@@ -1,0 +1,1432 @@
+[
+  {
+    "name": "Zwiebeln Geröstet",
+    "brand": "ROYAL ORIENT",
+    "content": "12 X 400 G",
+    "sku": "5805",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/8/5805.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/uitjes-gebakken-5805.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Seetang Snack mit Olivenöl",
+    "brand": "CHUNG JUNG ONE",
+    "content": "15 X 3 X 4,5 G",
+    "sku": "6493-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6493-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zeewier-snack-met-olijfolie-6493-2.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Koriandersamen Dhania",
+    "brand": "TRS",
+    "content": "10 X 100 G",
+    "sku": "4481-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4481-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/korianderzaden-4481-01.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Anchovis Getrocknet",
+    "brand": "AFROASE",
+    "content": "10 X 100 G",
+    "sku": "9078-25",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-25.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47355/s/sardellen-getrocknet/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Bockshornkleesamen",
+    "brand": "TRS",
+    "content": "20 X 100 G",
+    "sku": "4538",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4538.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39666/s/methi-samen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Tung Ku Pilz",
+    "brand": "MOUNTAINS",
+    "content": "30 X 50 G",
+    "sku": "494",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/9/494.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/tung-ku-paddestoelen-m-494.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Fenchelsamen Soonf",
+    "brand": "TRS",
+    "content": "15 X 100 G",
+    "sku": "4542-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4542-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/46742/s/fenchelsamen-soonf/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kantonesische Wurst",
+    "brand": "WANDERFORT",
+    "content": "15 X 250 G",
+    "sku": "6237",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/2/6237.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/48123/s/kantonesische-wurst/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Popcornmais",
+    "brand": "TRS",
+    "content": "8 X 500 G",
+    "sku": "4496-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4496-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/popcorn-mais-4496-01.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Seetang Getrocknet & Geschnitten",
+    "brand": "CHUNG JUNG ONE",
+    "content": "60 X 20 G",
+    "sku": "6483-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6483-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/gedroogd-gesneden-zeewier-6483-2.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Flusskrebs Ganz",
+    "brand": "AFROASE",
+    "content": "20 X 50 G",
+    "sku": "9078-14",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-14.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47340/s/flusskrebs-ganz/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Zwiebeln Geröstet",
+    "brand": "ROYAL ORIENT",
+    "content": "4 X 2,5 KG",
+    "sku": "5805-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/8/5805-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/uitjes-gebakken-5805-2.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarze Bohnen Fermentiert",
+    "brand": "PRB",
+    "content": "40 X 250 G",
+    "sku": "6097-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/0/6097-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/gefermenteerde-zwarte-bonen-6097-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schellfisch Getrocknet & Gesalzen",
+    "brand": "NORTHERN FISH",
+    "content": "1 X 3 KG",
+    "sku": "9074-91",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9074-91.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/schelvis-gedroogd-gezouten-9074-91.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kaffernlimettenblätter Getrocknet",
+    "brand": "COCK",
+    "content": "24 X 10 G",
+    "sku": "6200",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/2/6200.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/gedroogde-kafferlimoenbladeren-6200.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Flusskrebs Gemahlen",
+    "brand": "AFROASE",
+    "content": "20 X 50 G",
+    "sku": "9078-15",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-15.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47341/s/flusskrebs-gemahlen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Linsen Rot",
+    "brand": "TRS",
+    "content": "20 X 500 G",
+    "sku": "4622",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4622.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/linzen-rood-4622.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Köhler Getrocknet & Gesalzen 31/70",
+    "brand": "NORTHERN FISH",
+    "content": "1 X 3 KG",
+    "sku": "9074-61",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9074-61.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/bakkeljauw-31-70-9074-61.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarze Bohnen",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503-07",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503-07.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwarte-bonen-4503-07.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Senfsamen Braun",
+    "brand": "TRS",
+    "content": "20 X 100 G",
+    "sku": "4494",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4494.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39636/s/braune-senfsamen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarze Bohnen",
+    "brand": "AFROASE",
+    "content": "12 X 1 KG",
+    "sku": "4507",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4507.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39646/s/schwarze-bohnen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarzaugenbohnen",
+    "brand": "TRS",
+    "content": "20 X 500 G",
+    "sku": "4616",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4616.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwartoogbonen-4616.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sojastücke",
+    "brand": "TRS",
+    "content": "6 X 500 G",
+    "sku": "4726",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/7/4726.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39718/s/sojastucke/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kidneybohnen Dunkelrot",
+    "brand": "AFROASE",
+    "content": "12 X 1 KG",
+    "sku": "4509-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4509-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/donkerrode-kidney-bonen-4509-2.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kidneybohnen Hellrot",
+    "brand": "AFROASE",
+    "content": "12 X 1 KG",
+    "sku": "4509-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4509-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/licht-rode-kidney-bonen-4509-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarzaugenbohnen",
+    "brand": "AFROASE",
+    "content": "12 X 1 KG",
+    "sku": "4508",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4508.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39647/s/schwarzaugenbohnen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kichererbsen Halb Chana Dal",
+    "brand": "TRS",
+    "content": "20 X 500 G",
+    "sku": "4618",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4618.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39684/s/kichererbsen-halb-chana-dall/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarzaugenbohnen",
+    "brand": "TRS",
+    "content": "10 X 1 KG",
+    "sku": "4616-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4616-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwartoogbonen-4616-2.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarzaugenbohnen",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503-08",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503-08.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwartoogbonen-4503-08.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Welsfilet Geräuchert & Getrocknet",
+    "brand": "AFROASE",
+    "content": "10 X 100 G",
+    "sku": "9078-21",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-21.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/meerval-filet-gerookt-gedroogd-9078-21.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kidneybohnen Hellrot",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503-09",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503-09.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/kidney-bonen-lichtrood-4503-09.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Zwiebeln Geröstet",
+    "brand": "ROYAL ORIENT",
+    "content": "20 X 200 G",
+    "sku": "5805-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/8/5805-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/uitjes-gebakken-5805-01.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Mung Dal",
+    "brand": "TRS",
+    "content": "10 X 1 KG",
+    "sku": "4491-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4491-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/mung-linzen-4491-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kichererbsen Geschält Chana Dal",
+    "brand": "TRS",
+    "content": "10 X 1 KG",
+    "sku": "4618-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4618-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/kikkererwten-half-chana-dall-4618-2.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Fischpulver",
+    "brand": "AFROASE",
+    "content": "10 X 100 G",
+    "sku": "9078-18",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-18.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47344/s/fischpulver/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sojastangen Getrocknet",
+    "brand": "EAGLOBE",
+    "content": "50 X 150 G",
+    "sku": "551",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/5/551.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/soja-stengels-gedroogd-551.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Knoblauch Geröstet",
+    "brand": "NANG FAH",
+    "content": "48 X 100 G",
+    "sku": "5804",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/8/5804.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/knoflook-gebakken-5804.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Egusi Ganz",
+    "brand": "NINA",
+    "content": "24 X 227 G",
+    "sku": "4455-30",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4455-30.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/egusi-heel-4455-30.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kidneybohnen Weiß",
+    "brand": "AFROASE",
+    "content": "12 X 1 KG",
+    "sku": "4509",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4509.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39648/s/weiss-kidney-bohnen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarze Pilze Schwarz/Weiß",
+    "brand": "MOUNTAINS",
+    "content": "50 X 100 G",
+    "sku": "6570-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/5/6570-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwarte-paddestoelen-zwart-wit-6570-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Seetang Gewürzt",
+    "brand": "SURASANG",
+    "content": "30 X 8 X 2,3 G",
+    "sku": "6487-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6487-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zeewier-gekruid-6487-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Tofu-Rolle Getrocknet",
+    "brand": "EAGLOBE",
+    "content": "25 X 300 G",
+    "sku": "548",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/4/548.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39073/s/getrocknete-soja-roll/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Mungbohnen Geschält",
+    "brand": "GOLDEN CHEF",
+    "content": "50 X 400 G",
+    "sku": "4641",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4641.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/gepelde-split-mungbonen-4641.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Weiße Bohnen",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503-05",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503-05.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/witte-bonen-4503-05.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sojakörner",
+    "brand": "TRS",
+    "content": "10 X 250 G",
+    "sku": "4725",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/7/4725.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39717/s/sojakorner/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Mungbohnen",
+    "brand": "TRS",
+    "content": "10 X 1 KG",
+    "sku": "4490-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4490-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/41662/s/mung-bohnen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarzaugenbohnen Geschält",
+    "brand": "MP",
+    "content": "10 X 910 G",
+    "sku": "4513-4",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4513-4.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/gepelde-bonen-4513-4.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kichererbsen Braun",
+    "brand": "TRS",
+    "content": "20 X 500 G",
+    "sku": "4516",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4516.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39653/s/braune-kichererbsen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarze Pilze Schwarz/Schwarz",
+    "brand": "MOUNTAINS",
+    "content": "50 X 100 G",
+    "sku": "6570",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/5/6570.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwarte-paddestoelen-zwart-zwart-6570.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Mungbohnen Grün",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503-04",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503-04.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/mungbonen-groen-4503-04.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Tung Ku Pilz",
+    "brand": "MOUNTAINS",
+    "content": "3 X 1 KG",
+    "sku": "474",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/7/474.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/tung-ku-paddestoelen-m-474.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Ogbono Ganz",
+    "brand": "AFROASE",
+    "content": "10 X 80 G",
+    "sku": "4455",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4455.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/ogbono-heel-4455.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Tung Ku Pilz",
+    "brand": "MOUNTAINS",
+    "content": "30 X 100 G",
+    "sku": "493",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/9/493.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/tung-ku-paddestoelen-m-493.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Cashewnüsse",
+    "brand": "TRS",
+    "content": "15 X 100 G",
+    "sku": "4466",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4466.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/cashewnoten-4466.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sesamkörner Weiß",
+    "brand": "RAITIP",
+    "content": "24 X 100 G",
+    "sku": "6730",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/7/6730.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/witte-sesamzaadjes-6730.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Erbsen Halb Grün",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/spliterwten-groen-4503-01.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Egusi Ganz",
+    "brand": "AFROASE",
+    "content": "12 X 250 G",
+    "sku": "4455-31",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4455-31.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/egusi-heel-4455-31.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kichererbsen",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503-02",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503-02.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/kikkererwten-4503-02.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Erbsen Halb Gelb",
+    "brand": "TRS",
+    "content": "8 X 500 G",
+    "sku": "4712-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/7/4712-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/48258/s/erbsen-halb-gelb/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Seetang Getrocknet Fueru Wakame",
+    "brand": "OKAYA",
+    "content": "6 X 450 G",
+    "sku": "6483",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6483.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/gedroogd-zeewier-fueru-wakame-6483.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kidneybohnen Rot",
+    "brand": "TRS",
+    "content": "20 X 500 G",
+    "sku": "4514-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4514-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/rode-kidney-bonen-4514-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Köhler Morue Getrocknet & Gesalzen 21/30",
+    "brand": "NORTHERN FISH",
+    "content": "1 X 3 KG",
+    "sku": "9074-81",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9074-81.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/bakkeljauw-morue-21-30-9074-81.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Rote Garnelen Geräuchert & Getrocknet",
+    "brand": "AFROASE",
+    "content": "10 X 100 G",
+    "sku": "9078-16",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-16.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47342/s/rote-garnelen-gerauchert-getrocknet/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sojablätter",
+    "brand": "DALI",
+    "content": "50 X 250 G",
+    "sku": "552",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/5/552.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/soja-bladeren-552.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Linsen Braun Ganz",
+    "brand": "TRS",
+    "content": "20 X 500 G",
+    "sku": "4488",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4488.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39630/s/braune-linsen-ganz/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Linsen Rot",
+    "brand": "TRS",
+    "content": "6 X 2 KG",
+    "sku": "4619",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4619.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39685/s/rote-linsen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Ogbono Ganz",
+    "brand": "NINA",
+    "content": "24 X 57 G",
+    "sku": "4455-10",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4455-10.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/ogbono-heel-4455-10.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Pflaumen Getrocknet Weiß",
+    "brand": "EAGLOBE",
+    "content": "20 X 100 G",
+    "sku": "6450-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6450-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/gedroogde-witte-pruimen-6450-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Linsen Ganz Rot",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/linzen-heel-rood-4503.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Goldener Pilz Getrocknet",
+    "brand": "MOUNTAINS",
+    "content": "30 X 100 G",
+    "sku": "473",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/7/473.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/gedroogde-gouden-paddestoelen-473.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Mandarinenschale Getrocknet",
+    "brand": "JIABAO",
+    "content": "50 X 45 G",
+    "sku": "959",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/5/959.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/mandarijnschil-gedroogd-959.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Mung Dal",
+    "brand": "TRS",
+    "content": "6 X 2 KG",
+    "sku": "4491-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4491-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/mung-linzen-4491-2.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Datteln Groß",
+    "brand": "EAGLOBE",
+    "content": "50 X 150 G",
+    "sku": "956-3",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/5/956-3.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/dadels-groot-956-3.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Linsen Halb Rot",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503-11",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503-11.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/splitlinzen-rood-4503-11.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Tusk Brosme Getrocknet & Gesalzen",
+    "brand": "NORTHERN FISH",
+    "content": "1 X 3 KG",
+    "sku": "9074-71",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9074-71.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/48312/s/tusk-brosme-getrocknet-gesalzen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Seetang Geröstet Yaki Sushi Nori Weiß",
+    "brand": "SUKINA",
+    "content": "50 X 25 G",
+    "sku": "6494-6",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6494-6.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/geroosterd-zeewier-voor-sushi-6494-6.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Seetang Geröstet für Sushi",
+    "brand": "O'FOOD",
+    "content": "64 X 20 G",
+    "sku": "6495-3",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6495-3.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/geroosterd-zeewier-voor-sushi-6495-3.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Pflaumen Getrocknet",
+    "brand": "JIABAO",
+    "content": "50 X 65 G",
+    "sku": "961",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/6/961.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/pruimen-gedroogd-961.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Linsen Grün Ganz",
+    "brand": "TRS",
+    "content": "20 X 500 G",
+    "sku": "4489",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4489.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39631/s/grune-linsen-ganz/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Rote Bohnen Afrikanisch",
+    "brand": "NINA",
+    "content": "24 X 342 G",
+    "sku": "4500",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4500.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/afrikaanse-rode-bonen-4500.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kichererbsen Weiß",
+    "brand": "TRS",
+    "content": "20 X 500 G",
+    "sku": "4713",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/7/4713.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39713/s/weisse-kichererbsen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Rote Datteln ohne Kern",
+    "brand": "EAGLOBE",
+    "content": "50 X 200 G",
+    "sku": "955-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/5/955-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/rode-dadels-zonder-pit-955-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Basilikumsamen",
+    "brand": "RAITIP",
+    "content": "24 X 100 G",
+    "sku": "6715",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/7/6715.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/basilicumzaadjes-6715.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sojablätter Getrocknet",
+    "brand": "EAGLOBE",
+    "content": "50 X 150 G",
+    "sku": "550",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/5/550.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39075/s/getrocknete-soja-blatter/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Limabohnen",
+    "brand": "TRS",
+    "content": "20 X 500 G",
+    "sku": "4617",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4617.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39683/s/limabohnen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sesamkörner Weiß",
+    "brand": "RAITIP",
+    "content": "24 X 500 G",
+    "sku": "6800",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/8/6800.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/sesamzaadjes-wit-6800.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Linsen Halb Rot",
+    "brand": "AFROASE",
+    "content": "12 X 1 KG",
+    "sku": "4510-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4510-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/41672/s/rote-split-linsen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Saith Colin Getrocknet & Gesalzen",
+    "brand": "NORTHERN FISH",
+    "content": "20 X 500 G",
+    "sku": "9074-62",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9074-62.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/saith-colin-gedroogd-gezouten-9074-62.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Tung Ku Pilz",
+    "brand": "MOUNTAINS",
+    "content": "3 X 3 KG",
+    "sku": "475",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/7/475.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/tung-ku-paddestoelen-m-475.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Rote Bohnen",
+    "brand": "EAGLOBE",
+    "content": "50 X 400 G",
+    "sku": "4643-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4643-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/rode-bonen-4643-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Wachsmais Gekocht Schwarz",
+    "brand": "NONGSAO",
+    "content": "24 X 220 G",
+    "sku": "2101-03",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/1/2101-03.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/kleverige-mais-gekookt-zwart-2101-03.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Moringa-Blätter",
+    "brand": "ZENA",
+    "content": "10 X 100 G",
+    "sku": "1199",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/1/1199.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47116/s/moringa-blatter/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Nudelwurst",
+    "brand": "WANDERFORT",
+    "content": "15 X 270 G",
+    "sku": "6238",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/2/6238.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/noedelworst-6238.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarze Pilze Schwarz/Schwarz",
+    "brand": "MOUNTAINS",
+    "content": "10 X 1 KG",
+    "sku": "6566",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/5/6566.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwarte-paddestoelen-zwart-zwart-6566.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sesamkörner Schwarz",
+    "brand": "RAITIP",
+    "content": "24 X 500 G",
+    "sku": "6790",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/7/6790.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/sesamzaadjes-zwart-6790.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Bitterblätter",
+    "brand": "AFROASE",
+    "content": "10 X 25 G",
+    "sku": "1196-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/1/1196-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/bitterbladeren-1196-2.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Stockfischsteak",
+    "brand": "AFROASE",
+    "content": "10 X 100 G",
+    "sku": "9075-13",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9075-13.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47338/s/stockfisch-scheiben/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Laird Linsen",
+    "brand": "AFROASE",
+    "content": "12 X 1 KG",
+    "sku": "4510",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4510.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39649/s/laird-linsen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarze Bohnen Gesalzen",
+    "brand": "EAGLOBE",
+    "content": "40 X 250 G",
+    "sku": "6097",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/0/6097.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwarte-gezouten-bonen-6097.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Bambusblätter Trocken 8,5 cm",
+    "brand": "SHINE FARM",
+    "content": "30 X 400 G",
+    "sku": "1190-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/1/1190-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/droge-bamboe-bladeren-8-5-cm-1190-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Urid Ganz",
+    "brand": "TRS",
+    "content": "20 X 500 G",
+    "sku": "4610-5",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4610-5.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/41758/s/urid-ganze-bohnen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Tung Ku-Pilze",
+    "brand": "MOUNTAINS",
+    "content": "30 X 100 G",
+    "sku": "489-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/8/489-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/41822/s/tung-ku-pilze-m-a-qual/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Laird-Linsen Grün",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503-10",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503-10.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/laird-linzen-groen-4503-10.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Bonitoflocken Katsuobushi",
+    "brand": "WADAKYU",
+    "content": "8 X 500 G",
+    "sku": "6481-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6481-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/bonitovlokken-katsuobushi-6481-01.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Waxberry Getrocknet",
+    "brand": "JIABAO",
+    "content": "50 X 65 G",
+    "sku": "967",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/6/967.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39158/s/getrocknete-waxberry/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schellfisch Ambassade Plus Getr.&Gesalz.",
+    "brand": "NORTHERN FISH",
+    "content": "1 X 3 KG",
+    "sku": "9074-92",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9074-92.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/48313/s/schellfisch-ambassade-plus-getr-gesalz/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schalotten Geröstet",
+    "brand": "NANG FAH",
+    "content": "48 X 100 G",
+    "sku": "5806",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/8/5806.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/sjalotten-gebakken-5806.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Agar-Agar-Sticks",
+    "brand": "EAGLOBE",
+    "content": "50 X 42 G",
+    "sku": "6115",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/1/6115.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/agar-agar-sticks-6115.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Popcornmais",
+    "brand": "AFROASE",
+    "content": "10 X 1 KG",
+    "sku": "4503-03",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/5/4503-03.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/popcorn-mais-4503-03.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Welsfilet Geräuchert & Getrocknet",
+    "brand": "VISH",
+    "content": "25 X 100 G",
+    "sku": "9063-10",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9063-10.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47232/s/welsfilet-gerauchert-getrocknet/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Seetang Snack mit Olivenöl",
+    "brand": "CHUNG JUNG ONE",
+    "content": "10 X 9 X 5 G",
+    "sku": "6495-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6495-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zeewier-snack-met-olijfolie-6495-2.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sesamsamen Weiß",
+    "brand": "TRS",
+    "content": "20 X 100 G",
+    "sku": "4480",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4480.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/witte-sesamzaden-4480.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Bonitoflocken Katsuobushi",
+    "brand": "WADAKYU",
+    "content": "30 X 40 G",
+    "sku": "6481-02",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6481-02.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/bonitovlokken-katsuobushi-6481-02.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Mungbohnen",
+    "brand": "RAITIP",
+    "content": "24 X 500 G",
+    "sku": "6723",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/7/6723.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/mungbonen-6723.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Seetang Getrocknet",
+    "brand": "CHUNG JUNG ONE",
+    "content": "20 X 150 G",
+    "sku": "6482",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/4/6482.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/40164/s/getrocknete-algen/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sojabohnen",
+    "brand": "VIET NAM",
+    "content": "5 X 1 KG",
+    "sku": "4727",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/7/4727.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/sojabonen-4727.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Sesamkörner Schwarz",
+    "brand": "RAITIP",
+    "content": "24 X 100 G",
+    "sku": "6731",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/7/6731.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwarte-sesamzaadjes-6731.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Knoblauch Frittiert",
+    "brand": "HAIDILAO",
+    "content": "40 X 30 G",
+    "sku": "5876-07",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/8/5876-07.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/knoflook-gefrituurd-5876-07.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Wachsmais Gekocht Mehrfarbig",
+    "brand": "NONGSAO",
+    "content": "24 X 220 G",
+    "sku": "2101-02",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/1/2101-02.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/kleverige-mais-gekookt-bont-2101-02.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Mungbohnen Halb Ungeschält",
+    "brand": "GOLDEN CHEF",
+    "content": "50 X 400 G",
+    "sku": "4641-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4641-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/ongeschilde-split-mung-bonen-4641-1.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Barrakudaringe Geräuchert & Getrocknet",
+    "brand": "AFROASE",
+    "content": "10 X 150 G",
+    "sku": "9078-20",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-20.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47346/s/barracuda-ring-gerauchert-getrocknetes/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kichererbsen Geschält Chana Dal",
+    "brand": "TRS",
+    "content": "6 X 2 KG",
+    "sku": "4618-3",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4618-3.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/kikkererwten-half-chana-dall-4618-3.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Rote Datteln mit Kern",
+    "brand": "EAGLOBE",
+    "content": "50 X 200 G",
+    "sku": "956-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/5/956-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/rode-dadels-met-pit-956-2.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Rote Bohnen",
+    "brand": "COCK",
+    "content": "50 X 400 G",
+    "sku": "4643",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4643.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/rode-bonen-4643.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Mango Getrocknet",
+    "brand": "TUAN DAT",
+    "content": "50 X 100 G",
+    "sku": "1063",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/0/1063.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/mango-gedroogd-1063.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Bonga Filet Shawa",
+    "brand": "AFROASE",
+    "content": "10 X 100 G",
+    "sku": "9078-23",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-23.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47353/s/bonga-fillet-shawa/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Tilapia-Filet Geräuchert",
+    "brand": "AFROASE",
+    "content": "10 X 100 G",
+    "sku": "9078-24",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-24.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47354/s/tilapia-filet-gerauchert/category/3149/",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarze Bohnen",
+    "brand": "COCK",
+    "content": "50 X 400 G",
+    "sku": "4642",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/6/4642.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwarte-bonen-4642.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Schwarze Pilze Schwarz/Schwarz",
+    "brand": "MOUNTAINS",
+    "content": "30 X 50 G",
+    "sku": "6572",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/5/6572.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/zwarte-paddestoelen-zwart-zwart-6572.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Weiße Pilze",
+    "brand": "MOUNTAINS",
+    "content": "30 X 100 G",
+    "sku": "6575",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/5/6575.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/witte-paddestoelen-6575.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Mungbohnen Halb Geschält",
+    "brand": "RAITIP",
+    "content": "24 X 500 G",
+    "sku": "6724",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/7/6724.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/geschilde-split-mungbonen-6724.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Anatto-Samen",
+    "brand": "VIET NAM",
+    "content": "20 X 100 G",
+    "sku": "9108",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/1/9108.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/anattozaden-9108.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Egusi Ganz",
+    "brand": "AFROASE",
+    "content": "24 X 227 G",
+    "sku": "4455-32",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/4/4/4455-32.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/egusi-heel-4455-32.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Wachsmais Gekocht Gelb",
+    "brand": "NONGSAO",
+    "content": "24 X 220 G",
+    "sku": "2101-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/1/2101-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/kleverige-mais-gekookt-geel-2101-01.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Welsring Geräuchert & Getrocknet",
+    "brand": "AFROASE",
+    "content": "10 X 150 G",
+    "sku": "9078-19",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-19.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/meerval-ring-gerookt-gedroogd-9078-19.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Barrakuda Filet Geräuchert",
+    "brand": "AFROASE",
+    "content": "10 X 100 G",
+    "sku": "9078-22",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/9/0/9078-22.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/barracuda-filet-gerookt-9078-22.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Bitterblätter",
+    "brand": "OBIJ",
+    "content": "20 X 55 G",
+    "sku": "1199-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/1/1199-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/bitterbladeren-1199-01.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Kürbisblätter Ugu",
+    "brand": "OBIJ",
+    "content": "20 X 55 G",
+    "sku": "1199-02",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/1/1199-02.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/pompoenbladeren-ugu-1199-02.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Ukazi Blätter",
+    "brand": "OBIJ",
+    "content": "20 X 55 G",
+    "sku": "1199-03",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/1/1199-03.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/ukazi-bladeren-1199-03.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Tropische Früchtemischung Getrocknet",
+    "brand": "TUAN DAT",
+    "content": "24 X 100 G",
+    "sku": "1066",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/0/1066.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/gemengd-tropisch-fruit-gedroogd-1066.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Guave Getrocknet",
+    "brand": "TUAN DAT",
+    "content": "24 X 100 G",
+    "sku": "1067",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/0/1067.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/guava-gedroogd-1067.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Jackfrucht Chips",
+    "brand": "TUAN DAT",
+    "content": "24 X 200 G",
+    "sku": "1068",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/0/1068.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/jackfruit-chips-1068.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  },
+  {
+    "name": "Gemischte Fruchtchips",
+    "brand": "TUAN DAT",
+    "content": "24 X 100 G",
+    "sku": "1069",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/1/0/1069.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/getrocknete-produkte/gemengde-fruitchips-1069.html",
+    "category": "Getrocknete Produkte",
+    "categorySlug": "getrocknete-produkte"
+  }
+]

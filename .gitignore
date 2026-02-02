@@ -1,0 +1,81 @@
+# ================================
+# LOKMA 2026 - Master .gitignore
+# ================================
+
+# ========== Node.js / Next.js ==========
+node_modules/
+.pnp/
+.pnp.js
+.next/
+out/
+build/
+dist/
+.firebase/
+coverage/
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ========== Flutter / Dart ==========
+.dart_tool/
+.packages
+build/
+*.iml
+*.log
+
+# ========== iOS ==========
+ios/Pods/
+ios/build/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+*.xcarchive
+*.dSYM
+*.ipa
+DerivedData/
+*.hmap
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+
+# ========== Android ==========
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# ========== Environment & Secrets ==========
+.env
+.env*.local
+*.pem
+secrets/
+.secrets/
+
+# ========== OS Files ==========
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# ========== IDE ==========
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ========== Backup files ==========
+*.backup
+*_BACKUP_*
+backups/*.zip

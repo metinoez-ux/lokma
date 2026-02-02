@@ -1,0 +1,25 @@
+{
+  "totalProducts": 292,
+  "withEAN": 290,
+  "withoutEAN": 2,
+  "errors": 0,
+  "categories": {
+    "Alkoholfreie Getränke": 28,
+    "Fischkonserven": 21,
+    "Fleischkonserven": 19,
+    "Fertiggerichte": 28,
+    "Gemüsekonserven": 26,
+    "Mayo, Senf, Saucen & Öl": 27,
+    "Getreide, Mehl & Nudeln": 30,
+    "Snack": 32,
+    "Kondensmilch & Backware": 17,
+    "Süßwaren, Gebäck": 23,
+    "Kaviar": 17,
+    "Wurstspezialitäten": 4,
+    "Frisch & Fertig": 0,
+    "Milch, Quark": 8,
+    "Kosmetik": 7,
+    "Vorteilspack": 5
+  },
+  "scrapedAt": "2026-01-19T04:15:33.998Z"
+}

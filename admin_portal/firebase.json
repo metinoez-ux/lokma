@@ -1,0 +1,42 @@
+{
+    "hosting": {
+        "site": "lokma",
+        "source": ".",
+        "ignore": [
+            "firebase.json",
+            "**/.*",
+            "**/node_modules/**"
+        ],
+        "headers": [
+            {
+                "source": "/zohoverify/**",
+                "headers": [
+                    {
+                        "key": "Content-Type",
+                        "value": "text/html"
+                    }
+                ]
+            }
+        ],
+        "frameworksBackend": {
+            "region": "europe-west1",
+            "env": [
+                {
+                    "variable": "FIREBASE_SERVICE_ACCOUNT_KEY",
+                    "secret": "FB_SERVICE_ACCOUNT"
+                }
+            ]
+        }
+    },
+    "functions": {
+        "source": "functions",
+        "codebase": "mira-notifications",
+        "runtime": "nodejs20"
+    },
+    "storage": {
+        "rules": "storage.rules"
+    },
+    "firestore": {
+        "rules": "firestore.rules"
+    }
+}

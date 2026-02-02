@@ -1,0 +1,59 @@
+{
+  "@@locale": "de",
+  
+  "appName": "LOKMA",
+  "search": "Suchen",
+  "searchHint": "Essen, Restaurant oder Markt suchen...",
+  "searchNoResults": "Keine Ergebnisse gefunden",
+  "searchTryDifferent": "Versuchen Sie einen anderen Suchbegriff",
+  "searching": "Suche...",
+  "popularSearches": "Beliebte Suchen",
+  "showMore": "Mehr anzeigen",
+  
+  "maxDistance": "Maximale Entfernung",
+  "kmUnit": "km",
+  
+  "categoryButcher": "Metzger",
+  "categoryMarket": "Markt",
+  "categoryRestaurant": "Restaurant",
+  "categoryFlorist": "Blumenladen",
+  "categoryKermes": "Kermesse",
+  "categoryPastry": "Konditorei",
+  "categoryCoffee": "Kaffee",
+  "categoryImbiss": "Imbiss",
+  
+  "businesses": "Geschäfte",
+  "products": "Produkte",
+  "categories": "Kategorien",
+  
+  "order": "Bestellen",
+  "go": "Los",
+  "orderAgain": "Erneut bestellen",
+  
+  "profile": "Profil",
+  "welcome": "Willkommen",
+  "loginPrompt": "Melden Sie sich an, um Ihre Bestellungen zu verfolgen und exklusive Angebote zu erhalten.",
+  "loginWithPhone": "Mit Telefon anmelden",
+  "loginWithEmail": "Mit E-Mail anmelden",
+  "loginWithApple": "Mit Apple anmelden",
+  "loginWithGoogle": "Mit Google anmelden",
+  "logout": "Abmelden",
+  
+  "myOrders": "Meine Bestellungen",
+  "myFavorites": "Meine Favoriten",
+  "myAddresses": "Meine Adressen",
+  "paymentMethods": "Zahlungsmethoden",
+  "notifications": "Benachrichtigungen",
+  "help": "Hilfe",
+  
+  "home": "Startseite",
+  "orders": "Bestellungen",
+  
+  "comingSoon": "Demnächst verfügbar",
+  
+  "sendFlowers": "Blumen senden",
+  "sameDay": "Lieferung am selben Tag",
+  "recipientName": "Name des Empfängers",
+  "recipientPhone": "Telefon des Empfängers",
+  "cardMessage": "Kartennachricht"
+}

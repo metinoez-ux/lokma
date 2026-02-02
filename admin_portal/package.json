@@ -1,0 +1,42 @@
+{
+  "name": "lokmaportal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.954.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@stripe/stripe-js": "^8.6.1",
+    "date-fns": "^4.1.0",
+    "firebase": "^12.7.0",
+    "firebase-admin": "^13.6.0",
+    "googleapis": "^170.1.0",
+    "jspdf": "^3.0.4",
+    "lucide-react": "^0.562.0",
+    "next": "16.0.10",
+    "puppeteer": "^24.35.0",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "react-hot-toast": "^2.6.0",
+    "resend": "^6.6.0",
+    "stripe": "^20.1.0",
+    "twilio": "^5.11.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/google.maps": "^3.58.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.10",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,41 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "meat_orders",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "butcherId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "pickupTime",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "meat_orders",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "butcherId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "status",
+                    "arrayConfig": "CONTAINS"
+                },
+                {
+                    "fieldPath": "pickupTime",
+                    "order": "ASCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}

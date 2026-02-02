@@ -1,0 +1,1010 @@
+[
+  {
+    "url": "https://www.foodpaket.de/collections/beyco",
+    "slug": "beyco",
+    "name": "beyco",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/aspendos",
+    "slug": "aspendos",
+    "name": "aspendos",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/ja",
+    "slug": "ja",
+    "name": "ja",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/shisha-tabak",
+    "slug": "shisha-tabak",
+    "name": "Shisha Tabak",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/shisha-tabak.jpg?v=1638483397"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/getranke",
+    "slug": "getranke",
+    "name": "Getränke",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/getraenke.jpg?v=1693489207"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/fleischprodukte",
+    "slug": "fleischprodukte",
+    "name": "Fleisch",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Fleischprodukte.jpg?v=1693489068"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/milchprodukte",
+    "slug": "milchprodukte",
+    "name": "Milchprodukte",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Milchprodukte.jpg?v=1693489105"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/snacks",
+    "slug": "snacks",
+    "name": "Snacks",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Snacks.jpg?v=1715696805"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/gewurze-mischungen",
+    "slug": "gewurze-mischungen",
+    "name": "Gewürze &amp; Mischungen",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/gewurze.jpg?v=1693489087"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/oliven-und-eingelegtes",
+    "slug": "oliven-und-eingelegtes",
+    "name": "Oliven und Eingelegtes",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/oliven-und-eingelegtes.jpg?v=1693489119"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/aufstrich",
+    "slug": "aufstrich",
+    "name": "Aufstrich",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/oliven-und-eingelegtes_c3310c08-9003-4f9e-813c-35b6d35c5501.jpg?v=1698224763"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/sucuk",
+    "slug": "sucuk",
+    "name": "Sucuk",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/sucuk.jpg?v=1693489150"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/wurstchen",
+    "slug": "wurstchen",
+    "name": "Wurst",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/wuerstchen.jpg?v=1653460834"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/aufschnitt",
+    "slug": "aufschnitt",
+    "name": "Aufschnitt",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/aufschnitt.jpg?v=1653460849"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/susses-und-saures",
+    "slug": "susses-und-saures",
+    "name": "Süßes und Saures",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/suessesundsaueres.jpg?v=1693489223"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/chips-und-co",
+    "slug": "chips-und-co",
+    "name": "Chips und Co.",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/salzig.jpg?v=1693489237"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/vegan",
+    "slug": "vegan",
+    "name": "Vegetarisch, Vegan &amp; Bio",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/vegan.jpg?v=1693489187"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/milch",
+    "slug": "milch",
+    "name": "Milch, Butter &amp; Sahne",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/milch.jpg?v=1652694646"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/cigkofte",
+    "slug": "cigkofte",
+    "name": "Cigköfte &amp; Falafel",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/cigkofte.jpg?v=1652948619"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/wurstwaren",
+    "slug": "wurstwaren",
+    "name": "Vegane Wurstwaren",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/wurstwaren.jpg?v=1653460940"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/joghurt",
+    "slug": "joghurt",
+    "name": "Joghurt",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/joghurt.jpg?v=1653460866"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/kase",
+    "slug": "kase",
+    "name": "Käse",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/kaese.jpg?v=1652694360"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/ayran",
+    "slug": "ayran",
+    "name": "Ayran",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/ayran.jpg?v=1693489019"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/milch-1",
+    "slug": "milch-1",
+    "name": "Vegane Milch",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/milch-h.jpg?v=1653460916"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/teigwaren",
+    "slug": "teigwaren",
+    "name": "Teigwaren",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/teigwaren.jpg?v=1693489167"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/backmischungen",
+    "slug": "backmischungen",
+    "name": "Backmischungen",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/backmischungen.jpg?v=1653460993"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/softdrinks",
+    "slug": "softdrinks",
+    "name": "Softdrinks",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/softdrinks.jpg?v=1698224861"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/energy-drinks",
+    "slug": "energy-drinks",
+    "name": "Energy Drinks",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/energydrinks.jpg?v=1698225019"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/milkshakes",
+    "slug": "milkshakes",
+    "name": "Milkshakes",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/milchshake.jpg?v=1653461151"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/eistee",
+    "slug": "eistee",
+    "name": "Eistee",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/eistee.jpg?v=1693489050"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/nudeln-und-co",
+    "slug": "nudeln-und-co",
+    "name": "Kochen &amp; Backen",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/nudelnundco.jpg?v=1652694695"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/nudeln",
+    "slug": "nudeln",
+    "name": "Nudeln",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/nudeln.jpg?v=1653460959"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/reis",
+    "slug": "reis",
+    "name": "Reis",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/reis.jpg?v=1652692646"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/hulsenfruchte",
+    "slug": "hulsenfruchte",
+    "name": "Nüsse, Trockenobst &amp; Hülsenfrüchte",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/huelsenfruechte.jpg?v=1652689520"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/cerealien",
+    "slug": "cerealien",
+    "name": "Aufstrich &amp; Cerealien",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/cerealien.jpg?v=1693489036"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/musli",
+    "slug": "musli",
+    "name": "Müsli",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/muesli.jpg?v=1653461245"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/konserven",
+    "slug": "konserven",
+    "name": "Konserven",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/konserven.jpg?v=1698224595"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/fertiggerichte",
+    "slug": "fertiggerichte",
+    "name": "Fertiggerichte",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/fertiggerichte.jpg?v=1652692385"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/cornflakes",
+    "slug": "cornflakes",
+    "name": "Cornflakes",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/cornflakes.jpg?v=1652690026"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/sutat-ayran",
+    "slug": "sutat-ayran",
+    "name": "sutat-ayran",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/sauces",
+    "slug": "sauces",
+    "name": "Saucen",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/sauces.jpg?v=1693489135"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/tee",
+    "slug": "tee",
+    "name": "Tee",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/tee.jpg?v=1697638337"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/kaffee",
+    "slug": "kaffee",
+    "name": "Kaffee",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/kaffee.jpg?v=1697638504"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/safte",
+    "slug": "safte",
+    "name": "safte",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/wasser",
+    "slug": "wasser",
+    "name": "wasser",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/fur-babys",
+    "slug": "fur-babys",
+    "name": "fur-babys",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/nahrungsmittel",
+    "slug": "nahrungsmittel",
+    "name": "nahrungsmittel",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/angebote",
+    "slug": "angebote",
+    "name": "Angebote",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/shoppaymentorderbuy-09_icon-icons.com_73854.png?v=1719577141"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/cookie-bros",
+    "slug": "cookie-bros",
+    "name": "Cookie Dough",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/cookiebros.jpg?v=1698225391"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/yayla-sucuk-und-co",
+    "slug": "yayla-sucuk-und-co",
+    "name": "yayla-sucuk-und-co",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/rezept-pakete",
+    "slug": "rezept-pakete",
+    "name": "rezept-pakete",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/drogerieprodukte",
+    "slug": "drogerieprodukte",
+    "name": "drogerieprodukte",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/eyup-sabri-tuncer",
+    "slug": "eyup-sabri-tuncer",
+    "name": "eyup-sabri-tuncer",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/raumdufte",
+    "slug": "raumdufte",
+    "name": "raumdufte",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/babypflege",
+    "slug": "babypflege",
+    "name": "babypflege",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/7-no-sale",
+    "slug": "7-no-sale",
+    "name": "7-no-sale",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/mhd-lebensmittel",
+    "slug": "mhd-lebensmittel",
+    "name": "mhd-lebensmittel",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/kaugummis",
+    "slug": "kaugummis",
+    "name": "kaugummis",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/raucherbedarf",
+    "slug": "raucherbedarf",
+    "name": "raucherbedarf",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/cerez",
+    "slug": "cerez",
+    "name": "Cerez",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/cerez.jpg?v=1698225857"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/samyang-buldak-instant-nudeln",
+    "slug": "samyang-buldak-instant-nudeln",
+    "name": "SamYang Buldak",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/buldak.jpg?v=1697636417"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/schokolade-online-kaufen",
+    "slug": "schokolade-online-kaufen",
+    "name": "Schokolade",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/schokolade.jpg?v=1698225140"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/kekse-geback",
+    "slug": "kekse-geback",
+    "name": "Kekse &amp; Gebäck",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/kekse.jpg?v=1698225265"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/vegane-sucuk",
+    "slug": "vegane-sucuk",
+    "name": "Vegane Sucuk &amp; Lahmacun",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/vegane-sucuk.jpg?v=1697637725"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/zum-fruhstuck",
+    "slug": "zum-fruhstuck",
+    "name": "zum-fruhstuck",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/grillpakete-fur-fussballvereine",
+    "slug": "grillpakete-fur-fussballvereine",
+    "name": "Grillpakete für Fußballvereine",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/post.jpg?v=1693490005"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/trendprodukte",
+    "slug": "trendprodukte",
+    "name": "Trendprodukte",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/81zPD5RyAFL.jpg?v=1749798733"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/barilla-nudelmania-angebote",
+    "slug": "barilla-nudelmania-angebote",
+    "name": "barilla-nudelmania-angebote",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/bubble-tea",
+    "slug": "bubble-tea",
+    "name": "Bubble Tea",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/bubble-tea.jpg?v=1697638691"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/yayla",
+    "slug": "yayla",
+    "name": "Yayla – Authentische türkische Spezialitäten für dein Zuhause",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/3.jpg?v=1738598020"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/ramadan-pakete",
+    "slug": "ramadan-pakete",
+    "name": "ramadan-pakete",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/boxen",
+    "slug": "boxen",
+    "name": "boxen",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/grillfleisch-und-grillgut",
+    "slug": "grillfleisch-und-grillgut",
+    "name": "Grillfleisch und Grillgut",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Foodboxen.png?v=1749804807"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/american-sweets",
+    "slug": "american-sweets",
+    "name": "American Sweets",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Flag_of_the_United_States_svg.png?v=1716796190"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/turkei",
+    "slug": "turkei",
+    "name": "Türkei",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Flag_of_Turkey_svg.png?v=1719320171"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/asien",
+    "slug": "asien",
+    "name": "Asien",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Asia_on_the_globe__white-red__svg.png?v=1720518663"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/italien",
+    "slug": "italien",
+    "name": "Italien",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Flag_of_Italy.jpg?v=1720519228"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/festival",
+    "slug": "festival",
+    "name": "Festival",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/festival-bild-1.jpg?v=1721208748"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/bestseller",
+    "slug": "bestseller",
+    "name": "Bestseller",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/istockphoto-1341299313-612x612.jpg?v=1722248561"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/pistazien-dubai-schokolade-knafeh-kadayif",
+    "slug": "pistazien-dubai-schokolade-knafeh-kadayif",
+    "name": "Pistazien Dubai Schokolade - Knafeh/Kadayif",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Produkt_der_Woche_1.jpg?v=1724770668"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/neu-eingetroffen",
+    "slug": "neu-eingetroffen",
+    "name": "neu-eingetroffen",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/fitness",
+    "slug": "fitness",
+    "name": "Fitness",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/539724-schwarzweissabbildung-eines-dummkopfs-vektor.jpg?v=1726563508"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/haushaltswaren",
+    "slug": "haushaltswaren",
+    "name": "haushaltswaren",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/alien-burger",
+    "slug": "alien-burger",
+    "name": "Alien Burger",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Alien_Burger.jpg?v=1759239472"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/finger-hotdog",
+    "slug": "finger-hotdog",
+    "name": "Finger-Hotdog",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Finger_Hotdog.jpg?v=1759239448"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/sussungsmittel",
+    "slug": "sussungsmittel",
+    "name": "sussungsmittel",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/wurstchen-mumien",
+    "slug": "wurstchen-mumien",
+    "name": "Würstchen Mumien",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Mumien_Hotdogs.jpg?v=1759239605"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/blatterteig-kurbisse",
+    "slug": "blatterteig-kurbisse",
+    "name": "Blätterteig Kürbisse",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/23.png?v=1759239496"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/veggie-sussigkeiten",
+    "slug": "veggie-sussigkeiten",
+    "name": "veggie-sussigkeiten",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/pistazie-lotus",
+    "slug": "pistazie-lotus",
+    "name": "pistazie-lotus",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/schnelle-manti-rezept-in-unter-15-minuten",
+    "slug": "schnelle-manti-rezept-in-unter-15-minuten",
+    "name": "schnelle-manti-rezept-in-unter-15-minuten",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/hot-spicy-flaming-hot-chips-scharfe-snacks",
+    "slug": "hot-spicy-flaming-hot-chips-scharfe-snacks",
+    "name": "hot-spicy-flaming-hot-chips-scharfe-snacks",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/schnelles-rezept-sucuk-burger",
+    "slug": "schnelles-rezept-sucuk-burger",
+    "name": "Schnelles Rezept: Sucuk Burger",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/front-view-tasty-burger-along-with-olives-cheese-tomatoes-green-salad-inside-round-plate.jpg?v=1731760980"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/weihnachtliche-backzutaten-suesse-leckereien",
+    "slug": "weihnachtliche-backzutaten-suesse-leckereien",
+    "name": "weihnachtliche-backzutaten-suesse-leckereien",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/turkische-sussigkeiten",
+    "slug": "turkische-sussigkeiten",
+    "name": "turkische-sussigkeiten",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/amerikanische-sussigkeiten",
+    "slug": "amerikanische-sussigkeiten",
+    "name": "amerikanische-sussigkeiten",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/rezept-lotus-schnecken",
+    "slug": "rezept-lotus-schnecken",
+    "name": "Rezept: Lotus Schnecken",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Screenshot_47.png?v=1733051581"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/rezept-buldak-ramen-tteokbokki",
+    "slug": "rezept-buldak-ramen-tteokbokki",
+    "name": "Rezept: Buldak Ramen &amp; Tteokbokki",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/egg-noodle-with-red-roasted-pork-wonton-table.jpg?v=1733055172"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/anna-pauls-turkish-pasta",
+    "slug": "anna-pauls-turkish-pasta",
+    "name": "Anna Paul&apos;s Turkish Pasta",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/3c77bdb6-b4f1-452d-ae21-3726a33f2a29.webp?v=1733916768"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/mystery-box",
+    "slug": "mystery-box",
+    "name": "Mystery Box",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Mystery_Box_Sticker.jpg?v=1734353246"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/dubai-schokoladenkuchen",
+    "slug": "dubai-schokoladenkuchen",
+    "name": "Dubai Schokoladenkuchen",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2024-12-19_um_15.47.56_e8d3afd9.jpg?v=1734624346"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/kofte-gefullte-zwiebeln",
+    "slug": "kofte-gefullte-zwiebeln",
+    "name": "Köfte &amp; gefüllte Zwiebeln",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Koefte_158e94f1-9218-44d9-9b00-49eefe1f0e46.jpg?v=1734625906"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/vegan-sucuk-bowl",
+    "slug": "vegan-sucuk-bowl",
+    "name": "Vegan Sucuk Bowl",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2024-12-19_um_15.47.53_491c6f63.jpg?v=1734626875"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/bratapfel-tiramisu-alles-fur-dein-winterliches-lieblingsdessert",
+    "slug": "bratapfel-tiramisu-alles-fur-dein-winterliches-lieblingsdessert",
+    "name": "bratapfel-tiramisu-alles-fur-dein-winterliches-lieblingsdessert",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/fastenzeit-essentials",
+    "slug": "fastenzeit-essentials",
+    "name": "fastenzeit-essentials",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/ifter-sahur",
+    "slug": "ifter-sahur",
+    "name": "ifter-sahur",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/siron-rezept",
+    "slug": "siron-rezept",
+    "name": "Siron - Rezept",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-01-26_um_12.44.55_28771a42.jpg?v=1737892935"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/super-bowl-snacks",
+    "slug": "super-bowl-snacks",
+    "name": "super-bowl-snacks",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/super-bowl-bundles",
+    "slug": "super-bowl-bundles",
+    "name": "super-bowl-bundles",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/loaded-nachos",
+    "slug": "loaded-nachos",
+    "name": "Loaded Nachos",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/5_d2b10939-dd24-4cf4-a867-ae127bb7f6d4.png?v=1738149309"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/smores",
+    "slug": "smores",
+    "name": "S&apos;mores",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/8_654ee3bd-d0cf-4f0c-93b9-63a9f7b069b9.png?v=1738151684"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/schoko-karamell-popcorn",
+    "slug": "schoko-karamell-popcorn",
+    "name": "Schoko-Karamell Popcorn",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/7_75e30f89-3a95-43da-95cc-0993886e8ec1.png?v=1738152365"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/gefullte-paprikas",
+    "slug": "gefullte-paprikas",
+    "name": "Gefüllte Paprikas",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-01-29_um_20.23.38_68695f1a.jpg?v=1738178747"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/milay-halal-genuss-von-aufschnitt-bis-kase",
+    "slug": "milay-halal-genuss-von-aufschnitt-bis-kase",
+    "name": "Milay – Halal-Genuss von Aufschnitt bis Käse",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WMILAY.jpg?v=1738597971"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/beyco-hochwertige-eingelegte-spezialitaten-oliven",
+    "slug": "beyco-hochwertige-eingelegte-spezialitaten-oliven",
+    "name": "Beyco – Hochwertige eingelegte Spezialitäten &amp; Oliven",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/4.jpg?v=1738598137"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/mac-and-cheese-rezept",
+    "slug": "mac-and-cheese-rezept",
+    "name": "Mac and Cheese - Rezept",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-02-06_um_11.28.10_942172b0.jpg?v=1738838221"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/crunchy-wrap-rezept",
+    "slug": "crunchy-wrap-rezept",
+    "name": "Crunchy Wrap - Rezept",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-02-05_um_11.41.18_106d6bd4.jpg?v=1738753123"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/hummus-rezept",
+    "slug": "hummus-rezept",
+    "name": "Hummus - Rezept",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-02-05_um_12.30.08_0595599b.jpg?v=1738755566"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/yayla-ramadan-aktion",
+    "slug": "yayla-ramadan-aktion",
+    "name": "yayla-ramadan-aktion",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/dubai-strawberry-cup",
+    "slug": "dubai-strawberry-cup",
+    "name": "Dubai Strawberry Cup",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-02-19_um_11.10.44_61bc56fe.jpg?v=1739961308"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/gefullte-blatterteigherzen",
+    "slug": "gefullte-blatterteigherzen",
+    "name": "Gefüllte Blätterteigherzen",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-02-19_um_11.10.44_6b029250.jpg?v=1739963974"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/kadayif-pistazien-dessert",
+    "slug": "kadayif-pistazien-dessert",
+    "name": "Kadayif-Pistazien Dessert",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-02-19_um_13.37.26_3bb3ede8.jpg?v=1739970468"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/gefullte-datteln",
+    "slug": "gefullte-datteln",
+    "name": "Gefüllte Datteln",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Datteln.jpg?v=1740134529"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/susse-karneval-snacks",
+    "slug": "susse-karneval-snacks",
+    "name": "Süße Karneval Snacks",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Karneval.jpg?v=1740135339"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/baklava-cheesecake",
+    "slug": "baklava-cheesecake",
+    "name": "Baklava Cheesecake",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/IMG-20250228-WA0006.jpg?v=1740736686"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/biscoff-vanilla-dessert",
+    "slug": "biscoff-vanilla-dessert",
+    "name": "Biscoff Vanilla Dessert",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/IMG-20250228-WA0012.jpg?v=1740737931"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/engelshaar-schokolade",
+    "slug": "engelshaar-schokolade",
+    "name": "Engelshaar Schokolade",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-03-18_um_13.46.51_04eb129d.jpg?v=1742302687"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/zwiebel-kase-snack",
+    "slug": "zwiebel-kase-snack",
+    "name": "Zwiebel-Käse Snack",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Kaese_Zwiebel_Snack.jpg?v=1742304927"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/turkische-linsensuppe",
+    "slug": "turkische-linsensuppe",
+    "name": "Türkische Linsensuppe",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-03-26_um_17.01.31_d761b983_a06931e9-beb9-49c3-9ad4-2afe40877aed.jpg?v=1743005851"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/pogaca",
+    "slug": "pogaca",
+    "name": "Poğaça",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-04-17_um_13.57.20_49c2d36f.jpg?v=1744892783"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/oreo-dessert",
+    "slug": "oreo-dessert",
+    "name": "Oreo Dessert",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_25.png?v=1745771075"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/traditionelle-sussigkeiten",
+    "slug": "traditionelle-sussigkeiten",
+    "name": "Traditionelle Snacks &amp; Süßigkeiten",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/tuerkische-desserts-1.jpg?v=1745934774"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/grillsets",
+    "slug": "grillsets",
+    "name": "Grillsets",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/4.png?v=1747730767"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/mercimek-manti",
+    "slug": "mercimek-manti",
+    "name": "Mercimek Manti",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/WhatsApp_Bild_2025-05-04_um_17.04.29_1e1c7a35.jpg?v=1746371116"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/traditionelles-turkisches-fruhstuck",
+    "slug": "traditionelles-turkisches-fruhstuck",
+    "name": "traditionelles-turkisches-fruhstuck",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/beilagen-zum-grillen",
+    "slug": "beilagen-zum-grillen",
+    "name": "Beilagen zum Grillen",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/2_019872eb-341d-4362-a440-0da50507d81b.png?v=1749804892"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/sucuk-grillspiesse",
+    "slug": "sucuk-grillspiesse",
+    "name": "Sucuk Grillspieße",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Bild_Sucuk.png?v=1747221672"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/halloumi-gemuse-durum",
+    "slug": "halloumi-gemuse-durum",
+    "name": "Halloumi-Gemüse-Dürüm",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/5d14b4e97ae20d00164a39a4-36a3fa06.jpg?v=1747223157"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/grillen-und-aufraumen",
+    "slug": "grillen-und-aufraumen",
+    "name": "Grillen und Aufräumen",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Kollektionsbilder_Grillseason_3.jpg?v=1747318868"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/spassgetranke-1",
+    "slug": "spassgetranke-1",
+    "name": "Spaßgetränke",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Kollektionsbilder_Grillseason_2.jpg?v=1749804600"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/kisir-rezept",
+    "slug": "kisir-rezept",
+    "name": "kisir-rezept",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/knoblauch-joghurt-dip",
+    "slug": "knoblauch-joghurt-dip",
+    "name": "Knoblauch-Joghurt-Dip",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/joghurt_dip.jpg?v=1748423419"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/dubai-schoko-erdbeeren",
+    "slug": "dubai-schoko-erdbeeren",
+    "name": "Dubai Schoko-Erdbeeren",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_29.png?v=1750066342"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/bulgur-bowl",
+    "slug": "bulgur-bowl",
+    "name": "Bulgur Bowl",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_28.png?v=1750067226"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/schnelle-lahmacun-variante",
+    "slug": "schnelle-lahmacun-variante",
+    "name": "Schnelle Lahmacun Variante",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_30.png?v=1750585774"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/hitschies",
+    "slug": "hitschies",
+    "name": "hitschies",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/schnelle-sucuk-pide",
+    "slug": "schnelle-sucuk-pide",
+    "name": "Schnelle Sucuk Pide",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_31.png?v=1753188715"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/zimt-wrap-rollchen",
+    "slug": "zimt-wrap-rollchen",
+    "name": "Zimt-Wrap-Röllchen",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_32.png?v=1753468724"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/food-facts-baklava",
+    "slug": "food-facts-baklava",
+    "name": "food-facts-baklava",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/joghurt-himbeer-bites",
+    "slug": "joghurt-himbeer-bites",
+    "name": "Joghurt-Himbeer-Bites",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_33.png?v=1754661519"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/cig-kofte",
+    "slug": "cig-kofte",
+    "name": "Cig Köfte",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/CK.jpg?v=1755250430"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/dosengetranke",
+    "slug": "dosengetranke",
+    "name": "dosengetranke",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/mango-joghurt-matcha",
+    "slug": "mango-joghurt-matcha",
+    "name": "Mango-Joghurt Matcha",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_34.png?v=1757848362"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/ol",
+    "slug": "ol",
+    "name": "Öle",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/11722.jpg?v=1758120813"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/kebab-spiesse",
+    "slug": "kebab-spiesse",
+    "name": "Kebab-Spieße",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_35.png?v=1758456182"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/deutschland",
+    "slug": "deutschland",
+    "name": "Deutschland",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Deutschland_Grafik.jpg?v=1758632374"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/pfirsich-joghurt",
+    "slug": "pfirsich-joghurt",
+    "name": "Pfirsich Joghurt",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_38.png?v=1759570844"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/pflege-und-kosmetik",
+    "slug": "pflege-und-kosmetik",
+    "name": "pflege-und-kosmetik",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/halloween-hitschies",
+    "slug": "halloween-hitschies",
+    "name": "halloween-hitschies",
+    "imageUrl": null
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/crunchy-nudelsalat",
+    "slug": "crunchy-nudelsalat",
+    "name": "Crunchy Nudelsalat",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_39_c0128e5d-c269-42d0-9039-979cb6d9c81b.png?v=1761486193"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/apfel-biscoff-crumble",
+    "slug": "apfel-biscoff-crumble",
+    "name": "Apfel Biscoff Crumble",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_40.png?v=1762090270"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/gemuse-durum",
+    "slug": "gemuse-durum",
+    "name": "Gemüse Dürüm",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_41.png?v=1762760710"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/burcu-herzstucke-der-turkischen-kuche",
+    "slug": "burcu-herzstucke-der-turkischen-kuche",
+    "name": "Burcu – Herzstücke der türkischen Küche",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Burcu-Sonnengetrocknete-Tomaten-300g-Burcu-58556325.jpg?v=1763114925"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/sucuk-hotdog",
+    "slug": "sucuk-hotdog",
+    "name": "Sucuk Hotdog",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_42.png?v=1763311479"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/black-weekend-deals-big-packs-bundles",
+    "slug": "black-weekend-deals-big-packs-bundles",
+    "name": "Black Weekend Deals – Big Packs &amp; Bundles",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/CIG_KOeFTE.jpg?v=1763999939"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/milchcreme-kadayif-dessert",
+    "slug": "milchcreme-kadayif-dessert",
+    "name": "Milchcreme &amp; Kadayif Dessert",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/Rezept_Banner_mobil_43.png?v=1764522433"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/sonstiges",
+    "slug": "sonstiges",
+    "name": "Sonstiges",
+    "imageUrl": "https://cdn.shopify.com/s/files/1/0614/6270/8480/collections/4-6.jpg?v=1765967283"
+  },
+  {
+    "url": "https://www.foodpaket.de/collections/yayla-veganuary-bundle",
+    "slug": "yayla-veganuary-bundle",
+    "name": "yayla-veganuary-bundle",
+    "imageUrl": null
+  }
+]

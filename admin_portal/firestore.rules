@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===========================================
+    // PUBLIC READ COLLECTIONS
+    // These contain business data viewable by anyone
+    // ===========================================
+    
+    // BUSINESSES - NEW UNIFIED COLLECTION (Jan 22 Standard)
+    // Replaces butcher_partners with multi-sector support
+    match /businesses/{businessId} {
+      allow read: if true;  // Public marketplace access
+      allow write: if request.auth != null;
+      
+      // Business products - public catalog (subcollection)
+      match /products/{productId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+      
+      // Business categories - public catalog (subcollection)
+      match /categories/{categoryId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+      
+      // Business orders - authenticated only
+      match /orders/{orderId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+    
+    // LEGACY: Butcher partners (DEPRECATED - Jan 22)
+    // Kept for backward compatibility during migration
+    match /butcher_partners/{butcherId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+      
+      // Butcher products - public catalog (subcollection)
+      match /products/{productId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+      
+      // Butcher orders - authenticated only
+      match /orders/{orderId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+    
+    // Butcher products (top-level collection) - public catalog
+    match /butcher_products/{productId} {  
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Master products catalog - public read
+    match /master_products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // ===========================================
+    // AUTHENTICATED ONLY COLLECTIONS
+    // ===========================================
+    
+    // User data - owner only
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Admin collection - admin only
+    match /admins/{adminId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Orders - authenticated users
+    match /butcher_orders/{orderId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // General orders collection
+    match /orders/{orderId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Notifications - authenticated users
+    match /notifications/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Cenaze announcements - public read, admin write
+    match /cenaze/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // ===========================================
+    // KERMES COLLECTIONS
+    // ===========================================
+    
+    // Kermes events - public read
+    match /kermes_events/{eventId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Kermes orders - public read/write for anonymous orders
+    match /kermes_orders/{orderId} {
+      allow read: if true;
+      allow write: if true;  // Anonymous orders allowed
+    }
+    
+    // Kermes group orders
+    match /kermes_group_orders/{groupId} {
+      allow read: if true;
+      allow write: if true;  // Anonymous participation allowed
+    }
+    
+    // Guest profiles - anonim siparişler için kullanıcı profilleri
+    match /guest_profiles/{profileId} {
+      allow read: if true;
+      allow write: if true;  // Anonymous profile creation allowed
+    }
+    
+    // Activity logs - authenticated users
+    match /activity_logs/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Platform transactions - authenticated users
+    match /platform_transactions/{docId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // ===========================================
+    // WILDCARD RULE for other authenticated collections
+    // ===========================================
+    match /{collection}/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "total": 292,
+  "withEAN": 290,
+  "withoutEAN": 2,
+  "withNutrition": 282,
+  "withIngredients": 288,
+  "withImages": 292,
+  "byCategory": {
+    "Alkoholsüz İçecekler": 28,
+    "Balık Konserveleri": 21,
+    "Et Konserveleri": 19,
+    "Hazır Yemekler": 28,
+    "Sebze Konserveleri": 26,
+    "Soslar & Yağlar": 27,
+    "Tahıllar & Makarna": 30,
+    "Atıştırmalıklar": 32,
+    "Süt Ürünleri & Unlu Mamüller": 17,
+    "Şekerlemeler & Tatlılar": 23,
+    "Havyar & Deniz Ürünleri": 17,
+    "Et & Sosis": 4,
+    "Süt & Süt Ürünleri": 8,
+    "Kozmetik": 7,
+    "Avantajlı Paketler": 5
+  },
+  "imported": 292,
+  "errors": 0,
+  "importedAt": "2026-01-19T05:23:52.411Z",
+  "dryRun": true
+}

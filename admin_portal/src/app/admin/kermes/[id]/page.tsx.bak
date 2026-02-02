@@ -1,0 +1,926 @@
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy, Timestamp, where, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAdmin } from '@/components/providers/AdminProvider';
+import { KERMES_MENU_CATALOG, KermesMenuItemData } from '@/lib/kermes_menu_catalog';
+
+// Etkinlik özellikleri
+const EVENT_FEATURES = [
+    { id: 'family_area', label: '👨‍👩‍👧‍👦 Aile Bölümü' },
+    { id: 'parking', label: '🅿️ Otopark' },
+    { id: 'accessible', label: '♿ Engelli Erişimi' },
+    { id: 'kids_area', label: '🎠 Çocuk Alanı' },
+    { id: 'outdoor', label: '🌳 Açık Alan' },
+    { id: 'indoor', label: '🏠 Kapalı Alan' },
+    { id: 'live_music', label: '🎵 Canlı Müzik' },
+    { id: 'prayer_room', label: '🕌 Namaz Alanı' },
+    { id: 'vegetarian', label: '🥗 Vejetaryen' },
+    { id: 'halal', label: '☪️ Helal' },
+    { id: 'free_entry', label: '🎟️ Ücretsiz Giriş' },
+    { id: 'wifi', label: '📶 WiFi' },
+];
+
+// Varsayılan kategoriler (ilk yüklemede Firebase'e yazılacak)
+const DEFAULT_CATEGORIES = ['Ana Yemek', 'Çorba', 'Tatlı', 'İçecek', 'Aperatif', 'Grill', 'Diğer'];
+
+interface KermesEvent {
+    id: string;
+    title: string;
+    city?: string;
+    address?: string;
+    location?: string;
+    date?: any;
+    startDate?: any;
+    endDate?: any;
+    openingTime?: string;
+    closingTime?: string;
+    organizerId?: string;
+    organizationName?: string;
+    isActive?: boolean;
+    sponsor?: 'tuna' | 'akdeniz_toros' | 'none';
+    contactName?: string;
+    contactPhone?: string;
+    features?: string[];
+    customCategories?: string[]; // Dinamik kategoriler
+}
+
+interface KermesProduct {
+    id: string;
+    masterSku: string;
+    name: string;
+    price: number;
+    category: string;
+    description?: string;
+    isAvailable: boolean;
+    isCustom?: boolean;
+    sourceType?: 'master' | 'kermes_catalog' | 'custom';
+    barcode?: string;
+}
+
+interface MasterProduct {
+    id: string;
+    name: string;
+    barcode?: string;
+    category?: string;
+    defaultPrice?: number;
+    unit?: string;
+}
+
+export default function KermesDetailPage() {
+    const params = useParams();
+    const router = useRouter();
+    const { admin, loading: adminLoading } = useAdmin();
+    const kermesId = params.id as string;
+
+    const [kermes, setKermes] = useState<KermesEvent | null>(null);
+    const [products, setProducts] = useState<KermesProduct[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [activeTab, setActiveTab] = useState<'bilgi' | 'menu'>('bilgi');
+
+    // Edit mode
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState({
+        title: '', date: '', endDate: '', openingTime: '', closingTime: '', address: '',
+        contactName: '', contactPhone: '',
+    });
+    const [editFeatures, setEditFeatures] = useState<string[]>([]);
+
+    // Categories - dinamik
+    const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+
+    // Add product modal
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [modalView, setModalView] = useState<'select' | 'catalog' | 'master' | 'custom'>('select');
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [customProduct, setCustomProduct] = useState({ name: '', category: 'Ana Yemek', price: 0 });
+
+    // Master katalog
+    const [masterProducts, setMasterProducts] = useState<MasterProduct[]>([]);
+    const [loadingMaster, setLoadingMaster] = useState(false);
+
+    // Ürün ekleme öncesi düzenleme modalı
+    const [editBeforeAdd, setEditBeforeAdd] = useState<{
+        item: KermesMenuItemData | MasterProduct | null;
+        type: 'catalog' | 'master';
+        price: number;
+        category: string;
+    } | null>(null);
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
+
+    const loadKermes = useCallback(async () => {
+        if (!kermesId) return;
+        setLoading(true);
+        try {
+            const kermesDoc = await getDoc(doc(db, 'kermes_events', kermesId));
+            if (!kermesDoc.exists()) {
+                showToast('Kermes bulunamadı', 'error');
+                router.push('/admin/business');
+                return;
+            }
+            const data = { id: kermesDoc.id, ...kermesDoc.data() } as KermesEvent;
+            setKermes(data);
+
+            // Dinamik kategorileri yükle
+            if (data.customCategories && data.customCategories.length > 0) {
+                setCategories([...DEFAULT_CATEGORIES, ...data.customCategories.filter(c => !DEFAULT_CATEGORIES.includes(c))]);
+            }
+
+            const startD = data.date?.toDate?.() || data.startDate?.toDate?.() || null;
+            const endD = data.endDate?.toDate?.() || null;
+            setEditForm({
+                title: data.title || '',
+                date: startD ? startD.toISOString().split('T')[0] : '',
+                endDate: endD ? endD.toISOString().split('T')[0] : '',
+                openingTime: data.openingTime || '',
+                closingTime: data.closingTime || '',
+                address: data.address || '',
+                contactName: data.contactName || '',
+                contactPhone: data.contactPhone || '',
+            });
+            setEditFeatures(data.features || []);
+
+            const productsQuery = query(collection(db, 'kermes_events', kermesId, 'products'), orderBy('name'));
+            const productsSnapshot = await getDocs(productsQuery);
+            setProducts(productsSnapshot.docs.map(d => ({ id: d.id, ...d.data() } as KermesProduct)));
+        } catch (error) {
+            console.error('Error loading kermes:', error);
+            showToast('Yükleme hatası', 'error');
+        } finally {
+            setLoading(false);
+        }
+    }, [kermesId, router]);
+
+    // Master katalog ürünlerini yükle
+    const loadMasterProducts = async () => {
+        setLoadingMaster(true);
+        try {
+            const q = query(collection(db, 'products'), orderBy('name'));
+            const snapshot = await getDocs(q);
+            setMasterProducts(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as MasterProduct)));
+        } catch (error) {
+            console.error('Error loading master products:', error);
+        } finally {
+            setLoadingMaster(false);
+        }
+    };
+
+    // Global kategorileri Firebase'den yükle
+    const loadCategories = useCallback(async () => {
+        try {
+            const q = query(collection(db, 'kermes_categories'), orderBy('order'));
+            const snapshot = await getDocs(q);
+            const firebaseCats = snapshot.docs.map(d => d.data().name as string);
+
+            // Default kategorileri Firebase'dekilerle birleştir
+            const allCats = [...DEFAULT_CATEGORIES];
+            firebaseCats.forEach(cat => {
+                if (!allCats.includes(cat)) {
+                    allCats.push(cat);
+                }
+            });
+            setCategories(allCats);
+
+            // Eğer Firebase'de kategori yoksa, default'ları kaydet
+            if (snapshot.empty) {
+                for (let i = 0; i < DEFAULT_CATEGORIES.length; i++) {
+                    const catName = DEFAULT_CATEGORIES[i];
+                    const categoryId = catName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_ğüşöçı]/g, '');
+                    await setDoc(doc(db, 'kermes_categories', categoryId), {
+                        name: catName, id: categoryId, order: i, createdAt: new Date(),
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    }, []);
+
+    useEffect(() => { loadKermes(); loadCategories(); }, [loadKermes, loadCategories]);
+
+    const toggleActiveStatus = async () => {
+        if (!kermes) return;
+        try {
+            await updateDoc(doc(db, 'kermes_events', kermesId), { isActive: !kermes.isActive });
+            setKermes({ ...kermes, isActive: !kermes.isActive });
+            showToast(kermes.isActive ? 'Kermes kapatıldı' : 'Kermes aktif edildi');
+        } catch (error) {
+            showToast('Hata oluştu', 'error');
+        }
+    };
+
+    const handleSaveEdits = async () => {
+        if (!kermes) return;
+        setSaving(true);
+        try {
+            const updateData: any = {
+                title: editForm.title,
+                openingTime: editForm.openingTime || null,
+                closingTime: editForm.closingTime || null,
+                address: editForm.address || null,
+                contactName: editForm.contactName || null,
+                contactPhone: editForm.contactPhone || null,
+                features: editFeatures,
+                updatedAt: new Date(),
+            };
+            if (editForm.date) updateData.date = Timestamp.fromDate(new Date(editForm.date));
+            if (editForm.endDate) updateData.endDate = Timestamp.fromDate(new Date(editForm.endDate));
+            await updateDoc(doc(db, 'kermes_events', kermesId), updateData);
+            setKermes({ ...kermes, ...updateData, title: editForm.title, contactName: editForm.contactName, contactPhone: editForm.contactPhone, features: editFeatures });
+            setIsEditing(false);
+            showToast('✅ Kaydedildi');
+        } catch (error) {
+            showToast('Kaydetme hatası', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const toggleFeature = (featureId: string) => {
+        setEditFeatures(prev => prev.includes(featureId) ? prev.filter(f => f !== featureId) : [...prev, featureId]);
+    };
+
+    // Yeni kategori ekle - Firebase'e global olarak kaydet
+    const handleAddCategory = async () => {
+        if (!newCategoryName.trim()) return;
+        const catName = newCategoryName.trim();
+        if (categories.includes(catName)) {
+            showToast('Bu kategori zaten var', 'error');
+            return;
+        }
+
+        try {
+            // Firebase'e global kategori olarak kaydet
+            const categoryId = catName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+            await setDoc(doc(db, 'kermes_categories', categoryId), {
+                name: catName,
+                id: categoryId,
+                createdAt: new Date(),
+                createdBy: admin?.id,
+                order: categories.length,
+            });
+
+            setCategories([...categories, catName]);
+            setNewCategoryName('');
+            setShowCategoryModal(false);
+            showToast(`✅ "${catName}" kategorisi eklendi`);
+        } catch (error) {
+            console.error('Error adding category:', error);
+            showToast('Kategori eklenemedi', 'error');
+        }
+    };
+
+    // Katalogdan ürün seç ve düzenleme modalını aç
+    const handleSelectFromCatalog = (item: KermesMenuItemData) => {
+        if (products.some(p => p.masterSku === item.sku)) {
+            showToast('Zaten menüde', 'error');
+            return;
+        }
+        setEditBeforeAdd({
+            item,
+            type: 'catalog',
+            price: item.defaultPrice,
+            category: item.category,
+        });
+    };
+
+    // Düzenleme modalından onaylanınca ekle
+    const handleConfirmAdd = async () => {
+        if (!editBeforeAdd?.item) return;
+        setSaving(true);
+        try {
+            const item = editBeforeAdd.item;
+            if (editBeforeAdd.type === 'catalog') {
+                const catalogItem = item as KermesMenuItemData;
+                const productData = {
+                    masterSku: catalogItem.sku, name: catalogItem.name, description: catalogItem.description || null,
+                    category: editBeforeAdd.category, price: editBeforeAdd.price, isAvailable: true,
+                    isCustom: false, sourceType: 'kermes_catalog', createdAt: new Date(), createdBy: admin?.id,
+                };
+                const docRef = await addDoc(collection(db, 'kermes_events', kermesId, 'products'), productData);
+                setProducts([...products, { id: docRef.id, ...productData } as KermesProduct]);
+                showToast(`✅ ${catalogItem.name} eklendi`);
+            } else {
+                const masterItem = item as MasterProduct;
+                const productData = {
+                    masterSku: masterItem.id, name: masterItem.name, description: undefined,
+                    category: editBeforeAdd.category, price: editBeforeAdd.price, isAvailable: true,
+                    isCustom: false, sourceType: 'master' as const, barcode: masterItem.barcode || undefined,
+                    createdAt: new Date(), createdBy: admin?.id,
+                };
+                const docRef = await addDoc(collection(db, 'kermes_events', kermesId, 'products'), productData);
+                setProducts([...products, { id: docRef.id, ...productData } as KermesProduct]);
+                showToast(`✅ ${masterItem.name} eklendi`);
+            }
+            setEditBeforeAdd(null);
+        } catch (error) {
+            showToast('Hata', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // Master katalogdan ürün seç ve düzenleme modalını aç
+    const handleSelectFromMaster = (item: MasterProduct) => {
+        if (products.some(p => p.masterSku === item.id)) {
+            showToast('Zaten menüde', 'error');
+            return;
+        }
+        setEditBeforeAdd({
+            item,
+            type: 'master',
+            price: item.defaultPrice || 0,
+            category: item.category || 'Diğer',
+        });
+    };
+
+    const handleCreateCustom = async () => {
+        if (!customProduct.name.trim() || customProduct.price <= 0) {
+            showToast('Ürün adı ve fiyat gerekli', 'error');
+            return;
+        }
+        setSaving(true);
+        try {
+            const sku = `CUSTOM-${kermesId.slice(0, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+            const productData = {
+                masterSku: sku, name: customProduct.name.trim(), category: customProduct.category,
+                price: customProduct.price, isAvailable: true, isCustom: true, sourceType: 'custom',
+                createdAt: new Date(), createdBy: admin?.id,
+            };
+            const docRef = await addDoc(collection(db, 'kermes_events', kermesId, 'products'), productData);
+            setProducts([...products, { id: docRef.id, ...productData } as KermesProduct]);
+            setCustomProduct({ name: '', category: 'Ana Yemek', price: 0 });
+            setShowAddModal(false);
+            showToast(`✅ "${customProduct.name}" oluşturuldu`);
+        } catch (error) {
+            showToast('Hata', 'error');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleToggleAvailability = async (product: KermesProduct) => {
+        try {
+            await updateDoc(doc(db, 'kermes_events', kermesId, 'products', product.id), { isAvailable: !product.isAvailable });
+            setProducts(products.map(p => p.id === product.id ? { ...p, isAvailable: !p.isAvailable } : p));
+        } catch (error) {
+            showToast('Hata', 'error');
+        }
+    };
+
+    const handleDeleteProduct = async (product: KermesProduct) => {
+        if (!confirm(`"${product.name}" kaldırılsın mı?`)) return;
+        try {
+            await deleteDoc(doc(db, 'kermes_events', kermesId, 'products', product.id));
+            setProducts(products.filter(p => p.id !== product.id));
+            showToast('Kaldırıldı');
+        } catch (error) {
+            showToast('Hata', 'error');
+        }
+    };
+
+    const filteredCatalog = Object.values(KERMES_MENU_CATALOG).filter(item => {
+        const matchesCat = !selectedCategory || item.category === selectedCategory;
+        const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCat && matchesSearch;
+    });
+
+    const filteredMaster = masterProducts.filter(item => {
+        const matchesSearch = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (item.barcode && item.barcode.includes(searchQuery));
+        return matchesSearch;
+    });
+
+    const productsByCategory = products.reduce((acc, p) => {
+        const cat = p.category || 'Diğer';
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(p);
+        return acc;
+    }, {} as Record<string, KermesProduct[]>);
+
+    const getCategoryEmoji = (cat: string) => {
+        const e: Record<string, string> = { 'Ana Yemek': '🍖', 'Çorba': '🍲', 'Tatlı': '🍰', 'İçecek': '🥤', 'Aperatif': '🥙', 'Diğer': '📦' };
+        return e[cat] || '📦';
+    };
+
+    const formatDate = (date: any) => {
+        if (!date) return '-';
+        const d = date.toDate ? date.toDate() : new Date(date);
+        return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    };
+
+    const getFeatureLabel = (featureId: string) => {
+        const f = EVENT_FEATURES.find(ef => ef.id === featureId);
+        return f?.label || featureId;
+    };
+
+    if (adminLoading || loading) {
+        return (
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+            </div>
+        );
+    }
+
+    if (!kermes) {
+        return (
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+                <p className="text-white">Kermes bulunamadı</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-900 p-6">
+            {/* Toast */}
+            {toast && (
+                <div className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'} text-white`}>
+                    <span>{toast.type === 'success' ? '✅' : '❌'}</span>
+                    <span>{toast.message}</span>
+                </div>
+            )}
+
+            <div className="max-w-5xl mx-auto">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                        <Link href="/admin/business" className="text-gray-400 hover:text-white">← Geri</Link>
+                        <div>
+                            <h1 className="text-xl font-bold text-white flex items-center gap-2">🎪 {kermes.title}</h1>
+                            {kermes.organizationName && <p className="text-gray-400 text-sm">🕌 {kermes.organizationName}</p>}
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {kermes.sponsor === 'tuna' && <span className="px-2 py-1 bg-blue-600/30 text-blue-400 rounded text-xs">🐟 TUNA</span>}
+                        {kermes.sponsor === 'akdeniz_toros' && <span className="px-2 py-1 bg-orange-600/30 text-orange-400 rounded text-xs">🏔️ TOROS</span>}
+                        <button onClick={toggleActiveStatus}
+                            className={`px-3 py-1 rounded-lg text-sm font-medium ${kermes.isActive ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                            {kermes.isActive ? '✅ Aktif' : '⏸️ Kapalı'}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Tabs */}
+                <div className="flex gap-2 mb-6 bg-gray-800 p-1 rounded-xl w-fit">
+                    <button onClick={() => setActiveTab('bilgi')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'bilgi' ? 'bg-pink-600 text-white' : 'text-gray-400 hover:text-white'}`}>
+                        📋 Bilgiler
+                    </button>
+                    <button onClick={() => setActiveTab('menu')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === 'menu' ? 'bg-pink-600 text-white' : 'text-gray-400 hover:text-white'}`}>
+                        🍽️ Menü ({products.length})
+                    </button>
+                </div>
+
+                {/* Tab Content - Bilgi */}
+                {activeTab === 'bilgi' && (
+                    <div className="space-y-6">
+                        {/* Main Info Card */}
+                        <div className="bg-gray-800 rounded-xl p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-white font-bold">📋 Kermes Bilgileri</h3>
+                                {!isEditing ? (
+                                    <button onClick={() => setIsEditing(true)} className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600">
+                                        ✏️ Düzenle
+                                    </button>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <button onClick={() => setIsEditing(false)} className="px-3 py-1 bg-gray-600 text-white rounded-lg text-sm">İptal</button>
+                                        <button onClick={handleSaveEdits} disabled={saving} className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm disabled:opacity-50">
+                                            {saving ? '...' : '✓ Kaydet'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {isEditing ? (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="md:col-span-2">
+                                            <label className="text-gray-400 text-xs block mb-1">Kermes Adı</label>
+                                            <input type="text" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
+                                        </div>
+                                        <div>
+                                            <label className="text-gray-400 text-xs block mb-1">Başlangıç Tarihi</label>
+                                            <input type="date" value={editForm.date} onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
+                                        </div>
+                                        <div>
+                                            <label className="text-gray-400 text-xs block mb-1">Bitiş Tarihi</label>
+                                            <input type="date" value={editForm.endDate} onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
+                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
+                                        </div>
+                                        <div>
+                                            <label className="text-gray-400 text-xs block mb-1">Açılış Saati</label>
+                                            <input type="time" value={editForm.openingTime} onChange={(e) => setEditForm({ ...editForm, openingTime: e.target.value })}
+                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
+                                        </div>
+                                        <div>
+                                            <label className="text-gray-400 text-xs block mb-1">Kapanış Saati</label>
+                                            <input type="time" value={editForm.closingTime} onChange={(e) => setEditForm({ ...editForm, closingTime: e.target.value })}
+                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="text-gray-400 text-xs block mb-1">Adres</label>
+                                            <input type="text" value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
+                                        </div>
+                                    </div>
+
+                                    {/* Features in Edit Mode */}
+                                    <div>
+                                        <label className="text-gray-400 text-xs block mb-2">Etkinlik Özellikleri</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {EVENT_FEATURES.map(f => (
+                                                <button key={f.id} type="button" onClick={() => toggleFeature(f.id)}
+                                                    className={`px-3 py-1 rounded-full text-xs font-medium transition ${editFeatures.includes(f.id) ? 'bg-pink-600 text-white' : 'bg-gray-700 text-gray-400'
+                                                        }`}>
+                                                    {f.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-500">📅 Tarih:</span>
+                                            <span className="text-white">{formatDate(kermes.date || kermes.startDate)}</span>
+                                        </div>
+                                        {kermes.endDate && (
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">📅 Bitiş:</span>
+                                                <span className="text-white">{formatDate(kermes.endDate)}</span>
+                                            </div>
+                                        )}
+                                        {kermes.openingTime && (
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-500">🕐 Saat:</span>
+                                                <span className="text-white">{kermes.openingTime} - {kermes.closingTime || '?'}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between text-sm md:col-span-2">
+                                            <span className="text-gray-500">📍 Adres:</span>
+                                            <span className="text-white">{kermes.address || kermes.city || '-'}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Features Display */}
+                                    {kermes.features && kermes.features.length > 0 && (
+                                        <div className="pt-4 border-t border-gray-700">
+                                            <span className="text-gray-500 text-sm block mb-2">✨ Özellikler:</span>
+                                            <div className="flex flex-wrap gap-2">
+                                                {kermes.features.map(fId => (
+                                                    <span key={fId} className="px-3 py-1 bg-pink-600/20 text-pink-400 rounded-full text-xs">
+                                                        {getFeatureLabel(fId)}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Contact Person Card */}
+                        <div className="bg-gray-800 rounded-xl p-6">
+                            <h3 className="text-white font-bold mb-4">👤 Yetkili Kişi</h3>
+                            {isEditing ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-gray-400 text-xs block mb-1">Yetkili Adı</label>
+                                        <input type="text" value={editForm.contactName} onChange={(e) => setEditForm({ ...editForm, contactName: e.target.value })}
+                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" placeholder="Kermesten sorumlu kişi" />
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-400 text-xs block mb-1">Telefon Numarası</label>
+                                        <input type="tel" value={editForm.contactPhone} onChange={(e) => setEditForm({ ...editForm, contactPhone: e.target.value })}
+                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" placeholder="+49 123 456 789" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <span className="text-gray-500">👤 İsim:</span>
+                                        <span className="text-white">{kermes.contactName || '-'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-sm">
+                                        <span className="text-gray-500">📞 Telefon:</span>
+                                        <span className="text-white">{kermes.contactPhone || '-'}</span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Tab Content - Menu */}
+                {activeTab === 'menu' && (
+                    <div className="bg-gray-800 rounded-xl p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-white font-bold">🍽️ Kermes Menüsü</h3>
+                            <div className="flex gap-2">
+                                <button onClick={() => setShowCategoryModal(true)}
+                                    className="px-3 py-2 bg-purple-600/20 text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-600/40">
+                                    ➕ Kategori Ekle
+                                </button>
+                                <button onClick={() => { setShowAddModal(true); setModalView('select'); }}
+                                    className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-sm font-medium">
+                                    ➕ Ürün Ekle
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Kategori Tab'ları - TÜM Kategoriler */}
+                        <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-gray-700">
+                            <button
+                                onClick={() => setSelectedCategory('')}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${selectedCategory === ''
+                                    ? 'bg-pink-600 text-white'
+                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    }`}>
+                                🍽️ Tümü ({products.length})
+                            </button>
+                            {categories.map(category => {
+                                const count = productsByCategory[category]?.length || 0;
+                                return (
+                                    <button
+                                        key={category}
+                                        onClick={() => setSelectedCategory(category)}
+                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${selectedCategory === category
+                                            ? 'bg-pink-600 text-white'
+                                            : count > 0
+                                                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                                : 'bg-gray-800 text-gray-500 hover:bg-gray-700 border border-gray-600 border-dashed'
+                                            }`}>
+                                        {getCategoryEmoji(category)} {category} ({count})
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {products.length === 0 ? (
+                            <div className="text-center py-8">
+                                <p className="text-4xl mb-3">🍽️</p>
+                                <p className="text-gray-400 mb-4">Henüz menüde ürün yok</p>
+                                <button onClick={() => { setShowAddModal(true); setModalView('select'); }}
+                                    className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-sm">
+                                    İlk Ürünü Ekle
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {Object.entries(productsByCategory)
+                                    .filter(([category]) => !selectedCategory || category === selectedCategory)
+                                    .map(([category, items]) => (
+                                        <div key={category}>
+                                            <h4 className="text-pink-400 text-sm font-medium mb-2">{getCategoryEmoji(category)} {category}</h4>
+                                            <div className="space-y-2">
+                                                {items.map((product) => (
+                                                    <div key={product.id} className={`bg-gray-700 rounded-lg p-3 flex items-center justify-between ${!product.isAvailable ? 'opacity-50' : ''}`}>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-white font-medium">{product.name}</span>
+                                                            {product.isCustom && <span className="px-2 py-0.5 bg-purple-600/30 text-purple-400 rounded text-xs">Özel</span>}
+                                                            {product.sourceType === 'master' && <span className="px-2 py-0.5 bg-blue-600/30 text-blue-400 rounded text-xs">Barkod</span>}
+                                                            <span className="text-green-400 font-bold">{product.price.toFixed(2)} €</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <button onClick={() => handleToggleAvailability(product)}
+                                                                className={`px-2 py-1 rounded text-xs ${product.isAvailable ? 'bg-green-600/30 text-green-400' : 'bg-red-600/30 text-red-400'}`}>
+                                                                {product.isAvailable ? '✓ Mevcut' : '✕ Tükendi'}
+                                                            </button>
+                                                            <button onClick={() => handleDeleteProduct(product)} className="px-2 py-1 bg-red-600/20 text-red-400 hover:bg-red-600/40 rounded text-xs">🗑️</button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Category Modal */}
+            {showCategoryModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-2xl w-full max-w-md p-6">
+                        <h2 className="text-lg font-bold text-white mb-4">➕ Yeni Kategori Ekle</h2>
+                        <input
+                            type="text"
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            placeholder="Kategori adı (örn: Salata)"
+                            className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 mb-4"
+                            autoFocus
+                        />
+                        <div className="flex gap-2">
+                            <button onClick={() => setShowCategoryModal(false)} className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg">İptal</button>
+                            <button onClick={handleAddCategory} disabled={!newCategoryName.trim()} className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg disabled:opacity-50">Ekle</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Product Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+                        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {modalView !== 'select' && <button onClick={() => setModalView('select')} className="text-gray-400 hover:text-white">←</button>}
+                                <h2 className="text-lg font-bold text-white">
+                                    {modalView === 'select' && '➕ Ürün Ekle'}
+                                    {modalView === 'catalog' && '🎪 Kermes Kataloğu'}
+                                    {modalView === 'master' && '📦 Master Katalog (Barkodlu)'}
+                                    {modalView === 'custom' && '✨ Özel Ürün'}
+                                </h2>
+                            </div>
+                            <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4">
+                            {modalView === 'select' && (
+                                <div className="grid grid-cols-3 gap-4">
+                                    <button onClick={() => setModalView('catalog')} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
+                                        <div className="text-3xl mb-2">🎪</div>
+                                        <h3 className="text-white font-bold">Kermes Kataloğu</h3>
+                                        <p className="text-gray-400 text-sm">Hazır yemek listesi</p>
+                                    </button>
+                                    <button onClick={() => { setModalView('master'); loadMasterProducts(); }} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
+                                        <div className="text-3xl mb-2">📦</div>
+                                        <h3 className="text-white font-bold">Master Katalog</h3>
+                                        <p className="text-gray-400 text-sm">Barkodlu ürünler</p>
+                                    </button>
+                                    <button onClick={() => setModalView('custom')} className="bg-gray-700 hover:bg-gray-600 rounded-xl p-6 text-left">
+                                        <div className="text-3xl mb-2">✨</div>
+                                        <h3 className="text-white font-bold">Özel Ürün</h3>
+                                        <p className="text-gray-400 text-sm">Kendi ürününüzü ekleyin</p>
+                                    </button>
+                                </div>
+                            )}
+
+                            {modalView === 'catalog' && (
+                                <>
+                                    <div className="flex gap-2 mb-4">
+                                        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Ara..."
+                                            className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm" />
+                                        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}
+                                            className="px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm">
+                                            <option value="">Tümü</option>
+                                            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                                        {filteredCatalog.map((item) => {
+                                            const isAdded = products.some(p => p.masterSku === item.sku);
+                                            return (
+                                                <div key={item.sku} className={`bg-gray-700 rounded-lg p-3 flex items-center justify-between ${isAdded ? 'opacity-50' : ''}`}>
+                                                    <div>
+                                                        <span className="text-white">{item.name}</span>
+                                                        <span className="text-gray-500 text-sm ml-2">{item.category}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-green-400 font-bold">{item.defaultPrice.toFixed(2)} €</span>
+                                                        {isAdded ? <span className="text-gray-400 text-xs">✓</span> : (
+                                                            <button onClick={() => handleSelectFromCatalog(item)} disabled={saving}
+                                                                className="px-3 py-1 bg-pink-600 hover:bg-pink-500 text-white rounded text-sm disabled:opacity-50">Ekle</button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </>
+                            )}
+
+                            {modalView === 'master' && (
+                                <>
+                                    <div className="mb-4">
+                                        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Ürün adı veya barkod ile ara..."
+                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm" />
+                                    </div>
+                                    {loadingMaster ? (
+                                        <div className="text-center py-8 text-gray-400">Yükleniyor...</div>
+                                    ) : filteredMaster.length === 0 ? (
+                                        <div className="text-center py-8 text-gray-400">
+                                            {masterProducts.length === 0 ? 'Master katalog boş' : 'Sonuç bulunamadı'}
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                                            {filteredMaster.map((item) => {
+                                                const isAdded = products.some(p => p.masterSku === item.id);
+                                                return (
+                                                    <div key={item.id} className={`bg-gray-700 rounded-lg p-3 flex items-center justify-between ${isAdded ? 'opacity-50' : ''}`}>
+                                                        <div>
+                                                            <span className="text-white">{item.name}</span>
+                                                            {item.barcode && <span className="text-gray-500 text-xs ml-2">#{item.barcode}</span>}
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                            {item.defaultPrice && <span className="text-green-400 font-bold">{item.defaultPrice.toFixed(2)} €</span>}
+                                                            {isAdded ? <span className="text-gray-400 text-xs">✓</span> : (
+                                                                <button onClick={() => handleSelectFromMaster(item)} disabled={saving}
+                                                                    className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm disabled:opacity-50">Ekle</button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {modalView === 'custom' && (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-gray-400 text-sm block mb-1">Ürün Adı *</label>
+                                        <input type="text" value={customProduct.name} onChange={(e) => setCustomProduct({ ...customProduct, name: e.target.value })}
+                                            placeholder="örn: Ev Yapımı Baklava" className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" />
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-400 text-sm block mb-1">Kategori</label>
+                                        <select value={customProduct.category} onChange={(e) => setCustomProduct({ ...customProduct, category: e.target.value })}
+                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600">
+                                            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-gray-400 text-sm block mb-1">Fiyat (€) *</label>
+                                        <input type="number" step="0.50" min="0" value={customProduct.price || ''} onChange={(e) => setCustomProduct({ ...customProduct, price: parseFloat(e.target.value) || 0 })}
+                                            placeholder="0.00" className="w-full px-3 py-2 bg-gray-700 text-white text-xl font-bold rounded-lg border border-gray-600" />
+                                    </div>
+                                    <button onClick={handleCreateCustom} disabled={saving || !customProduct.name.trim() || customProduct.price <= 0}
+                                        className="w-full py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-lg font-medium disabled:opacity-50">
+                                        {saving ? '⏳ Oluşturuluyor...' : '✨ Oluştur ve Ekle'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+
+            {/* Ürün Ekleme Öncesi Düzenleme Modalı */ }
+    {
+        editBeforeAdd && (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]">
+                <div className="bg-gray-800 rounded-2xl w-full max-w-md p-6">
+                    <h2 className="text-lg font-bold text-white mb-4">
+                        ✏️ Ürün Ekle: {editBeforeAdd.type === 'catalog'
+                            ? (editBeforeAdd.item as KermesMenuItemData).name
+                            : (editBeforeAdd.item as MasterProduct).name}
+                    </h2>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-gray-400 text-sm block mb-2">Menü Kategorisi</label>
+                            <select
+                                value={editBeforeAdd.category}
+                                onChange={(e) => setEditBeforeAdd({ ...editBeforeAdd, category: e.target.value })}
+                                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600">
+                                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-gray-400 text-sm block mb-2">Kermes Fiyatı (€)</label>
+                            <input type="number" step="0.50" min="0" value={editBeforeAdd.price || ''}
+                                onChange={(e) => setEditBeforeAdd({ ...editBeforeAdd, price: parseFloat(e.target.value) || 0 })}
+                                className="w-full px-4 py-3 bg-gray-700 text-white text-xl font-bold rounded-lg border border-gray-600" placeholder="0.00" />
+                            <p className="text-gray-500 text-xs mt-1">
+                                Varsayılan: {editBeforeAdd.type === 'catalog'
+                                    ? (editBeforeAdd.item as KermesMenuItemData).defaultPrice.toFixed(2)
+                                    : ((editBeforeAdd.item as MasterProduct).defaultPrice || 0).toFixed(2)} €
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                        <button onClick={() => setEditBeforeAdd(null)}
+                            className="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-lg font-medium">İptal</button>
+                        <button onClick={handleConfirmAdd} disabled={saving || editBeforeAdd.price <= 0}
+                            className="flex-1 px-4 py-3 bg-pink-600 hover:bg-pink-500 text-white rounded-lg font-medium disabled:opacity-50">
+                            {saving ? '⏳ Ekleniyor...' : '✅ Menüye Ekle'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+        </div >
+    );
+}

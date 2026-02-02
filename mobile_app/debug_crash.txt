@@ -1,0 +1,14 @@
+Launching lib/main.dart on iPhone 17 Pro Metin in debug mode...
+Automatically signing iOS for device deployment using specified development team in Xcode project: Y834B2NJY9
+Running Xcode build...                                          
+Xcode build done.                                           269,9s
+Installing and launching...                                     
+You may be prompted to give access to control Xcode. Flutter uses Xcode to run your app. If access is not allowed, you can change this through your Settings > Privacy & Security > Automation.
+Xcode is taking longer than expected to start debugging the app. If the issue persists, try closing Xcode and re-running your Flutter command.
+Error starting debug session in Xcode: Timed out waiting for CONFIGURATION_BUILD_DIR to update.
+Could not run build/ios/iphoneos/Runner.app on 00008150-000808603C52401C.
+Try launching Xcode and selecting "Product > Run" to fix the problem:
+  open ios/Runner.xcworkspace
+
+Installing and launching...                                       135,6s
+Error launching application on iPhone 17 Pro Metin.

@@ -1,0 +1,59 @@
+{
+  "@@locale": "tr",
+  
+  "appName": "LOKMA",
+  "search": "Ara",
+  "searchHint": "Yemek, restoran veya market ara...",
+  "searchNoResults": "Sonuç bulunamadı",
+  "searchTryDifferent": "Farklı bir arama terimi deneyin",
+  "searching": "Aranıyor...",
+  "popularSearches": "Popüler Aramalar",
+  "showMore": "Daha Fazla Göster",
+  
+  "maxDistance": "Maksimum Mesafe",
+  "kmUnit": "km",
+  
+  "categoryButcher": "Kasap",
+  "categoryMarket": "Market",
+  "categoryRestaurant": "Restoran",
+  "categoryFlorist": "Çiçekçi",
+  "categoryKermes": "Kermes",
+  "categoryPastry": "Pastane",
+  "categoryCoffee": "Kahve",
+  "categoryImbiss": "İmbiss",
+  
+  "businesses": "İşletmeler",
+  "products": "Ürünler",
+  "categories": "Kategoriler",
+  
+  "order": "Sipariş",
+  "go": "Git",
+  "orderAgain": "Tekrar Sipariş",
+  
+  "profile": "Profil",
+  "welcome": "Hoş Geldiniz",
+  "loginPrompt": "Siparişlerinizi takip etmek ve özel fırsatlardan yararlanmak için giriş yapın.",
+  "loginWithPhone": "Telefon ile Giriş",
+  "loginWithEmail": "E-posta ile Giriş",
+  "loginWithApple": "Apple ile Giriş",
+  "loginWithGoogle": "Google ile Giriş",
+  "logout": "Çıkış Yap",
+  
+  "myOrders": "Siparişlerim",
+  "myFavorites": "Favorilerim",
+  "myAddresses": "Adreslerim",
+  "paymentMethods": "Ödeme Yöntemleri",
+  "notifications": "Bildirimler",
+  "help": "Yardım",
+  
+  "home": "Ana Sayfa",
+  "orders": "Siparişler",
+  
+  "comingSoon": "Yakında aktif olacak",
+  
+  "sendFlowers": "Çiçek Gönder",
+  "sameDay": "Aynı Gün Teslimat",
+  "recipientName": "Alıcı Adı",
+  "recipientPhone": "Alıcı Telefonu",
+  "cardMessage": "Kart Mesajı"
+}

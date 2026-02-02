@@ -1,0 +1,59 @@
+{
+  "@@locale": "es",
+  
+  "appName": "LOKMA",
+  "search": "Buscar",
+  "searchHint": "Buscar comida, restaurante o mercado...",
+  "searchNoResults": "No se encontraron resultados",
+  "searchTryDifferent": "Prueba con un término de búsqueda diferente",
+  "searching": "Buscando...",
+  "popularSearches": "Búsquedas populares",
+  "showMore": "Mostrar más",
+  
+  "maxDistance": "Distancia máxima",
+  "kmUnit": "km",
+  
+  "categoryButcher": "Carnicería",
+  "categoryMarket": "Mercado",
+  "categoryRestaurant": "Restaurante",
+  "categoryFlorist": "Floristería",
+  "categoryKermes": "Feria",
+  "categoryPastry": "Pastelería",
+  "categoryCoffee": "Café",
+  "categoryImbiss": "Comida rápida",
+  
+  "businesses": "Negocios",
+  "products": "Productos",
+  "categories": "Categorías",
+  
+  "order": "Pedir",
+  "go": "Ir",
+  "orderAgain": "Pedir de nuevo",
+  
+  "profile": "Perfil",
+  "welcome": "Bienvenido",
+  "loginPrompt": "Inicie sesión para rastrear sus pedidos y recibir ofertas exclusivas.",
+  "loginWithPhone": "Iniciar sesión con teléfono",
+  "loginWithEmail": "Iniciar sesión con email",
+  "loginWithApple": "Iniciar sesión con Apple",
+  "loginWithGoogle": "Iniciar sesión con Google",
+  "logout": "Cerrar sesión",
+  
+  "myOrders": "Mis pedidos",
+  "myFavorites": "Mis favoritos",
+  "myAddresses": "Mis direcciones",
+  "paymentMethods": "Métodos de pago",
+  "notifications": "Notificaciones",
+  "help": "Ayuda",
+  
+  "home": "Inicio",
+  "orders": "Pedidos",
+  
+  "comingSoon": "Próximamente",
+  
+  "sendFlowers": "Enviar flores",
+  "sameDay": "Entrega el mismo día",
+  "recipientName": "Nombre del destinatario",
+  "recipientPhone": "Teléfono del destinatario",
+  "cardMessage": "Mensaje de tarjeta"
+}

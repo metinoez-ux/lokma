@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOKMA - Mahalleni Keşfet</title>
+    <meta name="description" content="LOKMA, geleneksel ticaretin gücünü modern teknolojiyle birleştiren adil bir pazar yeridir.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #120a0a;
+            color: white;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        a { text-decoration: none; color: inherit; }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 50;
+            background: rgba(18, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 1rem 2rem;
+        }
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .logo svg { width: 32px; height: 32px; color: #ec131e; }
+        .logo h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.05em; text-transform: uppercase; }
+        .nav { display: flex; gap: 2rem; }
+        .nav a { font-size: 0.875rem; font-weight: 500; transition: color 0.3s; }
+        .nav a:hover { color: #ec131e; }
+        .header-right { display: flex; align-items: center; gap: 1rem; }
+        .lang-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.05);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: white;
+        }
+        .login-btn {
+            background: #ec131e;
+            padding: 0.5rem 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            transition: background 0.3s;
+        }
+        .login-btn:hover { background: #c41018; }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            min-height: 85vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 6rem;
+            overflow: hidden;
+        }
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(18,10,10,0.8), rgba(18,10,10,0.6), #120a0a);
+            z-index: 1;
+        }
+        .hero-image {
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            transform: scale(1.05);
+            background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDxlIp_cD3tTcUm8UmL7N2cZGr6NZqZCJ7RasQV4R1B59JtwYF5moSxLKUhfuAOnjMNjfJO8TP77IfY4Aejq4ei3S6lHURkI5hp5WUFhkDsRxP2ecyP17Lwdk4VKiX1R0F7nbq6cYJIlYZ1KhBE-KzdUuD14p-x3rJkNNohha-fPWqb0IXnNIeA7Nqmsrh19-FCKclMewBfYiG6KQIziWAuCqaK4LBNzZzhVQOzdHqWijWivs5NQOILJAemBnnJNF_rfjiROKELPMI');
+        }
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 0 1.5rem;
+            max-width: 800px;
+        }
+        .hero h1 {
+            font-size: clamp(2rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            text-shadow: 0 4px 30px rgba(0,0,0,0.5);
+        }
+        .hero h1 span { color: #ec131e; font-style: italic; }
+        .hero p {
+            font-size: 1.125rem;
+            color: rgba(255,255,255,0.8);
+            margin-top: 1.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hero-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2.5rem;
+        }
+        .btn-primary {
+            background: #ec131e;
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 10px 40px rgba(236,19,30,0.3);
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary:hover { background: #c41018; transform: translateY(-2px); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 1.125rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+
+        /* Categories */
+        .categories {
+            background: #120a0a;
+            padding: 5rem 2rem;
+        }
+        .section-inner { max-width: 1200px; margin: 0 auto; }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 2.5rem;
+        }
+        .section-header h2 { font-size: 2.25rem; font-weight: 800; }
+        .section-header p { color: rgba(255,255,255,0.6); margin-top: 0.5rem; }
+        .section-header a { color: #ec131e; font-weight: 700; display: flex; align-items: center; gap: 0.25rem; }
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        .category-card {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+            border-radius: 1rem;
+            cursor: pointer;
+        }
+        .category-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.2), transparent);
+            z-index: 1;
+        }
+        .category-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.7s;
+        }
+        .category-card:hover img { transform: scale(1.1); }
+        .category-info {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            z-index: 2;
+        }
+        .category-info h3 { font-size: 1.5rem; font-weight: 700; }
+        .category-info p { font-size: 0.875rem; color: rgba(255,255,255,0.7); }
+
+        /* B2B Section */
+        .b2b-section { padding: 5rem 2rem; }
+        .b2b-card {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 2rem;
+            overflow: hidden;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .b2b-content { flex: 1; min-width: 300px; padding: 4rem; }
+        .b2b-badge {
+            display: inline-block;
+            background: rgba(236,19,30,0.2);
+            color: #ec131e;
+            padding: 0.25rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+        .b2b-content h2 { font-size: 2.5rem; font-weight: 900; line-height: 1.1; }
+        .b2b-content > p { color: rgba(255,255,255,0.6); font-size: 1.125rem; margin-top: 1.5rem; max-width: 500px; }
+        .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+        .benefit-item { display: flex; gap: 1rem; align-items: flex-start; }
+        .benefit-icon {
+            background: rgba(236,19,30,0.2);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            color: #ec131e;
+        }
+        .benefit-item h4 { font-weight: 700; }
+        .benefit-item p { font-size: 0.875rem; color: rgba(255,255,255,0.5); }
+        .b2b-image {
+            flex: 1;
+            min-width: 300px;
+            min-height: 400px;
+            background-size: cover;
+            background-position: center;
+            filter: grayscale(100%);
+            transition: filter 1s;
+            background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBwG1qu9yNk5CCFgEYc5ml_rZBG9Ou6Qi4r7WXK7qvpuS4qOearAQpUzF_D5jdrvJp1TvZLAE7-EO_jDKT-ccPj1bOOWMnCD649xi-fSk7S0BOLGk5mU804M2nZqlJY5Irlt5SEMoIf13Nfq3RIZzHflFPg9vZ6OREmPHJupw4Xwz0b6ta6QV807gp3w3F6fyk_RwVfCpM7f_Z57zCCl8cJ2untx8m_Sr68fvQPUtvlMALWNfgkwE39Aznvn1hFdAy0NipWx7Fn3Ew');
+        }
+        .b2b-image:hover { filter: grayscale(0%); }
+
+        /* Footer */
+        .footer {
+            background: #0a0505;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding: 3rem 2rem;
+        }
+        .footer-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+        }
+        .footer-brand p { font-size: 0.875rem; color: rgba(255,255,255,0.4); margin-top: 1rem; line-height: 1.6; }
+        .footer-col h4 {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+        .footer-col ul { list-style: none; }
+        .footer-col li { margin-bottom: 0.5rem; }
+        .footer-col a { font-size: 0.875rem; color: rgba(255,255,255,0.5); transition: color 0.3s; }
+        .footer-col a:hover { color: #ec131e; }
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        .footer-bottom p { font-size: 0.75rem; color: rgba(255,255,255,0.3); }
+        .footer-lang { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+
+        @media (max-width: 768px) {
+            .nav { display: none; }
+            .header { padding: 1rem; }
+            .b2b-content { padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="currentColor" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z"/>
+                </svg>
+                <h2>LOKMA</h2>
+            </div>
+            <nav class="nav">
+                <a href="#">Anasayfa</a>
+                <a href="#">Hakkımızda</a>
+                <a href="#">Esnaf Portalı</a>
+                <a href="#">Destek</a>
+            </nav>
+            <div class="header-right">
+                <button class="lang-btn">
+                    <span class="material-symbols-outlined">language</span>
+                    TR
+                </button>
+                <a href="/login" class="login-btn">Giriş Yap</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg">
+            <div class="hero-overlay"></div>
+            <div class="hero-image"></div>
+        </div>
+        <div class="hero-content">
+            <h1>Lokma, <span>alın terinin</span> yanında duran bir platformdur.</h1>
+            <p>Mahallenizin ruhunu dijital dünyayla birleştiriyoruz. Adil, şeffaf ve topluluk odaklı yeni nesil yaşam ekosistemi.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary">
+                    Keşfetmeye Başla
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+                <button class="btn-secondary">Partnerimiz Olun</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories">
+        <div class="section-inner">
+            <div class="section-header">
+                <div>
+                    <h2>Mahalleni Keşfet</h2>
+                    <p>En sevdiğiniz yerel dükkanlar şimdi bir tık uzağınızda.</p>
+                </div>
+                <a href="#">Tümünü Gör <span class="material-symbols-outlined">chevron_right</span></a>
+            </div>
+            <div class="categories-grid">
+                <div class="category-card">
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEVs9F1p-MauF5eNVA5eYldgqFpE207b2eUycOdE0Uyr_CqLuTg-L8jHJfA2MapdFAsgKuscHd815tjfnDTb0r09kbgyUo0qCeV_pdArR78YGmWV4Ah7gImVt0eglMLTefRbnnIRHlc2Wn-DDBswILQM34KAG0dHhSBr_nGBf77YX0Tp8XJyygy72UBCsJr12piLHGPcsnKUZntLIaWwL5GnXuEDLIXEg8zJlj2wR0czCyrtkrN1k2av-KFNptTEM0FkAO2V7BkWk" alt="Market">
+                    <div class="category-info">
+                        <h3>Market</h3>
+                        <p>Taze ve yerel ürünler</p>
+                    </div>
+                </div>
+                <div class="category-card">
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuArw-TkI2-SzpObLta2IQwojPsIP3VeIb78vV1IvBMdZe2dyV7_lQ3ejmcKzmRW_qI_AY3dvMowCaJQGjOBTWD__v0TJDuKOIWPMQUB0OByMsff8xDw_3EhTca9SfbfP2aljgaBfA5HWa9FksjyRI_XMnkZj809dOi1CSpn2bjA8lZKvZ0UvaPuMnrK2FkEINZ_l902_fWpxTpsjiv1SnxG9pTaUMr0fG6RwsJmdsGiQQ_wd17fZ4dUQnDkPF6aO50W4YikUgcgKcM" alt="Kasap">
+                    <div class="category-info">
+                        <h3>Kasap</h3>
+                        <p>Ustalıkla hazırlanmış</p>
+                    </div>
+                </div>
+                <div class="category-card">
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6p0c2Yu4v2xu5b5_oWKBYFUaEbjFub1JTnbRD4umr449cO38ryv7h55GzrDk5EYhI73-ZF9qzi0BKdtrFWNqP6hrJ0Yr1Tld8Gsz49uXLf29gGddlUathh8DkVu4Z6tL9DmIbOmLxnL52f1Am60XBC8bVmTMNjlly5mZag0jUEHS2-QYmGZSy6gOdZlAU3ip5UxbJFm7V5qs1OJLcvtMuDsQg-DRdLFtToh0woYl3NnQNO1G17fYm3TfZUOTYjBGGczhirbx-poE" alt="Catering">
+                    <div class="category-info">
+                        <h3>Catering</h3>
+                        <p>Özel anlarınız için</p>
+                    </div>
+                </div>
+                <div class="category-card">
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQpcy6BGPQ6eU9911vrabfP4EqYYFKxKc4mjpbRnbTrog2lUWY6g4emwly6xjlPYKn7lbIWK-R_1bHOG93YJmXJxgGskqSKnW-9Zb2S8t_t_x--ugIlPjsGEcZkjQVxXyqutg8pQ3HwjOgO8d_Wml9yG4ViXjFydYFeQHPMbxxr4tckWaitFQVMzRB1iTV1ogl1HU0HnO9Vo5nMoGLTYssJy72z8aB9WEtaIU6QJcFIpc7wShj7BVwvDySvDPwK3ih2a5o_OALWog" alt="Çiçek">
+                    <div class="category-info">
+                        <h3>Çiçek</h3>
+                        <p>Aynı gün teslimat</p>
+                    </div>
+                </div>
+                <div class="category-card">
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCN09M8elc_C8OsSIqRq-4dpdi0B-qBOhsauyUuAp91K2z0i5sTqYiSW45WkV5wgkkse8HanK1NKfhP0vWQqKQ9_epsxzAdfWJC0I-ArkTqSakmgGaAJmggZCP49tE8O-2sb6ieERfa8FWONxW2CzC_UJqCjhWmydjDGGoSwurrb4PCXDMh-_Z2Kpau2YrdXVG99DoqL6hJ0d0BVQEN3K_6yopBcWsWfdzTZtz4slgoekRrrgG-KFEq6d6fCwpFay9xvuR37QDm_qk" alt="Kermes">
+                    <div class="category-info">
+                        <h3>Kermes</h3>
+                        <p>Mahalleli dayanışması</p>
+                    </div>
+                </div>
+                <div class="category-card">
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2Tm8hx8ZWjL9LUYjxUcedhtjUX68PIeLaZvkaT6nt9_NB6pVHJYBVlSFL-8o1dWUcMOlQaFkjCFI4-hFGy96FuZF1ESb8Bhbe7tDu3wq6DnBpK-6UOOu8k2LEjcZkLcsEMe7RlZFJGJk-ZlLqrUoK68i7Orf8PLMRTnJDyIWYxAxBBlJ97DWYt_nwAb74kA4wEUVBSmC6IbiyMjOUDjewpKHVse2j62g80G8XUYlZVQAj8Rlc77oPKcWs8yX6H8R0WL059U0n7X8" alt="Restoran">
+                    <div class="category-info">
+                        <h3>Restoran</h3>
+                        <p>Usta ellerden sofralar</p>
+                    </div>
+                </div>
+                <div class="category-card">
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKFIaOFcIHmWtI6IIAfXV8zA5AepK99GDxrPaqFX8VVG5YEyrYnS5AJVKzKIebcs61decJe9UkbW4qC3mSwYPSzSNInyvHBvY3EC0GWrRTMrAqvbRoh6lclBPdIf4u4-cAB-G0Gu5Mee6-ZAHXnB5DLUe0oulUSLvg72kFUd6tgHzPDwP1Xuk2QuZfdOIWlHJbwHOGbn6A1Or2rQc-OindKBFm3CYjBsjN0HCQda-M1Xh3Vth7eikG8PEoWRMzXatx9_QloGLUc88" alt="Fast Food">
+                    <div class="category-info">
+                        <h3>Fast Food</h3>
+                        <p>Pratik sokak lezzetleri</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- B2B Section -->
+    <section class="b2b-section">
+        <div class="b2b-card">
+            <div class="b2b-content">
+                <span class="b2b-badge">B2B Ortaklık</span>
+                <h2>Esnafın Yanında, Geleceğin Yolunda.</h2>
+                <p>LOKMA olarak esnafımızın emeğine değer veriyoruz. Gizli ücretler yok, karmaşık sözleşmeler yok. Sadece büyüme ve adil kazanç var.</p>
+                
+                <div class="benefits-grid">
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <span class="material-symbols-outlined">payments</span>
+                        </div>
+                        <div>
+                            <h4>Adil Komisyon</h4>
+                            <p>Sektörün en düşük oranlarıyla kazancınızı koruyoruz.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <span class="material-symbols-outlined">bolt</span>
+                        </div>
+                        <div>
+                            <h4>Hızlı Ödeme</h4>
+                            <p>Haftalık değil, anlık ödeme sistemleri ile nakit akışınızı yönetin.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <span class="material-symbols-outlined">groups</span>
+                        </div>
+                        <div>
+                            <h4>Geniş Kitle</h4>
+                            <p>Bölgenizdeki binlerce müşteriye dijital reklam gücümüzle ulaşın.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">
+                            <span class="material-symbols-outlined">verified</span>
+                        </div>
+                        <div>
+                            <h4>Kolay Yönetim</h4>
+                            <p>Kullanıcı dostu mobil panel ile her şeyi kontrol edin.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" style="margin-top: 2rem;">Şimdi Başvuru Yap</button>
+            </div>
+            <div class="b2b-image"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo">
+                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; color: #ec131e;">
+                        <path fill="currentColor" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z"/>
+                    </svg>
+                    <h2 style="font-size: 1.25rem;">LOKMA</h2>
+                </div>
+                <p>LOKMA, geleneksel ticaretin gücünü modern teknolojiyle birleştiren adil bir pazar yeridir.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Platform</h4>
+                <ul>
+                    <li><a href="#">Nasıl Çalışır?</a></li>
+                    <li><a href="#">Kategoriler</a></li>
+                    <li><a href="#">Popüler Mağazalar</a></li>
+                    <li><a href="#">İndirimler</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Kurumsal</h4>
+                <ul>
+                    <li><a href="#">Hakkımızda</a></li>
+                    <li><a href="#">Kariyer</a></li>
+                    <li><a href="#">Basın</a></li>
+                    <li><a href="#">İletişim</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Yasal</h4>
+                <ul>
+                    <li><a href="#">Kullanım Koşulları</a></li>
+                    <li><a href="#">Gizlilik Politikası</a></li>
+                    <li><a href="#">KVKK Aydınlatma</a></li>
+                    <li><a href="#">Çerez Tercihleri</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2024 LOKMA Platform. Tüm hakları saklıdır.</p>
+            <div class="footer-lang">
+                <span class="material-symbols-outlined" style="font-size: 14px;">language</span>
+                8 Dil Desteği Aktif
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

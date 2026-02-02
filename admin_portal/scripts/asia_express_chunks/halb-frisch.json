@@ -1,0 +1,1182 @@
+[
+  {
+    "name": "Seidentofu Rot T01",
+    "brand": "UNICURD",
+    "content": "21 X 300 G",
+    "sku": "310",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/310.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/zijdentofu-rood-t01-310.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest",
+    "brand": "NATURAL VEGETARIAN FOODS",
+    "content": "12 X 500 G",
+    "sku": "285",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/8/285.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-stevig-285.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Ramen-Nudeln",
+    "brand": "MAI WA",
+    "content": "30 X 180 G",
+    "sku": "7498",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/4/7498.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/ramen-noedels-7498.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest Grün T05",
+    "brand": "UNICURD",
+    "content": "14 X 300 G",
+    "sku": "314",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/314.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-stevig-groen-t05-314.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Miso Gereift Rot",
+    "brand": "HIKARI MISO",
+    "content": "8 X 300 G",
+    "sku": "5278",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/2/5278.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/miso-aged-rood-5278.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "BIBIGO",
+    "content": "10 X 500 G",
+    "sku": "3005-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3005-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3005-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Miso Weiß Shinshu",
+    "brand": "HIKARI MISO",
+    "content": "20 X 400 G",
+    "sku": "5282",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/2/5282.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/shinshu-wit-miso-5282.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Reiskuchen Scheiben",
+    "brand": "JONGGA",
+    "content": "10 X 500 G",
+    "sku": "3027-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3027-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/41059/s/reis-cake-geschnitten/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Reiskuchen Koreanisch",
+    "brand": "MATAMUN",
+    "content": "12 X 600 G",
+    "sku": "3025-11",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3025-11.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/rijst-cake-koreaans-3025-11.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "JONGGA",
+    "content": "10 X 500 G",
+    "sku": "3005",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3005.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3005.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Bai Ye T36",
+    "brand": "UNICURD",
+    "content": "24 X 250 G",
+    "sku": "319",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/319.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-bai-ye-t36-319.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Reiskuchen Scheiben",
+    "brand": "JONGGA",
+    "content": "5 X 1 KG",
+    "sku": "3027-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3027-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/rijst-cake-gesneden-3027-2.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Paneer",
+    "brand": "NATURAL VEGETARIAN FOODS",
+    "content": "1 X 5 KG",
+    "sku": "236",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/3/236.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/panir-10-stuks-236.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Wachteleier",
+    "brand": "WABU",
+    "content": "9 X 12 PCS",
+    "sku": "6110-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/1/6110-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/42397/s/wachteleier/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Seidentofu Japanisch T02",
+    "brand": "UNICURD",
+    "content": "21 X 300 G",
+    "sku": "311",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/311.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-japan-t02-311.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest Grün T05-1",
+    "brand": "UNICURD",
+    "content": "46 X 300 G",
+    "sku": "314-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/314-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-groen-t05-1-stevig-314-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "JONGGA",
+    "content": "6 X 750 G",
+    "sku": "3004-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3004-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3004-01.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Miso Enjuku Koji",
+    "brand": "HIKARI MISO",
+    "content": "8 X 375 G",
+    "sku": "5280",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/2/5280.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/enjuku-koji-miso-5280.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "JONGGA",
+    "content": "6 X 1 KG",
+    "sku": "3010",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3010.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/46307/s/mat-kimchi-1kg-eu/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Soja-Rolle Frittiert",
+    "brand": "HAIDILAO",
+    "content": "16 X 120 G",
+    "sku": "308-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/308-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/soja-rolletje-gefrituurd-308-01.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Seidentofu Rot T01",
+    "brand": "UNICURD",
+    "content": "50 X 300 G",
+    "sku": "310-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/310-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-pak-rood-t01-310-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "BIBIGO",
+    "content": "30 X 150 G",
+    "sku": "3018",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3018.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3018.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Miso Rot Inaka",
+    "brand": "HIKARI MISO",
+    "content": "20 X 400 G",
+    "sku": "5281",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/2/5281.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/inaka-rood-miso-5281.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "BIBIGO",
+    "content": "6 X 1 KG",
+    "sku": "3004-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3004-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3004-2.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "JONGGA",
+    "content": "9 X 300 G",
+    "sku": "3008",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3008.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/46305/s/mat-kimchi-300g-eu/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Udon Nudeln",
+    "brand": "SUKINA",
+    "content": "30 X 200 G",
+    "sku": "7528-3",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/5/7528-3.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/udon-noedels-7528-3.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest Mori-Nu Silken",
+    "brand": "MORINAGA",
+    "content": "12 X 307 G",
+    "sku": "5819",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/8/5819.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-stevig-mori-nu-silken-5819.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "JONGGA",
+    "content": "5 X 1 KG",
+    "sku": "3004",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3004.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39380/s/mat-kimchi/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi Vegan",
+    "brand": "JONGGA",
+    "content": "6 X 1 KG",
+    "sku": "3010-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3010-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47736/s/kimchi-mat-vegan/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Weich Hiya Yakko Blue T04",
+    "brand": "UNICURD",
+    "content": "21 X 300 G",
+    "sku": "313",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/313.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/hiya-yakko-tofu-blauw-t04-313.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Udon Nudeln",
+    "brand": "MAI WA",
+    "content": "30 X 200 G",
+    "sku": "7528-8",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/5/7528-8.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/udon-noedels-7528-8.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Udon Nudeln",
+    "brand": "SUKINA",
+    "content": "12 X 600 G",
+    "sku": "7528-6",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/5/7528-6.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47990/s/udon-nudeln/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Extra Fest Mori-Nu Silken",
+    "brand": "MORINAGA",
+    "content": "12 X 308 G",
+    "sku": "5819-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/8/5819-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-extra-stevig-mori-nu-silken-5819-01.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Traditionell",
+    "brand": "LAKOVO",
+    "content": "24 X 500 G",
+    "sku": "390",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/9/390.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/original-tofu-390.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest",
+    "brand": "BIBIGO",
+    "content": "12 X 300 G",
+    "sku": "288",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/8/288.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-stevig-288.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Geräuchert",
+    "brand": "KOMY TOFU",
+    "content": "20 X 500 G",
+    "sku": "370-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/7/370-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/gerookte-tofu-370-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Miso Kodawattemasu",
+    "brand": "HIKARI MISO",
+    "content": "8 X 500 G",
+    "sku": "5283",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/2/5283.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/miso-kodawattemasu-5283.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Weich Tube",
+    "brand": "BIBIGO",
+    "content": "14 X 350 G",
+    "sku": "293",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/9/293.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/zachte-tofu-tube-293.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Kimchi Baek Weiß",
+    "brand": "JONGGA",
+    "content": "10 X 500 G",
+    "sku": "3022",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3022.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39392/s/baek-weisse-kimchi/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu mit Ei",
+    "brand": "PANG NIU",
+    "content": "30 X 130 G",
+    "sku": "317-4",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/317-4.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-met-ei-317-4.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Reiskuchen Scheiben",
+    "brand": "MATAMUN",
+    "content": "12 X 600 G",
+    "sku": "3027-21",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3027-21.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/rijst-cake-gesneden-3027-21.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi Vegan",
+    "brand": "BIBIGO",
+    "content": "6 X 500 G",
+    "sku": "3005-3",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3005-3.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-vegan-3005-3.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Poggi Kimchi",
+    "brand": "BIBIGO",
+    "content": "6 X 1 KG",
+    "sku": "3001-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3001-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/poggi-kimchi-3001-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Weich",
+    "brand": "BIBIGO",
+    "content": "12 X 300 G",
+    "sku": "289",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/8/289.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-zacht-289.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Nudeln Koreanisch & Schwarze Bohnensoße",
+    "brand": "PULMUONE",
+    "content": "12 X 664 G",
+    "sku": "7304",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/3/7304.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/noedels-koreaans-zwarte-bonensaus-7304.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Kimchi Geröstet",
+    "brand": "JONGGA",
+    "content": "12 X 190 G",
+    "sku": "3000-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3000-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/41041/s/gerostete-kimchi/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi Vegan",
+    "brand": "JONGGA",
+    "content": "1 X 3 KG",
+    "sku": "3011-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3011-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-vegan-3011-01.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Enteneier Gekocht & Gesalzen Ham Tan",
+    "brand": "GOOSUN",
+    "content": "24 X 6 X 72 G",
+    "sku": "6106-3",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/1/6106-3.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/gekookte-gezouten-eendenei-ham-tan-6106-3.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Buchweizennudeln mit Kimchi-Brühe",
+    "brand": "PULMUONE",
+    "content": "12 X 806 G",
+    "sku": "7302",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/3/7302.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/boekweitnoedels-met-kimchi-bouillon-7302.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Enteneier Konserviert Tan",
+    "brand": "GOOSUN",
+    "content": "24 X 6 X 63 G",
+    "sku": "6105-3",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/6/1/6105-3.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/gecons-eendeneieren-tan-6105-3.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Miso Original Ryotei No Aji DE",
+    "brand": "MARUKOME",
+    "content": "10 X 375 G",
+    "sku": "5277-30",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/2/5277-30.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/miso-origineel-ryotei-no-aji-de-5277-30.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Weich Chinesisch T17",
+    "brand": "UNICURD",
+    "content": "21 X 300 G",
+    "sku": "318",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/318.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/gladde-chinese-tofu-t17-318.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Gebratene Udon mit Teriyaki-Soße",
+    "brand": "PULMUONE",
+    "content": "12 X 457,2 G",
+    "sku": "7300",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/3/7300.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/46961/s/gebratene-udon-mit-teriyaki-sauce/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Ramen Nudeln",
+    "brand": "MAI WA",
+    "content": "10 X 180 G",
+    "sku": "7498-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/4/7498-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47904/s/ramen-nudeln/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Rettich Eingelegt für Wraps Süßsauer",
+    "brand": "CJ",
+    "content": "12 X 320 G",
+    "sku": "3106",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/3106.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/ingemaakte-radijs-zoet-zuur-3106.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Nudeln Dick",
+    "brand": "PULMUONE",
+    "content": "12 X 100 G",
+    "sku": "299",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/9/299.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-noedels-dik-299.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "BIBIGO",
+    "content": "12 X 300 G",
+    "sku": "3014",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3014.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3014.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Kaju Katli",
+    "brand": "HALDIRAM'S",
+    "content": "16 X 300 G",
+    "sku": "INS022-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/i/n/ins022-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/kaju-katli-ins022-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest",
+    "brand": "SINGH TOFU",
+    "content": "12 X 500 G",
+    "sku": "286",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/8/286.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-stevig-286.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Nudeln Dünn",
+    "brand": "PULMUONE",
+    "content": "12 X 100 G",
+    "sku": "298",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/9/298.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-noedels-dun-298.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "JONGGA",
+    "content": "1 X 3 KG",
+    "sku": "3011",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3011.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/46308/s/mat-kimchi-3kg-eu/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Ramen Nudeln",
+    "brand": "MAI WA",
+    "content": "6 X 5 X 180 G",
+    "sku": "7498-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/4/7498-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/ramen-noedels-7498-2.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "BIBIGO",
+    "content": "6 X 500 G",
+    "sku": "3005-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3005-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3005-2.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Udong Nudeln Asiatischer Art",
+    "brand": "WANG",
+    "content": "24 X 453 G",
+    "sku": "7513-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/5/7513-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/udon-asian-style-noedels-7513-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Rettich Eingelegt Ganz",
+    "brand": "BIBIGO",
+    "content": "20 X 400 G",
+    "sku": "3103",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/3103.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/radijs-ingemaakt-geheel-3103.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Gerstennudeln Jjolmyeon Sweet & Spicy",
+    "brand": "PULMUONE",
+    "content": "12 X 430 G",
+    "sku": "7301",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/3/7301.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47689/s/gerstennudeln-jjolmyeon-sweet-spicy/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu-Streifen Geräuchert 5 Gewürze",
+    "brand": "KOMY TOFU",
+    "content": "20 X 250 G",
+    "sku": "372-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/7/372-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-repen-gerookt-5-spices-372-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Motichoor Ladoo",
+    "brand": "HALDIRAM'S",
+    "content": "16 X 300 G",
+    "sku": "INS021-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/i/n/ins021-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/motichoor-ladoo-ins021-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Udon Nudeln Asiatischer Art",
+    "brand": "WANG",
+    "content": "12 X 1,36 KG",
+    "sku": "7513",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/5/7513.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/udon-noedels-aziatische-stijl-7513.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Poggi Kimchi",
+    "brand": "BIBIGO",
+    "content": "12 X 500 G",
+    "sku": "3002-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3002-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/poggi-kimchi-3002-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Rettich Eingelegt Halbiert",
+    "brand": "BIBIGO",
+    "content": "20 X 400 G",
+    "sku": "3104",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/3104.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/radijs-ingemaakt-gesneden-3104.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Kimchi Chonggak",
+    "brand": "BIBIGO",
+    "content": "12 X 450 G",
+    "sku": "3020-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3020-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/chonggak-kimchi-radijs-3020-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Miso Weiß",
+    "brand": "HIKARI MISO",
+    "content": "8 X 300 G",
+    "sku": "5278-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/2/5278-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/miso-wit-hartig-5278-2.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Reiskuchen Koreanisch",
+    "brand": "JONGGA",
+    "content": "10 X 500 G",
+    "sku": "3025-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3025-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/41055/s/reis-cake-rohr-stab/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Frittiert",
+    "brand": "KOMY TOFU",
+    "content": "15 X 170 G",
+    "sku": "373-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/7/373-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/gefrituurdetofu-373-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Weich",
+    "brand": "PULMUONE",
+    "content": "12 X 290 G",
+    "sku": "297",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/9/297.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47139/s/tofu-weich/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest",
+    "brand": "PULMUONE",
+    "content": "12 X 290 G",
+    "sku": "296",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/9/296.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/47138/s/tofu-fest/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Bambussprossen Grün",
+    "brand": "ZHU XIN",
+    "content": "20 X 500 G",
+    "sku": "3070-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3070-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/bamboe-scheut-groen-3070-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Weich Mori-Nu Silken",
+    "brand": "MORINAGA",
+    "content": "12 X 305 G",
+    "sku": "5819-02",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/8/5819-02.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-zacht-mori-nu-silken-5819-02.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "JONGGA",
+    "content": "20 X 200 G",
+    "sku": "3017",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3017.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3017.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Poggi Kimchi",
+    "brand": "JONGGA",
+    "content": "10 X 500 G",
+    "sku": "3002",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3002.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/poggi-kimchi-3002.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Frittiert Fest Tau Kwa T07",
+    "brand": "UNICURD",
+    "content": "24 X 220 G",
+    "sku": "316",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/316.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/gebakken-tau-kwa-t07-316.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "JONGGA",
+    "content": "6 X 700 G",
+    "sku": "3009",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3009.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3009.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tempeh",
+    "brand": "NATURAL VEGETARIAN FOODS",
+    "content": "10 X 400 G",
+    "sku": "380",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/8/380.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tempeh-380.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest Tau Kwa T06",
+    "brand": "UNICURD",
+    "content": "24 X 220 G",
+    "sku": "315",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/315.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tau-kwa-t06-315.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Bambussprossen Spitzen",
+    "brand": "ZHU XIN",
+    "content": "20 X 500 G",
+    "sku": "3071",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3071.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/bamboe-scheut-pijlvorm-3071.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Miso Nama-Koj",
+    "brand": "HIKARI MISO",
+    "content": "8 X 400 G",
+    "sku": "5280-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/2/5280-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/ambachtelijke-miso-nama-koj-5280-2.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Kimchi Chonggak Ponytail Rettich",
+    "brand": "JONGGA",
+    "content": "10 X 500 G",
+    "sku": "3020",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3020.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39390/s/chonggak-kimchi-rettich/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Seidentofu Tube T03",
+    "brand": "UNICURD",
+    "content": "30 X 250 G",
+    "sku": "312",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/1/312.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-flesje-t03-312.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest Tau Kwa",
+    "brand": "NATURAL VEGETARIAN FOODS",
+    "content": "15 X 300 G",
+    "sku": "240-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/4/240-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-stevig-tau-kwa-240-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Kimchi Kkakdugi Rettichwürfel",
+    "brand": "BIBIGO",
+    "content": "12 X 450 G",
+    "sku": "3021-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3021-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/kimchi-kkakdugi-gesneden-rettich-3021-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Bambussprossen Spitzen",
+    "brand": "ZHU XIN",
+    "content": "30 X 250 G",
+    "sku": "3076",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3076.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/bamboe-scheut-mountain-3076.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Poggi Kimchi",
+    "brand": "JONGGA",
+    "content": "4 X 2,5 KG",
+    "sku": "3003",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3003.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/poggi-kimchi-3003.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Shanxi Nudeln",
+    "brand": "YUANFU BRAND",
+    "content": "24 X 400 G",
+    "sku": "3040",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3040.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/shanxi-noedels-3040.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest",
+    "brand": "NATURAL VEGETARIAN FOODS",
+    "content": "12 X 500 G",
+    "sku": "230-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/3/230-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-stevig-230-2.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Weich",
+    "brand": "NATURAL VEGETARIAN FOODS",
+    "content": "15 X 250 G",
+    "sku": "235-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/3/235-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-zacht-235-2.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Frittiert",
+    "brand": "JONGGA",
+    "content": "30 X 160 G",
+    "sku": "295",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/9/295.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-gefrituurd-295.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Fest",
+    "brand": "JONGGA",
+    "content": "12 X 300 G",
+    "sku": "290",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/9/290.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-stevig-290.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Tofu Weich",
+    "brand": "JONGGA",
+    "content": "12 X 300 G",
+    "sku": "291",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/2/9/291.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/tofu-zacht-291.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Poggi Kimchi",
+    "brand": "JONGGA",
+    "content": "5 X 1 KG",
+    "sku": "3001",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3001.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/poggi-kimchi-3001.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "JONGGA",
+    "content": "12 X 400 G",
+    "sku": "3006",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3006.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3006.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi ohne Fisch",
+    "brand": "JONGGA",
+    "content": "6 X 300 G",
+    "sku": "3016",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3016.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/catalog/product/view/id/39386/s/mat-kimchi-fish-free/category/3336/",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Kimchi Yeolmu",
+    "brand": "JONGGA",
+    "content": "10 X 500 G",
+    "sku": "3019",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3019.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/kimchi-yeolmu-3019.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Kimchi Kkakdugi Rettichwürfel",
+    "brand": "JONGGA",
+    "content": "10 X 500 G",
+    "sku": "3021",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3021.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/kimchi-kkakdugi-gesneden-rettich-3021.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Lanzhou Nudeln",
+    "brand": "YUANFU BRAND",
+    "content": "24 X 400 G",
+    "sku": "3041",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3041.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/fresh-lanzhou-noedels-3041.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Shanghai Nudeln",
+    "brand": "YUANFU BRAND",
+    "content": "24 X 400 G",
+    "sku": "3042",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3042.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/fresh-shanghai-noedels-3042.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Nudeln Handgemacht",
+    "brand": "YUANFU BRAND",
+    "content": "24 X 400 G",
+    "sku": "3043",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3043.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/noedels-handgemaakt-3043.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Jianshui Nudeln",
+    "brand": "YUANFU BRAND",
+    "content": "24 X 400 G",
+    "sku": "3044",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3044.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/verse-jianshui-noedels-3044.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Bambussprossen in Salzlake",
+    "brand": "ZHU XIN",
+    "content": "20 X 500 G",
+    "sku": "3072",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3072.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/bamboe-scheut-bloemvorm-3072.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Bambussprossen in Salzlake",
+    "brand": "ZHU XIN",
+    "content": "20 X 500 G",
+    "sku": "3074",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3074.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/bamboe-scheut-vlokkig-3074.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Udon-Nudeln",
+    "brand": "SAU TAO",
+    "content": "30 X 200 G",
+    "sku": "7528",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/7/5/7528.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/udon-noedels-7528.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Poggi Kimchi",
+    "brand": "JONGGA",
+    "content": "1 X 10 KG",
+    "sku": "3000-1",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3000-1.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/poggi-kimchi-3000-1.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Kimchi Frühlingszwiebel",
+    "brand": "JONGGA",
+    "content": "10 X 300 G",
+    "sku": "3024-5",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3024-5.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/kimchi-bosui-3024-5.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Reiskuchen Koreanisch",
+    "brand": "JONGGA",
+    "content": "5 X 1 KG",
+    "sku": "3025-2",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3025-2.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/rijst-cake-koreaans-3025-2.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Reiskuchen Koreanisch Mini",
+    "brand": "JONGGA",
+    "content": "5 X 1 KG",
+    "sku": "3025-3",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3025-3.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/rijst-cake-tubular-staaf-mini-3025-3.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Miso Original Ryotei No Aji",
+    "brand": "MARUKOME",
+    "content": "10 X 375 G",
+    "sku": "5277",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/5/2/5277.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/miso-origineel-ryotei-no-aji-5277.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Kimchi Yeolmu",
+    "brand": "BIBIGO",
+    "content": "12 X 450 G",
+    "sku": "3019-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3019-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/kimchi-yeolmu-3019-01.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  },
+  {
+    "name": "Mat Kimchi",
+    "brand": "JONGGA",
+    "content": "12 X 300 G",
+    "sku": "3015-01",
+    "imageUrl": "https://order.asiaexpressfood.nl/media/catalog/product/cache/906647e2d7fbe9ae1c3ae51557a0b533/3/0/3015-01.jpg",
+    "productUrl": "https://order.asiaexpressfood.nl/de/assortiment/halb-frisch/mat-kimchi-3015-01.html",
+    "category": "Halb Frisch",
+    "categorySlug": "halb-frisch"
+  }
+]

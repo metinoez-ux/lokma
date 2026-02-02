@@ -1,0 +1,75 @@
+name: lokma_app
+description: "LOKMA - Food & Beverage Super App"
+publish_to: 'none'
+version: 1.0.0+501
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # Firebase
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  cloud_firestore: ^6.1.0
+  firebase_storage: ^13.0.4
+  firebase_messaging: ^16.1.0
+  
+  # Google Sign-In
+  google_sign_in: ^6.2.2
+  sign_in_with_apple: ^6.1.0
+  
+  # Navigation
+  go_router: ^17.0.0
+  
+  # State Management
+  flutter_riverpod: ^3.0.3
+  
+  # UI & Utilities
+  intl: ^0.20.2
+  http: ^1.6.0
+  cached_network_image: ^3.3.0
+  auto_size_text: ^3.0.0
+  
+  # Icons
+  cupertino_icons: ^1.0.8
+  font_awesome_flutter: ^10.12.0
+  
+  # Location & Maps
+  geolocator: ^14.0.0
+  geocoding: ^4.0.0
+  flutter_map: ^8.2.2
+  latlong2: ^0.9.1
+  google_places_flutter: ^2.0.8
+  
+  # Utilities
+  shared_preferences: ^2.2.2
+  url_launcher: ^6.3.2
+  package_info_plus: ^9.0.0
+  uuid: ^4.5.2
+  image_picker: ^1.2.1
+  permission_handler: ^12.0.1
+  qr_flutter: ^4.1.0
+  flutter_local_notifications: ^19.5.0
+  timezone: ^0.10.1
+  share_plus: ^12.0.1
+  flutter_stripe: ^11.3.0
+  screen_brightness: ^2.1.7
+  flutter_svg: ^2.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  generate: true
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+

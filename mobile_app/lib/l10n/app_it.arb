@@ -1,0 +1,59 @@
+{
+  "@@locale": "it",
+  
+  "appName": "LOKMA",
+  "search": "Cerca",
+  "searchHint": "Cerca cibo, ristorante o mercato...",
+  "searchNoResults": "Nessun risultato trovato",
+  "searchTryDifferent": "Prova con un altro termine di ricerca",
+  "searching": "Ricerca in corso...",
+  "popularSearches": "Ricerche popolari",
+  "showMore": "Mostra di più",
+  
+  "maxDistance": "Distanza massima",
+  "kmUnit": "km",
+  
+  "categoryButcher": "Macelleria",
+  "categoryMarket": "Mercato",
+  "categoryRestaurant": "Ristorante",
+  "categoryFlorist": "Fiorista",
+  "categoryKermes": "Fiera",
+  "categoryPastry": "Pasticceria",
+  "categoryCoffee": "Caffè",
+  "categoryImbiss": "Fast food",
+  
+  "businesses": "Attività",
+  "products": "Prodotti",
+  "categories": "Categorie",
+  
+  "order": "Ordina",
+  "go": "Vai",
+  "orderAgain": "Ordina di nuovo",
+  
+  "profile": "Profilo",
+  "welcome": "Benvenuto",
+  "loginPrompt": "Accedi per monitorare i tuoi ordini e ricevere offerte esclusive.",
+  "loginWithPhone": "Accedi con telefono",
+  "loginWithEmail": "Accedi con email",
+  "loginWithApple": "Accedi con Apple",
+  "loginWithGoogle": "Accedi con Google",
+  "logout": "Esci",
+  
+  "myOrders": "I miei ordini",
+  "myFavorites": "I miei preferiti",
+  "myAddresses": "I miei indirizzi",
+  "paymentMethods": "Metodi di pagamento",
+  "notifications": "Notifiche",
+  "help": "Aiuto",
+  
+  "home": "Home",
+  "orders": "Ordini",
+  
+  "comingSoon": "Prossimamente",
+  
+  "sendFlowers": "Invia fiori",
+  "sameDay": "Consegna in giornata",
+  "recipientName": "Nome del destinatario",
+  "recipientPhone": "Telefono del destinatario",
+  "cardMessage": "Messaggio del biglietto"
+}
