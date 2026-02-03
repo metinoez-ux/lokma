@@ -294,6 +294,19 @@ class KermesCartNotifier extends Notifier<KermesCartState> {
     return item?.quantity ?? 0;
   }
 
+  /// Sepetten ürün çıkar (ID ile) - Lieferando cart uyumluluğu
+  void removeItem(String itemId) {
+    removeFromCart(itemId);
+  }
+
+  /// Sepete ürün ekle (KermesMenuItem ile) - Lieferando cart uyumluluğu
+  void addItem(KermesMenuItem menuItem) {
+    if (state.eventId != null && state.eventName != null) {
+      _addItemInternal(menuItem, state.eventId!, state.eventName!);
+      _saveCartToStorage();
+    }
+  }
+
   /// Sepeti temizle
   void clearCart() {
     state = KermesCartState();

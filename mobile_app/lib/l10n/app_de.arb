@@ -55,5 +55,12 @@
   "sameDay": "Lieferung am selben Tag",
   "recipientName": "Name des Empfängers",
   "recipientPhone": "Telefon des Empfängers",
-  "cardMessage": "Kartennachricht"
+  "cardMessage": "Kartennachricht",
+  
+  "checkoutButton": "Bestellen und bezahlen",
+  "checkoutTermsPrefix": "Durch Klicken auf Bestellen und bezahlen erklären Sie sich mit dem Inhalt des Warenkorbs, den von Ihnen eingegebenen Daten, unserer ",
+  "privacyPolicy": "Datenschutzerklärung",
+  "termsConjunction": " und unseren ",
+  "termsOfUse": "Nutzungsbedingungen",
+  "checkoutTermsSuffix": " einverstanden."
 }

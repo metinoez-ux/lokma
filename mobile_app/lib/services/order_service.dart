@@ -166,9 +166,10 @@ class OrderService {
     return docRef.id;
   }
 
-  /// Get user's orders stream
+  /// Get user's orders stream (from both collections)
   Stream<List<LokmaOrder>> getUserOrdersStream(String userId) {
-    return _db
+    // Stream from lokma_orders
+    final lokmaStream = _db
         .collection(_collection)
         .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
@@ -176,6 +177,26 @@ class OrderService {
         .map((snapshot) => snapshot.docs
             .map((doc) => LokmaOrder.fromFirestore(doc))
             .toList());
+    
+    // Stream from meat_orders (legacy cart collection)
+    final meatStream = _db
+        .collection('meat_orders')
+        .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => LokmaOrder.fromFirestore(doc))
+            .toList());
+    
+    // Combine both streams
+    return lokmaStream.asyncExpand((lokmaOrders) {
+      return meatStream.map((meatOrders) {
+        final allOrders = [...lokmaOrders, ...meatOrders];
+        // Sort by createdAt descending
+        allOrders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return allOrders;
+      });
+    });
   }
 
   /// Get single order

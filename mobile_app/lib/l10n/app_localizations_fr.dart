@@ -146,4 +146,23 @@ class LFr extends L {
 
   @override
   String get cardMessage => 'Message de carte';
+
+  @override
+  String get checkoutButton => 'Siparişi Onayla';
+
+  @override
+  String get checkoutTermsPrefix =>
+      'Siparişi Onayla butonuna tıklayarak sepet içeriğini, girdiğiniz bilgileri, ';
+
+  @override
+  String get privacyPolicy => 'Gizlilik Politikamızı';
+
+  @override
+  String get termsConjunction => ' ve ';
+
+  @override
+  String get termsOfUse => 'Kullanım Koşullarımızı';
+
+  @override
+  String get checkoutTermsSuffix => ' kabul etmiş olursunuz.';
 }

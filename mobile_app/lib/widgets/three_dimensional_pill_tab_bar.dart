@@ -20,10 +20,10 @@ class ThreeDimensionalPillTabBar extends StatelessWidget {
     required this.tabs,
   });
 
-  // LOKMA Brand Colors (Rose-500 palette)
-  static const Color lokmaPink = Color(0xFFF43F5E);      // Main brand color
-  static const Color lokmaPinkLight = Color(0xFFFB7185); // Light top (reflection)
-  static const Color lokmaPinkDark = Color(0xFFE11D48);  // Dark shadow bottom
+  // 🎨 BRAND COLOUR - LOKMA Red (#EC131E) with gradient shades
+  static const Color lokmaPink = Color(0xFFEC131E);      // Main brand color
+  static const Color lokmaPinkLight = Color(0xFFF54D4D); // Light top (reflection)
+  static const Color lokmaPinkDark = Color(0xFFC41017);  // Dark shadow bottom
 
   @override
   Widget build(BuildContext context) {

@@ -55,5 +55,12 @@
   "sameDay": "Aynı Gün Teslimat",
   "recipientName": "Alıcı Adı",
   "recipientPhone": "Alıcı Telefonu",
-  "cardMessage": "Kart Mesajı"
+  "cardMessage": "Kart Mesajı",
+  
+  "checkoutButton": "Siparişi Onayla",
+  "checkoutTermsPrefix": "Siparişi Onayla butonuna tıklayarak sepet içeriğini, girdiğiniz bilgileri, ",
+  "privacyPolicy": "Gizlilik Politikamızı",
+  "termsConjunction": " ve ",
+  "termsOfUse": "Kullanım Koşullarımızı",
+  "checkoutTermsSuffix": " kabul etmiş olursunuz."
 }

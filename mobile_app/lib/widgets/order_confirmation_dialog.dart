@@ -195,8 +195,8 @@ class OrderConfirmationDialog extends StatelessWidget {
                     // Use rootNavigator to ensure we're closing the dialog properly
                     final navigator = Navigator.of(context, rootNavigator: true);
                     
-                    // First navigate to kasap (this will replace the entire stack)
-                    context.go('/kasap');
+                    // First navigate to restoran (Yemek segment) - this will replace the entire stack
+                    context.go('/restoran');
                     
                     // Then close the dialog
                     navigator.pop();

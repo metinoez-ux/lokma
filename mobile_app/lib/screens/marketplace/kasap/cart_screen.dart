@@ -12,6 +12,7 @@ import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/models/kermes_order_model.dart';
 import 'package:lokma_app/widgets/order_confirmation_dialog.dart';
 import 'package:lokma_app/widgets/kermes/order_qr_dialog.dart';
+import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/services/fcm_service.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
@@ -37,6 +38,18 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   bool _loadingButcherParams = true;
   bool _isSubmitting = false;
   OpeningHoursHelper? _hoursHelper;
+
+  /// 🎨 BRAND COLOUR - Dynamic resolution per Design System Protocol
+  Color get _accentColor {
+    final brandColorHex = _butcherData?['brandColor']?.toString();
+    if (brandColorHex != null && brandColorHex.isNotEmpty) {
+      // Strip '#' and prepend 'FF' for alpha
+      final hex = brandColorHex.replaceFirst('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    }
+    // Fallback to LOKMA Rose-500
+    return const Color(0xFFF43F5E);
+  }
 
   @override
   void initState() {
@@ -144,7 +157,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final authState = ref.read(authProvider);
     final currentUser = authState.appUser;
     
-    if (currentUser == null) {
+    // Fallback to FirebaseAuth if provider state not synced
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    
+    if (currentUser == null && firebaseUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lütfen önce giriş yapın')),
       );
@@ -184,11 +200,18 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         _selectedTime.minute,
       );
 
+      // Use firebaseUser as fallback if currentUser is null
+      final userId = currentUser?.uid ?? firebaseUser!.uid;
+      final userDisplayName = currentUser?.displayName ?? firebaseUser?.displayName ?? firebaseUser?.email ?? 'User';
+      final userEmail = currentUser?.email ?? firebaseUser?.email ?? '';
+      final userPhone = currentUser?.phoneNumber ?? firebaseUser?.phoneNumber ?? '';
+      final userAddress = currentUser?.address;
+
       final orderData = {
-        'userId': currentUser.uid,
-        'userDisplayName': currentUser.displayName ?? currentUser.email ?? 'User',
-        'userEmail': currentUser.email ?? '',
-        'userPhone': currentUser.phoneNumber ?? '',
+        'userId': userId,
+        'userDisplayName': userDisplayName,
+        'userEmail': userEmail,
+        'userPhone': userPhone,
         'fcmToken': fcmToken,
         'butcherId': cart.butcherId,
         'butcherName': cart.butcherName,
@@ -204,7 +227,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         'totalAmount': cart.totalAmount,
         'deliveryMethod': _isPickUp ? 'pickup' : 'delivery',
         'pickupTime': _isPickUp ? Timestamp.fromDate(pickupDateTime) : null,
-        'deliveryAddress': !_isPickUp ? currentUser.address : null,
+        'deliveryAddress': !_isPickUp ? userAddress : null,
         'paymentMethod': _paymentMethod,
         'paymentStatus': _paymentMethod == 'cash' ? 'pending' : 'pending',
         'status': 'pending',
@@ -255,122 +278,48 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Widget build(BuildContext context) {
     final cart = ref.watch(cartProvider);
     final kermesCart = ref.watch(kermesCartProvider);
+    final bothEmpty = cart.items.isEmpty && kermesCart.isEmpty;
     
-    // Sepetteki ürün sayısı
-    final cartItemCount = cart.items.length + (kermesCart.isNotEmpty ? kermesCart.items.length : 0);
-    
+    // 🍊 LIEFERANDO-STYLE: Simple white background, no tabs
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: Colors.white,
         elevation: 0,
-        title: Text(
+        scrolledUnderElevation: 0,
+        title: const Text(
           'Sepetim',
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.black87,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
-          onPressed: () => context.go('/'),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87, size: 20),
+          onPressed: () {
+            // Use GoRouter's pop for proper navigation
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              // Fallback to restoran if no history
+              context.go('/restoran');
+            }
+          },
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: const Color(0xFFF43F5E),
-          indicatorWeight: 3,
-          labelColor: Theme.of(context).primaryColor,
-          unselectedLabelColor: Colors.grey,
-          tabs: [
-            Tab(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.shopping_cart_outlined, size: 18),
-                  const SizedBox(width: 6),
-                  const Text('Sepet'),
-                  if (cartItemCount > 0) ...[
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF43F5E),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '$cartItemCount',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Tab(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('kermes_orders')
-                    .where('status', whereIn: ['pending', 'preparing', 'ready'])
-                    .limit(10)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  final hasActiveOrders = snapshot.hasData && snapshot.data!.docs.isNotEmpty;
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.pending_outlined, size: 18),
-                      const SizedBox(width: 6),
-                      const Text('Aktif'),
-                      if (hasActiveOrders) ...[
-                        const SizedBox(width: 6),
-                        AnimatedBuilder(
-                          animation: _pulseAnimation,
-                          builder: (context, child) {
-                            return Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.orange.withOpacity(_pulseAnimation.value),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.orange.withOpacity(_pulseAnimation.value * 0.5),
-                                    blurRadius: 4,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ],
-                  );
-                },
-              ),
-            ),
-            const Tab(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.history, size: 18),
-                  SizedBox(width: 6),
-                  Text('Geçmiş'),
-                ],
-              ),
-            ),
-          ],
+        // 🍊 LIEFERANDO: Thin divider line under title
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(
+            color: Colors.grey.shade200,
+            height: 1,
+          ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Tab 1: Sepet
-          _buildCartTab(cart, kermesCart),
-          // Tab 2: Aktif Siparişler
-          _buildActiveOrdersTab(),
-          // Tab 3: Sipariş Geçmişi
-          _buildOrderHistoryTab(),
-        ],
-      ),
+      body: bothEmpty 
+        ? _buildEmptyCart()
+        : _buildLieferandoCartContent(cart, kermesCart),
     );
   }
   
@@ -716,6 +665,502 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
   
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🍊 LIEFERANDO-STYLE CART LAYOUT
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  Widget _buildLieferandoCartContent(CartState cart, KermesCartState kermesCart) {
+    final hasKermes = kermesCart.isNotEmpty;
+    final hasKasap = cart.items.isNotEmpty;
+    
+    // Calculate totals
+    final kermesTotal = hasKermes ? kermesCart.totalAmount : 0.0;
+    final kasapTotal = hasKasap ? cart.totalAmount : 0.0;
+    final grandTotal = kermesTotal + kasapTotal;
+    
+    return Stack(
+      children: [
+        // Scrollable content
+        SingleChildScrollView(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 120),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 🚴 Delivery Info Pill (Lieferando style)
+              _buildLieferandoDeliveryPill(),
+              const SizedBox(height: 16),
+              
+              // 🟡 Minimum Order Bar (Yellow - Lieferando style)
+              if (hasKasap && _butcherData?['minOrderAmount'] != null)
+                _buildLieferandoMinimumBar(cart.totalAmount),
+              
+              // 📦 Kermes Items (if any)
+              if (hasKermes) ...[
+                _buildLieferandoSectionHeader(kermesCart.eventName ?? 'Kermes'),
+                ...kermesCart.items.map((item) => _buildLieferandoKermesItem(item)),
+                const SizedBox(height: 16),
+              ],
+              
+              // 🥩 Kasap Items (if any)  
+              if (hasKasap) ...[
+                if (hasKermes) const Divider(height: 32),
+                if (_butcherData != null)
+                  _buildLieferandoSectionHeader(_butcherData!['companyName'] ?? 'Kasap'),
+                ...cart.items.map((item) => _buildLieferandoCartItem(item)),
+                const SizedBox(height: 16),
+              ],
+              
+              // 💰 Price Summary
+              _buildLieferandoPriceSummary(kermesTotal, kasapTotal, grandTotal),
+              
+              const SizedBox(height: 100), // Space for button
+            ],
+          ),
+        ),
+        
+        // 🟠 Fixed Bottom Checkout Button + Legal Footer
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 16,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildLieferandoCheckoutButton(grandTotal),
+              const SizedBox(height: 12),
+              // Legal terms footer (Lieferando style)
+              _buildLegalTermsFooter(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+  
+  /// 😴 3D Pill Tab Switch for Gel Al / Kurye
+  Widget _buildLieferandoDeliveryPill() {
+    if (!_canDeliver) {
+      // Only pickup available - show static pill
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.store_outlined,
+              color: _accentColor, // 🎨 BRAND COLOUR
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Gel Al',
+              style: TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // 3D Switch for Gel Al / Kurye
+    return ThreeDimensionalPillTabBar(
+      selectedIndex: _isPickUp ? 0 : 1,
+      onTabSelected: (index) {
+        setState(() => _isPickUp = index == 0);
+      },
+      tabs: const [
+        TabItem(title: 'Gel Al', icon: Icons.store_outlined),
+        TabItem(title: 'Kurye', icon: Icons.delivery_dining),
+      ],
+    );
+  }
+  
+  /// 🟡 Lieferando-style minimum order bar (yellow)
+  Widget _buildLieferandoMinimumBar(double currentTotal) {
+    final minOrder = (_butcherData!['minOrderAmount'] as num).toDouble();
+    final remaining = minOrder - currentTotal;
+    final isReached = remaining <= 0;
+    
+    if (isReached) return const SizedBox.shrink();
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF9C4), // Light yellow
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: const TextStyle(color: Colors.black87, fontSize: 14),
+                children: [
+                  const TextSpan(text: 'Noch '),
+                  TextSpan(
+                    text: '${remaining.toStringAsFixed(2)} €',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const TextSpan(text: ' bis der Mindestbestellwert erreicht ist'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Section header (e.g., restaurant name)
+  Widget _buildLieferandoSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.black87,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+  
+  /// 📦 Lieferando-style Kermes item
+  Widget _buildLieferandoKermesItem(dynamic item) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name + Price on same line
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.menuItem.name,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${item.totalPrice.toStringAsFixed(2)} €',
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Quantity controls
+                Row(
+                  children: [
+                    // Delete button
+                    GestureDetector(
+                      onTap: () => ref.read(kermesCartProvider.notifier).removeItem(item.menuItem.id),
+                      child: const Icon(Icons.delete_outline, color: Colors.grey, size: 22),
+                    ),
+                    const SizedBox(width: 16),
+                    // Quantity
+                    Text(
+                      '${item.quantity}',
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Add button
+                    GestureDetector(
+                      onTap: () => ref.read(kermesCartProvider.notifier).addItem(item.menuItem),
+                      child: const Icon(Icons.add, color: Colors.black87, size: 22),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// 🥩 Lieferando-style Kasap cart item
+  Widget _buildLieferandoCartItem(CartItem item) {
+    final productName = item.product.name;
+    final quantity = item.quantity;
+    final totalPrice = item.totalPrice;
+    final unitType = item.product.unitType?.toLowerCase() ?? 'adet';
+    final isKg = unitType == 'kg';
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Name + Price on same line
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  productName,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              Text(
+                '${totalPrice.toStringAsFixed(2)} €',
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+          
+          // Unit info for kg items
+          if (isKg)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '${item.product.price.toStringAsFixed(2)} €/kg',
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              ),
+            ),
+          
+          const SizedBox(height: 8),
+          
+          // Quantity controls (Lieferando style: trash + count + plus)
+          Row(
+            children: [
+              // Delete/minus button
+              GestureDetector(
+                onTap: () {
+                  if (quantity > 1) {
+                    ref.read(cartProvider.notifier).updateQuantity(item.product.sku, quantity - 1);
+                  } else {
+                    ref.read(cartProvider.notifier).removeFromCart(item.product.sku);
+                  }
+                },
+                child: Icon(
+                  quantity == 1 ? Icons.delete_outline : Icons.remove,
+                  color: Colors.grey[700],
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Quantity
+              Text(
+                isKg ? '${(quantity / 1000).toStringAsFixed(1)} kg' : '${quantity.toInt()}',
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Add button
+              GestureDetector(
+                onTap: () {
+                  ref.read(cartProvider.notifier).updateQuantity(
+                    item.product.sku, 
+                    isKg ? quantity + 100 : quantity + 1,
+                  );
+                },
+                child: Icon(Icons.add, color: Colors.grey[700], size: 22),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// 💰 Price Summary
+  Widget _buildLieferandoPriceSummary(double kermesTotal, double kasapTotal, double grandTotal) {
+    return Column(
+      children: [
+        const SizedBox(height: 8),
+        // Subtotal
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Zwischensumme',
+              style: TextStyle(color: Colors.black87, fontSize: 14),
+            ),
+            Text(
+              '${grandTotal.toStringAsFixed(2)} €',
+              style: const TextStyle(color: Colors.black87, fontSize: 14),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Service fee (if applicable)
+        if (!_isPickUp && _butcherData?['deliveryFee'] != null) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Lieferkosten',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+              Text(
+                '${(_butcherData!['deliveryFee'] as num).toStringAsFixed(2)} €',
+                style: const TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+      ],
+    );
+  }
+  
+  /// 🟠 Orange Checkout Button (Lieferando pill style)
+  Widget _buildLieferandoCheckoutButton(double total) {
+    return GestureDetector(
+      onTap: () {
+        // Check minimum order for ALL orders (both pickup and delivery)
+        if (_butcherData?['minOrderAmount'] != null) {
+          final minOrder = (_butcherData!['minOrderAmount'] as num).toDouble();
+          if (total < minOrder) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Minimum sipariş tutarı: ${minOrder.toStringAsFixed(2)} €'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
+        }
+        _submitOrder();
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: _accentColor, // 🎨 BRAND COLOUR
+          borderRadius: BorderRadius.circular(28), // Pill shape
+          boxShadow: [
+            BoxShadow(
+              color: _accentColor.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            'Siparişi Onayla · ${total.toStringAsFixed(2)} €',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  /// 📜 Legal Terms Footer (Lieferando style)
+  Widget _buildLegalTermsFooter() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontSize: 11,
+            height: 1.4,
+          ),
+          children: [
+            const TextSpan(text: 'Siparişi Onayla butonuna tıklayarak sepet içeriğini, girdiğiniz bilgileri, '),
+            WidgetSpan(
+              child: GestureDetector(
+                onTap: () => _openPrivacyPolicy(),
+                child: Text(
+                  'Gizlilik Politikamızı',
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 11,
+                    decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const TextSpan(text: ' ve '),
+            WidgetSpan(
+              child: GestureDetector(
+                onTap: () => _openTermsOfUse(),
+                child: Text(
+                  'Kullanım Koşullarımızı',
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontSize: 11,
+                    decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const TextSpan(text: ' kabul etmiş olursunuz.'),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  void _openPrivacyPolicy() {
+    // TODO: Navigate to privacy policy page or open web URL
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Gizlilik Politikası yakında eklenecek')),
+    );
+  }
+  
+  void _openTermsOfUse() {
+    // TODO: Navigate to terms of use page or open web URL
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Kullanım Koşulları yakında eklenecek')),
+    );
+  }
+  
   /// Kermes sepet bölümü
   Widget _buildKermesCartSection(KermesCartState kermesCart) {
     return Container(
@@ -904,32 +1349,80 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             _buildDeliveryToggle(),
             const SizedBox(height: 12),
             
-            // Minimum Order Info (for delivery)
-            if (!_isPickUp && _canDeliver && _butcherData?['minOrderAmount'] != null)
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Colors.orange[400], size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Minimum Sipariş: ${(_butcherData!['minOrderAmount'] as num).toStringAsFixed(0)}€',
-                        style: TextStyle(
-                          color: Colors.orange[400],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+            // 🛒 LIEFERANDO-STYLE: Dynamic Minimum Order Progress
+            if (_butcherData?['minOrderAmount'] != null)
+              Builder(builder: (context) {
+                final minOrder = (_butcherData!['minOrderAmount'] as num).toDouble();
+                final currentTotal = cart.totalAmount;
+                final remaining = minOrder - currentTotal;
+                final progress = (currentTotal / minOrder).clamp(0.0, 1.0);
+                final isReached = remaining <= 0;
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: isReached 
+                        ? const Color(0xFF4CAF50).withOpacity(0.1)
+                        : const Color(0xFFFFF3CD), // Yellow/amber background like Lieferando
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isReached 
+                          ? const Color(0xFF4CAF50).withOpacity(0.3)
+                          : const Color(0xFFFFE082),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            isReached ? Icons.check_circle : Icons.info_outline,
+                            color: isReached ? const Color(0xFF4CAF50) : const Color(0xFFF57C00),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              isReached
+                                  ? 'Minimum sipariş tutarına ulaşıldı ✓'
+                                  : 'Noch ${remaining.toStringAsFixed(2)} € bis der Mindestbestellwert erreicht ist',
+                              style: TextStyle(
+                                color: isReached ? const Color(0xFF2E7D32) : const Color(0xFF5D4037),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (!isReached) ...[
+                        const SizedBox(height: 10),
+                        // Progress bar
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progress,
+                            backgroundColor: const Color(0xFFFFE082),
+                            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF57C00)),
+                            minHeight: 6,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        // Progress text
+                        Text(
+                          '${currentTotal.toStringAsFixed(2)} € / ${minOrder.toStringAsFixed(2)} €',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }),
 
             // Time/Date Selection
             _buildTimeSelector(),
@@ -1051,101 +1544,72 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     }
   }
 
+  // 🎨 LIEFERANDO-STYLE: Minimalist delivery info bar
   Widget _buildDeliveryToggle() {
-    // 🆕 Compact pill bar (44px, single-row layout)
     final deliveryFee = _butcherData?['deliveryFee'] as num?;
+    final estimatedTime = _butcherData?['deliveryTime'] ?? '20-35';
     
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Row(
-        children: [
-          // Gel Al
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _isPickUp = true),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                decoration: BoxDecoration(
-                  color: _isPickUp ? const Color(0xFFF43F5E) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
+    return GestureDetector(
+      onTap: () {
+        // Toggle between pickup and delivery
+        if (_canDeliver || _isPickUp) {
+          setState(() => _isPickUp = !_isPickUp);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _isPickUp ? Icons.store_outlined : Icons.local_shipping_outlined,
+              color: _accentColor, // 🎨 BRAND COLOUR
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _isPickUp ? 'Gel Al' : 'Kurye',
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.store_outlined,
-                      color: _isPickUp ? Colors.white : Colors.grey[600],
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Gel Al',
-                      style: TextStyle(
-                        color: _isPickUp ? Colors.white : Colors.grey[600],
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
+                Text(
+                  _isPickUp ? '15-20 Dk.' : '$estimatedTime Dk.',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            if (!_isPickUp && deliveryFee != null)
+              Text(
+                '+${deliveryFee.toStringAsFixed(2)} €',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 13,
                 ),
               ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.keyboard_arrow_down,
+              color: Colors.grey[500],
+              size: 20,
             ),
-          ),
-          // Kurye
-          Expanded(
-            child: GestureDetector(
-              onTap: _canDeliver ? () => setState(() => _isPickUp = false) : null,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeInOut,
-                decoration: BoxDecoration(
-                  color: !_isPickUp ? const Color(0xFFF43F5E) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.local_shipping_outlined,
-                      color: !_isPickUp 
-                        ? Colors.white 
-                        : (_canDeliver ? Colors.grey[600] : Colors.grey[400]),
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _canDeliver ? 'Kurye' : 'Yok',
-                      style: TextStyle(
-                        color: !_isPickUp 
-                          ? Colors.white 
-                          : (_canDeliver ? Colors.grey[600] : Colors.grey[400]),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    // Compact delivery fee inline
-                    if (deliveryFee != null && _canDeliver) ...[
-                      const SizedBox(width: 4),
-                      Text(
-                        '+${deliveryFee.toStringAsFixed(0)}€',
-                        style: TextStyle(
-                          color: !_isPickUp ? Colors.white70 : Colors.grey[500],
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1234,220 +1698,112 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
 
+  // 🎨 LIEFERANDO-STYLE: Payment method selector
   Widget _buildPaymentToggle() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _paymentMethod = 'cash'),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: _paymentMethod == 'cash' ? const Color(0xFFE53935) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.money, color: _paymentMethod == 'cash' ? Colors.white : Colors.grey, size: 18),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Nakit',
-                      style: TextStyle(
-                        color: _paymentMethod == 'cash' ? Colors.white : Colors.grey,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+    final methodLabel = _paymentMethod == 'cash' ? 'Nakit Ödeme' : 'Kart ile Ödeme';
+    final methodIcon = _paymentMethod == 'cash' ? Icons.payments_outlined : Icons.credit_card_outlined;
+    
+    return GestureDetector(
+      onTap: () {
+        // Toggle payment method
+        setState(() {
+          _paymentMethod = _paymentMethod == 'cash' ? 'card' : 'cash';
+        });
+        if (_paymentMethod == 'card') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Kart ödemesi yakında aktif olacak!')),
+          );
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              methodIcon,
+              color: _accentColor, // 🎨 BRAND COLOUR
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              methodLabel,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
               ),
             ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() => _paymentMethod = 'card');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Kart ödemesi yakında aktif olacak!')),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: _paymentMethod == 'card' ? const Color(0xFFE53935) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.credit_card, color: _paymentMethod == 'card' ? Colors.white : Colors.grey, size: 18),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Kart',
-                      style: TextStyle(
-                        color: _paymentMethod == 'card' ? Colors.white : Colors.grey,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            const Spacer(),
+            Icon(
+              Icons.chevron_right,
+              color: Colors.grey[400],
+              size: 22,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
+  // 🎨 LIEFERANDO-STYLE: Minimalist cart item
   Widget _buildCartItem(CartItem item) {
-    // Defensive null checks
     final productName = item.product.name.isNotEmpty ? item.product.name : 'Ürün';
     final unitType = item.product.unitType.isNotEmpty ? item.product.unitType : 'adet';
     final quantity = item.quantity;
     final totalPrice = item.totalPrice;
+    final unitPrice = item.product.price;
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
-        ],
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Product Image (Left)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: item.product.imageUrl != null && item.product.imageUrl!.isNotEmpty
-                ? CachedNetworkImage(
-                    imageUrl: item.product.imageUrl!,
-                    width: 64,
-                    height: 64,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(
-                      width: 64, height: 64,
-                      color: Colors.grey.shade800,
-                      child: const Icon(Icons.restaurant, color: Colors.grey, size: 28),
-                    ),
-                    errorWidget: (_, __, ___) => Container(
-                      width: 64, height: 64,
-                      color: Colors.grey.shade800,
-                      child: const Icon(Icons.restaurant, color: Colors.grey, size: 28),
-                    ),
-                  )
-                : Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade800,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.restaurant, color: Colors.grey, size: 28),
-                  ),
-          ),
-          const SizedBox(width: 14),
-          
-          // Product Info + Quantity Controls
+          // Left side: Product info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Product Name
+                // Product name
                 Text(
                   productName,
                   style: const TextStyle(
-                    color: Colors.black87, // Changed from Colors.black87
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 10),
                 
-                // Quantity Controls Row (Larger Buttons)
-                Row(
-                  children: [
-                    // Minus Button
-                    GestureDetector(
-                      onTap: () {
-                        if (quantity > 1) {
-                          ref.read(cartProvider.notifier).updateQuantity(item.product.sku, quantity - 1);
-                        } else {
-                          ref.read(cartProvider.notifier).removeFromCart(item.product.sku);
-                        }
-                      },
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade800,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.remove, color: Colors.white, size: 20),
+                // Unit info (for kg products)
+                if (unitType == 'kg')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '${quantity.toInt()}g x ${unitPrice.toStringAsFixed(2)} €/kg',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 13,
                       ),
                     ),
-                    
-                    // Quantity Display
-                    Container(
-                      width: 60,
-                      alignment: Alignment.center,
-                      child: Text(
-                        unitType == 'kg' ? '${quantity.toInt()}g' : '${quantity.toInt()}',
-                        style: const TextStyle(
-                          color: Colors.black87, 
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                    ),
-                    
-                    // Plus Button
-                    GestureDetector(
-                      onTap: () {
-                        ref.read(cartProvider.notifier).updateQuantity(item.product.sku, quantity + 1);
-                      },
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE53935),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.add, color: Colors.white, size: 20),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
               ],
             ),
           ),
           
-          // Price + Delete Column (Right)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          // Right side: Controls + Price
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Price
-              Text(
-                '${totalPrice.toStringAsFixed(2)} €',
-                style: const TextStyle(
-                  color: Colors.black87, 
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              const SizedBox(height: 12),
-              
-              // Delete Button
+              // Trash button (always deletes)
               GestureDetector(
                 onTap: () {
                   ref.read(cartProvider.notifier).removeFromCart(item.product.sku);
@@ -1456,9 +1812,54 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   padding: const EdgeInsets.all(8),
                   child: Icon(
                     Icons.delete_outline,
-                    color: Colors.red.shade400,
-                    size: 24,
+                    color: Colors.grey[500],
+                    size: 20,
                   ),
+                ),
+              ),
+              
+              // Quantity
+              Container(
+                width: 32,
+                alignment: Alignment.center,
+                child: Text(
+                  '${quantity.toInt()}',
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              
+              // Plus button
+              GestureDetector(
+                onTap: () {
+                  ref.read(cartProvider.notifier).updateQuantity(item.product.sku, quantity + 1);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.black87,
+                    size: 20,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(width: 12),
+              
+              // Price
+              SizedBox(
+                width: 64,
+                child: Text(
+                  '${totalPrice.toStringAsFixed(2)} €',
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                  textAlign: TextAlign.right,
                 ),
               ),
             ],

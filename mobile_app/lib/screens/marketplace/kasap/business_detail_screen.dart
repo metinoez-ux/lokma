@@ -27,26 +27,39 @@ class BusinessDetailScreen extends ConsumerStatefulWidget {
 
 class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // Theme-aware colors (resolved in build method)
-  // LIEFERANDO STYLE: Dynamic light/dark theme support
-  static const Color _accentOrange = Color(0xFFFF8000); // Lieferando orange
+  // 🎨 BRAND COLOUR: Fallback when no brandColor in Firestore
+  static const Color _defaultBrandColor = Color(0xFFD03140);  // LOKMA default red
   static const Color _accentRed = Color(0xFFE53935);    // Legacy red accent
   
-  // Helper to get theme-aware accent color (for use in helper methods)
-  // Uses brand color when available, otherwise falls back to theme accent
+  // 🎨 BRAND COLOUR: Get merchant's brand color from Firestore
+  // Reads 'brandColor' field (hex string like '#FF5733') from business document
   Color _getAccent(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    // Check for brand color
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
-    final brand = data?['brand']?.toString().toLowerCase();
     
-    if (brand == 'tuna') {
-      return const Color(0xFFB71C1C); // TUNA brand red
-    } else if (brand == 'akdeniz_toros') {
-      return const Color(0xFF1B5E20); // Akdeniz Toros green
+    // 🎨 BRAND COLOUR: Check for brandColor field in Firestore (hex format: #RRGGBB)
+    final brandColorHex = data?['brandColor']?.toString();
+    if (brandColorHex != null && brandColorHex.isNotEmpty) {
+      try {
+        // Parse hex color (e.g., "#FF5733" or "FF5733")
+        String hex = brandColorHex.replaceAll('#', '');
+        if (hex.length == 6) {
+          return Color(int.parse('FF$hex', radix: 16));
+        }
+      } catch (e) {
+        // Fall through to defaults if parsing fails
+      }
     }
     
-    return isDark ? _accentRed : _accentOrange;
+    // Check for legacy brand field
+    final brand = data?['brand']?.toString().toLowerCase();
+    if (brand == 'tuna') {
+      return const Color(0xFFE91E63); // 🎨 BRAND COLOUR: TUNA pink/magenta
+    } else if (brand == 'akdeniz_toros') {
+      return const Color(0xFF1B5E20); // 🎨 BRAND COLOUR: Akdeniz Toros green
+    }
+    
+    // 🎨 BRAND COLOUR: Default fallback
+    return _defaultBrandColor;
   }
   
   String _selectedCategory = 'Tümü';
@@ -74,6 +87,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   
   // Local Cart/Selection State (simple map: sku -> quantity)
   final Map<String, double> _selections = {};
+  
+  // 🔍 Store all loaded products for instant search
+  List<ButcherProduct> _allProducts = [];
 
   @override
   void initState() {
@@ -311,156 +327,27 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
   // 🔍 LIEFERANDO-STYLE: Full-screen search overlay
   void _showMenuSearchOverlay() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF8F8F8);
-    final textPrimary = isDark ? Colors.white : Colors.black87;
-    final accent = _getAccent(context);
-    
-    final searchFocusNode = FocusNode();
-    final overlaySearchController = TextEditingController(text: _menuSearchQuery);
-    
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: scaffoldBg,
-      isDismissible: true,
-      enableDrag: false,
-      builder: (context) {
-        // Auto-focus the search field
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          searchFocusNode.requestFocus();
-        });
-        
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return SafeArea(
-              child: Container(
-                height: MediaQuery.of(context).size.height,
-                color: scaffoldBg,
-                child: Column(
-                  children: [
-                    // Search Bar Header
-                    Container(
-                      padding: EdgeInsets.only(
-                        top: MediaQuery.of(context).padding.top + 8,
-                        left: 16,
-                        right: 16,
-                        bottom: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scaffoldBg,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          // Search Input
-                          Expanded(
-                            child: Container(
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(color: Colors.grey.withOpacity(0.3)),
-                              ),
-                              child: Row(
-                                children: [
-                                  const SizedBox(width: 16),
-                                  Icon(Icons.search, color: accent, size: 22),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: overlaySearchController,
-                                      focusNode: searchFocusNode,
-                                      style: TextStyle(fontSize: 16, color: textPrimary),
-                                      textInputAction: TextInputAction.search,
-                                      decoration: InputDecoration(
-                                        hintText: 'Menüde ara...',
-                                        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
-                                        border: InputBorder.none,
-                                        contentPadding: EdgeInsets.zero,
-                                        isDense: true,
-                                      ),
-                                      onChanged: (value) {
-                                        setModalState(() {});
-                                        setState(() => _menuSearchQuery = value);
-                                      },
-                                      onSubmitted: (value) {
-                                        setState(() => _menuSearchQuery = value);
-                                        Navigator.pop(context);
-                                      },
-                                    ),
-                                  ),
-                                  if (overlaySearchController.text.isNotEmpty)
-                                    IconButton(
-                                      icon: Icon(Icons.clear, color: Colors.grey, size: 20),
-                                      onPressed: () {
-                                        overlaySearchController.clear();
-                                        setModalState(() {});
-                                        setState(() => _menuSearchQuery = '');
-                                      },
-                                    )
-                                  else
-                                    const SizedBox(width: 16),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Close Button (X)
-                          GestureDetector(
-                            onTap: () {
-                              _searchController.text = overlaySearchController.text;
-                              Navigator.pop(context);
-                            },
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.close, color: textPrimary, size: 20),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Empty space - could show search suggestions or recent searches
-                    Expanded(
-                      child: Container(
-                        color: scaffoldBg,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.search, size: 64, color: Colors.grey[400]),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Ürün ara...',
-                                style: TextStyle(color: Colors.grey[500], fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    ).then((_) {
-      searchFocusNode.dispose();
-      overlaySearchController.dispose();
-    });
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: true,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return _MenuSearchPage(
+            initialQuery: _menuSearchQuery,
+            products: _allProducts,
+            onSearch: (query) {
+              setState(() {
+                _menuSearchQuery = query;
+                _searchController.text = query;
+              });
+            },
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 200),
+      ),
+    );
   }
 
   // --- Helper Methods ---
@@ -1394,7 +1281,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       return Scaffold(
         backgroundColor: scaffoldBg,
         body: Center(
-          child: CircularProgressIndicator(color: isDark ? _accentRed : _accentOrange),
+          child: CircularProgressIndicator(color: _defaultBrandColor), // 🎨 BRAND COLOUR
         ),
       );
     }
@@ -1408,14 +1295,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            (brand?.toString().toLowerCase() == 'tuna' || brand?.toString().toLowerCase() == 'akdeniz_toros');
     final address = data?['address'] as Map<String, dynamic>?;
     
-    // BRAND COLOR SYSTEM: Use brand-specific colors when available
+    // 🎨 BRAND COLOR SYSTEM: Use brand-specific colors when available
     Color accent;
     if (brand?.toString().toLowerCase() == 'tuna') {
-      accent = const Color(0xFFB71C1C); // TUNA brand red
+      accent = const Color(0xFFE91E63); // 🎨 BRAND COLOUR: TUNA pink/magenta
     } else if (brand?.toString().toLowerCase() == 'akdeniz_toros') {
-      accent = const Color(0xFF1B5E20); // Akdeniz Toros green
+      accent = const Color(0xFF1B5E20); // 🎨 BRAND COLOUR: Akdeniz Toros green
     } else {
-      accent = isDark ? _accentRed : _accentOrange; // Default theme accent
+      accent = _defaultBrandColor; // 🎨 BRAND COLOUR: Default fallback
     }
 
     return Scaffold(
@@ -1448,6 +1335,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               
               return ButcherProduct.fromFirestore(data, doc.id, butcherId: widget.businessId, masterData: masterMap);
             }).toList();
+            // 🔍 Update all products for instant search
+            _allProducts = products;
           }
 
           // Filter by Category
@@ -2810,5 +2699,367 @@ class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_SearchBarDelegate oldDelegate) {
     return height != oldDelegate.height || child != oldDelegate.child;
+  }
+}
+
+// 🔍 Full-screen menu search page with instant search
+class _MenuSearchPage extends StatefulWidget {
+  final String initialQuery;
+  final ValueChanged<String> onSearch;
+  final List<ButcherProduct> products;
+  final VoidCallback? onProductTap;
+
+  const _MenuSearchPage({
+    required this.initialQuery,
+    required this.onSearch,
+    required this.products,
+    this.onProductTap,
+  });
+
+  @override
+  State<_MenuSearchPage> createState() => _MenuSearchPageState();
+}
+
+class _MenuSearchPageState extends State<_MenuSearchPage> {
+  late TextEditingController _controller;
+  late FocusNode _focusNode;
+  String _localQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialQuery);
+    _localQuery = widget.initialQuery;
+    _focusNode = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  // 🇹🇷 Turkish character normalization for easier search
+  String _normalizeTurkish(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll('ö', 'o')
+        .replaceAll('ü', 'u')
+        .replaceAll('ı', 'i')
+        .replaceAll('ğ', 'g')
+        .replaceAll('ş', 's')
+        .replaceAll('ç', 'c')
+        .replaceAll('İ', 'i')
+        .replaceAll('Ö', 'o')
+        .replaceAll('Ü', 'u')
+        .replaceAll('Ğ', 'g')
+        .replaceAll('Ş', 's')
+        .replaceAll('Ç', 'c');
+  }
+
+  List<ButcherProduct> get _filteredProducts {
+    if (_localQuery.length < 2) return [];
+    final query = _normalizeTurkish(_localQuery);
+    return widget.products.where((p) => 
+      _normalizeTurkish(p.name).contains(query) ||
+      (p.description != null && _normalizeTurkish(p.description!).contains(query)) ||
+      _normalizeTurkish(p.category).contains(query)
+    ).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF8F8F8);
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.grey[400] : Colors.grey[600];
+    final accent = const Color(0xFFD03140); // Brand color
+    final topPadding = MediaQuery.of(context).padding.top;
+    final filtered = _filteredProducts;
+
+    // Group products by category
+    final Map<String, List<ButcherProduct>> groupedProducts = {};
+    for (final product in filtered) {
+      final category = product.category.isNotEmpty ? product.category : 'Diğer';
+      groupedProducts.putIfAbsent(category, () => []).add(product);
+    }
+
+    return Scaffold(
+      backgroundColor: scaffoldBg,
+      body: Column(
+        children: [
+          // Search Bar Header
+          Container(
+            padding: EdgeInsets.only(
+              top: topPadding + 12,
+              left: 16,
+              right: 16,
+              bottom: 12,
+            ),
+            decoration: BoxDecoration(
+              color: scaffoldBg,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                // Search Input
+                Expanded(
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 16),
+                        Icon(Icons.search, color: accent, size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: _controller,
+                            focusNode: _focusNode,
+                            style: TextStyle(fontSize: 16, color: textPrimary),
+                            textInputAction: TextInputAction.search,
+                            decoration: InputDecoration(
+                              hintText: 'Menüde ara...',
+                              hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                            ),
+                            onChanged: (value) {
+                              setState(() => _localQuery = value);
+                            },
+                            onSubmitted: (value) {
+                              widget.onSearch(value);
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ),
+                        if (_controller.text.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+                            onPressed: () {
+                              _controller.clear();
+                              setState(() => _localQuery = '');
+                            },
+                          )
+                        else
+                          const SizedBox(width: 16),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Close Button (X)
+                GestureDetector(
+                  onTap: () {
+                    // Clear the search query when closing without submitting
+                    widget.onSearch('');
+                    Navigator.of(context).pop();
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.close, color: textPrimary, size: 20),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Search Results
+          Expanded(
+            child: _localQuery.length < 2
+                ? Container(color: scaffoldBg) // Empty when query is short
+                : filtered.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Sonuç bulunamadı',
+                              style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: groupedProducts.entries.fold<int>(
+                          0, (sum, e) => sum + 1 + e.value.length), // Categories + products
+                        itemBuilder: (context, index) {
+                          // Build flat list with category headers
+                          int currentIndex = 0;
+                          for (final entry in groupedProducts.entries) {
+                            // Category header
+                            if (index == currentIndex) {
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 16, bottom: 8),
+                                child: Text(
+                                  entry.key,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: textSecondary,
+                                  ),
+                                ),
+                              );
+                            }
+                            currentIndex++;
+
+                            // Products in this category
+                            for (int i = 0; i < entry.value.length; i++) {
+                              if (index == currentIndex) {
+                                final product = entry.value[i];
+                                final isLast = i == entry.value.length - 1;
+                                return _buildProductResultItem(
+                                  product, 
+                                  isDark, 
+                                  textPrimary, 
+                                  textSecondary!, 
+                                  accent, 
+                                  isLast,
+                                );
+                              }
+                              currentIndex++;
+                            }
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductResultItem(
+    ButcherProduct product, 
+    bool isDark, 
+    Color textPrimary, 
+    Color textSecondary, 
+    Color accent,
+    bool isLast,
+  ) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: () {
+            // TODO: Add to cart logic
+            Navigator.of(context).pop(); // Close search and navigate back
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product info (left side)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product.name,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '€${product.price.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: textSecondary,
+                        ),
+                      ),
+                      if (product.description != null && product.description!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          product.description!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Product image + add button (right side)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        color: isDark ? Colors.grey[800] : Colors.grey[200],
+                        child: (product.imageUrl != null && product.imageUrl!.isNotEmpty)
+                            ? Image.network(
+                                product.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Icon(
+                                  Icons.restaurant_menu,
+                                  color: isDark ? Colors.grey[600] : Colors.grey[400],
+                                  size: 32,
+                                ),
+                              )
+                            : Icon(
+                                Icons.restaurant_menu,
+                                color: isDark ? Colors.grey[600] : Colors.grey[400],
+                                size: 32,
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // 🎨 BRAND COLOUR: "+" pill button (same style as main menu)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.add, color: Colors.white, size: 16),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Divider (except for last item)
+        if (!isLast)
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: isDark ? Colors.grey[800] : Colors.grey[300],
+          ),
+      ],
+    );
   }
 }

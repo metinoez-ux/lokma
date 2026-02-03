@@ -380,6 +380,42 @@ abstract class L {
   /// In tr, this message translates to:
   /// **'Kart Mesajı'**
   String get cardMessage;
+
+  /// No description provided for @checkoutButton.
+  ///
+  /// In tr, this message translates to:
+  /// **'Siparişi Onayla'**
+  String get checkoutButton;
+
+  /// No description provided for @checkoutTermsPrefix.
+  ///
+  /// In tr, this message translates to:
+  /// **'Siparişi Onayla butonuna tıklayarak sepet içeriğini, girdiğiniz bilgileri, '**
+  String get checkoutTermsPrefix;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlilik Politikamızı'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsConjunction.
+  ///
+  /// In tr, this message translates to:
+  /// **' ve '**
+  String get termsConjunction;
+
+  /// No description provided for @termsOfUse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanım Koşullarımızı'**
+  String get termsOfUse;
+
+  /// No description provided for @checkoutTermsSuffix.
+  ///
+  /// In tr, this message translates to:
+  /// **' kabul etmiş olursunuz.'**
+  String get checkoutTermsSuffix;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

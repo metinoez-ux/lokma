@@ -62,12 +62,12 @@ class ButcherProduct {
       description: getVal<String>('description') ?? '',
       category: getVal<String>('category') ?? 'Diğer',
       price: (data['price'] ?? 0).toDouble(), // Price always from Butcher
-      unitType: getVal<String>('unit') ?? 'kg',
+      unitType: getVal<String>('unit') ?? 'adet', // Default to 'adet' not 'kg'
       imageUrl: imgUrl,
       tags: List<String>.from(data['tags'] ?? masterData?['tags'] ?? []),
       inStock: data['isAvailable'] ?? true,
-      minQuantity: (getVal<String>('unit') == 'ad') ? 1.0 : 0.5,
-      stepQuantity: (getVal<String>('unit') == 'ad') ? 1.0 : 0.5,
+      minQuantity: (getVal<String>('unit') == 'kg') ? 0.5 : 1.0, // Only kg uses 0.5
+      stepQuantity: (getVal<String>('unit') == 'kg') ? 0.5 : 1.0, // Only kg uses 0.5
       isCustom: data['isCustom'] ?? false,
       allowBackorder: data['allowBackorder'] ?? false,
       expectedRestockDate: data['expectedRestockDate'] != null 

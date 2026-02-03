@@ -146,4 +146,23 @@ class LDe extends L {
 
   @override
   String get cardMessage => 'Kartennachricht';
+
+  @override
+  String get checkoutButton => 'Bestellen und bezahlen';
+
+  @override
+  String get checkoutTermsPrefix =>
+      'Durch Klicken auf Bestellen und bezahlen erklären Sie sich mit dem Inhalt des Warenkorbs, den von Ihnen eingegebenen Daten, unserer ';
+
+  @override
+  String get privacyPolicy => 'Datenschutzerklärung';
+
+  @override
+  String get termsConjunction => ' und unseren ';
+
+  @override
+  String get termsOfUse => 'Nutzungsbedingungen';
+
+  @override
+  String get checkoutTermsSuffix => ' einverstanden.';
 }
