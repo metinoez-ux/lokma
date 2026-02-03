@@ -14,6 +14,7 @@ import 'package:lokma_app/providers/cart_provider.dart';
 import 'cart_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/providers/theme_provider.dart';
+import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 
 class BusinessDetailScreen extends ConsumerStatefulWidget {
   final String businessId;
@@ -50,6 +51,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   
   String _selectedCategory = 'Tümü';
   
+  // 🚀 Service Mode (Lieferando-style toggle)
+  bool _isDeliveryMode = true; // true = Kurye/Teslimat, false = Gel Al/Abholung
+  
+  // 🔍 Menu Search
+  String _menuSearchQuery = '';
+  bool _isSearching = false;
+  
+  // 📜 Scroll Controller for Lieferando-style search bar
+  final ScrollController _scrollController = ScrollController();
+  bool _showSearchBar = false; // Shows when scrolled past hero
+  final TextEditingController _searchController = TextEditingController();
+  
   // 🔄 Dynamic categories loaded from Firestore
   List<Map<String, dynamic>> _categories = [
     {'name': 'Tümü', 'icon': Icons.grid_view, 'emoji': '🏠'},
@@ -67,6 +80,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     super.initState();
     _loadButcherAndReviews();
     _setupCategoriesListener(); // 🔄 Real-time listener for categories
+    
+    // Listen to scroll to show/hide search bar
+    _scrollController.addListener(() {
+      final shouldShow = _scrollController.offset > 150; // After hero image
+      if (shouldShow != _showSearchBar) {
+        setState(() => _showSearchBar = shouldShow);
+      }
+    });
   }
   // 🔄 Real-time subscription for categories
   late final Stream<QuerySnapshot<Map<String, dynamic>>> _categoriesStream;
@@ -285,6 +306,160 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           ],
         ),
       );
+    });
+  }
+
+  // 🔍 LIEFERANDO-STYLE: Full-screen search overlay
+  void _showMenuSearchOverlay() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF8F8F8);
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final accent = _getAccent(context);
+    
+    final searchFocusNode = FocusNode();
+    final overlaySearchController = TextEditingController(text: _menuSearchQuery);
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: scaffoldBg,
+      isDismissible: true,
+      enableDrag: false,
+      builder: (context) {
+        // Auto-focus the search field
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          searchFocusNode.requestFocus();
+        });
+        
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Container(
+                height: MediaQuery.of(context).size.height,
+                color: scaffoldBg,
+                child: Column(
+                  children: [
+                    // Search Bar Header
+                    Container(
+                      padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + 8,
+                        left: 16,
+                        right: 16,
+                        bottom: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scaffoldBg,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          // Search Input
+                          Expanded(
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const SizedBox(width: 16),
+                                  Icon(Icons.search, color: accent, size: 22),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: TextField(
+                                      controller: overlaySearchController,
+                                      focusNode: searchFocusNode,
+                                      style: TextStyle(fontSize: 16, color: textPrimary),
+                                      textInputAction: TextInputAction.search,
+                                      decoration: InputDecoration(
+                                        hintText: 'Menüde ara...',
+                                        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.zero,
+                                        isDense: true,
+                                      ),
+                                      onChanged: (value) {
+                                        setModalState(() {});
+                                        setState(() => _menuSearchQuery = value);
+                                      },
+                                      onSubmitted: (value) {
+                                        setState(() => _menuSearchQuery = value);
+                                        Navigator.pop(context);
+                                      },
+                                    ),
+                                  ),
+                                  if (overlaySearchController.text.isNotEmpty)
+                                    IconButton(
+                                      icon: Icon(Icons.clear, color: Colors.grey, size: 20),
+                                      onPressed: () {
+                                        overlaySearchController.clear();
+                                        setModalState(() {});
+                                        setState(() => _menuSearchQuery = '');
+                                      },
+                                    )
+                                  else
+                                    const SizedBox(width: 16),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Close Button (X)
+                          GestureDetector(
+                            onTap: () {
+                              _searchController.text = overlaySearchController.text;
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.close, color: textPrimary, size: 20),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Empty space - could show search suggestions or recent searches
+                    Expanded(
+                      child: Container(
+                        color: scaffoldBg,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search, size: 64, color: Colors.grey[400]),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Ürün ara...',
+                                style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      searchFocusNode.dispose();
+      overlaySearchController.dispose();
     });
   }
 
@@ -1168,6 +1343,36 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     );
   }
 
+  // Lieferando-style compact action button
+  Widget _buildQuickAction(IconData icon, String label, VoidCallback onTap, bool isDark) {
+    return Material(
+      color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: isDark ? Colors.white70 : Colors.black54),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black54,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // LIEFERANDO STYLE: Theme-aware color system
@@ -1246,346 +1451,328 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           }
 
           // Filter by Category
-          final filteredProducts = _selectedCategory == 'Tümü' 
+          var filteredProducts = _selectedCategory == 'Tümü' 
               ? products 
               : products.where((p) => p.category == _selectedCategory).toList();
+          
+          // 🔍 Filter by Menu Search Query
+          if (_menuSearchQuery.isNotEmpty) {
+            final query = _menuSearchQuery.toLowerCase();
+            filteredProducts = filteredProducts.where((p) => 
+              p.name.toLowerCase().contains(query) ||
+              (p.description?.toLowerCase().contains(query) ?? false)
+            ).toList();
+          }
 
           return CustomScrollView(
+            controller: _scrollController,
             slivers: [
-              // 1. Expanded Header (Image + Title)
+              // 1. LIEFERANDO-STYLE: White Top Bar (separate from hero)
               SliverAppBar(
-                expandedHeight: 280, // Lieferando-style hero section
+                expandedHeight: 0, // No expanded height - just the app bar
                 floating: false,
                 pinned: true,
                 backgroundColor: scaffoldBg,
-                leading: IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle),
-                    child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                  ),
-                  onPressed: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go('/restoran');
-                    }
-                  },
-                ),
-                actions: [
-                  IconButton(
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle),
-                      child: Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorite ? accent : Colors.white,
-                        size: 20,
+                surfaceTintColor: scaffoldBg,
+                elevation: 0,
+                toolbarHeight: 56,
+                // Back button with white circular background
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Material(
+                    color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                    shape: const CircleBorder(),
+                    elevation: 2,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/restoran');
+                        }
+                      },
+                      child: SizedBox(
+                        width: 40, height: 40,
+                        child: Icon(Icons.arrow_back_ios_new, color: textPrimary, size: 18),
                       ),
                     ),
-                    onPressed: () {
-                      ref.read(butcherFavoritesProvider.notifier).toggleFavorite(widget.businessId);
-                    },
                   ),
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final cart = ref.watch(cartProvider);
-                      final itemCount = cart.items.fold<int>(0, (sum, item) => sum + item.quantity.toInt());
-                      
-                      return Stack(
-                        children: [
-                          IconButton(
-                            icon: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
-                                shape: BoxShape.circle,
+                ),
+                // Title: Search Bar when scrolled, else Service Toggle
+                title: _showSearchBar
+                    ? GestureDetector(
+                        onTap: () => _showMenuSearchOverlay(),
+                        child: Container(
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
                               ),
-                              child: const Icon(Icons.shopping_cart, color: Colors.white, size: 20),
-                            ),
-                            onPressed: () => context.push('/cart'),
+                            ],
                           ),
-                          if (itemCount > 0)
-                            Positioned(
-                              right: 8,
-                              top: 8,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: accent,
-                                  shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 18,
-                                  minHeight: 18,
-                                ),
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 12),
+                              Icon(Icons.search, color: accent, size: 22),
+                              const SizedBox(width: 8),
+                              Expanded(
                                 child: Text(
-                                  '$itemCount',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                                  _menuSearchQuery.isNotEmpty ? _menuSearchQuery : 'Menüde ara...',
+                                  style: TextStyle(
+                                    fontSize: 14, 
+                                    color: _menuSearchQuery.isNotEmpty ? textPrimary : Colors.grey[500],
                                   ),
-                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ThreeDimensionalPillTabBar(
+                        selectedIndex: _isDeliveryMode ? 0 : 1,
+                        tabs: const [
+                          TabItem(title: 'Kurye', icon: Icons.delivery_dining),
+                          TabItem(title: 'Gel Al', icon: Icons.shopping_bag_outlined),
+                        ],
+                        onTabSelected: (index) {
+                          setState(() => _isDeliveryMode = index == 0);
+                        },
+                      ),
+                centerTitle: true,
+                actions: [
+                  // Search Icon with white circular background
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Material(
+                      color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                      shape: const CircleBorder(),
+                      elevation: 2,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: () {
+                          _showMenuSearchOverlay();
+                        },
+                        child: SizedBox(
+                          width: 40, height: 40,
+                          child: Icon(Icons.search, color: textPrimary, size: 20),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              
+              // 2. HERO IMAGE (separate sliver, not part of AppBar)
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Business Image
+                          (_butcherDoc != null && _butcherDoc!['imageUrl'] != null && (_butcherDoc!['imageUrl'] as String).isNotEmpty)
+                              ? CachedNetworkImage(
+                                  imageUrl: _butcherDoc!['imageUrl'],
+                                  fit: BoxFit.cover,
+                                )
+                              : Image.asset('assets/images/kasap_card.png', fit: BoxFit.cover),
+                          
+                          // Logo (Bottom Left - Lieferando style)
+                          if (data?['logoUrl'] != null && (data!['logoUrl'] as String).isNotEmpty)
+                            Positioned(
+                              left: 12,
+                              bottom: 12,
+                              child: Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8)],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: CachedNetworkImage(
+                                    imageUrl: data!['logoUrl'],
+                                    fit: BoxFit.cover,
+                                  ),
                                 ),
                               ),
                             ),
                         ],
-                      );
-                    },
-                  ),
-                ],
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // Butcher Image
-                       (_butcherDoc != null && _butcherDoc!['imageUrl'] != null && (_butcherDoc!['imageUrl'] as String).isNotEmpty)
-                          ? CachedNetworkImage(
-                              imageUrl: _butcherDoc!['imageUrl'],
-                              fit: BoxFit.cover,
-                            )
-                          : Image.asset('assets/images/kasap_card.png', fit: BoxFit.cover),
-                      
-                      // Gradient Overlay (Heavy bottom fade for text)
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                                Colors.transparent, 
-                                Colors.black.withOpacity(0.2),
-                                scaffoldBg.withOpacity(0.8), 
-                                scaffoldBg
-                            ],
-                            stops: const [0.5, 0.6, 0.85, 1.0],
-                          ),
-                        ),
                       ),
-                      
-                      // Title & Location (Bottom Left)
-                      Positioned(
-                        left: 20, right: 20, bottom: 20,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              data?['companyName'] ?? data?['name'] ?? 'Kasap',
-                              style: const TextStyle(
-                                color: Colors.white, 
-                                fontSize: 26, 
-                                fontWeight: FontWeight.w800,
-                                height: 1.1,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                Icon(Icons.location_on, color: accent, size: 16),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${address?['city'] ?? 'Konum'}, ${address?['country'] ?? 'DE'}',
-                                  style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
 
-                // 2. Action Bar (Buttons + Chips)
+              // 2. Lieferando-Style Info Section (Clean & Compact)
               SliverToBoxAdapter(
                  child: Container(
-                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2), // More compact
+                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                    child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
                      children: [
-                       // 2a. Action Buttons
+                       // 2a. Business Name + Info Button (Lieferando: name + "Über uns")
                        Row(
                          children: [
                            Expanded(
-                             child: ElevatedButton.icon(
-                               onPressed: _callStore,
-                               icon: const Icon(Icons.phone, size: 16), // Smaller Icon
-                               label: const Text('Ara', style: TextStyle(fontSize: 13)), // Smaller Text
-                               style: ElevatedButton.styleFrom(
-                                 backgroundColor: const Color(0xFF2C2C2C),
-                                 foregroundColor: Colors.white,
-                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                 padding: const EdgeInsets.symmetric(vertical: 8), // Compact Button
-                                 elevation: 0,
+                             child: Text(
+                               data?['companyName'] ?? data?['name'] ?? 'İşletme',
+                               style: TextStyle(
+                                 color: Theme.of(context).colorScheme.onSurface,
+                                 fontSize: 24,
+                                 fontWeight: FontWeight.w800,
+                                 letterSpacing: -0.5,
+                               ),
+                               maxLines: 2,
+                               overflow: TextOverflow.ellipsis,
+                             ),
+                           ),
+                           const SizedBox(width: 8),
+                           // Info Button (compact Lieferando style)
+                           Material(
+                             color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
+                             borderRadius: BorderRadius.circular(8),
+                             child: InkWell(
+                               onTap: _showInfoSheet,
+                               borderRadius: BorderRadius.circular(8),
+                               child: Padding(
+                                 padding: const EdgeInsets.all(8),
+                                 child: Icon(
+                                   Icons.info_outline,
+                                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                   size: 20,
+                                 ),
                                ),
                              ),
                            ),
                            const SizedBox(width: 8),
-                           Expanded(
-                             child: ElevatedButton.icon(
-                               onPressed: _launchMaps,
-                               icon: const Icon(Icons.directions, size: 16),
-                               label: const Text('Yol Tarifi', style: TextStyle(fontSize: 13)),
-                               style: ElevatedButton.styleFrom(
-                                 backgroundColor: const Color(0xFF2C2C2C),
-                                 foregroundColor: Colors.white,
-                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                 padding: const EdgeInsets.symmetric(vertical: 8),
-                                 elevation: 0,
-                               ),
-                             ),
-                           ),
-                           const SizedBox(width: 8),
-                           Expanded(
-                             child: ElevatedButton.icon(
-                               onPressed: _showInfoSheet,
-                               icon: const Icon(Icons.info_outline, size: 16),
-                               label: const Text('Bilgi', style: TextStyle(fontSize: 13)),
-                               style: ElevatedButton.styleFrom(
-                                 backgroundColor: const Color(0xFF2C2C2C),
-                                 foregroundColor: Colors.white,
-                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                 padding: const EdgeInsets.symmetric(vertical: 8),
-                                 elevation: 0,
+                           // Favorite Button (heart icon)
+                           Material(
+                             color: isFavorite 
+                                 ? accent.withOpacity(0.1) 
+                                 : (isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]),
+                             borderRadius: BorderRadius.circular(8),
+                             child: InkWell(
+                               onTap: () {
+                                 ref.read(butcherFavoritesProvider.notifier).toggleFavorite(widget.businessId);
+                               },
+                               borderRadius: BorderRadius.circular(8),
+                               child: Padding(
+                                 padding: const EdgeInsets.all(8),
+                                 child: Icon(
+                                   isFavorite ? Icons.favorite : Icons.favorite_border,
+                                   color: isFavorite ? accent : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                   size: 20,
+                                 ),
                                ),
                              ),
                            ),
                          ],
                        ),
                        
-                       const SizedBox(height: 8), // More compact
+                       const SizedBox(height: 8),
                        
-                       // 2b. Status Chips Row
-                       Row(
+                       // 2b. Stats Line (Lieferando: ★ 4.5 · Open/Closed · Delivery info)
+                       Wrap(
+                         spacing: 12,
+                         runSpacing: 8,
+                         crossAxisAlignment: WrapCrossAlignment.center,
                          children: [
-                           // Brand Badge
-                           if (showBrandBadge) ...[
+                           // Brand Badge (if TUNA)
+                           if (showBrandBadge)
                              InkWell(
                                onTap: _showTunaBrandInfo,
                                child: Container(
-                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                  decoration: BoxDecoration(
                                    color: const Color(0xFFD32F2F),
-                                   borderRadius: BorderRadius.circular(20),
+                                   borderRadius: BorderRadius.circular(4),
                                  ),
-                                 child: Row(
-                                   children: [
-                                     Text(
-                                       _getBrandLabel(brand),
-                                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-                                     ),
-                                     const SizedBox(width: 4),
-                                      const Icon(Icons.info, color: Colors.white, size: 12)
-                                   ],
+                                 child: Text(
+                                   _getBrandLabel(brand),
+                                   style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
                                  ),
                                ),
                              ),
-                             const SizedBox(width: 8),
-                           ],
                            
-                           // Rating Pill
-                           if (_placeDetails != null) ...[
-                               InkWell(
-                                 onTap: _showRatings,
-                                 child: Container(
-                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                   decoration: BoxDecoration(
-                                     color: Colors.amber.withOpacity(0.1),
-                                     borderRadius: BorderRadius.circular(20),
-                                     border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                           // Rating
+                           if (_placeDetails != null)
+                             InkWell(
+                               onTap: _showRatings,
+                               child: Row(
+                                 mainAxisSize: MainAxisSize.min,
+                                 children: [
+                                   const Icon(Icons.star, color: Colors.amber, size: 16),
+                                   const SizedBox(width: 4),
+                                   Text(
+                                     '${_placeDetails!['rating']} (${_placeDetails!['user_ratings_total']}+)',
+                                     style: TextStyle(
+                                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                                       fontSize: 13,
+                                       fontWeight: FontWeight.w500,
+                                     ),
                                    ),
-                                   child: Row(
-                                     children: [
-                                       const Icon(Icons.star, color: Colors.amber, size: 14),
-                                       const SizedBox(width: 4),
-                                       Text(
-                                         '${_placeDetails!['rating']} (${_placeDetails!['user_ratings_total']})',
-                                         style: const TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold),
-                                       ),
-                                     ],
-                                   ),
-                                 ),
+                                 ],
                                ),
-                               const SizedBox(width: 8),
-                           ],
+                             ),
+                           
+                           // Separator
+                           Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
                            
                            // Open/Closed Status
                            InkWell(
                              onTap: _showWeeklyHours,
-                             child: Container(
-                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                               decoration: BoxDecoration(
-                                 color: isOpen ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                                 borderRadius: BorderRadius.circular(20),
-                                 border: Border.all(color: isOpen ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3)),
-                               ),
-                               child: Row(
-                                 children: [
-                                   Container(width: 6, height: 6, decoration: BoxDecoration(color: isOpen ? Colors.green : Colors.red, shape: BoxShape.circle)),
-                                   const SizedBox(width: 6),
-                                   Text(
-                                     isOpen ? 'Şu An Açık' : 'Şu An Kapalı',
-                                     style: TextStyle(color: isOpen ? Colors.green : Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
+                             child: Row(
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+                                 Container(
+                                   width: 6, height: 6,
+                                   decoration: BoxDecoration(
+                                     color: isOpen ? Colors.green : Colors.red,
+                                     shape: BoxShape.circle,
                                    ),
-                                   const SizedBox(width: 4),
-                                   Icon(Icons.keyboard_arrow_down, color: isOpen ? Colors.green : Colors.red, size: 14),
-                                 ],
-                               ),
+                                 ),
+                                 const SizedBox(width: 4),
+                                 Text(
+                                   isOpen ? 'Açık' : 'Kapalı',
+                                   style: TextStyle(
+                                     color: isOpen ? Colors.green : Colors.red,
+                                     fontSize: 13,
+                                     fontWeight: FontWeight.w600,
+                                   ),
+                                 ),
+                               ],
                              ),
                            ),
-                         ],
-                       ),
-                       
-                       const SizedBox(height: 6), // Compact
-                       
-                       // 2c. Services & Features Row (NEW!)
-                       SingleChildScrollView(
-                         scrollDirection: Axis.horizontal,
-                         child: Row(
-                           children: [
-                             // Business Category Badge
-                             if (data?['businessCategories'] != null && (data!['businessCategories'] as List).isNotEmpty)
-                               _buildServiceBadge(
-                                 _getCategoryIcon((data['businessCategories'] as List).first?.toString() ?? 'kasap'),
-                                 _getCategoryLabel((data['businessCategories'] as List).first?.toString() ?? 'kasap'),
-                                 Colors.orange,
+                           
+                           // Min Order (if applicable)
+                           if ((data?['minDeliveryOrder'] ?? 0) > 0) ...[
+                             Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                             Text(
+                               'Min. ${data!['minDeliveryOrder']}€',
+                               style: TextStyle(
+                                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                 fontSize: 13,
                                ),
-                             
-                             // Delivery Badge
-                             if ((data?['deliveryRadius'] ?? 0) > 0)
-                               _buildServiceBadge(
-                                 Icons.delivery_dining,
-                                 'Teslimat (${data!['deliveryRadius']} km)',
-                                 Colors.blue,
-                               ),
-                             
-                             // Card Payment Badge
-                             if (data?['acceptsCardPayment'] == true)
-                               _buildServiceBadge(
-                                 Icons.credit_card,
-                                 'Kart Kabul',
-                                 Colors.green,
-                               ),
-                             
-                             // Seating Badge
-                             if (data?['hasSeating'] == true)
-                               _buildServiceBadge(
-                                 Icons.chair_alt,
-                                 'Oturma (${data!['tableCount'] ?? 0} masa)',
-                                 Colors.purple,
-                               ),
-                             
-                             // Min Order Badge
-                             if ((data?['minDeliveryOrder'] ?? 0) > 0)
-                               _buildServiceBadge(
-                                 Icons.euro,
-                                 'Min. ${data!['minDeliveryOrder']}€',
-                                 Colors.amber,
-                               ),
+                             ),
                            ],
-                         ),
+                         ],
                        ),
                      ],
                    ),
@@ -2599,5 +2786,29 @@ class _StickyTabDelegate extends SliverPersistentHeaderDelegate {
     return maxHeight != oldDelegate.maxHeight ||
            minHeight != oldDelegate.minHeight ||
            child != oldDelegate.child;
+  }
+}
+
+// 🔍 Search Bar Delegate for pinned search bar (Lieferando-style)
+class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
+  final double height;
+  final Widget child;
+
+  _SearchBarDelegate({required this.height, required this.child});
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return SizedBox.expand(child: child);
+  }
+
+  @override
+  bool shouldRebuild(_SearchBarDelegate oldDelegate) {
+    return height != oldDelegate.height || child != oldDelegate.child;
   }
 }

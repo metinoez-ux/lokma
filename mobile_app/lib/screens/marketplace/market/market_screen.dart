@@ -43,7 +43,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   Color get cardBg => Theme.of(context).cardTheme.color ?? Colors.white;
 
   // Delivery mode
-  String _deliveryMode = 'gelal';
+  String _deliveryMode = 'teslimat'; // Varsayılan: Kurye
   
   // Category filter - 'all' or specific businessType
   String _categoryFilter = 'all';
@@ -554,8 +554,12 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                     // Search bar (teslimat/gel al altında)
                                     _buildSearchBar(),
                                     
-                                    // Distance slider + TUNA toggle (aynı satırda)
-                                    _buildDistanceSliderWithTuna(),
+                                    // Distance slider + TUNA toggle - Sadece Gel-Al modunda göster (Kurye'de gizle)
+                                    if (_deliveryMode == 'gelal')
+                                      _buildDistanceSliderWithTuna()
+                                    else
+                                      // Kurye modunda sadece TUNA Kasaplar toggle göster
+                                      _buildTunaToggleOnly(),
                                   ],
                                 ),
                               ),
@@ -923,13 +927,72 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   width: 1.5,
                 ),
               ),
-              child: Text(
-                'TUNA Kasaplar',
-                style: TextStyle(
-                  color: _onlyTuna ? Colors.white : Colors.grey[600],
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _onlyTuna ? Icons.check_box : Icons.check_box_outline_blank,
+                    color: _onlyTuna ? Colors.white : Colors.grey[600],
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'TUNA Kasaplar',
+                    style: TextStyle(
+                      color: _onlyTuna ? Colors.white : Colors.grey[600],
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // 🆕 TUNA Kasaplar toggle only (for Kurye mode - no distance slider)
+  Widget _buildTunaToggleOnly() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              setState(() => _onlyTuna = !_onlyTuna);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: _onlyTuna ? const Color(0xFFB71C1C) : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _onlyTuna ? const Color(0xFFB71C1C) : Colors.grey.shade400,
+                  width: 1.5,
                 ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _onlyTuna ? Icons.check_box : Icons.check_box_outline_blank,
+                    color: _onlyTuna ? Colors.white : Colors.grey[600],
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'TUNA Kasaplar',
+                    style: TextStyle(
+                      color: _onlyTuna ? Colors.white : Colors.grey[600],
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

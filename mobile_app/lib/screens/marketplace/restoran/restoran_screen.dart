@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
+import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 
 /// Business type labels for display
@@ -52,7 +53,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   Color get cardBg => Theme.of(context).cardTheme.color ?? Colors.white;
 
   // Delivery mode
-  String _deliveryMode = 'gelal';
+  String _deliveryMode = 'teslimat'; // Varsayılan: Kurye
   
   // Category filter - 'all' or specific businessType
   String _categoryFilter = 'all';
@@ -563,8 +564,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     // Arama çubuğu (teslimat/gel al altında)
                                     _buildSearchBar(),
                                     
-                                    // Distance slider - Sadece Gel-Al modunda göster (TUNA checkbox dahil)
-                                      _buildDistanceSlider(),
+                                    // Distance slider - Sadece Gel-Al modunda göster (Kurye'de gizle)
+                                    if (_deliveryMode == 'gelal')
+                                      _buildDistanceSlider()
+                                    else
+                                      // Kurye modunda sadece TUNA toggle göster
+                                      _buildTunaToggleOnly(),
                                   ],
                                 ),
                               ),
@@ -938,13 +943,72 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   width: 1.5,
                 ),
               ),
-              child: Text(
-                'TUNA',
-                style: TextStyle(
-                  color: _onlyTuna ? Colors.white : Colors.grey[600],
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _onlyTuna ? Icons.check_box : Icons.check_box_outline_blank,
+                    color: _onlyTuna ? Colors.white : Colors.grey[600],
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'TUNA',
+                    style: TextStyle(
+                      color: _onlyTuna ? Colors.white : Colors.grey[600],
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // 🆕 TUNA toggle only (for Kurye mode - no distance slider)
+  Widget _buildTunaToggleOnly() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              setState(() => _onlyTuna = !_onlyTuna);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: _onlyTuna ? const Color(0xFFB71C1C) : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _onlyTuna ? const Color(0xFFB71C1C) : Colors.grey.shade400,
+                  width: 1.5,
                 ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _onlyTuna ? Icons.check_box : Icons.check_box_outline_blank,
+                    color: _onlyTuna ? Colors.white : Colors.grey[600],
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'TUNA',
+                    style: TextStyle(
+                      color: _onlyTuna ? Colors.white : Colors.grey[600],
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1312,11 +1376,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         ),
                 ),
                 
-                // Business logo (bottom left, overlapping) - only show if logo exists
+                // 🆕 Business logo (BOTTOM LEFT - Lieferando style)
                 if (logoUrl != null && logoUrl.isNotEmpty)
                   Positioned(
                     left: 12,
-                    bottom: -24,
+                    bottom: 12,
                     child: Container(
                       width: 48,
                       height: 48,
@@ -1344,10 +1408,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ),
                   ),
                 
-                // TUNA brand badge (top left) - synced from admin panel
+                // TUNA brand badge (TOP RIGHT - to not overlap with logo)
                 if (isTunaPartner)
                   Positioned(
-                    left: 12,
+                    right: 12,
                     top: 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -1473,11 +1537,72 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ),
                   ),
                 ),
+                
+                // 🆕 Cart badge (BOTTOM RIGHT) - show if cart has items from this business (Lieferando-style)
+                Builder(
+                  builder: (context) {
+                    final cartState = ref.watch(cartProvider);
+                    if (cartState.butcherId == id && cartState.items.isNotEmpty) {
+                      return Positioned(
+                        right: 12,
+                        bottom: 12,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                Icons.shopping_cart_outlined,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 24,
+                              ),
+                              Positioned(
+                                right: -8,
+                                top: -8,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                                  child: Center(
+                                    child: Text(
+                                      '${cartState.items.length}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
               ],
             ),
             
-            // Info section (below image)
-            Padding(
+            // Info section (below image) - Fixed height for consistent cards
+            Container(
+              height: 114, // Fixed height for consistent card sizes
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1530,23 +1655,21 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ],
                   ),
                   
-                  // Distance
-                  if (distanceText.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(Icons.location_on_outlined, color: Colors.grey[600], size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          distanceText,
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 13,
-                          ),
+                  // Distance - always show row for consistent height
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, color: Colors.grey[600], size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                        distanceText.isNotEmpty ? distanceText : '—',
+                        style: TextStyle(
+                          color: Colors.grey[700],
+                          fontSize: 13,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

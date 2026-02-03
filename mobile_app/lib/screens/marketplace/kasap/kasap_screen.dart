@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lokma_app/providers/cart_provider.dart';
 
 // Business sector definitions - mirrors admin_portal business-types.ts
 const Map<String, Map<String, dynamic>> BUSINESS_SECTORS = {
@@ -364,6 +366,7 @@ class _KasapScreenState extends State<KasapScreen> {
               address: addressStr,
               rating: (data['rating'] ?? 0).toDouble(),
               imageUrl: data['imageUrl'],
+              logoUrl: data['logoUrl'] as String?,  // 🆕 Lieferando-style logo
               cuisineType: data['cuisineType'] as String?,  // 🆕 Lieferando-style
               isOpen: data['isActive'] ?? true,
               businessType: businessType,
@@ -392,6 +395,7 @@ class _BusinessCard extends StatelessWidget {
   final String address;
   final double rating;
   final String? imageUrl;
+  final String? logoUrl;  // 🆕 Lieferando-style logo (square)
   final String? cuisineType;  // 🆕 Lieferando-style cuisine type
   final bool isOpen;
   final String businessType;
@@ -406,6 +410,7 @@ class _BusinessCard extends StatelessWidget {
     required this.address,
     required this.rating,
     this.imageUrl,
+    this.logoUrl,  // 🆕 Optional
     this.cuisineType,  // 🆕 Optional
     required this.isOpen,
     required this.businessType,
@@ -450,10 +455,10 @@ class _BusinessCard extends StatelessWidget {
                             child: Text(sectorIcon, style: const TextStyle(fontSize: 48)),
                           ),
                   ),
-                  // Sector Badge
+                  // Sector Badge (TOP RIGHT - to not overlap with logo)
                   Positioned(
                     top: 12,
-                    left: 12,
+                    right: 12,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
@@ -476,6 +481,96 @@ class _BusinessCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                  ),
+                  // 🆕 Business Logo (BOTTOM LEFT - Lieferando style)
+                  if (logoUrl != null && logoUrl!.isNotEmpty)
+                    Positioned(
+                      left: 12,
+                      bottom: 12,
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            logoUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Center(
+                              child: Text(sectorIcon, style: const TextStyle(fontSize: 24)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  // 🆕 Cart badge (BOTTOM RIGHT) - Lieferando-style
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final cartState = ref.watch(cartProvider);
+                      if (cartState.butcherId == id && cartState.items.isNotEmpty) {
+                        return Positioned(
+                          right: 12,
+                          bottom: 12,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Icon(
+                                  Icons.shopping_cart_outlined,
+                                  color: Colors.orange.shade700,
+                                  size: 24,
+                                ),
+                                Positioned(
+                                  right: -8,
+                                  top: -8,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade700,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                                    child: Center(
+                                      child: Text(
+                                        '${cartState.items.length}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
                   ),
                 ],
               ),
