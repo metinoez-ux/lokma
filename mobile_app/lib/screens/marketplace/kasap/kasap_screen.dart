@@ -420,7 +420,7 @@ class _BusinessCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E1E),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
         child: Column(
@@ -428,11 +428,11 @@ class _BusinessCard extends StatelessWidget {
           children: [
             // Image
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: Stack(
                 children: [
                   Container(
-                    height: 140,
+                    height: 230,
                     width: double.infinity,
                     color: const Color(0xFF2A2A2A),
                     child: imageUrl != null && imageUrl!.isNotEmpty
@@ -479,7 +479,7 @@ class _BusinessCard extends StatelessWidget {
             ),
             // Info
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -492,7 +492,7 @@ class _BusinessCard extends StatelessWidget {
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -517,12 +517,16 @@ class _BusinessCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                      const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           address,
-                          style: const TextStyle(color: Colors.grey, fontSize: 13),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                            fontWeight: FontWeight.normal,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -531,14 +535,14 @@ class _BusinessCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.star, size: 16, color: Color(0xFFFF6B35)),
+                      const Icon(Icons.star, size: 14, color: Color(0xFFFF6B35)),
                       const SizedBox(width: 4),
                       Text(
                         rating.toStringAsFixed(1),
                         style: const TextStyle(
                           color: Color(0xFFFF6B35),
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],

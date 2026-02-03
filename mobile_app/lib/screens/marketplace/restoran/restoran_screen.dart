@@ -1272,7 +1272,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           color: cardBg,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
@@ -1288,9 +1288,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             // Large image with overlays
             Stack(
               children: [
-                // Main image - Lieferando style (tall)
-                AspectRatio(
-                  aspectRatio: 16 / 10, // Taller like Lieferando
+                // Main image - Lieferando style (230px fixed height)
+                SizedBox(
+                  height: 230,
+                  width: double.infinity,
                   child: imageUrl != null && imageUrl.isNotEmpty
                       ? Image.network(
                           imageUrl,
@@ -1476,7 +1477,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             
             // Info section (below image)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 28, 12, 12), // Extra top padding for logo overlap
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1485,7 +1486,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     name,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
@@ -1502,7 +1503,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         rating.toStringAsFixed(1),
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1512,7 +1513,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           reviewText,
                           style: TextStyle(
                             color: Colors.grey[700],
-                            fontSize: 13,
+                            fontSize: 14,
                           ),
                         ),
                       ],
@@ -1520,7 +1521,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         ' · $typeLabel',
                         style: TextStyle(
                           color: Colors.grey[700],
-                          fontSize: 13,
+                          fontSize: 14,
                         ),
                       ),
                     ],
