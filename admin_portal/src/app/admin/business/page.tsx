@@ -299,12 +299,17 @@ export default function BusinessesPage() {
 
     // Filter businesses
     const filteredBusinesses = businesses.filter(b => {
-        const normalizedQuery = normalizeTurkish(searchQuery);
-        const matchesSearch = searchQuery === '' ||
-            normalizeTurkish(b.companyName || '').includes(normalizedQuery) ||
-            normalizeTurkish(b.brand || '').includes(normalizedQuery) ||
-            normalizeTurkish(b.address?.city || '').includes(normalizedQuery) ||
-            (b.address?.postalCode || '').includes(searchQuery);
+        // 🆕 Multi-term search: Birden fazla kelime yazıldığında hepsini eşleştir
+        // Örn: "41836 tuna" → postalCode 41836 VE isim/marka tuna içermeli
+        const searchTerms = searchQuery.trim().toLowerCase().split(/\s+/).filter(t => t.length > 0);
+
+        const matchesSearch = searchTerms.length === 0 || searchTerms.every(term => {
+            const normalizedTerm = normalizeTurkish(term);
+            return normalizeTurkish(b.companyName || '').includes(normalizedTerm) ||
+                normalizeTurkish(b.brand || '').includes(normalizedTerm) ||
+                normalizeTurkish(b.address?.city || '').includes(normalizedTerm) ||
+                (b.address?.postalCode || '').toLowerCase().includes(term);
+        });
 
         // Check multiple possible type fields for backwards compatibility
         const businessData = b as any;

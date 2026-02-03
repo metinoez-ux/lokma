@@ -364,6 +364,7 @@ class _KasapScreenState extends State<KasapScreen> {
               address: addressStr,
               rating: (data['rating'] ?? 0).toDouble(),
               imageUrl: data['imageUrl'],
+              cuisineType: data['cuisineType'] as String?,  // 🆕 Lieferando-style
               isOpen: data['isActive'] ?? true,
               businessType: businessType,
               sectorIcon: sectorInfo['icon'] as String,
@@ -391,6 +392,7 @@ class _BusinessCard extends StatelessWidget {
   final String address;
   final double rating;
   final String? imageUrl;
+  final String? cuisineType;  // 🆕 Lieferando-style cuisine type
   final bool isOpen;
   final String businessType;
   final String sectorIcon;
@@ -404,6 +406,7 @@ class _BusinessCard extends StatelessWidget {
     required this.address,
     required this.rating,
     this.imageUrl,
+    this.cuisineType,  // 🆕 Optional
     required this.isOpen,
     required this.businessType,
     required this.sectorIcon,
@@ -544,6 +547,16 @@ class _BusinessCard extends StatelessWidget {
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
+                      ),
+                      // 🆕 Cuisine type or sector label (Lieferando-style)
+                      Text(
+                        ' · ${cuisineType != null && cuisineType!.isNotEmpty ? cuisineType : sectorLabel}',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

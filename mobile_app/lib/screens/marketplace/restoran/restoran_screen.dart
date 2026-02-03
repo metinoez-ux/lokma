@@ -1221,6 +1221,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final reviewCount = (data['reviewCount'] as num?)?.toInt() ?? 0;
     final imageUrl = data['imageUrl'] as String?;
     final logoUrl = data['logoUrl'] as String?;
+    final cuisineType = data['cuisineType'] as String?;  // 🆕 Lieferando-style cuisine type
     
     // Business type label
     final typeLabel = BUSINESS_TYPE_LABELS[businessType] ?? businessType;
@@ -1518,11 +1519,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         ),
                       ],
                       Text(
-                        ' · $typeLabel',
+                        ' · ${cuisineType != null && cuisineType.isNotEmpty ? cuisineType : typeLabel}',
                         style: TextStyle(
                           color: Colors.grey[700],
                           fontSize: 14,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

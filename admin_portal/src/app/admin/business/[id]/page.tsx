@@ -321,6 +321,9 @@ export default function BusinessDetailPage() {
     bankBic: "",
     bankAccountHolder: "",
     bankName: "",
+    // 🆕 Lieferando-style fields
+    cuisineType: "",      // "Kebap, Döner, Türkisch" - Mutfak türü/alt başlık
+    logoUrl: "",          // Kare işletme logosu URL'i
   });
 
   // Google Places search states
@@ -536,6 +539,9 @@ export default function BusinessDetailPage() {
           bankBic: d.bankDetails?.bic || "",
           bankAccountHolder: d.bankDetails?.accountHolder || "",
           bankName: d.bankDetails?.bankName || "",
+          // 🆕 Lieferando-style fields
+          cuisineType: d.cuisineType || "",
+          logoUrl: d.logoUrl || "",
         });
       }
     } catch (error) {
@@ -980,6 +986,9 @@ export default function BusinessDetailPage() {
         // 🆕 Multi-type support: types array + legacy type field
         types: formData.types || [],
         type: formData.types?.[0] || "",  // Legacy: ilk tür backward compat için
+        // 🆕 Lieferando-style fields
+        cuisineType: formData.cuisineType || "",
+        logoUrl: formData.logoUrl || "",
         address: {
           street: formData.street || "",
           postalCode: formData.postalCode || "",
@@ -2267,6 +2276,86 @@ export default function BusinessDetailPage() {
                     disabled={!isEditing}
                     className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
                   />
+                </div>
+
+                {/* 🆕 Mutfak Türü / Alt Başlık (Lieferando-style) */}
+                <div>
+                  <label className="text-gray-400 text-sm">Mutfak Türü / Alt Başlık</label>
+                  <input
+                    type="text"
+                    value={formData.cuisineType}
+                    onChange={(e) =>
+                      setFormData({ ...formData, cuisineType: e.target.value })
+                    }
+                    disabled={!isEditing}
+                    placeholder="Örn: Kebap, Döner, Türkisch"
+                    className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    📝 Kartlarda işletme adı altında gösterilir
+                  </p>
+                </div>
+
+                {/* 🆕 İşletme Logosu (Kare) */}
+                <div>
+                  <label className="text-gray-400 text-sm">İşletme Logosu (Kare)</label>
+                  <div className="flex items-center gap-4 mt-2">
+                    {formData.logoUrl ? (
+                      <img
+                        src={formData.logoUrl}
+                        alt="Logo"
+                        className="w-16 h-16 rounded-lg object-cover border border-gray-600"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-lg bg-gray-700 border border-dashed border-gray-500 flex items-center justify-center text-gray-500 text-2xl">
+                        🏪
+                      </div>
+                    )}
+                    {isEditing && (
+                      <div className="flex flex-col gap-2">
+                        <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer text-sm">
+                          📤 Logo Yükle
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                const file = e.target.files[0];
+                                // Upload to Firebase Storage
+                                const logoRef = ref(storage, `business_logos/${businessId}/logo_${Date.now()}.jpg`);
+                                const uploadTask = uploadBytesResumable(logoRef, file);
+                                uploadTask.on('state_changed',
+                                  () => { },
+                                  (error) => {
+                                    console.error('Logo upload error:', error);
+                                    showToast('Logo yüklenirken hata oluştu', 'error');
+                                  },
+                                  async () => {
+                                    const url = await getDownloadURL(uploadTask.snapshot.ref);
+                                    setFormData({ ...formData, logoUrl: url });
+                                    showToast('✅ Logo yüklendi!', 'success');
+                                  }
+                                );
+                              }
+                            }}
+                          />
+                        </label>
+                        {formData.logoUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, logoUrl: '' })}
+                            className="text-red-400 text-xs hover:text-red-300"
+                          >
+                            🗑️ Logoyu Kaldır
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    📐 Önerilen boyut: 64x64 piksel (kare)
+                  </p>
                 </div>
 
                 {/* 🆕 İşletme Türleri - Multi-Select (Firestore'dan dinamik) */}
