@@ -6,18 +6,16 @@ import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
 
-// Order statuses with colors and labels
+// Canonical Order Status Set (7 statuses)
+// Synchronized with Mobile App OrderStatus enum
 const orderStatuses = {
-    pending_payment: { label: 'Ödeme Bekleniyor', color: 'yellow', icon: '💳' },
-    confirmed: { label: 'Onaylandı', color: 'blue', icon: '✅' },
+    pending: { label: 'Beklemede', color: 'yellow', icon: '⏳' },
+    accepted: { label: 'Onaylandı', color: 'blue', icon: '✅' },
     preparing: { label: 'Hazırlanıyor', color: 'orange', icon: '👨‍🍳' },
-    ready_for_pickup: { label: 'Teslime Hazır', color: 'green', icon: '📦' },
-    ready_for_delivery: { label: 'Kurye Bekliyor', color: 'purple', icon: '🚚' },
-    out_for_delivery: { label: 'Yolda', color: 'indigo', icon: '🛵' },
+    ready: { label: 'Hazır', color: 'green', icon: '📦' },
+    onTheWay: { label: 'Yolda', color: 'indigo', icon: '🛵' },
     delivered: { label: 'Teslim Edildi', color: 'emerald', icon: '🎉' },
-    picked_up: { label: 'Teslim Alındı', color: 'emerald', icon: '✔️' },
     cancelled: { label: 'İptal', color: 'red', icon: '❌' },
-    refunded: { label: 'İade Edildi', color: 'gray', icon: '💰' },
 } as const;
 
 type OrderStatus = keyof typeof orderStatuses;
@@ -180,12 +178,12 @@ export default function OrdersPage() {
         return true;
     });
 
-    // Group orders by status for kanban view
-    const pendingOrders = filteredOrders.filter(o => ['pending_payment', 'confirmed'].includes(o.status));
+    // Group orders by status for kanban view (using canonical statuses)
+    const pendingOrders = filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status));
     const preparingOrders = filteredOrders.filter(o => o.status === 'preparing');
-    const readyOrders = filteredOrders.filter(o => ['ready_for_pickup', 'ready_for_delivery'].includes(o.status));
-    const inTransitOrders = filteredOrders.filter(o => o.status === 'out_for_delivery');
-    const completedOrders = filteredOrders.filter(o => ['delivered', 'picked_up'].includes(o.status));
+    const readyOrders = filteredOrders.filter(o => o.status === 'ready');
+    const inTransitOrders = filteredOrders.filter(o => o.status === 'onTheWay');
+    const completedOrders = filteredOrders.filter(o => o.status === 'delivered');
 
     // Update order status
     const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/cart_provider.dart';
 import '../../services/order_service.dart';
 import 'rating_screen.dart';
 
@@ -12,13 +14,9 @@ class OrdersScreen extends ConsumerStatefulWidget {
 }
 
 class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerProviderStateMixin {
-  final OrderService _orderService = OrderService();
   late TabController _tabController;
 
-  static const Color lokmaRed = Color(0xFFEC131E);
-  static const Color blackPure = Color(0xFF000000);
-  static const Color surfaceCard = Color(0xFF1E1E1E);
-  static const Color textSubtle = Color(0xFF888888);
+  static const Color lokmaOrange = Color(0xFFFF8000);
 
   @override
   void initState() {
@@ -44,110 +42,82 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final userId = authState.user?.uid;
-
-    if (userId == null) {
-      return Scaffold(
-        backgroundColor: blackPure,
-        appBar: AppBar(
-          backgroundColor: surfaceCard,
-          title: const Text('Siparişlerim', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.login, size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
-              const Text(
-                'Siparişlerinizi görmek için giriş yapın',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: lokmaRed,
-                ),
-                onPressed: () {
-                  // Navigate to login
-                },
-                child: const Text('Giriş Yap', style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final bgColor = isDark ? Colors.black : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final cardColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+    final dividerColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
 
     return Scaffold(
-      backgroundColor: blackPure,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: surfaceCard,
-        title: const Text('Siparişlerim', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: bgColor,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          'Siparişlerim',
+          style: TextStyle(
+            color: textColor,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: textColor, size: 20),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/restoran');
+            }
+          },
+        ),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: lokmaRed,
-          labelColor: Colors.white,
-          unselectedLabelColor: textSubtle,
+          indicatorColor: lokmaOrange,
+          indicatorWeight: 3,
+          labelColor: textColor,
+          unselectedLabelColor: subtitleColor,
+          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           tabs: const [
-            Tab(text: 'Aktif Siparişler'),
-            Tab(text: 'Tamamlanan'),
+            Tab(text: 'Sepetim'),
+            Tab(text: 'Siparişlerim'),
           ],
         ),
       ),
-      body: StreamBuilder<List<LokmaOrder>>(
-        stream: _orderService.getUserOrdersStream(userId),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Hata: ${snapshot.error}',
-                style: const TextStyle(color: Colors.red),
-              ),
-            );
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(color: lokmaRed),
-            );
-          }
-
-          final allOrders = snapshot.data ?? [];
-          final activeOrders = allOrders.where((o) => _isActiveOrder(o.status)).toList();
-          final completedOrders = allOrders.where((o) => !_isActiveOrder(o.status)).toList();
-
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildOrderList(activeOrders, isActive: true),
-              _buildOrderList(completedOrders, isActive: false),
-            ],
-          );
-        },
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildCartTab(cardColor, textColor, subtitleColor, dividerColor, isDark),
+          _buildOrdersTab(userId, cardColor, textColor, subtitleColor, isDark),
+        ],
       ),
     );
   }
 
-  Widget _buildOrderList(List<LokmaOrder> orders, {required bool isActive}) {
-    if (orders.isEmpty) {
+  Widget _buildCartTab(Color cardColor, Color textColor, Color? subtitleColor, Color dividerColor, bool isDark) {
+    final cartState = ref.watch(cartProvider);
+    final cartItems = cartState.items;
+
+    if (cartItems.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isActive ? Icons.receipt_long_outlined : Icons.check_circle_outline,
-              size: 64,
-              color: Colors.grey,
-            ),
+            Icon(Icons.shopping_cart_outlined, size: 64, color: subtitleColor),
             const SizedBox(height: 16),
             Text(
-              isActive ? 'Aktif siparişiniz yok' : 'Tamamlanan siparişiniz yok',
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
+              'Sepetiniz boş',
+              style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Text(
-              isActive ? 'Sipariş vermek için bir kasap seçin!' : 'Önceki siparişleriniz burada görünecek',
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
+              'Sipariş vermek için ürün ekleyin',
+              style: TextStyle(color: subtitleColor, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ],
@@ -155,12 +125,241 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: orders.length,
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        return _OrderCard(order: order);
+    final totalAmount = cartItems.fold<double>(0, (sum, item) => sum + (item.price * item.quantity));
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: cartItems.length,
+            itemBuilder: (context, index) {
+              final item = cartItems[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: isDark ? null : Border.all(color: dividerColor),
+                  boxShadow: isDark ? null : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: item.imageUrl != null && item.imageUrl!.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(item.imageUrl!, fit: BoxFit.cover),
+                            )
+                          : Icon(Icons.fastfood, color: subtitleColor, size: 28),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.name,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                            style: TextStyle(color: subtitleColor, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.remove_circle_outline, color: textColor),
+                          onPressed: () {
+                            if (item.quantity > 1) {
+                              ref.read(cartProvider.notifier).updateQuantity(item.id, item.quantity - 1);
+                            } else {
+                              ref.read(cartProvider.notifier).removeItem(item.id);
+                            }
+                          },
+                        ),
+                        Text(
+                          '${item.quantity}',
+                          style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.add_circle_outline, color: textColor),
+                          onPressed: () {
+                            ref.read(cartProvider.notifier).updateQuantity(item.id, item.quantity + 1);
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        // Checkout button
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: cardColor,
+            border: Border(top: BorderSide(color: dividerColor)),
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Toplam',
+                      style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      '€${totalAmount.toStringAsFixed(2)}',
+                      style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: lokmaOrange,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      final businessId = ref.read(cartProvider).businessId;
+                      if (businessId != null) {
+                        context.push('/kasap/$businessId/cart');
+                      }
+                    },
+                    child: const Text(
+                      'Ödemeye Geç',
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOrdersTab(String? userId, Color cardColor, Color textColor, Color? subtitleColor, bool isDark) {
+    if (userId == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.login, size: 64, color: subtitleColor),
+            const SizedBox(height: 16),
+            Text(
+              'Siparişlerinizi görmek için giriş yapın',
+              style: TextStyle(color: subtitleColor, fontSize: 16),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: lokmaOrange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              ),
+              onPressed: () => context.go('/profile'),
+              child: const Text('Giriş Yap', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final orderService = OrderService();
+
+    return StreamBuilder<List<LokmaOrder>>(
+      stream: orderService.getUserOrdersStream(userId),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Hata: ${snapshot.error}',
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: lokmaOrange),
+          );
+        }
+
+        final allOrders = snapshot.data ?? [];
+        
+        if (allOrders.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.receipt_long_outlined, size: 64, color: subtitleColor),
+                const SizedBox(height: 16),
+                Text(
+                  'Henüz siparişiniz yok',
+                  style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Sipariş vermek için bir işletme seçin!',
+                  style: TextStyle(color: subtitleColor, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Sort: active orders first (by createdAt desc), then completed (by createdAt desc)
+        final activeOrders = allOrders.where((o) => _isActiveOrder(o.status)).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        final completedOrders = allOrders.where((o) => !_isActiveOrder(o.status)).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        
+        final sortedOrders = [...activeOrders, ...completedOrders];
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: sortedOrders.length,
+          itemBuilder: (context, index) {
+            final order = sortedOrders[index];
+            return _OrderCard(order: order, isDark: isDark);
+          },
+        );
       },
     );
   }
@@ -168,8 +367,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> with SingleTickerPr
 
 class _OrderCard extends StatelessWidget {
   final LokmaOrder order;
+  final bool isDark;
 
-  const _OrderCard({required this.order});
+  const _OrderCard({required this.order, required this.isDark});
+
+  static const Color lokmaOrange = Color(0xFFFF8000);
 
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
@@ -184,7 +386,7 @@ class _OrderCard extends StatelessWidget {
       case OrderStatus.onTheWay:
         return Colors.teal;
       case OrderStatus.delivered:
-        return Colors.grey;
+        return Colors.green;
       case OrderStatus.cancelled:
         return Colors.red;
     }
@@ -209,131 +411,249 @@ class _OrderCard extends StatelessWidget {
     }
   }
 
-  String _getOrderTypeIcon(OrderType type) {
-    switch (type) {
-      case OrderType.delivery:
-        return '🚴';
-      case OrderType.pickup:
-        return '🏃';
-      case OrderType.dineIn:
-        return '🍽️';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final isCompleted = order.status == OrderStatus.delivered || 
+                        order.status == OrderStatus.cancelled;
+    final isActive = !isCompleted;
+    
+    final cardColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final dividerColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: isDark ? null : Border.all(color: dividerColor),
+        boxShadow: isDark ? null : [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with business info
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    order.butcherName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+                // Business image
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  width: 70,
+                  height: 70,
                   decoration: BoxDecoration(
-                    color: _getStatusColor(order.status).withOpacity(0.2),
+                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    _getStatusText(order.status),
-                    style: TextStyle(
-                      color: _getStatusColor(order.status),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: Icon(Icons.store, color: subtitleColor, size: 32),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            
-            // Order type and items
-            Row(
-              children: [
-                Text(_getOrderTypeIcon(order.orderType), style: const TextStyle(fontSize: 18)),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
+                // Business info
                 Expanded(
-                  child: Text(
-                    '${order.items.length} ürün',
-                    style: const TextStyle(color: Colors.grey, fontSize: 14),
-                  ),
-                ),
-                Text(
-                  '€${order.totalAmount.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    color: Color(0xFFFF6B35),
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            
-            // Date
-            Text(
-              _formatDate(order.createdAt),
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
-                fontSize: 12,
-              ),
-            ),
-
-            // Rate button for delivered orders
-            if (order.status == OrderStatus.delivered) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => RatingScreen(
-                          orderId: order.id,
-                          businessId: order.butcherId,
-                          businessName: order.butcherName,
-                          userId: order.userId,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        order.butcherName,
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.amber,
-                    side: const BorderSide(color: Colors.amber),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(order.status).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              _getStatusText(order.status),
+                              style: TextStyle(
+                                color: _getStatusColor(order.status),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _formatDate(order.createdAt),
+                            style: TextStyle(color: subtitleColor, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${order.items.length} Ürün • €${order.totalAmount.toStringAsFixed(2)}',
+                        style: TextStyle(color: subtitleColor, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Active order: show progress indicator
+          if (isActive) ...[
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: lokmaOrange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: lokmaOrange,
                     ),
                   ),
-                  icon: const Icon(Icons.star_outline, size: 18),
-                  label: const Text('Değerlendir'),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _getActiveStatusMessage(order.status),
+                      style: const TextStyle(
+                        color: lokmaOrange,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          
+          // Action buttons for completed orders
+          if (isCompleted && order.status != OrderStatus.cancelled) ...[
+            // Rating button
+            InkWell(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => RatingScreen(
+                      orderId: order.id,
+                      businessId: order.butcherId,
+                      businessName: order.butcherName,
+                      userId: order.userId,
+                    ),
+                  ),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    'Puan Ver',
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ),
-            ],
+            ),
+            const SizedBox(height: 8),
+            // Reorder button
+            InkWell(
+              onTap: () {
+                context.push('/kasap/${order.butcherId}');
+              },
+              child: Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  border: Border.all(color: textColor, width: 1.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Text(
+                    'Tekrar Sipariş Ver',
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
-        ),
+          
+          // Cancelled order message
+          if (order.status == OrderStatus.cancelled) ...[
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.cancel_outlined, color: Colors.red, size: 18),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Bu sipariş iptal edildi',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
+  }
+
+  String _getActiveStatusMessage(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return 'Siparişiniz onay bekliyor...';
+      case OrderStatus.accepted:
+        return 'Siparişiniz onaylandı, hazırlanıyor...';
+      case OrderStatus.preparing:
+        return 'Siparişiniz hazırlanıyor...';
+      case OrderStatus.ready:
+        return 'Siparişiniz hazır, teslim bekleniyor!';
+      case OrderStatus.onTheWay:
+        return 'Siparişiniz yolda!';
+      default:
+        return '';
+    }
   }
 
   String _formatDate(DateTime date) {
@@ -343,9 +663,9 @@ class _OrderCard extends StatelessWidget {
     if (diff.inDays == 0) {
       return 'Bugün ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     } else if (diff.inDays == 1) {
-      return 'Dün ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      return 'Dün';
     } else {
-      return '${date.day}.${date.month}.${date.year}';
+      return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
     }
   }
 }

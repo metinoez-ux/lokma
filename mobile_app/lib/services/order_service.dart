@@ -12,6 +12,34 @@ enum OrderStatus {
   cancelled,  // İptal
 }
 
+/// Parse order status from Firestore (handles legacy values)
+OrderStatus _parseOrderStatus(dynamic status) {
+  final statusStr = status?.toString() ?? 'pending';
+  
+  // Map legacy/alternative status values
+  switch (statusStr) {
+    case 'completed':
+    case 'picked_up':
+      return OrderStatus.delivered;
+    case 'out_for_delivery':
+      return OrderStatus.onTheWay;
+    case 'confirmed':
+      return OrderStatus.accepted;
+    case 'ready_for_pickup':
+    case 'ready_for_delivery':
+      return OrderStatus.ready;
+    case 'pending_payment':
+      return OrderStatus.pending;
+    case 'refunded':
+      return OrderStatus.cancelled;
+    default:
+      return OrderStatus.values.firstWhere(
+        (e) => e.name == statusStr,
+        orElse: () => OrderStatus.pending,
+      );
+  }
+}
+
 /// Order type enum
 enum OrderType {
   delivery,   // Teslimat
@@ -72,10 +100,7 @@ class LokmaOrder {
         (e) => e.name == data['orderType'],
         orElse: () => OrderType.pickup,
       ),
-      status: OrderStatus.values.firstWhere(
-        (e) => e.name == data['status'],
-        orElse: () => OrderStatus.pending,
-      ),
+      status: _parseOrderStatus(data['status']),
       deliveryAddress: data['deliveryAddress'],
       scheduledTime: (data['scheduledTime'] as Timestamp?)?.toDate(),
       notes: data['notes'],
@@ -128,7 +153,8 @@ class OrderItem {
 /// Order Service for LOKMA
 class OrderService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  static const String _collection = 'lokma_orders';
+  // Use meat_orders as the canonical collection (matches Admin Panel)
+  static const String _collection = 'meat_orders';
 
   /// Create a new order from cart
   Future<String> createOrder({
@@ -166,37 +192,20 @@ class OrderService {
     return docRef.id;
   }
 
-  /// Get user's orders stream (from both collections)
+  /// Get user's orders stream (from meat_orders - canonical collection)
   Stream<List<LokmaOrder>> getUserOrdersStream(String userId) {
-    // Stream from lokma_orders
-    final lokmaStream = _db
+    return _db
         .collection(_collection)
         .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => LokmaOrder.fromFirestore(doc))
-            .toList());
-    
-    // Stream from meat_orders (legacy cart collection)
-    final meatStream = _db
-        .collection('meat_orders')
-        .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => LokmaOrder.fromFirestore(doc))
-            .toList());
-    
-    // Combine both streams
-    return lokmaStream.asyncExpand((lokmaOrders) {
-      return meatStream.map((meatOrders) {
-        final allOrders = [...lokmaOrders, ...meatOrders];
-        // Sort by createdAt descending
-        allOrders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        return allOrders;
-      });
-    });
+            .toList())
+        .handleError((e) {
+          print('Error fetching orders: $e');
+          return <LokmaOrder>[];
+        });
   }
 
   /// Get single order

@@ -15,6 +15,8 @@ import 'package:lokma_app/widgets/kermes/order_qr_dialog.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/services/fcm_service.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
+import 'package:lokma_app/services/order_service.dart';
+import 'package:lokma_app/screens/orders/rating_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
@@ -201,7 +203,24 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       );
 
       // Use firebaseUser as fallback if currentUser is null
-      final userId = currentUser?.uid ?? firebaseUser!.uid;
+      // CRITICAL: Ensure userId is never empty
+      String userId = '';
+      if (currentUser?.uid != null && currentUser!.uid.isNotEmpty) {
+        userId = currentUser.uid;
+      } else if (firebaseUser?.uid != null && firebaseUser!.uid.isNotEmpty) {
+        userId = firebaseUser.uid;
+      }
+      
+      // Double-check userId is not empty
+      if (userId.isEmpty) {
+        Navigator.pop(context); // Close loading dialog
+        setState(() => _isSubmitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kullanıcı bilgisi alınamadı. Lütfen tekrar giriş yapın.')),
+        );
+        return;
+      }
+      
       final userDisplayName = currentUser?.displayName ?? firebaseUser?.displayName ?? firebaseUser?.email ?? 'User';
       final userEmail = currentUser?.email ?? firebaseUser?.email ?? '';
       final userPhone = currentUser?.phoneNumber ?? firebaseUser?.phoneNumber ?? '';
@@ -278,9 +297,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Widget build(BuildContext context) {
     final cart = ref.watch(cartProvider);
     final kermesCart = ref.watch(kermesCartProvider);
-    final bothEmpty = cart.items.isEmpty && kermesCart.isEmpty;
     
-    // 🍊 LIEFERANDO-STYLE: Simple white background, no tabs
+    // 🍊 LIEFERANDO-STYLE: White background with tabs
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -308,19 +326,55 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             }
           },
         ),
-        // 🍊 LIEFERANDO: Thin divider line under title
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: Colors.grey.shade200,
-            height: 1,
+          preferredSize: const Size.fromHeight(49),
+          child: Column(
+            children: [
+              Container(
+                color: Colors.grey.shade200,
+                height: 1,
+              ),
+              TabBar(
+                controller: _tabController,
+                indicatorColor: const Color(0xFFEC131E),
+                indicatorWeight: 3,
+                labelColor: Colors.black87,
+                unselectedLabelColor: Colors.grey,
+                labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                tabs: const [
+                  Tab(text: 'Sepet'),
+                  Tab(text: 'Aktif Siparişler'),
+                  Tab(text: 'Tamamlanan'),
+                ],
+              ),
+            ],
           ),
         ),
       ),
-      body: bothEmpty 
-        ? _buildEmptyCart()
-        : _buildLieferandoCartContent(cart, kermesCart),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // Tab 1: Sepet
+          _buildCartTabContent(cart, kermesCart),
+          // Tab 2: Aktif Siparişler
+          _buildActiveOrdersTab(),
+          // Tab 3: Tamamlanan
+          _buildOrderHistoryTab(),
+        ],
+      ),
     );
+  }
+  
+  /// Sepet Tab İçeriği
+  Widget _buildCartTabContent(CartState cart, KermesCartState kermesCart) {
+    final bothEmpty = cart.items.isEmpty && kermesCart.isEmpty;
+    
+    if (bothEmpty) {
+      return _buildEmptyCart();
+    }
+    
+    return _buildLieferandoCartContent(cart, kermesCart);
   }
   
   /// Sepet Tab'ı
@@ -336,14 +390,16 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   
   /// Aktif Siparişler Tab'ı
   Widget _buildActiveOrdersTab() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('kermes_orders')
-          .where('status', whereIn: ['pending', 'preparing', 'ready'])
-          .limit(50)
-          .snapshots(),
+    final authState = ref.watch(authProvider);
+    final userId = authState.user?.uid;
+    
+    if (userId == null) {
+      return _buildLoginPrompt();
+    }
+    
+    return StreamBuilder<List<LokmaOrder>>(
+      stream: OrderService().getUserOrdersStream(userId),
       builder: (context, snapshot) {
-        // Debug için snapshot durumunu kontrol et
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -354,36 +410,36 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         }
         
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFF43F5E)));
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFEC131E)));
         }
         
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        final allOrders = snapshot.data ?? [];
+        final activeOrders = allOrders.where((o) => _isActiveOrder(o.status)).toList();
+        
+        if (activeOrders.isEmpty) {
           return _buildEmptyOrders('Aktif siparişiniz yok', Icons.pending_outlined);
         }
         
-        // Client-side sıralama
-        final orders = snapshot.data!.docs
-            .map((doc) => KermesOrder.fromDocument(doc))
-            .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        
         return ListView.builder(
           padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-          itemCount: orders.length,
-          itemBuilder: (context, index) => _buildOrderCard(orders[index], isActive: true),
+          itemCount: activeOrders.length,
+          itemBuilder: (context, index) => _buildLokmaOrderCard(activeOrders[index], isActive: true),
         );
       },
     );
   }
   
-  /// Sipariş Geçmişi Tab'ı
+  /// Sipariş Geçmişi Tab'ı - Lieferando Style
   Widget _buildOrderHistoryTab() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('kermes_orders')
-          .where('status', whereIn: ['delivered', 'cancelled'])
-          .limit(50)
-          .snapshots(),
+    final authState = ref.watch(authProvider);
+    final userId = authState.user?.uid;
+    
+    if (userId == null) {
+      return _buildLoginPrompt();
+    }
+    
+    return StreamBuilder<List<LokmaOrder>>(
+      stream: OrderService().getUserOrdersStream(userId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -395,25 +451,59 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         }
         
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFF43F5E)));
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFEC131E)));
         }
         
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        final allOrders = snapshot.data ?? [];
+        final completedOrders = allOrders.where((o) => !_isActiveOrder(o.status)).toList();
+        
+        if (completedOrders.isEmpty) {
           return _buildEmptyOrders('Henüz tamamlanmış siparişiniz yok', Icons.history);
         }
         
-        // Client-side sıralama
-        final orders = snapshot.data!.docs
-            .map((doc) => KermesOrder.fromDocument(doc))
-            .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-        
         return ListView.builder(
           padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-          itemCount: orders.length,
-          itemBuilder: (context, index) => _buildOrderCard(orders[index], isActive: false),
+          itemCount: completedOrders.length,
+          itemBuilder: (context, index) => _buildLokmaOrderCard(completedOrders[index], isActive: false),
         );
       },
+    );
+  }
+  
+  bool _isActiveOrder(OrderStatus status) {
+    return status == OrderStatus.pending ||
+           status == OrderStatus.accepted ||
+           status == OrderStatus.preparing ||
+           status == OrderStatus.ready ||
+           status == OrderStatus.onTheWay;
+  }
+  
+  /// Giriş yapın prompt
+  Widget _buildLoginPrompt() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.login, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          const Text(
+            'Siparişlerinizi görmek için giriş yapın',
+            style: TextStyle(color: Colors.grey, fontSize: 16),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEC131E),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            ),
+            onPressed: () => context.go('/profile'),
+            child: const Text('Giriş Yap', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
   
@@ -423,13 +513,241 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: Colors.grey.shade600),
+          Icon(icon, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
+            style: const TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Sipariş vermek için bir işletme seçin!',
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
         ],
+      ),
+    );
+  }
+  
+  /// Lieferando-style Sipariş Kartı
+  Widget _buildLokmaOrderCard(LokmaOrder order, {required bool isActive}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with business info
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Business image placeholder
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.store, color: Colors.grey[400], size: 30),
+                ),
+                const SizedBox(width: 12),
+                // Business info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        order.butcherName,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_getStatusText(order.status)} • ${_formatDate(order.createdAt)}',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${order.items.length} ürün • €${order.totalAmount.toStringAsFixed(2)}',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                // Status badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(order.status).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    _getStatusText(order.status),
+                    style: TextStyle(
+                      color: _getStatusColor(order.status),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Action buttons for completed orders (Lieferando style)
+          if (!isActive) ...[
+            Container(
+              width: double.infinity,
+              height: 1,
+              color: Colors.grey.shade200,
+            ),
+            // Puan Ver button
+            InkWell(
+              onTap: () => _rateOrder(order),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                child: const Center(
+                  child: Text(
+                    'Puan Ver',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              height: 1,
+              color: Colors.grey.shade200,
+            ),
+            // Tekrar Sipariş Ver button
+            InkWell(
+              onTap: () => _reorder(order),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFEC131E),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(12),
+                    bottomRight: Radius.circular(12),
+                  ),
+                ),
+                child: const Center(
+                  child: Text(
+                    'Tekrar Sipariş Ver',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+  
+  Color _getStatusColor(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return Colors.orange;
+      case OrderStatus.accepted:
+        return Colors.blue;
+      case OrderStatus.preparing:
+        return Colors.purple;
+      case OrderStatus.ready:
+        return Colors.green;
+      case OrderStatus.onTheWay:
+        return Colors.teal;
+      case OrderStatus.delivered:
+        return Colors.green;
+      case OrderStatus.cancelled:
+        return Colors.red;
+    }
+  }
+
+  String _getStatusText(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return 'Beklemede';
+      case OrderStatus.accepted:
+        return 'Onaylandı';
+      case OrderStatus.preparing:
+        return 'Hazırlanıyor';
+      case OrderStatus.ready:
+        return 'Hazır';
+      case OrderStatus.onTheWay:
+        return 'Yolda';
+      case OrderStatus.delivered:
+        return 'Teslim Edildi';
+      case OrderStatus.cancelled:
+        return 'İptal';
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+    
+    if (diff.inDays == 0) {
+      return 'Bugün ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    } else if (diff.inDays == 1) {
+      return 'Dün';
+    } else {
+      return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    }
+  }
+  
+  /// Puan Ver - Navigate to rating screen
+  void _rateOrder(LokmaOrder order) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RatingScreen(
+          orderId: order.id,
+          businessId: order.butcherId,
+          businessName: order.butcherName,
+          userId: order.userId,
+        ),
+      ),
+    );
+  }
+  
+  /// Tekrar Sipariş Ver - Add items to cart and navigate to business
+  void _reorder(LokmaOrder order) {
+    // Navigate to the business page
+    context.go('/kasap/${order.butcherId}');
+    
+    // Show a snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${order.butcherName} sayfasına yönlendiriliyorsunuz'),
+        backgroundColor: const Color(0xFFEC131E),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

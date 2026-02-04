@@ -61,6 +61,8 @@ class RatingService {
   static const String _collection = 'ratings';
 
   /// Submit a new rating for an order
+  /// Ratings 1-2 stars require Super Admin moderation before publishing
+  /// Ratings 3-5 stars are auto-approved
   Future<String> submitRating({
     required String orderId,
     required String businessId,
@@ -71,7 +73,12 @@ class RatingService {
     int? courierRating,
     String? courierComment,
   }) async {
-    // Create rating document
+    // Determine moderation status based on rating
+    // 1-2 stars: pending (requires Super Admin approval)
+    // 3-5 stars: approved (auto-published)
+    final String status = businessRating <= 2 ? 'pending' : 'approved';
+    
+    // Create rating document with moderation status
     final docRef = await _db.collection(_collection).add({
       'orderId': orderId,
       'businessId': businessId,
@@ -81,19 +88,49 @@ class RatingService {
       'courierId': courierId,
       'courierRating': courierRating,
       'courierComment': courierComment,
+      'status': status, // 'pending', 'approved', 'rejected'
+      'source': 'lokma', // 'lokma' or 'google'
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    // Update business average rating
-    await _updateBusinessRating(businessId);
+    // Update business average rating (only for approved ratings)
+    if (status == 'approved') {
+      await _updateBusinessRating(businessId);
+    }
 
-    // Mark order as rated
-    await _db.collection('lokma_orders').doc(orderId).update({
-      'hasRating': true,
-      'ratingId': docRef.id,
-    });
+    // Mark order as rated - try both collections
+    await _markOrderAsRated(orderId, docRef.id);
 
     return docRef.id;
+  }
+  
+  /// Mark order as rated - checks both lokma_orders and meat_orders
+  Future<void> _markOrderAsRated(String orderId, String ratingId) async {
+    // Try lokma_orders first
+    try {
+      final lokmaDoc = await _db.collection('lokma_orders').doc(orderId).get();
+      if (lokmaDoc.exists) {
+        await _db.collection('lokma_orders').doc(orderId).update({
+          'hasRating': true,
+          'ratingId': ratingId,
+        });
+        return;
+      }
+    } catch (_) {}
+    
+    // Try meat_orders as fallback
+    try {
+      final meatDoc = await _db.collection('meat_orders').doc(orderId).get();
+      if (meatDoc.exists) {
+        await _db.collection('meat_orders').doc(orderId).update({
+          'hasRating': true,
+          'ratingId': ratingId,
+        });
+        return;
+      }
+    } catch (_) {}
+    
+    // If neither exists, silently continue (order might be archived)
   }
 
   /// Check if order has already been rated
@@ -129,10 +166,15 @@ class RatingService {
   }
 
   /// Update business average rating after new rating
+  /// Only counts approved LOKMA ratings
+  /// Switches from Google to LOKMA rating system after 5 approved ratings
   Future<void> _updateBusinessRating(String businessId) async {
+    // Only count approved LOKMA ratings
     final ratings = await _db
         .collection(_collection)
         .where('businessId', isEqualTo: businessId)
+        .where('status', isEqualTo: 'approved')
+        .where('source', isEqualTo: 'lokma')
         .get();
 
     if (ratings.docs.isEmpty) return;
@@ -143,11 +185,18 @@ class RatingService {
     }
 
     final average = total / ratings.docs.length;
+    final ratingCount = ratings.docs.length;
+    
+    // Determine rating source:
+    // - If 5+ approved LOKMA ratings: use LOKMA system
+    // - Otherwise: keep Google rating
+    final String ratingSource = ratingCount >= 5 ? 'lokma' : 'google';
 
     // Update business document
     await _db.collection('businesses').doc(businessId).update({
-      'averageRating': double.parse(average.toStringAsFixed(1)),
-      'totalRatings': ratings.docs.length,
+      'lokmaAverageRating': double.parse(average.toStringAsFixed(1)),
+      'lokmaRatingsCount': ratingCount,
+      'ratingSource': ratingSource, // 'google' or 'lokma'
     });
   }
 }
