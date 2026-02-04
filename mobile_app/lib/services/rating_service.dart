@@ -104,33 +104,20 @@ class RatingService {
     return docRef.id;
   }
   
-  /// Mark order as rated - checks both lokma_orders and meat_orders
+  /// Mark order as rated - uses meat_orders (canonical collection)
   Future<void> _markOrderAsRated(String orderId, String ratingId) async {
-    // Try lokma_orders first
     try {
-      final lokmaDoc = await _db.collection('lokma_orders').doc(orderId).get();
-      if (lokmaDoc.exists) {
-        await _db.collection('lokma_orders').doc(orderId).update({
-          'hasRating': true,
-          'ratingId': ratingId,
-        });
-        return;
-      }
-    } catch (_) {}
-    
-    // Try meat_orders as fallback
-    try {
-      final meatDoc = await _db.collection('meat_orders').doc(orderId).get();
-      if (meatDoc.exists) {
+      final doc = await _db.collection('meat_orders').doc(orderId).get();
+      if (doc.exists) {
         await _db.collection('meat_orders').doc(orderId).update({
           'hasRating': true,
           'ratingId': ratingId,
         });
-        return;
       }
-    } catch (_) {}
-    
-    // If neither exists, silently continue (order might be archived)
+    } catch (e) {
+      // Order might be archived or doesn't exist - silently continue
+      print('Warning: Could not mark order $orderId as rated: $e');
+    }
   }
 
   /// Check if order has already been rated

@@ -62,6 +62,8 @@ class LokmaOrder {
   final String? deliveryAddress;
   final DateTime? scheduledTime;
   final String? notes;
+  final String? courierId;
+  final String? courierName;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -79,6 +81,8 @@ class LokmaOrder {
     this.deliveryAddress,
     this.scheduledTime,
     this.notes,
+    this.courierId,
+    this.courierName,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -104,6 +108,8 @@ class LokmaOrder {
       deliveryAddress: data['deliveryAddress'],
       scheduledTime: (data['scheduledTime'] as Timestamp?)?.toDate(),
       notes: data['notes'],
+      courierId: data['courierId'],
+      courierName: data['courierName'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );

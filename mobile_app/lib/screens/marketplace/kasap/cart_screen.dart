@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
@@ -30,7 +31,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   late TabController _tabController;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-  bool _isPickUp = true;
+  bool _isPickUp = false; // Default to Kurye (delivery)
   bool _canDeliver = false;
   bool _checkingDelivery = true;
   String _paymentMethod = 'cash';
@@ -56,7 +57,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     
     // Pulse animation for active orders indicator
     _pulseController = AnimationController(
@@ -297,57 +298,47 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Widget build(BuildContext context) {
     final cart = ref.watch(cartProvider);
     final kermesCart = ref.watch(kermesCartProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     
-    // 🍊 LIEFERANDO-STYLE: White background with tabs
+    // 🍊 LIEFERANDO-STYLE: Theme-aware background with tabs
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        title: const Text(
+        leading: IconButton(
+          icon: Icon(
+            Icons.chevron_left,
+            color: colorScheme.onSurface,
+            size: 28,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        centerTitle: true,
+        title: Text(
           'Sepetim',
           style: TextStyle(
-            color: Colors.black87,
-            fontSize: 17,
+            color: colorScheme.onSurface,
+            fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87, size: 20),
-          onPressed: () {
-            // Use GoRouter's pop for proper navigation
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              // Fallback to restoran if no history
-              context.go('/restoran');
-            }
-          },
-        ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(49),
-          child: Column(
-            children: [
-              Container(
-                color: Colors.grey.shade200,
-                height: 1,
-              ),
-              TabBar(
-                controller: _tabController,
-                indicatorColor: const Color(0xFFEC131E),
-                indicatorWeight: 3,
-                labelColor: Colors.black87,
-                unselectedLabelColor: Colors.grey,
-                labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                unselectedLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                tabs: const [
-                  Tab(text: 'Sepet'),
-                  Tab(text: 'Aktif Siparişler'),
-                  Tab(text: 'Tamamlanan'),
-                ],
-              ),
+          preferredSize: const Size.fromHeight(48),
+          child: TabBar(
+            controller: _tabController,
+            indicatorColor: const Color(0xFFEC131E),
+            indicatorWeight: 3,
+            labelColor: colorScheme.onSurface,
+            unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
+            labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            tabs: const [
+              Tab(text: 'Sepetim'),
+              Tab(text: 'Siparişlerim'),
             ],
           ),
         ),
@@ -357,10 +348,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         children: [
           // Tab 1: Sepet
           _buildCartTabContent(cart, kermesCart),
-          // Tab 2: Aktif Siparişler
-          _buildActiveOrdersTab(),
-          // Tab 3: Tamamlanan
-          _buildOrderHistoryTab(),
+          // Tab 2: Siparişlerim (unified chronological list)
+          _buildUnifiedOrdersTab(),
         ],
       ),
     );
@@ -388,8 +377,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     return _buildCombinedCartContent(cart, kermesCart);
   }
   
-  /// Aktif Siparişler Tab'ı
+  /// Aktif Siparişler Tab'ı - DEPRECATED, use _buildUnifiedOrdersTab
   Widget _buildActiveOrdersTab() {
+    return _buildUnifiedOrdersTab();
+  }
+  
+  /// Birleştirilmiş Siparişler Tab'ı - Kronolojik tek liste
+  Widget _buildUnifiedOrdersTab() {
     final authState = ref.watch(authProvider);
     final userId = authState.user?.uid;
     
@@ -414,60 +408,35 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         }
         
         final allOrders = snapshot.data ?? [];
-        final activeOrders = allOrders.where((o) => _isActiveOrder(o.status)).toList();
         
-        if (activeOrders.isEmpty) {
-          return _buildEmptyOrders('Aktif siparişiniz yok', Icons.pending_outlined);
+        if (allOrders.isEmpty) {
+          return _buildEmptyOrders('Henüz siparişiniz yok', Icons.receipt_long_outlined);
         }
+        
+        // Sort: active orders first (by createdAt desc), then completed (by createdAt desc)
+        final activeOrders = allOrders.where((o) => _isActiveOrder(o.status)).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        final completedOrders = allOrders.where((o) => !_isActiveOrder(o.status)).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        
+        final sortedOrders = [...activeOrders, ...completedOrders];
         
         return ListView.builder(
           padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-          itemCount: activeOrders.length,
-          itemBuilder: (context, index) => _buildLokmaOrderCard(activeOrders[index], isActive: true),
+          itemCount: sortedOrders.length,
+          itemBuilder: (context, index) {
+            final order = sortedOrders[index];
+            final isActive = _isActiveOrder(order.status);
+            return _buildLokmaOrderCard(order, isActive: isActive);
+          },
         );
       },
     );
   }
   
-  /// Sipariş Geçmişi Tab'ı - Lieferando Style
+  /// Sipariş Geçmişi Tab'ı - DEPRECATED, use _buildUnifiedOrdersTab
   Widget _buildOrderHistoryTab() {
-    final authState = ref.watch(authProvider);
-    final userId = authState.user?.uid;
-    
-    if (userId == null) {
-      return _buildLoginPrompt();
-    }
-    
-    return StreamBuilder<List<LokmaOrder>>(
-      stream: OrderService().getUserOrdersStream(userId),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              'Hata: ${snapshot.error}',
-              style: const TextStyle(color: Colors.red),
-            ),
-          );
-        }
-        
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFEC131E)));
-        }
-        
-        final allOrders = snapshot.data ?? [];
-        final completedOrders = allOrders.where((o) => !_isActiveOrder(o.status)).toList();
-        
-        if (completedOrders.isEmpty) {
-          return _buildEmptyOrders('Henüz tamamlanmış siparişiniz yok', Icons.history);
-        }
-        
-        return ListView.builder(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-          itemCount: completedOrders.length,
-          itemBuilder: (context, index) => _buildLokmaOrderCard(completedOrders[index], isActive: false),
-        );
-      },
-    );
+    return _buildUnifiedOrdersTab();
   }
   
   bool _isActiveOrder(OrderStatus status) {
@@ -529,147 +498,1107 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
   
-  /// Lieferando-style Sipariş Kartı
+  /// Lieferando-style Sipariş Kartı - Simplified & Tappable
   Widget _buildLokmaOrderCard(LokmaOrder order, {required bool isActive}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with business info
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Business image placeholder
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(8),
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    
+    return GestureDetector(
+      onTap: () => _showOrderDetailSheet(order),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isDark ? Colors.grey.shade600 : Colors.grey.shade300, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header with business info - Lieferando style
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Horizontal image - Business cover/logo from Firestore with Tuna badge
+                  order.butcherId.isNotEmpty
+                      ? FutureBuilder<DocumentSnapshot>(
+                          future: FirebaseFirestore.instance.collection('businesses').doc(order.butcherId).get(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  width: 90,
+                                  height: 64,
+                                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                                  child: Center(child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28)),
+                                ),
+                              );
+                            }
+                            if (!snapshot.hasData || !snapshot.data!.exists) {
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  width: 90,
+                                  height: 64,
+                                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                                  child: Center(child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28)),
+                                ),
+                              );
+                            }
+                            final businessData = snapshot.data!.data() as Map<String, dynamic>?;
+                            final imageUrl = businessData?['imageUrl'] as String?;
+                            final brandLabelActive = businessData?['brandLabelActive'] == true;
+                            final brand = businessData?['brand']?.toString().trim().toLowerCase();
+                            final hasTunaBadge = brandLabelActive && brand == 'tuna';
+                            
+                            return Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    width: 90,
+                                    height: 64,
+                                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                                    child: imageUrl != null && imageUrl.isNotEmpty
+                                        ? Image.network(
+                                            imageUrl,
+                                            fit: BoxFit.cover,
+                                            loadingBuilder: (context, child, loadingProgress) {
+                                              if (loadingProgress == null) return child;
+                                              return Center(child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28));
+                                            },
+                                            errorBuilder: (_, __, ___) => Center(child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28)),
+                                          )
+                                        : Center(child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28)),
+                                  ),
+                                ),
+                                // Tuna Badge overlay
+                                if (hasTunaBadge)
+                                  Positioned(
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFD32F2F),
+                                        borderRadius: const BorderRadius.only(
+                                          bottomLeft: Radius.circular(12),
+                                          bottomRight: Radius.circular(12),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'TUNA',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: 90,
+                            height: 64,
+                            color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                            child: Center(child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28)),
+                          ),
+                        ),
+                  const SizedBox(width: 12),
+                  // Business info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Order number - always visible
+                        Text(
+                          'Sipariş No: ${order.id.substring(0, 6).toUpperCase()}',
+                          style: TextStyle(
+                            color: colorScheme.onSurface.withOpacity(0.5),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Business name
+                        Text(
+                          order.butcherName,
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Status and date
+                        Text(
+                          '${_getStatusText(order.status)} • ${_formatDate(order.createdAt)}',
+                          style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
+                        ),
+                        const SizedBox(height: 4),
+                        // "Siparişi Görüntüle" link
+                        Text(
+                          'Siparişi Görüntüle',
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Items and price
+                        Text(
+                          '${order.items.length} ürün • €${order.totalAmount.toStringAsFixed(2)}',
+                          style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Icon(Icons.store, color: Colors.grey[400], size: 30),
-                ),
-                const SizedBox(width: 12),
-                // Business info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        order.butcherName,
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                  // Status badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(order.status).withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      _getStatusText(order.status),
+                      style: TextStyle(
+                        color: _getStatusColor(order.status),
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Buttons row - Lieferando style thin pills
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                children: [
+                  // Puan Ver button - Dark mode aware
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40,
+                    child: ElevatedButton(
+                      onPressed: () => _rateOrder(order),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade200,
+                        foregroundColor: isDark ? Colors.white : Colors.black,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: EdgeInsets.zero,
+                      ),
+                      child: Text(
+                        'Puan Ver',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${_getStatusText(order.status)} • ${_formatDate(order.createdAt)}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Tekrar Sipariş Ver button - Dark mode aware
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40,
+                    child: ElevatedButton(
+                      onPressed: () => _reorder(order),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark ? const Color(0xFF3A3A3C) : const Color(0xFF1A1A1A),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: EdgeInsets.zero,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${order.items.length} ürün • €${order.totalAmount.toStringAsFixed(2)}',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                      child: const Text(
+                        'Tekrar Sipariş Ver',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
-                    ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Show order detail bottom sheet - Lieferando style
+  void _showOrderDetailSheet(LokmaOrder order) {
+    // Fetch brand color from business
+    _fetchBrandColor(order.butcherId).then((brandColor) {
+      final theme = Theme.of(context);
+      final colorScheme = theme.colorScheme;
+      final isDark = theme.brightness == Brightness.dark;
+      
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) => Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                // Handle bar
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[600] : Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                // Status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(order.status).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
+                
+                // Close button
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close, color: brandColor, size: 28),
                   ),
-                  child: Text(
-                    _getStatusText(order.status),
-                    style: TextStyle(
-                      color: _getStatusColor(order.status),
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                ),
+                
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Order date and time header
+                        Text(
+                          'Sipariş ${_formatDateFull(order.createdAt)}',
+                          style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${order.createdAt.hour.toString().padLeft(2, '0')}:${order.createdAt.minute.toString().padLeft(2, '0')}',
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Status row with expand icon
+                        Row(
+                          children: [
+                            Icon(
+                              _getStatusIcon(order.status),
+                              color: _getStatusColor(order.status),
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              _getStatusText(order.status),
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Spacer(),
+                            Icon(Icons.keyboard_arrow_down, color: Colors.grey[400]),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        
+                        // Action buttons
+                        // Puan Ver button (brand color)
+                        Container(
+                          width: double.infinity,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: brandColor,
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: TextButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _rateOrder(order);
+                            },
+                            icon: const Icon(Icons.star_border, color: Colors.white, size: 20),
+                            label: const Text(
+                              'Puan Ver',
+                              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        
+                        // Tekrar Sipariş Ver button (black outline)
+                        Container(
+                          width: double.infinity,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: colorScheme.surface,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: colorScheme.onSurface, width: 1.5),
+                          ),
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _reorder(order);
+                            },
+                            child: Text(
+                              'Tekrar Sipariş Ver',
+                              style: TextStyle(color: colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // Divider
+                        Container(height: 1, color: Colors.grey.shade200),
+                        const SizedBox(height: 20),
+                        
+                        // Delivery/Pickup address section
+                        Text(
+                          order.orderType == OrderType.delivery ? 'Teslimat Adresi:' : 'Gel Al:',
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.location_on_outlined, color: Colors.grey[600], size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                order.deliveryAddress ?? order.butcherName,
+                                style: TextStyle(color: colorScheme.onSurface.withOpacity(0.7), fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        
+                        // Show on map button
+                        Container(
+                          width: double.infinity,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: TextButton.icon(
+                            onPressed: () => _openMapsForBusiness(order.butcherId, order.butcherName),
+                            icon: Icon(Icons.navigation_outlined, color: colorScheme.onSurface.withOpacity(0.7), size: 18),
+                            label: Text(
+                              'Haritada Göster',
+                              style: TextStyle(color: colorScheme.onSurface.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // Divider
+                        Container(height: 1, color: Colors.grey.shade200),
+                        const SizedBox(height: 20),
+                        
+                        // Business info and order items
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    order.butcherName,
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Sipariş No: ${order.id.substring(0, 6).toUpperCase()}',
+                                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Business logo
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                width: 48,
+                                height: 48,
+                                color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+                                child: order.butcherId.isNotEmpty
+                                    ? Image.network(
+                                        'https://firebasestorage.googleapis.com/v0/b/lokma-app.firebasestorage.app/o/businesses%2F${order.butcherId}%2Flogo.jpg?alt=media',
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Icon(Icons.store, color: Colors.grey[400], size: 24),
+                                      )
+                                    : Icon(Icons.store, color: Colors.grey[400], size: 24),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Order items list
+                        ...order.items.map((item) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              Text(
+                                '${item.quantity.toInt()}',
+                                style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Text(
+                                  item.name,
+                                  style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
+                                ),
+                              ),
+                              Text(
+                                '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                                style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        )),
+                        const SizedBox(height: 16),
+                        
+                        // Divider
+                        Container(height: 1, color: isDark ? Colors.grey.shade700 : Colors.grey.shade200),
+                        const SizedBox(height: 16),
+                        
+                        // Total
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Ödenen Toplam',
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '€${order.totalAmount.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        // View receipt link
+                        GestureDetector(
+                          onTap: () => _showReceiptSheet(order, brandColor),
+                          child: Text(
+                            'Fişi Görüntüle',
+                            style: TextStyle(
+                              color: brandColor,
+                              fontSize: 14,
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        
+                        // Help section
+                        Container(height: 1, color: isDark ? Colors.grey.shade700 : Colors.grey.shade200),
+                        const SizedBox(height: 24),
+                        
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Bir sorun mu var?',
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Yardımcımız size yardımcı olabilir',
+                                    style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  GestureDetector(
+                                    onTap: () => _openSupportChat(order),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: brandColor,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: const Text(
+                                        'Sohbeti Başlat',
+                                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Help illustration placeholder
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: brandColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(40),
+                              ),
+                              child: Icon(Icons.support_agent, color: brandColor.withOpacity(0.5), size: 40),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 120), // Extra padding for bottom navbar
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
           ),
+        ),
+      );
+    });
+  }
+  
+  /// Fetch brand color from Firestore
+  Future<Color> _fetchBrandColor(String businessId) async {
+    if (businessId.isEmpty) return const Color(0xFFEC131E);
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(businessId)
+          .get();
+      if (doc.exists) {
+        final data = doc.data();
+        final brandColorHex = data?['brandColor'] as String?;
+        if (brandColorHex != null && brandColorHex.isNotEmpty) {
+          final hex = brandColorHex.replaceAll('#', '');
+          return Color(int.parse('FF$hex', radix: 16));
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching brand color: $e');
+    }
+    return const Color(0xFFEC131E); // Default LOKMA red
+  }
+  
+  /// Open maps for business location
+  Future<void> _openMapsForBusiness(String businessId, String businessName) async {
+    try {
+      // First get business address from Firestore
+      final doc = await FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(businessId)
+          .get();
+      
+      String query = businessName;
+      double? lat;
+      double? lng;
+      
+      if (doc.exists) {
+        final data = doc.data();
+        
+        // Try to get coordinates first (most accurate)
+        if (data?['lat'] is num) lat = (data!['lat'] as num).toDouble();
+        if (data?['lng'] is num) lng = (data!['lng'] as num).toDouble();
+        
+        // Handle address - can be String or Map
+        final addressField = data?['address'];
+        String? addressStr;
+        String? city = data?['city'] as String?;
+        
+        if (addressField is String && addressField.isNotEmpty) {
+          // Address is a simple string
+          addressStr = addressField;
+        } else if (addressField is Map<String, dynamic>) {
+          // Address is a Map with structured data
+          final streetName = addressField['streetName'] as String?;
+          final streetNumber = addressField['streetNumber'] as String?;
+          final postalCode = addressField['postalCode'] as String?;
+          final cityFromAddress = addressField['city'] as String?;
           
-          // Action buttons for completed orders (Lieferando style)
-          if (!isActive) ...[
-            Container(
-              width: double.infinity,
-              height: 1,
-              color: Colors.grey.shade200,
-            ),
-            // Puan Ver button
-            InkWell(
-              onTap: () => _rateOrder(order),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                child: const Center(
-                  child: Text(
-                    'Puan Ver',
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
+          // Try to get lat/lng from address map if not already found
+          if (lat == null && addressField['lat'] is num) {
+            lat = (addressField['lat'] as num).toDouble();
+          }
+          if (lng == null && addressField['lng'] is num) {
+            lng = (addressField['lng'] as num).toDouble();
+          }
+          
+          // Build address string
+          final parts = <String>[];
+          if (streetName != null && streetName.isNotEmpty) {
+            parts.add(streetNumber != null ? '$streetName $streetNumber' : streetName);
+          }
+          if (postalCode != null && postalCode.isNotEmpty) {
+            parts.add(postalCode);
+          }
+          if (cityFromAddress != null && cityFromAddress.isNotEmpty) {
+            city = cityFromAddress;
+          }
+          if (city != null && city.isNotEmpty) {
+            parts.add(city);
+          }
+          
+          if (parts.isNotEmpty) {
+            addressStr = parts.join(', ');
+          }
+        }
+        
+        if (addressStr != null && addressStr.isNotEmpty) {
+          query = addressStr;
+        } else if (city != null && city.isNotEmpty) {
+          query = '$businessName, $city';
+        }
+      }
+      
+      Uri mapsUrl;
+      
+      // If we have coordinates, use them for more accurate navigation
+      if (lat != null && lng != null) {
+        // Apple Maps with coordinates
+        mapsUrl = Uri.parse('https://maps.apple.com/?ll=$lat,$lng&q=${Uri.encodeComponent(businessName)}');
+      } else {
+        // Fallback to search query
+        final encodedQuery = Uri.encodeComponent(query);
+        mapsUrl = Uri.parse('https://maps.apple.com/?q=$encodedQuery');
+      }
+      
+      debugPrint('Opening maps URL: $mapsUrl');
+      
+      if (await canLaunchUrl(mapsUrl)) {
+        await launchUrl(mapsUrl, mode: LaunchMode.externalApplication);
+      } else {
+        // Fallback to Google Maps if Apple Maps fails
+        final googleUrl = lat != null && lng != null
+            ? Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng')
+            : Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}');
+        if (await canLaunchUrl(googleUrl)) {
+          await launchUrl(googleUrl, mode: LaunchMode.externalApplication);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error opening maps: $e');
+      // Show snackbar for user feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Harita açılırken hata oluştu: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+  
+  /// Open support chat
+  void _openSupportChat(LokmaOrder order) {
+    // Navigate to support or open email
+    final subject = Uri.encodeComponent('Sipariş Desteği: ${order.id.substring(0, 6).toUpperCase()}');
+    final body = Uri.encodeComponent('Sipariş No: ${order.id}\nİşletme: ${order.butcherName}\n\nMesajınız:');
+    final mailtoUri = Uri.parse('mailto:destek@lokma.app?subject=$subject&body=$body');
+    launchUrl(mailtoUri);
+  }
+  
+  /// Show nostalgic receipt sheet
+  void _showReceiptSheet(LokmaOrder order, Color brandColor) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFFFFDE7), // Yellowish receipt paper color
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              // Close button
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.close, color: Colors.grey[600], size: 24),
+                ),
+              ),
+              
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      // Receipt header - dashed line
+                      _buildDashedLine(),
+                      const SizedBox(height: 16),
+                      
+                      // Business name - centered in monospace
+                      Text(
+                        order.butcherName.toUpperCase(),
+                        style: const TextStyle(
+                          fontFamily: 'Courier',
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          letterSpacing: 2,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'LOKMA',
+                        style: TextStyle(
+                          fontFamily: 'Courier',
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          letterSpacing: 3,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDashedLine(),
+                      const SizedBox(height: 16),
+                      
+                      // Order info
+                      _buildReceiptRow('SİPARİŞ NO:', order.id.substring(0, 6).toUpperCase()),
+                      const SizedBox(height: 4),
+                      _buildReceiptRow('TARİH:', DateFormat('dd.MM.yyyy').format(order.createdAt)),
+                      const SizedBox(height: 4),
+                      _buildReceiptRow('SAAT:', DateFormat('HH:mm').format(order.createdAt)),
+                      const SizedBox(height: 4),
+                      _buildReceiptRow('TİP:', order.orderType == OrderType.delivery ? 'TESLİMAT' : 'GEL AL'),
+                      const SizedBox(height: 16),
+                      _buildDashedLine(),
+                      const SizedBox(height: 16),
+                      
+                      // Items header
+                      Row(
+                        children: [
+                          const Expanded(
+                            flex: 3,
+                            child: Text(
+                              'ÜRÜN',
+                              style: TextStyle(
+                                fontFamily: 'Courier',
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 40,
+                            child: Text(
+                              'AD.',
+                              style: TextStyle(
+                                fontFamily: 'Courier',
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 60,
+                            child: Text(
+                              'FİYAT',
+                              style: TextStyle(
+                                fontFamily: 'Courier',
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      
+                      // Items
+                      ...order.items.map((item) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                item.name.toUpperCase(),
+                                style: const TextStyle(
+                                  fontFamily: 'Courier',
+                                  fontSize: 11,
+                                  color: Colors.black87,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 40,
+                              child: Text(
+                                '${item.quantity.toInt()}',
+                                style: const TextStyle(
+                                  fontFamily: 'Courier',
+                                  fontSize: 11,
+                                  color: Colors.black87,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            SizedBox(
+                              width: 60,
+                              child: Text(
+                                '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontFamily: 'Courier',
+                                  fontSize: 11,
+                                  color: Colors.black87,
+                                ),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )),
+                      
+                      const SizedBox(height: 16),
+                      _buildDashedLine(),
+                      const SizedBox(height: 16),
+                      
+                      // Total
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'TOPLAM',
+                            style: TextStyle(
+                              fontFamily: 'Courier',
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            '€${order.totalAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontFamily: 'Courier',
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _buildDashedLine(),
+                      const SizedBox(height: 24),
+                      
+                      // Thank you message
+                      const Text(
+                        'TEŞEKKÜR EDERİZ!',
+                        style: TextStyle(
+                          fontFamily: 'Courier',
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          letterSpacing: 2,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Afiyet olsun',
+                        style: TextStyle(
+                          fontFamily: 'Courier',
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Barcode simulation
+                      Container(
+                        height: 50,
+                        margin: const EdgeInsets.symmetric(horizontal: 40),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(30, (index) => Container(
+                            width: index % 3 == 0 ? 3 : 1.5,
+                            height: 50,
+                            color: Colors.black87,
+                            margin: const EdgeInsets.symmetric(horizontal: 1),
+                          )),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        order.id.substring(0, 12).toUpperCase(),
+                        style: const TextStyle(
+                          fontFamily: 'Courier',
+                          fontSize: 10,
+                          color: Colors.black87,
+                          letterSpacing: 3,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      _buildDashedLine(),
+                      const SizedBox(height: 40),
+                    ],
                   ),
                 ),
               ),
-            ),
-            Container(
-              width: double.infinity,
-              height: 1,
-              color: Colors.grey.shade200,
-            ),
-            // Tekrar Sipariş Ver button
-            InkWell(
-              onTap: () => _reorder(order),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEC131E),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
-                  ),
-                ),
-                child: const Center(
-                  child: Text(
-                    'Tekrar Sipariş Ver',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
+            ],
+          ),
+        ),
       ),
     );
+  }
+  
+  /// Build dashed line for receipt
+  Widget _buildDashedLine() {
+    return Row(
+      children: List.generate(40, (index) => Expanded(
+        child: Container(
+          height: 1,
+          color: index % 2 == 0 ? Colors.grey[400] : Colors.transparent,
+        ),
+      )),
+    );
+  }
+  
+  /// Build receipt row
+  Widget _buildReceiptRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Courier',
+            fontSize: 12,
+            color: Colors.black87,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontFamily: 'Courier',
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  /// Get status icon
+  IconData _getStatusIcon(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return Icons.schedule;
+      case OrderStatus.accepted:
+        return Icons.check_circle_outline;
+      case OrderStatus.preparing:
+        return Icons.restaurant;
+      case OrderStatus.ready:
+        return Icons.inventory_2_outlined;
+      case OrderStatus.onTheWay:
+        return Icons.delivery_dining;
+      case OrderStatus.delivered:
+        return Icons.check_circle;
+      case OrderStatus.cancelled:
+        return Icons.cancel_outlined;
+    }
+  }
+  
+  /// Format date with month name
+  String _formatDateFull(DateTime date) {
+    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
+                    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+    return '${date.day} ${months[date.month - 1]}';
   }
   
   Color _getStatusColor(OrderStatus status) {
@@ -711,16 +1640,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   }
 
   String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
-    
-    if (diff.inDays == 0) {
-      return 'Bugün ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-    } else if (diff.inDays == 1) {
-      return 'Dün';
-    } else {
-      return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-    }
+    // Always show actual date: DD.MM.YY HH:MM
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year.toString().substring(2)} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
   
   /// Puan Ver - Navigate to rating screen
@@ -732,6 +1653,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           businessId: order.butcherId,
           businessName: order.butcherName,
           userId: order.userId,
+          isDelivery: order.orderType == OrderType.delivery,
+          courierId: order.courierId,
+          courierName: order.courierName,
         ),
       ),
     );
@@ -1008,8 +1932,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               _buildLieferandoDeliveryPill(),
               const SizedBox(height: 16),
               
-              // 🟡 Minimum Order Bar (Yellow - Lieferando style)
-              if (hasKasap && _butcherData?['minOrderAmount'] != null)
+              // 🟡 Minimum Order Bar (Yellow - Lieferando style) - ONLY for Kurye mode
+              if (hasKasap && _butcherData != null && !_isPickUp)
                 _buildLieferandoMinimumBar(cart.totalAmount),
               
               // 📦 Kermes Items (if any)
@@ -1089,27 +2013,60 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       );
     }
     
-    // 3D Switch for Gel Al / Kurye
+    // 3D Switch for Kurye / Gel Al (Kurye on LEFT as standard)
     return ThreeDimensionalPillTabBar(
-      selectedIndex: _isPickUp ? 0 : 1,
+      selectedIndex: _isPickUp ? 1 : 0, // Kurye=0, Gel Al=1
       onTabSelected: (index) {
-        setState(() => _isPickUp = index == 0);
+        setState(() => _isPickUp = index == 1); // index 1 = Gel Al
       },
       tabs: const [
-        TabItem(title: 'Gel Al', icon: Icons.store_outlined),
-        TabItem(title: 'Kurye', icon: Icons.delivery_dining),
+        TabItem(title: 'Kurye', icon: Icons.delivery_dining), // LEFT
+        TabItem(title: 'Gel Al', icon: Icons.store_outlined), // RIGHT
       ],
     );
   }
   
-  /// 🟡 Lieferando-style minimum order bar (yellow)
+  /// 🟡 Lieferando-style minimum order bar (yellow warning or green success)
   Widget _buildLieferandoMinimumBar(double currentTotal) {
-    final minOrder = (_butcherData!['minOrderAmount'] as num).toDouble();
+    final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
     final remaining = minOrder - currentTotal;
     final isReached = remaining <= 0;
     
-    if (isReached) return const SizedBox.shrink();
+    if (isReached) {
+      // ✅ SUCCESS: Minimum reached - show green bar (Lieferando style)
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE8F5E9), // Light green
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.check, color: Colors.white, size: 14),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Harika! Teslimat şimdi mümkün',
+              style: TextStyle(
+                color: Color(0xFF2E7D32),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     
+    // 🟡 WARNING: Below minimum - show yellow bar
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(14),
@@ -1119,17 +2076,22 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       ),
       child: Row(
         children: [
+          const Icon(Icons.info_outline, color: Color(0xFFF9A825), size: 20),
+          const SizedBox(width: 10),
           Expanded(
             child: RichText(
               text: TextSpan(
                 style: const TextStyle(color: Colors.black87, fontSize: 14),
                 children: [
-                  const TextSpan(text: 'Noch '),
                   TextSpan(
-                    text: '${remaining.toStringAsFixed(2)} €',
+                    text: '${remaining.toStringAsFixed(2).replaceAll('.', ',')} €',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  const TextSpan(text: ' bis der Mindestbestellwert erreicht ist'),
+                  const TextSpan(text: ' daha ekle, min. sipariş '),
+                  TextSpan(
+                    text: '${minOrder.toStringAsFixed(0)} €',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),
@@ -1241,15 +2203,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Name + Price on same line
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
+          // LEFT: Product name and details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   productName,
                   style: const TextStyle(
                     color: Colors.black87,
@@ -1257,7 +2219,23 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     fontSize: 15,
                   ),
                 ),
-              ),
+                if (isKg)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '${item.product.price.toStringAsFixed(2)} €/kg',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          
+          // RIGHT: Price + Quantity controls (Lieferando style)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Price
               Text(
                 '${totalPrice.toStringAsFixed(2)} €',
                 style: const TextStyle(
@@ -1266,59 +2244,64 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   fontSize: 15,
                 ),
               ),
-            ],
-          ),
-          
-          // Unit info for kg items
-          if (isKg)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                '${item.product.price.toStringAsFixed(2)} €/kg',
-                style: TextStyle(color: Colors.grey[600], fontSize: 13),
-              ),
-            ),
-          
-          const SizedBox(height: 8),
-          
-          // Quantity controls (Lieferando style: trash + count + plus)
-          Row(
-            children: [
-              // Delete/minus button
-              GestureDetector(
-                onTap: () {
-                  if (quantity > 1) {
-                    ref.read(cartProvider.notifier).updateQuantity(item.product.sku, quantity - 1);
-                  } else {
-                    ref.read(cartProvider.notifier).removeFromCart(item.product.sku);
-                  }
-                },
-                child: Icon(
-                  quantity == 1 ? Icons.delete_outline : Icons.remove,
-                  color: Colors.grey[700],
-                  size: 22,
+              const SizedBox(height: 8),
+              // Quantity controls: - number +
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ),
-              const SizedBox(width: 16),
-              // Quantity
-              Text(
-                isKg ? '${(quantity / 1000).toStringAsFixed(1)} kg' : '${quantity.toInt()}',
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Minus/Delete button
+                    GestureDetector(
+                      onTap: () {
+                        final step = isKg ? 100.0 : 1.0;
+                        final minQty = isKg ? 100.0 : 1.0;
+                        if (quantity > minQty) {
+                          ref.read(cartProvider.notifier).updateQuantity(item.product.sku, quantity - step);
+                        } else {
+                          ref.read(cartProvider.notifier).removeFromCart(item.product.sku);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          quantity == 1 ? Icons.delete_outline : Icons.remove,
+                          color: Colors.grey[700],
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    // Quantity
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 32),
+                      alignment: Alignment.center,
+                      child: Text(
+                        isKg ? '${(quantity / 1000).toStringAsFixed(1)}' : '${quantity.toInt()}',
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    // Plus button
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(cartProvider.notifier).updateQuantity(
+                          item.product.sku, 
+                          isKg ? quantity + 100 : quantity + 1,
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(Icons.add, color: Colors.grey[700], size: 18),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              // Add button
-              GestureDetector(
-                onTap: () {
-                  ref.read(cartProvider.notifier).updateQuantity(
-                    item.product.sku, 
-                    isKg ? quantity + 100 : quantity + 1,
-                  );
-                },
-                child: Icon(Icons.add, color: Colors.grey[700], size: 22),
               ),
             ],
           ),
@@ -1337,7 +2320,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Zwischensumme',
+              'Ara Toplam',
               style: TextStyle(color: Colors.black87, fontSize: 14),
             ),
             Text(
@@ -1353,7 +2336,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Lieferkosten',
+                'Teslimat Ücreti',
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               Text(
@@ -1372,13 +2355,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Widget _buildLieferandoCheckoutButton(double total) {
     return GestureDetector(
       onTap: () {
-        // Check minimum order for ALL orders (both pickup and delivery)
-        if (_butcherData?['minOrderAmount'] != null) {
-          final minOrder = (_butcherData!['minOrderAmount'] as num).toDouble();
+        // Check minimum order ONLY for Kurye (delivery) mode - Gel Al has no minimum
+        if (!_isPickUp) {
+          final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
           if (total < minOrder) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Minimum sipariş tutarı: ${minOrder.toStringAsFixed(2)} €'),
+                content: Text('Kurye için minimum sipariş tutarı: ${minOrder.toStringAsFixed(0)} €'),
                 backgroundColor: Colors.orange,
               ),
             );

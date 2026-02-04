@@ -1512,23 +1512,114 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ],
                   ),
                   
-                  // Distance
-                  if (distanceText.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(Icons.location_on_outlined, color: Colors.grey[600], size: 14),
-                        const SizedBox(width: 4),
-                        Text(
-                          distanceText,
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  // 🆕 Lieferando-style info row - changes based on mode
+                  const SizedBox(height: 4),
+                  Builder(
+                    builder: (context) {
+                      // Read business delivery settings
+                      final prepTimeMin = (data['prepTimeMin'] as num?)?.toInt() ?? 10;
+                      final prepTimeMax = (data['prepTimeMax'] as num?)?.toInt() ?? 25;
+                      final deliveryFee = (data['deliveryFee'] as num?)?.toDouble() ?? 0.0;
+                      final minOrderAmount = (data['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
+                      final freeDeliveryThreshold = (data['freeDeliveryThreshold'] as num?)?.toDouble();
+                      
+                      if (_deliveryMode == 'teslimat') {
+                        // DELIVERY MODE: Show prep time + delivery fee + min order
+                        // Calculate estimated delivery time = prep time + travel time (3 min/km)
+                        double travelTimeMin = 0;
+                        if (distanceText.isNotEmpty) {
+                          final kmMatch = RegExp(r'([\d.]+)').firstMatch(distanceText);
+                          if (kmMatch != null) {
+                            final km = double.tryParse(kmMatch.group(1) ?? '0') ?? 0;
+                            travelTimeMin = km * 3; // ~3 min per km
+                          }
+                        }
+                        final totalMin = prepTimeMin + travelTimeMin.round();
+                        final totalMax = prepTimeMax + travelTimeMin.round() + 5;
+                        
+                        final hasDeliveryFee = deliveryFee > 0;
+                        final hasMinOrder = minOrderAmount > 0;
+                        final hasFreeDelivery = freeDeliveryThreshold != null && freeDeliveryThreshold > 0;
+                        
+                        return Row(
+                          children: [
+                            // Delivery time
+                            Icon(Icons.access_time, color: Colors.grey[600], size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$totalMin-$totalMax dk',
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 13,
+                              ),
+                            ),
+                            
+                            // Delivery fee
+                            if (hasDeliveryFee || hasFreeDelivery) ...[
+                              Text(' · ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                              Icon(Icons.delivery_dining, color: Colors.grey[600], size: 14),
+                              const SizedBox(width: 4),
+                              if (hasFreeDelivery)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2E7D32).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    deliveryFee > 0 ? '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}€' : 'Ücretsiz',
+                                    style: TextStyle(
+                                      color: deliveryFee > 0 ? Colors.grey[700] : const Color(0xFF2E7D32),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                )
+                              else
+                                Text(
+                                  '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}€',
+                                  style: TextStyle(
+                                    color: Colors.grey[700],
+                                    fontSize: 13,
+                                  ),
+                                ),
+                            ],
+                            
+                            // Min order
+                            if (hasMinOrder) ...[
+                              Text(' · ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                              Icon(Icons.shopping_basket_outlined, color: Colors.grey[600], size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Min. ${minOrderAmount.toStringAsFixed(0)}€',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      } else {
+                        // PICKUP MODE: Just show distance (Lieferando style)
+                        if (distanceText.isEmpty) return const SizedBox.shrink();
+                        return Row(
+                          children: [
+                            Icon(Icons.location_on_outlined, color: Colors.grey[600], size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              distanceText,
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                    },
+                  ),
+
                 ],
               ),
             ),

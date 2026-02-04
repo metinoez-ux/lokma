@@ -43,6 +43,14 @@ const planLabels: Record<string, { label: string; color: string; pushQuota: numb
     free: { label: 'MIRA Free', color: 'bg-gray-700', pushQuota: 0 },
 };
 
+interface BusinessSearchResult {
+    id: string;
+    companyName: string;
+    postalCode?: string;
+    city?: string;
+    businessType?: string;
+}
+
 export default function VendorPanelPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
@@ -54,6 +62,13 @@ export default function VendorPanelPage() {
         pushQuotaTotal: 0,
     });
     const [activeFilter, setActiveFilter] = useState<'today' | 'yesterday' | 'week' | 'month'>('today');
+
+    // Super admin business search
+    const [isSuperAdminUser, setIsSuperAdminUser] = useState(false);
+    const [showBusinessSearch, setShowBusinessSearch] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<BusinessSearchResult[]>([]);
+    const [searching, setSearching] = useState(false);
 
     // Load vendor info and orders
     const loadVendorData = useCallback(async (vendorId: string, vendorType: string) => {
@@ -113,27 +128,12 @@ export default function VendorPanelPage() {
                     setVendor(vendorData);
                     await loadVendorData(vendorData.vendorId, vendorData.vendorType);
                 } else {
-                    // For demo: Check if super admin with butcher access
+                    // Check if super admin
                     const { isSuperAdmin } = await import('@/lib/config');
                     if (isSuperAdmin(user.email)) {
-                        // Demo mode: Use first butcher
-                        const butchersQuery = query(collection(db, 'businesses'), limit(1));
-                        const butchersSnapshot = await getDocs(butchersQuery);
-                        if (!butchersSnapshot.empty) {
-                            const firstButcher = butchersSnapshot.docs[0];
-                            const demoVendor: VendorAdmin = {
-                                id: 'demo',
-                                userId: user.uid,
-                                vendorType: 'butcher',
-                                vendorId: firstButcher.id,
-                                role: 'owner',
-                                permissions: ['all'],
-                                isActive: true,
-                                companyName: firstButcher.data().companyName,
-                            };
-                            setVendor(demoVendor);
-                            await loadVendorData(firstButcher.id, 'butcher');
-                        }
+                        // Super admin - show business search
+                        setIsSuperAdminUser(true);
+                        setShowBusinessSearch(true);
                     } else {
                         router.push('/dashboard');
                         return;
@@ -149,6 +149,66 @@ export default function VendorPanelPage() {
 
         return () => unsubscribeAuth();
     }, [router, loadVendorData]);
+
+    // Search businesses for super admin
+    const searchBusinesses = async () => {
+        if (searchQuery.length < 2) return;
+
+        setSearching(true);
+        try {
+            const businessesRef = collection(db, 'businesses');
+            const snapshot = await getDocs(businessesRef);
+
+            const results: BusinessSearchResult[] = [];
+            const queryLower = searchQuery.toLowerCase();
+
+            snapshot.docs.forEach(doc => {
+                const data = doc.data();
+                const companyName = (data.companyName || '').toLowerCase();
+                const postalCode = (data.postalCode || data.address?.postalCode || '').toString();
+                const city = (data.city || data.address?.city || '').toLowerCase();
+
+                // Match by name, postal code, or city
+                if (companyName.includes(queryLower) ||
+                    postalCode.includes(queryLower) ||
+                    city.includes(queryLower)) {
+                    results.push({
+                        id: doc.id,
+                        companyName: data.companyName || 'İsimsiz',
+                        postalCode: postalCode,
+                        city: data.city || data.address?.city || '',
+                        businessType: data.businessType || data.type || 'İşletme'
+                    });
+                }
+            });
+
+            setSearchResults(results.slice(0, 20)); // Limit to 20
+        } catch (error) {
+            console.error('Search error:', error);
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    // Select a business (super admin)
+    const selectBusiness = async (business: BusinessSearchResult) => {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
+
+        const demoVendor: VendorAdmin = {
+            id: 'demo',
+            userId: currentUser.uid,
+            vendorType: 'butcher',
+            vendorId: business.id,
+            role: 'owner',
+            permissions: ['all'],
+            isActive: true,
+            companyName: business.companyName,
+        };
+        setVendor(demoVendor);
+        setShowBusinessSearch(false);
+        await loadVendorData(business.id, 'butcher');
+    };
 
     // Filter orders by date
     const getFilteredOrders = () => {
@@ -205,6 +265,77 @@ export default function VendorPanelPage() {
         );
     }
 
+    // Super admin business search modal
+    if (showBusinessSearch && isSuperAdminUser) {
+        return (
+            <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+                <div className="bg-gray-800 rounded-2xl w-full max-w-lg p-6 border border-gray-700">
+                    <div className="text-center mb-6">
+                        <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-3xl">🔍</span>
+                        </div>
+                        <h1 className="text-2xl font-bold text-white">İşletme Seçin</h1>
+                        <p className="text-gray-400 mt-2">Super Admin - İşletme adı veya posta kodu ile arayın</p>
+                    </div>
+
+                    {/* Search Input */}
+                    <div className="flex gap-2 mb-4">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && searchBusinesses()}
+                            placeholder="İşletme adı, posta kodu veya şehir..."
+                            className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                        />
+                        <button
+                            onClick={searchBusinesses}
+                            disabled={searching || searchQuery.length < 2}
+                            className="px-6 py-3 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold text-white transition-colors"
+                        >
+                            {searching ? '...' : 'Ara'}
+                        </button>
+                    </div>
+
+                    {/* Search Results */}
+                    <div className="max-h-80 overflow-y-auto space-y-2">
+                        {searchResults.length === 0 && searchQuery.length >= 2 && !searching && (
+                            <p className="text-center text-gray-500 py-4">Sonuç bulunamadı</p>
+                        )}
+                        {searchResults.map((business) => (
+                            <button
+                                key={business.id}
+                                onClick={() => selectBusiness(business)}
+                                className="w-full p-4 bg-gray-700 hover:bg-gray-600 rounded-xl text-left transition-colors border border-gray-600 hover:border-purple-500"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-purple-600/30 rounded-lg flex items-center justify-center">
+                                        <span className="text-xl">🏪</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold text-white">{business.companyName}</h3>
+                                        <p className="text-sm text-gray-400">
+                                            {business.postalCode && `📍 ${business.postalCode}`}
+                                            {business.city && ` • ${business.city}`}
+                                            {business.businessType && ` • ${business.businessType}`}
+                                        </p>
+                                    </div>
+                                    <span className="text-purple-400">→</span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-gray-700">
+                        <Link href="/admin" className="block text-center text-gray-400 hover:text-white">
+                            ← Admin Panel&apos;e Dön
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-900">
             {/* Header */}
@@ -253,6 +384,12 @@ export default function VendorPanelPage() {
                             className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
                         >
                             📦 Ürün Yönetimi
+                        </Link>
+                        <Link
+                            href="/vendor-panel/categories"
+                            className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
+                        >
+                            📁 Kategoriler
                         </Link>
                         <Link
                             href="/vendor-panel/orders"

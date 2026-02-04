@@ -492,9 +492,9 @@ export default function AdminHeader() {
                                 <span className="text-slate-200 text-sm font-medium">Toptancı</span>
                             </Link>
 
-                            {/* Ürün Yönetimi - İşletme kendi ürünlerini görebilir, Super Admin Master Katalog görür */}
+                            {/* Ürün Yönetimi - Unified route with context-aware detection */}
                             <Link
-                                href={admin?.butcherId ? `/admin/butchers/${admin.butcherId}/products` : '/admin/products'}
+                                href="/admin/products"
                                 className="flex items-center gap-2 bg-emerald-700/50 hover:bg-emerald-700 px-4 py-2 rounded-lg transition-all border border-emerald-600"
                             >
                                 <span className="text-lg">🏷️</span>

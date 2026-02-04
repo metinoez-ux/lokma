@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
+
+interface Business {
+    id: string;
+    name: string;
+    city?: string;
+    plz?: string;
+}
 
 interface Category {
     id: string;
@@ -19,13 +27,22 @@ interface Category {
 
 const DEFAULT_ICONS = ['🥩', '🐑', '🐄', '🐔', '🥓', '📦', '🍖', '🌿', '🧈', '🥚'];
 
-export default function CategoriesPage() {
+function CategoriesPageContent() {
     const { admin, loading: adminLoading } = useAdmin();
+    const searchParams = useSearchParams();
+    const urlBusinessId = searchParams.get('businessId');
+
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [saving, setSaving] = useState(false);
+
+    // Business selector state for Super Admin
+    const [businesses, setBusinesses] = useState<Business[]>([]);
+    const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(urlBusinessId);
+    const [businessSearch, setBusinessSearch] = useState('');
+    const [loadingBusinesses, setLoadingBusinesses] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -34,8 +51,33 @@ export default function CategoriesPage() {
         isActive: true,
     });
 
-    // Get butcherId from admin context
-    const butcherId = admin?.butcherId;
+    // Determine the active business ID
+    const isSuperAdmin = admin?.adminType === 'super';
+    const butcherId = isSuperAdmin ? selectedBusinessId : admin?.butcherId;
+
+    // Load businesses for Super Admin
+    useEffect(() => {
+        if (!isSuperAdmin || adminLoading) return;
+
+        const loadBusinesses = async () => {
+            setLoadingBusinesses(true);
+            try {
+                const snapshot = await getDocs(collection(db, 'businesses'));
+                const biz = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    name: doc.data().name || doc.data().businessName || 'İsimsiz',
+                    city: doc.data().city,
+                    plz: doc.data().plz,
+                })) as Business[];
+                setBusinesses(biz.sort((a, b) => a.name.localeCompare(b.name)));
+            } catch (error) {
+                console.error('Error loading businesses:', error);
+            }
+            setLoadingBusinesses(false);
+        };
+
+        loadBusinesses();
+    }, [isSuperAdmin, adminLoading]);
 
     // Load categories
     useEffect(() => {
@@ -130,38 +172,54 @@ export default function CategoriesPage() {
         setShowModal(true);
     };
 
-    // Check if admin has access
-    if (!adminLoading && !butcherId) {
-        // Super Admin can access by selecting a business first
-        const isSuperAdmin = admin?.adminType === 'super';
+    // Move category up or down
+    const moveCategory = async (index: number, direction: 'up' | 'down') => {
+        if (!butcherId) return;
 
+        const newCategories = [...categories];
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+        if (targetIndex < 0 || targetIndex >= newCategories.length) return;
+
+        // Swap
+        [newCategories[index], newCategories[targetIndex]] = [newCategories[targetIndex], newCategories[index]];
+
+        // Update order in Firestore
+        try {
+            for (let i = 0; i < newCategories.length; i++) {
+                const catRef = doc(db, `businesses/${butcherId}/categories`, newCategories[i].id);
+                await updateDoc(catRef, { order: i });
+            }
+            setCategories(newCategories.map((c, i) => ({ ...c, order: i })));
+        } catch (error) {
+            console.error('Error reordering:', error);
+        }
+    };
+
+    // Check if admin has access - for Super Admin show business selector inline
+    if (!adminLoading && !butcherId && !isSuperAdmin) {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
                 <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md">
-                    <span className="text-5xl">{isSuperAdmin ? '📂' : '🔒'}</span>
-                    <h2 className="text-xl font-bold text-white mt-4">
-                        {isSuperAdmin ? 'İşletme Seçin' : 'Erişim Yok'}
-                    </h2>
+                    <span className="text-5xl">🔒</span>
+                    <h2 className="text-xl font-bold text-white mt-4">Erişim Yok</h2>
                     <p className="text-gray-400 mt-2">
-                        {isSuperAdmin
-                            ? 'Kategori yönetimi için önce bir işletme seçmelisiniz.'
-                            : 'Kategori yönetimi için bir işletmeye bağlı olmanız gerekiyor.'
-                        }
+                        Kategori yönetimi için bir işletmeye bağlı olmanız gerekiyor.
                     </p>
-                    <div className="flex gap-3 mt-4 justify-center">
-                        <Link href="/admin/dashboard" className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500">
-                            Dashboard'a Git
-                        </Link>
-                        {isSuperAdmin && (
-                            <Link href="/admin/butchers" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500">
-                                İşletmelere Git
-                            </Link>
-                        )}
-                    </div>
+                    <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500">
+                        Dashboard&apos;a Git
+                    </Link>
                 </div>
             </div>
         );
     }
+
+    // Filter businesses by search
+    const filteredBusinesses = businesses.filter(b =>
+        b.name.toLowerCase().includes(businessSearch.toLowerCase()) ||
+        (b.city && b.city.toLowerCase().includes(businessSearch.toLowerCase())) ||
+        (b.plz && b.plz.includes(businessSearch))
+    );
 
     if (loading || adminLoading) {
         return (
@@ -208,49 +266,63 @@ export default function CategoriesPage() {
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-3">
                         {categories.map((category, index) => (
                             <div
                                 key={category.id}
-                                className={`bg-gray-800 rounded-xl p-4 border-2 transition ${category.isActive ? 'border-gray-700' : 'border-gray-700/50 opacity-60'
+                                className={`bg-gray-800 rounded-xl p-4 border transition ${category.isActive ? 'border-gray-700' : 'border-red-900/50 opacity-60'
                                     }`}
                             >
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-3xl">{category.icon}</span>
-                                        <div>
-                                            <h3 className="text-white font-medium">{category.name}</h3>
-                                            <p className="text-gray-500 text-sm">
-                                                Sıra: {index + 1} • {category.productCount || 0} ürün
-                                            </p>
-                                        </div>
+                                <div className="flex items-center gap-4">
+                                    {/* Move Up/Down Buttons */}
+                                    <div className="flex flex-col items-center gap-1">
+                                        <button
+                                            onClick={() => moveCategory(index, 'up')}
+                                            disabled={index === 0}
+                                            className="text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                            title="Yukarı Taşı"
+                                        >
+                                            ▲
+                                        </button>
+                                        <span className="text-xs text-gray-600">{index + 1}</span>
+                                        <button
+                                            onClick={() => moveCategory(index, 'down')}
+                                            disabled={index === categories.length - 1}
+                                            className="text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                            title="Aşağı Taşı"
+                                        >
+                                            ▼
+                                        </button>
                                     </div>
+
+                                    {/* Icon */}
+                                    <span className="text-4xl">{category.icon}</span>
+
+                                    {/* Info */}
+                                    <div className="flex-1">
+                                        <h3 className="text-white font-bold text-lg">{category.name}</h3>
+                                        <p className="text-gray-500 text-sm">
+                                            {category.productCount || 0} ürün • {category.isActive ? '✅ Aktif' : '🔴 Pasif'}
+                                        </p>
+                                    </div>
+
+                                    {/* Actions */}
                                     <div className="flex items-center gap-2">
                                         <button
                                             onClick={() => openEdit(category)}
-                                            className="p-2 text-gray-400 hover:text-white transition"
+                                            className="p-2 bg-yellow-600 hover:bg-yellow-500 rounded-lg transition text-white"
                                             title="Düzenle"
                                         >
                                             ✏️
                                         </button>
                                         <button
                                             onClick={() => handleDelete(category.id)}
-                                            className="p-2 text-gray-400 hover:text-red-400 transition"
+                                            className="p-2 bg-red-600 hover:bg-red-500 rounded-lg transition text-white"
                                             title="Sil"
                                         >
                                             🗑️
                                         </button>
                                     </div>
-                                </div>
-
-                                {/* Active Toggle */}
-                                <div className="mt-3 flex items-center justify-between">
-                                    <span className={`text-xs px-2 py-1 rounded ${category.isActive
-                                        ? 'bg-green-600/30 text-green-400'
-                                        : 'bg-gray-600/30 text-gray-400'
-                                        }`}>
-                                        {category.isActive ? '✓ Aktif' : 'Pasif'}
-                                    </span>
                                 </div>
                             </div>
                         ))}
@@ -330,5 +402,18 @@ export default function CategoriesPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+// Wrapper with Suspense for useSearchParams (Next.js 16 requirement)
+export default function CategoriesPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+                <div className="text-xl">Yükleniyor...</div>
+            </div>
+        }>
+            <CategoriesPageContent />
+        </Suspense>
     );
 }

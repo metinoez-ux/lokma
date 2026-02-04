@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import Link from 'next/link';
 
 interface OrderItem {
@@ -44,6 +45,7 @@ export default function BusinessOrdersPage() {
     const [orders, setOrders] = useState<BusinessOrder[]>([]);
     const [butcher, setBusiness] = useState<BusinessInfo | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isVendorUser, setIsVendorUser] = useState(false);
 
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
@@ -65,6 +67,17 @@ export default function BusinessOrdersPage() {
 
     // Edit order modal
     const [editingOrderItems, setEditingOrderItems] = useState<BusinessOrder | null>(null);
+
+    // Check if user is vendor admin (for smart back link)
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const vendorAdminDoc = await getDoc(doc(db, 'vendor_admins', user.uid));
+                setIsVendorUser(vendorAdminDoc.exists());
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
     // Load butcher info
     useEffect(() => {
@@ -89,11 +102,12 @@ export default function BusinessOrdersPage() {
 
     // Load orders with real-time listener
     useEffect(() => {
-        const ordersRef = collection(db, 'orders');
-        // Only filter by businessId - sort client-side to avoid composite index requirement
+        // Use meat_orders collection (canonical for LOKMA/MIRA - matches mobile app)
+        const ordersRef = collection(db, 'meat_orders');
+        // Filter by butcherId (legacy field name used across the system)
         const q = query(
             ordersRef,
-            where('businessId', '==', businessId)
+            where('butcherId', '==', businessId)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -351,7 +365,12 @@ export default function BusinessOrdersPage() {
             <header className="bg-red-700 text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                        <Link href="/admin/butchers" className="text-red-200 hover:text-white text-sm">← Kasaplara Dön</Link>
+                        <Link 
+                            href={isVendorUser ? '/vendor-panel' : '/admin/businesses'} 
+                            className="text-red-200 hover:text-white text-sm"
+                        >
+                            ← {isVendorUser ? 'Dashboard' : 'İşletmelere Dön'}
+                        </Link>
                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                             <span className="text-2xl">📦</span>
                         </div>

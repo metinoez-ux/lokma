@@ -9,6 +9,7 @@ import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 /// Business type labels for display
 const Map<String, String> BUSINESS_TYPE_LABELS = {
@@ -1261,6 +1262,67 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     );
   }
 
+  /// 🆕 Check if business is available for the currently selected mode
+  /// Returns tuple: (isAvailable, unavailableReason, startTime)
+  ({bool isAvailable, String? reason, String? startTime}) _checkAvailabilityForMode(
+    Map<String, dynamic> data, 
+    String mode,
+  ) {
+    final now = DateTime.now();
+    final currentHour = now.hour;
+    final currentMinute = now.minute;
+    
+    if (mode == 'teslimat') {
+      // Check temporary pause first
+      final temporaryDeliveryPaused = data['temporaryDeliveryPaused'] as bool? ?? false;
+      if (temporaryDeliveryPaused) {
+        return (isAvailable: false, reason: 'Kurye şu an hizmet vermiyor', startTime: null);
+      }
+      
+      // Check delivery start time
+      final deliveryStartTime = data['deliveryStartTime'] as String?;
+      if (deliveryStartTime != null && deliveryStartTime.isNotEmpty) {
+        final parsed = _parseTimeString(deliveryStartTime);
+        if (parsed != null) {
+          final startHour = parsed.$1;
+          final startMinute = parsed.$2;
+          // Check if current time is before start time
+          if (currentHour < startHour || (currentHour == startHour && currentMinute < startMinute)) {
+            return (isAvailable: false, reason: 'Kurye $deliveryStartTime\'ten sonra', startTime: deliveryStartTime);
+          }
+        }
+      }
+      return (isAvailable: true, reason: null, startTime: null);
+      
+    } else if (mode == 'gelal') {
+      // Check pickup start time
+      final pickupStartTime = data['pickupStartTime'] as String?;
+      if (pickupStartTime != null && pickupStartTime.isNotEmpty) {
+        final parsed = _parseTimeString(pickupStartTime);
+        if (parsed != null) {
+          final startHour = parsed.$1;
+          final startMinute = parsed.$2;
+          if (currentHour < startHour || (currentHour == startHour && currentMinute < startMinute)) {
+            return (isAvailable: false, reason: 'Gel Al $pickupStartTime\'dan', startTime: pickupStartTime);
+          }
+        }
+      }
+      return (isAvailable: true, reason: null, startTime: null);
+    }
+    
+    return (isAvailable: true, reason: null, startTime: null);
+  }
+  
+  /// Parse time string like "11:00" into (hour, minute)
+  (int, int)? _parseTimeString(String timeStr) {
+    final regex = RegExp(r'(\d{1,2}):(\d{2})');
+    final match = regex.firstMatch(timeStr);
+    if (match != null) {
+      return (int.parse(match.group(1)!), int.parse(match.group(2)!));
+    }
+    return null;
+  }
+
   /// Lieferando-style restaurant card with large image
   Widget _buildRestaurantCard(String id, Map<String, dynamic> data) {
     final name = data['businessName'] ?? data['companyName'] ?? 'İsimsiz';
@@ -1274,18 +1336,16 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           (brand?.toLowerCase() == 'tuna') || 
                           hasTunaTag;
     
-    // 🆕 Gelişmiş Sipariş Saatleri
-    final deliveryStartTime = data['deliveryStartTime'] as String?;
-    final pickupStartTime = data['pickupStartTime'] as String?;
-    final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
-    // 🆕 Geçici Kurye Kapatma
-    final temporaryDeliveryPaused = data['temporaryDeliveryPaused'] as bool? ?? false;
+    // 🆕 Availability check based on current mode
+    final availability = _checkAvailabilityForMode(data, _deliveryMode);
+    final isAvailable = availability.isAvailable;
+    final unavailableReason = availability.reason;
     
     final rating = (data['rating'] as num?)?.toDouble() ?? 4.0;
     final reviewCount = (data['reviewCount'] as num?)?.toInt() ?? 0;
     final imageUrl = data['imageUrl'] as String?;
     final logoUrl = data['logoUrl'] as String?;
-    final cuisineType = data['cuisineType'] as String?;  // 🆕 Lieferando-style cuisine type
+    final cuisineType = data['cuisineType'] as String?;
     
     // Business type label
     final typeLabel = BUSINESS_TYPE_LABELS[businessType] ?? businessType;
@@ -1347,331 +1407,430 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           ],
         ),
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            // Large image with overlays
-            Stack(
+            // Main card content
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Main image - Lieferando style (230px fixed height)
-                SizedBox(
-                  height: 230,
-                  width: double.infinity,
-                  child: imageUrl != null && imageUrl.isNotEmpty
-                      ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            color: Colors.grey[200],
-                            child: const Center(
-                              child: Icon(Icons.restaurant, color: lokmaPink, size: 48),
-                            ),
-                          ),
-                        )
-                      : Container(
-                          color: Colors.grey[200],
-                          child: const Center(
-                            child: Icon(Icons.restaurant, color: lokmaPink, size: 48),
-                          ),
-                        ),
-                ),
-                
-                // 🆕 Business logo (BOTTOM LEFT - Lieferando style)
-                if (logoUrl != null && logoUrl.isNotEmpty)
-                  Positioned(
-                    left: 12,
-                    bottom: 12,
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          logoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Center(
-                            child: Icon(Icons.store, color: lokmaPink, size: 24),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                
-                // TUNA brand badge (TOP RIGHT - to not overlap with logo)
-                if (isTunaPartner)
-                  Positioned(
-                    right: 12,
-                    top: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFB71C1C), // TUNA red
-                        borderRadius: BorderRadius.circular(16), // Pill shape
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Text(
-                        'TUNA',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-                  ),
-                
-                // 🆕 Teslimat/Gel Al başlangıç saati badge'leri (Lieferando benzeri)
-                if (deliveryStartTime != null && deliveryStartTime.isNotEmpty ||
-                    pickupStartTime != null && pickupStartTime.isNotEmpty)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.85),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (deliveryStartTime != null && deliveryStartTime.isNotEmpty) ...[
-                            const Icon(Icons.delivery_dining, color: Colors.white, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Teslimat $deliveryStartTime\'ten sonra',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                          if (deliveryStartTime != null && deliveryStartTime.isNotEmpty &&
-                              pickupStartTime != null && pickupStartTime.isNotEmpty)
-                            const Text(' • ', style: TextStyle(color: Colors.white70, fontSize: 11)),
-                          if (pickupStartTime != null && pickupStartTime.isNotEmpty) ...[
-                            const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Gel Al $pickupStartTime\'dan',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                
-                // 🆕 Geçici Kurye Kapatma Banner
-                if (temporaryDeliveryPaused)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade700,
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.pause_circle_outline, color: Colors.white, size: 16),
-                          SizedBox(width: 6),
-                          Text(
-                            '🚚 Kurye şu an hizmet vermiyor',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                
-                // Favorite button (top right) - moved below banner
-                Positioned(
-                  top: 48,
-                  right: 12,
-                  child: GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      ref.read(butcherFavoritesProvider.notifier).toggleFavorite(id);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorite ? lokmaPink : Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-                
-                // 🆕 Cart badge (BOTTOM RIGHT) - show if cart has items from this business (Lieferando-style)
-                Builder(
-                  builder: (context) {
-                    final cartState = ref.watch(cartProvider);
-                    if (cartState.butcherId == id && cartState.items.isNotEmpty) {
-                      return Positioned(
-                        right: 12,
-                        bottom: 12,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Icon(
-                                Icons.shopping_cart_outlined,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 24,
-                              ),
-                              Positioned(
-                                right: -8,
-                                top: -8,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                                  child: Center(
-                                    child: Text(
-                                      '${cartState.items.length}',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
+                // Large image with overlays
+                Stack(
+                  children: [
+                    // Main image - Lieferando style (230px fixed height)
+                    // 🆕 Apply ColorFiltered for grayscale when unavailable
+                    ColorFiltered(
+                      colorFilter: isAvailable 
+                          ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
+                          : const ColorFilter.matrix(<double>[
+                              0.2126, 0.7152, 0.0722, 0, 0,
+                              0.2126, 0.7152, 0.0722, 0, 0,
+                              0.2126, 0.7152, 0.0722, 0, 0,
+                              0,      0,      0,      1, 0,
+                            ]),
+                      child: SizedBox(
+                        height: 230,
+                        width: double.infinity,
+                        child: imageUrl != null && imageUrl.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: Colors.grey[200],
+                                  child: const Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: lokmaPink,
                                       ),
                                     ),
                                   ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  color: Colors.grey[200],
+                                  child: const Center(
+                                    child: Icon(Icons.restaurant, color: lokmaPink, size: 48),
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                color: Colors.grey[200],
+                                child: const Center(
+                                  child: Icon(Icons.restaurant, color: lokmaPink, size: 48),
+                                ),
+                              ),
+                      ),
+                    ),
+                    
+                    // 🆕 Dark overlay for unavailable businesses
+                    if (!isAvailable)
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.black.withOpacity(0.35),
+                        ),
+                      ),
+                    
+                    // 🆕 Business logo (BOTTOM LEFT - Lieferando style)
+                    if (logoUrl != null && logoUrl.isNotEmpty)
+                      Positioned(
+                        left: 12,
+                        bottom: 12,
+                        child: Opacity(
+                          opacity: isAvailable ? 1.0 : 0.7,
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: CachedNetworkImage(
+                                imageUrl: logoUrl,
+                                fit: BoxFit.cover,
+                                errorWidget: (_, __, ___) => const Center(
+                                  child: Icon(Icons.store, color: lokmaPink, size: 24),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    
+                    // 🆕 TUNA brand badge (TOP LEFT - four-corner quadrant system)
+                    if (isTunaPartner)
+                      Positioned(
+                        left: 12,
+                        top: 12,
+                        child: Opacity(
+                          opacity: isAvailable ? 1.0 : 0.7,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFB71C1C), // TUNA red
+                              borderRadius: BorderRadius.circular(16), // Pill shape
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Text(
+                              'TUNA',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    
+                    // 🆕 Favorite button (TOP RIGHT - fixed position)
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          ref.read(butcherFavoritesProvider.notifier).toggleFavorite(id);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? lokmaPink : Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // 🆕 Unavailable reason banner (BOTTOM - Lieferando style)
+                    if (!isAvailable && unavailableReason != null)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.85),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                _deliveryMode == 'teslimat' ? Icons.delivery_dining : Icons.shopping_bag_outlined,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                unavailableReason,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
+                      ),
+                    
+                    // 🆕 Cart badge (BOTTOM RIGHT) - only when available
+                    if (isAvailable)
+                      Builder(
+                        builder: (context) {
+                          final cartState = ref.watch(cartProvider);
+                          if (cartState.butcherId == id && cartState.items.isNotEmpty) {
+                            return Positioned(
+                              right: 12,
+                              bottom: 12,
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Icon(
+                                      Icons.shopping_cart_outlined,
+                                      color: Theme.of(context).colorScheme.primary,
+                                      size: 24,
+                                    ),
+                                    Positioned(
+                                      right: -8,
+                                      top: -8,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context).colorScheme.primary,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                                        child: Center(
+                                          child: Text(
+                                            '${cartState.items.length}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                  ],
+                ),
+                
+                // Info section (below image) - Fixed height for consistent cards
+                // 🆕 Reduced opacity for unavailable businesses
+                Opacity(
+                  opacity: isAvailable ? 1.0 : 0.6,
+                  child: Container(
+                    height: 114, // Fixed height for consistent card sizes
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Business name
+                        Text(
+                          name,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        
+                        // Rating + Type (Lieferando style: ★ 4.5 (200+) · Türkisch, Döner)
+                        Row(
+                          children: [
+                            const Icon(Icons.star, color: Colors.amber, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              rating.toStringAsFixed(1),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (reviewText.isNotEmpty) ...[
+                              const SizedBox(width: 2),
+                              Text(
+                                reviewText,
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                            Expanded(
+                              child: Text(
+                                ' · ${cuisineType != null && cuisineType.isNotEmpty ? cuisineType : typeLabel}',
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        // 🆕 Lieferando-style info row - changes based on mode
+                        const SizedBox(height: 4),
+                        Builder(
+                          builder: (context) {
+                            // Read business delivery settings
+                            final prepTimeMin = (data['prepTimeMin'] as num?)?.toInt() ?? 15;
+                            final prepTimeMax = (data['prepTimeMax'] as num?)?.toInt() ?? 30;
+                            final deliveryFee = (data['deliveryFee'] as num?)?.toDouble() ?? 0.0;
+                            final minOrderAmount = (data['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
+                            final freeDeliveryThreshold = (data['freeDeliveryThreshold'] as num?)?.toDouble();
+                            
+                            if (_deliveryMode == 'teslimat') {
+                              // DELIVERY MODE: Show prep time + delivery fee + min order
+                              // Calculate estimated delivery time = prep time + travel time (3 min/km)
+                              double travelTimeMin = 0;
+                              if (distanceText.isNotEmpty) {
+                                final kmMatch = RegExp(r'([\d.]+)').firstMatch(distanceText);
+                                if (kmMatch != null) {
+                                  final km = double.tryParse(kmMatch.group(1) ?? '0') ?? 0;
+                                  travelTimeMin = km * 3; // ~3 min per km
+                                }
+                              }
+                              final totalMin = prepTimeMin + travelTimeMin.round();
+                              final totalMax = prepTimeMax + travelTimeMin.round() + 5;
+                              
+                              final hasDeliveryFee = deliveryFee > 0;
+                              final hasMinOrder = minOrderAmount > 0;
+                              final hasFreeDelivery = freeDeliveryThreshold != null && freeDeliveryThreshold > 0;
+                              
+                              return Row(
+                                children: [
+                                  // Delivery time
+                                  Icon(Icons.access_time, color: Colors.grey[600], size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '$totalMin-$totalMax dk',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  
+                                  // Delivery fee
+                                  if (hasDeliveryFee || hasFreeDelivery) ...[
+                                    Text(' · ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                    Icon(Icons.delivery_dining, color: Colors.grey[600], size: 14),
+                                    const SizedBox(width: 4),
+                                    if (hasFreeDelivery)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF2E7D32).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          deliveryFee > 0 ? '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}€' : 'Ücretsiz',
+                                          style: TextStyle(
+                                            color: deliveryFee > 0 ? Colors.grey[700] : const Color(0xFF2E7D32),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      )
+                                    else
+                                      Text(
+                                        '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}€',
+                                        style: TextStyle(
+                                          color: Colors.grey[700],
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                  ],
+                                  
+                                  // Min order
+                                  if (hasMinOrder) ...[
+                                    Text(' · ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                    Icon(Icons.shopping_basket_outlined, color: Colors.grey[600], size: 14),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Min. ${minOrderAmount.toStringAsFixed(0)}€',
+                                      style: TextStyle(
+                                        color: Colors.grey[700],
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              );
+                            } else {
+                              // PICKUP MODE: Just show distance (Lieferando style)
+                              return Row(
+                                children: [
+                                  Icon(Icons.location_on_outlined, color: Colors.grey[600], size: 14),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    distanceText.isNotEmpty ? distanceText : '—',
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+                          },
+                        ),
+
+                      ],
+                    ),
+                  ),
                 ),
               ],
-            ),
-            
-            // Info section (below image) - Fixed height for consistent cards
-            Container(
-              height: 114, // Fixed height for consistent card sizes
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Business name
-                  Text(
-                    name,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  
-                  // Rating + Type (Lieferando style: ★ 4.5 (200+) · Türkisch, Döner)
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        rating.toStringAsFixed(1),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (reviewText.isNotEmpty) ...[
-                        const SizedBox(width: 2),
-                        Text(
-                          reviewText,
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                      Text(
-                        ' · ${cuisineType != null && cuisineType.isNotEmpty ? cuisineType : typeLabel}',
-                        style: TextStyle(
-                          color: Colors.grey[700],
-                          fontSize: 14,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                  
-                  // Distance - always show row for consistent height
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_outlined, color: Colors.grey[600], size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        distanceText.isNotEmpty ? distanceText : '—',
-                        style: TextStyle(
-                          color: Colors.grey[700],
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
             ),
           ],
         ),

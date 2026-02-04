@@ -345,7 +345,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               // === YEMEKSEPETI-STYLE HEADER ===
               Container(
-                color: Theme.of(context).cardColor, // Dynamic theme background
+                color: Theme.of(context).scaffoldBackgroundColor, // Pure background color
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,10 +373,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Theme.of(context).brightness == Brightness.dark 
+                                  ? const Color(0xFF2C2C2E) 
+                                  : Colors.white.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.notifications_outlined, color: accent, size: 22),
+                            child: Icon(Icons.notifications_outlined, color: const Color(0xFFEC131E), size: 22),
                           ),
                         ),
                       ],
@@ -486,6 +488,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   // === Quick Access Chip (Yemeksepeti-style) ===
   Widget _buildQuickAccessChip(IconData icon, String label, VoidCallback onTap) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -495,16 +498,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
+            color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: Offset(0, 2)),
-            ],
+            border: isDark ? null : Border.all(
+              color: Colors.grey.shade300,
+              width: 1,
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: Theme.of(context).primaryColor, size: 22),
+              Icon(icon, color: const Color(0xFFEC131E), size: 22),
               const SizedBox(height: 6),
               Text(
                 label,
@@ -531,22 +535,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildSectionItem(IconData icon, String title, VoidCallback onTap, {Widget? trailing}) {
+  Widget _buildSectionItem(IconData icon, String title, VoidCallback onTap, {Widget? trailing, bool showDivider = true}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
         onTap();
       },
       child: Container(
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(12),
+          border: showDivider ? Border(
+            bottom: BorderSide(
+              color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+              width: 1,
+            ),
+          ) : null,
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.grey[400], size: 22),
+            Icon(icon, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600, size: 22),
             const SizedBox(width: 16),
             Expanded(child: Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15))),
             if (trailing != null) ...[trailing, const SizedBox(width: 8)],
@@ -565,11 +574,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         
         return Container(
-          margin: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(12),
+            border: Border(
+              bottom: BorderSide(
+                color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                width: 1,
+              ),
+            ),
           ),
           child: Row(
             children: [

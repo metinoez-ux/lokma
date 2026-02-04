@@ -554,16 +554,21 @@ export default function BusinessDetailPage() {
   const loadOrders = useCallback(async () => {
     if (!businessId) return;
     try {
+      // Query meat_orders collection with butcherId (matches main Orders page)
+      // Note: removed orderBy to avoid index requirement - sorting client-side
       const ordersQuery = query(
         collection(db, "meat_orders"),
-        where("businessId", "==", businessId),
-        orderBy("createdAt", "desc"),
+        where("butcherId", "==", businessId),
         limit(50),
       );
       const ordersSnap = await getDocs(ordersQuery);
-      const ordersData = ordersSnap.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() }) as MeatOrder,
-      );
+      const ordersData = ordersSnap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }) as MeatOrder)
+        .sort((a, b) => {
+          const aTime = a.createdAt?.toDate?.()?.getTime() || 0;
+          const bTime = b.createdAt?.toDate?.()?.getTime() || 0;
+          return bTime - aTime; // DESC
+        });
       setOrders(ordersData);
     } catch (error) {
       console.error("Error loading orders:", error);

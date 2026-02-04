@@ -1,18 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
-export default function BusinessCategoriesRedirect() {
+export default function VendorPanelCategoriesRedirect() {
     const router = useRouter();
-    const params = useParams();
-    const businessId = params.id as string;
 
     useEffect(() => {
-        // Redirect to main categories page with business context
-        // The main page will detect the business from URL or admin context
-        router.replace(`/admin/categories?businessId=${businessId}`);
-    }, [router, businessId]);
+        router.replace('/admin/categories');
+    }, [router]);
 
     return (
         <div className="min-h-screen bg-gray-900 flex items-center justify-center">

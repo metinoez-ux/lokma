@@ -101,7 +101,7 @@ class FirestoreService {
 
   // ============ ORDERS ============
 
-  /// Create a new order (LOKMA specific collection)
+  /// Create a new order (uses meat_orders - canonical collection)
   Future<DocumentReference> createOrder({
     required String butcherId,
     required String butcherName,
@@ -115,7 +115,7 @@ class FirestoreService {
     DateTime? scheduledTime,
     String? notes,
   }) async {
-    return _db.collection('lokma_orders').add({
+    return _db.collection('meat_orders').add({
       'butcherId': butcherId,
       'butcherName': butcherName,
       'userId': userId,
@@ -136,7 +136,7 @@ class FirestoreService {
   /// Get user's order history
   Stream<QuerySnapshot> getUserOrders(String userId) {
     return _db
-        .collection('lokma_orders')
+        .collection('meat_orders')
         .where('userId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots();
@@ -144,12 +144,12 @@ class FirestoreService {
 
   /// Get single order
   Future<DocumentSnapshot> getOrder(String orderId) {
-    return _db.collection('lokma_orders').doc(orderId).get();
+    return _db.collection('meat_orders').doc(orderId).get();
   }
 
   /// Update order status
   Future<void> updateOrderStatus(String orderId, String status) {
-    return _db.collection('lokma_orders').doc(orderId).update({
+    return _db.collection('meat_orders').doc(orderId).update({
       'status': status,
       'updatedAt': FieldValue.serverTimestamp(),
     });
