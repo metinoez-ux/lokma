@@ -20,11 +20,39 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
   String? _staffName;
   String? _staffPhone;
   bool _isLoading = false;
+  bool _checkedActiveDelivery = false;
 
   @override
   void initState() {
     super.initState();
     _loadStaffInfo();
+    _checkForActiveDelivery();
+  }
+
+  /// Check if user has an active delivery and redirect if so
+  Future<void> _checkForActiveDelivery() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    
+    // Listen once for active delivery
+    final activeDelivery = await _orderService
+        .getMyActiveDeliveryStream(user.uid)
+        .first;
+    
+    if (activeDelivery != null && mounted) {
+      // User has an active delivery - redirect to it
+      _checkedActiveDelivery = true;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ActiveDeliveryScreen(orderId: activeDelivery.id),
+        ),
+      );
+    } else {
+      if (mounted) {
+        setState(() => _checkedActiveDelivery = true);
+      }
+    }
   }
 
   Future<void> _loadStaffInfo() async {

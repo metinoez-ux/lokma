@@ -405,6 +405,42 @@ class OrderService {
         .map((doc) => doc.exists ? LokmaOrder.fromFirestore(doc) : null);
   }
 
+  /// Get courier's active (claimed but not delivered) delivery
+  /// Returns the order if courier has an active delivery, null otherwise
+  Stream<LokmaOrder?> getMyActiveDeliveryStream(String courierId) {
+    // Active statuses: order is claimed and being delivered
+    final activeStatuses = ['ready', 'preparing', 'pending', 'onTheWay', 'accepted'];
+    
+    return _db
+        .collection(_collection)
+        .where('courierId', isEqualTo: courierId)
+        .snapshots()
+        .map((snapshot) {
+          final activeDocs = snapshot.docs.where((doc) {
+            final data = doc.data();
+            final status = data['status']?.toString() ?? '';
+            final deliveryMethod = data['deliveryMethod']?.toString() ?? 
+                                   data['orderType']?.toString() ?? '';
+            
+            // Must be a delivery order with active status
+            return activeStatuses.contains(status) && deliveryMethod == 'delivery';
+          }).toList();
+          
+          if (activeDocs.isEmpty) return null;
+          
+          // Return most recently claimed order
+          activeDocs.sort((a, b) {
+            final aTime = a.data()['claimedAt'] as Timestamp?;
+            final bTime = b.data()['claimedAt'] as Timestamp?;
+            if (aTime == null) return 1;
+            if (bTime == null) return -1;
+            return bTime.compareTo(aTime);
+          });
+          
+          return LokmaOrder.fromFirestore(activeDocs.first);
+        });
+  }
+
   /// Get ready deliveries for a DRIVER assigned to multiple businesses
   /// Shows ready, preparing, and pending delivery orders - ready first
   /// NOTE: Uses client-side filtering because Firestore doesn't support multiple whereIn
