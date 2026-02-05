@@ -141,7 +141,7 @@ function GlobalProductsPageContent() {
     const [countryFilter, setCountryFilter] = useState('all');
     const [brandFilter, setBrandFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
-    const PRODUCTS_PER_PAGE = 50;
+    const PRODUCTS_PER_PAGE = 20;
 
     // Bulk selection
     const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
@@ -1420,7 +1420,7 @@ function GlobalProductsPageContent() {
                         {
                             showModal && (
                                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-                                    <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 border border-gray-700 shadow-2xl">
+                                    <div className="bg-gray-800 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6 border border-gray-700 shadow-2xl">
                                         <h2 className="text-xl font-bold mb-4">{editingProduct ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}</h2>
 
                                         {/* Validation Errors Banner */}
@@ -1438,7 +1438,8 @@ function GlobalProductsPageContent() {
                                             </div>
                                         )}
 
-                                        <div className="space-y-4">
+                                        {/* iPad-Optimized 2-Column Layout */}
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                             {/* Temel Bilgiler */}
                                             <div className="border-b border-gray-700 pb-4">
                                                 <h3 className="text-sm font-medium text-blue-400 mb-3">📋 Temel Bilgiler</h3>

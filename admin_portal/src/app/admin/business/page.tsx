@@ -142,6 +142,10 @@ export default function BusinessesPage() {
     // Review popup state
     const [reviewModal, setReviewModal] = useState<{ open: boolean; business: Business | null }>({ open: false, business: null });
 
+    // 📄 Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const BUSINESSES_PER_PAGE = 20;
+
     // 🆕 KERMES SEKTÖRÜ İÇİN - Organizations state (arka plan verisi)
     const [organizations, setOrganizations] = useState<any[]>([]);
     const [loadingOrganizations, setLoadingOrganizations] = useState(false);
@@ -333,6 +337,18 @@ export default function BusinessesPage() {
 
         return matchesSearch && matchesType && matchesStatus && matchesBrand;
     });
+
+    // 📄 Pagination calculations
+    const totalPages = Math.ceil(filteredBusinesses.length / BUSINESSES_PER_PAGE);
+    const paginatedBusinesses = filteredBusinesses.slice(
+        (currentPage - 1) * BUSINESSES_PER_PAGE,
+        currentPage * BUSINESSES_PER_PAGE
+    );
+
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, typeFilter, statusFilter, brandFilter]);
 
     // 🆕 KERMES İÇİN - Organizations filtreleme
     const filteredOrganizations = organizations.filter(o => {
@@ -1084,125 +1100,175 @@ export default function BusinessesPage() {
                                 <p className="text-gray-400">İşletme bulunamadı</p>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead className="bg-gray-700/50 text-gray-400 text-sm">
-                                        <tr>
-                                            <th className="px-4 py-3 w-20">ID</th>
-                                            <th className="px-4 py-3">İşletme</th>
-                                            <th className="px-4 py-3">Marka</th>
-                                            <th className="px-4 py-3">Tür</th>
-                                            <th className="px-4 py-3">Konum</th>
-                                            <th className="px-4 py-3">Puan</th>
-                                            <th className="px-4 py-3">Hizmetler</th>
-                                            <th className="px-4 py-3">Durum</th>
-                                            <th className="px-4 py-3 text-center">İşlemler</th>
+                            <>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead className="bg-gray-700/50 text-gray-400 text-sm">
+                                            <tr>
+                                                <th className="px-4 py-3 w-20">ID</th>
+                                                <th className="px-4 py-3">İşletme</th>
+                                                <th className="px-4 py-3">Marka</th>
+                                                <th className="px-4 py-3">Tür</th>
+                                                <th className="px-4 py-3">Konum</th>
+                                                <th className="px-4 py-3">Puan</th>
+                                                <th className="px-4 py-3">Hizmetler</th>
+                                                <th className="px-4 py-3">Durum</th>
+                                                <th className="px-4 py-3 text-center">İşlemler</th>
 
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-700">
-                                        {filteredBusinesses.map((business) => {
-                                            // Get business type from multiple possible fields
-                                            const businessData = business as any;
-                                            const businessType = business.businessCategories?.[0] || businessData.businessType || businessData.type || 'kasap';
-                                            const typeInfo = getTypeInfo(businessType);
-                                            return (
-                                                <tr key={business.id} className="hover:bg-gray-700/30 transition cursor-pointer" onClick={() => window.location.href = `/admin/business/${business.id}`}>
-                                                    {/* ID Column */}
-                                                    <td className="px-4 py-4">
-                                                        <span className="text-gray-400 font-mono text-xs bg-gray-700/50 px-2 py-1 rounded">
-                                                            {(business as any).customerId || business.id?.slice(-6).toUpperCase()}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-4">
-                                                        <p className="text-white font-medium">{business.companyName}</p>
-                                                    </td>
-                                                    {/* Brand Label Column */}
-                                                    <td className="px-4 py-4">
-                                                        {((business.brandLabel || (business as any).brand) === 'tuna') && (
-                                                            <span className="px-3 py-1.5 bg-red-600/30 text-red-400 border border-red-500/50 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
-                                                                🔴 TUNA
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-700">
+                                            {paginatedBusinesses.map((business) => {
+                                                // Get business type from multiple possible fields
+                                                const businessData = business as any;
+                                                const businessType = business.businessCategories?.[0] || businessData.businessType || businessData.type || 'kasap';
+                                                const typeInfo = getTypeInfo(businessType);
+                                                return (
+                                                    <tr key={business.id} className="hover:bg-gray-700/30 transition cursor-pointer" onClick={() => window.location.href = `/admin/business/${business.id}`}>
+                                                        {/* ID Column */}
+                                                        <td className="px-4 py-4">
+                                                            <span className="text-gray-400 font-mono text-xs bg-gray-700/50 px-2 py-1 rounded">
+                                                                {(business as any).customerId || business.id?.slice(-6).toUpperCase()}
                                                             </span>
-                                                        )}
-                                                        {((business.brandLabel || (business as any).brand) === 'akdeniz_toros') && (
-                                                            <span className="px-3 py-1.5 bg-gray-800/50 text-gray-300 border border-gray-500/50 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
-                                                                ⚫ TOROS
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <p className="text-white font-medium">{business.companyName}</p>
+                                                        </td>
+                                                        {/* Brand Label Column */}
+                                                        <td className="px-4 py-4">
+                                                            {((business.brandLabel || (business as any).brand) === 'tuna') && (
+                                                                <span className="px-3 py-1.5 bg-red-600/30 text-red-400 border border-red-500/50 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
+                                                                    🔴 TUNA
+                                                                </span>
+                                                            )}
+                                                            {((business.brandLabel || (business as any).brand) === 'akdeniz_toros') && (
+                                                                <span className="px-3 py-1.5 bg-gray-800/50 text-gray-300 border border-gray-500/50 rounded-lg text-xs font-bold flex items-center gap-1 w-fit">
+                                                                    ⚫ TOROS
+                                                                </span>
+                                                            )}
+                                                            {!business.brandLabel && !(business as any).brand && (
+                                                                <span className="text-gray-500 text-sm">-</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-700 rounded-lg text-sm">
+                                                                <span>{typeInfo.icon}</span>
+                                                                <span className="text-white">{typeInfo.label}</span>
                                                             </span>
-                                                        )}
-                                                        {!business.brandLabel && !(business as any).brand && (
-                                                            <span className="text-gray-500 text-sm">-</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-4 py-4">
-                                                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-700 rounded-lg text-sm">
-                                                            <span>{typeInfo.icon}</span>
-                                                            <span className="text-white">{typeInfo.label}</span>
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-4">
-                                                        <p className="text-white">{business.address?.city || '-'}</p>
-                                                        <p className="text-sm text-gray-400">{business.address?.postalCode}</p>
-                                                    </td>
-                                                    <td className="px-4 py-4">
-                                                        {business.rating ? (
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <p className="text-white">{business.address?.city || '-'}</p>
+                                                            <p className="text-sm text-gray-400">{business.address?.postalCode}</p>
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            {business.rating ? (
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); setReviewModal({ open: true, business }); }}
+                                                                    className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded text-xs font-medium hover:bg-yellow-500/30 transition"
+                                                                >
+                                                                    ⭐ {business.rating}{business.reviewCount ? ` (${business.reviewCount})` : ''}
+                                                                </button>
+                                                            ) : (
+                                                                <span className="text-gray-500 text-xs">-</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="px-4 py-4">
+                                                            <div className="flex gap-1">
+                                                                {business.services?.delivery && (
+                                                                    <span title="Teslimat" className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs">🚚</span>
+                                                                )}
+                                                                {business.services?.pickup && (
+                                                                    <span title="Gel Al" className="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs">🏃</span>
+                                                                )}
+                                                                {business.services?.dineIn && (
+                                                                    <span title="Yerinde" className="px-2 py-1 bg-orange-600/20 text-orange-400 rounded text-xs">🍽️</span>
+                                                                )}
+                                                                {business.services?.reservation && (
+                                                                    <span title="Rezervasyon" className="px-2 py-1 bg-purple-600/20 text-purple-400 rounded text-xs">📅</span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-4">
                                                             <button
-                                                                onClick={(e) => { e.stopPropagation(); setReviewModal({ open: true, business }); }}
-                                                                className="px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded text-xs font-medium hover:bg-yellow-500/30 transition"
+                                                                onClick={(e) => { e.stopPropagation(); handleToggleStatus(business); }}
+                                                                className={`px-3 py-1 rounded-full text-xs font-medium ${business.isActive !== false
+                                                                    ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30'
+                                                                    : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
+                                                                    } transition`}
                                                             >
-                                                                ⭐ {business.rating}{business.reviewCount ? ` (${business.reviewCount})` : ''}
+                                                                {business.isActive !== false ? '✅ Aktif' : '🔴 Pasif'}
                                                             </button>
-                                                        ) : (
-                                                            <span className="text-gray-500 text-xs">-</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-4 py-4">
-                                                        <div className="flex gap-1">
-                                                            {business.services?.delivery && (
-                                                                <span title="Teslimat" className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs">🚚</span>
-                                                            )}
-                                                            {business.services?.pickup && (
-                                                                <span title="Gel Al" className="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs">🏃</span>
-                                                            )}
-                                                            {business.services?.dineIn && (
-                                                                <span title="Yerinde" className="px-2 py-1 bg-orange-600/20 text-orange-400 rounded text-xs">🍽️</span>
-                                                            )}
-                                                            {business.services?.reservation && (
-                                                                <span title="Rezervasyon" className="px-2 py-1 bg-purple-600/20 text-purple-400 rounded text-xs">📅</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-4 py-4">
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleToggleStatus(business); }}
-                                                            className={`px-3 py-1 rounded-full text-xs font-medium ${business.isActive !== false
-                                                                ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30'
-                                                                : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
-                                                                } transition`}
-                                                        >
-                                                            {business.isActive !== false ? '✅ Aktif' : '🔴 Pasif'}
-                                                        </button>
-                                                    </td>
-                                                    {/* Actions Column */}
-                                                    <td className="px-4 py-4">
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleDelete(business); }}
-                                                            className={`px-3 py-1 rounded-lg text-xs font-medium transition ${(business as any).isArchived
-                                                                ? 'bg-gray-600/20 text-gray-400 cursor-not-allowed'
-                                                                : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
-                                                                }`}
-                                                            disabled={(business as any).isArchived}
-                                                            title={(business as any).isArchived ? 'Arşivde' : 'Sil / Arşivle'}
-                                                        >
-                                                            {(business as any).isArchived ? '📦 Arşivde' : '🗑️ Sil'}
-                                                        </button>
-                                                    </td>
+                                                        </td>
+                                                        {/* Actions Column */}
+                                                        <td className="px-4 py-4">
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleDelete(business); }}
+                                                                className={`px-3 py-1 rounded-lg text-xs font-medium transition ${(business as any).isArchived
+                                                                    ? 'bg-gray-600/20 text-gray-400 cursor-not-allowed'
+                                                                    : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
+                                                                    }`}
+                                                                disabled={(business as any).isArchived}
+                                                                title={(business as any).isArchived ? 'Arşivde' : 'Sil / Arşivle'}
+                                                            >
+                                                                {(business as any).isArchived ? '📦 Arşivde' : '🗑️ Sil'}
+                                                            </button>
+                                                        </td>
 
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {/* Pagination Controls */}
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-between mt-4 px-4">
+                                        <p className="text-sm text-gray-400">
+                                            Toplam {filteredBusinesses.length} işletmeden {(currentPage - 1) * BUSINESSES_PER_PAGE + 1}-{Math.min(currentPage * BUSINESSES_PER_PAGE, filteredBusinesses.length)} gösteriliyor
+                                        </p>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                                disabled={currentPage === 1}
+                                                className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                ←
+                                            </button>
+                                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                                let pageNum;
+                                                if (totalPages <= 5) {
+                                                    pageNum = i + 1;
+                                                } else if (currentPage <= 3) {
+                                                    pageNum = i + 1;
+                                                } else if (currentPage >= totalPages - 2) {
+                                                    pageNum = totalPages - 4 + i;
+                                                } else {
+                                                    pageNum = currentPage - 2 + i;
+                                                }
+                                                return (
+                                                    <button
+                                                        key={pageNum}
+                                                        onClick={() => setCurrentPage(pageNum)}
+                                                        className={`px-3 py-1 rounded-lg ${currentPage === pageNum
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                                            }`}
+                                                    >
+                                                        {pageNum}
+                                                    </button>
+                                                );
+                                            })}
+                                            <button
+                                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                →
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )
                     )}
                 </div>
