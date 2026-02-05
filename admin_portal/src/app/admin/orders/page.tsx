@@ -186,13 +186,29 @@ export default function OrdersPage() {
     const completedOrders = filteredOrders.filter(o => o.status === 'delivered');
 
     // Update order status
+    // When status is reset backward (pending/preparing/ready), clear courier assignment
+    // so the order appears in the driver's pending delivery queue again
     const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
         try {
-            await updateDoc(doc(db, 'meat_orders', orderId), {
+            // Statuses that should clear courier assignment when set
+            const unclamedStatuses: OrderStatus[] = ['pending', 'preparing', 'ready'];
+            const shouldClearCourier = unclamedStatuses.includes(newStatus);
+
+            const updateData: Record<string, any> = {
                 status: newStatus,
                 [`statusHistory.${newStatus}`]: new Date(),
                 updatedAt: new Date(),
-            });
+            };
+
+            // Clear courier fields when resetting status backward
+            if (shouldClearCourier) {
+                updateData.courierId = null;
+                updateData.courierName = null;
+                updateData.courierPhone = null;
+                updateData.claimedAt = null;
+            }
+
+            await updateDoc(doc(db, 'meat_orders', orderId), updateData);
             showToast('Sipariş durumu güncellendi', 'success');
             setSelectedOrder(null);
         } catch (error) {
