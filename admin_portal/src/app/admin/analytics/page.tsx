@@ -231,7 +231,7 @@ export default function UnifiedAnalyticsPage() {
                     items: d.items || [],
                     total: d.totalPrice || d.totalAmount || d.total || 0,
                     status: d.status || 'pending',
-                    type: d.deliveryType || d.fulfillmentType || 'pickup',
+                    type: d.deliveryMethod || d.deliveryType || d.fulfillmentType || 'pickup',
                     createdAt: d.createdAt,
                 };
             }) as Order[];

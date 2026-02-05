@@ -10,6 +10,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import '../../providers/theme_provider.dart';
+import '../../providers/driver_provider.dart';
+import '../../services/staff_role_service.dart';
+import '../staff/staff_delivery_screen.dart';
+import '../driver/driver_delivery_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -385,15 +389,152 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     const SizedBox(height: 20),
                     
-                    // === THREE CHIPS: Siparişlerim, Favoriler, Adreslerim ===
-                    Row(
-                      children: [
-                        _buildQuickAccessChip(Icons.receipt_long_outlined, 'Siparişlerim', () => context.push('/orders')),
-                        const SizedBox(width: 12),
-                        _buildQuickAccessChip(Icons.favorite_outline, 'Favoriler', () => context.push('/favorites')),
-                        const SizedBox(width: 12),
-                        _buildQuickAccessChip(Icons.location_on_outlined, 'Adreslerim', () => context.push('/my-info')),
-                      ],
+                    // === QUICK ACCESS CHIPS ===
+                    // Check if user is staff
+                    FutureBuilder<bool>(
+                      future: StaffRoleService().checkStaffStatus(),
+                      builder: (context, staffSnapshot) {
+                        final isStaff = staffSnapshot.data == true;
+                        final staffService = StaffRoleService();
+                        
+                        return Column(
+                          children: [
+                            // First row: Standard chips
+                            Row(
+                              children: [
+                                _buildQuickAccessChip(Icons.receipt_long_outlined, 'Siparişlerim', () => context.push('/orders')),
+                                const SizedBox(width: 12),
+                                _buildQuickAccessChip(Icons.favorite_outline, 'Favoriler', () => context.push('/favorites')),
+                                const SizedBox(width: 12),
+                                _buildQuickAccessChip(Icons.location_on_outlined, 'Adreslerim', () => context.push('/my-info')),
+                              ],
+                            ),
+                            // Staff-only: Teslimat Paneli chip
+                            if (isStaff && staffService.businessId != null) ...[
+                              const SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => StaffDeliveryScreen(
+                                        businessId: staffService.businessId!,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.orange, width: 1.5),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.motorcycle, color: Colors.orange.shade700, size: 22),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'Teslimat Paneli',
+                                        style: TextStyle(
+                                          color: Colors.orange.shade700,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange,
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: const Text(
+                                          'Personel',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+                    // Driver Panel - for couriers assigned to multiple businesses
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final driverState = ref.watch(driverProvider);
+                        if (!driverState.isDriver) return const SizedBox.shrink();
+                        
+                        final businessCount = driverState.driverInfo?.assignedBusinesses.length ?? 0;
+                        
+                        return Column(
+                          children: [
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const DriverDeliveryScreen(),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.blue, width: 1.5),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.local_shipping, color: Colors.blue.shade700, size: 22),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'Teslimatlarım',
+                                      style: TextStyle(
+                                        color: Colors.blue.shade700,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const Spacer(),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        '$businessCount İşletme',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     // TODO: Cüzdan özelliği hazır olunca geri eklenecek (TODO.md)
                   ],

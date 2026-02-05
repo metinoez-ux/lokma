@@ -398,7 +398,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           return Center(
             child: Text(
               'Hata: ${snapshot.error}',
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Colors.red),
             ),
           );
         }
@@ -454,12 +454,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.login, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16),
+          Text(
             'Siparişlerinizi görmek için giriş yapın',
             style: TextStyle(color: Colors.grey, fontSize: 16),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEC131E),
@@ -469,7 +469,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
             ),
             onPressed: () => context.go('/profile'),
-            child: const Text('Giriş Yap', style: TextStyle(color: Colors.white)),
+            child: Text('Giriş Yap', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -483,12 +483,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             message,
-            style: const TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.w600),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Sipariş vermek için bir işletme seçin!',
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
@@ -598,7 +598,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                           bottomRight: Radius.circular(12),
                                         ),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         'TUNA',
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
@@ -623,7 +623,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             child: Center(child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28)),
                           ),
                         ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   // Business info
                   Expanded(
                     child: Column(
@@ -639,7 +639,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             letterSpacing: 0.5,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         // Business name
                         Text(
                           order.butcherName,
@@ -649,13 +649,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         // Status and date
                         Text(
                           '${_getStatusText(order.status)} • ${_formatDate(order.createdAt)}',
                           style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         // "Siparişi Görüntüle" link
                         Text(
                           'Siparişi Görüntüle',
@@ -666,7 +666,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             decoration: TextDecoration.underline,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         // Items and price
                         Text(
                           '${order.items.length} ürün • €${order.totalAmount.toStringAsFixed(2)}',
@@ -725,7 +725,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   // Tekrar Sipariş Ver button - Dark mode aware
                   SizedBox(
                     width: double.infinity,
@@ -741,7 +741,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         ),
                         padding: EdgeInsets.zero,
                       ),
-                      child: const Text(
+                      child: Text(
                         'Tekrar Sipariş Ver',
                         style: TextStyle(
                           fontSize: 14,
@@ -816,7 +816,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           'Sipariş ${_formatDateFull(order.createdAt)}',
                           style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           '${order.createdAt.hour.toString().padLeft(2, '0')}:${order.createdAt.minute.toString().padLeft(2, '0')}',
                           style: TextStyle(
@@ -825,7 +825,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         
                         // Status row with expand icon
                         Row(
@@ -835,7 +835,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               color: _getStatusColor(order.status),
                               size: 24,
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12),
                             Text(
                               _getStatusText(order.status),
                               style: TextStyle(
@@ -848,7 +848,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             Icon(Icons.keyboard_arrow_down, color: Colors.grey[400]),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         
                         // Action buttons
                         // Puan Ver button (brand color)
@@ -865,13 +865,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               _rateOrder(order);
                             },
                             icon: const Icon(Icons.star_border, color: Colors.white, size: 20),
-                            label: const Text(
+                            label: Text(
                               'Puan Ver',
                               style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         
                         // Tekrar Sipariş Ver button (black outline)
                         Container(
@@ -893,11 +893,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: 24),
                         
                         // Divider
                         Container(height: 1, color: Colors.grey.shade200),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         
                         // Delivery/Pickup address section
                         Text(
@@ -908,11 +908,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Row(
                           children: [
                             Icon(Icons.location_on_outlined, color: Colors.grey[600], size: 20),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 order.deliveryAddress ?? order.butcherName,
@@ -921,7 +921,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         
                         // Show on map button
                         Container(
@@ -940,11 +940,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: 24),
                         
                         // Divider
                         Container(height: 1, color: Colors.grey.shade200),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
                         
                         // Business info and order items
                         Row(
@@ -962,7 +962,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  SizedBox(height: 4),
                                   Text(
                                     'Sipariş No: ${order.id.substring(0, 6).toUpperCase()}',
                                     style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
@@ -988,7 +988,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         
                         // Order items list
                         ...order.items.map((item) => Padding(
@@ -999,7 +999,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 '${item.quantity.toInt()}',
                                 style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
                               ),
-                              const SizedBox(width: 16),
+                              SizedBox(width: 16),
                               Expanded(
                                 child: Text(
                                   item.name,
@@ -1013,11 +1013,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ],
                           ),
                         )),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         
                         // Divider
                         Container(height: 1, color: isDark ? Colors.grey.shade700 : Colors.grey.shade200),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         
                         // Total
                         Row(
@@ -1041,7 +1041,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         
                         // View receipt link
                         GestureDetector(
@@ -1056,11 +1056,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                           ),
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: 32),
                         
                         // Help section
                         Container(height: 1, color: isDark ? Colors.grey.shade700 : Colors.grey.shade200),
-                        const SizedBox(height: 24),
+                        SizedBox(height: 24),
                         
                         Row(
                           children: [
@@ -1076,12 +1076,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
+                                  SizedBox(height: 4),
                                   Text(
                                     'Yardımcımız size yardımcı olabilir',
                                     style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                                   ),
-                                  const SizedBox(height: 12),
+                                  SizedBox(height: 12),
                                   GestureDetector(
                                     onTap: () => _openSupportChat(order),
                                     child: Container(
@@ -1090,7 +1090,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                         color: brandColor,
                                         borderRadius: BorderRadius.circular(20),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         'Sohbeti Başlat',
                                         style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
                                       ),
@@ -1111,7 +1111,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                           ],
                         ),
-                        const SizedBox(height: 120), // Extra padding for bottom navbar
+                        SizedBox(height: 120), // Extra padding for bottom navbar
                       ],
                     ),
                   ),
@@ -1309,21 +1309,21 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     children: [
                       // Receipt header - dashed line
                       _buildDashedLine(),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       
                       // Business name - centered in monospace
                       Text(
                         order.butcherName.toUpperCase(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Courier',
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.onSurface,
                           letterSpacing: 2,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         'LOKMA',
                         style: TextStyle(
@@ -1334,26 +1334,26 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       _buildDashedLine(),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       
                       // Order info
                       _buildReceiptRow('SİPARİŞ NO:', order.id.substring(0, 6).toUpperCase()),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       _buildReceiptRow('TARİH:', DateFormat('dd.MM.yyyy').format(order.createdAt)),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       _buildReceiptRow('SAAT:', DateFormat('HH:mm').format(order.createdAt)),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       _buildReceiptRow('TİP:', order.orderType == OrderType.delivery ? 'TESLİMAT' : 'GEL AL'),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       _buildDashedLine(),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       
                       // Items header
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             flex: 3,
                             child: Text(
                               'ÜRÜN',
@@ -1361,11 +1361,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 fontFamily: 'Courier',
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                           ),
-                          const SizedBox(
+                          SizedBox(
                             width: 40,
                             child: Text(
                               'AD.',
@@ -1373,12 +1373,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 fontFamily: 'Courier',
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                               textAlign: TextAlign.center,
                             ),
                           ),
-                          const SizedBox(
+                          SizedBox(
                             width: 60,
                             child: Text(
                               'FİYAT',
@@ -1386,14 +1386,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 fontFamily: 'Courier',
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                               textAlign: TextAlign.right,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       
                       // Items
                       ...order.items.map((item) => Padding(
@@ -1404,10 +1404,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               flex: 3,
                               child: Text(
                                 item.name.toUpperCase(),
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: 'Courier',
                                   fontSize: 11,
-                                  color: Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -1417,10 +1417,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               width: 40,
                               child: Text(
                                 '${item.quantity.toInt()}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: 'Courier',
                                   fontSize: 11,
-                                  color: Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -1429,10 +1429,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               width: 60,
                               child: Text(
                                 '€${(item.price * item.quantity).toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontFamily: 'Courier',
                                   fontSize: 11,
-                                  color: Colors.black87,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                                 textAlign: TextAlign.right,
                               ),
@@ -1441,51 +1441,51 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         ),
                       )),
                       
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       _buildDashedLine(),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       
                       // Total
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'TOPLAM',
                             style: TextStyle(
                               fontFamily: 'Courier',
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           Text(
                             '€${order.totalAmount.toStringAsFixed(2)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontFamily: 'Courier',
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.black87,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildDashedLine(),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       
                       // Thank you message
-                      const Text(
+                      Text(
                         'TEŞEKKÜR EDERİZ!',
                         style: TextStyle(
                           fontFamily: 'Courier',
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.onSurface,
                           letterSpacing: 2,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         'Afiyet olsun',
                         style: TextStyle(
@@ -1495,7 +1495,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       
                       // Barcode simulation
                       Container(
@@ -1506,25 +1506,25 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           children: List.generate(30, (index) => Container(
                             width: index % 3 == 0 ? 3 : 1.5,
                             height: 50,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.onSurface,
                             margin: const EdgeInsets.symmetric(horizontal: 1),
                           )),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         order.id.substring(0, 12).toUpperCase(),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Courier',
                           fontSize: 10,
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.onSurface,
                           letterSpacing: 3,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                       _buildDashedLine(),
-                      const SizedBox(height: 40),
+                      SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -1555,19 +1555,19 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Courier',
             fontSize: 12,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'Courier',
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],
@@ -1729,8 +1729,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               Expanded(
                 child: Text(
                   order.kermesName,
-                  style: const TextStyle(
-                    color: Colors.black87,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1746,7 +1746,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(statusIcon, size: 14, color: statusColor),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Text(
                       order.statusLabel,
                       style: TextStyle(
@@ -1760,7 +1760,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           
           // Sipariş No + Tarih
           Row(
@@ -1776,7 +1776,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           
           // Ürünler
           ...order.items.take(3).map((item) => Padding(
@@ -1785,13 +1785,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               children: [
                 Text(
                   '${item.quantity}x',
-                  style: const TextStyle(color: Color(0xFFF43F5E), fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Color(0xFFF43F5E), fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     item.name,
-                    style: const TextStyle(color: Colors.black87, fontSize: 13),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -1808,9 +1808,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
             ),
           
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           const Divider(color: Colors.grey, height: 1),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           
           // Footer: Teslimat + Ödeme + Toplam
           Row(
@@ -1824,10 +1824,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ),
                 child: Text(
                   order.deliveryTypeLabel,
-                  style: const TextStyle(color: Colors.blue, fontSize: 11),
+                  style: TextStyle(color: Colors.blue, fontSize: 11),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               // Ödeme türü
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1837,15 +1837,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ),
                 child: Text(
                   order.paymentMethodLabel,
-                  style: const TextStyle(color: Colors.green, fontSize: 11),
+                  style: TextStyle(color: Colors.green, fontSize: 11),
                 ),
               ),
               const Spacer(),
               // Toplam
               Text(
                 '${order.totalAmount.toStringAsFixed(2)} €',
-                style: const TextStyle(
-                  color: Colors.black87,
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1854,7 +1854,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           ),
           
           // QR Kod Butonu
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -1870,7 +1870,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 );
               },
               icon: const Icon(Icons.qr_code, size: 20),
-              label: const Text('Hesabı Göster'),
+              label: Text('Hesabı Göster'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF43F5E),
                 foregroundColor: Colors.white,
@@ -1896,7 +1896,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           // Kermes Sepeti (varsa)
           if (kermesCart.isNotEmpty) ...[
             _buildKermesCartSection(kermesCart),
-            if (cart.items.isNotEmpty) const SizedBox(height: 24),
+            if (cart.items.isNotEmpty) SizedBox(height: 24),
           ],
           
           // Kasap Sepeti (varsa)
@@ -1930,7 +1930,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             children: [
               // 🚴 Delivery Info Pill (Lieferando style)
               _buildLieferandoDeliveryPill(),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               
               // 🟡 Minimum Order Bar (Yellow - Lieferando style) - ONLY for Kurye mode
               if (hasKasap && _butcherData != null && !_isPickUp)
@@ -1940,7 +1940,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               if (hasKermes) ...[
                 _buildLieferandoSectionHeader(kermesCart.eventName ?? 'Kermes'),
                 ...kermesCart.items.map((item) => _buildLieferandoKermesItem(item)),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
               ],
               
               // 🥩 Kasap Items (if any)  
@@ -1949,13 +1949,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 if (_butcherData != null)
                   _buildLieferandoSectionHeader(_butcherData!['companyName'] ?? 'Kasap'),
                 ...cart.items.map((item) => _buildLieferandoCartItem(item)),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
               ],
               
               // 💰 Price Summary
               _buildLieferandoPriceSummary(kermesTotal, kasapTotal, grandTotal),
               
-              const SizedBox(height: 100), // Space for button
+              SizedBox(height: 100), // Space for button
             ],
           ),
         ),
@@ -1969,7 +1969,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildLieferandoCheckoutButton(grandTotal),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               // Legal terms footer (Lieferando style)
               _buildLegalTermsFooter(),
             ],
@@ -1999,11 +1999,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               color: _accentColor, // 🎨 BRAND COLOUR
               size: 20,
             ),
-            const SizedBox(width: 10),
-            const Text(
+            SizedBox(width: 10),
+            Text(
               'Gel Al',
               style: TextStyle(
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
               ),
@@ -2052,8 +2052,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ),
               child: const Icon(Icons.check, color: Colors.white, size: 14),
             ),
-            const SizedBox(width: 10),
-            const Text(
+            SizedBox(width: 10),
+            Text(
               'Harika! Teslimat şimdi mümkün',
               style: TextStyle(
                 color: Color(0xFF2E7D32),
@@ -2077,20 +2077,20 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       child: Row(
         children: [
           const Icon(Icons.info_outline, color: Color(0xFFF9A825), size: 20),
-          const SizedBox(width: 10),
+          SizedBox(width: 10),
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(color: Colors.black87, fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
                 children: [
                   TextSpan(
                     text: '${remaining.toStringAsFixed(2).replaceAll('.', ',')} €',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const TextSpan(text: ' daha ekle, min. sipariş '),
                   TextSpan(
                     text: '${minOrder.toStringAsFixed(0)} €',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -2107,8 +2107,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: const TextStyle(
-          color: Colors.black87,
+        style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
           fontSize: 16,
           fontWeight: FontWeight.bold,
         ),
@@ -2138,8 +2138,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     Expanded(
                       child: Text(
                         item.menuItem.name,
-                        style: const TextStyle(
-                          color: Colors.black87,
+                        style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w500,
                           fontSize: 15,
                         ),
@@ -2147,15 +2147,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     ),
                     Text(
                       '${item.totalPrice.toStringAsFixed(2)} €',
-                      style: const TextStyle(
-                        color: Colors.black87,
+                      style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w500,
                         fontSize: 15,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 // Quantity controls
                 Row(
                   children: [
@@ -2164,21 +2164,21 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       onTap: () => ref.read(kermesCartProvider.notifier).removeItem(item.menuItem.id),
                       child: const Icon(Icons.delete_outline, color: Colors.grey, size: 22),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     // Quantity
                     Text(
                       '${item.quantity}',
-                      style: const TextStyle(
-                        color: Colors.black87,
+                      style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     // Add button
                     GestureDetector(
                       onTap: () => ref.read(kermesCartProvider.notifier).addItem(item.menuItem),
-                      child: const Icon(Icons.add, color: Colors.black87, size: 22),
+                      child: Icon(Icons.add, color: Theme.of(context).colorScheme.onSurface, size: 22),
                     ),
                   ],
                 ),
@@ -2213,8 +2213,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               children: [
                 Text(
                   productName,
-                  style: const TextStyle(
-                    color: Colors.black87,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w500,
                     fontSize: 15,
                   ),
@@ -2238,70 +2238,75 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               // Price
               Text(
                 '${totalPrice.toStringAsFixed(2)} €',
-                style: const TextStyle(
-                  color: Colors.black87,
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.w500,
                   fontSize: 15,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               // Quantity controls: - number +
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Minus/Delete button
-                    GestureDetector(
-                      onTap: () {
-                        final step = isKg ? 100.0 : 1.0;
-                        final minQty = isKg ? 100.0 : 1.0;
-                        if (quantity > minQty) {
-                          ref.read(cartProvider.notifier).updateQuantity(item.product.sku, quantity - step);
-                        } else {
-                          ref.read(cartProvider.notifier).removeFromCart(item.product.sku);
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          quantity == 1 ? Icons.delete_outline : Icons.remove,
-                          color: Colors.grey[700],
-                          size: 18,
+              Builder(
+                builder: (context) {
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+                  return Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: isDark ? Colors.grey.shade600 : Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Minus/Delete button
+                        GestureDetector(
+                          onTap: () {
+                            final step = isKg ? 100.0 : 1.0;
+                            final minQty = isKg ? 100.0 : 1.0;
+                            if (quantity > minQty) {
+                              ref.read(cartProvider.notifier).updateQuantity(item.product.sku, quantity - step);
+                            } else {
+                              ref.read(cartProvider.notifier).removeFromCart(item.product.sku);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              quantity == 1 ? Icons.delete_outline : Icons.remove,
+                              color: isDark ? Colors.grey[400] : Colors.grey[700],
+                              size: 18,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    // Quantity
-                    Container(
-                      constraints: const BoxConstraints(minWidth: 32),
-                      alignment: Alignment.center,
-                      child: Text(
-                        isKg ? '${(quantity / 1000).toStringAsFixed(1)}' : '${quantity.toInt()}',
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                        // Quantity
+                        Container(
+                          constraints: const BoxConstraints(minWidth: 32),
+                          alignment: Alignment.center,
+                          child: Text(
+                            isKg ? '${(quantity / 1000).toStringAsFixed(1)}' : '${quantity.toInt()}',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ),
+                        // Plus button
+                        GestureDetector(
+                          onTap: () {
+                            ref.read(cartProvider.notifier).updateQuantity(
+                              item.product.sku, 
+                              isKg ? quantity + 100 : quantity + 1,
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(Icons.add, color: isDark ? Colors.grey[400] : Colors.grey[700], size: 18),
+                          ),
+                        ),
+                      ],
                     ),
-                    // Plus button
-                    GestureDetector(
-                      onTap: () {
-                        ref.read(cartProvider.notifier).updateQuantity(
-                          item.product.sku, 
-                          isKg ? quantity + 100 : quantity + 1,
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(Icons.add, color: Colors.grey[700], size: 18),
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
             ],
           ),
@@ -2314,38 +2319,38 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Widget _buildLieferandoPriceSummary(double kermesTotal, double kasapTotal, double grandTotal) {
     return Column(
       children: [
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         // Subtotal
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Ara Toplam',
-              style: TextStyle(color: Colors.black87, fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
             ),
             Text(
               '${grandTotal.toStringAsFixed(2)} €',
-              style: const TextStyle(color: Colors.black87, fontSize: 14),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         // Service fee (if applicable)
         if (!_isPickUp && _butcherData?['deliveryFee'] != null) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Teslimat Ücreti',
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               Text(
                 '${(_butcherData!['deliveryFee'] as num).toStringAsFixed(2)} €',
-                style: const TextStyle(color: Colors.grey, fontSize: 14),
+                style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
         ],
       ],
     );
@@ -2387,7 +2392,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         child: Center(
           child: Text(
             'Siparişi Onayla · ${total.toStringAsFixed(2)} €',
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -2492,22 +2497,22 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ),
                 child: const Icon(Icons.restaurant_menu, color: Color(0xFFF43F5E), size: 20),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       kermesCart.eventName ?? 'Kermes Siparişi',
-                      style: const TextStyle(
-                        color: Colors.black87,
+                      style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                     Text(
                       '${kermesCart.totalItems} ürün',
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ],
                 ),
@@ -2519,7 +2524,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           
           // Ürünler
           ...kermesCart.items.map((item) => Padding(
@@ -2537,7 +2542,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   child: Center(
                     child: Text(
                       '${item.quantity}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -2545,18 +2550,18 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 // Ürün adı
                 Expanded(
                   child: Text(
                     item.menuItem.name,
-                    style: const TextStyle(color: Colors.black87, fontSize: 14),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
                   ),
                 ),
                 // Fiyat
                 Text(
                   '€${item.totalPrice.toStringAsFixed(2)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Color(0xFF4CAF50),
                     fontWeight: FontWeight.bold,
                   ),
@@ -2571,13 +2576,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Kermes Toplamı',
-                style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
               ),
               Text(
                 '€${kermesCart.totalAmount.toStringAsFixed(2)}',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Color(0xFF4CAF50),
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -2586,7 +2591,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             ],
           ),
           
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           
           // Kermese Git butonu
           SizedBox(
@@ -2606,7 +2611,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: const Text(
+              child: Text(
                 'Kermes Menüsüne Dön',
                 style: TextStyle(color: Color(0xFFF43F5E), fontWeight: FontWeight.bold),
               ),
@@ -2623,13 +2628,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey[400]),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
           Text(
             'Sepetiniz boş',
             style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 20),
           ),
-          const SizedBox(height: 8),
-          const Text('Kermes menüsünden sipariş verin', style: TextStyle(color: Colors.grey)),
+          SizedBox(height: 8),
+          Text('Kermes menüsünden sipariş verin', style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
@@ -2648,7 +2653,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           children: [
             // Delivery Toggle
             _buildDeliveryToggle(),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             
             // 🛒 LIEFERANDO-STYLE: Dynamic Minimum Order Progress
             if (_butcherData?['minOrderAmount'] != null)
@@ -2683,7 +2688,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             color: isReached ? const Color(0xFF4CAF50) : const Color(0xFFF57C00),
                             size: 20,
                           ),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               isReached
@@ -2699,7 +2704,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         ],
                       ),
                       if (!isReached) ...[
-                        const SizedBox(height: 10),
+                        SizedBox(height: 10),
                         // Progress bar
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
@@ -2710,7 +2715,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             minHeight: 6,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         // Progress text
                         Text(
                           '${currentTotal.toStringAsFixed(2)} € / ${minOrder.toStringAsFixed(2)} €',
@@ -2727,15 +2732,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
             // Time/Date Selection
             _buildTimeSelector(),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             
             // Payment Method
             _buildPaymentToggle(),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             
             // Cart Items
             Text('Ürünler', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             ...cart.items.map((item) {
               try {
                 return _buildCartItem(item);
@@ -2748,7 +2753,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     color: const Color(0xFF1E1E1E),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Ürün yüklenemedi',
                     style: TextStyle(color: Colors.red),
                   ),
@@ -2756,7 +2761,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               }
             }),
             
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             
             // Total
             Container(
@@ -2771,16 +2776,16 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Toplam', style: TextStyle(color: Colors.black87, fontSize: 16)),
+                  Text('Toplam', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16)),
                   Text(
                     '€${cart.totalAmount.toStringAsFixed(2)}',
-                    style: const TextStyle(color: Color(0xFF4CAF50), fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: Color(0xFF4CAF50), fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
             
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             
             // Submit Button - Pill shaped
             SizedBox(
@@ -2795,12 +2800,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   elevation: 0,
                 ),
                 child: _isSubmitting
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                       )
-                    : const Text(
+                    : Text(
                         'Siparişi Onayla',
                         style: TextStyle(
                           fontSize: 16,
@@ -2811,7 +2816,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ),
             ),
             
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
         ),
       );
@@ -2822,22 +2827,22 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16),
+            Text(
               'Sepet yüklenirken hata oluştu',
               style: TextStyle(color: Colors.white, fontSize: 18),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               e.toString(),
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
+              style: TextStyle(color: Colors.grey, fontSize: 12),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => context.go('/'),
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE53935)),
-              child: const Text('Ana Sayfaya Dön'),
+              child: Text('Ana Sayfaya Dön'),
             ),
           ],
         ),
@@ -2872,15 +2877,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               color: _accentColor, // 🎨 BRAND COLOUR
               size: 20,
             ),
-            const SizedBox(width: 10),
+            SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   _isPickUp ? 'Gel Al' : 'Kurye',
-                  style: const TextStyle(
-                    color: Colors.black87,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
@@ -2903,7 +2908,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   fontSize: 13,
                 ),
               ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Icon(
               Icons.keyboard_arrow_down,
               color: Colors.grey[500],
@@ -2928,9 +2933,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         children: [
           Text(
             _isPickUp ? 'Gel Al Zamanı' : 'Teslimat Zamanı',
-            style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -2953,17 +2958,17 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     child: Row(
                       children: [
                         const Icon(Icons.calendar_today, color: Colors.grey, size: 18),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
                           DateFormat('dd MMM').format(_selectedDate),
-                          style: const TextStyle(color: Colors.black87),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                         ),
                       ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
                   onTap: () async {
@@ -2982,10 +2987,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     child: Row(
                       children: [
                         const Icon(Icons.access_time, color: Colors.grey, size: 18),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
                           _selectedTime.format(context),
-                          style: const TextStyle(color: Colors.black87),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                         ),
                       ],
                     ),
@@ -3030,11 +3035,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               color: _accentColor, // 🎨 BRAND COLOUR
               size: 22,
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Text(
               methodLabel,
-              style: const TextStyle(
-                color: Colors.black87,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
@@ -3075,8 +3080,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 // Product name
                 Text(
                   productName,
-                  style: const TextStyle(
-                    color: Colors.black87,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),
@@ -3125,8 +3130,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 alignment: Alignment.center,
                 child: Text(
                   '${quantity.toInt()}',
-                  style: const TextStyle(
-                    color: Colors.black87,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),
@@ -3140,23 +3145,23 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 },
                 child: Container(
                   padding: const EdgeInsets.all(8),
-                  child: const Icon(
+                  child: Icon(
                     Icons.add,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.onSurface,
                     size: 20,
                   ),
                 ),
               ),
               
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               
               // Price
               SizedBox(
                 width: 64,
                 child: Text(
                   '${totalPrice.toStringAsFixed(2)} €',
-                  style: const TextStyle(
-                    color: Colors.black87,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),

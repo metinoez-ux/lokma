@@ -320,6 +320,7 @@ export default function AdminHeader() {
                                 { href: '/admin/analytics', icon: '📊', label: 'Analitik' },
                                 { href: '/admin/sectors', icon: '🏭', label: 'Sektör Yönetimi' },
                                 { href: '/admin/kermes', icon: '🎪', label: 'Kermes' },
+                                { href: '/admin/drivers', icon: '🚗', label: 'Sürücüler' },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);
                                 return (

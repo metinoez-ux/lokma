@@ -96,8 +96,56 @@ export const onOrderStatusChange = onDocumentUpdated(
                 body = `${orderNumber} - Kasabınız siparişinizi hazırlıyor`;
                 break;
             case "ready":
+                // Notify customer
                 title = "✅ Siparişiniz Hazır!";
                 body = `${orderNumber} - Alabilirsiniz! Toplam: ${totalAmount.toFixed(2)}€`;
+
+                // If delivery order, also notify staff about pending delivery
+                if (after.orderType === "delivery" || after.deliveryType === "delivery") {
+                    const butcherId = after.butcherId;
+                    const deliveryAddress = after.deliveryAddress || "";
+
+                    // Get all staff FCM tokens for this business
+                    try {
+                        const staffSnapshot = await db.collection("admins")
+                            .where("businessId", "==", butcherId)
+                            .get();
+
+                        const staffTokens: string[] = [];
+                        staffSnapshot.docs.forEach(doc => {
+                            const data = doc.data();
+                            if (data.fcmToken) staffTokens.push(data.fcmToken);
+                            if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                                staffTokens.push(...data.fcmTokens);
+                            }
+                        });
+
+                        if (staffTokens.length > 0) {
+                            const staffMessage = {
+                                notification: {
+                                    title: "🚚 Teslimat Bekliyor!",
+                                    body: `${orderNumber} - ${deliveryAddress.substring(0, 50)}...`,
+                                },
+                                data: {
+                                    type: "delivery_ready",
+                                    orderId: event.params.orderId,
+                                    businessId: butcherId,
+                                },
+                                tokens: staffTokens,
+                            };
+                            await messaging.sendEachForMulticast(staffMessage);
+                            console.log(`Sent delivery notification to ${staffTokens.length} staff`);
+                        }
+                    } catch (staffErr) {
+                        console.error("Error notifying staff:", staffErr);
+                    }
+                }
+                break;
+            case "onTheWay":
+                // Courier has claimed and started delivery
+                const courierName = after.courierName || "Kurye";
+                title = "🚚 Kurye Yola Çıktı!";
+                body = `${orderNumber} - ${courierName} siparişinizi getiriyor`;
                 break;
             case "delivered":
                 title = "🎉 Siparişiniz Teslim Edildi";

@@ -18,6 +18,7 @@ import '../screens/feedback/feedback_form_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/search/smart_search_screen.dart';
 import '../screens/marketplace/kasap/cart_screen.dart';
+import '../screens/driver/driver_delivery_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 
@@ -151,6 +152,11 @@ class AppRouter {
       GoRoute(
         path: '/help',
         builder: (context, state) => const HelpScreen(),
+      ),
+      // Driver Deliveries - For couriers assigned to multiple businesses
+      GoRoute(
+        path: '/driver-deliveries',
+        builder: (context, state) => const DriverDeliveryScreen(),
       ),
     ],
   );
