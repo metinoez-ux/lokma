@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
+exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-functions/v2/firestore");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
@@ -50,7 +50,7 @@ const db = admin.firestore();
 /**
  * When a new order is created, send push notification to butcher admin
  */
-exports.onNewOrder = (0, firestore_1.onDocumentCreated)("butcher_orders/{orderId}", async (event) => {
+exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}", async (event) => {
     const order = event.data?.data();
     if (!order)
         return;
@@ -93,7 +93,7 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("butcher_orders/{orderId
 /**
  * When order status changes, send push notification to customer
  */
-exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("butcher_orders/{orderId}", async (event) => {
+exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{orderId}", async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
     if (!before || !after)
@@ -119,6 +119,17 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("butcher_orders
         case "ready":
             title = "✅ Siparişiniz Hazır!";
             body = `${orderNumber} - Alabilirsiniz! Toplam: ${totalAmount.toFixed(2)}€`;
+            break;
+        case "delivered":
+            title = "🎉 Siparişiniz Teslim Edildi";
+            body = `${orderNumber} - Afiyet olsun!`;
+            // Schedule feedback request for 24 hours later
+            const feedbackSendAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            await db.collection("meat_orders").doc(event.params.orderId).update({
+                feedbackSendAt: admin.firestore.Timestamp.fromDate(feedbackSendAt),
+                feedbackSent: false,
+            });
+            console.log(`[Feedback] Scheduled feedback request for ${orderNumber} at ${feedbackSendAt.toISOString()}`);
             break;
         case "completed":
             title = "🎉 Sipariş Tamamlandı";
@@ -364,7 +375,7 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
         // 2. COMMISSION INVOICES (for businesses with commission-based plans)
         // =================================================================
         // Calculate commissions from orders in previous month
-        const ordersSnapshot = await db.collection("butcher_orders")
+        const ordersSnapshot = await db.collection("meat_orders")
             .where("createdAt", ">=", admin.firestore.Timestamp.fromDate(periodStart))
             .where("createdAt", "<=", admin.firestore.Timestamp.fromDate(periodEnd))
             .where("status", "==", "completed")
@@ -662,6 +673,93 @@ exports.onScheduledMonthlyDeliveryPauseReport = (0, scheduler_1.onSchedule)({
     }
     catch (error) {
         console.error("[Monthly Delivery Report] Critical error:", error);
+        throw error;
+    }
+});
+// =============================================================================
+// HOURLY FEEDBACK REQUEST NOTIFICATIONS
+// Sends feedback request 24 hours after order delivery
+// =============================================================================
+/**
+ * Hourly check for orders that need feedback requests
+ * Sends push notifications asking customers to rate their experience
+ */
+exports.onScheduledFeedbackRequests = (0, scheduler_1.onSchedule)({
+    schedule: "0 * * * *", // Every hour at minute 0
+    timeZone: "Europe/Berlin",
+    memory: "256MiB",
+    timeoutSeconds: 120,
+}, async () => {
+    console.log("[Feedback Request] Starting hourly feedback check...");
+    const now = new Date();
+    let sentCount = 0;
+    let skipCount = 0;
+    try {
+        // Find orders where feedbackSendAt has passed and feedbackSent is false
+        const pendingFeedback = await db.collection("meat_orders")
+            .where("feedbackSent", "==", false)
+            .where("feedbackSendAt", "<=", admin.firestore.Timestamp.fromDate(now))
+            .limit(50) // Process max 50 per run
+            .get();
+        console.log(`[Feedback Request] Found ${pendingFeedback.size} orders pending feedback`);
+        for (const orderDoc of pendingFeedback.docs) {
+            const order = orderDoc.data();
+            const orderId = orderDoc.id;
+            // Skip if already rated
+            if (order.hasRating) {
+                await db.collection("meat_orders").doc(orderId).update({
+                    feedbackSent: true,
+                });
+                skipCount++;
+                continue;
+            }
+            const customerFcmToken = order.customerFcmToken;
+            if (!customerFcmToken) {
+                console.log(`[Feedback Request] No FCM token for order ${orderId}`);
+                await db.collection("meat_orders").doc(orderId).update({
+                    feedbackSent: true,
+                });
+                skipCount++;
+                continue;
+            }
+            const butcherName = order.butcherName || "İşletme";
+            try {
+                await messaging.send({
+                    notification: {
+                        title: "⭐ Siparişinizi Değerlendirir misiniz?",
+                        body: `${butcherName}'den aldığınız siparişten memnun kaldınız mı?`,
+                    },
+                    data: {
+                        type: "feedback_request",
+                        orderId: orderId,
+                        businessId: order.butcherId || "",
+                        businessName: butcherName,
+                    },
+                    token: customerFcmToken,
+                });
+                await db.collection("meat_orders").doc(orderId).update({
+                    feedbackSent: true,
+                    feedbackSentAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                sentCount++;
+                console.log(`[Feedback Request] Sent to order ${orderId}`);
+            }
+            catch (sendError) {
+                console.error(`[Feedback Request] Failed for order ${orderId}:`, sendError);
+                // Mark as sent to avoid retry loop
+                await db.collection("meat_orders").doc(orderId).update({
+                    feedbackSent: true,
+                    feedbackError: String(sendError),
+                });
+            }
+        }
+        console.log("========================================");
+        console.log("[Feedback Request] COMPLETED");
+        console.log(`  Sent: ${sentCount}, Skipped: ${skipCount}`);
+        console.log("========================================");
+    }
+    catch (error) {
+        console.error("[Feedback Request] Critical error:", error);
         throw error;
     }
 });

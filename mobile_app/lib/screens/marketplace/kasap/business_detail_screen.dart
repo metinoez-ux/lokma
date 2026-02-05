@@ -414,13 +414,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
   
   void _showWeeklyHours() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final handleColor = isDark ? Colors.white24 : Colors.grey.shade300;
+    
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF1E1E1E),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: sheetBg,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -429,11 +434,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             Container(
               width: 40, height: 4,
               margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
             ),
-            const Text('Haftalık Çalışma Saatleri', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('Haftalık Çalışma Saatleri', style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
-            ..._buildHoursList(),
+            ..._buildHoursListThemed(isDark),
             const SizedBox(height: 24),
           ],
         ),
@@ -824,6 +829,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
 
   void _showInfoSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final handleColor = isDark ? Colors.white24 : Colors.grey.shade300;
+    
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -832,9 +842,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         try {
           return Container(
             height: MediaQuery.of(context).size.height * 0.6,
-            decoration: const BoxDecoration(
-              color: Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            decoration: BoxDecoration(
+              color: sheetBg,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
               children: [
@@ -843,7 +853,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   margin: const EdgeInsets.only(top: 8, bottom: 12),
                   width: 40,
                   height: 4,
-                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
                 ),
                 
                 Expanded(
@@ -853,7 +863,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       // Title
                       Text(
                         _butcherDoc?['companyName'] ?? 'İşletme Bilgileri',
-                        style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       
@@ -896,20 +906,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           final street = address is Map ? (address['street'] ?? '') : '';
                           final postalCode = address is Map ? (address['postalCode'] ?? '') : '';
                           final city = address is Map ? (address['city'] ?? '') : '';
-                          return _buildInfoRow(Icons.location_on, 'Adres', '$street\n$postalCode $city');
+                          return _buildInfoRow(Icons.location_on, 'Adres', '$street\n$postalCode $city', isDark: isDark);
                         } catch (e) {
-                          return _buildInfoRow(Icons.location_on, 'Adres', 'Adres bilgisi yok');
+                          return _buildInfoRow(Icons.location_on, 'Adres', 'Adres bilgisi yok', isDark: isDark);
                         }
                       }),
-                      const Divider(color: Colors.white10),
-                      _buildInfoRow(Icons.phone, 'Telefon', _butcherDoc?['shopPhone']?.toString() ?? 'Belirtilmemiş', isAction: true, onTap: _callStore),
+                      Divider(color: isDark ? Colors.white10 : Colors.grey.shade300),
+                      _buildInfoRow(Icons.phone, 'Telefon', _butcherDoc?['shopPhone']?.toString() ?? 'Belirtilmemiş', isAction: true, onTap: _callStore, isDark: isDark),
                       
                       const SizedBox(height: 12),
-                      const Text('Çalışma Saatleri', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('Çalışma Saatleri', style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       
                       // Hours List - wrapped in try-catch builder
-                      ..._buildHoursListSafe(),
+                      ..._buildHoursListThemed(isDark),
                       
                       const SizedBox(height: 20),
                     ],
@@ -949,8 +959,32 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       ];
     }
   }
+  
+  // Themed wrapper for hours list  
+  List<Widget> _buildHoursListThemed(bool isDark) {
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final todayHighlight = isDark ? _getAccent(context) : _getAccent(context);
+    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey.shade600;
+    
+    // For simplicity, reuse _buildHoursList and just return - theme colors are handled via the page context
+    try {
+      return _buildHoursList();
+    } catch (e) {
+      return [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text('Çalışma saatleri görüntülenemiyor.', style: TextStyle(color: subtitleColor)),
+        )
+      ];
+    }
+  }
 
-  Widget _buildInfoRow(IconData icon, String title, String content, {bool isAction = false, VoidCallback? onTap}) {
+  Widget _buildInfoRow(IconData icon, String title, String content, {bool isAction = false, VoidCallback? onTap, bool isDark = true}) {
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey : Colors.grey.shade600;
+    final iconBgColor = isDark ? Colors.white10 : Colors.grey.shade100;
+    final arrowColor = isDark ? Colors.white24 : Colors.grey.shade400;
+    
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -960,7 +994,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(8)),
               child: Icon(icon, color: _getAccent(context), size: 18),
             ),
             const SizedBox(width: 12),
@@ -968,13 +1002,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                   Text(title, style: TextStyle(color: subtitleColor, fontSize: 12)),
                    const SizedBox(height: 2),
-                   Text(content, style: TextStyle(color: isAction ? Colors.blue[400] : Colors.white, fontSize: 14, height: 1.3)),
+                   Text(content, style: TextStyle(color: isAction ? Colors.blue[400] : textColor, fontSize: 14, height: 1.3)),
                 ],
               ),
             ),
-            if (isAction) Icon(Icons.arrow_forward_ios, color: Colors.white24, size: 12),
+            if (isAction) Icon(Icons.arrow_forward_ios, color: arrowColor, size: 12),
           ],
         ),
       ),
@@ -1119,8 +1153,17 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         String content = line.replaceAll('$dayName:', '').replaceAll(dayName, '').trim();
         if (content.isEmpty) content = 'Kapalı';
 
+        // Theme-aware colors
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final dayColor = isToday 
+            ? Colors.green 
+            : (isDark ? Colors.grey[300] : Colors.black87);
+        final hoursColor = isToday 
+            ? Colors.green 
+            : (isDark ? Colors.white : Colors.black87);
+
         return Container(
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
           decoration: BoxDecoration(
             color: isToday ? Colors.green.withOpacity(0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
@@ -1129,8 +1172,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(dayName, style: TextStyle(color: isToday ? Colors.green : Colors.grey[400], fontSize: 13, fontWeight: isToday ? FontWeight.bold : FontWeight.normal)),
-              Text(content, style: TextStyle(color: isToday ? Colors.green : Colors.white, fontSize: 13, fontWeight: isToday ? FontWeight.bold : FontWeight.normal)),
+              Text(dayName, style: TextStyle(color: dayColor, fontSize: 14, fontWeight: isToday ? FontWeight.bold : FontWeight.w500)),
+              Text(content, style: TextStyle(color: hoursColor, fontSize: 14, fontWeight: isToday ? FontWeight.bold : FontWeight.w500)),
             ],
           ),
         );

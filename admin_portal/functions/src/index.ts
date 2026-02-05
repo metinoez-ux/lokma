@@ -16,7 +16,7 @@ const db = admin.firestore();
  * When a new order is created, send push notification to butcher admin
  */
 export const onNewOrder = onDocumentCreated(
-    "butcher_orders/{orderId}",
+    "meat_orders/{orderId}",
     async (event) => {
         const order = event.data?.data();
         if (!order) return;
@@ -67,7 +67,7 @@ export const onNewOrder = onDocumentCreated(
  * When order status changes, send push notification to customer
  */
 export const onOrderStatusChange = onDocumentUpdated(
-    "butcher_orders/{orderId}",
+    "meat_orders/{orderId}",
     async (event) => {
         const before = event.data?.before.data();
         const after = event.data?.after.data();
@@ -104,7 +104,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                 body = `${orderNumber} - Afiyet olsun!`;
                 // Schedule feedback request for 24 hours later
                 const feedbackSendAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
-                await db.collection("butcher_orders").doc(event.params.orderId).update({
+                await db.collection("meat_orders").doc(event.params.orderId).update({
                     feedbackSendAt: admin.firestore.Timestamp.fromDate(feedbackSendAt),
                     feedbackSent: false,
                 });
@@ -416,7 +416,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
             // 2. COMMISSION INVOICES (for businesses with commission-based plans)
             // =================================================================
             // Calculate commissions from orders in previous month
-            const ordersSnapshot = await db.collection("butcher_orders")
+            const ordersSnapshot = await db.collection("meat_orders")
                 .where("createdAt", ">=", admin.firestore.Timestamp.fromDate(periodStart))
                 .where("createdAt", "<=", admin.firestore.Timestamp.fromDate(periodEnd))
                 .where("status", "==", "completed")
@@ -815,7 +815,7 @@ export const onScheduledFeedbackRequests = onSchedule(
 
         try {
             // Find orders where feedbackSendAt has passed and feedbackSent is false
-            const pendingFeedback = await db.collection("butcher_orders")
+            const pendingFeedback = await db.collection("meat_orders")
                 .where("feedbackSent", "==", false)
                 .where("feedbackSendAt", "<=", admin.firestore.Timestamp.fromDate(now))
                 .limit(50) // Process max 50 per run
@@ -829,7 +829,7 @@ export const onScheduledFeedbackRequests = onSchedule(
 
                 // Skip if already rated
                 if (order.hasRating) {
-                    await db.collection("butcher_orders").doc(orderId).update({
+                    await db.collection("meat_orders").doc(orderId).update({
                         feedbackSent: true,
                     });
                     skipCount++;
@@ -839,7 +839,7 @@ export const onScheduledFeedbackRequests = onSchedule(
                 const customerFcmToken = order.customerFcmToken;
                 if (!customerFcmToken) {
                     console.log(`[Feedback Request] No FCM token for order ${orderId}`);
-                    await db.collection("butcher_orders").doc(orderId).update({
+                    await db.collection("meat_orders").doc(orderId).update({
                         feedbackSent: true,
                     });
                     skipCount++;
@@ -863,7 +863,7 @@ export const onScheduledFeedbackRequests = onSchedule(
                         token: customerFcmToken,
                     });
 
-                    await db.collection("butcher_orders").doc(orderId).update({
+                    await db.collection("meat_orders").doc(orderId).update({
                         feedbackSent: true,
                         feedbackSentAt: admin.firestore.FieldValue.serverTimestamp(),
                     });
@@ -874,7 +874,7 @@ export const onScheduledFeedbackRequests = onSchedule(
                 } catch (sendError) {
                     console.error(`[Feedback Request] Failed for order ${orderId}:`, sendError);
                     // Mark as sent to avoid retry loop
-                    await db.collection("butcher_orders").doc(orderId).update({
+                    await db.collection("meat_orders").doc(orderId).update({
                         feedbackSent: true,
                         feedbackError: String(sendError),
                     });

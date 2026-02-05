@@ -1264,7 +1264,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
   /// 🆕 Check if business is available for the currently selected mode
   /// Returns tuple: (isAvailable, unavailableReason, startTime)
-  ({bool isAvailable, String? reason, String? startTime}) _checkAvailabilityForMode(
+  ({bool isAvailable, String? reason, String? startTime, String? deliveryTime, String? pickupTime}) _checkAvailabilityForMode(
     Map<String, dynamic> data, 
     String mode,
   ) {
@@ -1272,45 +1272,51 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final currentHour = now.hour;
     final currentMinute = now.minute;
     
-    if (mode == 'teslimat') {
-      // Check temporary pause first
-      final temporaryDeliveryPaused = data['temporaryDeliveryPaused'] as bool? ?? false;
-      if (temporaryDeliveryPaused) {
-        return (isAvailable: false, reason: 'Kurye şu an hizmet vermiyor', startTime: null);
-      }
-      
-      // Check delivery start time
-      final deliveryStartTime = data['deliveryStartTime'] as String?;
-      if (deliveryStartTime != null && deliveryStartTime.isNotEmpty) {
-        final parsed = _parseTimeString(deliveryStartTime);
-        if (parsed != null) {
-          final startHour = parsed.$1;
-          final startMinute = parsed.$2;
-          // Check if current time is before start time
-          if (currentHour < startHour || (currentHour == startHour && currentMinute < startMinute)) {
-            return (isAvailable: false, reason: 'Kurye $deliveryStartTime\'ten sonra', startTime: deliveryStartTime);
-          }
+    final deliveryStartTime = data['deliveryStartTime'] as String?;
+    final pickupStartTime = data['pickupStartTime'] as String?;
+    
+    // Check if current time is before delivery start
+    bool deliveryUnavailable = false;
+    if (deliveryStartTime != null && deliveryStartTime.isNotEmpty) {
+      final parsed = _parseTimeString(deliveryStartTime);
+      if (parsed != null) {
+        if (currentHour < parsed.$1 || (currentHour == parsed.$1 && currentMinute < parsed.$2)) {
+          deliveryUnavailable = true;
         }
       }
-      return (isAvailable: true, reason: null, startTime: null);
-      
-    } else if (mode == 'gelal') {
-      // Check pickup start time
-      final pickupStartTime = data['pickupStartTime'] as String?;
-      if (pickupStartTime != null && pickupStartTime.isNotEmpty) {
-        final parsed = _parseTimeString(pickupStartTime);
-        if (parsed != null) {
-          final startHour = parsed.$1;
-          final startMinute = parsed.$2;
-          if (currentHour < startHour || (currentHour == startHour && currentMinute < startMinute)) {
-            return (isAvailable: false, reason: 'Gel Al $pickupStartTime\'dan', startTime: pickupStartTime);
-          }
-        }
-      }
-      return (isAvailable: true, reason: null, startTime: null);
     }
     
-    return (isAvailable: true, reason: null, startTime: null);
+    // Check if current time is before pickup start
+    bool pickupUnavailable = false;
+    if (pickupStartTime != null && pickupStartTime.isNotEmpty) {
+      final parsed = _parseTimeString(pickupStartTime);
+      if (parsed != null) {
+        if (currentHour < parsed.$1 || (currentHour == parsed.$1 && currentMinute < parsed.$2)) {
+          pickupUnavailable = true;
+        }
+      }
+    }
+    
+    // Check temporary pause for delivery mode
+    final temporaryDeliveryPaused = data['temporaryDeliveryPaused'] as bool? ?? false;
+    
+    if (mode == 'teslimat') {
+      if (temporaryDeliveryPaused) {
+        return (isAvailable: false, reason: 'Kurye şu an hizmet vermiyor', startTime: null, deliveryTime: deliveryStartTime, pickupTime: pickupStartTime);
+      }
+      if (deliveryUnavailable) {
+        return (isAvailable: false, reason: 'Teslimat $deliveryStartTime\'ten sonra', startTime: deliveryStartTime, deliveryTime: deliveryStartTime, pickupTime: pickupStartTime);
+      }
+      return (isAvailable: true, reason: null, startTime: null, deliveryTime: deliveryStartTime, pickupTime: pickupStartTime);
+      
+    } else if (mode == 'gelal') {
+      if (pickupUnavailable) {
+        return (isAvailable: false, reason: 'Gel Al $pickupStartTime\'dan', startTime: pickupStartTime, deliveryTime: deliveryStartTime, pickupTime: pickupStartTime);
+      }
+      return (isAvailable: true, reason: null, startTime: null, deliveryTime: deliveryStartTime, pickupTime: pickupStartTime);
+    }
+    
+    return (isAvailable: true, reason: null, startTime: null, deliveryTime: deliveryStartTime, pickupTime: pickupStartTime);
   }
   
   /// Parse time string like "11:00" into (hour, minute)
@@ -1322,6 +1328,82 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     }
     return null;
   }
+  
+  /// 🆕 Show dialog for closed/unavailable business
+  void _showClosedBusinessDialog(BuildContext context, String businessName, String? reason) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.schedule, color: Colors.orange, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                businessName,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (reason != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.access_time, color: Colors.orange, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        reason,
+                        style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.orange),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 16),
+            const Text(
+              'Şu an kapalı, ama yine de menüye göz atabilirsiniz.',
+              style: TextStyle(fontSize: 15),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Kapat'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              // Navigate to business detail
+              final businessId = _currentBusinessIdForDialog;
+              if (businessId != null) {
+                context.push('/business/$businessId');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: lokmaPink,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Menüyü Gör'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  String? _currentBusinessIdForDialog;
 
   /// Lieferando-style restaurant card with large image
   Widget _buildRestaurantCard(String id, Map<String, dynamic> data) {
@@ -1391,7 +1473,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        context.push('/business/$id');
+        if (!isAvailable) {
+          // Store business ID for dialog navigation
+          _currentBusinessIdForDialog = id;
+          _showClosedBusinessDialog(context, name, unavailableReason);
+        } else {
+          context.push('/business/$id');
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -1563,38 +1651,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       ),
                     ),
                     
-                    // 🆕 Unavailable reason banner (BOTTOM - Lieferando style)
-                    if (!isAvailable && unavailableReason != null)
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.85),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                _deliveryMode == 'teslimat' ? Icons.delivery_dining : Icons.shopping_bag_outlined,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                unavailableReason,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
                     
                     // 🆕 Cart badge (BOTTOM RIGHT) - only when available
                     if (isAvailable)

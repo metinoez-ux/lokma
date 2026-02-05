@@ -144,7 +144,7 @@ export default function BusinessesPage() {
 
     // 📄 Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const BUSINESSES_PER_PAGE = 20;
+    const BUSINESSES_PER_PAGE = 15;
 
     // 🆕 KERMES SEKTÖRÜ İÇİN - Organizations state (arka plan verisi)
     const [organizations, setOrganizations] = useState<any[]>([]);
