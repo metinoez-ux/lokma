@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
@@ -75,9 +75,28 @@ export default function OrdersPage() {
     const [typeFilter, setTypeFilter] = useState<string>('all');
     // Business filter - auto-set for non-super admins
     const [businessFilter, setBusinessFilter] = useState<string>('all');
+    const [businessSearch, setBusinessSearch] = useState<string>('');
+    const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
+    const businessSearchRef = useRef<HTMLDivElement>(null);
     const [dateFilter, setDateFilter] = useState<string>('all');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    // Filter businesses based on search
+    const filteredBusinesses = Object.entries(businesses).filter(([id, name]) =>
+        name.toLowerCase().includes(businessSearch.toLowerCase())
+    );
+
+    // Click outside handler for business dropdown
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (businessSearchRef.current && !businessSearchRef.current.contains(event.target as Node)) {
+                setShowBusinessDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const showToast = (message: string, type: 'success' | 'error') => {
         setToast({ message, type });
@@ -358,16 +377,72 @@ export default function OrdersPage() {
 
                         {/* Business Filter - Only show to Super Admins */}
                         {admin?.adminType === 'super' && (
-                            <select
-                                value={businessFilter}
-                                onChange={(e) => setBusinessFilter(e.target.value)}
-                                className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                            >
-                                <option value="all">Tüm İşletmeler</option>
-                                {Object.entries(businesses).map(([id, name]) => (
-                                    <option key={id} value={id}>{name}</option>
-                                ))}
-                            </select>
+                            <div ref={businessSearchRef} className="relative">
+                                <div className="flex items-center">
+                                    <input
+                                        type="text"
+                                        value={businessFilter === 'all' ? businessSearch : (businesses[businessFilter] || businessSearch)}
+                                        onChange={(e) => {
+                                            setBusinessSearch(e.target.value);
+                                            setShowBusinessDropdown(true);
+                                            if (e.target.value === '') {
+                                                setBusinessFilter('all');
+                                            }
+                                        }}
+                                        onFocus={() => setShowBusinessDropdown(true)}
+                                        placeholder="🔍 İşletme Ara..."
+                                        className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 w-64"
+                                    />
+                                    {businessFilter !== 'all' && (
+                                        <button
+                                            onClick={() => {
+                                                setBusinessFilter('all');
+                                                setBusinessSearch('');
+                                            }}
+                                            className="ml-2 text-gray-400 hover:text-white"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
+                                {showBusinessDropdown && (
+                                    <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50">
+                                        <div
+                                            className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-green-400 font-medium"
+                                            onClick={() => {
+                                                setBusinessFilter('all');
+                                                setBusinessSearch('');
+                                                setShowBusinessDropdown(false);
+                                            }}
+                                        >
+                                            ✓ Tüm İşletmeler
+                                        </div>
+                                        {filteredBusinesses.slice(0, 15).map(([id, name]) => (
+                                            <div
+                                                key={id}
+                                                className={`px-4 py-2 hover:bg-gray-700 cursor-pointer text-white ${businessFilter === id ? 'bg-purple-600/30 text-purple-300' : ''}`}
+                                                onClick={() => {
+                                                    setBusinessFilter(id);
+                                                    setBusinessSearch('');
+                                                    setShowBusinessDropdown(false);
+                                                }}
+                                            >
+                                                {name}
+                                            </div>
+                                        ))}
+                                        {filteredBusinesses.length === 0 && businessSearch && (
+                                            <div className="px-4 py-2 text-gray-500">
+                                                Sonuç bulunamadı
+                                            </div>
+                                        )}
+                                        {filteredBusinesses.length > 15 && (
+                                            <div className="px-4 py-2 text-gray-500 text-sm">
+                                                +{filteredBusinesses.length - 15} daha... (Aramayı daraltın)
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
