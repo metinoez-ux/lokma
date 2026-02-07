@@ -1,12 +1,16 @@
 import 'dart:ui';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/cart_provider.dart';
 import '../providers/kermes_cart_provider.dart';
+import '../services/order_service.dart';
+import '../screens/orders/courier_tracking_screen.dart';
 
-class MainScaffold extends ConsumerWidget {
+class MainScaffold extends ConsumerStatefulWidget {
   final Widget child;
   
   const MainScaffold({super.key, required this.child});
@@ -19,16 +23,85 @@ class MainScaffold extends ConsumerWidget {
     _NavItemData(icon: Icons.person_rounded, label: 'Profilim', path: '/profile'),
   ];
   
+  @override
+  ConsumerState<MainScaffold> createState() => _MainScaffoldState();
+}
+
+class _MainScaffoldState extends ConsumerState<MainScaffold>
+    with SingleTickerProviderStateMixin {
+  // Animation for hopping motorcycle
+  late AnimationController _hopController;
+  late Animation<double> _hopAnimation;
+  
+  // Active delivery stream
+  Stream<List<LokmaOrder>>? _activeOrdersStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _hopController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _hopAnimation = Tween<double>(begin: 0, end: -6).animate(
+      CurvedAnimation(parent: _hopController, curve: Curves.easeInOut),
+    );
+    
+    _initActiveOrdersStream();
+  }
+
+  void _initActiveOrdersStream() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    
+    // Query active deliveries (pending, preparing, ready, onTheWay)
+    _activeOrdersStream = FirebaseFirestore.instance
+        .collection('meat_orders')
+        .where('userId', isEqualTo: user.uid)
+        .where('status', whereIn: ['pending', 'preparing', 'ready', 'onTheWay'])
+        .orderBy('createdAt', descending: true)
+        .limit(1)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => LokmaOrder.fromFirestore(doc))
+            .toList())
+        .handleError((e) {
+          debugPrint('[MainScaffold] Active orders stream error: $e');
+          return <LokmaOrder>[];
+        });
+  }
+
+  @override
+  void dispose() {
+    _hopController.dispose();
+    super.dispose();
+  }
+
   int _getSelectedIndex(BuildContext context) {
     final currentPath = GoRouterState.of(context).uri.path;
-    for (int i = 0; i < _items.length; i++) {
-      if (currentPath == _items[i].path) return i;
+    for (int i = 0; i < MainScaffold._items.length; i++) {
+      if (currentPath == MainScaffold._items[i].path) return i;
     }
     return 0;
   }
 
+  void _navigateToOrder(LokmaOrder order) {
+    if (order.status == OrderStatus.onTheWay) {
+      // Go directly to courier tracking map
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CourierTrackingScreen(orderId: order.id),
+        ),
+      );
+    } else {
+      // For other statuses, go to orders list
+      context.go('/orders');
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final cartState = ref.watch(cartProvider);
     final kermesCartState = ref.watch(kermesCartProvider);
     final cartItemCount = cartState.items.length + kermesCartState.items.length;
@@ -45,16 +118,121 @@ class MainScaffold extends ConsumerWidget {
     );
 
     return Scaffold(
-      extendBody: true, // Blur efektinin arkasında içerik görünmesi için kritik
-      body: child,
+      extendBody: true,
+      body: Stack(
+        children: [
+          widget.child,
+          // Floating active delivery button
+          if (_activeOrdersStream != null)
+            StreamBuilder<List<LokmaOrder>>(
+              stream: _activeOrdersStream,
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                
+                final activeOrder = snapshot.data!.first;
+                return _buildFloatingDeliveryButton(activeOrder);
+              },
+            ),
+        ],
+      ),
       bottomNavigationBar: GlassBottomBar(
         currentIndex: selectedIndex,
         cartItemCount: cartItemCount,
         onTap: (index) {
           HapticFeedback.lightImpact();
-          context.go(_items[index].path);
+          context.go(MainScaffold._items[index].path);
         },
-        items: _items,
+        items: MainScaffold._items,
+      ),
+    );
+  }
+
+  Widget _buildFloatingDeliveryButton(LokmaOrder order) {
+    // Determine status info
+    String statusText;
+    Color statusColor;
+    IconData statusIcon;
+    
+    switch (order.status) {
+      case OrderStatus.onTheWay:
+        statusText = 'Kurye Yolda';
+        statusColor = Colors.green;
+        statusIcon = Icons.motorcycle;
+        break;
+      case OrderStatus.ready:
+        statusText = 'Hazır';
+        statusColor = Colors.orange;
+        statusIcon = Icons.check_circle;
+        break;
+      case OrderStatus.preparing:
+        statusText = 'Hazırlanıyor';
+        statusColor = Colors.blue;
+        statusIcon = Icons.restaurant;
+        break;
+      default:
+        statusText = 'Beklemede';
+        statusColor = Colors.grey;
+        statusIcon = Icons.hourglass_empty;
+    }
+
+    final isOnTheWay = order.status == OrderStatus.onTheWay;
+
+    return Positioned(
+      right: 16,
+      bottom: 110, // Above bottom nav bar
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          _navigateToOrder(order);
+        },
+        child: AnimatedBuilder(
+          animation: _hopAnimation,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, isOnTheWay ? _hopAnimation.value : 0),
+              child: child,
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: statusColor,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: statusColor.withValues(alpha: 0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(statusIcon, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  statusText,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right, color: Colors.white, size: 18),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

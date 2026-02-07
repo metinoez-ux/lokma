@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, deleteField, query, orderBy, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
@@ -81,6 +81,10 @@ export default function OrdersPage() {
     const [dateFilter, setDateFilter] = useState<string>('all');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    // Cancellation modal state
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
+    const [cancelReason, setCancelReason] = useState('');
 
     // Filter businesses based on search
     const filteredBusinesses = Object.entries(businesses).filter(([id, name]) =>
@@ -161,7 +165,7 @@ export default function OrdersPage() {
                 const d = doc.data();
                 return {
                     id: doc.id,
-                    orderNumber: d.orderNumber || doc.id.slice(-6).toUpperCase(),
+                    orderNumber: d.orderNumber || doc.id.slice(0, 6).toUpperCase(),
                     businessId: d.butcherId || d.businessId || '',
                     businessName: d.butcherName || d.businessName || '',
                     customerId: d.userId || d.customerId || '',
@@ -176,7 +180,7 @@ export default function OrdersPage() {
                     createdAt: d.createdAt,
                     scheduledAt: d.deliveryDate || d.scheduledDateTime,
                     address: d.deliveryAddress ? { street: d.deliveryAddress } : d.address,
-                    notes: d.notes || d.customerNote || '',
+                    notes: d.notes || d.orderNote || d.customerNote || '',
                 };
             }) as Order[];
             setOrders(data);
@@ -208,6 +212,19 @@ export default function OrdersPage() {
     // When status is reset backward (pending/preparing/ready), clear courier assignment
     // so the order appears in the driver's pending delivery queue again
     const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+        // If cancelling, show modal to get reason
+        if (newStatus === 'cancelled') {
+            setCancelOrderId(orderId);
+            setCancelReason('');
+            setShowCancelModal(true);
+            return;
+        }
+
+        await updateOrderStatus(orderId, newStatus);
+    };
+
+    // Actual status update function
+    const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, cancellationReason?: string) => {
         try {
             // Statuses that should clear courier assignment when set
             const unclamedStatuses: OrderStatus[] = ['pending', 'preparing', 'ready'];
@@ -219,21 +236,69 @@ export default function OrdersPage() {
                 updatedAt: new Date(),
             };
 
-            // Clear courier fields when resetting status backward
             if (shouldClearCourier) {
-                updateData.courierId = null;
-                updateData.courierName = null;
-                updateData.courierPhone = null;
-                updateData.claimedAt = null;
+                updateData.courierId = deleteField();
+                updateData.courierName = deleteField();
+                updateData.courierPhone = deleteField();
+                updateData.claimedAt = deleteField();
+            }
+
+            // Add cancellation reason if provided
+            if (newStatus === 'cancelled' && cancellationReason) {
+                updateData.cancellationReason = cancellationReason;
             }
 
             await updateDoc(doc(db, 'meat_orders', orderId), updateData);
+
+            // Send push notification to customer for cancellation
+            if (newStatus === 'cancelled') {
+                try {
+                    // Find the order to get customer info
+                    const order = orders.find(o => o.id === orderId);
+                    if (order?.customerId) {
+                        // Fetch customer FCM token
+                        const { getDoc } = await import('firebase/firestore');
+                        const userDoc = await getDoc(doc(db, 'users', order.customerId));
+                        const fcmToken = userDoc.data()?.fcmToken;
+
+                        if (fcmToken) {
+                            await fetch('/api/orders/notify', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    orderId,
+                                    type: 'order_cancelled',
+                                    customerFcmToken: fcmToken,
+                                    butcherName: order.businessName || businesses[order.businessId] || '',
+                                    cancellationReason: cancellationReason || '',
+                                }),
+                            });
+                        }
+                    }
+                } catch (notifyError) {
+                    console.error('Error sending cancellation notification:', notifyError);
+                    // Don't fail the status update if notification fails
+                }
+            }
+
             showToast('Sipariş durumu güncellendi', 'success');
             setSelectedOrder(null);
         } catch (error) {
             console.error('Error updating order:', error);
             showToast('Durum güncellenirken hata oluştu', 'error');
         }
+    };
+
+    // Handle cancellation with reason
+    const handleCancelConfirm = async () => {
+        if (!cancelOrderId || !cancelReason.trim()) {
+            showToast('Lütfen iptal sebebi girin', 'error');
+            return;
+        }
+        await updateOrderStatus(cancelOrderId, 'cancelled', cancelReason.trim());
+        setShowCancelModal(false);
+        setCancelOrderId(null);
+        setCancelReason('');
     };
 
     // Delete order
@@ -606,7 +671,7 @@ export default function OrdersPage() {
                     <div className="bg-gray-800 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-gray-700 flex items-center justify-between">
                             <h2 className="text-xl font-bold text-white">
-                                📦 Sipariş #{selectedOrder.orderNumber || selectedOrder.id.slice(-6)}
+                                📦 Sipariş #{selectedOrder.orderNumber || selectedOrder.id.slice(0, 6).toUpperCase()}
                             </h2>
                             <button
                                 onClick={() => setSelectedOrder(null)}
@@ -669,12 +734,12 @@ export default function OrdersPage() {
                             <div className="border-t border-gray-700 pt-4">
                                 <h4 className="text-white font-medium mb-2">Ürünler</h4>
                                 <div className="space-y-2">
-                                    {selectedOrder.items?.map((item, idx) => (
+                                    {selectedOrder.items?.map((item: any, idx: number) => (
                                         <div key={idx} className="flex justify-between text-sm">
                                             <span className="text-gray-300">
-                                                {item.quantity}x {item.name}
+                                                {item.quantity}x {item.productName || item.name}
                                             </span>
-                                            <span className="text-white">{formatCurrency(item.price * item.quantity)}</span>
+                                            <span className="text-white">{formatCurrency(item.totalPrice ?? ((item.unitPrice || item.price || 0) * (item.quantity || 1)))}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -701,8 +766,8 @@ export default function OrdersPage() {
                             {/* Notes */}
                             {selectedOrder.notes && (
                                 <div className="border-t border-gray-700 pt-4">
-                                    <h4 className="text-gray-400 text-sm mb-1">Notlar</h4>
-                                    <p className="text-white bg-gray-700 rounded-lg p-3">{selectedOrder.notes}</p>
+                                    <h4 className="text-yellow-400 font-medium text-sm mb-1 flex items-center gap-1">📝 Sipariş Notu</h4>
+                                    <p className="text-white bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3">{selectedOrder.notes}</p>
                                 </div>
                             )}
 
@@ -740,6 +805,102 @@ export default function OrdersPage() {
                     </div>
                 </div>
             )}
+
+            {/* Cancellation Reason Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-white">
+                                ❌ Sipariş İptal Sebebi
+                            </h2>
+                            <button
+                                onClick={() => {
+                                    setShowCancelModal(false);
+                                    setCancelOrderId(null);
+                                    setCancelReason('');
+                                }}
+                                className="text-gray-400 hover:text-white"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <p className="text-gray-400 text-sm">
+                                Lütfen siparişin neden iptal edildiğini belirtin. Bu bilgi müşteriye iletilecektir.
+                            </p>
+
+                            {/* Quick Reason Buttons */}
+                            <div className="grid grid-cols-1 gap-2">
+                                {[
+                                    'Ürün stokta kalmadı',
+                                    'İşletme şu an kapalı',
+                                    'Teslimat yapılamıyor',
+                                    'Sipariş tekrarı',
+                                    'Müşteri talebiyle',
+                                ].map((reason) => (
+                                    <button
+                                        key={reason}
+                                        onClick={() => setCancelReason(reason)}
+                                        className={`px-4 py-2 rounded-lg text-left text-sm ${cancelReason === reason
+                                            ? 'bg-red-600 text-white'
+                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                            }`}
+                                    >
+                                        {reason}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Custom Reason Input */}
+                            <div>
+                                <label className="text-gray-400 text-sm block mb-2">
+                                    veya özel sebep yazın:
+                                </label>
+                                <textarea
+                                    value={cancelReason}
+                                    onChange={(e) => setCancelReason(e.target.value)}
+                                    placeholder="İptal sebebini girin..."
+                                    rows={3}
+                                    className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none"
+                                />
+                            </div>
+
+                            {/* Warning */}
+                            <div className="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-3">
+                                <p className="text-yellow-400 text-sm">
+                                    ⚠️ İptal bildirimi müşteriye gönderilecek ve ödeme yapıldıysa iade bilgisi eklenecektir.
+                                </p>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowCancelModal(false);
+                                        setCancelOrderId(null);
+                                        setCancelReason('');
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+                                >
+                                    Vazgeç
+                                </button>
+                                <button
+                                    onClick={handleCancelConfirm}
+                                    disabled={!cancelReason.trim()}
+                                    className={`flex-1 px-4 py-3 rounded-lg transition flex items-center justify-center gap-2 ${cancelReason.trim()
+                                        ? 'bg-red-600 text-white hover:bg-red-700'
+                                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                        }`}
+                                >
+                                    ❌ İptal Et
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -764,7 +925,7 @@ function OrderCard({
         >
             <div className="flex items-center justify-between mb-2">
                 <span className="text-white font-medium text-sm">
-                    #{order.orderNumber || order.id.slice(-6)}
+                    #{order.orderNumber || order.id.slice(0, 6).toUpperCase()}
                 </span>
                 <span className={`px-2 py-0.5 rounded text-xs bg-${typeInfo?.color || 'gray'}-600/30 text-${typeInfo?.color || 'gray'}-400`}>
                     {typeInfo?.icon} {typeInfo?.label}

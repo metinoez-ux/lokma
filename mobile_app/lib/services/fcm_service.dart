@@ -2,6 +2,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../router/app_router.dart';
 
 class FCMService {
   static final FCMService _instance = FCMService._internal();
@@ -32,6 +34,14 @@ class FCMService {
     
     if (settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional) {
+      // CRITICAL: Tell iOS to show notification banners even when app is in foreground
+      await _messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      debugPrint('🔔 Foreground notification presentation options set');
+      
       await _getAndSaveToken();
       
       // Listen for token refresh
@@ -117,15 +127,129 @@ class FCMService {
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('Foreground message received: ${message.notification?.title}');
-    // You can show a local notification or snackbar here
+    debugPrint('🔔 Foreground message received: ${message.notification?.title}');
+    debugPrint('🔔 Message data: ${message.data}');
+    
+    final title = message.notification?.title;
+    final body = message.notification?.body;
+    
+    if (title == null && body == null) return;
+    
+    // Show in-app SnackBar for foreground messages
+    try {
+      final context = _navigatorKey.currentContext;
+      if (context != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (title != null)
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                if (body != null)
+                  Text(
+                    body,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF2E7D32),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Göster',
+              textColor: Colors.white,
+              onPressed: () {
+                // Navigate based on notification type
+                final data = message.data;
+                final type = data['type'];
+                final orderId = data['orderId'];
+                if (type == 'new_delivery' && orderId != null) {
+                  _navigateToDriverDeliveries(orderId);
+                } else if (type == 'order_status' && orderId != null) {
+                  _navigateToOrders();
+                }
+              },
+            ),
+          ),
+        );
+        debugPrint('✅ Foreground notification SnackBar shown');
+      } else {
+        debugPrint('⚠️ No context available for SnackBar');
+      }
+    } catch (e) {
+      debugPrint('❌ Error showing foreground notification: $e');
+    }
   }
 
   void _handleMessageOpenedApp(RemoteMessage message) {
     debugPrint('Message opened app: ${message.data}');
-    // Handle navigation based on message data
-    // For example, navigate to order details
+    
+    final data = message.data;
+    final type = data['type'];
+    final orderId = data['orderId'];
+    
+    debugPrint('🔔 Notification type: $type, orderId: $orderId');
+    
+    // Handle different notification types
+    if (type == 'new_delivery' && orderId != null) {
+      // Driver tapped on new delivery notification - navigate to driver deliveries
+      debugPrint('🚚 Navigating to driver deliveries for order: $orderId');
+      _navigateToDriverDeliveries(orderId);
+    } else if (type == 'order_status' && orderId != null) {
+      // Customer tapped on order status notification - navigate to orders
+      debugPrint('📦 Navigating to orders for order: $orderId');
+      _navigateToOrders();
+    }
   }
+  
+  void _navigateToDriverDeliveries(String orderId) {
+    // Use a slight delay to ensure the app is fully initialized
+    Future.delayed(const Duration(milliseconds: 500), () {
+      // Import and use GoRouter for navigation
+      try {
+        // Navigate to driver deliveries screen
+        // The screen will show the order that needs attention
+        final context = _navigatorKey.currentContext;
+        if (context != null) {
+          GoRouter.of(context).go('/driver-deliveries');
+          debugPrint('✅ Navigated to driver-deliveries');
+        } else {
+          debugPrint('⚠️ Navigator context not available');
+        }
+      } catch (e) {
+        debugPrint('❌ Navigation error: $e');
+      }
+    });
+  }
+  
+  void _navigateToOrders() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      try {
+        final context = _navigatorKey.currentContext;
+        if (context != null) {
+          GoRouter.of(context).go('/orders');
+          debugPrint('✅ Navigated to orders');
+        }
+      } catch (e) {
+        debugPrint('❌ Navigation error: $e');
+      }
+    });
+  }
+  
+  // Global navigator key - set this from main.dart
+  GlobalKey<NavigatorState> get _navigatorKey => AppRouter.navigatorKey;
 
   /// Delete token on logout
   Future<void> deleteToken() async {

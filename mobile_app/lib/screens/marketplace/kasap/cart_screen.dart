@@ -41,6 +41,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   bool _loadingButcherParams = true;
   bool _isSubmitting = false;
   OpeningHoursHelper? _hoursHelper;
+  String _orderNote = '';
 
   /// 🎨 BRAND COLOUR - Dynamic resolution per Design System Protocol
   Color get _accentColor {
@@ -225,7 +226,28 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final userDisplayName = currentUser?.displayName ?? firebaseUser?.displayName ?? firebaseUser?.email ?? 'User';
       final userEmail = currentUser?.email ?? firebaseUser?.email ?? '';
       final userPhone = currentUser?.phoneNumber ?? firebaseUser?.phoneNumber ?? '';
-      final userAddress = currentUser?.address;
+      
+      // Build full delivery address from Firestore user document
+      String? userAddress;
+      if (!_isPickUp) {
+        try {
+          final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+          if (userDoc.exists) {
+            final userData = userDoc.data()!;
+            final street = userData['address'] ?? '';
+            final houseNumber = userData['houseNumber'] ?? '';
+            final postalCode = userData['postalCode'] ?? '';
+            final city = userData['city'] ?? '';
+            
+            // Build full address: "Street HouseNumber, PLZ City"
+            final streetPart = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
+            userAddress = [streetPart, '$postalCode $city'].where((s) => s.trim().isNotEmpty).join(', ');
+          }
+        } catch (e) {
+          debugPrint('Error fetching user address: $e');
+          userAddress = currentUser?.address; // Fallback
+        }
+      }
 
       final orderData = {
         'userId': userId,
@@ -251,6 +273,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         'paymentMethod': _paymentMethod,
         'paymentStatus': _paymentMethod == 'cash' ? 'pending' : 'pending',
         'status': 'pending',
+        if (_orderNote.trim().isNotEmpty) 'orderNote': _orderNote.trim(),
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -272,6 +295,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             pickupDate: pickupDateTime,
             businessHours: _hoursHelper?.getHoursStringForDate(pickupDateTime),
             businessName: _butcherData?['companyName'],
+            isPickUp: _isPickUp,
           ),
         );
       }
@@ -419,16 +443,64 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         final completedOrders = allOrders.where((o) => !_isActiveOrder(o.status)).toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
         
-        final sortedOrders = [...activeOrders, ...completedOrders];
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final textColor = isDark ? Colors.white : Colors.black87;
+        final subtitleColor = isDark ? Colors.grey[400] : Colors.grey[600];
         
-        return ListView.builder(
+        return ListView(
           padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 120),
-          itemCount: sortedOrders.length,
-          itemBuilder: (context, index) {
-            final order = sortedOrders[index];
-            final isActive = _isActiveOrder(order.status);
-            return _buildLokmaOrderCard(order, isActive: isActive);
-          },
+          children: [
+            // Active orders — shown normally
+            if (activeOrders.isNotEmpty) ...[
+              for (final order in activeOrders)
+                _buildLokmaOrderCard(order, isActive: true),
+            ] else ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.check_circle_outline, size: 48, color: Colors.green[300]),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Aktif siparişiniz yok',
+                        style: TextStyle(color: subtitleColor, fontSize: 15, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+            // Past orders — collapsed section
+            if (completedOrders.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  initiallyExpanded: false,
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+                  title: Row(
+                    children: [
+                      Icon(Icons.history, size: 20, color: subtitleColor),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Geçmiş Siparişler (${completedOrders.length})',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  children: [
+                    for (final order in completedOrders)
+                      _buildLokmaOrderCard(order, isActive: false),
+                  ],
+                ),
+              ),
+            ],
+          ],
         );
       },
     );
@@ -631,7 +703,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       children: [
                         // Order number - always visible
                         Text(
-                          'Sipariş No: ${order.id.substring(0, 6).toUpperCase()}',
+                          'Sipariş No: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                           style: TextStyle(
                             color: colorScheme.onSurface.withOpacity(0.5),
                             fontSize: 11,
@@ -964,7 +1036,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    'Sipariş No: ${order.id.substring(0, 6).toUpperCase()}',
+                                    'Sipariş No: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                                     style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                                   ),
                                 ],
@@ -1258,7 +1330,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   /// Open support chat
   void _openSupportChat(LokmaOrder order) {
     // Navigate to support or open email
-    final subject = Uri.encodeComponent('Sipariş Desteği: ${order.id.substring(0, 6).toUpperCase()}');
+    final subject = Uri.encodeComponent('Sipariş Desteği: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}');
     final body = Uri.encodeComponent('Sipariş No: ${order.id}\nİşletme: ${order.butcherName}\n\nMesajınız:');
     final mailtoUri = Uri.parse('mailto:destek@lokma.app?subject=$subject&body=$body');
     launchUrl(mailtoUri);
@@ -1339,7 +1411,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       SizedBox(height: 16),
                       
                       // Order info
-                      _buildReceiptRow('SİPARİŞ NO:', order.id.substring(0, 6).toUpperCase()),
+                      _buildReceiptRow('SİPARİŞ NO:', order.orderNumber ?? order.id.substring(0, 6).toUpperCase()),
                       SizedBox(height: 4),
                       _buildReceiptRow('TARİH:', DateFormat('dd.MM.yyyy').format(order.createdAt)),
                       SizedBox(height: 4),
@@ -2373,7 +2445,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             return;
           }
         }
-        _submitOrder();
+        _showCheckoutSheet(total);
       },
       child: Container(
         width: double.infinity,
@@ -2848,6 +2920,512 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         ),
       );
     }
+  }
+
+  /// 🛒 CHECKOUT CONFIRMATION BOTTOM SHEET
+  void _showCheckoutSheet(double total) {
+    // Auth gate: giriş yapmamışsa login'e yönlendir
+    final authState = ref.read(authProvider);
+    final firebaseUser = FirebaseAuth.instance.currentUser;
+    if (authState.appUser == null && firebaseUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sipariş vermek için giriş yapmalısınız'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      context.push('/login');
+      return;
+    }
+
+    final cart = ref.read(cartProvider);
+    final deliveryFee = (!_isPickUp ? (_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50 : 0.0);
+    final grandTotal = total + deliveryFee;
+    final noteController = TextEditingController(text: _orderNote);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final scrollController = ScrollController();
+        bool hasScrolledForKeyboard = false;
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final bottomInset = MediaQuery.of(ctx).viewInsets.bottom;
+            // Auto-scroll to bottom (note field) when keyboard opens — once only
+            if (bottomInset > 0 && !hasScrolledForKeyboard) {
+              hasScrolledForKeyboard = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (scrollController.hasClients) {
+                  scrollController.animateTo(
+                    scrollController.position.maxScrollExtent,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              });
+            } else if (bottomInset == 0) {
+              hasScrolledForKeyboard = false;
+            }
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85,
+              ),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 8),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Sipariş Özeti',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          icon: Icon(Icons.close, color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  // Scrollable content
+                  Flexible(
+                    child: GestureDetector(
+                      onTap: () => FocusScope.of(ctx).unfocus(),
+                      child: SingleChildScrollView(
+                      controller: scrollController,
+                      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 📍 DELIVERY ADDRESS (only for delivery)
+                          if (!_isPickUp) ...[
+                            _buildCheckoutSectionHeader('📍', 'Teslimat Adresi'),
+                            const SizedBox(height: 8),
+                            FutureBuilder<DocumentSnapshot>(
+                              future: FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(firebaseUser?.uid ?? authState.appUser?.uid)
+                                  .get(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  return Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                                  );
+                                }
+                                final userData = snapshot.data?.data() as Map<String, dynamic>?;
+                                final street = userData?['address'] ?? '';
+                                final houseNumber = userData?['houseNumber'] ?? '';
+                                final postalCode = userData?['postalCode'] ?? '';
+                                final city = userData?['city'] ?? '';
+                                final streetFull = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
+                                final fullAddress = [streetFull, '$postalCode $city'].where((s) => s.trim().isNotEmpty).join(', ');
+                                final hasAddress = fullAddress.trim().isNotEmpty && street.toString().trim().isNotEmpty;
+
+                                return Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: hasAddress ? Colors.grey.shade300 : Colors.orange.shade300,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        hasAddress ? Icons.location_on : Icons.warning_amber_rounded,
+                                        color: hasAddress ? _accentColor : Colors.orange,
+                                        size: 22,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          hasAddress ? fullAddress : 'Adres bilgisi bulunamadı.\nProfil ayarlarından adres ekleyin.',
+                                          style: TextStyle(
+                                            color: hasAddress ? Theme.of(context).colorScheme.onSurface : Colors.orange.shade700,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                      if (hasAddress)
+                                        Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+
+                          // 🏪 GEL AL info
+                          if (_isPickUp) ...[
+                            _buildCheckoutSectionHeader('🏪', 'Gel Al'),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.store, color: _accentColor, size: 22),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      _butcherData?['companyName'] ?? cart.butcherName ?? 'İşletme',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.onSurface,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+
+                          // 💳 PAYMENT METHOD
+                          _buildCheckoutSectionHeader('💳', 'Ödeme Yöntemi'),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setSheetState(() {});
+                                      setState(() => _paymentMethod = 'cash');
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: _paymentMethod == 'cash' ? _accentColor : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.payments_outlined,
+                                            size: 18,
+                                            color: _paymentMethod == 'cash' ? Colors.white : Colors.grey[600],
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'Kapıda Nakit',
+                                            style: TextStyle(
+                                              color: _paymentMethod == 'cash' ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setSheetState(() {});
+                                      setState(() => _paymentMethod = 'card');
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
+                                      decoration: BoxDecoration(
+                                        color: _paymentMethod == 'card' ? _accentColor : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.credit_card,
+                                            size: 18,
+                                            color: _paymentMethod == 'card' ? Colors.white : Colors.grey[600],
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'Kart ile',
+                                            style: TextStyle(
+                                              color: _paymentMethod == 'card' ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Payment methods info row (animated)
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeInOut,
+                            child: _paymentMethod == 'card'
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: 10),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: Colors.grey.shade200),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.info_outline, size: 16, color: Colors.grey[500]),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Apple Pay · Google Pay · Visa · Mastercard',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // 🛒 ORDER ITEMS
+                          _buildCheckoutSectionHeader('🛒', 'Sipariş Detayı'),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Column(
+                              children: [
+                                ...cart.items.map((item) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        '${item.quantity}x',
+                                        style: TextStyle(
+                                          color: _accentColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          item.product.name,
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.onSurface,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        '${item.totalPrice.toStringAsFixed(2)} €',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )),
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Ara Toplam', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                    Text('${total.toStringAsFixed(2)} €', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                                  ],
+                                ),
+                                if (!_isPickUp) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('Teslimat Ücreti', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                      Text('${deliveryFee.toStringAsFixed(2)} €', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                                    ],
+                                  ),
+                                ],
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('Toplam', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
+                                    Text('${grandTotal.toStringAsFixed(2)} €', style: TextStyle(color: _accentColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // 📝 ORDER NOTE
+                          _buildCheckoutSectionHeader('📝', 'Sipariş Notu (opsiyonel)'),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: noteController,
+                            maxLines: 3,
+                            minLines: 2,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => FocusScope.of(ctx).unfocus(),
+                            decoration: InputDecoration(
+                              hintText: 'Ör: Kapı zili çalışmıyor, lütfen arayın…',
+                              hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+                              filled: true,
+                              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: _accentColor),
+                              ),
+                              contentPadding: const EdgeInsets.all(14),
+                            ),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
+                    ),
+                    ),
+                  ),
+                  // Bottom button
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: GestureDetector(
+                      onTap: _isSubmitting ? null : () {
+                        _orderNote = noteController.text;
+                        Navigator.pop(ctx);
+                        _submitOrder();
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: _isSubmitting ? Colors.grey : _accentColor,
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _accentColor.withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: _isSubmitting
+                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                              : Text(
+                                  'Siparişi Gönder · ${grandTotal.toStringAsFixed(2)} €',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+               ),
+            );
+           },
+         );
+       },
+     );
+   }
+
+  /// Section header helper for checkout sheet
+  Widget _buildCheckoutSectionHeader(String emoji, String title) {
+    return Row(
+      children: [
+        Text(emoji, style: const TextStyle(fontSize: 16)),
+        const SizedBox(width: 6),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+      ],
+    );
   }
 
   // 🎨 LIEFERANDO-STYLE: Minimalist delivery info bar

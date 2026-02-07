@@ -163,17 +163,21 @@ export async function POST(request: NextRequest) {
                 break;
 
             case 'order_cancelled':
-                // Send cancellation notification
+                // Send cancellation notification with reason
+                const cancellationReason = body.cancellationReason || '';
                 if (customerEmail) {
                     // TODO: Add cancellation email template
                     console.log('Order cancellation - email not implemented yet');
                 }
                 if (customerFcmToken) {
+                    const cancelBody = cancellationReason
+                        ? `Maalesef siparişiniz iptal edildi. Sebep: ${cancellationReason}. Anlayışınız için teşekkür ederiz. 🙏`
+                        : `Maalesef siparişiniz iptal edildi. Anlayışınız için teşekkür ederiz. 🙏`;
                     results.push = await sendPushNotification(
                         customerFcmToken,
                         '❌ Sipariş İptal Edildi',
-                        'Siparişiniz iptal edildi. Detaylar için uygulamayı kontrol edin.',
-                        { orderId, type: 'order_cancelled' }
+                        cancelBody,
+                        { orderId, type: 'order_cancelled', cancellationReason }
                     );
                 }
                 break;

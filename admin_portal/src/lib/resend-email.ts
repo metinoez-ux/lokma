@@ -74,7 +74,7 @@ export const OrderEmailTemplates = {
         paymentMethod: string;
         totalAmount?: number;
     }) => ({
-        subject: `✅ Siparişiniz Alındı #${details.orderId.slice(-6).toUpperCase()}`,
+        subject: `✅ Siparişiniz Alındı #${details.orderId.slice(0, 6).toUpperCase()}`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #1a1a1a; color: white;">
                 <!-- Header -->
@@ -96,7 +96,7 @@ export const OrderEmailTemplates = {
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Sipariş No:</td>
-                                <td style="padding: 10px 0; color: white; font-weight: bold; text-align: right;">#${details.orderId.slice(-6).toUpperCase()}</td>
+                                <td style="padding: 10px 0; color: white; font-weight: bold; text-align: right;">#${details.orderId.slice(0, 6).toUpperCase()}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Kasap:</td>
@@ -148,7 +148,7 @@ export const OrderEmailTemplates = {
         customerName: string;
         butcherName: string;
     }) => ({
-        subject: `👨‍🍳 Siparişiniz Hazırlanıyor #${details.orderId.slice(-6).toUpperCase()}`,
+        subject: `👨‍🍳 Siparişiniz Hazırlanıyor #${details.orderId.slice(0, 6).toUpperCase()}`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #1a1a1a; color: white;">
                 <!-- Header -->
@@ -170,7 +170,7 @@ export const OrderEmailTemplates = {
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Sipariş No:</td>
-                                <td style="padding: 10px 0; color: white; font-weight: bold; text-align: right;">#${details.orderId.slice(-6).toUpperCase()}</td>
+                                <td style="padding: 10px 0; color: white; font-weight: bold; text-align: right;">#${details.orderId.slice(0, 6).toUpperCase()}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Kasap:</td>
@@ -209,7 +209,7 @@ export const OrderEmailTemplates = {
         butcherName: string;
         butcherAddress?: string;
     }) => ({
-        subject: `🎉 Siparişiniz Hazır! #${details.orderId.slice(-6).toUpperCase()}`,
+        subject: `🎉 Siparişiniz Hazır! #${details.orderId.slice(0, 6).toUpperCase()}`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #1a1a1a; color: white;">
                 <!-- Header -->
@@ -231,7 +231,7 @@ export const OrderEmailTemplates = {
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Sipariş No:</td>
-                                <td style="padding: 10px 0; color: white; font-weight: bold; text-align: right;">#${details.orderId.slice(-6).toUpperCase()}</td>
+                                <td style="padding: 10px 0; color: white; font-weight: bold; text-align: right;">#${details.orderId.slice(0, 6).toUpperCase()}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Kasap:</td>
@@ -271,7 +271,7 @@ export const OrderEmailTemplates = {
         deliveredAt: string;
         totalAmount: number;
     }) => ({
-        subject: `🎉 Teslim Edildi! #${details.orderId.slice(-6).toUpperCase()}`,
+        subject: `🎉 Teslim Edildi! #${details.orderId.slice(0, 6).toUpperCase()}`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #1a1a1a; color: white;">
                 <!-- Header -->
@@ -293,7 +293,7 @@ export const OrderEmailTemplates = {
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Sipariş No:</td>
-                                <td style="padding: 10px 0; color: white; font-weight: bold; text-align: right;">#${details.orderId.slice(-6).toUpperCase()}</td>
+                                <td style="padding: 10px 0; color: white; font-weight: bold; text-align: right;">#${details.orderId.slice(0, 6).toUpperCase()}</td>
                             </tr>
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Kasap:</td>
@@ -333,7 +333,7 @@ export const OrderEmailTemplates = {
         scheduledDate: string;
         paymentMethod: string;
     }) => ({
-        subject: `🆕 Yeni Sipariş #${details.orderId.slice(-6).toUpperCase()}`,
+        subject: `🆕 Yeni Sipariş #${details.orderId.slice(0, 6).toUpperCase()}`,
         html: `
             <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #1a1a1a; color: white;">
                 <!-- Header -->
@@ -345,7 +345,7 @@ export const OrderEmailTemplates = {
                 
                 <!-- Content -->
                 <div style="padding: 30px;">
-                    <h2 style="color: #E53935; margin: 0 0 15px 0; font-size: 22px;">Sipariş #${details.orderId.slice(-6).toUpperCase()}</h2>
+                    <h2 style="color: #E53935; margin: 0 0 15px 0; font-size: 22px;">Sipariş #${details.orderId.slice(0, 6).toUpperCase()}</h2>
                     
                     <!-- Customer Info -->
                     <div style="background: #2a2a2a; border-radius: 12px; padding: 15px; margin-bottom: 15px;">

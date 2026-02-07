@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/marketplace/kasap/kasap_screen.dart';
 import '../screens/marketplace/kasap/business_detail_screen.dart';
@@ -23,7 +24,11 @@ import '../widgets/main_scaffold.dart';
 
 
 class AppRouter {
+  // Global navigator key for FCM notification deep linking
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  
   static final router = GoRouter(
+    navigatorKey: navigatorKey,
     initialLocation: '/restoran',  // Open directly to Yemek (food) page
     // Handle Firebase Auth callback URLs - redirect to login and let Firebase SDK handle internally
     redirect: (context, state) {

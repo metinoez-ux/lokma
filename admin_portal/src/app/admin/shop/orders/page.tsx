@@ -258,7 +258,7 @@ export default function ShopOrdersPage() {
                                 <div className="p-4 border-b border-gray-700 flex flex-wrap items-center justify-between gap-3">
                                     <div className="flex items-center gap-4">
                                         <div>
-                                            <span className="text-white font-bold">{order.orderNumber || `#${order.id.slice(-6)}`}</span>
+                                            <span className="text-white font-bold">{order.orderNumber || `#${order.id.slice(0, 6).toUpperCase()}`}</span>
                                             <span className="text-gray-500 text-sm ml-2">{formatDate(order.createdAt)}</span>
                                         </div>
                                         <span className={`px-3 py-1 rounded-lg text-sm border ${getStatusStyle(order.status)}`}>

@@ -77,14 +77,17 @@ export const onOrderStatusChange = onDocumentUpdated(
         // Only process if status changed
         if (before.status === after.status) return;
 
-        const customerFcmToken = after.customerFcmToken;
-        if (!customerFcmToken) {
-            console.log("No customer FCM token, skipping notification");
-            return;
+        // Support both field names for customer FCM token (mobile uses 'fcmToken')
+        const customerFcmToken = after.customerFcmToken || after.fcmToken;
+        const hasCustomerToken = !!customerFcmToken;
+        if (!hasCustomerToken) {
+            console.log("No customer FCM token found, will skip customer notification but continue for driver notifications");
         }
+
 
         const orderNumber = after.orderNumber || "Sipariş";
         const totalAmount = after.totalAmount || 0;
+        const businessName = after.butcherName || after.businessName || "İşletme";
         const newStatus = after.status;
 
         let title = "";
@@ -93,26 +96,60 @@ export const onOrderStatusChange = onDocumentUpdated(
         switch (newStatus) {
             case "preparing":
                 title = "👨‍🍳 Siparişiniz Hazırlanıyor";
-                body = `${orderNumber} - Kasabınız siparişinizi hazırlıyor`;
+                body = `${orderNumber} - ${businessName} siparişinizi hazırlıyor`;
                 break;
             case "ready":
-                // Notify customer
-                title = "✅ Siparişiniz Hazır!";
-                body = `${orderNumber} - Alabilirsiniz! Toplam: ${totalAmount.toFixed(2)}€`;
+                // Check if delivery order or pickup
+                const isDeliveryOrder = after.orderType === "delivery" || after.deliveryType === "delivery" || after.deliveryMethod === "delivery";
+
+                if (isDeliveryOrder) {
+                    // Delivery order: ready but waiting for courier to claim
+                    title = "📦 Siparişiniz Hazır!";
+                    body = `${orderNumber} - Kuryenin alması bekleniyor. Toplam: ${totalAmount.toFixed(2)}€`;
+                } else {
+                    // Pickup order: customer should come pick it up
+                    title = "✅ Siparişiniz Hazır!";
+                    body = `${orderNumber} - Alabilirsiniz! Toplam: ${totalAmount.toFixed(2)}€`;
+                }
 
                 // If delivery order, also notify staff about pending delivery
-                if (after.orderType === "delivery" || after.deliveryType === "delivery") {
-                    const butcherId = after.butcherId;
+                if (isDeliveryOrder) {
+                    const butcherId = after.butcherId || after.businessId;
                     const deliveryAddress = after.deliveryAddress || "";
 
-                    // Get all staff FCM tokens for this business
+                    // Get all driver FCM tokens who are assigned to this business
                     try {
+                        // Query 1: Drivers assigned via assignedBusinesses array
+                        const driversSnapshot = await db.collection("admins")
+                            .where("isDriver", "==", true)
+                            .where("assignedBusinesses", "array-contains", butcherId)
+                            .get();
+
+                        // Query 2: Staff with direct businessId match (legacy support)
                         const staffSnapshot = await db.collection("admins")
                             .where("businessId", "==", butcherId)
                             .get();
 
                         const staffTokens: string[] = [];
+                        const processedIds = new Set<string>();
+
+                        // Process drivers first
+                        driversSnapshot.docs.forEach(doc => {
+                            if (processedIds.has(doc.id)) return;
+                            processedIds.add(doc.id);
+
+                            const data = doc.data();
+                            if (data.fcmToken) staffTokens.push(data.fcmToken);
+                            if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                                staffTokens.push(...data.fcmTokens);
+                            }
+                        });
+
+                        // Process legacy staff (only if not already processed as driver)
                         staffSnapshot.docs.forEach(doc => {
+                            if (processedIds.has(doc.id)) return;
+                            processedIds.add(doc.id);
+
                             const data = doc.data();
                             if (data.fcmToken) staffTokens.push(data.fcmToken);
                             if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
@@ -124,7 +161,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                             const staffMessage = {
                                 notification: {
                                     title: "🚚 Teslimat Bekliyor!",
-                                    body: `${orderNumber} - ${deliveryAddress.substring(0, 50)}...`,
+                                    body: `${orderNumber} - ${deliveryAddress.substring(0, 50)}${deliveryAddress.length > 50 ? "..." : ""}`,
                                 },
                                 data: {
                                     type: "delivery_ready",
@@ -133,11 +170,13 @@ export const onOrderStatusChange = onDocumentUpdated(
                                 },
                                 tokens: staffTokens,
                             };
-                            await messaging.sendEachForMulticast(staffMessage);
-                            console.log(`Sent delivery notification to ${staffTokens.length} staff`);
+                            const response = await messaging.sendEachForMulticast(staffMessage);
+                            console.log(`Sent delivery notification to ${response.successCount}/${staffTokens.length} drivers/staff`);
+                        } else {
+                            console.log(`No driver tokens found for business ${butcherId}`);
                         }
                     } catch (staffErr) {
-                        console.error("Error notifying staff:", staffErr);
+                        console.error("Error notifying drivers:", staffErr);
                     }
                 }
                 break;
@@ -169,26 +208,50 @@ export const onOrderStatusChange = onDocumentUpdated(
                 body = `${orderNumber} - ${reason}${butcherPhone ? ` Tel: ${butcherPhone}` : ""}`;
                 break;
             case "cancelled":
+                const cancellationReason = after.cancellationReason || "İşletme tarafından iptal edildi";
+                const paymentStatus = after.paymentStatus;
+                const paymentMethod = after.paymentMethod;
+
                 title = "❌ Sipariş İptal Edildi";
-                body = `${orderNumber} - Siparişiniz iptal edildi`;
+
+                // Build message with reason and refund info
+                let cancelMsg = `${orderNumber} - Sebep: ${cancellationReason}`;
+
+                // If payment was made (paid/completed), mention refund
+                if (paymentStatus === "paid" || paymentStatus === "completed") {
+                    if (paymentMethod === "card" || paymentMethod === "stripe") {
+                        cancelMsg += ". 💳 Ödemeniz kartınıza otomatik olarak iade edilecektir.";
+                    } else {
+                        cancelMsg += ". Ödemeniz iade edilecektir.";
+                    }
+                }
+
+                // Add apology
+                cancelMsg += " Verdiğimiz rahatsızlık için özür dileriz. 🙏";
+                body = cancelMsg;
                 break;
             default:
                 return; // Don't send notification for other statuses
         }
 
-        try {
-            await messaging.send({
-                notification: { title, body },
-                data: {
-                    type: "order_status",
-                    orderId: event.params.orderId,
-                    status: newStatus,
-                },
-                token: customerFcmToken,
-            });
-            console.log(`Sent ${newStatus} notification to customer`);
-        } catch (error) {
-            console.error("Error sending notification to customer:", error);
+        // Only send customer notification if we have a token
+        if (hasCustomerToken && title && body) {
+            try {
+                await messaging.send({
+                    notification: { title, body },
+                    data: {
+                        type: "order_status",
+                        orderId: event.params.orderId,
+                        status: newStatus,
+                    },
+                    token: customerFcmToken,
+                });
+                console.log(`Sent ${newStatus} notification to customer`);
+            } catch (error) {
+                console.error("Error sending notification to customer:", error);
+            }
+        } else if (!hasCustomerToken) {
+            console.log(`Skipped customer notification for ${newStatus} - no FCM token`);
         }
     }
 );

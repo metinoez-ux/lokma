@@ -6,6 +6,7 @@ class OrderConfirmationDialog extends StatelessWidget {
   final DateTime pickupDate;
   final String? businessHours;
   final String? businessName;
+  final bool isPickUp;
   final VoidCallback? onDismiss;
 
   const OrderConfirmationDialog({
@@ -13,13 +14,19 @@ class OrderConfirmationDialog extends StatelessWidget {
     required this.pickupDate, 
     this.businessHours,
     this.businessName,
+    this.isPickUp = true,
     this.onDismiss,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Format date with business hours
-    String formattedDate = _formatDate(pickupDate, businessHours);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final cardColor = isDark ? Colors.white.withOpacity(0.06) : Colors.grey.shade50;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final subtextColor = isDark ? Colors.white70 : Colors.grey.shade600;
+    final borderColor = isDark ? Colors.white10 : Colors.grey.shade200;
+    final accentColor = const Color(0xFFE53935);
 
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
@@ -29,210 +36,170 @@ class OrderConfirmationDialog extends StatelessWidget {
         child: Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: const Color(0xFF1E1E1E), // Fallback
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF252525),
-                Color(0xFF1A1A1A),
-              ],
-            ),
+            color: bgColor,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white10),
+            border: Border.all(color: borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withOpacity(isDark ? 0.5 : 0.15),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
             ],
           ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 1. Success Animation / Icon Area
-            Container(
-              height: 120,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.check, color: Colors.white, size: 40),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // 2. Title & Message
-            const Text(
-              'Ön Sipariş Alındı!',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                businessName != null
-                  ? 'Siparişiniz $businessName tarafından hazırlanacak.'
-                  : 'Siparişiniz kasaba iletildi. Hazırlanmaya başladığında bildirim alacaksınız.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // 3. Pickup Time Card
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.black26,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: Row(
-                children: [
-                   Container(
-                     padding: const EdgeInsets.all(10),
-                     decoration: BoxDecoration(
-                       color: Colors.orange.withOpacity(0.2),
-                       borderRadius: BorderRadius.circular(12),
-                     ),
-                     child: const Icon(Icons.store, color: Colors.orange, size: 24),
-                   ),
-                   const SizedBox(width: 16),
-                   Expanded(
-                     child: Column(
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'En Erken Teslim Alma Saati',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                         const SizedBox(height: 2),
-                         Text(
-                           formattedDate,
-                           style: const TextStyle(
-                             color: Colors.white,
-                             fontSize: 16,
-                             fontWeight: FontWeight.bold,
-                           ),
-                         ),
-                       ],
-                     ),
-                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // 4. Critical Warning Area
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE53935).withOpacity(0.15), // Red tint background
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFE53935).withOpacity(0.5)),
-              ),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: Color(0xFFE53935), size: 24),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'LÜTFEN DİKKAT!',
-                          style: TextStyle(
-                            color: Color(0xFFE53935), 
-                            fontSize: 13, 
-                            fontWeight: FontWeight.bold
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Siparişiniz Hazır bildirimi gelmeden lütfen mağazaya gitmeyiniz.',
-                          style: TextStyle(color: Colors.white70, fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // 5. Action Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ✅ Success header
+              Container(
+                height: 100,
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Use rootNavigator to ensure we're closing the dialog properly
-                    final navigator = Navigator.of(context, rootNavigator: true);
-                    
-                    // First navigate to restoran (Yemek segment) - this will replace the entire stack
-                    context.go('/restoran');
-                    
-                    // Then close the dialog
-                    navigator.pop();
-                    
-                    // Call callback if provided
-                    if (onDismiss != null) {
-                      onDismiss!();
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.green.withOpacity(0.15),
+                      Colors.green.withOpacity(0.05),
+                    ],
                   ),
-                  child: const Text('Tamam', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check, color: Colors.white, size: 32),
+                    ),
+                  ],
                 ),
               ),
-            ),
 
-            const SizedBox(height: 24),
-          ],
-        ),
+              const SizedBox(height: 20),
+
+              // Title
+              Text(
+                'Sipariş Alındı!',
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                child: Text(
+                  businessName != null
+                    ? 'Siparişiniz $businessName tarafından hazırlanacak.'
+                    : 'Siparişiniz iletildi.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: subtextColor, fontSize: 14),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // 📦 Mode-specific info card
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isPickUp ? 'Gel Al' : 'Kurye ile Teslimat',
+                      style: TextStyle(
+                        color: subtextColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isPickUp 
+                          ? _formatPickupTime()
+                          : 'Tahmini süre: 30-45 dk',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Mode-specific warning card
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(isDark ? 0.12 : 0.08),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                ),
+                child: Text(
+                  isPickUp
+                      ? 'Siparişiniz hazır olduğunda bildirim alacaksınız. Hazır bildirimi gelmeden lütfen mağazaya gitmeyiniz.'
+                      : 'Kuryenizi canlı takip edebilirsiniz.',
+                  style: TextStyle(color: subtextColor, fontSize: 13, height: 1.4),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Action Button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final navigator = Navigator.of(context, rootNavigator: true);
+                      context.go('/restoran');
+                      navigator.pop();
+                      if (onDismiss != null) onDismiss!();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: accentColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text('Tamam', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  String _formatDate(DateTime date, String? businessHours) {
-    // Basic Tr formatting helper
+  String _formatPickupTime() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
-    final checkDate = DateTime(date.year, date.month, date.day);
+    final checkDate = DateTime(pickupDate.year, pickupDate.month, pickupDate.day);
 
     String dayStr;
     if (checkDate == today) {
@@ -240,20 +207,17 @@ class OrderConfirmationDialog extends StatelessWidget {
     } else if (checkDate == tomorrow) {
       dayStr = "Yarın";
     } else {
-      dayStr = "${date.day}.${date.month}.${date.year}";
+      dayStr = "${pickupDate.day}.${pickupDate.month}.${pickupDate.year}";
     }
 
-    String minuteStr = date.minute.toString().padLeft(2, '0');
-    String hourStr = date.hour.toString().padLeft(2, '0');
-    String timeStr = "$hourStr:$minuteStr";
+    String minuteStr = pickupDate.minute.toString().padLeft(2, '0');
+    String hourStr = pickupDate.hour.toString().padLeft(2, '0');
 
-    // Add business hours if available
-    if (businessHours != null && businessHours.isNotEmpty) {
-      // Clean hours (remove extra text if needed)
-      final cleanHours = businessHours.replaceAll('Açılış: ', '').trim();
-      return "$dayStr ($cleanHours) • $timeStr";
+    if (businessHours != null && businessHours!.isNotEmpty) {
+      final cleanHours = businessHours!.replaceAll('Açılış: ', '').trim();
+      return "$dayStr ($cleanHours) · $hourStr:$minuteStr";
     }
 
-    return "$dayStr • $timeStr";
+    return "$dayStr · $hourStr:$minuteStr";
   }
 }

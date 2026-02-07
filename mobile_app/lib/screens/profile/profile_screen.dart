@@ -409,63 +409,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 _buildQuickAccessChip(Icons.location_on_outlined, 'Adreslerim', () => context.push('/my-info')),
                               ],
                             ),
-                            // Staff-only: Teslimat Paneli chip
-                            if (isStaff && staffService.businessId != null) ...[
-                              const SizedBox(height: 12),
-                              GestureDetector(
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => StaffDeliveryScreen(
-                                        businessId: staffService.businessId!,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.shade50,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.orange, width: 1.5),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.motorcycle, color: Colors.orange.shade700, size: 22),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        'Teslimat Paneli',
-                                        style: TextStyle(
-                                          color: Colors.orange.shade700,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: Colors.orange,
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-                                        child: const Text(
-                                          'Personel',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
+                            // Teslimat Paneli removed - consolidated into Teslimatlarım
                           ],
                         );
                       },
@@ -484,18 +428,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             GestureDetector(
                               onTap: () {
                                 HapticFeedback.lightImpact();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const DriverDeliveryScreen(),
-                                  ),
-                                );
+                                context.push('/driver-deliveries');
                               },
                               child: Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.blue.shade900.withOpacity(0.3) 
+                                      : Colors.blue.shade50,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(color: Colors.blue, width: 1.5),
                                 ),

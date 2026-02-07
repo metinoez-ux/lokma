@@ -198,9 +198,17 @@ export default function DriverManagementPage() {
         <div className="min-h-screen bg-gray-900 text-white p-6">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold">🚗 Sürücü Yönetimi</h1>
-                    <p className="text-gray-400 text-sm">Personeli sürücü olarak ata ve işletmelere görevlendir</p>
+                <div className="mb-6 flex justify-between items-center">
+                    <div>
+                        <h1 className="text-2xl font-bold">🚗 Sürücü Yönetimi</h1>
+                        <p className="text-gray-400 text-sm">Personeli sürücü olarak ata ve işletmelere görevlendir</p>
+                    </div>
+                    <a
+                        href="/admin/drivers/performance"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                    >
+                        📊 Performans Raporu
+                    </a>
                 </div>
 
                 {/* Stats */}

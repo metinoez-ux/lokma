@@ -111,12 +111,17 @@ export default function BusinessOrdersPage() {
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            const ordersData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                scheduledDateTime: doc.data().scheduledDateTime?.toDate() || new Date(),
-                createdAt: doc.data().createdAt?.toDate() || new Date(),
-            })) as BusinessOrder[];
+            const ordersData = snapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    ...data,
+                    // UOIP: First-6-Digit Fallback Standard for consistent Order ID display
+                    orderNumber: data.orderNumber || doc.id.slice(0, 6).toUpperCase(),
+                    scheduledDateTime: data.scheduledDateTime?.toDate() || new Date(),
+                    createdAt: data.createdAt?.toDate() || new Date(),
+                };
+            }) as BusinessOrder[];
 
             // Sort client-side by createdAt desc
             ordersData.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
@@ -365,8 +370,8 @@ export default function BusinessOrdersPage() {
             <header className="bg-red-700 text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                        <Link 
-                            href={isVendorUser ? '/vendor-panel' : '/admin/businesses'} 
+                        <Link
+                            href={isVendorUser ? '/vendor-panel' : '/admin/businesses'}
                             className="text-red-200 hover:text-white text-sm"
                         >
                             ← {isVendorUser ? 'Dashboard' : 'İşletmelere Dön'}
