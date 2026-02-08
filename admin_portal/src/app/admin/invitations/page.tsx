@@ -7,6 +7,7 @@ import { auth, db } from '@/lib/firebase';
 import { isSuperAdmin, SUPER_ADMIN_EMAILS } from '@/lib/config';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface Invitation {
     id: string;
@@ -52,6 +53,8 @@ export default function InvitationsPage() {
     const [activeTab, setActiveTab] = useState<'invite' | 'pending' | 'superadmins'>('invite');
     const [superAdmins, setSuperAdmins] = useState<string[]>([]);
     const router = useRouter();
+    const [confirmApprove, setConfirmApprove] = useState<Invitation | null>(null);
+    const [confirmReject, setConfirmReject] = useState<Invitation | null>(null);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -139,7 +142,11 @@ export default function InvitationsPage() {
     };
 
     const handleApprove = async (invitation: Invitation) => {
-        if (!confirm(`${invitation.email} adresini Super Admin olarak onaylıyor musunuz?`)) return;
+        setConfirmApprove(invitation);
+    };
+    const handleApproveConfirm = async () => {
+        const invitation = confirmApprove;
+        if (!invitation) return;
 
         try {
             // Update invitation status
@@ -166,6 +173,7 @@ export default function InvitationsPage() {
             }
 
             await loadInvitations();
+            setConfirmApprove(null);
             alert('Onaylandı! Kullanıcı artık Super Admin yetkisine sahip.');
         } catch (error) {
             console.error('Approve error:', error);
@@ -174,7 +182,11 @@ export default function InvitationsPage() {
     };
 
     const handleReject = async (invitation: Invitation) => {
-        if (!confirm(`${invitation.email} adresinin başvurusunu reddetmek istediğinize emin misiniz?`)) return;
+        setConfirmReject(invitation);
+    };
+    const handleRejectConfirm = async () => {
+        const invitation = confirmReject;
+        if (!invitation) return;
 
         try {
             await updateDoc(doc(db, 'admin_invitations', invitation.id), {
@@ -184,6 +196,7 @@ export default function InvitationsPage() {
             });
 
             await loadInvitations();
+            setConfirmReject(null);
             alert('Başvuru reddedildi.');
         } catch (error) {
             console.error('Reject error:', error);
@@ -302,9 +315,9 @@ export default function InvitationsPage() {
                                                 </p>
                                             </div>
                                             <span className={`px-2 py-1 rounded text-xs ${inv.status === 'approved' ? 'bg-green-600' :
-                                                    inv.status === 'rejected' ? 'bg-red-600' :
-                                                        inv.status === 'registered' ? 'bg-yellow-600' :
-                                                            'bg-gray-600'
+                                                inv.status === 'rejected' ? 'bg-red-600' :
+                                                    inv.status === 'registered' ? 'bg-yellow-600' :
+                                                        'bg-gray-600'
                                                 } text-white`}>
                                                 {inv.status === 'pending' ? 'Bekliyor' :
                                                     inv.status === 'registered' ? 'Kayıt Oldu' :
@@ -415,6 +428,32 @@ export default function InvitationsPage() {
                     </div>
                 )}
             </main>
+
+            {/* Approve Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmApprove}
+                onClose={() => setConfirmApprove(null)}
+                onConfirm={handleApproveConfirm}
+                title="Admin Onayla"
+                message="Bu kişiyi Super Admin olarak onaylamak istediğinizden emin misiniz?"
+                itemName={confirmApprove?.email}
+                variant="warning"
+                confirmText="Evet, Onayla"
+                loadingText="Onaylanıyor..."
+            />
+
+            {/* Reject Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmReject}
+                onClose={() => setConfirmReject(null)}
+                onConfirm={handleRejectConfirm}
+                title="Başvuruyu Reddet"
+                message="Bu kişinin başvurusunu reddetmek istediğinizden emin misiniz?"
+                itemName={confirmReject?.email}
+                variant="danger"
+                confirmText="Evet, Reddet"
+                loadingText="Reddediliyor..."
+            />
         </div>
     );
 }

@@ -5,6 +5,7 @@ import { collection, getDocs, doc, updateDoc, deleteDoc, deleteField, query, ord
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 // Canonical Order Status Set (7 statuses)
 // Synchronized with Mobile App OrderStatus enum
@@ -166,17 +167,17 @@ export default function OrdersPage() {
                 return {
                     id: doc.id,
                     orderNumber: d.orderNumber || doc.id.slice(0, 6).toUpperCase(),
-                    businessId: d.butcherId || d.businessId || '',
-                    businessName: d.butcherName || d.businessName || '',
+                    businessId: d.businessId || d.butcherId || '',
+                    businessName: d.businessName || d.butcherName || '',
                     customerId: d.userId || d.customerId || '',
-                    customerName: d.customerName || '',
-                    customerPhone: d.customerPhone || '',
+                    customerName: d.customerName || d.userDisplayName || d.userName || '',
+                    customerPhone: d.customerPhone || d.userPhone || '',
                     items: d.items || [],
                     subtotal: d.subtotal || d.totalPrice || d.totalAmount || 0,
                     deliveryFee: d.deliveryFee || 0,
                     total: d.totalPrice || d.totalAmount || d.total || 0,
                     status: d.status || 'pending',
-                    type: d.deliveryMethod || d.deliveryType || d.fulfillmentType || 'pickup',
+                    type: d.orderType || d.deliveryMethod || d.deliveryType || d.fulfillmentType || 'pickup',
                     createdAt: d.createdAt,
                     scheduledAt: d.deliveryDate || d.scheduledDateTime,
                     address: d.deliveryAddress ? { street: d.deliveryAddress } : d.address,
@@ -302,12 +303,17 @@ export default function OrdersPage() {
     };
 
     // Delete order
-    const handleDeleteOrder = async (orderId: string) => {
-        if (!confirm('Bu siparişi silmek istediğinize emin misiniz?')) return;
+    const [confirmDeleteOrderId, setConfirmDeleteOrderId] = useState<string | null>(null);
+    const handleDeleteOrder = (orderId: string) => {
+        setConfirmDeleteOrderId(orderId);
+    };
+    const handleDeleteOrderConfirm = async () => {
+        if (!confirmDeleteOrderId) return;
         try {
-            await deleteDoc(doc(db, 'meat_orders', orderId));
+            await deleteDoc(doc(db, 'meat_orders', confirmDeleteOrderId));
             showToast('Sipariş silindi', 'success');
             setSelectedOrder(null);
+            setConfirmDeleteOrderId(null);
         } catch (error) {
             console.error('Error deleting order:', error);
             showToast('Sipariş silinirken hata oluştu', 'error');
@@ -341,7 +347,7 @@ export default function OrdersPage() {
         completed: completedOrders.length,
         cancelled: filteredOrders.filter(o => o.status === 'cancelled').length,
         revenue: filteredOrders
-            .filter(o => ['delivered', 'picked_up'].includes(o.status))
+            .filter(o => o.status === 'delivered')
             .reduce((sum, o) => sum + (o.total || 0), 0),
         avgOrderValue: 0,
     };
@@ -600,10 +606,13 @@ export default function OrdersPage() {
                                 <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
                                 Bekleyen ({pendingOrders.length})
                             </h3>
-                            <div className="space-y-3">
-                                {pendingOrders.map(order => (
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                                {pendingOrders.slice(0, 10).map(order => (
                                     <OrderCard key={order.id} order={order} businesses={businesses} onClick={() => setSelectedOrder(order)} />
                                 ))}
+                                {pendingOrders.length > 10 && (
+                                    <p className="text-gray-500 text-center text-sm">+{pendingOrders.length - 10} daha</p>
+                                )}
                             </div>
                         </div>
 
@@ -613,10 +622,13 @@ export default function OrdersPage() {
                                 <span className="w-3 h-3 bg-orange-400 rounded-full"></span>
                                 Hazırlanıyor ({preparingOrders.length})
                             </h3>
-                            <div className="space-y-3">
-                                {preparingOrders.map(order => (
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                                {preparingOrders.slice(0, 10).map(order => (
                                     <OrderCard key={order.id} order={order} businesses={businesses} onClick={() => setSelectedOrder(order)} />
                                 ))}
+                                {preparingOrders.length > 10 && (
+                                    <p className="text-gray-500 text-center text-sm">+{preparingOrders.length - 10} daha</p>
+                                )}
                             </div>
                         </div>
 
@@ -626,10 +638,13 @@ export default function OrdersPage() {
                                 <span className="w-3 h-3 bg-green-400 rounded-full"></span>
                                 Hazır ({readyOrders.length})
                             </h3>
-                            <div className="space-y-3">
-                                {readyOrders.map(order => (
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                                {readyOrders.slice(0, 10).map(order => (
                                     <OrderCard key={order.id} order={order} businesses={businesses} onClick={() => setSelectedOrder(order)} />
                                 ))}
+                                {readyOrders.length > 10 && (
+                                    <p className="text-gray-500 text-center text-sm">+{readyOrders.length - 10} daha</p>
+                                )}
                             </div>
                         </div>
 
@@ -639,10 +654,13 @@ export default function OrdersPage() {
                                 <span className="w-3 h-3 bg-indigo-400 rounded-full"></span>
                                 Yolda ({inTransitOrders.length})
                             </h3>
-                            <div className="space-y-3">
-                                {inTransitOrders.map(order => (
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                                {inTransitOrders.slice(0, 10).map(order => (
                                     <OrderCard key={order.id} order={order} businesses={businesses} onClick={() => setSelectedOrder(order)} />
                                 ))}
+                                {inTransitOrders.length > 10 && (
+                                    <p className="text-gray-500 text-center text-sm">+{inTransitOrders.length - 10} daha</p>
+                                )}
                             </div>
                         </div>
 

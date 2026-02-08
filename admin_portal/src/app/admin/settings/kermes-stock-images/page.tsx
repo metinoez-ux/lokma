@@ -7,6 +7,7 @@ import { db, storage } from '@/lib/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface StockImage {
     id: string;
@@ -115,23 +116,29 @@ export default function KermesStockImagesPage() {
         }
     };
 
-    const handleDelete = async (image: StockImage) => {
-        if (!confirm(`"${image.title}" görselini silmek istediğinize emin misiniz?`)) return;
+    const [confirmDeleteImage, setConfirmDeleteImage] = useState<StockImage | null>(null);
 
+    const handleDelete = (image: StockImage) => {
+        setConfirmDeleteImage(image);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!confirmDeleteImage) return;
         try {
             // Delete from Storage
-            if ((image as any).storagePath) {
-                const storageRef = ref(storage, (image as any).storagePath);
+            if ((confirmDeleteImage as any).storagePath) {
+                const storageRef = ref(storage, (confirmDeleteImage as any).storagePath);
                 await deleteObject(storageRef).catch(() => { });
             }
 
             // Delete from Firestore
-            await deleteDoc(doc(db, 'kermes_stock_images', image.id));
+            await deleteDoc(doc(db, 'kermes_stock_images', confirmDeleteImage.id));
             loadImages();
         } catch (error) {
             console.error('Error deleting image:', error);
             alert('Görsel silinirken hata oluştu!');
         }
+        setConfirmDeleteImage(null);
     };
 
     const filteredImages = selectedCategory === 'all'
@@ -425,6 +432,19 @@ export default function KermesStockImagesPage() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmDeleteImage}
+                onClose={() => setConfirmDeleteImage(null)}
+                onConfirm={handleDeleteConfirm}
+                title="Görsel Sil"
+                message="Bu görseli silmek istediğinize emin misiniz?"
+                itemName={confirmDeleteImage?.title}
+                variant="danger"
+                confirmText="Evet, Sil"
+                loadingText="Siliniyor..."
+            />
         </div>
     );
 }

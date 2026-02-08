@@ -96,6 +96,8 @@ export async function POST(request: NextRequest) {
             // 🔑 UNIVERSAL BUSINESS FIELDS (accept both new and legacy names)
             businessId: bodyBusinessId, businessName: bodyBusinessName, businessType: bodyBusinessType,
             butcherId: legacyButcherId, butcherName: legacyButcherName, // Legacy support
+            // 🚗 Driver fields
+            isDriver: bodyIsDriver, driverType: bodyDriverType,
             // Assigner details for welcome email
             assignerName, assignerEmail, assignerPhone, assignerRole
         } = body;
@@ -260,6 +262,49 @@ export async function POST(request: NextRequest) {
             }
 
             await db.collection('admins').doc(userRecord.uid).set(adminData);
+        }
+
+        // 🚗 If driver role is assigned (without admin role), create admin doc with driver fields
+        if (bodyIsDriver && !(role === 'admin' && adminType)) {
+            const driverAdminData: Record<string, unknown> = {
+                email,
+                displayName,
+                firstName,
+                lastName,
+                phoneNumber: phone || null,
+                role: 'admin',
+                isDriver: true,
+                driverType: bodyDriverType || 'business',
+                isActive: true,
+                createdAt: new Date().toISOString(),
+                createdBy: createdBy || 'system',
+                firebaseUid: userRecord.uid,
+            };
+
+            if (businessId) {
+                driverAdminData.businessId = businessId;
+                driverAdminData.businessName = businessName || null;
+                driverAdminData.businessType = businessType || null;
+            }
+
+            if (assignerName) {
+                driverAdminData.assignedBy = {
+                    name: assignerName,
+                    email: assignerEmail || null,
+                    phone: assignerPhone || null,
+                    role: assignerRole || null,
+                };
+            }
+
+            await db.collection('admins').doc(userRecord.uid).set(driverAdminData);
+        }
+
+        // If admin role WITH driver flag, add driver fields to existing admin record
+        if (bodyIsDriver && role === 'admin' && adminType) {
+            await db.collection('admins').doc(userRecord.uid).update({
+                isDriver: true,
+                driverType: bodyDriverType || 'business',
+            });
         }
 
         // ═══════════════════════════════════════════════════════════════════════

@@ -59,7 +59,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
     _activeOrdersStream = FirebaseFirestore.instance
         .collection('meat_orders')
         .where('userId', isEqualTo: user.uid)
-        .where('status', whereIn: ['pending', 'preparing', 'ready', 'onTheWay'])
+        .where('status', isEqualTo: 'onTheWay')
         .snapshots()
         .map((snapshot) {
           final orders = snapshot.docs
@@ -162,32 +162,10 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
   }
 
   Widget _buildFloatingDeliveryButton(LokmaOrder order) {
-    // Determine status info
-    String statusText;
-    Color statusColor;
-    IconData statusIcon;
-    
-    switch (order.status) {
-      case OrderStatus.onTheWay:
-        statusText = 'Kurye Yolda';
-        statusColor = Colors.green;
-        statusIcon = Icons.motorcycle;
-        break;
-      case OrderStatus.ready:
-        statusText = 'Hazır';
-        statusColor = Colors.orange;
-        statusIcon = Icons.check_circle;
-        break;
-      case OrderStatus.preparing:
-        statusText = 'Hazırlanıyor';
-        statusColor = Colors.blue;
-        statusIcon = Icons.restaurant;
-        break;
-      default:
-        statusText = 'Beklemede';
-        statusColor = Colors.grey;
-        statusIcon = Icons.hourglass_empty;
-    }
+    // Only onTheWay orders show the floating button
+    final statusText = 'Kurye Yolda';
+    final statusColor = Colors.green;
+    final statusIcon = Icons.motorcycle;
 
     final isOnTheWay = order.status == OrderStatus.onTheWay;
 

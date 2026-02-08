@@ -1,28 +1,47 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { subscriptionService } from '@/services/subscriptionService';
 import { ButcherSubscriptionPlan } from '@/types';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { useSectors } from '@/hooks/useSectors';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function PlansPage() {
     const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
+    const { sectors, loading: sectorsLoading } = useSectors();
 
-    const [selectedBusinessType, setSelectedBusinessType] = useState<ButcherSubscriptionPlan['businessType']>('butcher');
+    // Derive unique categories from sectors (e.g. yemek, market, kermes)
+    const sectorCategories = useMemo(() => {
+        const categoryMap = new Map<string, string>();
+        const categoryLabels: Record<string, string> = {
+            yemek: 'Yemek',
+            market: 'Marketler',
+            kermes: 'Kermes',
+            hizmet: 'Hizmet',
+        };
+        sectors
+            .filter(s => s.isActive)
+            .forEach(s => {
+                if (!categoryMap.has(s.category)) {
+                    categoryMap.set(s.category, categoryLabels[s.category] || s.category);
+                }
+            });
+        return Array.from(categoryMap.entries()).map(([id, label]) => ({ id, label }));
+    }, [sectors]);
+
+    const [selectedBusinessType, setSelectedBusinessType] = useState<string>('');
     const [plans, setPlans] = useState<ButcherSubscriptionPlan[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPlan, setEditingPlan] = useState<ButcherSubscriptionPlan | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
-    const businessTypes: { id: ButcherSubscriptionPlan['businessType'], label: string }[] = [
-        { id: 'butcher', label: 'Kasaplar' },
-        { id: 'market', label: 'Marketler' },
-        { id: 'restaurant', label: 'Restoranlar' },
-        { id: 'other', label: 'Diğer' },
-    ];
+
 
     // Form State
     const [formData, setFormData] = useState<Partial<ButcherSubscriptionPlan>>({
@@ -32,7 +51,7 @@ export default function PlansPage() {
         color: 'bg-gray-600',
         order: 99,
         isActive: true,
-        businessType: 'butcher',
+        businessType: selectedBusinessType || 'yemek',
         features: {} as any,
         miraAppConnected: false,
         commissionClickCollect: 5,
@@ -57,12 +76,19 @@ export default function PlansPage() {
         { label: 'Indigo', value: 'bg-indigo-600' },
     ];
 
+    // Set default selected business type from sectors
+    useEffect(() => {
+        if (sectorCategories.length > 0 && !selectedBusinessType) {
+            setSelectedBusinessType(sectorCategories[0].id);
+        }
+    }, [sectorCategories, selectedBusinessType]);
+
     useEffect(() => {
         if (!adminLoading && (!admin || admin.role !== 'super_admin')) {
             router.push('/admin');
             return;
         }
-        if (admin?.role === 'super_admin') {
+        if (admin?.role === 'super_admin' && selectedBusinessType) {
             loadPlans();
         }
     }, [admin, adminLoading, router, selectedBusinessType]);
@@ -70,8 +96,6 @@ export default function PlansPage() {
     const loadPlans = async () => {
         setLoading(true);
         try {
-            // Auto-seed if empty
-            await subscriptionService.seedDefaults();
             const data = await subscriptionService.getAllPlans(selectedBusinessType);
             setPlans(data);
         } catch (error) {
@@ -130,7 +154,7 @@ export default function PlansPage() {
                 perOrderFeeType: (formData as any).perOrderFeeType ?? 'none',
                 perOrderFeeAmount: (formData as any).perOrderFeeAmount ?? 0,
                 // Masa rezervasyonu
-                tableReservationLimit: (formData as any).tableReservationLimit,
+                tableReservationLimit: (formData as any).tableReservationLimit ?? null,
                 tableReservationOverageFee: (formData as any).tableReservationOverageFee ?? 0,
                 stripePriceId: {
                     monthly: formData.stripePriceId?.monthly || '',
@@ -138,9 +162,10 @@ export default function PlansPage() {
                 }
             };
 
+            // Remove undefined fields if any sneak through (Firestore rejects undefined)
+            Object.keys(commonData).forEach(key => commonData[key] === undefined && delete commonData[key]);
+
             if (editingPlan) {
-                // Remove undefined fields if any sneak through
-                Object.keys(commonData).forEach(key => commonData[key] === undefined && delete commonData[key]);
                 await subscriptionService.updatePlan(editingPlan.id, commonData);
                 toast.success('Plan güncellendi.');
             } else {
@@ -176,22 +201,26 @@ export default function PlansPage() {
 
 
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Bu planı silmek istediğinize emin misiniz?')) return;
+    const handleDeleteConfirm = async () => {
+        if (!confirmDelete) return;
+        setDeleting(true);
         try {
-            await subscriptionService.deletePlan(id);
+            await subscriptionService.deletePlan(confirmDelete.id);
             loadPlans();
             toast.success('Plan silindi.');
         } catch (error) {
             toast.error('Silme işlemi başarısız.');
+        } finally {
+            setDeleting(false);
+            setConfirmDelete(null);
         }
     };
 
-    if (loading || adminLoading) return <div className="p-8 text-white">Yükleniyor...</div>;
+    if (loading || adminLoading || sectorsLoading) return <div className="p-8 text-white">Yükleniyor...</div>;
 
     return (
         <div className="flex flex-col min-h-screen bg-gray-900 text-white">
-            <div className="w-full px-6 py-8">
+            <div className="w-full max-w-4xl mx-auto px-6 py-8">
                 {/* Back Button */}
                 <button
                     onClick={() => router.push('/admin/dashboard')}
@@ -203,12 +232,12 @@ export default function PlansPage() {
 
                 <div className="flex justify-between items-center mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Abonelik Paketleri (v1.2)</h1>
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Abonelik Paketleri</h1>
                         <p className="text-gray-400 mt-1">İşletme türüne göre abonelik planlarını yönetin.</p>
                     </div>
                     <button
                         onClick={handleCreate}
-                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-medium shadow-lg hover:shadow-green-500/20 transition-all flex items-center gap-2"
+                        className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl font-medium shadow-lg hover:shadow-green-500/20 transition-all flex items-center gap-2 text-sm"
                     >
                         <span>+</span> Yeni Paket
                     </button>
@@ -217,7 +246,7 @@ export default function PlansPage() {
                 {/* Business Type Selector */}
                 <div className="flex space-x-1 bg-gray-800 p-1 rounded-lg mb-6 w-fit">
                     {
-                        businessTypes.map(type => (
+                        sectorCategories.map(type => (
                             <button
                                 key={type.id}
                                 onClick={() => setSelectedBusinessType(type.id)}
@@ -232,99 +261,111 @@ export default function PlansPage() {
                     }
                 </div>
 
-                {/* Data Grid (Cards) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                {/* Plan Rows */}
+                <div className="space-y-3">
                     {
                         plans.map(plan => (
-                            <div key={plan.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-gray-500 transition-all group flex flex-col shadow-lg">
-                                {/* Card Header */}
-                                <div className={`h-2 w-full ${plan.color}`}></div>
-                                <div className="p-5 flex-1 flex flex-col">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div>
-                                            <h3 className="font-bold text-lg text-white">{plan.name}</h3>
-                                            <p className="text-xs text-gray-400 font-mono bg-gray-900/50 px-1.5 py-0.5 rounded inline-block mt-1">ID: {plan.code}</p>
-                                        </div>
-                                        <div className={`w-3 h-3 rounded-full ${plan.isActive ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`}></div>
-                                    </div>
+                            <div key={plan.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-gray-500 transition-all group shadow-lg">
+                                <div className="flex items-stretch">
+                                    {/* Color Bar (vertical left) */}
+                                    <div className={`w-1.5 shrink-0 ${plan.color}`}></div>
 
-                                    <div className="my-3">
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-2xl font-bold text-white">€{plan.monthlyFee.toFixed(2)}</span>
-                                            <span className="text-sm text-gray-400">/ay</span>
+                                    {/* Main Content */}
+                                    <div className="flex-1 px-5 py-4 flex items-center gap-6 min-w-0">
+                                        {/* Name & Code */}
+                                        <div className="w-36 shrink-0">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-bold text-white text-base truncate">{plan.name}</h3>
+                                                <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${plan.isActive ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`}></div>
+                                            </div>
+                                            <p className="text-xs text-gray-500 font-mono mt-0.5">{plan.code}</p>
                                         </div>
-                                        {plan.yearlyFee && (
-                                            <p className="text-xs text-gray-500 mt-0.5">Yıllık: €{plan.yearlyFee.toFixed(2)}</p>
-                                        )}
-                                    </div>
 
-                                    {/* Features Summary */}
-                                    <div className="mt-2 space-y-1.5 flex-1">
-                                        <div className="flex items-center gap-2 text-xs text-gray-300">
-                                            <span className={plan.features?.clickAndCollect ? "text-green-400" : "text-gray-600"}>
-                                                {plan.features?.clickAndCollect ? '✓' : '•'} Gel-Al
+                                        {/* Price */}
+                                        <div className="w-28 shrink-0 text-center">
+                                            <span className="text-xl font-bold text-white">€{plan.monthlyFee.toFixed(2)}</span>
+                                            <span className="text-xs text-gray-500 ml-1">/ay</span>
+                                        </div>
+
+                                        {/* Features Chips */}
+                                        <div className="flex-1 flex flex-wrap gap-1.5 min-w-0">
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${plan.features?.clickAndCollect ? 'bg-green-900/40 text-green-400 border border-green-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
+                                                {plan.features?.clickAndCollect ? '✓' : '·'} Gel-Al
+                                            </span>
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${plan.features?.delivery ? 'bg-blue-900/40 text-blue-400 border border-blue-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
+                                                {plan.features?.delivery ? '✓' : '·'} Teslimat
+                                            </span>
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${plan.features?.campaigns ? 'bg-purple-900/40 text-purple-400 border border-purple-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
+                                                {plan.features?.campaigns ? '✓' : '·'} Kampanya
+                                            </span>
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${plan.features?.onlinePayment ? 'bg-amber-900/40 text-amber-400 border border-amber-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
+                                                {plan.features?.onlinePayment ? '✓' : '·'} Ödeme
                                             </span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs text-gray-300">
-                                            <span className={plan.features?.delivery ? "text-green-400" : "text-gray-600"}>
-                                                {plan.features?.delivery ? '✓' : '•'} Teslimat
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs text-gray-300">
-                                            <span className={plan.features?.campaigns ? "text-green-400" : "text-gray-600"}>
-                                                {plan.features?.campaigns ? '✓' : '•'} Kampanyalar
-                                            </span>
-                                        </div>
-                                        <div className="border-t border-gray-700/50 my-2 pt-2">
-                                            <p className="text-xs text-gray-500 flex justify-between">
-                                                <span>Ürün Limiti:</span>
-                                                <span className="text-gray-300">{plan.productLimit === null ? '∞' : plan.productLimit}</span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                {/* Card Footer / Actions */}
-                                <div className="bg-gray-900/50 p-3 border-t border-gray-700 flex justify-between items-center">
-                                    <div className="text-xs text-gray-500">
-                                        Sıra: {plan.order}
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleEdit(plan)}
-                                            className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded transition-colors"
-                                            title="Düzenle"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(plan.id)}
-                                            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded transition-colors"
-                                            title="Sil"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
+                                        {/* Limits */}
+                                        <div className="w-24 shrink-0 text-center">
+                                            <p className="text-xs text-gray-500">Sipariş</p>
+                                            <p className="text-sm font-bold text-gray-300">{plan.orderLimit === null ? '∞' : plan.orderLimit}/ay</p>
+                                        </div>
+
+                                        {/* Commission */}
+                                        <div className="w-20 shrink-0 text-center">
+                                            <p className="text-xs text-gray-500">Prov.</p>
+                                            <p className="text-sm font-bold text-amber-400">%{plan.commissionClickCollect || 5}</p>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex gap-1.5 shrink-0">
+                                            <button
+                                                onClick={() => handleEdit(plan)}
+                                                className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-colors"
+                                                title="Düzenle"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={() => setConfirmDelete({ id: plan.id, name: plan.name })}
+                                                className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                title="Sil"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         ))
                     }
 
-                    {/* 'New Plan' Ghost Card */}
+                    {/* 'New Plan' Ghost Row */}
                     <button
                         onClick={handleCreate}
-                        className="border-2 border-dashed border-gray-700 hover:border-gray-500 rounded-xl p-6 flex flex-col items-center justify-center text-gray-500 hover:text-gray-300 transition-all min-h-[250px] group"
+                        className="w-full border-2 border-dashed border-gray-700 hover:border-gray-500 rounded-xl px-5 py-4 flex items-center justify-center gap-3 text-gray-500 hover:text-gray-300 transition-all group"
                     >
-                        <div className="w-12 h-12 rounded-full bg-gray-800 group-hover:bg-gray-700 flex items-center justify-center mb-3 transition-colors">
-                            <span className="text-2xl font-light">+</span>
+                        <div className="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-gray-700 flex items-center justify-center transition-colors">
+                            <span className="text-lg font-light">+</span>
                         </div>
-                        <span className="font-medium">Yeni Paket Ekle</span>
+                        <span className="font-medium text-sm">Yeni Paket Ekle</span>
                     </button>
-                </div >
+                </div>
+
+                {/* Delete Confirmation Modal */}
+                <ConfirmModal
+                    isOpen={!!confirmDelete}
+                    onClose={() => setConfirmDelete(null)}
+                    onConfirm={handleDeleteConfirm}
+                    title="Planı Sil"
+                    message="Bu planı kalıcı olarak silmek istediğinizden emin misiniz?"
+                    itemName={confirmDelete?.name}
+                    variant="danger"
+                    confirmText="Evet, Sil"
+                    loadingText="Siliniyor..."
+                />
 
                 {/* Modal */}
                 {
@@ -338,7 +379,7 @@ export default function PlansPage() {
                                         <h2 className="text-2xl font-bold text-white">{editingPlan ? 'Paketi Düzenle' : 'Yeni Paket Oluştur'}</h2>
                                         <p className="text-sm text-gray-400 mt-1">
                                             <span className="bg-blue-900/50 text-blue-200 px-2 py-0.5 rounded text-xs border border-blue-800 uppercase tracking-wide mr-2">
-                                                {(businessTypes.find(t => t.id === formData.businessType)?.label || formData.businessType || selectedBusinessType)}
+                                                {(sectorCategories.find(t => t.id === formData.businessType)?.label || formData.businessType || selectedBusinessType)}
                                             </span>
                                             için abonelik detaylarını yapılandırın.
                                         </p>

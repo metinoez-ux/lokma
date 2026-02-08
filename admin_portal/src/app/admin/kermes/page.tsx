@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { KermesEvent } from '@/types';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 type KermesWithOrg = KermesEvent & {
     organizationName?: string;
@@ -279,12 +280,18 @@ export default function KermesListPage() {
             return order[getKermesTimeStatus(a)] - order[getKermesTimeStatus(b)];
         });
 
-    const handleArchive = async (eventId: string, e: React.MouseEvent) => {
+    const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
+
+    const handleArchive = (eventId: string, e: React.MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
-        if (!confirm('Bu kermesi arşivlemek istediğinize emin misiniz?')) return;
+        setConfirmArchiveId(eventId);
+    };
+
+    const handleArchiveConfirm = async () => {
+        if (!confirmArchiveId) return;
         try {
-            await updateDoc(doc(db, 'kermes_events', eventId), {
+            await updateDoc(doc(db, 'kermes_events', confirmArchiveId), {
                 isArchived: true,
                 archivedAt: new Date(),
             });
@@ -292,6 +299,7 @@ export default function KermesListPage() {
         } catch (error) {
             console.error('Error archiving:', error);
         }
+        setConfirmArchiveId(null);
     };
 
     if (adminLoading || loading) {
@@ -536,6 +544,19 @@ export default function KermesListPage() {
                     </div>
                 )}
             </div>
+
+            {/* Archive Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmArchiveId}
+                onClose={() => setConfirmArchiveId(null)}
+                onConfirm={handleArchiveConfirm}
+                title="Kermes Arşivle"
+                message="Bu kermesi arşivlemek istediğinize emin misiniz?"
+                itemName={events.find(e => e.id === confirmArchiveId)?.title}
+                variant="warning"
+                confirmText="Evet, Arşivle"
+                loadingText="Arşivleniyor..."
+            />
         </div>
     );
 }

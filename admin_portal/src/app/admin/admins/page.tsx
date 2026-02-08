@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, addDoc, updateDoc, deleteDoc, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface Admin {
     id: string;
@@ -45,6 +46,7 @@ export default function AdminManagementPage() {
     // Modal state
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
+    const [confirmDeleteAdmin, setConfirmDeleteAdmin] = useState<Admin | null>(null);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -178,10 +180,11 @@ export default function AdminManagementPage() {
     };
 
     // Delete admin
-    const deleteAdmin = async (adminId: string) => {
-        if (!confirm('Bu admin\'i silmek istediğinize emin misiniz?')) return;
+    const handleDeleteAdminConfirm = async () => {
+        if (!confirmDeleteAdmin) return;
         try {
-            await deleteDoc(doc(db, 'platform_admins', adminId));
+            await deleteDoc(doc(db, 'platform_admins', confirmDeleteAdmin.id));
+            setConfirmDeleteAdmin(null);
         } catch (error) {
             console.error('Error deleting admin:', error);
         }
@@ -269,8 +272,8 @@ export default function AdminManagementPage() {
                             key={role}
                             onClick={() => setRoleFilter(role)}
                             className={`px-3 py-1 rounded-full text-sm ${roleFilter === role
-                                    ? 'bg-purple-600 text-white'
-                                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                 }`}
                         >
                             {role === 'all' ? 'Tümü' : ROLE_LABELS[role]}
@@ -323,8 +326,8 @@ export default function AdminManagementPage() {
                                         <button
                                             onClick={() => toggleAdminStatus(admin)}
                                             className={`px-2 py-1 rounded-full text-xs font-medium ${admin.isActive
-                                                    ? 'bg-green-900/50 text-green-400'
-                                                    : 'bg-gray-700 text-gray-400'
+                                                ? 'bg-green-900/50 text-green-400'
+                                                : 'bg-gray-700 text-gray-400'
                                                 }`}
                                         >
                                             {admin.isActive ? '✓ Aktif' : 'Pasif'}
@@ -339,7 +342,7 @@ export default function AdminManagementPage() {
                                                 ✏️
                                             </button>
                                             <button
-                                                onClick={() => deleteAdmin(admin.id)}
+                                                onClick={() => setConfirmDeleteAdmin(admin)}
                                                 className="text-red-400 hover:text-red-300"
                                             >
                                                 🗑️
@@ -464,6 +467,19 @@ export default function AdminManagementPage() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmDeleteAdmin}
+                onClose={() => setConfirmDeleteAdmin(null)}
+                onConfirm={handleDeleteAdminConfirm}
+                title="Admin'i Sil"
+                message="Bu admin'i kalıcı olarak silmek istediğinizden emin misiniz?"
+                itemName={confirmDeleteAdmin?.name}
+                variant="danger"
+                confirmText="Evet, Sil"
+                loadingText="Siliniyor..."
+            />
         </div>
     );
 }

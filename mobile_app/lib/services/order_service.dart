@@ -227,7 +227,12 @@ class OrderService {
   }) async {
     final orderItems = cartItems.map((item) => OrderItem.fromCartItem(item).toMap()).toList();
 
-    final docRef = await _db.collection(_collection).add({
+    // UOIP: Pre-generate doc ID so orderNumber is included in initial write
+    // This eliminates the race condition where Cloud Functions fire before orderNumber is set
+    final docRef = _db.collection(_collection).doc();
+    final orderNumber = docRef.id.substring(0, 6).toUpperCase();
+
+    await docRef.set({
       'butcherId': butcherId,
       'butcherName': butcherName,
       'userId': userId,
@@ -240,13 +245,10 @@ class OrderService {
       'deliveryAddress': deliveryAddress,
       'scheduledTime': scheduledTime != null ? Timestamp.fromDate(scheduledTime) : null,
       'notes': notes,
+      'orderNumber': orderNumber,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
-
-    // UOIP: Persist orderNumber using First-6-Digit standard for cross-platform consistency
-    final orderNumber = docRef.id.substring(0, 6).toUpperCase();
-    await docRef.update({'orderNumber': orderNumber});
 
     return docRef.id;
   }

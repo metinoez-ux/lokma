@@ -207,22 +207,23 @@ export interface RoleConfig {
     businessType?: string;
 }
 
-/** Belirli bir işletme türü için roller oluştur (Admin + Personel) */
+/** Belirli bir işletme türü için roller oluştur (Geriye uyumluluk) */
 export const generateRolesForBusinessType = (businessType: string): RoleConfig[] => {
     const config = getBusinessType(businessType);
     if (!config) return [];
 
+    // Artık tüm işletme türleri için genel roller kullanılır
     return [
         {
-            value: businessType,
-            label: `${config.label} Admin`,
+            value: 'isletme_admin',
+            label: 'İşletme Admin',
             icon: `👑`,
             isAdmin: true,
             businessType,
         },
         {
-            value: `${businessType}_staff`,
-            label: `${config.label} Personeli`,
+            value: 'isletme_staff',
+            label: 'İşletme Personel',
             icon: `👤`,
             isAdmin: false,
             businessType,
@@ -230,19 +231,19 @@ export const generateRolesForBusinessType = (businessType: string): RoleConfig[]
     ];
 };
 
-/** Tüm rolleri al (Super Admin dahil + Kullanıcı seçeneği) */
+/** Tüm rolleri al - KONSOLİDE: Sadece 5 genel rol */
 export const getAllRoles = (): RoleConfig[] => {
-    const roles: RoleConfig[] = [
+    return [
         // Normal kullanıcı - admin rolünü kaldırmak için
         { value: 'user', label: 'Kullanıcı (Admin Değil)', icon: '👤', isAdmin: false },
-        { value: 'super', label: 'Super Admin', icon: '🌟', isAdmin: true },
+        { value: 'super', label: 'Süper Admin', icon: '🌟', isAdmin: true },
+        // 🆕 Genel işletme rolleri
+        { value: 'isletme_admin', label: 'İşletme Admin', icon: '🏪', isAdmin: true },
+        { value: 'isletme_staff', label: 'İşletme Personel', icon: '🏪', isAdmin: false },
+        // Organizasyon rolleri
+        { value: 'kermes', label: 'Kermes Admin', icon: '🎪', isAdmin: true },
+        { value: 'kermes_staff', label: 'Kermes Personel', icon: '🎪', isAdmin: false },
     ];
-
-    Object.keys(BUSINESS_TYPES).forEach(type => {
-        roles.push(...generateRolesForBusinessType(type));
-    });
-
-    return roles;
 };
 
 /** Belirli işletme türleri için rolleri al (dropdown filtreleme için) */
@@ -261,9 +262,19 @@ export const getRoleConfig = (roleValue: string): RoleConfig | undefined => {
     return getAllRoles().find(r => r.value === roleValue);
 };
 
-/** Rol değerinden label getir */
+/** Rol değerinden label getir - KONSOLİDE: eski rolleri de destekler */
 export const getRoleLabel = (roleValue: string): string => {
-    return getRoleConfig(roleValue)?.label || roleValue;
+    // Önce genel rollerde ara
+    const config = getRoleConfig(roleValue);
+    if (config) return config.label;
+
+    // Eski işletme rolleri için geriye uyumluluk
+    // kasap, restoran, market, pastane, vb. = İşletme Admin
+    // kasap_staff, restoran_staff, vb. = İşletme Personel
+    if (roleValue.endsWith('_staff')) return 'İşletme Personel';
+    if (Object.keys(BUSINESS_TYPES).includes(roleValue)) return 'İşletme Admin';
+
+    return roleValue;
 };
 
 /** Rol değerinden ikon getir */
@@ -273,9 +284,14 @@ export const getRoleIcon = (roleValue: string): string => {
 
 /** Rol admin mi kontrol et */
 export const isAdminRole = (roleValue: string): boolean => {
-    // Super admin veya sektör admin'i
+    // Super admin
     if (roleValue === 'super') return true;
+    // Yeni genel admin
+    if (roleValue === 'isletme_admin') return true;
+    // Kermes admin
+    if (roleValue === 'kermes') return true;
+    // Staff roller admin değil
     if (roleValue.endsWith('_staff')) return false;
-    // Sektör admin'i (kasap, market, restoran vb.)
+    // Eski sektör admin'leri (kasap, market, restoran vb.)
     return Object.keys(BUSINESS_TYPES).includes(roleValue);
 };

@@ -6,6 +6,7 @@ import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, o
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface Business {
     id: string;
@@ -37,6 +38,7 @@ function CategoriesPageContent() {
     const [showModal, setShowModal] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [saving, setSaving] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState<Category | null>(null);
 
     // Business selector state for Super Admin
     const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -145,12 +147,13 @@ function CategoriesPageContent() {
         setSaving(false);
     };
 
-    const handleDelete = async (categoryId: string) => {
-        if (!butcherId || !confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) return;
+    const handleDeleteConfirm = async () => {
+        if (!butcherId || !confirmDelete) return;
 
         try {
-            await deleteDoc(doc(db, `businesses/${butcherId}/categories`, categoryId));
-            setCategories(categories.filter(c => c.id !== categoryId));
+            await deleteDoc(doc(db, `businesses/${butcherId}/categories`, confirmDelete.id));
+            setCategories(categories.filter(c => c.id !== confirmDelete.id));
+            setConfirmDelete(null);
         } catch (error) {
             console.error('Error deleting category:', error);
         }
@@ -316,7 +319,7 @@ function CategoriesPageContent() {
                                             ✏️
                                         </button>
                                         <button
-                                            onClick={() => handleDelete(category.id)}
+                                            onClick={() => setConfirmDelete(category)}
                                             className="p-2 bg-red-600 hover:bg-red-500 rounded-lg transition text-white"
                                             title="Sil"
                                         >
@@ -401,6 +404,19 @@ function CategoriesPageContent() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmDelete}
+                onClose={() => setConfirmDelete(null)}
+                onConfirm={handleDeleteConfirm}
+                title="Kategoriyi Sil"
+                message="Bu kategoriyi kalıcı olarak silmek istediğinizden emin misiniz?"
+                itemName={confirmDelete?.name}
+                variant="danger"
+                confirmText="Evet, Sil"
+                loadingText="Siliniyor..."
+            />
         </div>
     );
 }

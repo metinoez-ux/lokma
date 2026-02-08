@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface MenuCategory {
     id: string;
@@ -152,13 +153,19 @@ export default function KermesCategoriesPage() {
         }
     };
 
-    const handleDeleteCategory = async (id: string, name: string) => {
-        if (!confirm(`"${name}" kategorisini silmek istediğinize emin misiniz?`)) return;
+    const [confirmDeleteCategory, setConfirmDeleteCategory] = useState<{ id: string; name: string } | null>(null);
 
-        const success = await saveCategories(categories.filter(c => c.id !== id));
+    const handleDeleteCategory = (id: string, name: string) => {
+        setConfirmDeleteCategory({ id, name });
+    };
+
+    const handleDeleteCategoryConfirm = async () => {
+        if (!confirmDeleteCategory) return;
+        const success = await saveCategories(categories.filter(c => c.id !== confirmDeleteCategory.id));
         if (success) {
             showToast('Kategori silindi', 'success');
         }
+        setConfirmDeleteCategory(null);
     };
 
     const handleToggleActive = async (category: MenuCategory) => {
@@ -435,6 +442,19 @@ export default function KermesCategoriesPage() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmDeleteCategory}
+                onClose={() => setConfirmDeleteCategory(null)}
+                onConfirm={handleDeleteCategoryConfirm}
+                title="Kategori Sil"
+                message="Bu kategoriyi silmek istediğinize emin misiniz?"
+                itemName={confirmDeleteCategory?.name}
+                variant="danger"
+                confirmText="Evet, Sil"
+                loadingText="Siliniyor..."
+            />
         </div>
     );
 }

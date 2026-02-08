@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { collection, query, onSnapshot, doc, updateDoc, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface AdminStaff {
     id: string;
@@ -43,6 +44,7 @@ export default function DriverManagementPage() {
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
     const [filterMode, setFilterMode] = useState<'drivers' | 'all'>('drivers');
+    const [confirmRemoveDriver, setConfirmRemoveDriver] = useState<AdminStaff | null>(null);
 
     // Load all admins (to show current drivers and allow assigning new ones)
     useEffect(() => {
@@ -163,16 +165,17 @@ export default function DriverManagementPage() {
     };
 
     // Remove driver role
-    const removeDriverRole = async (staff: AdminStaff) => {
-        if (!confirm(`${staff.name} için sürücü yetkisini kaldırmak istiyor musunuz?`)) return;
+    const handleRemoveDriverConfirm = async () => {
+        if (!confirmRemoveDriver) return;
 
         try {
-            await updateDoc(doc(db, 'admins', staff.id), {
+            await updateDoc(doc(db, 'admins', confirmRemoveDriver.id), {
                 isDriver: false,
                 assignedBusinesses: [],
                 assignedBusinessNames: [],
                 updatedAt: new Date(),
             });
+            setConfirmRemoveDriver(null);
         } catch (error) {
             console.error('Error removing driver role:', error);
         }
@@ -325,7 +328,7 @@ export default function DriverManagementPage() {
                                                 ✏️ İşletmeleri Düzenle
                                             </button>
                                             <button
-                                                onClick={() => removeDriverRole(person)}
+                                                onClick={() => setConfirmRemoveDriver(person)}
                                                 className="flex-1 text-sm text-red-400 hover:text-red-300 py-1"
                                             >
                                                 🗑️ Sürücü Yetkisini Kaldır
@@ -538,6 +541,19 @@ export default function DriverManagementPage() {
                     </div>
                 </div>
             )}
+
+            {/* Remove Driver Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmRemoveDriver}
+                onClose={() => setConfirmRemoveDriver(null)}
+                onConfirm={handleRemoveDriverConfirm}
+                title="Sürücü Yetkisini Kaldır"
+                message="Bu kişinin sürücü yetkisini kaldırmak istediğinizden emin misiniz?"
+                itemName={confirmRemoveDriver?.name}
+                variant="warning"
+                confirmText="Evet, Kaldır"
+                loadingText="Kaldırılıyor..."
+            />
         </div>
     );
 }

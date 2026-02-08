@@ -31,6 +31,7 @@ import { auth, db, storage } from "@/lib/firebase";
 import { Admin, ButcherPartner } from "@/types";
 import { useAdmin } from "@/components/providers/AdminProvider";
 import { useSectors } from "@/hooks/useSectors";
+import { subscriptionService } from "@/services/subscriptionService";
 
 import { Star, History } from "lucide-react";
 
@@ -52,15 +53,8 @@ interface MeatOrder {
   createdAt?: { toDate: () => Date };
 }
 
-const planLabels: Record<string, { label: string; color: string }> = {
-  ultra: {
-    label: "LOKMA Ultra",
-    color: "bg-gradient-to-r from-purple-600 to-pink-600",
-  },
-  premium: { label: "LOKMA Premium", color: "bg-purple-600" },
-  standard: { label: "LOKMA Standard", color: "bg-blue-600" },
-  basic: { label: "LOKMA Basic", color: "bg-gray-500" },
-  free: { label: "LOKMA Free", color: "bg-gray-700" },
+// Fallback plan labels for badge display (dynamic plans override these)
+const defaultPlanLabels: Record<string, { label: string; color: string }> = {
   none: { label: "Yok", color: "bg-gray-800" },
 };
 
@@ -234,6 +228,8 @@ export default function BusinessDetailPage() {
     }
   }, [searchParams]);
   const [products, setProducts] = useState<any[]>([]);
+  // 🆕 Dynamically loaded subscription plans from Firestore
+  const [availablePlans, setAvailablePlans] = useState<{ code: string; name: string; color: string }[]>([]);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [productMode, setProductMode] = useState<'standard' | 'custom'>('standard');
   const [selectedMasterId, setSelectedMasterId] = useState("");
@@ -286,13 +282,7 @@ export default function BusinessDetailPage() {
     billingPostalCode: "",
     billingCity: "",
     billingCountry: "DE",
-    subscriptionPlan: "basic" as
-      | "basic"
-      | "standard"
-      | "premium"
-      | "free"
-      | "ultra"
-      | "none",
+    subscriptionPlan: "none" as string,
     monthlyFee: 0,
     accountBalance: 0,
     notes: "",
@@ -640,17 +630,26 @@ export default function BusinessDetailPage() {
   }, [business]);
 
   // Handle Delete Product
-  const handleDeleteProduct = async (productId: string) => {
+  const handleDeleteProduct = (productId: string) => {
     if (!businessId) return;
-    if (!confirm("Bu ürünü silmek istediğinize emin misiniz?")) return;
-    try {
-      await deleteDoc(doc(db, `businesses/${businessId}/products`, productId));
-      showToast("Ürün silindi", "success");
-      loadProducts();
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      showToast("Ürün silinirken hata oluştu", "error");
-    }
+    setConfirmModal({
+      show: true,
+      title: 'Ürün Sil',
+      message: 'Bu ürünü silmek istediğinize emin misiniz?',
+      confirmText: 'Evet, Sil',
+      confirmColor: 'bg-red-600 hover:bg-red-500',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, show: false }));
+        try {
+          await deleteDoc(doc(db, `businesses/${businessId}/products`, productId));
+          showToast("Ürün silindi", "success");
+          loadProducts();
+        } catch (error) {
+          console.error("Error deleting product:", error);
+          showToast("Ürün silinirken hata oluştu", "error");
+        }
+      },
+    });
   };
 
   // Toggle Product Active Status
@@ -735,6 +734,29 @@ export default function BusinessDetailPage() {
       loadMasterProducts();
     }
   }, [business, loadMasterProducts]);
+
+  // 🆕 Load subscription plans from Firestore when business is loaded
+  useEffect(() => {
+    const loadPlans = async () => {
+      try {
+        // Business stores type as specific value (e.g. 'restoran'), but plans use
+        // the sector category (e.g. 'yemek'). Map via BUSINESS_TYPES config.
+        const rawType = (business as any)?.types?.[0] || (business as any)?.type || '';
+        const sectorCategory = rawType ? (BUSINESS_TYPES[rawType as keyof typeof BUSINESS_TYPES]?.category || rawType) : '';
+        const plans = await subscriptionService.getAllPlans(sectorCategory || undefined);
+        setAvailablePlans(plans.map(p => ({
+          code: p.code || p.id,
+          name: p.name,
+          color: p.color || 'bg-gray-600',
+        })));
+      } catch (error) {
+        console.error('Error loading subscription plans:', error);
+      }
+    };
+    if (business) {
+      loadPlans();
+    }
+  }, [business]);
 
   // Handle Image Selection
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1197,11 +1219,10 @@ export default function BusinessDetailPage() {
       // Auto-generate temporary password
       const tempPassword = `LOKMA${Math.floor(1000 + Math.random() * 9000)}`;
 
-      // Determine adminType based on selected role
-      const businessTypePrefix = (business as any)?.types?.[0] || (business as any)?.type || 'kasap';
+      // 🆕 KONSOLİDE: Tüm işletme türleri için genel rol değerleri kullan
       const adminType = inviteRole === 'Admin'
-        ? businessTypePrefix
-        : `${businessTypePrefix}_staff`;
+        ? 'isletme_admin'
+        : 'isletme_staff';
 
       // Use the proper create-user API (Firebase Auth + users + admins + notifications)
       const response = await fetch('/api/admin/create-user', {
@@ -1278,7 +1299,12 @@ export default function BusinessDetailPage() {
     );
   }
 
-  const planInfo = planLabels[business?.subscriptionPlan || "none"];
+  // Build dynamic planLabels from loaded plans
+  const planLabels: Record<string, { label: string; color: string }> = { ...defaultPlanLabels };
+  availablePlans.forEach(p => {
+    planLabels[p.code] = { label: `LOKMA ${p.name}`, color: p.color || 'bg-gray-600' };
+  });
+  const planInfo = planLabels[business?.subscriptionPlan || "none"] || { label: business?.subscriptionPlan || 'Yok', color: 'bg-gray-600' };
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -1465,7 +1491,7 @@ export default function BusinessDetailPage() {
                               </span>
                             </div>
                             <span
-                              className={`text-xs px-2 py-0.5 rounded ${staff.adminType === "Kasap Admin" ? "bg-purple-600/50 text-purple-300" : "bg-blue-600/50 text-blue-300"}`}
+                              className={`text-xs px-2 py-0.5 rounded ${staff.adminType?.includes('admin') || (!staff.adminType?.includes('staff') && staff.adminType !== 'user') ? "bg-purple-600/50 text-purple-300" : "bg-blue-600/50 text-blue-300"}`}
                             >
                               {staff.adminType}
                             </span>
@@ -3117,24 +3143,16 @@ export default function BusinessDetailPage() {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          subscriptionPlan: e.target.value as
-                            | "basic"
-                            | "standard"
-                            | "premium"
-                            | "free"
-                            | "ultra"
-                            | "none",
+                          subscriptionPlan: e.target.value as string,
                         })
                       }
                       disabled={!isEditing}
                       className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
                     >
                       <option value="none">Yok</option>
-                      <option value="free">Free</option>
-                      <option value="basic">Basic</option>
-                      <option value="standard">Standard</option>
-                      <option value="premium">Premium</option>
-                      <option value="ultra">Ultra</option>
+                      {availablePlans.map(plan => (
+                        <option key={plan.code} value={plan.code}>{plan.name}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -3443,34 +3461,43 @@ export default function BusinessDetailPage() {
                               <div className="flex flex-wrap gap-2">
                                 {/* Arşivle / Aktifleştir toggle */}
                                 <button
-                                  onClick={async () => {
-                                    if (confirm(staff.isActive !== false
-                                      ? `${staff.displayName} adlı personeli arşivlemek istediğinize emin misiniz?`
-                                      : `${staff.displayName} adlı personeli tekrar aktifleştirmek istediğinize emin misiniz?`)) {
-                                      try {
-                                        const adminRef = doc(db, 'admins', staff.id);
-                                        const now = new Date();
-                                        if (staff.isActive !== false) {
-                                          await updateDoc(adminRef, {
-                                            isActive: false,
-                                            deactivatedAt: now,
-                                            deactivationReason: 'İşletme panelinden arşivlendi',
-                                          });
-                                          showToast(`${staff.displayName} arşivlendi`, 'success');
-                                        } else {
-                                          await updateDoc(adminRef, {
-                                            isActive: true,
-                                            deactivatedAt: null,
-                                            deactivationReason: null,
-                                          });
-                                          showToast(`${staff.displayName} tekrar aktifleştirildi`, 'success');
+                                  onClick={() => {
+                                    const isActive = staff.isActive !== false;
+                                    setConfirmModal({
+                                      show: true,
+                                      title: isActive ? 'Personel Arşivle' : 'Personel Aktifleştir',
+                                      message: isActive
+                                        ? `${staff.displayName} adlı personeli arşivlemek istediğinize emin misiniz?`
+                                        : `${staff.displayName} adlı personeli tekrar aktifleştirmek istediğinize emin misiniz?`,
+                                      confirmText: isActive ? 'Evet, Arşivle' : 'Evet, Aktifleştir',
+                                      confirmColor: isActive ? 'bg-amber-600 hover:bg-amber-500' : 'bg-green-600 hover:bg-green-500',
+                                      onConfirm: async () => {
+                                        setConfirmModal(prev => ({ ...prev, show: false }));
+                                        try {
+                                          const adminRef = doc(db, 'admins', staff.id);
+                                          const now = new Date();
+                                          if (isActive) {
+                                            await updateDoc(adminRef, {
+                                              isActive: false,
+                                              deactivatedAt: now,
+                                              deactivationReason: 'İşletme panelinden arşivlendi',
+                                            });
+                                            showToast(`${staff.displayName} arşivlendi`, 'success');
+                                          } else {
+                                            await updateDoc(adminRef, {
+                                              isActive: true,
+                                              deactivatedAt: null,
+                                              deactivationReason: null,
+                                            });
+                                            showToast(`${staff.displayName} tekrar aktifleştirildi`, 'success');
+                                          }
+                                          loadStaff();
+                                        } catch (error) {
+                                          console.error('Archive error:', error);
+                                          showToast('İşlem başarısız', 'error');
                                         }
-                                        loadStaff();
-                                      } catch (error) {
-                                        console.error('Archive error:', error);
-                                        showToast('İşlem başarısız', 'error');
-                                      }
-                                    }
+                                      },
+                                    });
                                   }}
                                   className={`text-xs px-2 py-1 rounded ${staff.isActive !== false
                                     ? 'bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white'
@@ -3480,25 +3507,33 @@ export default function BusinessDetailPage() {
                                 </button>
                                 {/* Yetkiyi Kaldır */}
                                 <button
-                                  onClick={async () => {
-                                    if (confirm(`${staff.displayName} adlı personelin yetkisini kaldırmak istediğinize emin misiniz?`)) {
-                                      try {
-                                        const adminRef = doc(db, 'admins', staff.id);
-                                        await updateDoc(adminRef, {
-                                          isActive: false,
-                                          adminType: null,
-                                          butcherId: null,
-                                          butcherName: null,
-                                          deactivatedAt: new Date(),
-                                          deactivationReason: 'Yetki kaldırıldı',
-                                        });
-                                        showToast(`${staff.displayName} yetkisi kaldırıldı`, 'success');
-                                        loadStaff();
-                                      } catch (error) {
-                                        console.error('Remove permission error:', error);
-                                        showToast('İşlem başarısız', 'error');
-                                      }
-                                    }
+                                  onClick={() => {
+                                    setConfirmModal({
+                                      show: true,
+                                      title: 'Yetkiyi Kaldır',
+                                      message: `${staff.displayName} adlı personelin yetkisini kaldırmak istediğinize emin misiniz?`,
+                                      confirmText: 'Evet, Kaldır',
+                                      confirmColor: 'bg-red-600 hover:bg-red-500',
+                                      onConfirm: async () => {
+                                        setConfirmModal(prev => ({ ...prev, show: false }));
+                                        try {
+                                          const adminRef = doc(db, 'admins', staff.id);
+                                          await updateDoc(adminRef, {
+                                            isActive: false,
+                                            adminType: null,
+                                            butcherId: null,
+                                            butcherName: null,
+                                            deactivatedAt: new Date(),
+                                            deactivationReason: 'Yetki kaldırıldı',
+                                          });
+                                          showToast(`${staff.displayName} yetkisi kaldırıldı`, 'success');
+                                          loadStaff();
+                                        } catch (error) {
+                                          console.error('Remove permission error:', error);
+                                          showToast('İşlem başarısız', 'error');
+                                        }
+                                      },
+                                    });
                                   }}
                                   className="text-xs px-2 py-1 rounded bg-orange-600/20 text-orange-400 hover:bg-orange-600 hover:text-white"
                                 >
@@ -3637,7 +3672,7 @@ export default function BusinessDetailPage() {
                     className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1"
                   >
                     <option value="">-- Rol Seç --</option>
-                    <option value="Kasap Admin">Kasap Admin</option>
+                    <option value="İşletme Admin">İşletme Admin</option>
                     <option value="Personel">Personel</option>
                   </select>
                 </div>

@@ -245,7 +245,7 @@ export default function BusinessOrdersPage() {
                 updateData.rejectionReason = reason;
                 updateData.butcherPhone = butcher?.phone || '';
             }
-            await updateDoc(doc(db, 'orders', orderId), updateData);
+            await updateDoc(doc(db, 'meat_orders', orderId), updateData);
 
             // Log the activity
             if (order) {
@@ -283,7 +283,7 @@ export default function BusinessOrdersPage() {
         const order = orders.find(o => o.id === orderId);
 
         try {
-            await updateDoc(doc(db, 'orders', orderId), {
+            await updateDoc(doc(db, 'meat_orders', orderId), {
                 items: items.map(item => ({
                     productId: item.productId,
                     productName: item.productName,
@@ -371,7 +371,7 @@ export default function BusinessOrdersPage() {
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                         <Link
-                            href={isVendorUser ? '/vendor-panel' : '/admin/businesses'}
+                            href={isVendorUser ? '/admin/businesses' : '/admin/businesses'}
                             className="text-red-200 hover:text-white text-sm"
                         >
                             ← {isVendorUser ? 'Dashboard' : 'İşletmelere Dön'}

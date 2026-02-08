@@ -5,6 +5,7 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 import { useRouter } from 'next/navigation';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface KermesFeature {
     id: string;
@@ -111,10 +112,17 @@ export default function KermesFeaturesPage() {
         await saveFeatures(updated);
     };
 
-    const deleteFeature = async (id: string) => {
-        if (!confirm('Bu özelliği silmek istediğinize emin misiniz?')) return;
-        const updated = features.filter(f => f.id !== id);
+    const [confirmDeleteFeatureId, setConfirmDeleteFeatureId] = useState<string | null>(null);
+
+    const deleteFeature = (id: string) => {
+        setConfirmDeleteFeatureId(id);
+    };
+
+    const handleDeleteFeatureConfirm = async () => {
+        if (!confirmDeleteFeatureId) return;
+        const updated = features.filter(f => f.id !== confirmDeleteFeatureId);
         await saveFeatures(updated);
+        setConfirmDeleteFeatureId(null);
     };
 
     const updateFeature = async (id: string, updates: Partial<KermesFeature>) => {
@@ -346,6 +354,19 @@ export default function KermesFeaturesPage() {
                     </p>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmDeleteFeatureId}
+                onClose={() => setConfirmDeleteFeatureId(null)}
+                onConfirm={handleDeleteFeatureConfirm}
+                title="Özellik Sil"
+                message="Bu özelliği silmek istediğinize emin misiniz?"
+                itemName={features.find(f => f.id === confirmDeleteFeatureId)?.label}
+                variant="danger"
+                confirmText="Evet, Sil"
+                loadingText="Siliniyor..."
+            />
         </div>
     );
 }

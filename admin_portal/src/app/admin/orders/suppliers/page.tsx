@@ -7,6 +7,7 @@ import { getSuppliers, addSupplier, updateSupplier, deleteSupplier } from '@/ser
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function SuppliersPage() {
     const { admin, loading: adminLoading } = useAdmin();
@@ -15,6 +16,7 @@ export default function SuppliersPage() {
     const [showModal, setShowModal] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [confirmDeleteSupplier, setConfirmDeleteSupplier] = useState<Supplier | null>(null);
 
     // Form state
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -112,10 +114,11 @@ export default function SuppliersPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Bu tedarikçiyi silmek istediğinize emin misiniz?')) return;
+    const handleDeleteConfirm = async () => {
+        if (!confirmDeleteSupplier) return;
         try {
-            await deleteSupplier(id);
+            await deleteSupplier(confirmDeleteSupplier.id);
+            setConfirmDeleteSupplier(null);
             loadSuppliers();
         } catch (err) {
             console.error(err);
@@ -180,7 +183,7 @@ export default function SuppliersPage() {
                                     </div>
                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
                                         <button onClick={() => handleOpenModal(supplier)} className="p-2 hover:bg-gray-700 rounded text-blue-400">✏️</button>
-                                        <button onClick={() => handleDelete(supplier.id)} className="p-2 hover:bg-gray-700 rounded text-red-400">🗑️</button>
+                                        <button onClick={() => setConfirmDeleteSupplier(supplier)} className="p-2 hover:bg-gray-700 rounded text-red-400">🗑️</button>
                                     </div>
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-1">{supplier.name}</h3>
@@ -299,6 +302,19 @@ export default function SuppliersPage() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmDeleteSupplier}
+                onClose={() => setConfirmDeleteSupplier(null)}
+                onConfirm={handleDeleteConfirm}
+                title="Tedarikçiyi Sil"
+                message="Bu tedarikçiyi kalıcı olarak silmek istediğinizden emin misiniz?"
+                itemName={confirmDeleteSupplier?.name}
+                variant="danger"
+                confirmText="Evet, Sil"
+                loadingText="Siliniyor..."
+            />
         </div>
     );
 }

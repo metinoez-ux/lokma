@@ -11,6 +11,7 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
 import { getModuleBusinessTypes, SPECIAL_MODULES, getAllRoles, getBusinessType, getRoleLabel, getRoleIcon } from '@/lib/business-types';
 import { COUNTRY_CODES, getDialCode } from '@/lib/country-codes';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 
 
@@ -60,9 +61,9 @@ export default function SuperAdminDashboard() {
     const [allUsersSortOrder, setAllUsersSortOrder] = useState<'asc' | 'desc'>('desc');
     const [allUsersTotal, setAllUsersTotal] = useState(0);
     const [allUsersLoading, setAllUsersLoading] = useState(false);
-    const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'user' | 'admin' | 'staff' | 'super'>('all');
+    const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'user' | 'admin' | 'staff' | 'super' | 'driver' | 'driver_lokma' | 'driver_business'>('all');
     const [userStatusFilter, setUserStatusFilter] = useState<'active' | 'archived'>('active');
-    const USERS_PER_PAGE = 50;
+    const USERS_PER_PAGE = 10;
 
     // Role assignment modal
     const [selectedUser, setSelectedUser] = useState<FirebaseUser | null>(null);
@@ -90,7 +91,7 @@ export default function SuperAdminDashboard() {
     const [businessSearchFilter, setBusinessSearchFilter] = useState('');
 
     // 🆕 ORGANIZASYON SEÇİMİ - Kermes Admin/Personel için
-    const [organizationList, setOrganizationList] = useState<{ id: string, name: string, shortName: string, city: string, type: string }[]>([]);
+    const [organizationList, setOrganizationList] = useState<{ id: string, name: string, shortName: string, city: string, postalCode: string, type: string }[]>([]);
     const [selectedOrganizationId, setSelectedOrganizationId] = useState('');
     const [loadingOrganizations, setLoadingOrganizations] = useState(false);
     const [organizationSearchFilter, setOrganizationSearchFilter] = useState('');
@@ -136,6 +137,16 @@ export default function SuperAdminDashboard() {
     // Delete confirmation modal state
     const [deleteModal, setDeleteModal] = useState<{ show: boolean; userId: string; userName: string } | null>(null);
 
+    // ConfirmModal state
+    const [confirmState, setConfirmState] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        itemName?: string;
+        variant?: 'warning' | 'danger';
+        confirmText: string;
+        onConfirm: () => void;
+    }>({ isOpen: false, title: '', message: '', confirmText: '', onConfirm: () => { } });
 
     // User profile edit modal state
     const [editingUserProfile, setEditingUserProfile] = useState<{
@@ -164,6 +175,8 @@ export default function SuperAdminDashboard() {
         organizationName?: string; // 🆕 Display name of assigned organization
         isActive?: boolean; // Soft deactivation - user exists but can't login
         isPrimaryAdmin?: boolean; // 🟣 Primary Admin / İşletme Sahibi flag
+        isDriver?: boolean; // 🚗 Driver / Sürücü flag
+        driverType?: 'lokma_fleet' | 'business'; // 🚚 Driver fleet type
         // 🆕 ÇOKLU ROL DESTEĞİ
         roles?: {
             type: string;
@@ -193,7 +206,7 @@ export default function SuperAdminDashboard() {
         city: '',
         country: 'Almanya',
         postalCode: '',
-        role: 'user' as 'user' | 'staff' | 'business_admin' | 'super',
+        role: 'user' as 'user' | 'staff' | 'business_admin' | 'super' | 'driver_lokma' | 'driver_business',
         sector: '' as string,
         password: ''
     });
@@ -372,6 +385,7 @@ export default function SuperAdminDashboard() {
                     name: data.name || '',
                     shortName: data.shortName || '',
                     city: data.city || '',
+                    postalCode: data.postalCode || '',
                     type: data.type || 'vikz',
                 };
             }));
@@ -567,7 +581,8 @@ export default function SuperAdminDashboard() {
                         const type = component.types[0];
                         if (type === 'route') street = component.long_name;
                         else if (type === 'street_number') houseNumber = component.long_name;
-                        else if (type === 'locality' || type === 'postal_town' || type === 'administrative_area_level_2') city = component.long_name;
+                        else if (type === 'locality' || type === 'postal_town') city = component.long_name;
+                        else if (type === 'administrative_area_level_2' && !city) city = component.long_name; // Fallback: only if no locality/postal_town found
                         else if (type === 'postal_code') postalCode = component.long_name;
                         else if (type === 'country') {
                             country = component.long_name;
@@ -1000,11 +1015,11 @@ export default function SuperAdminDashboard() {
 
                 // 1️⃣ Query orders collection for this business (try both businessId and butcherId for backward compatibility)
                 const ordersQueryByBusinessId = query(
-                    collection(db, 'orders'),
+                    collection(db, 'meat_orders'),
                     where('businessId', '==', admin.butcherId)
                 );
                 const ordersQueryByButcherId = query(
-                    collection(db, 'orders'),
+                    collection(db, 'meat_orders'),
                     where('butcherId', '==', admin.butcherId)
                 );
 
@@ -1195,6 +1210,15 @@ export default function SuperAdminDashboard() {
                 } else if (userTypeFilter === 'super') {
                     // Show super admins
                     return user.isAdmin && user.adminType === 'super';
+                } else if (userTypeFilter === 'driver') {
+                    // Show all drivers (isDriver flag on admin profile)
+                    return (user.adminProfile as any)?.isDriver === true;
+                } else if (userTypeFilter === 'driver_lokma') {
+                    // Show only LOKMA fleet drivers
+                    return (user.adminProfile as any)?.isDriver === true && (user.adminProfile as any)?.driverType === 'lokma_fleet';
+                } else if (userTypeFilter === 'driver_business') {
+                    // Show only business drivers
+                    return (user.adminProfile as any)?.isDriver === true && ((user.adminProfile as any)?.driverType === 'business' || !(user.adminProfile as any)?.driverType);
                 }
                 // 'all' - show everyone
                 return true;
@@ -1322,32 +1346,41 @@ export default function SuperAdminDashboard() {
     };
 
     // Remove admin role
-    const handleRemoveAdmin = async (adminId: string) => {
-        if (!confirm('Bu kullanıcının admin yetkisini TAMAMEN KALDIRMAK istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
+    const handleRemoveAdmin = async (adminId: string, adminName?: string) => {
+        setConfirmState({
+            isOpen: true,
+            title: 'Admin Yetkisini Kaldır',
+            message: 'Bu kullanıcının admin yetkisini TAMAMEN KALDIRMAK istediğinize emin misiniz? Bu işlem geri alınamaz.',
+            itemName: adminName,
+            variant: 'danger',
+            confirmText: 'Evet, Yetkiyi Kaldır',
+            onConfirm: async () => {
+                setConfirmState(prev => ({ ...prev, isOpen: false }));
+                try {
+                    // Delete from admins collection
+                    await deleteDoc(doc(db, 'admins', adminId));
 
-        try {
-            // Delete from admins collection
-            await deleteDoc(doc(db, 'admins', adminId));
+                    // Also update users collection if exists
+                    try {
+                        const userDoc = await getDoc(doc(db, 'users', adminId));
+                        if (userDoc.exists()) {
+                            await updateDoc(doc(db, 'users', adminId), {
+                                isAdmin: false,
+                                adminType: null,
+                            });
+                        }
+                    } catch (e) {
+                        console.log('User doc update skipped:', e);
+                    }
 
-            // Also update users collection if exists
-            try {
-                const userDoc = await getDoc(doc(db, 'users', adminId));
-                if (userDoc.exists()) {
-                    await updateDoc(doc(db, 'users', adminId), {
-                        isAdmin: false,
-                        adminType: null,
-                    });
+                    setAdmins(admins.filter(a => a.id !== adminId));
+                    showToast('Admin yetkisi kaldırıldı', 'success');
+                } catch (error) {
+                    console.error('Remove admin error:', error);
+                    showToast('Hata oluştu: ' + (error as Error).message, 'error');
                 }
-            } catch (e) {
-                console.log('User doc update skipped:', e);
-            }
-
-            setAdmins(admins.filter(a => a.id !== adminId));
-            showToast('Admin yetkisi kaldırıldı', 'success');
-        } catch (error) {
-            console.error('Remove admin error:', error);
-            showToast('Hata oluştu: ' + (error as Error).message, 'error');
-        }
+            },
+        });
     };
 
     // Open edit modal for an admin
@@ -1944,13 +1977,16 @@ export default function SuperAdminDashboard() {
                                     {/* User Type Filter */}
                                     <select
                                         value={userTypeFilter}
-                                        onChange={(e) => setUserTypeFilter(e.target.value as 'all' | 'user' | 'admin' | 'staff' | 'super')}
+                                        onChange={(e) => setUserTypeFilter(e.target.value as 'all' | 'user' | 'admin' | 'staff' | 'super' | 'driver' | 'driver_lokma' | 'driver_business')}
                                         className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
                                     >
                                         <option value="all">👥 Tümü</option>
                                         <option value="user">👤 Sadece Kullanıcılar</option>
                                         <option value="admin">🎫 İşletme Adminleri</option>
                                         <option value="staff">👷 Personel</option>
+                                        <option value="driver">🚗 Tüm Sürücüler</option>
+                                        <option value="driver_lokma">🚚 LOKMA Filosu</option>
+                                        <option value="driver_business">🏪 İşletme Sürücüleri</option>
                                         {/* 🔒 SECURITY: Super Admin filter only visible to super admins */}
                                         {admin?.adminType === 'super' && (
                                             <option value="super">👑 Super Admin</option>
@@ -2002,6 +2038,9 @@ export default function SuperAdminDashboard() {
                                     if (userTypeFilter === 'admin') return user.isAdmin && user.adminType !== 'super' && !user.adminType?.includes('_staff');
                                     if (userTypeFilter === 'staff') return user.isAdmin && user.adminType?.includes('_staff');
                                     if (userTypeFilter === 'super') return user.isAdmin && user.adminType === 'super';
+                                    if (userTypeFilter === 'driver') return (user.adminProfile as any)?.isDriver === true;
+                                    if (userTypeFilter === 'driver_lokma') return (user.adminProfile as any)?.isDriver === true && (user.adminProfile as any)?.driverType === 'lokma_fleet';
+                                    if (userTypeFilter === 'driver_business') return (user.adminProfile as any)?.isDriver === true && ((user.adminProfile as any)?.driverType === 'business' || !(user.adminProfile as any)?.driverType);
                                     return true;
                                 })
                                     // 🔍 ENHANCED SEARCH: Also search by business name and PHONE
@@ -2079,6 +2118,8 @@ export default function SuperAdminDashboard() {
                                                     photoURL: user.photoURL || (user as any).profileImageUrl, // Load existing photo
                                                     // 🟣 Load isPrimaryAdmin from admin record
                                                     isPrimaryAdmin: (user.adminProfile as any)?.isPrimaryAdmin || false,
+                                                    isDriver: (user.adminProfile as any)?.isDriver || false, // 🚗 Load isDriver from admin record
+                                                    driverType: (user.adminProfile as any)?.driverType || 'business', // 🚚 Load driverType
 
                                                     // 🆕 ÇOKLU ROL DESTEĞİ - Mevcut rolden roles dizisi oluştur
                                                     roles: (user.adminProfile as any)?.roles || (user.isAdmin && user.adminType ? [{
@@ -2174,6 +2215,15 @@ export default function SuperAdminDashboard() {
                                                                 Kullanıcı
                                                             </span>
                                                         )}
+                                                        {/* 🚚 Driver Type Badge */}
+                                                        {(user.adminProfile as any)?.isDriver && (
+                                                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(user.adminProfile as any)?.driverType === 'lokma_fleet'
+                                                                ? 'bg-emerald-600 text-white'
+                                                                : 'bg-amber-600 text-white'
+                                                                }`}>
+                                                                {(user.adminProfile as any)?.driverType === 'lokma_fleet' ? '🚚 LOKMA Filo' : '🏪 İşletme Sürücü'}
+                                                            </span>
+                                                        )}
                                                         {/* Location - City, Country */}
                                                         {((user as any).country || (user as any).city) && (
                                                             <span className="text-gray-400 text-sm flex items-center gap-1">
@@ -2210,31 +2260,41 @@ export default function SuperAdminDashboard() {
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            if (confirm((user as any).isActive !== false
-                                                                ? `${user.displayName} adlı kullanıcıyı arşivlemek istediğinize emin misiniz?`
-                                                                : `${user.displayName} adlı kullanıcıyı tekrar aktifleştirmek istediğinize emin misiniz?`)) {
-                                                                const userRef = doc(db, 'users', user.id);
-                                                                const now = new Date();
-                                                                if ((user as any).isActive !== false) {
-                                                                    updateDoc(userRef, {
-                                                                        isActive: false,
-                                                                        deactivatedAt: now,
-                                                                        deactivationReason: 'Admin panelinden arşivlendi',
-                                                                    }).then(() => {
-                                                                        showToast(`${user.displayName} arşivlendi`, 'success');
-                                                                        loadAllUsers(allUsersPage);
-                                                                    });
-                                                                } else {
-                                                                    updateDoc(userRef, {
-                                                                        isActive: true,
-                                                                        deactivatedAt: null,
-                                                                        deactivationReason: null,
-                                                                    }).then(() => {
-                                                                        showToast(`${user.displayName} tekrar aktifleştirildi`, 'success');
-                                                                        loadAllUsers(allUsersPage);
-                                                                    });
-                                                                }
-                                                            }
+                                                            const isActive = (user as any).isActive !== false;
+                                                            setConfirmState({
+                                                                isOpen: true,
+                                                                title: isActive ? 'Kullanıcıyı Arşivle' : 'Kullanıcıyı Aktifleştir',
+                                                                message: isActive
+                                                                    ? `${user.displayName} adlı kullanıcıyı arşivlemek istediğinize emin misiniz?`
+                                                                    : `${user.displayName} adlı kullanıcıyı tekrar aktifleştirmek istediğinize emin misiniz?`,
+                                                                itemName: user.displayName || user.email,
+                                                                variant: isActive ? 'warning' : undefined,
+                                                                confirmText: isActive ? 'Evet, Arşivle' : 'Evet, Aktifleştir',
+                                                                onConfirm: async () => {
+                                                                    setConfirmState(prev => ({ ...prev, isOpen: false }));
+                                                                    const userRef = doc(db, 'users', user.id);
+                                                                    const now = new Date();
+                                                                    if (isActive) {
+                                                                        await updateDoc(userRef, {
+                                                                            isActive: false,
+                                                                            deactivatedAt: now,
+                                                                            deactivationReason: 'Admin panelinden arşivlendi',
+                                                                        }).then(() => {
+                                                                            showToast(`${user.displayName} arşivlendi`, 'success');
+                                                                            loadAllUsers(allUsersPage);
+                                                                        });
+                                                                    } else {
+                                                                        await updateDoc(userRef, {
+                                                                            isActive: true,
+                                                                            deactivatedAt: null,
+                                                                            deactivationReason: null,
+                                                                        }).then(() => {
+                                                                            showToast(`${user.displayName} tekrar aktifleştirildi`, 'success');
+                                                                            loadAllUsers(allUsersPage);
+                                                                        });
+                                                                    }
+                                                                },
+                                                            });
                                                         }}
                                                         className={`p-2 rounded-lg transition ${(user as any).isActive !== false
                                                             ? 'bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white'
@@ -2252,14 +2312,7 @@ export default function SuperAdminDashboard() {
                                         </div>
                                     ))}
 
-                                {hasMore && (
-                                    <button
-                                        onClick={() => searchUsers(searchQuery, true)}
-                                        className="w-full py-3 text-blue-400 hover:text-blue-300"
-                                    >
-                                        Daha fazla yükle...
-                                    </button>
-                                )}
+
                             </div>
                         ) : (searchQuery && !searchLoading) || showAllUsers ? (
                             <div className="text-center py-12 text-gray-400">
@@ -2481,43 +2534,53 @@ export default function SuperAdminDashboard() {
                                                             <>
                                                                 {/* Arşivle / Aktifleştir toggle button */}
                                                                 <button
-                                                                    onClick={async () => {
-                                                                        if (confirm(a.isActive !== false
-                                                                            ? `${a.displayName} adlı admini arşivlemek istediğinize emin misiniz?`
-                                                                            : `${a.displayName} adlı admini tekrar aktifleştirmek istediğinize emin misiniz?`)) {
-                                                                            try {
-                                                                                const adminRef = doc(db, 'admins', a.id);
-                                                                                const now = new Date();
-                                                                                if (a.isActive !== false) {
-                                                                                    // Deactivate (archive)
-                                                                                    await updateDoc(adminRef, {
-                                                                                        isActive: false,
-                                                                                        deactivatedBy: admin?.email || 'system',
-                                                                                        deactivatedAt: now,
-                                                                                        deactivationReason: 'Admin panelinden arşivlendi',
-                                                                                        updatedAt: now,
-                                                                                        updatedBy: admin?.email || 'system',
-                                                                                    });
-                                                                                    showToast(`${a.displayName} arşivlendi`, 'success');
-                                                                                } else {
-                                                                                    // Reactivate
-                                                                                    await updateDoc(adminRef, {
-                                                                                        isActive: true,
-                                                                                        deactivatedBy: null,
-                                                                                        deactivatedAt: null,
-                                                                                        deactivationReason: null,
-                                                                                        updatedAt: now,
-                                                                                        updatedBy: admin?.email || 'system',
-                                                                                    });
-                                                                                    showToast(`${a.displayName} tekrar aktifleştirildi`, 'success');
+                                                                    onClick={() => {
+                                                                        const isActive = a.isActive !== false;
+                                                                        setConfirmState({
+                                                                            isOpen: true,
+                                                                            title: isActive ? 'Admin Arşivle' : 'Admin Aktifleştir',
+                                                                            message: isActive
+                                                                                ? `${a.displayName} adlı admini arşivlemek istediğinize emin misiniz?`
+                                                                                : `${a.displayName} adlı admini tekrar aktifleştirmek istediğinize emin misiniz?`,
+                                                                            itemName: a.displayName,
+                                                                            variant: isActive ? 'warning' : undefined,
+                                                                            confirmText: isActive ? 'Evet, Arşivle' : 'Evet, Aktifleştir',
+                                                                            onConfirm: async () => {
+                                                                                setConfirmState(prev => ({ ...prev, isOpen: false }));
+                                                                                try {
+                                                                                    const adminRef = doc(db, 'admins', a.id);
+                                                                                    const now = new Date();
+                                                                                    if (isActive) {
+                                                                                        // Deactivate (archive)
+                                                                                        await updateDoc(adminRef, {
+                                                                                            isActive: false,
+                                                                                            deactivatedBy: admin?.email || 'system',
+                                                                                            deactivatedAt: now,
+                                                                                            deactivationReason: 'Admin panelinden arşivlendi',
+                                                                                            updatedAt: now,
+                                                                                            updatedBy: admin?.email || 'system',
+                                                                                        });
+                                                                                        showToast(`${a.displayName} arşivlendi`, 'success');
+                                                                                    } else {
+                                                                                        // Reactivate
+                                                                                        await updateDoc(adminRef, {
+                                                                                            isActive: true,
+                                                                                            deactivatedBy: null,
+                                                                                            deactivatedAt: null,
+                                                                                            deactivationReason: null,
+                                                                                            updatedAt: now,
+                                                                                            updatedBy: admin?.email || 'system',
+                                                                                        });
+                                                                                        showToast(`${a.displayName} tekrar aktifleştirildi`, 'success');
+                                                                                    }
+                                                                                    // 🔐 SECURITY: Use filtered reload function
+                                                                                    await reloadAdmins();
+                                                                                } catch (error) {
+                                                                                    console.error('Archive/activate error:', error);
+                                                                                    showToast('İşlem sırasında hata oluştu', 'error');
                                                                                 }
-                                                                                // 🔐 SECURITY: Use filtered reload function
-                                                                                await reloadAdmins();
-                                                                            } catch (error) {
-                                                                                console.error('Archive/activate error:', error);
-                                                                                showToast('İşlem sırasında hata oluştu', 'error');
-                                                                            }
-                                                                        }
+                                                                            },
+                                                                        });
                                                                     }}
                                                                     className={`text-sm ${a.isActive !== false ? 'text-amber-400 hover:text-amber-300' : 'text-green-400 hover:text-green-300'}`}
                                                                 >
@@ -2525,26 +2588,35 @@ export default function SuperAdminDashboard() {
                                                                 </button>
                                                                 {/* Yetkiyi Kaldır (soft delete - removes admin role) */}
                                                                 <button
-                                                                    onClick={() => handleRemoveAdmin(a.id)}
+                                                                    onClick={() => handleRemoveAdmin(a.id, a.displayName)}
                                                                     className="text-orange-400 hover:text-orange-300 text-sm"
                                                                 >
                                                                     🚫 Yetkiyi Kaldır
                                                                 </button>
                                                                 {/* Kalıcı Sil button */}
                                                                 <button
-                                                                    onClick={async () => {
-                                                                        if (confirm(`⚠️ DİKKAT: ${a.displayName} adlı admini kalıcı olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) {
-                                                                            try {
-                                                                                // Delete from admins collection
-                                                                                await deleteDoc(doc(db, 'admins', a.id));
-                                                                                showToast(`${a.displayName} kalıcı olarak silindi`, 'success');
-                                                                                // 🔐 SECURITY: Use filtered reload function
-                                                                                await reloadAdmins();
-                                                                            } catch (error) {
-                                                                                console.error('Delete error:', error);
-                                                                                showToast('Silme sırasında hata oluştu', 'error');
-                                                                            }
-                                                                        }
+                                                                    onClick={() => {
+                                                                        setConfirmState({
+                                                                            isOpen: true,
+                                                                            title: 'Admini Kalıcı Sil',
+                                                                            message: 'DİKKAT: Bu admini kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz!',
+                                                                            itemName: a.displayName,
+                                                                            variant: 'danger',
+                                                                            confirmText: 'Evet, Kalıcı Sil',
+                                                                            onConfirm: async () => {
+                                                                                setConfirmState(prev => ({ ...prev, isOpen: false }));
+                                                                                try {
+                                                                                    // Delete from admins collection
+                                                                                    await deleteDoc(doc(db, 'admins', a.id));
+                                                                                    showToast(`${a.displayName} kalıcı olarak silindi`, 'success');
+                                                                                    // 🔐 SECURITY: Use filtered reload function
+                                                                                    await reloadAdmins();
+                                                                                } catch (error) {
+                                                                                    console.error('Delete error:', error);
+                                                                                    showToast('Silme sırasında hata oluştu', 'error');
+                                                                                }
+                                                                            },
+                                                                        });
                                                                     }}
                                                                     className="text-red-400 hover:text-red-300 text-sm"
                                                                 >
@@ -2568,7 +2640,7 @@ export default function SuperAdminDashboard() {
             {
                 selectedUser && (
                     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-                        <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md">
+                        <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl">
                             <h3 className="text-xl font-bold text-white mb-4">Admin Rolü Ata</h3>
 
                             <div className="bg-gray-700 rounded-lg p-4 mb-6">
@@ -2677,7 +2749,7 @@ export default function SuperAdminDashboard() {
             {
                 showCreateModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+                        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl">
                             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                                 <span>📱</span> Admin Davetiyesi Gönder
                             </h3>
@@ -2903,7 +2975,7 @@ export default function SuperAdminDashboard() {
             {
                 showShareModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+                        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl">
                             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                                 <span>✅</span> Davetiye Oluşturuldu!
                             </h3>
@@ -3401,7 +3473,7 @@ export default function SuperAdminDashboard() {
             {
                 showNewUserModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                        <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-lg w-full p-6 my-8">
+                        <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-2xl w-full p-6 my-8">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                     ➕ Yeni Kullanıcı Ekle
@@ -3611,6 +3683,8 @@ export default function SuperAdminDashboard() {
                                         )}
                                         <option value="staff">👷 Personel</option>
                                         <option value="business_admin">🏪 İşletme Admin</option>
+                                        <option value="driver_lokma">🚚 LOKMA Filosu Sürücüsü</option>
+                                        <option value="driver_business">🏪 İşletme Sürücüsü</option>
                                         {/* Super Admin option only visible to super admins */}
                                         {admin?.adminType === 'super' && (
                                             <option value="super">👑 Süper Admin</option>
@@ -3763,7 +3837,11 @@ export default function SuperAdminDashboard() {
                                                     role: newUserData.role !== 'user' ? 'admin' : 'user',
                                                     adminType: newUserData.role === 'super' ? 'super' :
                                                         newUserData.role === 'business_admin' ? `${newUserData.sector}` :
-                                                            newUserData.role === 'staff' ? `${newUserData.sector}_staff` : undefined,
+                                                            newUserData.role === 'staff' ? `${newUserData.sector}_staff` :
+                                                                (newUserData.role === 'driver_lokma' || newUserData.role === 'driver_business') ? undefined : undefined,
+                                                    // 🚗 Driver fields
+                                                    isDriver: newUserData.role === 'driver_lokma' || newUserData.role === 'driver_business',
+                                                    driverType: newUserData.role === 'driver_lokma' ? 'lokma_fleet' : newUserData.role === 'driver_business' ? 'business' : undefined,
                                                     // 🔑 UNIVERSAL: Business ID for all business types
                                                     businessId: effectiveBusinessId,
                                                     businessName: effectiveBusinessName,
@@ -3839,7 +3917,7 @@ export default function SuperAdminDashboard() {
             {
                 editingUserProfile && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                        <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-2xl w-full p-6 my-8">
+                        <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-6xl w-full p-6 my-8">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                     👤 Kullanıcı Profili Düzenle
@@ -3920,9 +3998,17 @@ export default function SuperAdminDashboard() {
                                             {editingUserProfile.photoURL && (
                                                 <button
                                                     onClick={() => {
-                                                        if (window.confirm('Profil resmini kaldırmak istediğinizden emin misiniz?')) {
-                                                            setEditingUserProfile({ ...editingUserProfile, photoURL: undefined });
-                                                        }
+                                                        setConfirmState({
+                                                            isOpen: true,
+                                                            title: 'Profil Resmini Kaldır',
+                                                            message: 'Profil resmini kaldırmak istediğinizden emin misiniz?',
+                                                            variant: 'warning',
+                                                            confirmText: 'Evet, Kaldır',
+                                                            onConfirm: () => {
+                                                                setConfirmState(prev => ({ ...prev, isOpen: false }));
+                                                                setEditingUserProfile({ ...editingUserProfile, photoURL: undefined });
+                                                            },
+                                                        });
                                                     }}
                                                     className="text-red-400 text-xs hover:text-red-300 transition flex items-center gap-1 px-2 py-1 hover:bg-red-900/20 rounded"
                                                 >
@@ -3936,743 +4022,789 @@ export default function SuperAdminDashboard() {
                                     </div>
                                 </div>
 
-                                {/* Personal Info */}
-                                <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
-                                        📝 Kişisel Bilgiler
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-4">
+                                {/* 2-COLUMN GRID for tablet/desktop */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* LEFT COLUMN: Personal + Contact + Address */}
+                                    <div className="space-y-6">
+                                        {/* Personal Info */}
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">Ad</label>
-                                            <input
-                                                type="text"
-                                                value={editingUserProfile.firstName}
-                                                onChange={(e) => setEditingUserProfile({ ...editingUserProfile, firstName: e.target.value })}
-                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-gray-400 text-sm mb-1">Soyad</label>
-                                            <input
-                                                type="text"
-                                                value={editingUserProfile.lastName}
-                                                onChange={(e) => setEditingUserProfile({ ...editingUserProfile, lastName: e.target.value })}
-                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Active/Inactive Toggle */}
-                                    <div className="mt-4 flex items-center justify-between p-3 bg-gray-750 rounded-lg border border-gray-600">
-                                        <div className="flex-1">
-                                            <span className="text-white font-medium">Hesap Durumu</span>
-                                            <p className="text-gray-400 text-xs">Pasif hesaplar giriş yapamaz ama veriler korunur</p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditingUserProfile({
-                                                    ...editingUserProfile,
-                                                    isActive: editingUserProfile.isActive === false ? true : false
-                                                })}
-                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 ${editingUserProfile.isActive !== false
-                                                    ? 'bg-green-500 focus:ring-green-500'
-                                                    : 'bg-red-500 focus:ring-red-500'
-                                                    }`}
-                                            >
-                                                <span
-                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${editingUserProfile.isActive !== false
-                                                        ? 'translate-x-6'
-                                                        : 'translate-x-1'
-                                                        }`}
-                                                />
-                                            </button>
-                                            <span className={`text-sm font-medium min-w-[60px] ${editingUserProfile.isActive !== false
-                                                ? 'text-green-400'
-                                                : 'text-red-400'
-                                                }`}>
-                                                {editingUserProfile.isActive !== false ? '✅ Aktif' : '⛔ Pasif'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Contact Info - GDPR Privacy: Business admins cannot see phone/email */}
-                                <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
-                                        📞 İletişim Bilgileri
-                                        {admin?.adminType !== 'super' && (
-                                            <span className="text-xs text-yellow-500 font-normal ml-2">🔒 Gizlilik Korumalı</span>
-                                        )}
-                                    </h4>
-                                    {admin?.adminType === 'super' ? (
-                                        /* Super Admin: Full access to contact info */
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-gray-400 text-sm mb-1">E-posta Adresi</label>
-                                                <input
-                                                    type="email"
-                                                    value={editingUserProfile.email}
-                                                    onChange={(e) => setEditingUserProfile({ ...editingUserProfile, email: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-gray-400 text-sm mb-1">Telefon</label>
-                                                <div className="flex gap-2">
-                                                    <select
-                                                        value={editingUserProfile.dialCode || '+90'}
-                                                        onChange={(e) => setEditingUserProfile({ ...editingUserProfile, dialCode: e.target.value })}
-                                                        className="w-28 px-2 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 text-sm appearance-none"
-                                                    >
-                                                        {COUNTRY_CODES.map(c => (
-                                                            <option key={c.code} value={c.dial}>
-                                                                {c.flag} {c.dial}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
+                                                📝 Kişisel Bilgiler
+                                            </h4>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-gray-400 text-sm mb-1">Ad</label>
                                                     <input
-                                                        type="tel"
-                                                        value={editingUserProfile.phone}
-                                                        onChange={(e) => setEditingUserProfile({ ...editingUserProfile, phone: e.target.value })}
-                                                        className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
-                                                        placeholder="örn: XXX XXX XX XX"
+                                                        type="text"
+                                                        value={editingUserProfile.firstName}
+                                                        onChange={(e) => setEditingUserProfile({ ...editingUserProfile, firstName: e.target.value })}
+                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-gray-400 text-sm mb-1">Soyad</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingUserProfile.lastName}
+                                                        onChange={(e) => setEditingUserProfile({ ...editingUserProfile, lastName: e.target.value })}
+                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
                                                     />
                                                 </div>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        /* Business Admin: Privacy protected - cannot see or edit contact info */
-                                        <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4">
-                                            <div className="flex items-center gap-3 text-yellow-400 mb-2">
-                                                <span className="text-xl">🔒</span>
-                                                <span className="font-medium">Müşteri Gizliliği Koruması</span>
-                                            </div>
-                                            <p className="text-yellow-300/70 text-sm">
-                                                GDPR uyumluluğu gereği, işletme yöneticileri müşterilerin e-posta ve telefon bilgilerine erişemez.
-                                                Teslimat sırasında gerekli iletişim bilgileri sipariş detayında görüntülenir.
-                                            </p>
-                                            <div className="grid grid-cols-2 gap-4 mt-3">
-                                                <div>
-                                                    <label className="block text-gray-500 text-sm mb-1">E-posta</label>
-                                                    <div className="px-3 py-2 bg-gray-800 text-gray-500 rounded-lg border border-gray-700">
-                                                        🔒 Gizli
-                                                    </div>
+
+                                            {/* Active/Inactive Toggle */}
+                                            <div className="mt-4 flex items-center justify-between p-3 bg-gray-750 rounded-lg border border-gray-600">
+                                                <div className="flex-1">
+                                                    <span className="text-white font-medium">Hesap Durumu</span>
+                                                    <p className="text-gray-400 text-xs">Pasif hesaplar giriş yapamaz ama veriler korunur</p>
                                                 </div>
-                                                <div>
-                                                    <label className="block text-gray-500 text-sm mb-1">Telefon</label>
-                                                    <div className="px-3 py-2 bg-gray-800 text-gray-500 rounded-lg border border-gray-700">
-                                                        🔒 Gizli
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Address */}
-                                <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center justify-between border-b border-gray-700 pb-2">
-                                        <span className="flex items-center gap-2">📍 Adres Bilgileri</span>
-                                        <button
-                                            type="button"
-                                            onClick={handleReverseGeocode}
-                                            disabled={isGeocoding}
-                                            className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded flex items-center gap-1 transition disabled:opacity-50"
-                                        >
-                                            {isGeocoding ? '📍 Aranıyor...' : '📍 GPS\'ten Adres Çek'}
-                                        </button>
-                                    </h4>
-                                    <div className="space-y-4">
-                                        {/* Street and House Number Row */}
-                                        <div className="grid grid-cols-4 gap-4">
-                                            <div className="col-span-3 relative">
-                                                <label className="block text-gray-400 text-sm mb-1">Cadde / Sokak</label>
-                                                <input
-                                                    id="google-places-street-input"
-                                                    type="text"
-                                                    value={editingUserProfile.address}
-                                                    onChange={(e) => handleAddressInputChange(e.target.value, false)}
-                                                    onFocus={() => {
-                                                        if (addressSuggestions.length > 0) setShowAddressSuggestions(true);
-                                                    }}
-                                                    onBlur={() => {
-                                                        // Delay to allow click on suggestion
-                                                        setTimeout(() => setShowAddressSuggestions(false), 200);
-                                                    }}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                    placeholder="En az 3 karakter yazın..."
-                                                    autoComplete="off"
-                                                />
-                                                {/* Custom Autocomplete Dropdown */}
-                                                {showAddressSuggestions && addressSuggestions.length > 0 && (
-                                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                                        {addressSuggestions.map((suggestion, index) => (
-                                                            <div
-                                                                key={suggestion.place_id}
-                                                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm flex items-center gap-2"
-                                                                onClick={() => handleAddressSelect(suggestion.place_id, suggestion.description, false)}
-                                                            >
-                                                                <span className="text-red-500">📍</span>
-                                                                <span className="truncate">{suggestion.description}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                {addressSearchLoading && (
-                                                    <div className="absolute right-2 top-8 text-gray-400 text-xs">🔍</div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <label className="block text-gray-400 text-sm mb-1">Kapı No</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingUserProfile.houseNumber}
-                                                    onChange={(e) => setEditingUserProfile({ ...editingUserProfile, houseNumber: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                    placeholder="No"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Address Line 2 */}
-                                        <div>
-                                            <label className="block text-gray-400 text-sm mb-1">
-                                                Adres Satırı 2 <span className="text-gray-500 text-xs">(Daire, Kat, Site Adı vb.)</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={editingUserProfile.addressLine2}
-                                                onChange={(e) => setEditingUserProfile({ ...editingUserProfile, addressLine2: e.target.value })}
-                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                placeholder="Zorunlu alan: Daire, Kat veya Site/Apartman adı"
-                                            />
-                                        </div>
-
-                                        {/* City, Zip, Country */}
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div className="relative">
-                                                <label className="block text-gray-400 text-sm mb-1">Şehir</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingUserProfile.city}
-                                                    onChange={(e) => handleCityInputChange(e.target.value, false)}
-                                                    onFocus={() => {
-                                                        if (citySuggestions.length > 0) setShowCitySuggestions(true);
-                                                    }}
-                                                    onBlur={() => {
-                                                        setTimeout(() => setShowCitySuggestions(false), 200);
-                                                    }}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                    placeholder="Şehir yazın..."
-                                                />
-                                                {/* City Autocomplete Dropdown */}
-                                                {showCitySuggestions && citySuggestions.length > 0 && (
-                                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                                        {citySuggestions.map((suggestion) => (
-                                                            <div
-                                                                key={suggestion.place_id}
-                                                                className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm flex items-center gap-2"
-                                                                onClick={() => handleCitySelect(suggestion.description, false)}
-                                                            >
-                                                                <span className="text-blue-400">🏙️</span>
-                                                                <span className="truncate">{suggestion.description}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                                {citySearchLoading && (
-                                                    <div className="absolute right-2 top-8 text-gray-400 text-xs">🔍</div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <label className="block text-gray-400 text-sm mb-1">Posta Kodu</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingUserProfile.postalCode}
-                                                    onChange={(e) => setEditingUserProfile({ ...editingUserProfile, postalCode: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-gray-400 text-sm mb-1">Ülke</label>
-                                                <input
-                                                    type="text"
-                                                    value={editingUserProfile.country}
-                                                    onChange={(e) => setEditingUserProfile({ ...editingUserProfile, country: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Admin Role Section */}
-                                <div>
-                                    <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
-                                        🔐 Yetki Yönetimi
-                                    </h4>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <label className="block text-gray-400 text-sm mb-1">Rol</label>
-                                            <select
-                                                value={editingUserProfile.isAdmin ? (editingUserProfile.adminType || 'admin') : 'user'}
-                                                onChange={(e) => {
-                                                    const newRole = e.target.value;
-                                                    if (newRole === 'user') {
-                                                        setEditingUserProfile({
-                                                            ...editingUserProfile,
-                                                            isAdmin: false,
-                                                            adminType: undefined
-                                                        });
-                                                    } else {
-                                                        setEditingUserProfile({
-                                                            ...editingUserProfile,
-                                                            isAdmin: true,
-                                                            adminType: newRole
-                                                        });
-                                                    }
-                                                }}
-                                                className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                            >
-                                                <option value="user">👤 Kullanıcı</option>
-                                                {/* Dynamically generate roles - filtered by selected business sectors OR admin's sector */}
-                                                {(() => {
-                                                    // Get selected business's sectors
-                                                    const selectedBusiness = butcherList.find(b => b.id === editingUserProfile.butcherId);
-                                                    const businessSectors = selectedBusiness?.types || [];
-
-                                                    // If a business is selected, show only roles for that business's sectors
-                                                    if (editingUserProfile.butcherId && businessSectors.length > 0) {
-                                                        return getModuleBusinessTypes()
-                                                            .filter(bt => businessSectors.includes(bt.value))
-                                                            .map(bt => (
-                                                                <React.Fragment key={bt.value}>
-                                                                    <option key={`${bt.value}_staff`} value={`${bt.value}_staff`}>
-                                                                        {bt.icon} {bt.label} Personeli
-                                                                    </option>
-                                                                    <option key={`${bt.value}_admin`} value={`${bt.value}_admin`}>
-                                                                        {bt.icon} {bt.label} Admin
-                                                                    </option>
-                                                                </React.Fragment>
-                                                            ));
-                                                    }
-
-                                                    // Super Admin sees all sectors if no business selected
-                                                    if (admin?.adminType === 'super') {
-                                                        return getModuleBusinessTypes().map(bt => (
-                                                            <React.Fragment key={bt.value}>
-                                                                <option key={`${bt.value}_staff`} value={`${bt.value}_staff`}>
-                                                                    {bt.icon} {bt.label} Personeli
-                                                                </option>
-                                                                <option key={`${bt.value}_admin`} value={`${bt.value}_admin`}>
-                                                                    {bt.icon} {bt.label} Admin
-                                                                </option>
-                                                            </React.Fragment>
-                                                        ));
-                                                    }
-
-                                                    // İşletme Admin/Personel only sees their sector
-                                                    const currentAdminType = admin?.adminType || '';
-                                                    const sectorMatch = currentAdminType.replace(/_admin$/, '').replace(/_staff$/, '');
-
-                                                    return getModuleBusinessTypes()
-                                                        .filter(bt => bt.value === sectorMatch || currentAdminType === bt.value)
-                                                        .map(bt => (
-                                                            <React.Fragment key={bt.value}>
-                                                                <option key={`${bt.value}_staff`} value={`${bt.value}_staff`}>
-                                                                    {bt.icon} {bt.label} Personeli
-                                                                </option>
-                                                                <option key={`${bt.value}_admin`} value={`${bt.value}_admin`}>
-                                                                    {bt.icon} {bt.label} Admin
-                                                                </option>
-                                                            </React.Fragment>
-                                                        ));
-                                                })()}
-                                                {/* Super Admin - visible if current admin is super OR if edited user is super */}
-                                                {(admin?.adminType === 'super' || editingUserProfile.adminType === 'super') && (
-                                                    <option value="super">👑 Süper Admin</option>
-                                                )}
-                                            </select>
-                                        </div>
-
-                                        {/* Business Selection - ARAMA BAZLI AUTOCOMPLETE (Kermes HARİCİ roller için) */}
-                                        {editingUserProfile.isAdmin && editingUserProfile.adminType && editingUserProfile.adminType !== 'super' && editingUserProfile.adminType !== 'user' && editingUserProfile.adminType !== 'kermes' && editingUserProfile.adminType !== 'kermes_staff' && (
-                                            <div className="relative">
-                                                <label className="block text-gray-400 text-sm mb-1">
-                                                    🏪 İşletme Seçimi <span className="text-red-500">*</span>
-                                                </label>
-
-                                                {/* Seçili işletme göster veya arama inputu */}
-                                                {editingUserProfile.butcherId ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex-1 px-3 py-2 bg-green-900/30 border border-green-600 text-green-200 rounded-lg">
-                                                            ✅ {editingUserProfile.butcherName || 'İşletme Seçildi'}
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setEditingUserProfile({
-                                                                    ...editingUserProfile,
-                                                                    butcherId: '',
-                                                                    butcherName: ''
-                                                                });
-                                                                setBusinessSearchFilter('');
-                                                            }}
-                                                            className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
-                                                        >
-                                                            ✕ Değiştir
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <>
-                                                        <div className="relative">
-                                                            <input
-                                                                type="text"
-                                                                value={businessSearchFilter}
-                                                                onChange={(e) => setBusinessSearchFilter(e.target.value)}
-                                                                placeholder="🔍 İşletme adı veya şehir yazın (en az 3 karakter)..."
-                                                                className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                            />
-                                                            {businessSearchFilter.length > 0 && businessSearchFilter.length < 3 && (
-                                                                <p className="text-yellow-400 text-xs mt-1">
-                                                                    ⏳ En az 3 karakter yazın...
-                                                                </p>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Arama Sonuçları */}
-                                                        {businessSearchFilter.length >= 3 && (
-                                                            <div className="mt-2 max-h-60 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg">
-                                                                {loadingButchers ? (
-                                                                    <div className="p-3 text-gray-400 text-center">
-                                                                        ⏳ Yükleniyor...
-                                                                    </div>
-                                                                ) : (
-                                                                    (() => {
-                                                                        const searchLower = businessSearchFilter.toLowerCase();
-                                                                        const filteredBusinesses = butcherList.filter(b =>
-                                                                            b.name.toLowerCase().includes(searchLower) ||
-                                                                            b.city.toLowerCase().includes(searchLower) ||
-                                                                            b.postalCode?.includes(searchLower)
-                                                                        ).slice(0, 20);
-
-                                                                        if (filteredBusinesses.length === 0) {
-                                                                            return (
-                                                                                <div className="p-3 text-gray-400 text-center">
-                                                                                    ❌ "{businessSearchFilter}" için sonuç bulunamadı
-                                                                                </div>
-                                                                            );
-                                                                        }
-
-                                                                        return filteredBusinesses.map(b => (
-                                                                            <button
-                                                                                key={b.id}
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    setEditingUserProfile({
-                                                                                        ...editingUserProfile,
-                                                                                        butcherId: b.id,
-                                                                                        butcherName: `${b.name} - ${b.city}`
-                                                                                    });
-                                                                                    setBusinessSearchFilter('');
-                                                                                }}
-                                                                                className="w-full text-left px-4 py-3 hover:bg-blue-600/30 border-b border-gray-700 last:border-b-0 transition"
-                                                                            >
-                                                                                <div className="font-medium text-white">{b.name}</div>
-                                                                                <div className="text-sm text-gray-400">
-                                                                                    📍 {b.city} {b.postalCode && `- ${b.postalCode}`}
-                                                                                    {b.types?.length > 0 && (
-                                                                                        <span className="ml-2 text-xs bg-gray-700 px-2 py-0.5 rounded">
-                                                                                            {b.types.join(', ').toUpperCase()}
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                            </button>
-                                                                        ));
-                                                                    })()
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </>
-                                                )}
-
-                                                {!editingUserProfile.butcherId && (
-                                                    <p className="text-red-400 text-xs mt-1">
-                                                        ⚠️ Admin rolü için işletme seçimi zorunludur!
-                                                    </p>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* 🆕 ORGANIZASYON SEÇİMİ - Kermes Admin/Personel için */}
-                                        {editingUserProfile.isAdmin && (editingUserProfile.adminType === 'kermes' || editingUserProfile.adminType === 'kermes_staff') && (
-                                            <div className="relative">
-                                                <label className="block text-gray-400 text-sm mb-1">
-                                                    🕌 Organizasyon Seçimi (VIKZ Camii) <span className="text-red-500">*</span>
-                                                </label>
-
-                                                {/* Seçili organizasyon göster veya arama inputu */}
-                                                {editingUserProfile.organizationId ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex-1 px-3 py-2 bg-emerald-900/30 border border-emerald-600 text-emerald-200 rounded-lg">
-                                                            🕌 {editingUserProfile.organizationName || 'Organizasyon Seçildi'}
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setEditingUserProfile({
-                                                                    ...editingUserProfile,
-                                                                    organizationId: '',
-                                                                    organizationName: ''
-                                                                });
-                                                                setOrganizationSearchFilter('');
-                                                            }}
-                                                            className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
-                                                        >
-                                                            ✕ Değiştir
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <>
-                                                        <div className="relative">
-                                                            <input
-                                                                type="text"
-                                                                value={organizationSearchFilter}
-                                                                onChange={(e) => setOrganizationSearchFilter(e.target.value)}
-                                                                placeholder="🔍 Şehir veya cami adı yazın (en az 3 karakter)..."
-                                                                className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-emerald-500"
-                                                            />
-                                                            {organizationSearchFilter.length > 0 && organizationSearchFilter.length < 3 && (
-                                                                <p className="text-yellow-400 text-xs mt-1">
-                                                                    ⏳ En az 3 karakter yazın...
-                                                                </p>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Organizasyon Arama Sonuçları */}
-                                                        {organizationSearchFilter.length >= 3 && (
-                                                            <div className="mt-2 max-h-60 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg">
-                                                                {loadingOrganizations ? (
-                                                                    <div className="p-3 text-gray-400 text-center">
-                                                                        ⏳ Organizasyonlar yükleniyor...
-                                                                    </div>
-                                                                ) : (
-                                                                    (() => {
-                                                                        const searchLower = organizationSearchFilter.toLowerCase();
-                                                                        const filteredOrgs = organizationList.filter(o =>
-                                                                            o.name.toLowerCase().includes(searchLower) ||
-                                                                            o.city.toLowerCase().includes(searchLower) ||
-                                                                            o.shortName?.toLowerCase().includes(searchLower)
-                                                                        ).slice(0, 20);
-
-                                                                        if (filteredOrgs.length === 0) {
-                                                                            return (
-                                                                                <div className="p-3 text-gray-400 text-center">
-                                                                                    ❌ "{organizationSearchFilter}" için organizasyon bulunamadı
-                                                                                </div>
-                                                                            );
-                                                                        }
-
-                                                                        return filteredOrgs.map(o => (
-                                                                            <button
-                                                                                key={o.id}
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    setEditingUserProfile({
-                                                                                        ...editingUserProfile,
-                                                                                        organizationId: o.id,
-                                                                                        organizationName: `${o.shortName || o.name} - ${o.city}`
-                                                                                    });
-                                                                                    setOrganizationSearchFilter('');
-                                                                                }}
-                                                                                className="w-full text-left px-4 py-3 hover:bg-emerald-600/30 border-b border-gray-700 last:border-b-0 transition"
-                                                                            >
-                                                                                <div className="font-medium text-white">🕌 {o.shortName || o.name}</div>
-                                                                                <div className="text-sm text-gray-400">
-                                                                                    📍 {o.city}
-                                                                                    <span className="ml-2 text-xs bg-emerald-800 px-2 py-0.5 rounded text-emerald-200">
-                                                                                        {o.type.toUpperCase()}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </button>
-                                                                        ));
-                                                                    })()
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </>
-                                                )}
-
-                                                {!editingUserProfile.organizationId && (
-                                                    <p className="text-red-400 text-xs mt-1">
-                                                        ⚠️ Kermes admin/personel için organizasyon seçimi zorunludur!
-                                                    </p>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Role description */}
-                                        <p className="text-gray-500 text-xs">
-                                            {editingUserProfile.isAdmin
-                                                ? `Bu kullanıcı "${getRoleLabel(editingUserProfile.adminType as string) || editingUserProfile.adminType || 'Admin'}" yetkisine sahip.`
-                                                : 'Bu kullanıcının admin yetkisi bulunmuyor.'}
-                                        </p>
-
-                                        {/* 🟣 İşletme Sahibi Toggle - Only Super Admin can see/set */}
-                                        {admin?.adminType === 'super' && editingUserProfile.isAdmin && editingUserProfile.adminType !== 'super' && (
-                                            <div className="mt-4 bg-purple-900/30 border border-purple-700 rounded-lg p-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <p className="text-purple-200 font-medium flex items-center gap-2">
-                                                            👑 İşletme Sahibi Olarak İşaretle
-                                                        </p>
-                                                        <p className="text-purple-400 text-xs mt-1">
-                                                            İşletme sahipleri diğer adminler tarafından silinemez, arşivlenemez veya seviye düşürülemez.
-                                                        </p>
-                                                    </div>
+                                                <div className="flex items-center gap-3">
                                                     <button
                                                         type="button"
                                                         onClick={() => setEditingUserProfile({
                                                             ...editingUserProfile,
-                                                            isPrimaryAdmin: !(editingUserProfile as any).isPrimaryAdmin
-                                                        } as any)}
-                                                        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${(editingUserProfile as any).isPrimaryAdmin ? 'bg-purple-600' : 'bg-gray-600'
+                                                            isActive: editingUserProfile.isActive === false ? true : false
+                                                        })}
+                                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 ${editingUserProfile.isActive !== false
+                                                            ? 'bg-green-500 focus:ring-green-500'
+                                                            : 'bg-red-500 focus:ring-red-500'
                                                             }`}
                                                     >
                                                         <span
-                                                            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${(editingUserProfile as any).isPrimaryAdmin ? 'translate-x-8' : 'translate-x-1'
+                                                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ease-in-out ${editingUserProfile.isActive !== false
+                                                                ? 'translate-x-6'
+                                                                : 'translate-x-1'
                                                                 }`}
                                                         />
                                                     </button>
+                                                    <span className={`text-sm font-medium min-w-[60px] ${editingUserProfile.isActive !== false
+                                                        ? 'text-green-400'
+                                                        : 'text-red-400'
+                                                        }`}>
+                                                        {editingUserProfile.isActive !== false ? '✅ Aktif' : '⛔ Pasif'}
+                                                    </span>
                                                 </div>
-                                                {(editingUserProfile as any).isPrimaryAdmin && (
-                                                    <div className="mt-3 bg-purple-800/30 rounded p-2 text-center">
-                                                        <span className="text-purple-200 text-sm font-medium">
-                                                            ✅ Bu admin İşletme Sahibi olarak korunacak
-                                                        </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Contact Info - GDPR Privacy: Business admins cannot see phone/email */}
+                                        <div>
+                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
+                                                📞 İletişim Bilgileri
+                                                {admin?.adminType !== 'super' && (
+                                                    <span className="text-xs text-yellow-500 font-normal ml-2">🔒 Gizlilik Korumalı</span>
+                                                )}
+                                            </h4>
+                                            {admin?.adminType === 'super' ? (
+                                                /* Super Admin: Full access to contact info */
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-gray-400 text-sm mb-1">E-posta Adresi</label>
+                                                        <input
+                                                            type="email"
+                                                            value={editingUserProfile.email}
+                                                            onChange={(e) => setEditingUserProfile({ ...editingUserProfile, email: e.target.value })}
+                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-gray-400 text-sm mb-1">Telefon</label>
+                                                        <div className="flex gap-2">
+                                                            <select
+                                                                value={editingUserProfile.dialCode || '+90'}
+                                                                onChange={(e) => setEditingUserProfile({ ...editingUserProfile, dialCode: e.target.value })}
+                                                                className="w-28 px-2 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 text-sm appearance-none"
+                                                            >
+                                                                {COUNTRY_CODES.map(c => (
+                                                                    <option key={c.code} value={c.dial}>
+                                                                        {c.flag} {c.dial}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                            <input
+                                                                type="tel"
+                                                                value={editingUserProfile.phone}
+                                                                onChange={(e) => setEditingUserProfile({ ...editingUserProfile, phone: e.target.value })}
+                                                                className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
+                                                                placeholder="örn: XXX XXX XX XX"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                /* Business Admin: Privacy protected - cannot see or edit contact info */
+                                                <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4">
+                                                    <div className="flex items-center gap-3 text-yellow-400 mb-2">
+                                                        <span className="text-xl">🔒</span>
+                                                        <span className="font-medium">Müşteri Gizliliği Koruması</span>
+                                                    </div>
+                                                    <p className="text-yellow-300/70 text-sm">
+                                                        GDPR uyumluluğu gereği, işletme yöneticileri müşterilerin e-posta ve telefon bilgilerine erişemez.
+                                                        Teslimat sırasında gerekli iletişim bilgileri sipariş detayında görüntülenir.
+                                                    </p>
+                                                    <div className="grid grid-cols-2 gap-4 mt-3">
+                                                        <div>
+                                                            <label className="block text-gray-500 text-sm mb-1">E-posta</label>
+                                                            <div className="px-3 py-2 bg-gray-800 text-gray-500 rounded-lg border border-gray-700">
+                                                                🔒 Gizli
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-gray-500 text-sm mb-1">Telefon</label>
+                                                            <div className="px-3 py-2 bg-gray-800 text-gray-500 rounded-lg border border-gray-700">
+                                                                🔒 Gizli
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Address */}
+                                        <div>
+                                            <h4 className="text-white font-semibold mb-3 flex items-center justify-between border-b border-gray-700 pb-2">
+                                                <span className="flex items-center gap-2">📍 Adres Bilgileri</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleReverseGeocode}
+                                                    disabled={isGeocoding}
+                                                    className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded flex items-center gap-1 transition disabled:opacity-50"
+                                                >
+                                                    {isGeocoding ? '📍 Aranıyor...' : '📍 GPS\'ten Adres Çek'}
+                                                </button>
+                                            </h4>
+                                            <div className="space-y-4">
+                                                {/* Street and House Number Row */}
+                                                <div className="grid grid-cols-4 gap-4">
+                                                    <div className="col-span-3 relative">
+                                                        <label className="block text-gray-400 text-sm mb-1">Cadde / Sokak</label>
+                                                        <input
+                                                            id="google-places-street-input"
+                                                            type="text"
+                                                            value={editingUserProfile.address}
+                                                            onChange={(e) => handleAddressInputChange(e.target.value, false)}
+                                                            onFocus={() => {
+                                                                if (addressSuggestions.length > 0) setShowAddressSuggestions(true);
+                                                            }}
+                                                            onBlur={() => {
+                                                                // Delay to allow click on suggestion
+                                                                setTimeout(() => setShowAddressSuggestions(false), 200);
+                                                            }}
+                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                            placeholder="En az 3 karakter yazın..."
+                                                            autoComplete="off"
+                                                        />
+                                                        {/* Custom Autocomplete Dropdown */}
+                                                        {showAddressSuggestions && addressSuggestions.length > 0 && (
+                                                            <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                                                {addressSuggestions.map((suggestion, index) => (
+                                                                    <div
+                                                                        key={suggestion.place_id}
+                                                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm flex items-center gap-2"
+                                                                        onClick={() => handleAddressSelect(suggestion.place_id, suggestion.description, false)}
+                                                                    >
+                                                                        <span className="text-red-500">📍</span>
+                                                                        <span className="truncate">{suggestion.description}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {addressSearchLoading && (
+                                                            <div className="absolute right-2 top-8 text-gray-400 text-xs">🔍</div>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-gray-400 text-sm mb-1">Kapı No</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editingUserProfile.houseNumber}
+                                                            onChange={(e) => setEditingUserProfile({ ...editingUserProfile, houseNumber: e.target.value })}
+                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                            placeholder="No"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Address Line 2 */}
+                                                <div>
+                                                    <label className="block text-gray-400 text-sm mb-1">
+                                                        Adres Satırı 2 <span className="text-gray-500 text-xs">(Daire, Kat, Site Adı vb.)</span>
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={editingUserProfile.addressLine2}
+                                                        onChange={(e) => setEditingUserProfile({ ...editingUserProfile, addressLine2: e.target.value })}
+                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                        placeholder="Zorunlu alan: Daire, Kat veya Site/Apartman adı"
+                                                    />
+                                                </div>
+
+                                                {/* City, Zip, Country */}
+                                                <div className="grid grid-cols-3 gap-4">
+                                                    <div className="relative">
+                                                        <label className="block text-gray-400 text-sm mb-1">Şehir</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editingUserProfile.city}
+                                                            onChange={(e) => handleCityInputChange(e.target.value, false)}
+                                                            onFocus={() => {
+                                                                if (citySuggestions.length > 0) setShowCitySuggestions(true);
+                                                            }}
+                                                            onBlur={() => {
+                                                                setTimeout(() => setShowCitySuggestions(false), 200);
+                                                            }}
+                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                            placeholder="Şehir yazın..."
+                                                        />
+                                                        {/* City Autocomplete Dropdown */}
+                                                        {showCitySuggestions && citySuggestions.length > 0 && (
+                                                            <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                                                {citySuggestions.map((suggestion) => (
+                                                                    <div
+                                                                        key={suggestion.place_id}
+                                                                        className="px-3 py-2 hover:bg-gray-700 cursor-pointer text-white text-sm flex items-center gap-2"
+                                                                        onClick={() => handleCitySelect(suggestion.description, false)}
+                                                                    >
+                                                                        <span className="text-blue-400">🏙️</span>
+                                                                        <span className="truncate">{suggestion.description}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        {citySearchLoading && (
+                                                            <div className="absolute right-2 top-8 text-gray-400 text-xs">🔍</div>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-gray-400 text-sm mb-1">Posta Kodu</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editingUserProfile.postalCode}
+                                                            onChange={(e) => setEditingUserProfile({ ...editingUserProfile, postalCode: e.target.value })}
+                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-gray-400 text-sm mb-1">Ülke</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editingUserProfile.country}
+                                                            onChange={(e) => setEditingUserProfile({ ...editingUserProfile, country: e.target.value })}
+                                                            className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* RIGHT COLUMN: Yetki/Roles/Toggles */}
+                                    <div className="space-y-6">
+                                        {/* Admin Role Section */}
+                                        <div>
+                                            <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
+                                                🔐 Yetki Yönetimi
+                                            </h4>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <label className="block text-gray-400 text-sm mb-1">Rol</label>
+                                                    <select
+                                                        value={editingUserProfile.isAdmin ? (editingUserProfile.adminType || 'admin') : 'user'}
+                                                        onChange={(e) => {
+                                                            const newRole = e.target.value;
+                                                            if (newRole === 'user') {
+                                                                setEditingUserProfile({
+                                                                    ...editingUserProfile,
+                                                                    isAdmin: false,
+                                                                    adminType: undefined
+                                                                });
+                                                            } else {
+                                                                setEditingUserProfile({
+                                                                    ...editingUserProfile,
+                                                                    isAdmin: true,
+                                                                    adminType: newRole
+                                                                });
+                                                            }
+                                                        }}
+                                                        className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                    >
+                                                        <option value="user">👤 Kullanıcı</option>
+                                                        {/* 🆕 KONSOLİDE ROLLER */}
+                                                        <optgroup label="İşletme Rolleri">
+                                                            <option value="isletme_admin">🏪 İşletme Admin</option>
+                                                            <option value="isletme_staff">🏪 İşletme Personel</option>
+                                                        </optgroup>
+                                                        <optgroup label="Organizasyon Rolleri">
+                                                            <option value="kermes">🎪 Kermes Admin</option>
+                                                            <option value="kermes_staff">🎪 Kermes Personel</option>
+                                                        </optgroup>
+                                                        {/* Super Admin - sadece süper adminler görebilir */}
+                                                        {(admin?.adminType === 'super' || editingUserProfile.adminType === 'super') && (
+                                                            <option value="super">👑 Süper Admin</option>
+                                                        )}
+                                                    </select>
+                                                </div>
+
+                                                {/* Business Selection - ARAMA BAZLI AUTOCOMPLETE (Kermes HARİCİ roller için) */}
+                                                {editingUserProfile.isAdmin && editingUserProfile.adminType && editingUserProfile.adminType !== 'super' && editingUserProfile.adminType !== 'user' && editingUserProfile.adminType !== 'kermes' && editingUserProfile.adminType !== 'kermes_staff' && (
+                                                    <div className="relative">
+                                                        <label className="block text-gray-400 text-sm mb-1">
+                                                            🏪 İşletme Seçimi <span className="text-red-500">*</span>
+                                                        </label>
+
+                                                        {/* Seçili işletme göster veya arama inputu */}
+                                                        {editingUserProfile.butcherId ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="flex-1 px-3 py-2 bg-green-900/30 border border-green-600 text-green-200 rounded-lg">
+                                                                    ✅ {editingUserProfile.butcherName || 'İşletme Seçildi'}
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setEditingUserProfile({
+                                                                            ...editingUserProfile,
+                                                                            butcherId: '',
+                                                                            butcherName: ''
+                                                                        });
+                                                                        setBusinessSearchFilter('');
+                                                                    }}
+                                                                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
+                                                                >
+                                                                    ✕ Değiştir
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <div className="relative">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={businessSearchFilter}
+                                                                        onChange={(e) => setBusinessSearchFilter(e.target.value)}
+                                                                        placeholder="🔍 İşletme adı veya şehir yazın (en az 3 karakter)..."
+                                                                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
+                                                                    />
+                                                                    {businessSearchFilter.length > 0 && businessSearchFilter.length < 3 && (
+                                                                        <p className="text-yellow-400 text-xs mt-1">
+                                                                            ⏳ En az 3 karakter yazın...
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Arama Sonuçları */}
+                                                                {businessSearchFilter.length >= 3 && (
+                                                                    <div className="mt-2 max-h-60 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg">
+                                                                        {loadingButchers ? (
+                                                                            <div className="p-3 text-gray-400 text-center">
+                                                                                ⏳ Yükleniyor...
+                                                                            </div>
+                                                                        ) : (
+                                                                            (() => {
+                                                                                const searchLower = businessSearchFilter.toLowerCase();
+                                                                                const filteredBusinesses = butcherList.filter(b =>
+                                                                                    b.name.toLowerCase().includes(searchLower) ||
+                                                                                    b.city.toLowerCase().includes(searchLower) ||
+                                                                                    b.postalCode?.includes(searchLower)
+                                                                                ).slice(0, 20);
+
+                                                                                if (filteredBusinesses.length === 0) {
+                                                                                    return (
+                                                                                        <div className="p-3 text-gray-400 text-center">
+                                                                                            ❌ "{businessSearchFilter}" için sonuç bulunamadı
+                                                                                        </div>
+                                                                                    );
+                                                                                }
+
+                                                                                return filteredBusinesses.map(b => (
+                                                                                    <button
+                                                                                        key={b.id}
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setEditingUserProfile({
+                                                                                                ...editingUserProfile,
+                                                                                                butcherId: b.id,
+                                                                                                butcherName: `${b.name} - ${b.city}`
+                                                                                            });
+                                                                                            setBusinessSearchFilter('');
+                                                                                        }}
+                                                                                        className="w-full text-left px-4 py-3 hover:bg-blue-600/30 border-b border-gray-700 last:border-b-0 transition"
+                                                                                    >
+                                                                                        <div className="font-medium text-white">{b.name}</div>
+                                                                                        <div className="text-sm text-gray-400">
+                                                                                            📍 {b.city} {b.postalCode && `- ${b.postalCode}`}
+                                                                                            {b.types?.length > 0 && (
+                                                                                                <span className="ml-2 text-xs bg-gray-700 px-2 py-0.5 rounded">
+                                                                                                    {b.types.join(', ').toUpperCase()}
+                                                                                                </span>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </button>
+                                                                                ));
+                                                                            })()
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        )}
+
+                                                        {!editingUserProfile.butcherId && (
+                                                            <p className="text-red-400 text-xs mt-1">
+                                                                ⚠️ Admin rolü için işletme seçimi zorunludur!
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 )}
-                                            </div>
-                                        )}
 
-                                        {/* 🆕 ROLLER BÖLÜMÜ - Çoklu Rol Listesi ve Rol Ekleme */}
-                                        {editingUserProfile.isAdmin && admin?.adminType === 'super' && (
-                                            <div className="mt-6 bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-700 rounded-xl p-4">
-                                                <div className="flex items-center justify-between mb-4">
-                                                    <h4 className="text-indigo-200 font-semibold flex items-center gap-2">
-                                                        🎭 Kullanıcı Rolleri
-                                                    </h4>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setNewRoleType('');
-                                                            setNewRoleBusinessId('');
-                                                            setNewRoleBusinessName('');
-                                                            setNewRoleOrganizationId('');
-                                                            setNewRoleOrganizationName('');
-                                                            setShowAddRoleModal(true);
-                                                            loadButchersHelper();
-                                                            loadOrganizationsHelper();
-                                                        }}
-                                                        className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-500 transition flex items-center gap-1"
-                                                    >
-                                                        ➕ Rol Ekle
-                                                    </button>
-                                                </div>
+                                                {/* 🆕 ORGANIZASYON SEÇİMİ - Kermes Admin/Personel için */}
+                                                {editingUserProfile.isAdmin && (editingUserProfile.adminType === 'kermes' || editingUserProfile.adminType === 'kermes_staff') && (
+                                                    <div className="relative">
+                                                        <label className="block text-gray-400 text-sm mb-1">
+                                                            🕌 Organizasyon Seçimi (VIKZ Camii) <span className="text-red-500">*</span>
+                                                        </label>
 
-                                                {/* Mevcut Roller Listesi */}
-                                                {editingUserProfile.roles && editingUserProfile.roles.length > 0 ? (
-                                                    <div className="space-y-2">
-                                                        {editingUserProfile.roles.map((role, index) => (
-                                                            <div
-                                                                key={index}
-                                                                className={`flex items-center justify-between p-3 rounded-lg border ${role.isPrimary
-                                                                    ? 'bg-yellow-900/30 border-yellow-600'
-                                                                    : role.isActive
-                                                                        ? 'bg-gray-800/50 border-gray-600'
-                                                                        : 'bg-gray-900/50 border-gray-700 opacity-50'
+                                                        {/* Seçili organizasyon göster veya arama inputu */}
+                                                        {editingUserProfile.organizationId ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="flex-1 px-3 py-2 bg-emerald-900/30 border border-emerald-600 text-emerald-200 rounded-lg">
+                                                                    🕌 {editingUserProfile.organizationName || 'Organizasyon Seçildi'}
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setEditingUserProfile({
+                                                                            ...editingUserProfile,
+                                                                            organizationId: '',
+                                                                            organizationName: ''
+                                                                        });
+                                                                        setOrganizationSearchFilter('');
+                                                                    }}
+                                                                    className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
+                                                                >
+                                                                    ✕ Değiştir
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <div className="relative">
+                                                                    <input
+                                                                        type="text"
+                                                                        value={organizationSearchFilter}
+                                                                        onChange={(e) => setOrganizationSearchFilter(e.target.value)}
+                                                                        placeholder="🔍 Posta kodu, şehir veya dernek adı yazın (en az 3 karakter)..."
+                                                                        className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-emerald-500"
+                                                                    />
+                                                                    {organizationSearchFilter.length > 0 && organizationSearchFilter.length < 3 && (
+                                                                        <p className="text-yellow-400 text-xs mt-1">
+                                                                            ⏳ En az 3 karakter yazın...
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Organizasyon Arama Sonuçları */}
+                                                                {organizationSearchFilter.length >= 3 && (
+                                                                    <div className="mt-2 max-h-60 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg">
+                                                                        {loadingOrganizations ? (
+                                                                            <div className="p-3 text-gray-400 text-center">
+                                                                                ⏳ Organizasyonlar yükleniyor...
+                                                                            </div>
+                                                                        ) : (
+                                                                            (() => {
+                                                                                const searchLower = organizationSearchFilter.toLowerCase();
+                                                                                const filteredOrgs = organizationList.filter(o =>
+                                                                                    o.name.toLowerCase().includes(searchLower) ||
+                                                                                    o.city.toLowerCase().includes(searchLower) ||
+                                                                                    o.shortName?.toLowerCase().includes(searchLower) ||
+                                                                                    o.postalCode?.includes(searchLower)
+                                                                                ).slice(0, 20);
+
+                                                                                if (filteredOrgs.length === 0) {
+                                                                                    return (
+                                                                                        <div className="p-3 text-gray-400 text-center">
+                                                                                            ❌ "{organizationSearchFilter}" için organizasyon bulunamadı
+                                                                                        </div>
+                                                                                    );
+                                                                                }
+
+                                                                                return filteredOrgs.map(o => (
+                                                                                    <button
+                                                                                        key={o.id}
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setEditingUserProfile({
+                                                                                                ...editingUserProfile,
+                                                                                                organizationId: o.id,
+                                                                                                organizationName: `${o.shortName || o.name} - ${o.city}`
+                                                                                            });
+                                                                                            setOrganizationSearchFilter('');
+                                                                                        }}
+                                                                                        className="w-full text-left px-4 py-3 hover:bg-emerald-600/30 border-b border-gray-700 last:border-b-0 transition"
+                                                                                    >
+                                                                                        <div className="font-medium text-white">🕌 {o.shortName || o.name}</div>
+                                                                                        <div className="text-sm text-gray-400">
+                                                                                            📍 {o.postalCode && `${o.postalCode} `}{o.city}
+                                                                                            <span className="ml-2 text-xs bg-emerald-800 px-2 py-0.5 rounded text-emerald-200">
+                                                                                                {o.type.toUpperCase()}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    </button>
+                                                                                ));
+                                                                            })()
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        )}
+
+                                                        {!editingUserProfile.organizationId && (
+                                                            <p className="text-red-400 text-xs mt-1">
+                                                                ⚠️ Kermes admin/personel için organizasyon seçimi zorunludur!
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Role description */}
+                                                <p className="text-gray-500 text-xs">
+                                                    {editingUserProfile.isAdmin
+                                                        ? `Bu kullanıcı "${getRoleLabel(editingUserProfile.adminType as string) || editingUserProfile.adminType || 'Admin'}" yetkisine sahip.`
+                                                        : 'Bu kullanıcının admin yetkisi bulunmuyor.'}
+                                                </p>
+
+                                                {/* 🟣 İşletme Sahibi Toggle - Only Super Admin can see/set */}
+                                                {admin?.adminType === 'super' && editingUserProfile.isAdmin && editingUserProfile.adminType !== 'super' && (
+                                                    <div className="mt-4 bg-purple-900/30 border border-purple-700 rounded-lg p-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <div>
+                                                                <p className="text-purple-200 font-medium flex items-center gap-2">
+                                                                    👑 İşletme Sahibi Olarak İşaretle
+                                                                </p>
+                                                                <p className="text-purple-400 text-xs mt-1">
+                                                                    İşletme sahipleri diğer adminler tarafından silinemez, arşivlenemez veya seviye düşürülemez.
+                                                                </p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setEditingUserProfile({
+                                                                    ...editingUserProfile,
+                                                                    isPrimaryAdmin: !(editingUserProfile as any).isPrimaryAdmin
+                                                                } as any)}
+                                                                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${(editingUserProfile as any).isPrimaryAdmin ? 'bg-purple-600' : 'bg-gray-600'
                                                                     }`}
                                                             >
-                                                                <div className="flex items-center gap-3">
-                                                                    <span className="text-2xl">
-                                                                        {role.type === 'super' ? '👑' :
-                                                                            role.type?.includes('kermes') ? '🎪' :
-                                                                                role.type?.includes('kasap') ? '🥩' :
-                                                                                    role.type?.includes('restoran') ? '🍽️' :
-                                                                                        role.type?.includes('market') ? '🛒' : '🎫'}
-                                                                    </span>
-                                                                    <div>
-                                                                        <p className="text-white font-medium">
-                                                                            {getRoleLabel(role.type) || role.type}
-                                                                            {role.isPrimary && (
-                                                                                <span className="ml-2 text-xs bg-yellow-600 text-yellow-100 px-2 py-0.5 rounded">
-                                                                                    ⭐ Ana Rol
-                                                                                </span>
-                                                                            )}
-                                                                        </p>
-                                                                        <p className="text-gray-400 text-sm">
-                                                                            {role.businessName || role.organizationName || 'Tüm Sistem'}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex items-center gap-2">
-                                                                    {/* Ana Rol Yap butonu */}
-                                                                    {!role.isPrimary && role.isActive && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                const updatedRoles = editingUserProfile.roles?.map((r, i) => ({
-                                                                                    ...r,
-                                                                                    isPrimary: i === index
-                                                                                }));
-                                                                                setEditingUserProfile({
-                                                                                    ...editingUserProfile,
-                                                                                    roles: updatedRoles,
-                                                                                    // Ana rolü de güncelle
-                                                                                    adminType: role.type,
-                                                                                    butcherId: role.businessId || '',
-                                                                                    butcherName: role.businessName || '',
-                                                                                    organizationId: role.organizationId || '',
-                                                                                    organizationName: role.organizationName || ''
-                                                                                });
-                                                                            }}
-                                                                            className="px-2 py-1 text-xs bg-yellow-700 text-yellow-100 rounded hover:bg-yellow-600 transition"
-                                                                            title="Bu rolü ana rol yap"
-                                                                        >
-                                                                            ⭐ Ana Yap
-                                                                        </button>
-                                                                    )}
-                                                                    {/* Rol Sil butonu - ana rol silinemez */}
-                                                                    {!role.isPrimary && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                const updatedRoles = editingUserProfile.roles?.filter((_, i) => i !== index);
-                                                                                setEditingUserProfile({
-                                                                                    ...editingUserProfile,
-                                                                                    roles: updatedRoles
-                                                                                });
-                                                                            }}
-                                                                            className="px-2 py-1 text-xs bg-red-700 text-red-100 rounded hover:bg-red-600 transition"
-                                                                            title="Bu rolü kaldır"
-                                                                        >
-                                                                            🗑️
-                                                                        </button>
-                                                                    )}
+                                                                <span
+                                                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${(editingUserProfile as any).isPrimaryAdmin ? 'translate-x-8' : 'translate-x-1'
+                                                                        }`}
+                                                                />
+                                                            </button>
+                                                        </div>
+                                                        {(editingUserProfile as any).isPrimaryAdmin && (
+                                                            <div className="mt-3 bg-purple-800/30 rounded p-2 text-center">
+                                                                <span className="text-purple-200 text-sm font-medium">
+                                                                    ✅ Bu admin İşletme Sahibi olarak korunacak
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* 🚗 Sürücü Toggle - Tüm kullanıcılar için görünür (sürücü admin olmadan da atanabilir) */}
+                                                {(
+                                                    <div className="mt-4 bg-emerald-900/30 border border-emerald-700 rounded-lg p-4">
+                                                        <div className="flex items-center justify-between">
+                                                            <div>
+                                                                <p className="text-emerald-200 font-medium flex items-center gap-2">
+                                                                    🚗 Sürücü Olarak İşaretle
+                                                                </p>
+                                                                <p className="text-emerald-400 text-xs mt-1">
+                                                                    Bu kullanıcıyı teslimat sürücüsü olarak atayın. Sürücü paneline erişim sağlar.
+                                                                </p>
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setEditingUserProfile({
+                                                                    ...editingUserProfile,
+                                                                    isDriver: !(editingUserProfile as any).isDriver
+                                                                } as any)}
+                                                                className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${(editingUserProfile as any).isDriver ? 'bg-emerald-600' : 'bg-gray-600'
+                                                                    }`}
+                                                            >
+                                                                <span
+                                                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${(editingUserProfile as any).isDriver ? 'translate-x-8' : 'translate-x-1'
+                                                                        }`}
+                                                                />
+                                                            </button>
+                                                        </div>
+                                                        {(editingUserProfile as any).isDriver && (
+                                                            <div className="mt-3">
+                                                                <p className="text-emerald-300 text-xs font-medium mb-2">Sürücü Tipi:</p>
+                                                                <div className="flex gap-3">
+                                                                    <label
+                                                                        className={`flex-1 flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${(editingUserProfile as any).driverType === 'lokma_fleet'
+                                                                            ? 'border-emerald-400 bg-emerald-800/40'
+                                                                            : 'border-gray-600 bg-gray-800/40 hover:border-gray-500'
+                                                                            }`}
+                                                                        onClick={() => setEditingUserProfile({
+                                                                            ...editingUserProfile,
+                                                                            driverType: 'lokma_fleet'
+                                                                        } as any)}
+                                                                    >
+                                                                        <input
+                                                                            type="radio"
+                                                                            name="driverType"
+                                                                            checked={(editingUserProfile as any).driverType === 'lokma_fleet'}
+                                                                            readOnly
+                                                                            className="accent-emerald-500"
+                                                                        />
+                                                                        <div>
+                                                                            <p className="text-emerald-200 text-sm font-medium">🚚 LOKMA Filosu</p>
+                                                                            <p className="text-emerald-400/70 text-xs">Platform sürücüsü, tüm işletmelere atanabilir</p>
+                                                                        </div>
+                                                                    </label>
+                                                                    <label
+                                                                        className={`flex-1 flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${(editingUserProfile as any).driverType !== 'lokma_fleet'
+                                                                            ? 'border-amber-400 bg-amber-800/30'
+                                                                            : 'border-gray-600 bg-gray-800/40 hover:border-gray-500'
+                                                                            }`}
+                                                                        onClick={() => setEditingUserProfile({
+                                                                            ...editingUserProfile,
+                                                                            driverType: 'business'
+                                                                        } as any)}
+                                                                    >
+                                                                        <input
+                                                                            type="radio"
+                                                                            name="driverType"
+                                                                            checked={(editingUserProfile as any).driverType !== 'lokma_fleet'}
+                                                                            readOnly
+                                                                            className="accent-amber-500"
+                                                                        />
+                                                                        <div>
+                                                                            <p className="text-amber-200 text-sm font-medium">🏪 İşletme Sürücüsü</p>
+                                                                            <p className="text-amber-400/70 text-xs">Sadece kendi işletmesinin siparişlerini taşır</p>
+                                                                        </div>
+                                                                    </label>
                                                                 </div>
                                                             </div>
-                                                        ))}
+                                                        )}
                                                     </div>
-                                                ) : (
-                                                    <div className="text-center py-6 text-gray-400">
-                                                        <p className="text-3xl mb-2">🎭</p>
-                                                        <p>Henüz ek rol atanmamış</p>
-                                                        <p className="text-xs mt-1">Mevcut ana rol: <span className="text-indigo-300 font-medium">{(editingUserProfile.adminType ? getRoleLabel(editingUserProfile.adminType) : null) || editingUserProfile.adminType || 'Atanmamış'}</span></p>
+                                                )}
+
+                                                {/* 🆕 ROLLER BÖLÜMÜ - Çoklu Rol Listesi ve Rol Ekleme */}
+                                                {editingUserProfile.isAdmin && admin?.adminType === 'super' && (
+                                                    <div className="mt-6 bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-700 rounded-xl p-4">
+                                                        <div className="flex items-center justify-between mb-4">
+                                                            <h4 className="text-indigo-200 font-semibold flex items-center gap-2">
+                                                                🎭 Kullanıcı Rolleri
+                                                            </h4>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setNewRoleType('');
+                                                                    setNewRoleBusinessId('');
+                                                                    setNewRoleBusinessName('');
+                                                                    setNewRoleOrganizationId('');
+                                                                    setNewRoleOrganizationName('');
+                                                                    setShowAddRoleModal(true);
+                                                                    loadButchersHelper();
+                                                                    loadOrganizationsHelper();
+                                                                }}
+                                                                className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-500 transition flex items-center gap-1"
+                                                            >
+                                                                ➕ Rol Ekle
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Mevcut Roller Listesi */}
+                                                        {editingUserProfile.roles && editingUserProfile.roles.length > 0 ? (
+                                                            <div className="space-y-2">
+                                                                {editingUserProfile.roles.map((role, index) => (
+                                                                    <div
+                                                                        key={index}
+                                                                        className={`flex items-center justify-between p-3 rounded-lg border ${role.isPrimary
+                                                                            ? 'bg-yellow-900/30 border-yellow-600'
+                                                                            : role.isActive
+                                                                                ? 'bg-gray-800/50 border-gray-600'
+                                                                                : 'bg-gray-900/50 border-gray-700 opacity-50'
+                                                                            }`}
+                                                                    >
+                                                                        <div className="flex items-center gap-3">
+                                                                            <span className="text-2xl">
+                                                                                {role.type === 'super' ? '👑' :
+                                                                                    role.type?.includes('kermes') ? '🎪' :
+                                                                                        role.type?.includes('kasap') ? '🥩' :
+                                                                                            role.type?.includes('restoran') ? '🍽️' :
+                                                                                                role.type?.includes('market') ? '🛒' : '🎫'}
+                                                                            </span>
+                                                                            <div>
+                                                                                <p className="text-white font-medium">
+                                                                                    {getRoleLabel(role.type) || role.type}
+                                                                                    {role.isPrimary && (
+                                                                                        <span className="ml-2 text-xs bg-yellow-600 text-yellow-100 px-2 py-0.5 rounded">
+                                                                                            ⭐ Ana Rol
+                                                                                        </span>
+                                                                                    )}
+                                                                                </p>
+                                                                                <p className="text-gray-400 text-sm">
+                                                                                    {role.businessName || role.organizationName || 'Tüm Sistem'}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            {/* Ana Rol Yap butonu */}
+                                                                            {!role.isPrimary && role.isActive && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        const updatedRoles = editingUserProfile.roles?.map((r, i) => ({
+                                                                                            ...r,
+                                                                                            isPrimary: i === index
+                                                                                        }));
+                                                                                        setEditingUserProfile({
+                                                                                            ...editingUserProfile,
+                                                                                            roles: updatedRoles,
+                                                                                            // Ana rolü de güncelle
+                                                                                            adminType: role.type,
+                                                                                            butcherId: role.businessId || '',
+                                                                                            butcherName: role.businessName || '',
+                                                                                            organizationId: role.organizationId || '',
+                                                                                            organizationName: role.organizationName || ''
+                                                                                        });
+                                                                                    }}
+                                                                                    className="px-2 py-1 text-xs bg-yellow-700 text-yellow-100 rounded hover:bg-yellow-600 transition"
+                                                                                    title="Bu rolü ana rol yap"
+                                                                                >
+                                                                                    ⭐ Ana Yap
+                                                                                </button>
+                                                                            )}
+                                                                            {/* Rol Sil butonu - ana rol silinemez */}
+                                                                            {!role.isPrimary && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        const updatedRoles = editingUserProfile.roles?.filter((_, i) => i !== index);
+                                                                                        setEditingUserProfile({
+                                                                                            ...editingUserProfile,
+                                                                                            roles: updatedRoles
+                                                                                        });
+                                                                                    }}
+                                                                                    className="px-2 py-1 text-xs bg-red-700 text-red-100 rounded hover:bg-red-600 transition"
+                                                                                    title="Bu rolü kaldır"
+                                                                                >
+                                                                                    🗑️
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-center py-6 text-gray-400">
+                                                                <p className="text-3xl mb-2">🎭</p>
+                                                                <p>Henüz ek rol atanmamış</p>
+                                                                <p className="text-xs mt-1">Mevcut ana rol: <span className="text-indigo-300 font-medium">{(editingUserProfile.adminType ? getRoleLabel(editingUserProfile.adminType) : null) || editingUserProfile.adminType || 'Atanmamış'}</span></p>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -4682,64 +4814,71 @@ export default function SuperAdminDashboard() {
                                 {/* Delete/Archive Button - Only for Super Admin */}
                                 {admin?.adminType === 'super' && (
                                     <button
-                                        onClick={async () => {
-                                            const confirmAction = window.confirm(
-                                                editingUserProfile.isAdmin
+                                        onClick={() => {
+                                            const isAdmin = editingUserProfile.isAdmin;
+                                            setConfirmState({
+                                                isOpen: true,
+                                                title: isAdmin ? 'Kullanıcıyı Arşivle' : 'Kullanıcıyı Sil',
+                                                message: isAdmin
                                                     ? 'Bu kullanıcı admin yetkisine sahip. Arşivlemek istediğinizden emin misiniz?'
-                                                    : 'Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!'
-                                            );
-                                            if (!confirmAction) return;
-
-                                            try {
-                                                const userRef = doc(db, 'users', editingUserProfile.userId);
-                                                if (editingUserProfile.isAdmin) {
-                                                    // Archive - set isArchived flag
-                                                    await updateDoc(userRef, {
-                                                        isArchived: true,
-                                                        archivedAt: new Date(),
-                                                        archivedBy: admin?.displayName || 'admin'
-                                                    });
-                                                    showToast('Kullanıcı arşivlendi', 'success');
-                                                } else {
-                                                    // Try to delete user via API (Firebase Auth + Firestore)
+                                                    : 'Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!',
+                                                itemName: `${editingUserProfile.firstName} ${editingUserProfile.lastName}`.trim() || editingUserProfile.email,
+                                                variant: isAdmin ? 'warning' : 'danger',
+                                                confirmText: isAdmin ? 'Evet, Arşivle' : 'Evet, Sil',
+                                                onConfirm: async () => {
+                                                    setConfirmState(prev => ({ ...prev, isOpen: false }));
                                                     try {
-                                                        const response = await fetch('/api/admin/delete-user', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({
-                                                                userId: editingUserProfile.userId,
-                                                                email: editingUserProfile.email,
-                                                                phoneNumber: editingUserProfile.phone,
-                                                            }),
-                                                        });
-
-                                                        if (response.ok) {
-                                                            showToast('Kullanıcı tüm sistemlerden silindi', 'success');
+                                                        const userRef = doc(db, 'users', editingUserProfile.userId);
+                                                        if (isAdmin) {
+                                                            // Archive - set isArchived flag
+                                                            await updateDoc(userRef, {
+                                                                isArchived: true,
+                                                                archivedAt: new Date(),
+                                                                archivedBy: admin?.displayName || 'admin'
+                                                            });
+                                                            showToast('Kullanıcı arşivlendi', 'success');
                                                         } else {
-                                                            // API failed - fallback to direct Firestore delete
-                                                            throw new Error('API hatası - fallback moduna geçiliyor');
+                                                            // Try to delete user via API (Firebase Auth + Firestore)
+                                                            try {
+                                                                const response = await fetch('/api/admin/delete-user', {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({
+                                                                        userId: editingUserProfile.userId,
+                                                                        email: editingUserProfile.email,
+                                                                        phoneNumber: editingUserProfile.phone,
+                                                                    }),
+                                                                });
+
+                                                                if (response.ok) {
+                                                                    showToast('Kullanıcı tüm sistemlerden silindi', 'success');
+                                                                } else {
+                                                                    // API failed - fallback to direct Firestore delete
+                                                                    throw new Error('API hatası - fallback moduna geçiliyor');
+                                                                }
+                                                            } catch (apiError) {
+                                                                console.log('API delete failed, using Firestore fallback:', apiError);
+                                                                // Fallback: Delete directly from Firestore (orphan record)
+                                                                const userDocRef = doc(db, 'users', editingUserProfile.userId);
+                                                                const adminDocRef = doc(db, 'admins', editingUserProfile.userId);
+                                                                const profileDocRef = doc(db, 'user_profiles', editingUserProfile.userId);
+
+                                                                await deleteDoc(userDocRef).catch(e => console.log('users delete:', e));
+                                                                await deleteDoc(adminDocRef).catch(e => console.log('admins delete:', e));
+                                                                await deleteDoc(profileDocRef).catch(e => console.log('user_profiles delete:', e));
+
+                                                                showToast('Kullanıcı Firestore\'dan silindi (Auth kontrolü atlandı)', 'success');
+                                                            }
                                                         }
-                                                    } catch (apiError) {
-                                                        console.log('API delete failed, using Firestore fallback:', apiError);
-                                                        // Fallback: Delete directly from Firestore (orphan record)
-                                                        const userDocRef = doc(db, 'users', editingUserProfile.userId);
-                                                        const adminDocRef = doc(db, 'admins', editingUserProfile.userId);
-                                                        const profileDocRef = doc(db, 'user_profiles', editingUserProfile.userId);
-
-                                                        await deleteDoc(userDocRef).catch(e => console.log('users delete:', e));
-                                                        await deleteDoc(adminDocRef).catch(e => console.log('admins delete:', e));
-                                                        await deleteDoc(profileDocRef).catch(e => console.log('user_profiles delete:', e));
-
-                                                        showToast('Kullanıcı Firestore\'dan silindi (Auth kontrolü atlandı)', 'success');
+                                                        setEditingUserProfile(null);
+                                                        loadAllUsers();
+                                                    } catch (error) {
+                                                        console.error('Delete/archive error:', error);
+                                                        const errorMsg = error instanceof Error ? error.message : 'Bilinmeyen hata';
+                                                        showToast(`İşlem başarısız: ${errorMsg}`, 'error');
                                                     }
-                                                }
-                                                setEditingUserProfile(null);
-                                                loadAllUsers();
-                                            } catch (error) {
-                                                console.error('Delete/archive error:', error);
-                                                const errorMsg = error instanceof Error ? error.message : 'Bilinmeyen hata';
-                                                showToast(`İşlem başarısız: ${errorMsg}`, 'error');
-                                            }
+                                                },
+                                            });
                                         }}
                                         className={`px-4 py-3 rounded-lg font-medium transition ${editingUserProfile.isAdmin
                                             ? 'bg-orange-600 text-white hover:bg-orange-500'
@@ -4757,9 +4896,14 @@ export default function SuperAdminDashboard() {
                                 </button>
                                 <button
                                     onClick={async () => {
-                                        // Validation: Non-super admins MUST have a business selected
-                                        if (editingUserProfile.isAdmin && editingUserProfile.adminType !== 'super' && !editingUserProfile.butcherId) {
+                                        // Validation: Non-super, non-kermes admins MUST have a business selected
+                                        if (editingUserProfile.isAdmin && editingUserProfile.adminType !== 'super' && editingUserProfile.adminType !== 'kermes' && editingUserProfile.adminType !== 'kermes_staff' && !editingUserProfile.butcherId) {
                                             showToast('Admin rolü için işletme seçimi zorunludur!', 'error');
+                                            return;
+                                        }
+                                        // Validation: Kermes admins MUST have an organization selected
+                                        if (editingUserProfile.isAdmin && (editingUserProfile.adminType === 'kermes' || editingUserProfile.adminType === 'kermes_staff') && !editingUserProfile.organizationId) {
+                                            showToast('Kermes rolü için organizasyon seçimi zorunludur!', 'error');
                                             return;
                                         }
 
@@ -4872,6 +5016,10 @@ export default function SuperAdminDashboard() {
                                                         updatedBy: admin?.email || 'system',
                                                         // 🟣 Primary Admin flag - only Super Admin can set
                                                         ...(admin?.adminType === 'super' ? { isPrimaryAdmin: (editingUserProfile as any).isPrimaryAdmin || false } : {}),
+                                                        // 🚗 Driver flag - only Super Admin can set
+                                                        ...(admin?.adminType === 'super' ? { isDriver: (editingUserProfile as any).isDriver || false } : {}),
+                                                        // 🚚 Driver type - lokma_fleet or business
+                                                        ...(admin?.adminType === 'super' && (editingUserProfile as any).isDriver ? { driverType: (editingUserProfile as any).driverType || 'business' } : {}),
                                                     });
                                                 } else {
                                                     // Create new admin record with userId as doc ID
@@ -4899,6 +5047,10 @@ export default function SuperAdminDashboard() {
                                                         createdBy: admin?.email || 'system',
                                                         // 🟣 Primary Admin flag - only Super Admin can set
                                                         ...(admin?.adminType === 'super' ? { isPrimaryAdmin: (editingUserProfile as any).isPrimaryAdmin || false } : {}),
+                                                        // 🚗 Driver flag - only Super Admin can set
+                                                        ...(admin?.adminType === 'super' ? { isDriver: (editingUserProfile as any).isDriver || false } : {}),
+                                                        // 🚚 Driver type - lokma_fleet or business
+                                                        ...(admin?.adminType === 'super' && (editingUserProfile as any).isDriver ? { driverType: (editingUserProfile as any).driverType || 'business' } : {}),
                                                     });
 
                                                     // 🎉 SEND ADMIN PROMOTION NOTIFICATIONS
@@ -5040,7 +5192,7 @@ export default function SuperAdminDashboard() {
             {
                 deleteModal?.show && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                        <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-md w-full p-6">
+                        <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-2xl w-full p-6">
                             <div className="text-center mb-6">
                                 <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <span className="text-4xl">⚠️</span>
@@ -5075,7 +5227,7 @@ export default function SuperAdminDashboard() {
             {/* 🆕 ROL EKLEME MODAL */}
             {showAddRoleModal && editingUserProfile && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-                    <div className="bg-gray-800 rounded-xl border border-indigo-600 shadow-2xl max-w-lg w-full p-6">
+                    <div className="bg-gray-800 rounded-xl border border-indigo-600 shadow-2xl max-w-2xl w-full p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                 ➕ Yeni Rol Ekle
@@ -5106,12 +5258,8 @@ export default function SuperAdminDashboard() {
                                 >
                                     <option value="">-- Rol Seçin --</option>
                                     <optgroup label="İşletme Rolleri">
-                                        <option value="kasap">🥩 Kasap Admin</option>
-                                        <option value="kasap_staff">🥩 Kasap Personel</option>
-                                        <option value="restoran">🍽️ Restoran Admin</option>
-                                        <option value="restoran_staff">🍽️ Restoran Personel</option>
-                                        <option value="market">🛒 Market Admin</option>
-                                        <option value="market_staff">🛒 Market Personel</option>
+                                        <option value="isletme_admin">🏪 İşletme Admin</option>
+                                        <option value="isletme_staff">🏪 İşletme Personel</option>
                                     </optgroup>
                                     <optgroup label="Organizasyon Rolleri">
                                         <option value="kermes">🎪 Kermes Admin</option>
@@ -5120,8 +5268,8 @@ export default function SuperAdminDashboard() {
                                 </select>
                             </div>
 
-                            {/* İşletme Seçimi (kasap, restoran, market için) */}
-                            {newRoleType && ['kasap', 'kasap_staff', 'restoran', 'restoran_staff', 'market', 'market_staff'].includes(newRoleType) && (
+                            {/* İşletme Seçimi (isletme_admin, isletme_staff için) */}
+                            {newRoleType && ['isletme_admin', 'isletme_staff'].includes(newRoleType) && (
                                 <div>
                                     <label className="block text-gray-400 text-sm mb-2">
                                         🏪 İşletme Seçimi <span className="text-red-500">*</span>
@@ -5254,7 +5402,7 @@ export default function SuperAdminDashboard() {
                                                     type="text"
                                                     value={newRoleOrgSearch}
                                                     onChange={(e) => setNewRoleOrgSearch(e.target.value)}
-                                                    placeholder="🔍 Cami adı veya şehir ara..."
+                                                    placeholder="🔍 Posta kodu, şehir veya dernek adı ara..."
                                                     className="w-full px-4 py-2.5 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                                                     autoFocus
                                                 />
@@ -5279,7 +5427,8 @@ export default function SuperAdminDashboard() {
                                                             ? organizationList.filter(o =>
                                                                 o.name?.toLowerCase().includes(searchLower) ||
                                                                 o.shortName?.toLowerCase().includes(searchLower) ||
-                                                                o.city?.toLowerCase().includes(searchLower)
+                                                                o.city?.toLowerCase().includes(searchLower) ||
+                                                                o.postalCode?.includes(searchLower)
                                                             )
                                                             : organizationList;
                                                         const results = filtered.slice(0, 30);
@@ -5313,7 +5462,7 @@ export default function SuperAdminDashboard() {
                                                                         className="w-full text-left px-3 py-2 hover:bg-emerald-600/30 border-b border-gray-600 last:border-b-0 transition"
                                                                     >
                                                                         <div className="text-white text-sm font-medium">🕌 {o.shortName || o.name}</div>
-                                                                        <div className="text-gray-400 text-xs">📍 {o.city}</div>
+                                                                        <div className="text-gray-400 text-xs">📍 {o.postalCode && `${o.postalCode} `}{o.city}</div>
                                                                     </button>
                                                                 ))}
                                                             </>
@@ -5342,7 +5491,7 @@ export default function SuperAdminDashboard() {
                                         return;
                                     }
 
-                                    const needsBusiness = ['kasap', 'kasap_staff', 'restoran', 'restoran_staff', 'market', 'market_staff'].includes(newRoleType);
+                                    const needsBusiness = ['isletme_admin', 'isletme_staff'].includes(newRoleType);
                                     const needsOrg = ['kermes', 'kermes_staff'].includes(newRoleType);
 
                                     if (needsBusiness && !newRoleBusinessId) {
@@ -5396,6 +5545,18 @@ export default function SuperAdminDashboard() {
                     </div>
                 </div>
             )}
+
+            {/* ConfirmModal */}
+            <ConfirmModal
+                isOpen={confirmState.isOpen}
+                onClose={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmState.onConfirm}
+                title={confirmState.title}
+                message={confirmState.message}
+                itemName={confirmState.itemName}
+                variant={confirmState.variant}
+                confirmText={confirmState.confirmText}
+            />
         </div >
     )
 }

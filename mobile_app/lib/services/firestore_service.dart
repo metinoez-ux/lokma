@@ -165,7 +165,7 @@ class FirestoreService {
     String? phoneNumber,
     String? photoUrl,
   }) async {
-    await _db.collection('lokma_users').doc(uid).set({
+    await _db.collection('users').doc(uid).set({
       'email': email,
       'displayName': displayName,
       'phoneNumber': phoneNumber,
@@ -176,12 +176,12 @@ class FirestoreService {
 
   /// Get user profile
   Future<DocumentSnapshot> getUserProfile(String uid) {
-    return _db.collection('lokma_users').doc(uid).get();
+    return _db.collection('users').doc(uid).get();
   }
 
   /// Update user address
   Future<void> updateUserAddress(String uid, Map<String, dynamic> address) {
-    return _db.collection('lokma_users').doc(uid).update({
+    return _db.collection('users').doc(uid).update({
       'defaultAddress': address,
       'updatedAt': FieldValue.serverTimestamp(),
     });

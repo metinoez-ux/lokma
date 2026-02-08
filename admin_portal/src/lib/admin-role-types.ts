@@ -10,16 +10,21 @@
  */
 
 // Rol türleri
+// 🆕 Konsolide roller: isletme_admin / isletme_staff tüm işletme türlerini kapsar
+// Eski roller (kasap, restoran, market vb.) geriye uyumluluk için korunur
 export type AdminRoleType =
     | 'super'           // Süper Admin - Tüm sistem
-    | 'kasap'           // Kasap Admin - İşletme sahibi
-    | 'kasap_staff'     // Kasap Personeli
-    | 'restoran'        // Restoran Admin
-    | 'restoran_staff'  // Restoran Personeli  
-    | 'market'          // Market Admin
-    | 'market_staff'    // Market Personeli
+    | 'isletme_admin'   // 🆕 İşletme Admin (Genel - tüm iş türleri)
+    | 'isletme_staff'   // 🆕 İşletme Personel (Genel - tüm iş türleri)
     | 'kermes'          // Kermes Admin - Organizasyon bazlı
     | 'kermes_staff'    // Kermes Personeli
+    // --- Eski roller (geriye uyumluluk) ---
+    | 'kasap'           // → isletme_admin
+    | 'kasap_staff'     // → isletme_staff
+    | 'restoran'        // → isletme_admin
+    | 'restoran_staff'  // → isletme_staff
+    | 'market'          // → isletme_admin
+    | 'market_staff'    // → isletme_staff
     | 'cenaze'          // Cenaze Fonu Admin
     | 'cenaze_staff';   // Cenaze Fonu Personeli
 
@@ -77,7 +82,7 @@ export interface AdminDocument {
 
 // Yardımcı: Rol için işletme/organizasyon gerekiyor mu?
 export function roleRequiresBusiness(type: AdminRoleType): boolean {
-    return ['kasap', 'kasap_staff', 'restoran', 'restoran_staff', 'market', 'market_staff'].includes(type);
+    return ['isletme_admin', 'isletme_staff', 'kasap', 'kasap_staff', 'restoran', 'restoran_staff', 'market', 'market_staff'].includes(type);
 }
 
 export function roleRequiresOrganization(type: AdminRoleType): boolean {
@@ -88,14 +93,17 @@ export function roleRequiresOrganization(type: AdminRoleType): boolean {
 export function getAdminRoleLabel(type: AdminRoleType): string {
     const labels: Record<AdminRoleType, string> = {
         'super': '👑 Süper Admin',
-        'kasap': '🔪 Kasap Admin',
-        'kasap_staff': '🔪 Kasap Personeli',
-        'restoran': '🍽️ Restoran Admin',
-        'restoran_staff': '🍽️ Restoran Personeli',
-        'market': '🛒 Market Admin',
-        'market_staff': '🛒 Market Personeli',
+        'isletme_admin': '🏪 İşletme Admin',
+        'isletme_staff': '🏪 İşletme Personel',
         'kermes': '🎪 Kermes Admin',
-        'kermes_staff': '🎪 Kermes Personeli',
+        'kermes_staff': '🎪 Kermes Personel',
+        // Eski roller → genel etikete map'lenir
+        'kasap': '🏪 İşletme Admin',
+        'kasap_staff': '🏪 İşletme Personel',
+        'restoran': '🏪 İşletme Admin',
+        'restoran_staff': '🏪 İşletme Personel',
+        'market': '🏪 İşletme Admin',
+        'market_staff': '🏪 İşletme Personel',
         'cenaze': '🕯️ Cenaze Fonu Admin',
         'cenaze_staff': '🕯️ Cenaze Fonu Personeli',
     };
@@ -156,7 +164,7 @@ export function migrateToMultiRole(admin: Partial<AdminDocument>): AdminRole[] {
 
 // Varsayılan boş rol
 export const DEFAULT_ADMIN_ROLE: Partial<AdminRole> = {
-    type: 'kasap_staff',
+    type: 'isletme_staff',
     isPrimary: false,
     isActive: true,
 };

@@ -269,7 +269,7 @@ export async function generateMonthlyCommissionInvoices(): Promise<{
 
             // Bu ay toplanan komisyonu hesapla
             const ordersQuery = query(
-                collection(db, 'orders'),
+                collection(db, 'meat_orders'),
                 where('businessId', '==', businessId),
                 where('status', '==', 'delivered'),
                 where('deliveredAt', '>=', Timestamp.fromDate(periodStart)),
@@ -317,7 +317,7 @@ export async function generateMonthlyCommissionInvoices(): Promise<{
 export async function createAndSendOrderInvoice(orderId: string): Promise<MerchantInvoice | null> {
     try {
         // Sipariş bilgilerini al
-        const orderDoc = await getDoc(doc(db, 'orders', orderId));
+        const orderDoc = await getDoc(doc(db, 'meat_orders', orderId));
         if (!orderDoc.exists()) {
             console.error('Sipariş bulunamadı:', orderId);
             return null;
@@ -376,7 +376,7 @@ export async function createAndSendOrderInvoice(orderId: string): Promise<Mercha
         }
 
         // Siparişi güncelle
-        await updateDoc(doc(db, 'orders', orderId), {
+        await updateDoc(doc(db, 'meat_orders', orderId), {
             invoiceId: invoice.id,
             invoiceNumber: invoice.invoiceNumber,
             invoiceSentAt: new Date()

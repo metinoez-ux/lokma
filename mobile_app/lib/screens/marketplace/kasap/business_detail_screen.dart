@@ -2278,7 +2278,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
            ElevatedButton(
              onPressed: () {
                Navigator.of(context).push(
-                 MaterialPageRoute(builder: (context) => const CartScreen()),
+                 MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: !_isDeliveryMode)),
                );
              },
              style: ElevatedButton.styleFrom(

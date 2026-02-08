@@ -88,8 +88,14 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         if (doc.exists) {
           final data = doc.data() as Map<String, dynamic>;
           
-          // Robust Data Loading with Type Safety
-          _nameController.text = (data['fullName'] ?? data['displayName'])?.toString() ?? '';
+          // Name: prefer firstName/lastName (canonical), fallback to fullName/displayName
+          final firstName = data['firstName']?.toString() ?? '';
+          final lastName = data['lastName']?.toString() ?? '';
+          if (firstName.isNotEmpty || lastName.isNotEmpty) {
+            _nameController.text = '$firstName $lastName'.trim();
+          } else {
+            _nameController.text = (data['fullName'] ?? data['displayName'])?.toString() ?? '';
+          }
           _emailController.text = (data['email'] ?? user.email)?.toString() ?? '';
           _phoneController.text = (data['phoneNumber'] ?? user.phoneNumber)?.toString() ?? '';
           
@@ -366,8 +372,15 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        // Parse firstName/lastName from full name
+        final nameParts = _nameController.text.trim().split(' ');
+        final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+        final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+        
         // Universal Address Schema - Root Level Storage
         final userData = {
+          'firstName': firstName,
+          'lastName': lastName,
           'fullName': _nameController.text,
           'displayName': _nameController.text, // Sync displayName
           'phoneNumber': _phoneController.text,

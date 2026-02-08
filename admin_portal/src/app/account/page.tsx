@@ -9,88 +9,40 @@ import Link from 'next/link';
 import { limitService } from '@/services/limitService';
 import { invoiceService } from '@/services/invoiceService';
 import { subscriptionService } from '@/services/subscriptionService';
+import { ButcherSubscriptionPlan } from '@/types';
 
-// ═══════════════════════════════════════════════════════════════════
-// PLAN TANIMLARI
-// ═══════════════════════════════════════════════════════════════════
-const PLANS: Record<string, {
-    name: string;
-    price: number;
-    color: string;
-    icon: string;
-    features: string[];
-    orderLimit: number;
-    pushLimit: number;
-    commissionRate: number;
-}> = {
-    free: {
-        name: 'Ücretsiz',
-        price: 0,
-        color: 'gray',
-        icon: '🆓',
-        features: ['10 sipariş/ay', 'Temel özellikler'],
-        orderLimit: 10,
-        pushLimit: 0,
-        commissionRate: 5.0
-    },
-    starter: {
-        name: 'Starter',
-        price: 9.99,
-        color: 'blue',
-        icon: '🚀',
-        features: ['50 sipariş/ay', '5 push bildirim', 'E-posta desteği'],
-        orderLimit: 50,
-        pushLimit: 5,
-        commissionRate: 4.0
-    },
-    basic: {
-        name: 'Basic',
-        price: 19.99,
-        color: 'cyan',
-        icon: '📦',
-        features: ['200 sipariş/ay', '20 push bildirim', 'Öncelikli destek'],
-        orderLimit: 200,
-        pushLimit: 20,
-        commissionRate: 3.5
-    },
-    standard: {
-        name: 'Standart',
-        price: 29.99,
-        color: 'green',
-        icon: '⭐',
-        features: ['500 sipariş/ay', '50 push bildirim', 'Özel entegrasyonlar', 'Raporlar'],
-        orderLimit: 500,
-        pushLimit: 50,
-        commissionRate: 3.0
-    },
-    premium: {
-        name: 'Premium',
-        price: 49.99,
-        color: 'purple',
-        icon: '💎',
-        features: ['Sınırsız sipariş', '200 push bildirim', 'API erişimi', 'Özel destek'],
-        orderLimit: 99999,
-        pushLimit: 200,
-        commissionRate: 2.5
-    },
-    enterprise: {
-        name: 'Enterprise',
-        price: 99.99,
-        color: 'yellow',
-        icon: '👑',
-        features: ['Sınırsız her şey', 'Özel müşteri temsilcisi', 'SLA garantisi', 'White-label'],
-        orderLimit: 99999,
-        pushLimit: 99999,
-        commissionRate: 2.0
-    },
-};
+// Helper: Generate display features list from a Firestore plan
+function getPlanFeatures(plan: ButcherSubscriptionPlan): string[] {
+    const features: string[] = [];
+    if (plan.orderLimit) features.push(`${plan.orderLimit} sipariş/ay`);
+    else features.push('Sınırsız sipariş');
+    if (plan.features?.delivery) features.push('Kurye hizmeti');
+    if (plan.features?.onlinePayment) features.push('Online ödeme');
+    if (plan.features?.campaigns) features.push('Kampanyalar');
+    if (plan.features?.prioritySupport) features.push('Öncelikli destek');
+    if (plan.features?.liveCourierTracking) features.push('Canlı kurye takibi');
+    return features;
+}
+
+// Helper: Get plan icon from plan code/name
+function getPlanIcon(plan: ButcherSubscriptionPlan): string {
+    const code = (plan.code || plan.id || '').toLowerCase();
+    if (code.includes('free') || code.includes('market')) return '🆓';
+    if (code.includes('basic') || code.includes('entry')) return '📦';
+    if (code.includes('pro')) return '🚀';
+    if (code.includes('ultra') || code.includes('enterprise')) return '👑';
+    if (code.includes('premium')) return '💎';
+    if (code.includes('standard') || code.includes('starter')) return '⭐';
+    return '📋';
+}
 
 export default function AccountPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [admin, setAdmin] = useState<any>(null);
     const [business, setBusiness] = useState<any>(null);
-    const [livePlan, setLivePlan] = useState<any>(null); // Firestore'dan gelen aktif plan
+    const [livePlan, setLivePlan] = useState<ButcherSubscriptionPlan | null>(null); // Firestore'dan gelen aktif plan
+    const [allPlans, setAllPlans] = useState<ButcherSubscriptionPlan[]>([]); // All active plans for modal
     const [usageStats, setUsageStats] = useState<any>(null); // limitService'den
     const [estimatedInvoice, setEstimatedInvoice] = useState<any>(null); // invoiceService'den
     const [stats, setStats] = useState({
@@ -165,6 +117,7 @@ export default function AccountPage() {
                         // Aktif plan bilgisi
                         const planId = (businessData as any).subscriptionPlan || (businessData as any).plan || 'free';
                         const plans = await subscriptionService.getAllPlans();
+                        setAllPlans(plans.filter(p => p.isActive));
                         const activePlan = plans.find(p => p.id === planId || p.code === planId);
                         if (activePlan) setLivePlan(activePlan);
 
@@ -196,7 +149,7 @@ export default function AccountPage() {
             const now = new Date();
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-            const ordersRef = collection(db, 'orders');
+            const ordersRef = collection(db, 'meat_orders');
             const ordersQuery = query(ordersRef, where('businessId', '==', butcherId));
             const ordersSnap = await getDocs(ordersQuery);
 
@@ -218,7 +171,7 @@ export default function AccountPage() {
             });
 
             const plan = businessData?.plan || 'free';
-            const commissionRate = PLANS[plan]?.commissionRate || 5.0;
+            const commissionRate = livePlan?.commissionClickCollect || 5.0;
             const accruedCommission = totalRevenue * (commissionRate / 100);
 
             setStats({
@@ -323,10 +276,17 @@ export default function AccountPage() {
         );
     }
 
-    const currentPlan = business?.plan || 'free';
-    const planInfo = PLANS[currentPlan] || PLANS.free;
-    const pushRemaining = planInfo.pushLimit === 99999 ? '∞' : Math.max(0, planInfo.pushLimit - stats.pushUsed);
-    const orderProgress = planInfo.orderLimit === 99999 ? 0 : (stats.monthlyOrders / planInfo.orderLimit) * 100;
+    const currentPlan = business?.subscriptionPlan || business?.plan || 'free';
+    // Derive display info from livePlan (Firestore) instead of hardcoded PLANS
+    const planName = livePlan?.name || currentPlan;
+    const planPrice = livePlan?.monthlyFee ?? 0;
+    const planOrderLimit = livePlan?.orderLimit ?? usageStats?.orderLimit ?? 50;
+    const planColor = livePlan?.color?.replace('bg-', '').replace('-600', '') || 'gray';
+    const planIcon = livePlan ? getPlanIcon(livePlan) : '🆓';
+    const planFeatures = livePlan ? getPlanFeatures(livePlan) : ['Temel özellikler'];
+    const pushLimit = usageStats?.pushLimit ?? 0;
+    const pushRemaining = pushLimit === 0 ? '∞' : Math.max(0, pushLimit - stats.pushUsed);
+    const orderProgress = planOrderLimit === null ? 0 : (stats.monthlyOrders / (planOrderLimit || 1)) * 100;
 
     return (
         <div className="min-h-screen bg-gray-900">
@@ -351,16 +311,16 @@ export default function AccountPage() {
                 {/* ═══════════════════════════════════════════════════════════════════
                     AKTİF PLAN KARTI
                 ═══════════════════════════════════════════════════════════════════ */}
-                <div className={`bg-gradient-to-r from-${planInfo.color}-900/60 to-${planInfo.color}-800/40 border border-${planInfo.color}-500/40 rounded-2xl p-6 mb-6`}>
+                <div className={`bg-gradient-to-r from-${planColor}-900/60 to-${planColor}-800/40 border border-${planColor}-500/40 rounded-2xl p-6 mb-6`}>
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
                             <p className="text-gray-400 text-sm mb-1">Aktif Planınız</p>
                             <h2 className="text-4xl font-bold text-white flex items-center gap-3">
-                                <span>{planInfo.icon}</span>
-                                {planInfo.name}
+                                <span>{planIcon}</span>
+                                {planName}
                             </h2>
                             <div className="flex flex-wrap gap-2 mt-4">
-                                {planInfo.features.map((f, i) => (
+                                {planFeatures.map((f, i) => (
                                     <span key={i} className="px-3 py-1 bg-white/10 text-white/90 text-sm rounded-full">
                                         ✓ {f}
                                     </span>
@@ -370,7 +330,7 @@ export default function AccountPage() {
                         <div className="text-right">
                             <p className="text-gray-400 text-sm">Aylık Ücret</p>
                             <p className="text-4xl font-bold text-white">
-                                €{planInfo.price.toFixed(2)}
+                                €{planPrice.toFixed(2)}
                             </p>
                             <button
                                 onClick={() => setShowPlanModal(true)}
@@ -388,7 +348,7 @@ export default function AccountPage() {
                             <div className="flex justify-between text-sm mb-1">
                                 <span className="text-gray-300">Bu Ay Sipariş</span>
                                 <span className="text-white font-bold">
-                                    {stats.monthlyOrders} / {planInfo.orderLimit === 99999 ? '∞' : planInfo.orderLimit}
+                                    {stats.monthlyOrders} / {planOrderLimit === null ? '∞' : planOrderLimit}
                                 </span>
                             </div>
                             <div className="w-full bg-gray-700 rounded-full h-3">
@@ -403,13 +363,13 @@ export default function AccountPage() {
                             <div className="flex justify-between text-sm mb-1">
                                 <span className="text-gray-300">Push Bildirim</span>
                                 <span className="text-white font-bold">
-                                    {stats.pushUsed} / {planInfo.pushLimit === 99999 ? '∞' : planInfo.pushLimit}
+                                    {stats.pushUsed} / {pushLimit === 0 ? '∞' : pushLimit}
                                 </span>
                             </div>
                             <div className="w-full bg-gray-700 rounded-full h-3">
                                 <div
                                     className="h-3 rounded-full bg-blue-500 transition-all"
-                                    style={{ width: planInfo.pushLimit === 99999 ? '5%' : `${Math.min(100, (stats.pushUsed / planInfo.pushLimit) * 100)}%` }}
+                                    style={{ width: pushLimit === 0 ? '5%' : `${Math.min(100, (stats.pushUsed / pushLimit) * 100)}%` }}
                                 />
                             </div>
                         </div>
@@ -478,24 +438,34 @@ export default function AccountPage() {
                             ) : (
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-300">Provizyon Oranı</span>
-                                    <span className="text-xl font-bold text-white">%{planInfo.commissionRate}</span>
+                                    <span className="text-xl font-bold text-white">%5</span>
                                 </div>
                             )}
                             <hr className="border-amber-700/50" />
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-300">Bu Ay Komisyon ({commissionSummary.orderCount} sipariş)</span>
-                                <span className="text-xl font-bold text-amber-400">€{commissionSummary.totalCommission.toFixed(2)}</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">💳 Kart</span>
-                                    <span className="text-blue-400">€{commissionSummary.cardCommission.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-400">💵 Nakit</span>
-                                    <span className="text-purple-400">€{commissionSummary.cashCommission.toFixed(2)}</span>
-                                </div>
-                            </div>
+                            {(() => {
+                                // Derive commission data from estimatedInvoice for consistency
+                                const commLine = estimatedInvoice?.lineItems?.find((item: any) => item.type === 'commission');
+                                const commOrderCount = commLine?.quantity || commissionSummary.orderCount;
+                                const commTotal = commLine?.total || commissionSummary.totalCommission;
+                                return (
+                                    <>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gray-300">Bu Ay Komisyon ({commOrderCount} sipariş)</span>
+                                            <span className="text-xl font-bold text-amber-400">€{commTotal.toFixed(2)}</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-400">💳 Kart</span>
+                                                <span className="text-blue-400">€{commissionSummary.cardCommission.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-400">💵 Nakit</span>
+                                                <span className="text-purple-400">€{commissionSummary.cashCommission.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                );
+                            })()}
                             {(business?.accountBalance || 0) > 0 && (
                                 <div className="bg-red-900/40 border border-red-600/40 rounded-lg p-3 flex justify-between items-center">
                                     <span className="text-red-300 text-sm">📌 Açık Bakiye (Nakit Komisyon)</span>
@@ -789,43 +759,52 @@ export default function AccountPage() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {Object.entries(PLANS).map(([key, plan]) => (
-                                <div
-                                    key={key}
-                                    className={`rounded-xl p-5 border-2 transition-all ${currentPlan === key
-                                        ? 'border-green-500 bg-green-900/20'
-                                        : 'border-gray-700 hover:border-gray-500 bg-gray-700/30'
-                                        }`}
-                                >
-                                    <div className="text-center mb-4">
-                                        <span className="text-3xl">{plan.icon}</span>
-                                        <h3 className="text-xl font-bold text-white mt-2">{plan.name}</h3>
-                                        <p className="text-3xl font-bold text-white mt-2">
-                                            €{plan.price.toFixed(2)}
-                                            <span className="text-sm text-gray-400">/ay</span>
-                                        </p>
-                                    </div>
-                                    <ul className="space-y-2 mb-4 text-sm">
-                                        {plan.features.map((f, i) => (
-                                            <li key={i} className="text-gray-300 flex items-center gap-2">
-                                                <span className="text-green-400">✓</span> {f}
-                                            </li>
-                                        ))}
-                                        <li className="text-gray-400 flex items-center gap-2">
-                                            <span>💰</span> %{plan.commissionRate} provizyon
-                                        </li>
-                                    </ul>
-                                    {currentPlan === key ? (
-                                        <div className="text-center py-2 bg-green-600/30 text-green-400 rounded-lg font-medium">
-                                            ✓ Mevcut Plan
+                            {allPlans.length > 0 ? allPlans.map((plan) => {
+                                const isCurrentPlan = livePlan?.id === plan.id || currentPlan === plan.id || currentPlan === plan.code;
+                                const icon = getPlanIcon(plan);
+                                const features = getPlanFeatures(plan);
+                                return (
+                                    <div
+                                        key={plan.id}
+                                        className={`rounded-xl p-5 border-2 transition-all ${isCurrentPlan
+                                            ? 'border-green-500 bg-green-900/20'
+                                            : 'border-gray-700 hover:border-gray-500 bg-gray-700/30'
+                                            }`}
+                                    >
+                                        <div className="text-center mb-4">
+                                            <span className="text-3xl">{icon}</span>
+                                            <h3 className="text-xl font-bold text-white mt-2">{plan.name}</h3>
+                                            <p className="text-3xl font-bold text-white mt-2">
+                                                €{plan.monthlyFee.toFixed(2)}
+                                                <span className="text-sm text-gray-400">/ay</span>
+                                            </p>
                                         </div>
-                                    ) : (
-                                        <button className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium">
-                                            Seç
-                                        </button>
-                                    )}
+                                        <ul className="space-y-2 mb-4 text-sm">
+                                            {features.map((f, i) => (
+                                                <li key={i} className="text-gray-300 flex items-center gap-2">
+                                                    <span className="text-green-400">✓</span> {f}
+                                                </li>
+                                            ))}
+                                            <li className="text-gray-400 flex items-center gap-2">
+                                                <span>💰</span> %{plan.commissionClickCollect} provizyon
+                                            </li>
+                                        </ul>
+                                        {isCurrentPlan ? (
+                                            <div className="text-center py-2 bg-green-600/30 text-green-400 rounded-lg font-medium">
+                                                ✓ Mevcut Plan
+                                            </div>
+                                        ) : (
+                                            <button className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium">
+                                                Seç
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            }) : (
+                                <div className="col-span-3 text-center text-gray-400 py-8">
+                                    Yükleniyor...
                                 </div>
-                            ))}
+                            )}
                         </div>
 
                         <p className="text-gray-500 text-sm text-center mt-6">

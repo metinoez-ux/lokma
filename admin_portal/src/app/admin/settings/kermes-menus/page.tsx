@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 interface KermesMenuItem {
     id: string;
@@ -143,15 +144,21 @@ export default function KermesMenusPage() {
         }
     };
 
-    const handleDeleteItem = async (id: string) => {
-        if (!confirm('Bu menü öğesini silmek istediğinize emin misiniz?')) return;
+    const [confirmDeleteItemId, setConfirmDeleteItemId] = useState<string | null>(null);
 
+    const handleDeleteItem = (id: string) => {
+        setConfirmDeleteItemId(id);
+    };
+
+    const handleDeleteItemConfirm = async () => {
+        if (!confirmDeleteItemId) return;
         try {
-            await deleteDoc(doc(db, 'kermes_menu_catalog', id));
+            await deleteDoc(doc(db, 'kermes_menu_catalog', confirmDeleteItemId));
             await loadData();
         } catch (error) {
             console.error('Error deleting item:', error);
         }
+        setConfirmDeleteItemId(null);
     };
 
     const handleToggleActive = async (item: KermesMenuItem) => {
@@ -449,6 +456,19 @@ export default function KermesMenusPage() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            <ConfirmModal
+                isOpen={!!confirmDeleteItemId}
+                onClose={() => setConfirmDeleteItemId(null)}
+                onConfirm={handleDeleteItemConfirm}
+                title="Menü Öğesi Sil"
+                message="Bu menü öğesini silmek istediğinize emin misiniz?"
+                itemName={menuItems.find(i => i.id === confirmDeleteItemId)?.name}
+                variant="danger"
+                confirmText="Evet, Sil"
+                loadingText="Siliniyor..."
+            />
         </div>
     );
 }

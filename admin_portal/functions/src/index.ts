@@ -95,7 +95,7 @@ async function createCommissionRecord(orderId: string, orderData: any) {
             return;
         }
         const businessData = businessDoc.data()!;
-        const businessName = businessData.name || businessData.businessName || "İşletme";
+        const businessName = businessData.companyName || businessData.name || businessData.businessName || businessData.brand || orderData.butcherName || "İşletme";
         const planId = businessData.subscriptionPlan || businessData.plan || "free";
 
         // Get the plan from subscription_plans collection
@@ -245,8 +245,10 @@ export const onOrderStatusChange = onDocumentUpdated(
         }
 
 
-        const rawOrderNumber = after.orderNumber;
+        // UOIP: Fallback to First-6-Digit standard from doc ID if orderNumber not on document
+        const rawOrderNumber = after.orderNumber || event.params.orderId.substring(0, 6).toUpperCase();
         const orderNumber = rawOrderNumber ? `Sipariş #${rawOrderNumber}` : "Sipariş";
+        const orderTag = rawOrderNumber ? ` (#${rawOrderNumber})` : "";
         const totalAmount = after.totalAmount || 0;
         const businessName = after.butcherName || after.businessName || "İşletme";
         const newStatus = after.status;
@@ -256,7 +258,7 @@ export const onOrderStatusChange = onDocumentUpdated(
 
         switch (newStatus) {
             case "preparing":
-                title = "👨‍🍳 Siparişiniz Hazırlanıyor";
+                title = `👨‍🍳 Siparişiniz Hazırlanıyor${orderTag}`;
                 body = `${orderNumber} - ${businessName} siparişinizi hazırlıyor`;
                 break;
             case "ready":
@@ -265,11 +267,11 @@ export const onOrderStatusChange = onDocumentUpdated(
 
                 if (isDeliveryOrder) {
                     // Delivery order: ready but waiting for courier to claim
-                    title = "📦 Siparişiniz Hazır!";
+                    title = `📦 Siparişiniz Hazır!${orderTag}`;
                     body = `${orderNumber} - Kuryenin alması bekleniyor. Toplam: ${totalAmount.toFixed(2)}€`;
                 } else {
                     // Pickup order: customer should come pick it up
-                    title = "✅ Siparişiniz Hazır!";
+                    title = `✅ Siparişiniz Hazır!${orderTag}`;
                     body = `${orderNumber} - Alabilirsiniz! Toplam: ${totalAmount.toFixed(2)}€`;
                 }
 
@@ -344,11 +346,11 @@ export const onOrderStatusChange = onDocumentUpdated(
             case "onTheWay":
                 // Courier has claimed and started delivery
                 const courierName = after.courierName || "Kurye";
-                title = "🚚 Kurye Yola Çıktı!";
+                title = `🚚 Kurye Yola Çıktı!${orderTag}`;
                 body = `${orderNumber} - ${courierName} siparişinizi getiriyor`;
                 break;
             case "delivered":
-                title = "🎉 Siparişiniz Teslim Edildi";
+                title = `🎉 Siparişiniz Teslim Edildi${orderTag}`;
                 body = `${orderNumber} - Afiyet olsun!`;
                 // Schedule feedback request for 24 hours later
                 const feedbackSendAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -361,7 +363,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                 await createCommissionRecord(event.params.orderId, after);
                 break;
             case "completed":
-                title = "🎉 Sipariş Tamamlandı";
+                title = `🎉 Sipariş Tamamlandı${orderTag}`;
                 body = `${orderNumber} - Afiyet olsun!`;
                 // Also create commission record for completed orders (if not already created at delivered)
                 await createCommissionRecord(event.params.orderId, after);
@@ -369,7 +371,7 @@ export const onOrderStatusChange = onDocumentUpdated(
             case "rejected":
                 const reason = after.rejectionReason || "İstediğiniz ürün şu an mevcut değil";
                 const butcherPhone = after.butcherPhone || "";
-                title = "❌ Sipariş Kabul Edilemedi";
+                title = `❌ Sipariş Kabul Edilemedi${orderTag}`;
                 body = `${orderNumber} - ${reason}${butcherPhone ? ` Tel: ${butcherPhone}` : ""}`;
                 break;
             case "cancelled":
@@ -377,7 +379,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                 const paymentStatus = after.paymentStatus;
                 const paymentMethod = after.paymentMethod;
 
-                title = "❌ Sipariş İptal Edildi";
+                title = `❌ Sipariş İptal Edildi${orderTag}`;
 
                 // Build message with reason and refund info
                 let cancelMsg = `${orderNumber} - Sebep: ${cancellationReason}`;

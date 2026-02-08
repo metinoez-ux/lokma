@@ -6,8 +6,10 @@ import { db } from '@/lib/firebase';
 import { normalizeTurkish } from '@/lib/utils';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { BUSINESS_TYPES, getBusinessType, getBusinessTypeIcon, getBusinessTypeLabel } from '@/lib/business-types';
 import { useSectors } from '@/hooks/useSectors';
+import { subscriptionService } from '@/services/subscriptionService';
 // OpeningHoursEditor disabled - causing crashes
 
 // Counter for unique business IDs (starts at 100001, never reused)
@@ -141,16 +143,26 @@ export default function BusinessesPage() {
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     // Review popup state
     const [reviewModal, setReviewModal] = useState<{ open: boolean; business: Business | null }>({ open: false, business: null });
+    // ConfirmModal state
+    const [confirmState, setConfirmState] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        itemName?: string;
+        variant?: 'warning' | 'danger';
+        confirmText: string;
+        onConfirm: () => void;
+    }>({ isOpen: false, title: '', message: '', confirmText: '', onConfirm: () => { } });
 
     // 📄 Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const BUSINESSES_PER_PAGE = 15;
+    const BUSINESSES_PER_PAGE = 10;
 
     // 🆕 KERMES SEKTÖRÜ İÇİN - Organizations state (arka plan verisi)
     const [organizations, setOrganizations] = useState<any[]>([]);
     const [loadingOrganizations, setLoadingOrganizations] = useState(false);
     const [orgPage, setOrgPage] = useState(1);
-    const ORGS_PER_PAGE = 30;
+    const ORGS_PER_PAGE = 10;
 
     // 🆕 KERMES EVENTS - Ana liste
     const [kermesEvents, setKermesEvents] = useState<any[]>([]);
@@ -159,6 +171,18 @@ export default function BusinessesPage() {
     // 🆕 Organizasyon arama modal'ı
     const [showOrgSearchModal, setShowOrgSearchModal] = useState(false);
     const [orgSearchQuery, setOrgSearchQuery] = useState('');
+
+    // 🆕 Dynamically loaded subscription plans from Firestore
+    const [availablePlans, setAvailablePlans] = useState<{ code: string; name: string; color: string }[]>([]);
+    useEffect(() => {
+        subscriptionService.getAllPlans().then(plans => {
+            setAvailablePlans(plans.map(p => ({
+                code: p.code || p.id,
+                name: p.name,
+                color: p.color || 'bg-gray-600',
+            })));
+        }).catch(err => console.error('Error loading plans:', err));
+    }, []);
 
     // Read type from URL query param on mount (e.g., ?type=restoran)
     useEffect(() => {
@@ -699,26 +723,58 @@ export default function BusinessesPage() {
 
             if (hasHistory) {
                 // Can only archive
-                const archiveMessage = `"${business.companyName}" işletmesinin geçmişi var:\n${hasInvoices ? `• ${invoicesSnap.size} fatura\n` : ''}${hasOrders ? `• ${ordersSnap.size} sipariş\n` : ''}${hasSubscription ? `• Aktif abonelik: ${business.subscription?.planName}\n` : ''}\nBu işletme silinemez, sadece ARŞİVE alınabilir. Arşive almak istiyor musunuz?`;
+                const details = [
+                    hasInvoices ? `• ${invoicesSnap.size} fatura` : '',
+                    hasOrders ? `• ${ordersSnap.size} sipariş` : '',
+                    hasSubscription ? `• Aktif abonelik: ${business.subscription?.planName}` : '',
+                ].filter(Boolean).join('\n');
 
-                if (!confirm(archiveMessage)) return;
-
-                // Archive: set status to archived
-                await updateDoc(doc(db, 'businesses', business.id), {
-                    isActive: false,
-                    isArchived: true,
-                    archivedAt: new Date(),
-                    updatedAt: new Date(),
+                setConfirmState({
+                    isOpen: true,
+                    title: 'İşletmeyi Arşivle',
+                    message: `Bu işletmenin geçmişi var:\n${details}\n\nBu işletme silinemez, sadece arşive alınabilir. Arşive almak istiyor musunuz?`,
+                    itemName: business.companyName,
+                    variant: 'warning',
+                    confirmText: 'Evet, Arşivle',
+                    onConfirm: async () => {
+                        setConfirmState(prev => ({ ...prev, isOpen: false }));
+                        try {
+                            await updateDoc(doc(db, 'businesses', business.id), {
+                                isActive: false,
+                                isArchived: true,
+                                archivedAt: new Date(),
+                                updatedAt: new Date(),
+                            });
+                            showToast('İşletme arşive alındı', 'success');
+                            loadBusinesses();
+                        } catch (error) {
+                            console.error('Error archiving business:', error);
+                            showToast('İşlem sırasında hata oluştu', 'error');
+                        }
+                    },
                 });
-                showToast('İşletme arşive alındı', 'success');
             } else {
                 // No history - can delete completely
-                if (!confirm(`"${business.companyName}" işletmesini TAMAMEN SİLMEK istediğinize emin misiniz?\n\nBu işletmenin hiç faturası veya siparişi yok, güvenle silinebilir.`)) return;
-
-                await deleteDoc(doc(db, 'businesses', business.id));
-                showToast('İşletme tamamen silindi', 'success');
+                setConfirmState({
+                    isOpen: true,
+                    title: 'İşletmeyi Kalıcı Sil',
+                    message: 'Bu işletmenin hiç faturası veya siparişi yok, güvenle silinebilir.',
+                    itemName: business.companyName,
+                    variant: 'danger',
+                    confirmText: 'Evet, Kalıcı Sil',
+                    onConfirm: async () => {
+                        setConfirmState(prev => ({ ...prev, isOpen: false }));
+                        try {
+                            await deleteDoc(doc(db, 'businesses', business.id));
+                            showToast('İşletme tamamen silindi', 'success');
+                            loadBusinesses();
+                        } catch (error) {
+                            console.error('Error deleting business:', error);
+                            showToast('İşlem sırasında hata oluştu', 'error');
+                        }
+                    },
+                });
             }
-            loadBusinesses();
         } catch (error) {
             console.error('Error deleting/archiving business:', error);
             showToast('İşlem sırasında hata oluştu', 'error');
@@ -1000,32 +1056,50 @@ export default function BusinessesPage() {
                                                                 {event.isArchived ? (
                                                                     <>
                                                                         <button
-                                                                            onClick={async (e) => {
+                                                                            onClick={(e) => {
                                                                                 e.stopPropagation();
-                                                                                if (confirm('Bu kermesi arşivden çıkarmak istiyor musunuz?')) {
-                                                                                    try {
-                                                                                        await updateDoc(doc(db, 'kermes_events', event.id), { isArchived: false });
-                                                                                        loadKermesEvents();
-                                                                                    } catch (error) {
-                                                                                        console.error('Error:', error);
-                                                                                    }
-                                                                                }
+                                                                                setConfirmState({
+                                                                                    isOpen: true,
+                                                                                    title: 'Kermesi Arşivden Çıkar',
+                                                                                    message: 'Bu kermesi arşivden çıkarmak istiyor musunuz?',
+                                                                                    itemName: event.title,
+                                                                                    variant: 'warning',
+                                                                                    confirmText: 'Evet, Çıkar',
+                                                                                    onConfirm: async () => {
+                                                                                        setConfirmState(prev => ({ ...prev, isOpen: false }));
+                                                                                        try {
+                                                                                            await updateDoc(doc(db, 'kermes_events', event.id), { isArchived: false });
+                                                                                            loadKermesEvents();
+                                                                                        } catch (error) {
+                                                                                            console.error('Error:', error);
+                                                                                        }
+                                                                                    },
+                                                                                });
                                                                             }}
                                                                             className="px-3 py-1.5 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/40 transition text-sm"
                                                                         >
                                                                             📤 Çıkar
                                                                         </button>
                                                                         <button
-                                                                            onClick={async (e) => {
+                                                                            onClick={(e) => {
                                                                                 e.stopPropagation();
-                                                                                if (confirm('⚠️ DİKKAT: Bu kermesi kalıcı olarak silmek istiyor musunuz? Bu işlem geri alınamaz!')) {
-                                                                                    try {
-                                                                                        await deleteDoc(doc(db, 'kermes_events', event.id));
-                                                                                        loadKermesEvents();
-                                                                                    } catch (error) {
-                                                                                        console.error('Error:', error);
-                                                                                    }
-                                                                                }
+                                                                                setConfirmState({
+                                                                                    isOpen: true,
+                                                                                    title: 'Kermesi Kalıcı Sil',
+                                                                                    message: 'DİKKAT: Bu kermesi kalıcı olarak silmek istiyor musunuz? Bu işlem geri alınamaz!',
+                                                                                    itemName: event.title,
+                                                                                    variant: 'danger',
+                                                                                    confirmText: 'Evet, Kalıcı Sil',
+                                                                                    onConfirm: async () => {
+                                                                                        setConfirmState(prev => ({ ...prev, isOpen: false }));
+                                                                                        try {
+                                                                                            await deleteDoc(doc(db, 'kermes_events', event.id));
+                                                                                            loadKermesEvents();
+                                                                                        } catch (error) {
+                                                                                            console.error('Error:', error);
+                                                                                        }
+                                                                                    },
+                                                                                });
                                                                             }}
                                                                             className="px-3 py-1.5 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/40 transition text-sm"
                                                                         >
@@ -1034,16 +1108,25 @@ export default function BusinessesPage() {
                                                                     </>
                                                                 ) : (
                                                                     <button
-                                                                        onClick={async (e) => {
+                                                                        onClick={(e) => {
                                                                             e.stopPropagation();
-                                                                            if (confirm('Bu kermesi arşivlemek istiyor musunuz?')) {
-                                                                                try {
-                                                                                    await updateDoc(doc(db, 'kermes_events', event.id), { isArchived: true, isActive: false });
-                                                                                    loadKermesEvents();
-                                                                                } catch (error) {
-                                                                                    console.error('Error:', error);
-                                                                                }
-                                                                            }
+                                                                            setConfirmState({
+                                                                                isOpen: true,
+                                                                                title: 'Kermesi Arşivle',
+                                                                                message: 'Bu kermesi arşivlemek istiyor musunuz?',
+                                                                                itemName: event.title,
+                                                                                variant: 'warning',
+                                                                                confirmText: 'Evet, Arşivle',
+                                                                                onConfirm: async () => {
+                                                                                    setConfirmState(prev => ({ ...prev, isOpen: false }));
+                                                                                    try {
+                                                                                        await updateDoc(doc(db, 'kermes_events', event.id), { isArchived: true, isActive: false });
+                                                                                        loadKermesEvents();
+                                                                                    } catch (error) {
+                                                                                        console.error('Error:', error);
+                                                                                    }
+                                                                                },
+                                                                            });
                                                                         }}
                                                                         className="px-3 py-1.5 bg-yellow-600/20 text-yellow-400 rounded-lg hover:bg-yellow-600/40 transition text-sm"
                                                                     >
@@ -1703,11 +1786,9 @@ export default function BusinessesPage() {
                                                 className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                                             >
                                                 <option value="none">⊘ Plan Yok</option>
-                                                <option value="trial">🎁 Deneme</option>
-                                                <option value="starter">Starter (Başlangıç)</option>
-                                                <option value="standard">Standard</option>
-                                                <option value="premium">Premium</option>
-                                                <option value="enterprise">Enterprise</option>
+                                                {availablePlans.map(plan => (
+                                                    <option key={plan.code} value={plan.code}>{plan.name}</option>
+                                                ))}
                                             </select>
                                         </div>
                                         <div>
@@ -1991,6 +2072,18 @@ export default function BusinessesPage() {
                     </div>
                 </div>
             )}
+
+            {/* ConfirmModal */}
+            <ConfirmModal
+                isOpen={confirmState.isOpen}
+                onClose={() => setConfirmState(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmState.onConfirm}
+                title={confirmState.title}
+                message={confirmState.message}
+                itemName={confirmState.itemName}
+                variant={confirmState.variant}
+                confirmText={confirmState.confirmText}
+            />
         </div>
     );
 }

@@ -19,6 +19,7 @@ import { normalizeTurkish } from "@/lib/utils";
 import { MASTER_PRODUCTS, MasterProduct } from "@/lib/master_products";
 import { getBusinessTypesList, BusinessTypeConfig } from "@/lib/business-types";
 import Link from 'next/link';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 // Extended product type with new fields
 interface ExtendedProduct extends MasterProduct {
@@ -141,7 +142,7 @@ function GlobalProductsPageContent() {
     const [countryFilter, setCountryFilter] = useState('all');
     const [brandFilter, setBrandFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
-    const PRODUCTS_PER_PAGE = 20;
+    const PRODUCTS_PER_PAGE = 10;
 
     // Bulk selection
     const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
@@ -167,6 +168,18 @@ function GlobalProductsPageContent() {
     const [businessProducts, setBusinessProducts] = useState<any[]>([]);
     const [loadingBusinessProducts, setLoadingBusinessProducts] = useState(false);
     const [showAllMasterProducts, setShowAllMasterProducts] = useState(false);
+
+    // Generic confirm modal state
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        itemName?: string;
+        variant: 'danger' | 'warning';
+        confirmText: string;
+        loadingText: string;
+        onConfirm: () => Promise<void>;
+    } | null>(null);
 
     // Kermes ürünlerini filtrele
     const kermesProducts = products.filter(p =>
@@ -284,22 +297,30 @@ function GlobalProductsPageContent() {
     }, [pageMode]);
 
     // Seed Data
-    const handleSeed = async () => {
-        if (!confirm("Mevcut veritabanına varsayılan ürünler eklenecek. Devam edilsin mi?")) return;
-
-        setSeeding(true);
-        try {
-            for (const product of MASTER_PRODUCTS) {
-                await setDoc(doc(db, "master_products", product.id), product);
-            }
-            alert("Varsayılan ürünler başarıyla eklendi!");
-            fetchProducts();
-        } catch (error) {
-            console.error("Error seeding products:", error);
-            alert("Veri eklenirken hata oluştu.");
-        } finally {
-            setSeeding(false);
-        }
+    const handleSeed = () => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Varsayılan Ürünleri Yükle',
+            message: 'Mevcut veritabanına varsayılan ürünler eklenecek. Devam edilsin mi?',
+            variant: 'warning',
+            confirmText: 'Evet, Yükle',
+            loadingText: 'Yükleniyor...',
+            onConfirm: async () => {
+                setSeeding(true);
+                try {
+                    for (const product of MASTER_PRODUCTS) {
+                        await setDoc(doc(db, "master_products", product.id), product);
+                    }
+                    alert("Varsayılan ürünler başarıyla eklendi!");
+                    fetchProducts();
+                } catch (error) {
+                    console.error("Error seeding products:", error);
+                    alert("Veri eklenirken hata oluştu.");
+                } finally {
+                    setSeeding(false);
+                }
+            },
+        });
     };
 
     // Save (Add/Edit)
@@ -371,16 +392,26 @@ function GlobalProductsPageContent() {
     };
 
     // Delete
-    const handleDelete = async (id: string) => {
-        if (!confirm("Bu ürünü silmek istediğinize emin misiniz? (Bu işlem kasapların mevcut listesini etkilemeyebilir ama yeni eklemelerde görünmez)")) return;
-
-        try {
-            await deleteDoc(doc(db, "master_products", id));
-            fetchProducts();
-        } catch (error) {
-            console.error("Error deleting product:", error);
-            alert("Ürün silinirken hata oluştu.");
-        }
+    const handleDelete = (id: string) => {
+        const product = products.find(p => p.id === id);
+        setConfirmModal({
+            isOpen: true,
+            title: 'Ürün Sil',
+            message: 'Bu ürünü silmek istediğinize emin misiniz? (Bu işlem kasapların mevcut listesini etkilemeyebilir ama yeni eklemelerde görünmez)',
+            itemName: product?.name,
+            variant: 'danger',
+            confirmText: 'Evet, Sil',
+            loadingText: 'Siliniyor...',
+            onConfirm: async () => {
+                try {
+                    await deleteDoc(doc(db, "master_products", id));
+                    fetchProducts();
+                } catch (error) {
+                    console.error("Error deleting product:", error);
+                    alert("Ürün silinirken hata oluştu.");
+                }
+            },
+        });
     };
 
     // Bulk Actions
@@ -402,7 +433,7 @@ function GlobalProductsPageContent() {
         setSelectedProducts(newSelected);
     };
 
-    const handleBulkAction = async (action: 'activate' | 'deactivate' | 'delete') => {
+    const handleBulkAction = (action: 'activate' | 'deactivate' | 'delete') => {
         if (selectedProducts.size === 0) {
             alert("Lütfen işlem yapılacak ürünleri seçin.");
             return;
@@ -414,72 +445,90 @@ function GlobalProductsPageContent() {
             delete: 'silmek'
         };
 
-        if (!confirm(`Seçili ${selectedProducts.size} ürünü ${actionLabels[action]} yapmak istediğinize emin misiniz?`)) return;
+        const count = selectedProducts.size;
+        setConfirmModal({
+            isOpen: true,
+            title: 'Toplu İşlem',
+            message: `Seçili ${count} ürünü ${actionLabels[action]} yapmak istediğinize emin misiniz?`,
+            variant: action === 'delete' ? 'danger' : 'warning',
+            confirmText: `Evet, ${actionLabels[action]} Yap`,
+            loadingText: 'İşleniyor...',
+            onConfirm: async () => {
+                setIsProcessingBulk(true);
+                try {
+                    const batch = writeBatch(db);
 
-        setIsProcessingBulk(true);
-        try {
-            const batch = writeBatch(db);
+                    selectedProducts.forEach(id => {
+                        const productRef = doc(db, "master_products", id);
+                        if (action === 'delete') {
+                            batch.delete(productRef);
+                        } else {
+                            batch.update(productRef, { isActive: action === 'activate' });
+                        }
+                    });
 
-            selectedProducts.forEach(id => {
-                const productRef = doc(db, "master_products", id);
-                if (action === 'delete') {
-                    batch.delete(productRef);
-                } else {
-                    batch.update(productRef, { isActive: action === 'activate' });
+                    await batch.commit();
+                    setSelectedProducts(new Set());
+                    fetchProducts();
+                    alert(`${count} ürün başarıyla ${actionLabels[action]} yapıldı.`);
+                } catch (error) {
+                    console.error("Bulk action error:", error);
+                    alert("Toplu işlem sırasında hata oluştu.");
+                } finally {
+                    setIsProcessingBulk(false);
                 }
-            });
-
-            await batch.commit();
-            setSelectedProducts(new Set());
-            fetchProducts();
-            alert(`${selectedProducts.size} ürün başarıyla ${actionLabels[action]} yapıldı.`);
-        } catch (error) {
-            console.error("Bulk action error:", error);
-            alert("Toplu işlem sırasında hata oluştu.");
-        } finally {
-            setIsProcessingBulk(false);
-        }
+            },
+        });
     };
 
     // 🆕 Bulk Assign Business Types
-    const handleBulkAssignBusinessType = async (businessType: string) => {
+    const handleBulkAssignBusinessType = (businessType: string) => {
         if (selectedProducts.size === 0) {
             alert("Lütfen işlem yapılacak ürünleri seçin.");
             return;
         }
 
         const typeLabel = BUSINESS_TYPE_OPTIONS.find(bt => bt.value === businessType)?.label || businessType;
-        if (!confirm(`Seçili ${selectedProducts.size} ürüne "${typeLabel}" işletme türü eklensin mi?`)) return;
+        const count = selectedProducts.size;
+        setConfirmModal({
+            isOpen: true,
+            title: 'İşletme Türü Ata',
+            message: `Seçili ${count} ürüne "${typeLabel}" işletme türü eklensin mi?`,
+            variant: 'warning',
+            confirmText: 'Evet, Ekle',
+            loadingText: 'Ekleniyor...',
+            onConfirm: async () => {
+                setIsProcessingBulk(true);
+                try {
+                    const batch = writeBatch(db);
 
-        setIsProcessingBulk(true);
-        try {
-            const batch = writeBatch(db);
+                    for (const productId of selectedProducts) {
+                        const product = products.find(p => p.id === productId);
+                        const currentTypes = product?.allowedBusinessTypes || [];
+                        if (!currentTypes.includes(businessType)) {
+                            const productRef = doc(db, "master_products", productId);
+                            batch.update(productRef, {
+                                allowedBusinessTypes: [...currentTypes, businessType]
+                            });
+                        }
+                    }
 
-            for (const productId of selectedProducts) {
-                const product = products.find(p => p.id === productId);
-                const currentTypes = product?.allowedBusinessTypes || [];
-                if (!currentTypes.includes(businessType)) {
-                    const productRef = doc(db, "master_products", productId);
-                    batch.update(productRef, {
-                        allowedBusinessTypes: [...currentTypes, businessType]
-                    });
+                    await batch.commit();
+                    setSelectedProducts(new Set());
+                    fetchProducts();
+                    alert(`${count} ürüne "${typeLabel}" türü başarıyla eklendi.`);
+                } catch (error) {
+                    console.error("Bulk assign error:", error);
+                    alert("Toplu atama sırasında hata oluştu.");
+                } finally {
+                    setIsProcessingBulk(false);
                 }
-            }
-
-            await batch.commit();
-            setSelectedProducts(new Set());
-            fetchProducts();
-            alert(`${selectedProducts.size} ürüne "${typeLabel}" türü başarıyla eklendi.`);
-        } catch (error) {
-            console.error("Bulk assign error:", error);
-            alert("Toplu atama sırasında hata oluştu.");
-        } finally {
-            setIsProcessingBulk(false);
-        }
+            },
+        });
     };
 
     // 🔴 Bulk Assign Brand Labels (TUNA / Akdeniz Toros)
-    const handleBulkAssignBrand = async (brandValue: string) => {
+    const handleBulkAssignBrand = (brandValue: string) => {
         if (selectedProducts.size === 0) {
             alert("Lütfen işlem yapılacak ürünleri seçin.");
             return;
@@ -487,59 +536,75 @@ function GlobalProductsPageContent() {
 
         const brand = BRAND_LABELS.find(b => b.value === brandValue);
         const brandLabel = brand?.label || brandValue;
+        const count = selectedProducts.size;
 
         if (brandValue === 'remove') {
-            // Remove brand labels from selected products
-            if (!confirm(`Seçili ${selectedProducts.size} üründen marka etiketleri kaldırılsın mı?`)) return;
-
-            setIsProcessingBulk(true);
-            try {
-                const batch = writeBatch(db);
-                selectedProducts.forEach(productId => {
-                    const productRef = doc(db, "master_products", productId);
-                    batch.update(productRef, { brandLabels: [] });
-                });
-                await batch.commit();
-                setSelectedProducts(new Set());
-                fetchProducts();
-                alert(`${selectedProducts.size} üründen marka etiketleri kaldırıldı.`);
-            } catch (error) {
-                console.error("Bulk remove brand error:", error);
-                alert("Toplu işlem sırasında hata oluştu.");
-            } finally {
-                setIsProcessingBulk(false);
-            }
+            setConfirmModal({
+                isOpen: true,
+                title: 'Marka Etiketlerini Kaldır',
+                message: `Seçili ${count} üründen marka etiketleri kaldırılsın mı?`,
+                variant: 'warning',
+                confirmText: 'Evet, Kaldır',
+                loadingText: 'Kaldırılıyor...',
+                onConfirm: async () => {
+                    setIsProcessingBulk(true);
+                    try {
+                        const batch = writeBatch(db);
+                        selectedProducts.forEach(productId => {
+                            const productRef = doc(db, "master_products", productId);
+                            batch.update(productRef, { brandLabels: [] });
+                        });
+                        await batch.commit();
+                        setSelectedProducts(new Set());
+                        fetchProducts();
+                        alert(`${count} üründen marka etiketleri kaldırıldı.`);
+                    } catch (error) {
+                        console.error("Bulk remove brand error:", error);
+                        alert("Toplu işlem sırasında hata oluştu.");
+                    } finally {
+                        setIsProcessingBulk(false);
+                    }
+                },
+            });
             return;
         }
 
         // Add brand label to selected products
-        if (!confirm(`Seçili ${selectedProducts.size} ürüne "${brandLabel}" marka etiketi eklensin mi?`)) return;
+        setConfirmModal({
+            isOpen: true,
+            title: 'Marka Etiketi Ekle',
+            message: `Seçili ${count} ürüne "${brandLabel}" marka etiketi eklensin mi?`,
+            variant: 'warning',
+            confirmText: 'Evet, Ekle',
+            loadingText: 'Ekleniyor...',
+            onConfirm: async () => {
+                setIsProcessingBulk(true);
+                try {
+                    const batch = writeBatch(db);
 
-        setIsProcessingBulk(true);
-        try {
-            const batch = writeBatch(db);
+                    for (const productId of selectedProducts) {
+                        const product = products.find(p => p.id === productId);
+                        const currentLabels = (product as any)?.brandLabels || [];
+                        if (!currentLabels.includes(brandValue)) {
+                            const productRef = doc(db, "master_products", productId);
+                            batch.update(productRef, {
+                                brandLabels: [...currentLabels, brandValue]
+                            });
+                        }
+                    }
 
-            for (const productId of selectedProducts) {
-                const product = products.find(p => p.id === productId);
-                const currentLabels = (product as any)?.brandLabels || [];
-                if (!currentLabels.includes(brandValue)) {
-                    const productRef = doc(db, "master_products", productId);
-                    batch.update(productRef, {
-                        brandLabels: [...currentLabels, brandValue]
-                    });
+                    await batch.commit();
+                    setSelectedProducts(new Set());
+                    fetchProducts();
+                    alert(`${count} ürüne "${brandLabel}" etiketi başarıyla eklendi.`);
+                } catch (error) {
+                    console.error("Bulk assign brand error:", error);
+                    alert("Toplu marka atama sırasında hata oluştu.");
+                } finally {
+                    setIsProcessingBulk(false);
                 }
-            }
-
-            await batch.commit();
-            setSelectedProducts(new Set());
-            fetchProducts();
-            alert(`${selectedProducts.size} ürüne "${brandLabel}" etiketi başarıyla eklendi.`);
-        } catch (error) {
-            console.error("Bulk assign brand error:", error);
-            alert("Toplu marka atama sırasında hata oluştu.");
-        } finally {
-            setIsProcessingBulk(false);
-        }
+            },
+        });
     };
 
     // Image Upload Handler
@@ -1927,6 +1992,24 @@ function GlobalProductsPageContent() {
                     </>
                 )}
             </div>
+
+            {/* Generic Confirm Modal */}
+            {confirmModal && (
+                <ConfirmModal
+                    isOpen={confirmModal.isOpen}
+                    onClose={() => setConfirmModal(null)}
+                    onConfirm={async () => {
+                        await confirmModal.onConfirm();
+                        setConfirmModal(null);
+                    }}
+                    title={confirmModal.title}
+                    message={confirmModal.message}
+                    itemName={confirmModal.itemName}
+                    variant={confirmModal.variant}
+                    confirmText={confirmModal.confirmText}
+                    loadingText={confirmModal.loadingText}
+                />
+            )}
         </div>
     );
 }

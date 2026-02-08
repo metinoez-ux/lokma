@@ -10,6 +10,7 @@ class DriverInfo {
   final String name;
   final String? phone;
   final String role;
+  final String driverType; // 'lokma_fleet' or 'business'
   final List<String> assignedBusinesses;
   final List<String> assignedBusinessNames;
   final bool isActive;
@@ -20,6 +21,7 @@ class DriverInfo {
     required this.name,
     this.phone,
     required this.role,
+    required this.driverType,
     required this.assignedBusinesses,
     required this.assignedBusinessNames,
     required this.isActive,
@@ -33,6 +35,7 @@ class DriverInfo {
       name: data['name'] ?? data['displayName'] ?? '',
       phone: data['phone'],
       role: data['role'] ?? 'driver',
+      driverType: data['driverType'] ?? 'business',
       assignedBusinesses: List<String>.from(data['assignedBusinesses'] ?? []),
       assignedBusinessNames: List<String>.from(data['assignedBusinessNames'] ?? []),
       isActive: data['isActive'] ?? true,
@@ -43,6 +46,9 @@ class DriverInfo {
   bool isAssignedTo(String businessId) {
     return assignedBusinesses.contains(businessId);
   }
+
+  /// Check if this is a LOKMA fleet driver
+  bool get isLokmaFleet => driverType == 'lokma_fleet';
 }
 
 /// Driver state for the app

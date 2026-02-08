@@ -314,7 +314,7 @@ export default function AdminHeader() {
                                 { href: '/admin/orders', icon: '📦', label: 'Siparişler' },
                                 { href: '/admin/products', icon: '📋', label: 'Master Katalog' },
                                 { href: '/admin/invoices', icon: '📄', label: 'Faturalar' },
-                                { href: '/admin/commissions', icon: '💰', label: 'Komisyonlar' },
+                                { href: '/admin/commissions', icon: '💰', label: 'Provizyonlar' },
                                 { href: '/admin/plans', icon: '📅', label: 'Planlar' },
                                 { href: '/admin/activity-logs', icon: '📝', label: 'Log' },
                                 { href: '/admin/dashboard', icon: '👥', label: 'Kullanıcı Yönetimi' },
@@ -513,6 +513,12 @@ export default function AdminHeader() {
                             <Link href="/admin/invoices" className="flex items-center gap-2 bg-amber-700/50 hover:bg-amber-700 px-4 py-2 rounded-lg transition-all border border-amber-600">
                                 <span className="text-lg">📄</span>
                                 <span className="text-amber-200 text-sm font-medium">Faturalarım</span>
+                            </Link>
+
+                            {/* Hesabım - Komisyon & Bakiye */}
+                            <Link href="/admin/account" className="flex items-center gap-2 bg-orange-700/50 hover:bg-orange-700 px-4 py-2 rounded-lg transition-all border border-orange-600">
+                                <span className="text-lg">💼</span>
+                                <span className="text-orange-200 text-sm font-medium">Hesabım</span>
                             </Link>
 
                             {/* İstatistikler */}

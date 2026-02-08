@@ -21,7 +21,8 @@ import 'package:lokma_app/screens/orders/rating_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
-  const CartScreen({super.key});
+  final bool initialPickUp;
+  const CartScreen({super.key, this.initialPickUp = false});
 
   @override
   ConsumerState<CartScreen> createState() => _CartScreenState();
@@ -31,7 +32,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   late TabController _tabController;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-  bool _isPickUp = false; // Default to Kurye (delivery)
+  late bool _isPickUp;
   bool _canDeliver = false;
   bool _checkingDelivery = true;
   String _paymentMethod = 'cash';
@@ -58,6 +59,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   @override
   void initState() {
     super.initState();
+    _isPickUp = widget.initialPickUp;
     _tabController = TabController(length: 2, vsync: this);
     
     // Pulse animation for active orders indicator
@@ -252,8 +254,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final orderData = {
         'userId': userId,
         'userDisplayName': userDisplayName,
+        'customerName': userDisplayName, // Alias for admin panel compatibility
         'userEmail': userEmail,
         'userPhone': userPhone,
+        'customerPhone': userPhone, // Alias for admin panel compatibility
         'fcmToken': fcmToken,
         'butcherId': cart.butcherId,
         'butcherName': cart.butcherName,
@@ -280,6 +284,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
       // Save order
       final orderRef = await FirebaseFirestore.instance.collection('meat_orders').add(orderData);
+
+      // UOIP: Persist orderNumber using First-6-Digit standard for cross-platform consistency
+      final orderNumber = orderRef.id.substring(0, 6).toUpperCase();
+      await orderRef.update({'orderNumber': orderNumber});
       
       Navigator.pop(context); // Close loading
 
@@ -341,30 +349,20 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           ),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        title: const SizedBox.shrink(),
         centerTitle: true,
-        title: Text(
-          'Sepetim',
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: TabBar(
-            controller: _tabController,
-            indicatorColor: const Color(0xFFEC131E),
-            indicatorWeight: 3,
-            labelColor: colorScheme.onSurface,
-            unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
-            labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            tabs: const [
-              Tab(text: 'Sepetim'),
-              Tab(text: 'Siparişlerim'),
-            ],
-          ),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: const Color(0xFFEC131E),
+          indicatorWeight: 3,
+          labelColor: colorScheme.onSurface,
+          unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
+          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          tabs: const [
+            Tab(text: 'Sepetim'),
+            Tab(text: 'Siparişlerim'),
+          ],
         ),
       ),
       body: TabBarView(
@@ -2103,6 +2101,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
     final remaining = minOrder - currentTotal;
     final isReached = remaining <= 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     if (isReached) {
       // ✅ SUCCESS: Minimum reached - show green bar (Lieferando style)
@@ -2110,9 +2109,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFE8F5E9), // Light green
+          color: isDark ? const Color(0xFF1B3A1B) : const Color(0xFFE8F5E9),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.3)),
+          border: Border.all(color: const Color(0xFF4CAF50).withOpacity(isDark ? 0.5 : 0.3)),
         ),
         child: Row(
           children: [
@@ -2128,7 +2127,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             Text(
               'Harika! Teslimat şimdi mümkün',
               style: TextStyle(
-                color: Color(0xFF2E7D32),
+                color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32),
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -2138,22 +2137,27 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       );
     }
     
-    // 🟡 WARNING: Below minimum - show yellow bar
+    // 🟡 WARNING: Below minimum - show yellow/amber bar
+    final barBg = isDark ? const Color(0xFF3A2E00) : const Color(0xFFFFF9C4);
+    final textColor = isDark ? const Color(0xFFFFD54F) : const Color(0xFF5D4037);
+    final iconColor = isDark ? const Color(0xFFFFD54F) : const Color(0xFFF9A825);
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF9C4), // Light yellow
+        color: barBg,
         borderRadius: BorderRadius.circular(8),
+        border: isDark ? Border.all(color: const Color(0xFFFFD54F).withOpacity(0.3)) : null,
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, color: Color(0xFFF9A825), size: 20),
+          Icon(Icons.info_outline, color: iconColor, size: 20),
           SizedBox(width: 10),
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                style: TextStyle(color: textColor, fontSize: 14),
                 children: [
                   TextSpan(
                     text: '${remaining.toStringAsFixed(2).replaceAll('.', ',')} €',
@@ -3147,17 +3151,17 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Icon(
-                                            Icons.payments_outlined,
+                                            _isPickUp ? Icons.store_outlined : Icons.payments_outlined,
                                             size: 18,
                                             color: _paymentMethod == 'cash' ? Colors.white : Colors.grey[600],
                                           ),
                                           const SizedBox(width: 6),
                                           Text(
-                                            'Kapıda Nakit',
+                                            _isPickUp ? 'İşletmede Öde' : 'Kapıda Nakit',
                                             style: TextStyle(
                                               color: _paymentMethod == 'cash' ? Colors.white : Theme.of(context).colorScheme.onSurface,
                                               fontWeight: FontWeight.w600,
-                                              fontSize: 14,
+                                              fontSize: 13,
                                             ),
                                           ),
                                         ],

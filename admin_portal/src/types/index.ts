@@ -255,12 +255,12 @@ export interface CustomerOrder {
     paymentStatus: 'pending' | 'paid' | 'refunded';
 
     // Durum
-    status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'cancelled';
+    status: 'pending' | 'accepted' | 'preparing' | 'ready' | 'onTheWay' | 'delivered' | 'cancelled';
 
     // Zaman Damgaları
     createdAt: Date;
     updatedAt: Date;
-    confirmedAt?: Date;
+    acceptedAt?: Date;
     deliveredAt?: Date;
 }
 
@@ -459,7 +459,7 @@ export const BUTCHER_PLANS_V2: Record<MiraPlanTier, MiraPlanConfig> = {
 
 export interface ButcherSubscriptionPlan {
     id: string; // Firestore Doc ID
-    businessType: 'butcher' | 'market' | 'restaurant' | 'other'; // Future-proofing
+    businessType: string; // Dynamic - synced with sectors collection categories
     code: string; // 'entry', 'pro', 'premium' etc.
     name: string; // Display Name (Başlangıç, Profesyonel)
     description?: string;

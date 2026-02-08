@@ -94,7 +94,7 @@ export default function BusinessPerformancePage() {
                 const startDate = new Date();
                 startDate.setDate(startDate.getDate() - daysAgo);
 
-                const ordersRef = collection(db, 'orders');
+                const ordersRef = collection(db, 'meat_orders');
                 const q = query(
                     ordersRef,
                     where('businessId', '==', businessId),

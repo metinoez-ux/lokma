@@ -47,7 +47,7 @@ export default function OrderListener() {
         // Query: Pending orders for this business, ordered by creation
         // We limit to recent to avoid pulling huge history
         const q = query(
-            collection(db, 'orders'),
+            collection(db, 'meat_orders'),
             where('businessId', '==', admin.butcherId),
             where('status', '==', 'pending'),
             orderBy('createdAt', 'desc'),

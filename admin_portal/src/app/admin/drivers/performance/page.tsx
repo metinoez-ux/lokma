@@ -73,7 +73,7 @@ export default function DriverPerformancePage() {
     // Fetch completed deliveries
     useEffect(() => {
         const q = query(
-            collection(db, 'orders'),
+            collection(db, 'meat_orders'),
             where('status', '==', 'delivered'),
             where('deliveredAt', '>=', Timestamp.fromDate(dateRange.start)),
             where('deliveredAt', '<=', Timestamp.fromDate(dateRange.end)),
@@ -199,8 +199,8 @@ export default function DriverPerformancePage() {
                                     key={mode}
                                     onClick={() => setViewMode(mode)}
                                     className={`px-4 py-2 text-sm font-medium ${viewMode === mode
-                                            ? 'bg-orange-500 text-white'
-                                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                                        ? 'bg-orange-500 text-white'
+                                        : 'bg-white text-gray-700 hover:bg-gray-50'
                                         }`}
                                 >
                                     {mode === 'daily' && 'Günlük'}

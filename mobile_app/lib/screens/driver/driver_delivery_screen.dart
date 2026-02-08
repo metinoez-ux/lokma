@@ -151,59 +151,54 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🚗 '),
-            // Toggle pills
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _showAllOrders = false),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: !_showAllOrders ? Colors.white : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Teslimatlarım',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: !_showAllOrders ? brandBottom : Colors.white,
-                        ),
-                      ),
+        titleSpacing: 0,
+        title: Container(
+          margin: const EdgeInsets.only(left: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: () => setState(() => _showAllOrders = false),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: !_showAllOrders ? Colors.white : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Teslimatlarım',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: !_showAllOrders ? brandBottom : Colors.white,
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () => setState(() => _showAllOrders = true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _showAllOrders ? Colors.white : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Tüm Siparişler',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: _showAllOrders ? brandBottom : Colors.white,
-                        ),
-                      ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _showAllOrders = true),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _showAllOrders ? Colors.white : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Tüm Siparişler',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: _showAllOrders ? brandBottom : Colors.white,
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
@@ -220,7 +215,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         actions: [
           // Show assigned business count - tappable
           Padding(
-            padding: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: 12),
             child: GestureDetector(
               onTap: () => _showBusinessListSheet(businessIds),
               child: Container(
