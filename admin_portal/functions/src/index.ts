@@ -3,9 +3,12 @@ import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/fire
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { defineSecret } from "firebase-functions/params";
 import Stripe from "stripe";
+import { Resend } from "resend";
+import { generateInvoicePDF } from "./invoicePdf";
 
 // Define secrets for secure key management
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
+const resendApiKey = defineSecret("RESEND_API_KEY");
 
 admin.initializeApp();
 
@@ -22,7 +25,8 @@ export const onNewOrder = onDocumentCreated(
         if (!order) return;
 
         const butcherId = order.butcherId;
-        const orderNumber = order.orderNumber || "Yeni Sipariş";
+        const rawOrderNum = order.orderNumber;
+        const orderNumber = rawOrderNum ? `Sipariş #${rawOrderNum}` : "Yeni Sipariş";
         const totalAmount = order.totalAmount || 0;
         const customerName = order.customerName || "Müşteri";
 
@@ -64,6 +68,162 @@ export const onNewOrder = onDocumentCreated(
 );
 
 /**
+ * Create commission record when an order is delivered/completed
+ */
+async function createCommissionRecord(orderId: string, orderData: any) {
+    try {
+        // Prevent duplicate records
+        const existingRecord = await db.collection("commission_records")
+            .where("orderId", "==", orderId)
+            .limit(1)
+            .get();
+        if (!existingRecord.empty) {
+            console.log(`[Commission] Record already exists for order ${orderId}, skipping`);
+            return;
+        }
+
+        const businessId = orderData.butcherId || orderData.businessId;
+        if (!businessId) {
+            console.error(`[Commission] No businessId found for order ${orderId}`);
+            return;
+        }
+
+        // Get business doc to find their plan
+        const businessDoc = await db.collection("businesses").doc(businessId).get();
+        if (!businessDoc.exists) {
+            console.error(`[Commission] Business ${businessId} not found`);
+            return;
+        }
+        const businessData = businessDoc.data()!;
+        const businessName = businessData.name || businessData.businessName || "İşletme";
+        const planId = businessData.subscriptionPlan || businessData.plan || "free";
+
+        // Get the plan from subscription_plans collection
+        let plan: any = null;
+        const plansSnapshot = await db.collection("subscription_plans").doc(planId).get();
+        if (plansSnapshot.exists) {
+            plan = plansSnapshot.data();
+        } else {
+            // Try matching by code field
+            const plansByCode = await db.collection("subscription_plans")
+                .where("code", "==", planId)
+                .limit(1)
+                .get();
+            if (!plansByCode.empty) {
+                plan = plansByCode.docs[0].data();
+            }
+        }
+
+        if (!plan) {
+            console.error(`[Commission] Plan '${planId}' not found for business ${businessId}`);
+            return;
+        }
+
+        // Determine courier type from order
+        const orderType = orderData.orderType || orderData.deliveryMethod || "click_collect";
+        let courierType = "click_collect";
+        if (orderType === "delivery") {
+            // Check if business has own courier or uses LOKMA courier
+            courierType = orderData.assignedCourierId ? "lokma_courier" : (businessData.hasOwnCourier ? "own_courier" : "lokma_courier");
+        }
+
+        // Get commission rate based on courier type
+        let commissionRate = 5; // Default
+        switch (courierType) {
+            case "click_collect":
+                commissionRate = plan.commissionClickCollect || 5;
+                break;
+            case "own_courier":
+                commissionRate = plan.commissionOwnCourier || 4;
+                break;
+            case "lokma_courier":
+                commissionRate = plan.commissionLokmaCourier || 7;
+                break;
+        }
+
+        // Check for free orders
+        const currentMonth = new Date().toISOString().slice(0, 7); // "2026-02"
+        const monthlyOrders = businessData.usage?.orders?.[currentMonth] || 0;
+        const freeOrderCount = plan.freeOrderCount || 0;
+        const isFreeOrder = monthlyOrders < freeOrderCount;
+
+        const orderTotal = orderData.totalAmount || 0;
+        let commissionAmount = 0;
+        if (!isFreeOrder && orderTotal > 0) {
+            commissionAmount = Math.round(orderTotal * (commissionRate / 100) * 100) / 100;
+        }
+
+        // Per-order fee
+        let perOrderFee = 0;
+        if (!isFreeOrder && plan.perOrderFeeType !== "none") {
+            if (plan.perOrderFeeType === "percentage") {
+                perOrderFee = Math.round(orderTotal * (plan.perOrderFeeAmount / 100) * 100) / 100;
+            } else if (plan.perOrderFeeType === "fixed") {
+                perOrderFee = plan.perOrderFeeAmount || 0;
+            }
+        }
+
+        const totalCommission = Math.round((commissionAmount + perOrderFee) * 100) / 100;
+        const vatRate = 19; // Germany
+        const netCommission = Math.round((totalCommission / 1.19) * 100) / 100;
+        const vatAmount = Math.round((totalCommission - netCommission) * 100) / 100;
+
+        // Payment method
+        const paymentMethod = orderData.paymentMethod || "cash";
+        const isCardPayment = paymentMethod === "card" || paymentMethod === "stripe";
+
+        // Collection status: card payments are auto-collected via Stripe Connect
+        const collectionStatus = isCardPayment ? "auto_collected" : "pending";
+
+        // Write commission record
+        const commissionRecord = {
+            orderId,
+            orderNumber: orderData.orderNumber || null,
+            businessId,
+            businessName,
+            planId,
+            planName: plan.name || planId,
+            orderTotal,
+            courierType,
+            commissionRate,
+            commissionAmount,
+            perOrderFee,
+            totalCommission,
+            netCommission,
+            vatRate,
+            vatAmount,
+            paymentMethod,
+            collectionStatus,
+            invoiceId: null,
+            isFreeOrder,
+            period: currentMonth,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        await db.collection("commission_records").add(commissionRecord);
+        console.log(`[Commission] Created record: ${orderId} | ${businessName} | ${totalCommission}€ (${collectionStatus})`);
+
+        // Update business usage counters
+        const usageUpdate: any = {
+            [`usage.orders.${currentMonth}`]: admin.firestore.FieldValue.increment(1),
+            [`usage.totalCommission.${currentMonth}`]: admin.firestore.FieldValue.increment(totalCommission),
+            "usage.lastOrderAt": admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        // For cash orders: accumulate balance owed to LOKMA
+        if (!isCardPayment && totalCommission > 0) {
+            usageUpdate.accountBalance = admin.firestore.FieldValue.increment(totalCommission);
+        }
+
+        await db.collection("businesses").doc(businessId).update(usageUpdate);
+        console.log(`[Commission] Updated usage for ${businessName}: +1 order, +${totalCommission}€ commission`);
+
+    } catch (error) {
+        console.error(`[Commission] Error creating record for order ${orderId}:`, error);
+    }
+}
+
+/**
  * When order status changes, send push notification to customer
  */
 export const onOrderStatusChange = onDocumentUpdated(
@@ -85,7 +245,8 @@ export const onOrderStatusChange = onDocumentUpdated(
         }
 
 
-        const orderNumber = after.orderNumber || "Sipariş";
+        const rawOrderNumber = after.orderNumber;
+        const orderNumber = rawOrderNumber ? `Sipariş #${rawOrderNumber}` : "Sipariş";
         const totalAmount = after.totalAmount || 0;
         const businessName = after.butcherName || after.businessName || "İşletme";
         const newStatus = after.status;
@@ -196,10 +357,14 @@ export const onOrderStatusChange = onDocumentUpdated(
                     feedbackSent: false,
                 });
                 console.log(`[Feedback] Scheduled feedback request for ${orderNumber} at ${feedbackSendAt.toISOString()}`);
+                // Create commission record on delivery
+                await createCommissionRecord(event.params.orderId, after);
                 break;
             case "completed":
                 title = "🎉 Sipariş Tamamlandı";
                 body = `${orderNumber} - Afiyet olsun!`;
+                // Also create commission record for completed orders (if not already created at delivered)
+                await createCommissionRecord(event.params.orderId, after);
                 break;
             case "rejected":
                 const reason = after.rejectionReason || "İstediğiniz ürün şu an mevcut değil";
@@ -385,9 +550,9 @@ export const onScheduledMonthlyInvoicing = onSchedule(
     {
         schedule: "0 2 1 * *", // 1st of every month at 02:00
         timeZone: "Europe/Berlin",
-        memory: "512MiB",
+        memory: "1GiB",
         timeoutSeconds: 540, // 9 minutes
-        secrets: [stripeSecretKey], // Include Stripe key
+        secrets: [stripeSecretKey, resendApiKey],
     },
     async () => {
         console.log("[Monthly Invoicing] Starting monthly invoice generation...");
@@ -410,6 +575,60 @@ export const onScheduledMonthlyInvoicing = onSchedule(
             commissionGenerated: 0,
             commissionFailed: 0,
             totalAmount: 0,
+            emailsSent: 0,
+            emailsFailed: 0,
+        };
+
+        // Initialize Resend for email delivery
+        const resend = new Resend(resendApiKey.value());
+
+        // Helper: Generate PDF and send invoice email
+        const sendInvoiceEmail = async (invoiceData: any, recipientEmail: string) => {
+            try {
+                const pdfBuffer = await generateInvoicePDF(invoiceData);
+                const pdfBase64 = pdfBuffer.toString("base64");
+
+                await resend.emails.send({
+                    from: "LOKMA Marketplace <noreply@lokma.shop>",
+                    to: recipientEmail,
+                    subject: `Rechnung ${invoiceData.invoiceNumber} – ${invoiceData.period}`,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; background: #1a1a1a; color: #ffffff; padding: 30px;">
+                            <div style="max-width: 600px; margin: 0 auto;">
+                                <div style="background: #E65100; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+                                    <h1 style="margin: 0; color: white; font-size: 24px;">LOKMA</h1>
+                                    <p style="margin: 5px 0 0; color: rgba(255,255,255,0.8); font-size: 14px;">Rechnung</p>
+                                </div>
+                                <div style="background: #2a2a2a; padding: 25px; border-radius: 0 0 8px 8px;">
+                                    <p style="color: #ccc; margin: 0 0 15px;">Sehr geehrte/r Geschäftspartner/in,</p>
+                                    <p style="color: #ccc; margin: 0 0 20px;">anbei erhalten Sie Ihre Rechnung <strong style="color: #E65100;">${invoiceData.invoiceNumber}</strong> für den Zeitraum <strong>${invoiceData.period}</strong>.</p>
+                                    <div style="background: #333; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                                        <table style="width: 100%; color: #ccc; font-size: 14px;">
+                                            <tr><td>Rechnungsbetrag:</td><td style="text-align: right; font-weight: bold; color: #E65100; font-size: 18px;">€${invoiceData.grandTotal.toFixed(2)}</td></tr>
+                                            <tr><td style="color: #999;">davon USt. ${invoiceData.taxRate}%:</td><td style="text-align: right; color: #999;">€${invoiceData.taxAmount.toFixed(2)}</td></tr>
+                                            <tr><td style="color: #999;">Fällig am:</td><td style="text-align: right; color: #ff9800;">${invoiceData.dueDate instanceof Date ? invoiceData.dueDate.toLocaleDateString("de-DE") : "14 Tage"}</td></tr>
+                                        </table>
+                                    </div>
+                                    <p style="color: #999; font-size: 12px; margin: 20px 0 0;">Die Rechnung finden Sie als PDF im Anhang.</p>
+                                </div>
+                                <p style="color: #666; font-size: 11px; text-align: center; margin-top: 15px;">LOKMA Marketplace GmbH · noreply@lokma.shop</p>
+                            </div>
+                        </div>
+                    `,
+                    attachments: [
+                        {
+                            filename: `Rechnung_${invoiceData.invoiceNumber}.pdf`,
+                            content: pdfBase64,
+                        },
+                    ],
+                });
+
+                stats.emailsSent++;
+                console.log(`[Monthly Invoicing] Email sent to ${recipientEmail} for ${invoiceData.invoiceNumber}`);
+            } catch (emailError) {
+                stats.emailsFailed++;
+                console.error(`[Monthly Invoicing] Email failed for ${invoiceData.invoiceNumber}:`, emailError);
+            }
         };
 
         try {
@@ -517,6 +736,12 @@ export const onScheduledMonthlyInvoicing = onSchedule(
 
                     console.log(`[Monthly Invoicing] Created subscription invoice ${invoiceNumber} for ${business.companyName} - €${grandTotal.toFixed(2)}${stripeResult.stripeInvoiceId ? " (Stripe: " + stripeResult.stripeInvoiceId + ")" : ""}`);
 
+                    // Send invoice email with PDF
+                    const recipientEmail = business.email || business.contactEmail || business.adminEmail;
+                    if (recipientEmail) {
+                        await sendInvoiceEmail({ ...invoiceData, dueDate }, recipientEmail);
+                    }
+
                 } catch (error) {
                     console.error(`[Monthly Invoicing] Error processing business ${businessDoc.id}:`, error);
                     stats.subscriptionFailed++;
@@ -524,41 +749,62 @@ export const onScheduledMonthlyInvoicing = onSchedule(
             }
 
             // =================================================================
-            // 2. COMMISSION INVOICES (for businesses with commission-based plans)
+            // 2. COMMISSION INVOICES (from commission_records collection)
             // =================================================================
-            // Calculate commissions from orders in previous month
-            const ordersSnapshot = await db.collection("meat_orders")
-                .where("createdAt", ">=", admin.firestore.Timestamp.fromDate(periodStart))
-                .where("createdAt", "<=", admin.firestore.Timestamp.fromDate(periodEnd))
-                .where("status", "==", "completed")
+            const commRecordsSnapshot = await db.collection("commission_records")
+                .where("period", "==", periodString)
                 .get();
 
-            // Group orders by business
-            const businessCommissions: Record<string, { total: number; orderCount: number; businessName: string }> = {};
+            // Group commission records by business
+            const businessCommissions: Record<string, {
+                totalCommission: number;
+                netCommission: number;
+                vatAmount: number;
+                cardCommission: number;
+                cashCommission: number;
+                orderCount: number;
+                businessName: string;
+                recordIds: string[];
+            }> = {};
 
-            for (const orderDoc of ordersSnapshot.docs) {
-                const order = orderDoc.data();
-                const businessId = order.butcherId || order.businessId;
-
+            for (const recDoc of commRecordsSnapshot.docs) {
+                const rec = recDoc.data();
+                const businessId = rec.businessId;
                 if (!businessId) continue;
-
-                const commission = order.totalCommission || order.commissionAmount || 0;
 
                 if (!businessCommissions[businessId]) {
                     businessCommissions[businessId] = {
-                        total: 0,
+                        totalCommission: 0,
+                        netCommission: 0,
+                        vatAmount: 0,
+                        cardCommission: 0,
+                        cashCommission: 0,
                         orderCount: 0,
-                        businessName: order.butcherName || order.businessName || "Unbekannt",
+                        businessName: rec.businessName || "Unbekannt",
+                        recordIds: [],
                     };
                 }
 
-                businessCommissions[businessId].total += commission;
-                businessCommissions[businessId].orderCount++;
+                const bc = businessCommissions[businessId];
+                bc.totalCommission += rec.totalCommission || 0;
+                bc.netCommission += rec.netCommission || 0;
+                bc.vatAmount += rec.vatAmount || 0;
+                bc.orderCount++;
+                bc.recordIds.push(recDoc.id);
+
+                const isCard = rec.paymentMethod === "card" || rec.paymentMethod === "stripe";
+                if (isCard) {
+                    bc.cardCommission += rec.totalCommission || 0;
+                } else {
+                    bc.cashCommission += rec.totalCommission || 0;
+                }
             }
+
+            console.log(`[Monthly Invoicing] Found commission records for ${Object.keys(businessCommissions).length} businesses in ${periodString}`);
 
             // Create commission invoices
             for (const [businessId, commData] of Object.entries(businessCommissions)) {
-                if (commData.total <= 0) continue;
+                if (commData.totalCommission <= 0) continue;
 
                 try {
                     // Check for existing commission invoice
@@ -576,11 +822,6 @@ export const onScheduledMonthlyInvoicing = onSchedule(
 
                     const invoiceNumber = await getNextInvoiceNumber();
 
-                    // VAT on commission (19%)
-                    const vatRate = 19;
-                    const taxAmount = commData.total * (vatRate / 100);
-                    const grandTotal = commData.total + taxAmount;
-
                     const commissionInvoiceData = {
                         invoiceNumber,
                         type: "commission",
@@ -594,12 +835,14 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                         periodEnd: admin.firestore.Timestamp.fromDate(periodEnd),
 
                         description: `LOKMA Provision - ${commData.orderCount} Bestellungen - ${periodString}`,
-                        subtotal: commData.total,
-                        taxRate: vatRate,
-                        taxAmount,
-                        grandTotal,
+                        subtotal: commData.netCommission,
+                        taxRate: 19,
+                        taxAmount: commData.vatAmount,
+                        grandTotal: commData.totalCommission,
                         currency: "EUR",
                         orderCount: commData.orderCount,
+                        cardCommission: commData.cardCommission,
+                        cashCommission: commData.cashCommission,
 
                         issueDate: admin.firestore.FieldValue.serverTimestamp(),
                         dueDate: admin.firestore.Timestamp.fromDate(dueDate),
@@ -607,10 +850,22 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 
                         generatedBy: "cron_job",
+                        commissionRecordIds: commData.recordIds,
                     };
 
                     const commInvoiceRef = await db.collection("invoices").add(commissionInvoiceData);
                     const commInvoiceId = commInvoiceRef.id;
+
+                    // Mark commission records as invoiced
+                    const batch = db.batch();
+                    for (const recordId of commData.recordIds) {
+                        batch.update(db.collection("commission_records").doc(recordId), {
+                            collectionStatus: "invoiced",
+                            invoiceId: commInvoiceId,
+                            invoicedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        });
+                    }
+                    await batch.commit();
 
                     // Sync commission invoice to Stripe for automatic collection
                     const commStripeResult = await syncInvoiceToStripe(
@@ -618,16 +873,23 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                         businessId,
                         invoiceNumber,
                         `LOKMA Provision - ${commData.orderCount} Bestellungen - ${periodString}`,
-                        grandTotal,
+                        commData.totalCommission,
                         dueDate,
                         stripeSecretKey.value()
                     );
 
                     stats.commissionGenerated++;
-                    stats.totalAmount += grandTotal;
+                    stats.totalAmount += commData.totalCommission;
 
-                    console.log(`[Monthly Invoicing] Created commission invoice ${invoiceNumber} for ${commData.businessName} - €${grandTotal.toFixed(2)} (${commData.orderCount} orders)${commStripeResult.stripeInvoiceId ? " (Stripe: " + commStripeResult.stripeInvoiceId + ")" : ""}`);
+                    console.log(`[Monthly Invoicing] Created commission invoice ${invoiceNumber} for ${commData.businessName} - €${commData.totalCommission.toFixed(2)} (${commData.orderCount} orders, Card: €${commData.cardCommission.toFixed(2)}, Cash: €${commData.cashCommission.toFixed(2)})${commStripeResult.stripeInvoiceId ? " (Stripe: " + commStripeResult.stripeInvoiceId + ")" : ""}`);
 
+                    // Send commission invoice email with PDF
+                    const businessDoc = await db.collection("butcher_partners").doc(businessId).get();
+                    const biz = businessDoc.exists ? businessDoc.data() : null;
+                    const recipientEmail = biz?.email || biz?.contactEmail || biz?.adminEmail;
+                    if (recipientEmail) {
+                        await sendInvoiceEmail({ ...commissionInvoiceData, dueDate }, recipientEmail);
+                    }
                 } catch (error) {
                     console.error(`[Monthly Invoicing] Error creating commission invoice for ${businessId}:`, error);
                     stats.commissionFailed++;
@@ -641,6 +903,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
             console.log("[Monthly Invoicing] COMPLETED");
             console.log(`  Subscription Invoices: ${stats.subscriptionGenerated} created, ${stats.subscriptionFailed} failed`);
             console.log(`  Commission Invoices: ${stats.commissionGenerated} created, ${stats.commissionFailed} failed`);
+            console.log(`  Emails: ${stats.emailsSent} sent, ${stats.emailsFailed} failed`);
             console.log(`  Total Amount: €${stats.totalAmount.toFixed(2)}`);
             console.log("========================================");
 

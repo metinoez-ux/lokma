@@ -35,6 +35,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
   // Auto-refresh
   Timer? _refreshTimer;
   int _refreshKey = 0;
+  bool _showOrderDetails = false;
   
   // Animation for hopping motorcycle marker
   late AnimationController _hopController;
@@ -570,67 +571,140 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                 ),
         ),
 
-        // Legend bar
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: Colors.grey[50],
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildLegendItem(Colors.red.shade600, Icons.motorcycle, 'Kurye'),
-              _buildLegendItem(Colors.orange, Icons.storefront, 'İşletme'),
-              _buildLegendItem(Colors.blue.shade700, Icons.home, 'Teslimat'),
-            ],
-          ),
-        ),
-        
-        // Order summary footer
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.receipt_long, color: Colors.orange),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '${order.items.length} ürün',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                '${order.totalAmount.toStringAsFixed(2)}€',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
-            ],
-          ),
-        ),
+        // Collapsible order details panel
+        _buildCollapsibleOrderPanel(order),
       ],
+    );
+  }
+
+  Widget _buildCollapsibleOrderPanel(LokmaOrder order) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Legend row (always visible, compact)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            color: Colors.grey[50],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildLegendItem(Colors.red.shade600, Icons.motorcycle, 'Kurye'),
+                _buildLegendItem(Colors.orange, Icons.storefront, 'İşletme'),
+                _buildLegendItem(Colors.blue.shade700, Icons.home, 'Teslimat'),
+              ],
+            ),
+          ),
+          // Tappable order summary header
+          GestureDetector(
+            onTap: () => setState(() => _showOrderDetails = !_showOrderDetails),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  const Icon(Icons.receipt_long, color: Colors.orange, size: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${order.items.length} ürün',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${order.totalAmount.toStringAsFixed(2)}€',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  AnimatedRotation(
+                    turns: _showOrderDetails ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: const Icon(Icons.keyboard_arrow_up, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Expandable order items
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Container(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: ListView.separated(
+                shrinkWrap: true,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                itemCount: order.items.length,
+                separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[200]),
+                itemBuilder: (context, index) {
+                  final item = order.items[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade50,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${item.quantity}x',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange.shade700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            item.name,
+                            style: const TextStyle(fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          '${(item.price * item.quantity).toStringAsFixed(2)}€',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            crossFadeState: _showOrderDetails
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 250),
+          ),
+        ],
+      ),
     );
   }
 

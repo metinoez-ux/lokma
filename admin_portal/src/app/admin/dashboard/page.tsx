@@ -1844,10 +1844,21 @@ export default function SuperAdminDashboard() {
                     <div className="bg-gray-800 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-xl font-bold text-white">👥 Kullanıcı Yönetimi</h2>
-                            {/* Only Super Admin can add customers directly */}
-                            {admin?.adminType === 'super' && (
+                            {/* Super Admin ve İşletme Sahipleri kullanıcı/personel ekleyebilir */}
+                            {(admin?.adminType === 'super' || (admin?.adminType && !admin?.adminType?.includes('_staff'))) && (
                                 <button
-                                    onClick={() => setShowNewUserModal(true)}
+                                    onClick={() => {
+                                        // İşletme admin ise staff rolünü ve sektörü otomatik doldur
+                                        if (admin?.adminType !== 'super') {
+                                            const adminSector = admin?.adminType?.replace('_admin', '').replace('_staff', '') || 'kasap';
+                                            setNewUserData(prev => ({
+                                                ...prev,
+                                                role: 'staff',
+                                                sector: adminSector,
+                                            }));
+                                        }
+                                        setShowNewUserModal(true);
+                                    }}
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 font-medium flex items-center gap-2"
                                 >
                                     ➕ Yeni Kullanıcı Ekle

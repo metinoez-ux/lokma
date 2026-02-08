@@ -103,6 +103,15 @@ export default function AccountPage() {
         pushUsed: 0,
     });
     const [invoices, setInvoices] = useState<any[]>([]);
+    const [commissionRecords, setCommissionRecords] = useState<any[]>([]);
+    const [commissionSummary, setCommissionSummary] = useState({
+        totalCommission: 0,
+        cardCommission: 0,
+        cashCommission: 0,
+        pendingAmount: 0,
+        collectedAmount: 0,
+        orderCount: 0,
+    });
     const [showBankModal, setShowBankModal] = useState(false);
     const [showPlanModal, setShowPlanModal] = useState(false);
     const [bankForm, setBankForm] = useState({
@@ -169,8 +178,9 @@ export default function AccountPage() {
                     }
                 }
 
-                // Son faturalar
+                // Son faturalar + komisyon kayıtları
                 await loadInvoices((adminData as any).butcherId);
+                await loadCommissionRecords((adminData as any).butcherId);
             } catch (error) {
                 console.error('Veri yükleme hatası:', error);
             }
@@ -238,6 +248,46 @@ export default function AccountPage() {
         } catch {
             // Index yoksa boş bırak
             setInvoices([]);
+        }
+    };
+
+    // ═══════════════════════════════════════════════════════════════════
+    // KOMİSYON KAYITLARI
+    // ═══════════════════════════════════════════════════════════════════
+    const loadCommissionRecords = async (butcherId: string) => {
+        try {
+            const now = new Date();
+            const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const commQuery = query(
+                collection(db, 'commission_records'),
+                where('businessId', '==', butcherId),
+                where('period', '==', currentPeriod),
+                orderBy('createdAt', 'desc')
+            );
+            const snap = await getDocs(commQuery);
+            const records = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            setCommissionRecords(records);
+
+            // Summary
+            let totalCommission = 0, cardCommission = 0, cashCommission = 0, pendingAmount = 0, collectedAmount = 0;
+            records.forEach((r: any) => {
+                totalCommission += r.totalCommission || 0;
+                const isCard = r.paymentMethod === 'card' || r.paymentMethod === 'stripe';
+                if (isCard) {
+                    cardCommission += r.totalCommission || 0;
+                    collectedAmount += r.totalCommission || 0;
+                } else {
+                    cashCommission += r.totalCommission || 0;
+                    if (r.collectionStatus === 'pending') {
+                        pendingAmount += r.totalCommission || 0;
+                    } else {
+                        collectedAmount += r.totalCommission || 0;
+                    }
+                }
+            });
+            setCommissionSummary({ totalCommission, cardCommission, cashCommission, pendingAmount, collectedAmount, orderCount: records.length });
+        } catch (error) {
+            console.error('Komisyon kayıtları yükleme hatası:', error);
         }
     };
 
@@ -433,13 +483,25 @@ export default function AccountPage() {
                             )}
                             <hr className="border-amber-700/50" />
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-300">Biriken Provizyon</span>
-                                <span className="text-xl font-bold text-amber-400">€{stats.accruedCommission.toFixed(2)}</span>
+                                <span className="text-gray-300">Bu Ay Komisyon ({commissionSummary.orderCount} sipariş)</span>
+                                <span className="text-xl font-bold text-amber-400">€{commissionSummary.totalCommission.toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-gray-300">Ödenen Provizyon</span>
-                                <span className="text-xl font-bold text-green-400">€{stats.paidCommission.toFixed(2)}</span>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">💳 Kart</span>
+                                    <span className="text-blue-400">€{commissionSummary.cardCommission.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-400">💵 Nakit</span>
+                                    <span className="text-purple-400">€{commissionSummary.cashCommission.toFixed(2)}</span>
+                                </div>
                             </div>
+                            {(business?.accountBalance || 0) > 0 && (
+                                <div className="bg-red-900/40 border border-red-600/40 rounded-lg p-3 flex justify-between items-center">
+                                    <span className="text-red-300 text-sm">📌 Açık Bakiye (Nakit Komisyon)</span>
+                                    <span className="text-xl font-bold text-red-400">€{(business?.accountBalance || 0).toFixed(2)}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 

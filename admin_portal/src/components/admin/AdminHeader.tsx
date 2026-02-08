@@ -314,6 +314,7 @@ export default function AdminHeader() {
                                 { href: '/admin/orders', icon: '📦', label: 'Siparişler' },
                                 { href: '/admin/products', icon: '📋', label: 'Master Katalog' },
                                 { href: '/admin/invoices', icon: '📄', label: 'Faturalar' },
+                                { href: '/admin/commissions', icon: '💰', label: 'Komisyonlar' },
                                 { href: '/admin/plans', icon: '📅', label: 'Planlar' },
                                 { href: '/admin/activity-logs', icon: '📝', label: 'Log' },
                                 { href: '/admin/dashboard', icon: '👥', label: 'Kullanıcı Yönetimi' },

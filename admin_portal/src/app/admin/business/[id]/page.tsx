@@ -433,7 +433,14 @@ export default function BusinessDetailPage() {
   const [inviteCountryCode, setInviteCountryCode] = useState("+49");
   const [inviteFirstName, setInviteFirstName] = useState("");
   const [inviteLastName, setInviteLastName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<string>("Personel");
   const [staffLoading, setStaffLoading] = useState(false);
+  const [inviteResult, setInviteResult] = useState<{
+    success: boolean;
+    tempPassword?: string;
+    notifications?: { email: { sent: boolean }; whatsapp: { sent: boolean }; sms: { sent: boolean } };
+  } | null>(null);
 
   // Confirmation modal state
   const [confirmModal, setConfirmModal] = useState<{
@@ -1181,43 +1188,68 @@ export default function BusinessDetailPage() {
       return;
     }
     setStaffLoading(true);
+    setInviteResult(null);
     try {
       const fullPhone = inviteCountryCode + invitePhone;
       const displayName =
         inviteFirstName + (inviteLastName ? " " + inviteLastName : "");
-      const staffId = `staff_${Date.now()}`;
 
-      // Create staff record
-      await setDoc(doc(db, "admins", staffId), {
-        phoneNumber: fullPhone,
-        displayName: displayName,
-        businessId: businessId,
-        businessName: business?.companyName,
-        adminType: "Personel",
-        isActive: false,
-        tempPasswordRequired: true,
-        createdBy: admin?.id,
-        createdAt: new Date(),
+      // Auto-generate temporary password
+      const tempPassword = `LOKMA${Math.floor(1000 + Math.random() * 9000)}`;
+
+      // Determine adminType based on selected role
+      const businessTypePrefix = (business as any)?.types?.[0] || (business as any)?.type || 'kasap';
+      const adminType = inviteRole === 'Admin'
+        ? businessTypePrefix
+        : `${businessTypePrefix}_staff`;
+
+      // Use the proper create-user API (Firebase Auth + users + admins + notifications)
+      const response = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: inviteEmail || undefined,
+          password: tempPassword,
+          displayName,
+          phone: fullPhone,
+          dialCode: inviteCountryCode,
+          firstName: inviteFirstName,
+          lastName: inviteLastName || undefined,
+          role: 'admin',
+          adminType,
+          businessId: businessId,
+          businessName: business?.companyName,
+          businessType: (business as any)?.types?.[0] || (business as any)?.type || 'kasap',
+          createdBy: admin?.id || 'business_panel',
+          createdBySource: 'business_detail_invite',
+          assignerName: admin?.displayName || 'Admin',
+          assignerEmail: admin?.email,
+          assignerRole: admin?.adminType || 'super',
+        }),
       });
 
-      // Send WhatsApp invitation
-      const loginUrl = `https://miraportal.com/login?phone=${encodeURIComponent(fullPhone)}`;
-      const message = `Merhaba ${inviteFirstName}! ${business?.companyName} tarafından LOKMA Portal'a davet edildiniz. Giriş yapmak için: ${loginUrl}`;
+      const data = await response.json();
 
-      await fetch("/api/whatsapp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: fullPhone, message }),
+      if (!response.ok) {
+        throw new Error(data.error || 'Kullanıcı oluşturulamadı');
+      }
+
+      setInviteResult({
+        success: true,
+        tempPassword,
+        notifications: data.notifications,
       });
 
-      showToast(`${inviteFirstName} başarıyla davet edildi!`, "success");
+      showToast(`${inviteFirstName} başarıyla eklendi!`, "success");
       setInvitePhone("");
       setInviteFirstName("");
       setInviteLastName("");
+      setInviteEmail("");
       loadStaff();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Invite error:", error);
-      showToast("Davet gönderilemedi", "error");
+      const msg = error?.message || 'Davet gönderilemedi';
+      showToast(msg, "error");
     }
     setStaffLoading(false);
   };
@@ -3484,12 +3516,12 @@ export default function BusinessDetailPage() {
                 {/* Invite New Staff */}
                 <div>
                   <h3 className="text-white font-medium mb-3">
-                    Yeni Personel Ekle (WhatsApp Davet)
+                    ➕ Yeni Personel Ekle
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
                     <input
                       type="text"
-                      placeholder="İsim"
+                      placeholder="İsim *"
                       value={inviteFirstName}
                       onChange={(e) => setInviteFirstName(e.target.value)}
                       className="bg-gray-700 text-white px-3 py-2 rounded-lg"
@@ -3514,7 +3546,7 @@ export default function BusinessDetailPage() {
                     </select>
                     <input
                       type="tel"
-                      placeholder="Telefon numarası"
+                      placeholder="Telefon numarası *"
                       value={invitePhone}
                       onChange={(e) =>
                         setInvitePhone(e.target.value.replace(/\D/g, ""))
@@ -3522,15 +3554,63 @@ export default function BusinessDetailPage() {
                       className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg"
                     />
                   </div>
+                  <input
+                    type="email"
+                    placeholder="E-posta (opsiyonel, bildirim için)"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="w-full mt-3 bg-gray-700 text-white px-3 py-2 rounded-lg"
+                  />
+                  <div className="mt-3">
+                    <label className="text-gray-400 text-sm">Rol</label>
+                    <select
+                      value={inviteRole}
+                      onChange={(e) => setInviteRole(e.target.value)}
+                      className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1"
+                    >
+                      <option value="Personel">👤 Personel</option>
+                      <option value="Admin">👑 İşletme Admin</option>
+                    </select>
+                  </div>
                   <button
                     onClick={handleInviteStaff}
                     disabled={staffLoading}
-                    className="w-full mt-3 bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 disabled:opacity-50"
+                    className="w-full mt-3 bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 disabled:opacity-50 font-medium"
                   >
                     {staffLoading
-                      ? "Gönderiliyor..."
-                      : "📱 WhatsApp ile Davet Gönder"}
+                      ? "Hesap oluşturuluyor..."
+                      : "🚀 Hesap Oluştur & Davet Gönder"}
                   </button>
+
+                  {/* Invite Result Feedback */}
+                  {inviteResult && inviteResult.success && (
+                    <div className="mt-4 p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-3">
+                      <p className="text-green-300 font-medium">✅ Personel başarıyla eklendi!</p>
+                      <div className="bg-gray-800 p-3 rounded text-sm">
+                        <p className="text-gray-400">Geçici Şifre:</p>
+                        <p className="text-white font-mono text-lg">{inviteResult.tempPassword}</p>
+                      </div>
+                      {inviteResult.notifications && (
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <span className={`px-2 py-1 rounded ${inviteResult.notifications.email?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
+                            {inviteResult.notifications.email?.sent ? '✅' : '❌'} Email
+                          </span>
+                          <span className={`px-2 py-1 rounded ${inviteResult.notifications.whatsapp?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
+                            {inviteResult.notifications.whatsapp?.sent ? '✅' : '❌'} WhatsApp
+                          </span>
+                          <span className={`px-2 py-1 rounded ${inviteResult.notifications.sms?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
+                            {inviteResult.notifications.sms?.sent ? '✅' : '❌'} SMS
+                          </span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => setInviteResult(null)}
+                        className="text-xs text-gray-400 hover:text-white"
+                      >
+                        Kapat
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -55,17 +55,34 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
     
-    // Query active deliveries (pending, preparing, ready, onTheWay)
+    // Query ALL active deliveries — sort client-side by urgency
     _activeOrdersStream = FirebaseFirestore.instance
         .collection('meat_orders')
         .where('userId', isEqualTo: user.uid)
         .where('status', whereIn: ['pending', 'preparing', 'ready', 'onTheWay'])
-        .orderBy('createdAt', descending: true)
-        .limit(1)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => LokmaOrder.fromFirestore(doc))
-            .toList())
+        .map((snapshot) {
+          final orders = snapshot.docs
+              .map((doc) => LokmaOrder.fromFirestore(doc))
+              .toList();
+          
+          // Sort by urgency: onTheWay > ready > preparing > pending
+          const priority = {
+            'onTheWay': 0,
+            'ready': 1,
+            'preparing': 2,
+            'pending': 3,
+          };
+          orders.sort((a, b) {
+            final ap = priority[a.status.name] ?? 4;
+            final bp = priority[b.status.name] ?? 4;
+            if (ap != bp) return ap.compareTo(bp);
+            // Same priority → newer first
+            return (b.createdAt ?? DateTime(2000)).compareTo(a.createdAt ?? DateTime(2000));
+          });
+          
+          return orders;
+        })
         .handleError((e) {
           debugPrint('[MainScaffold] Active orders stream error: $e');
           return <LokmaOrder>[];
@@ -87,17 +104,12 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
   }
 
   void _navigateToOrder(LokmaOrder order) {
-    if (order.status == OrderStatus.onTheWay) {
-      // Go directly to courier tracking map
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => CourierTrackingScreen(orderId: order.id),
-        ),
-      );
-    } else {
-      // For other statuses, go to orders list
-      context.go('/orders');
-    }
+    // Always go to courier tracking screen for the specific order
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CourierTrackingScreen(orderId: order.id),
+      ),
+    );
   }
 
   @override
