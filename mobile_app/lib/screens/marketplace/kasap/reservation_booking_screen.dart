@@ -123,6 +123,70 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
     }
   }
 
+  /// Get readable opening hours for the selected day
+  String _getSelectedDayHours() {
+    if (_openingHoursRaw.isEmpty) return '';
+    
+    // Map weekday number to English day names used in the data
+    const dayNames = {
+      1: 'Monday', 2: 'Tuesday', 3: 'Wednesday',
+      4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday',
+    };
+    const dayNamesTr = {
+      1: 'Pazartesi', 2: 'Salı', 3: 'Çarşamba',
+      4: 'Perşembe', 5: 'Cuma', 6: 'Cumartesi', 7: 'Pazar',
+    };
+    
+    final dayEn = dayNames[_selectedDate.weekday] ?? '';
+    final dayTr = dayNamesTr[_selectedDate.weekday] ?? '';
+    
+    // Check if this day is marked as Closed
+    final closedPattern = RegExp('$dayEn:\\s*Closed', caseSensitive: false);
+    if (closedPattern.hasMatch(_openingHoursRaw)) {
+      return '$dayTr: Kapalı';
+    }
+    
+    // Try to find the time range for this day
+    // Pattern: "Monday: 11:30 AM – 10:00 PM" or "Monday: 11:30 AM - 10:00 PM"
+    final dayPattern = RegExp(
+      '$dayEn:\\s*(\\d{1,2}:\\d{2}\\s*(?:AM|PM)?)\\s*[–\\-]\\s*(\\d{1,2}:\\d{2}\\s*(?:AM|PM)?)',
+      caseSensitive: false,
+    );
+    final match = dayPattern.firstMatch(_openingHoursRaw);
+    
+    if (match != null) {
+      final open = _parseTimeToHHMM(match.group(1)!.trim());
+      final close = _parseTimeToHHMM(match.group(2)!.trim());
+      return '$dayTr: $open – $close';
+    }
+    
+    // Fallback: try general time range
+    final timeRangeRegex = RegExp(r'(\d{1,2}):(\d{2})\s*(?:AM|PM)?\s*[–\-]\s*(\d{1,2}):(\d{2})\s*(?:AM|PM)?');
+    final generalMatch = timeRangeRegex.firstMatch(_openingHoursRaw);
+    if (generalMatch != null) {
+      return '$dayTr: ${generalMatch.group(0)}';
+    }
+    
+    return '';
+  }
+  
+  /// Convert "11:30 AM" or "10:00 PM" to 24h "HH:MM" format
+  String _parseTimeToHHMM(String timeStr) {
+    final isPM = timeStr.toUpperCase().contains('PM');
+    final isAM = timeStr.toUpperCase().contains('AM');
+    final cleaned = timeStr.replaceAll(RegExp(r'\s*(AM|PM)\s*', caseSensitive: false), '').trim();
+    final parts = cleaned.split(':');
+    if (parts.length != 2) return cleaned;
+    
+    var hour = int.tryParse(parts[0]) ?? 0;
+    final minute = parts[1];
+    
+    if (isPM && hour < 12) hour += 12;
+    if (isAM && hour == 12) hour = 0;
+    
+    return '${hour.toString().padLeft(2, '0')}:$minute';
+  }
+
   /// Parse opening hours and generate 30-min time slots for the given day
   List<String> _generateTimeSlotsFromHours(DateTime date) {
     // Try to parse opening hours (format: "Mo-Sa: 10:00-22:00" or similar)
@@ -608,29 +672,24 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const Spacer(),
-                      if (!_isLoadingSlots && _maxReservationTables > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Max $_maxReservationTables masa/saat',
-                            style: TextStyle(fontSize: 10, color: Colors.blue[700]),
-                          ),
-                        ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  // Opening hours info
+                  // Opening hours for selected day only
                   if (_openingHoursRaw.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        'Açılış: $_openingHoursRaw',
-                        style: TextStyle(color: textSecondary, fontSize: 11),
+                      child: Row(
+                        children: [
+                          Icon(Icons.access_time, size: 14, color: textSecondary),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _getSelectedDayHours(),
+                              style: TextStyle(color: textSecondary, fontSize: 12),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   const SizedBox(height: 8),
