@@ -96,12 +96,13 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
           .collection('reservations')
           .where('reservationDate', isGreaterThanOrEqualTo: Timestamp.fromDate(dayStart))
           .where('reservationDate', isLessThan: Timestamp.fromDate(dayEnd))
-          .where('status', whereIn: ['pending', 'confirmed'])
           .get();
 
-      // Count reservations per time slot
+      // Count reservations per time slot (only pending/confirmed)
       final counts = <String, int>{};
       for (final doc in reservationsSnap.docs) {
+        final status = doc.data()['status'] as String? ?? '';
+        if (status != 'pending' && status != 'confirmed') continue;
         final resDate = (doc.data()['reservationDate'] as Timestamp).toDate();
         final timeKey = '${resDate.hour.toString().padLeft(2, '0')}:${resDate.minute.toString().padLeft(2, '0')}';
         counts[timeKey] = (counts[timeKey] ?? 0) + 1;
@@ -286,10 +287,15 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
           .collection('reservations')
           .where('reservationDate', isGreaterThanOrEqualTo: Timestamp.fromDate(slotStart))
           .where('reservationDate', isLessThan: Timestamp.fromDate(slotEnd))
-          .where('status', whereIn: ['pending', 'confirmed'])
           .get();
 
-      if (_maxReservationTables > 0 && existingSnap.docs.length >= _maxReservationTables) {
+      // Filter client-side for active reservations only
+      final activeCount = existingSnap.docs.where((doc) {
+        final status = doc.data()['status'] as String? ?? '';
+        return status == 'pending' || status == 'confirmed';
+      }).length;
+
+      if (_maxReservationTables > 0 && activeCount >= _maxReservationTables) {
         if (!mounted) return;
         _showSnackBar('Bu saat dolmuş! Lütfen farklı bir saat seçin.', isError: true);
         await _loadSlotsForDate(_selectedDate); // Refresh slot counts
@@ -852,6 +858,8 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                   TextField(
                     controller: _notesController,
                     maxLines: 3,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
                     style: TextStyle(color: textPrimary),
                     decoration: InputDecoration(
                       hintText:
