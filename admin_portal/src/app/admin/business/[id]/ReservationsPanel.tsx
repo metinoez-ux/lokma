@@ -8,7 +8,9 @@ import {
     orderBy,
     getDocs,
     doc,
+    getDoc,
     updateDoc,
+    deleteField,
     Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -24,6 +26,7 @@ interface Reservation {
     notes: string;
     status: "pending" | "confirmed" | "rejected" | "cancelled";
     confirmedBy: string | null;
+    tableCardNumbers: number[];
     createdAt: Date;
     businessId: string;
     businessName: string;
@@ -46,6 +49,27 @@ export default function ReservationsPanel({
     const [dateFilter, setDateFilter] = useState<"today" | "tomorrow" | "week" | "all">("today");
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [notification, setNotification] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+    // Card number selection
+    const [maxTables, setMaxTables] = useState(0);
+    const [showCardModal, setShowCardModal] = useState<{ resId: string } | null>(null);
+    const [selectedCards, setSelectedCards] = useState<Set<number>>(new Set());
+    const [occupiedCards, setOccupiedCards] = useState<Set<number>>(new Set());
+    const [cardModalLoading, setCardModalLoading] = useState(false);
+
+    // Load maxReservationTables from business document
+    useEffect(() => {
+        const loadMaxTables = async () => {
+            try {
+                const bizDoc = await getDoc(doc(db, "businesses", businessId));
+                if (bizDoc.exists()) {
+                    setMaxTables(bizDoc.data()?.maxReservationTables || 0);
+                }
+            } catch (e) {
+                console.error("Error loading maxTables:", e);
+            }
+        };
+        loadMaxTables();
+    }, [businessId]);
 
     const fetchReservations = useCallback(async () => {
         setLoading(true);
@@ -67,6 +91,7 @@ export default function ReservationsPanel({
                     notes: data.notes || "",
                     status: data.status || "pending",
                     confirmedBy: data.confirmedBy || null,
+                    tableCardNumbers: data.tableCardNumbers || [],
                     createdAt: data.createdAt?.toDate?.() || new Date(),
                     businessId: data.businessId || businessId,
                     businessName: data.businessName || businessName,
@@ -102,7 +127,79 @@ export default function ReservationsPanel({
         return true; // "all"
     });
 
+    // Get occupied card numbers from currently confirmed reservations
+    const getOccupiedCards = useCallback(async (): Promise<Set<number>> => {
+        try {
+            const q = query(
+                collection(db, "businesses", businessId, "reservations"),
+                where("status", "==", "confirmed")
+            );
+            const snap = await getDocs(q);
+            const occupied = new Set<number>();
+            snap.docs.forEach((d) => {
+                const cards = d.data().tableCardNumbers;
+                if (Array.isArray(cards)) {
+                    cards.forEach((c: number) => occupied.add(c));
+                }
+            });
+            return occupied;
+        } catch (e) {
+            console.error("Error fetching occupied cards:", e);
+            return new Set();
+        }
+    }, [businessId]);
+
+    // Open card selection modal
+    const openCardModal = useCallback(async (resId: string) => {
+        if (maxTables <= 0) {
+            // No tables configured, confirm directly
+            await confirmWithCards(resId, []);
+            return;
+        }
+        setCardModalLoading(true);
+        setShowCardModal({ resId });
+        setSelectedCards(new Set());
+        const occupied = await getOccupiedCards();
+        setOccupiedCards(occupied);
+        setCardModalLoading(false);
+    }, [maxTables, getOccupiedCards]);
+
+    // Confirm with selected card numbers
+    const confirmWithCards = async (resId: string, cardNumbers: number[]) => {
+        setActionLoading(resId);
+        try {
+            const resRef = doc(db, "businesses", businessId, "reservations", resId);
+            await updateDoc(resRef, {
+                status: "confirmed",
+                confirmedBy: staffName,
+                tableCardNumbers: cardNumbers,
+                tableCardAssignedBy: staffName,
+                tableCardAssignedAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+            });
+            setReservations((prev) =>
+                prev.map((r) => (r.id === resId ? { ...r, status: "confirmed" as const, confirmedBy: staffName, tableCardNumbers: cardNumbers } : r))
+            );
+            setShowCardModal(null);
+            const cardStr = cardNumbers.length > 0 ? ` (Masa ${cardNumbers.join(", ")})` : "";
+            setNotification({ msg: `✅ Rezervasyon onaylandı${cardStr}`, type: "success" });
+            setTimeout(() => setNotification(null), 3000);
+        } catch (err) {
+            console.error("Error confirming reservation:", err);
+            setNotification({ msg: "Hata oluştu", type: "error" });
+            setTimeout(() => setNotification(null), 3000);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
     async function handleStatusChange(resId: string, newStatus: "confirmed" | "rejected") {
+        // For confirmation → open card modal
+        if (newStatus === "confirmed") {
+            openCardModal(resId);
+            return;
+        }
+
         setActionLoading(resId);
         try {
             const resRef = doc(db, "businesses", businessId, "reservations", resId);
@@ -118,7 +215,7 @@ export default function ReservationsPanel({
             );
 
             setNotification({
-                msg: newStatus === "confirmed" ? "✅ Rezervasyon onaylandı" : "❌ Rezervasyon reddedildi",
+                msg: "❌ Rezervasyon reddedildi",
                 type: "success",
             });
             setTimeout(() => setNotification(null), 3000);
@@ -302,6 +399,18 @@ export default function ReservationsPanel({
                                                 {res.status === "confirmed" ? "Onaylayan" : "İşlem yapan"}: {res.confirmedBy}
                                             </p>
                                         )}
+
+                                        {/* Table Card Numbers */}
+                                        {res.status === "confirmed" && res.tableCardNumbers.length > 0 && (
+                                            <div className="mt-2 flex items-center gap-2">
+                                                <span className="text-gray-500 text-xs">🃏 Masa No:</span>
+                                                {res.tableCardNumbers.map((n) => (
+                                                    <span key={n} className="bg-green-600 text-white px-2 py-0.5 rounded text-sm font-bold">
+                                                        {n}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Right: Actions */}
@@ -327,6 +436,83 @@ export default function ReservationsPanel({
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {/* Card Number Selection Modal */}
+            {showCardModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-gray-700">
+                            <h2 className="text-xl font-bold text-white">🃏 Masa Kart Numarası Seçin</h2>
+                            <p className="text-gray-400 text-sm mt-1">Müşteriye verilecek masa kartını seçin</p>
+                            <div className="flex items-center gap-4 mt-3 text-xs">
+                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500 inline-block" /> Seçili</span>
+                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-600 inline-block" /> Boş</span>
+                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-900/50 border border-red-500/30 inline-block" /> Dolu</span>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            {cardModalLoading ? (
+                                <div className="text-center py-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto" />
+                                    <p className="text-gray-400 mt-3 text-sm">Masa durumu kontrol ediliyor...</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-5 gap-3">
+                                    {Array.from({ length: maxTables }, (_, i) => i + 1).map((num) => {
+                                        const isOccupied = occupiedCards.has(num);
+                                        const isSelected = selectedCards.has(num);
+                                        return (
+                                            <button
+                                                key={num}
+                                                disabled={isOccupied}
+                                                onClick={() => {
+                                                    setSelectedCards((prev) => {
+                                                        const next = new Set(prev);
+                                                        if (next.has(num)) next.delete(num);
+                                                        else next.add(num);
+                                                        return next;
+                                                    });
+                                                }}
+                                                className={`aspect-square rounded-xl text-xl font-bold transition-all ${isOccupied
+                                                        ? "bg-red-900/30 border border-red-500/30 text-red-400/50 cursor-not-allowed"
+                                                        : isSelected
+                                                            ? "bg-green-500 border-2 border-green-400 text-white shadow-lg shadow-green-500/30 scale-105"
+                                                            : "bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500"
+                                                    }`}
+                                            >
+                                                {num}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 border-t border-gray-700 flex gap-3">
+                            <button
+                                onClick={() => { setShowCardModal(null); setSelectedCards(new Set()); }}
+                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition"
+                            >
+                                İptal
+                            </button>
+                            <button
+                                disabled={selectedCards.size === 0}
+                                onClick={() => {
+                                    const sorted = Array.from(selectedCards).sort((a, b) => a - b);
+                                    confirmWithCards(showCardModal.resId, sorted);
+                                }}
+                                className={`flex-[2] py-3 rounded-lg font-medium transition ${selectedCards.size === 0
+                                        ? "bg-gray-600 text-gray-500 cursor-not-allowed"
+                                        : "bg-green-600 hover:bg-green-500 text-white"
+                                    }`}
+                            >
+                                {selectedCards.size === 0
+                                    ? "Numara Seçin"
+                                    : `✅ Onayla (${selectedCards.size} masa)`}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

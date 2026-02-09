@@ -10,7 +10,8 @@ import '../staff/staff_delivery_screen.dart';
 /// Driver Delivery Screen - Shows pending deliveries from ALL assigned businesses
 /// This screen is for couriers (drivers) who are assigned to multiple businesses
 class DriverDeliveryScreen extends ConsumerStatefulWidget {
-  const DriverDeliveryScreen({super.key});
+  final bool embedded;
+  const DriverDeliveryScreen({super.key, this.embedded = false});
 
   @override
   ConsumerState<DriverDeliveryScreen> createState() => _DriverDeliveryScreenState();

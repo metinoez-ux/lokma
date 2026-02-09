@@ -322,6 +322,7 @@ export default function AdminHeader() {
                                 { href: '/admin/sectors', icon: '🏭', label: 'Sektör Yönetimi' },
                                 { href: '/admin/kermes', icon: '🎪', label: 'Kermes' },
                                 { href: '/admin/drivers', icon: '🚗', label: 'Sürücüler' },
+                                { href: '/admin/reservations', icon: '🍽️', label: 'Rezervasyonlar' },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);
                                 return (
@@ -467,6 +468,12 @@ export default function AdminHeader() {
                             <Link href="/admin/orders" className="flex items-center gap-2 bg-slate-700/50 hover:bg-slate-700 px-4 py-2 rounded-lg transition-all border border-slate-600">
                                 <span className="text-lg">📦</span>
                                 <span className="text-slate-200 text-sm font-medium">Siparişler</span>
+                            </Link>
+
+                            {/* Rezervasyonlar */}
+                            <Link href="/admin/reservations" className="flex items-center gap-2 bg-rose-700/50 hover:bg-rose-700 px-4 py-2 rounded-lg transition-all border border-rose-600">
+                                <span className="text-lg">🍽️</span>
+                                <span className="text-rose-200 text-sm font-medium">Rezervasyonlar</span>
                             </Link>
 
                             {/* Personeller - Business Admin/Staff -> filtered view */}

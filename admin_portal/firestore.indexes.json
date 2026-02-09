@@ -52,12 +52,22 @@
         },
         {
             "collectionGroup": "reservations",
-            "queryScope": "COLLECTION",
+            "queryScope": "COLLECTION_GROUP",
             "fields": [
                 {
-                    "fieldPath": "status",
+                    "fieldPath": "userId",
                     "order": "ASCENDING"
                 },
+                {
+                    "fieldPath": "reservationDate",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "reservations",
+            "queryScope": "COLLECTION_GROUP",
+            "fields": [
                 {
                     "fieldPath": "reservationDate",
                     "order": "ASCENDING"

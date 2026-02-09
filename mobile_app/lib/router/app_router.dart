@@ -21,6 +21,8 @@ import '../screens/search/smart_search_screen.dart';
 import '../screens/marketplace/kasap/cart_screen.dart';
 import '../screens/driver/driver_delivery_screen.dart';
 import '../screens/profile/my_reservations_screen.dart';
+import '../screens/staff/staff_reservations_screen.dart';
+import '../screens/staff/staff_hub_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 
@@ -168,6 +170,16 @@ class AppRouter {
       GoRoute(
         path: '/my-reservations',
         builder: (context, state) => const MyReservationsScreen(),
+      ),
+      // Staff Reservation Management
+      GoRoute(
+        path: '/staff-reservations',
+        builder: (context, state) => const StaffReservationsScreen(),
+      ),
+      // Unified Staff Hub
+      GoRoute(
+        path: '/staff-hub',
+        builder: (context, state) => const StaffHubScreen(),
       ),
     ],
   );

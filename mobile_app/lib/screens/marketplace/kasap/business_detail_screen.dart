@@ -64,6 +64,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
   
   String _selectedCategory = 'Tümü';
+
+  /// Select a category without causing scroll jumps
+  void _selectCategory(String category) {
+    if (_selectedCategory == category) return;
+    final savedOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
+    setState(() => _selectedCategory = category);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        final maxScroll = _scrollController.position.maxScrollExtent;
+        _scrollController.jumpTo(savedOffset.clamp(0.0, maxScroll));
+      }
+    });
+  }
   
   // 🚀 Service Mode (Lieferando-style toggle)
   bool _isDeliveryMode = true; // true = Kurye/Teslimat, false = Gel Al/Abholung
@@ -612,55 +625,109 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // --- Modals ---
 
   void _showCategorySelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.white54 : Colors.black45;
+    final handleColor = isDark ? Colors.white24 : Colors.black12;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: const BoxDecoration(
-          color: Color(0xFF1E1E1E),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        height: MediaQuery.of(context).size.height * 0.6,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 16),
-              width: 40, height: 4,
-              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+            // Handle + Close button
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 36, height: 4,
+                  decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
+                ),
+                Positioned(
+                  right: 12,
+                  child: IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(Icons.close, color: textSecondary, size: 22),
+                  ),
+                ),
+              ],
             ),
-            const Text('Kategori Seçin', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
+            // Title
+            Padding(
+              padding: const EdgeInsets.only(left: 20, bottom: 12),
+              child: Text('Kategoriler', style: TextStyle(color: textPrimary, fontSize: 22, fontWeight: FontWeight.bold)),
+            ),
+            // Category list
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(24),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 itemCount: _categories.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
-                   final cat = _categories[index];
-                   final isSelected = _selectedCategory == cat['name'];
-                   return InkWell(
-                     onTap: () {
-                       setState(() => _selectedCategory = cat['name']);
-                       Navigator.pop(context);
-                     },
-                     child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                        decoration: BoxDecoration(
-                          color: isSelected ? _getAccent(context) : const Color(0xFF2C2C2C),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: isSelected ? _getAccent(context) : Colors.transparent),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(cat['icon'], color: Colors.white, size: 20),
-                            const SizedBox(width: 12),
-                            Expanded(child: Text(cat['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16))),
-                            if (isSelected) const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                          ],
-                        ),
-                     ),
-                   );
+                  final cat = _categories[index];
+                  final catName = cat['name'] as String;
+                  final isSelected = _selectedCategory == catName;
+                  
+                  // Get product names for this category
+                  String productPreview = '';
+                  if (catName == 'Tümü') {
+                    productPreview = _allProducts.take(4).map((p) => p.name).join(', ');
+                  } else {
+                    final catProducts = _allProducts.where((p) => p.category == catName).toList();
+                    productPreview = catProducts.take(4).map((p) => p.name).join(', ');
+                  }
+                  if (productPreview.length > 60) {
+                    productPreview = '${productPreview.substring(0, 57)}...';
+                  }
+                  
+                  return InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _selectCategory(catName);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  catName,
+                                  style: TextStyle(
+                                    color: textPrimary,
+                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    fontSize: 17,
+                                  ),
+                                ),
+                                if (productPreview.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    productPreview,
+                                    style: TextStyle(color: textSecondary, fontSize: 13),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          if (isSelected)
+                            Icon(Icons.check, color: textPrimary, size: 22),
+                        ],
+                      ),
+                    ),
+                  );
                 },
               ),
             ),
@@ -1790,67 +1857,65 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               SliverPersistentHeader(
                 pinned: true,
                 delegate: _StickyTabDelegate(
-                  minHeight: 56,
-                  maxHeight: 56,
+                  minHeight: 52,
+                  maxHeight: 52,
                   child: Container(
                     color: scaffoldBg,
                     child: Column(
                       children: [
                         Expanded(
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            itemCount: _categories.length,
-                            itemBuilder: (context, index) {
-                              final cat = _categories[index];
-                              final isSelected = _selectedCategory == cat['name'];
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: GestureDetector(
-                                  onTap: () => setState(() => _selectedCategory = cat['name']),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                    decoration: BoxDecoration(
-                                      color: isSelected 
-                                        ? (isDark ? accent : Colors.black87) 
-                                        : (isDark ? cardBg : Colors.white),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: isSelected 
-                                          ? Colors.transparent 
-                                          : (isDark ? Colors.white24 : Colors.black12),
-                                      ),
-                                      boxShadow: isSelected ? [
-                                        BoxShadow(
-                                          color: accent.withOpacity(0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ] : null,
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        if (cat['emoji'] != null && cat['emoji'] != '🏠') ...[
-                                          Text(cat['emoji'], style: const TextStyle(fontSize: 14)),
-                                          const SizedBox(width: 6),
-                                        ],
-                                        Text(
-                                          cat['name'],
-                                          style: TextStyle(
+                          child: Row(
+                            children: [
+                              // Scrollable category chips
+                              Expanded(
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  padding: const EdgeInsets.only(left: 16, right: 4, top: 8, bottom: 8),
+                                  itemCount: _categories.length,
+                                  itemBuilder: (context, index) {
+                                    final cat = _categories[index];
+                                    final isSelected = _selectedCategory == cat['name'];
+                                    return Padding(
+                                      padding: const EdgeInsets.only(right: 6),
+                                      child: GestureDetector(
+                                        onTap: () => _selectCategory(cat['name']),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          decoration: BoxDecoration(
                                             color: isSelected 
-                                              ? Colors.white 
-                                              : (isDark ? Colors.white70 : Colors.black87),
-                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                            fontSize: 13,
+                                              ? (isDark ? Colors.white : Colors.black87) 
+                                              : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Text(
+                                            cat['name'],
+                                            style: TextStyle(
+                                              color: isSelected 
+                                                ? (isDark ? Colors.black : Colors.white) 
+                                                : (isDark ? Colors.white70 : Colors.black54),
+                                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                              fontSize: 14,
+                                            ),
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              // ≡ More icon (Lieferando-style, no border)
+                              GestureDetector(
+                                onTap: _showCategorySelector,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 12, left: 2),
+                                  child: Icon(
+                                    Icons.format_list_bulleted,
+                                    color: isDark ? Colors.white70 : Colors.black54,
+                                    size: 22,
                                   ),
                                 ),
-                              );
-                            },
+                              ),
+                            ],
                           ),
                         ),
                         Divider(height: 1, color: dividerColor),
@@ -2319,34 +2384,43 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      final cart = ref.watch(cartProvider);
      
      if (cart.isEmpty) return const SizedBox.shrink();
+     
+     final isDark = Theme.of(context).brightness == Brightness.dark;
+     final barBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+     final barShadow = isDark ? Colors.black54 : Colors.black12;
+     final barBorder = isDark ? Colors.white10 : Colors.black12;
+     final iconBg = isDark ? Colors.white10 : Colors.grey.shade100;
+     final iconColor = isDark ? Colors.white : Colors.black87;
+     final subtitleColor = isDark ? Colors.grey : Colors.grey.shade600;
+     final priceColor = isDark ? Colors.white : Colors.black87;
 
      return Container(
        padding: EdgeInsets.only(
          left: 16, right: 16, top: 16, 
          bottom: MediaQuery.of(context).padding.bottom + 16
        ),
-       decoration: const BoxDecoration(
-         color: Color(0xFF1E1E1E),
-         boxShadow: [BoxShadow(color: Colors.black, blurRadius: 10, offset: Offset(0, -5))],
-         border: Border(top: BorderSide(color: Colors.white10)),
+       decoration: BoxDecoration(
+         color: barBg,
+         boxShadow: [BoxShadow(color: barShadow, blurRadius: 10, offset: const Offset(0, -5))],
+         border: Border(top: BorderSide(color: barBorder)),
        ),
        child: Row(
          children: [
            Container(
              padding: const EdgeInsets.all(12),
              decoration: BoxDecoration(
-               color: Colors.white10,
+               color: iconBg,
                borderRadius: BorderRadius.circular(12),
              ),
-             child: const Icon(Icons.shopping_bag, color: Colors.white, size: 24),
+             child: Icon(Icons.shopping_bag, color: iconColor, size: 24),
            ),
            const SizedBox(width: 16),
            Column(
              mainAxisSize: MainAxisSize.min,
              crossAxisAlignment: CrossAxisAlignment.start,
              children: [
-               Text('${cart.items.length} Ürün', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-               Text('€${cart.totalAmount.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+               Text('${cart.items.length} Ürün', style: TextStyle(color: subtitleColor, fontSize: 12)),
+               Text('€${cart.totalAmount.toStringAsFixed(2)}', style: TextStyle(color: priceColor, fontSize: 18, fontWeight: FontWeight.bold)),
              ],
            ),
            const Spacer(),

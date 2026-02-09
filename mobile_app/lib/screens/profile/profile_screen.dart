@@ -429,62 +429,82 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     Consumer(
                       builder: (context, ref, _) {
                         final driverState = ref.watch(driverProvider);
-                        if (!driverState.isDriver) return const SizedBox.shrink();
+                        final isDriver = driverState.isDriver;
                         
-                        final businessCount = driverState.driverInfo?.assignedBusinesses.length ?? 0;
-                        
-                        return Column(
-                          children: [
-                            const SizedBox(height: 12),
-                            GestureDetector(
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                                context.push('/driver-deliveries');
-                              },
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).brightness == Brightness.dark 
-                                      ? Colors.blue.shade900.withOpacity(0.3) 
-                                      : Colors.blue.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.blue, width: 1.5),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.local_shipping, color: Colors.blue.shade700, size: 22),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      'Teslimatlarım',
-                                      style: TextStyle(
-                                        color: Colors.blue.shade700,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
+                        // Show unified Staff Hub button if driver OR reservation staff
+                        return FutureBuilder<bool>(
+                          future: _checkStaffReservationAccess(),
+                          builder: (context, snapshot) {
+                            final hasReservation = snapshot.data == true;
+                            
+                            // If neither driver nor reservation staff, hide
+                            if (!isDriver && !hasReservation) return const SizedBox.shrink();
+                            
+                            return Column(
+                              children: [
+                                const SizedBox(height: 12),
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    context.push('/staff-hub');
+                                  },
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          const Color(0xFFD03140).withOpacity(0.08),
+                                          const Color(0xFFD03140).withOpacity(0.03),
+                                        ],
                                       ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: const Color(0xFFD03140), width: 1.5),
                                     ),
-                                    const Spacer(),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(
-                                        '$businessCount İşletme',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFD03140).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: const Icon(Icons.badge, color: Color(0xFFD03140), size: 22),
                                         ),
-                                      ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Personel Girişi',
+                                                style: TextStyle(
+                                                  color: Color(0xFFD03140),
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                              Text(
+                                                [
+                                                  if (isDriver) 'Teslimat',
+                                                  if (hasReservation) 'Rezervasyon',
+                                                ].join(' • '),
+                                                style: TextStyle(
+                                                  color: Colors.grey[500],
+                                                  fontSize: 11,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Icon(Icons.arrow_forward_ios, size: 16, color: const Color(0xFFD03140).withOpacity(0.5)),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
-                          ],
+                              ],
+                            );
+                          },
                         );
                       },
                     ),
@@ -617,6 +637,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ),
     );
   }
+
+  /// Check if current user is staff for a business with reservation support
+Future<bool> _checkStaffReservationAccess() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return false;
+  try {
+    final adminDoc = await FirebaseFirestore.instance
+        .collection('admins')
+        .doc(user.uid)
+        .get();
+    if (!adminDoc.exists) return false;
+    final data = adminDoc.data()!;
+
+    // Check direct businessId / butcherId
+    final bizId = data['businessId'] ?? data['butcherId'];
+    if (bizId != null) {
+      final bizDoc = await FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(bizId)
+          .get();
+      if (bizDoc.data()?['hasReservation'] == true) return true;
+    }
+
+    // Also check all assignedBusinesses
+    final assigned = data['assignedBusinesses'] as List<dynamic>?;
+    if (assigned != null) {
+      for (final id in assigned) {
+        final bizDoc = await FirebaseFirestore.instance
+            .collection('businesses')
+            .doc(id.toString())
+            .get();
+        if (bizDoc.data()?['hasReservation'] == true) return true;
+      }
+    }
+
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
 
   Widget _buildSectionTitle(String title) {
     return Padding(

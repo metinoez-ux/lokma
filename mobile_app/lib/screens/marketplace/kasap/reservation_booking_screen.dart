@@ -344,13 +344,20 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
 
   /// Show "pending confirmation" dialog (not auto-confirmed)
   void _showPendingConfirmationDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dialogBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final cardBg = isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.white70 : Colors.black54;
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
+        backgroundColor: dialogBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         icon: const Icon(Icons.schedule_send, color: Colors.orange, size: 56),
-        title: const Text('Rezervasyon Talebiniz Alındı!'),
+        title: Text('Rezervasyon Talebiniz Alındı!', style: TextStyle(color: textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -358,19 +365,19 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: cardBg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
                 children: [
-                  _buildDetailRow(Icons.store, widget.businessName),
+                  _buildDetailRow(Icons.store, widget.businessName, textPrimary),
                   const SizedBox(height: 8),
                   _buildDetailRow(Icons.calendar_today,
-                      DateFormat('d MMMM yyyy, EEEE', 'tr').format(_selectedDate)),
+                      DateFormat('d MMMM yyyy, EEEE', 'tr').format(_selectedDate), textPrimary),
                   const SizedBox(height: 8),
-                  _buildDetailRow(Icons.access_time, 'Saat $_selectedTime'),
+                  _buildDetailRow(Icons.access_time, 'Saat $_selectedTime', textPrimary),
                   const SizedBox(height: 8),
-                  _buildDetailRow(Icons.people, '$_partySize Kişi'),
+                  _buildDetailRow(Icons.people, '$_partySize Kişi', textPrimary),
                 ],
               ),
             ),
@@ -378,20 +385,20 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withOpacity(isDark ? 0.15 : 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.orange.withOpacity(0.3)),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.orange, size: 18),
-                  SizedBox(width: 8),
+                  const Icon(Icons.info_outline, color: Colors.orange, size: 18),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Lütfen işletmeden onay bildirimini bekleyin. '
                       'İşletme personeli talebinizi incelediğinde '
                       'bildirim alacaksınız.',
-                      style: TextStyle(fontSize: 12, color: Colors.black87),
+                      style: TextStyle(fontSize: 12, color: textSecondary),
                     ),
                   ),
                 ],
@@ -412,12 +419,14 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String text) {
+  Widget _buildDetailRow(IconData icon, String text, Color textColor) {
     return Row(
       children: [
         Icon(icon, size: 16, color: _accent),
         const SizedBox(width: 8),
-        Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        Expanded(
+          child: Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: textColor)),
+        ),
       ],
     );
   }

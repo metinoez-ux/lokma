@@ -313,19 +313,24 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   }
 
   void _showPredictionsSheet(List predictions) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetBg = isDark ? const Color(0xFF1F2937) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final dividerColor = isDark ? Colors.white10 : Colors.grey[300]!;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1F2937),
+      backgroundColor: sheetBg,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (ctx) {
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: predictions.length,
-          separatorBuilder: (_, __) => const Divider(color: Colors.white10),
+          separatorBuilder: (_, __) => Divider(color: dividerColor),
           itemBuilder: (ctx, i) {
             final p = predictions[i];
             return ListTile(
-              title: Text(p['description'], style: const TextStyle(color: Colors.white)),
+              title: Text(p['description'], style: TextStyle(color: textColor)),
               leading: const Icon(Icons.place, color: Color(0xFFE30A17)),
               onTap: () {
                 Navigator.pop(ctx);
@@ -421,20 +426,78 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scaffoldBg = isDark ? const Color(0xFF121212) : Colors.grey[50]!;
+    final cardBg = isDark ? const Color(0xFF1F2937) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final hintColor = isDark ? Colors.white70 : Colors.black54;
+    final borderColor = isDark ? Colors.white24 : Colors.grey[350]!;
+    final dividerColor = isDark ? Colors.white10 : Colors.grey[300]!;
+
     if (_isLoading && _nameController.text.isEmpty) {
-      return const Scaffold(
-        backgroundColor: Colors.black,
-        body: Center(child: CircularProgressIndicator(color: Color(0xFFE30A17))),
+      return Scaffold(
+        backgroundColor: scaffoldBg,
+        body: const Center(child: CircularProgressIndicator(color: Color(0xFFE30A17))),
+      );
+    }
+
+    InputDecoration buildInputDecoration({
+      required String label,
+      IconData? icon,
+      bool isOptional = false,
+    }) {
+      return InputDecoration(
+        labelText: label,
+        prefixIcon: icon != null ? Icon(icon, color: hintColor, size: 20) : null,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE30A17))),
+        filled: true,
+        fillColor: cardBg,
+        labelStyle: TextStyle(color: isOptional ? hintColor.withOpacity(0.5) : hintColor, fontSize: 13),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        isDense: true,
+      );
+    }
+
+    Widget buildAutocompleteSuggestions(Iterable<String> options, void Function(String) onSelected, {double maxWidth = 0.7}) {
+      return Align(
+        alignment: Alignment.topLeft,
+        child: Material(
+          color: cardBg,
+          elevation: 8,
+          borderRadius: BorderRadius.circular(8),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: 180, maxWidth: MediaQuery.of(context).size.width * maxWidth),
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              shrinkWrap: true,
+              itemCount: options.length,
+              separatorBuilder: (_, __) => Divider(color: dividerColor, height: 1),
+              itemBuilder: (context, index) {
+                final option = options.elementAt(index);
+                return ListTile(
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  title: Text(option, style: TextStyle(color: textColor, fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  leading: const Icon(Icons.place, color: Color(0xFFE30A17), size: 18),
+                  onTap: () => onSelected(option),
+                );
+              },
+            ),
+          ),
+        ),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text('Bilgilerim & Adres', style: TextStyle(color: Colors.white)),
+        backgroundColor: scaffoldBg,
+        surfaceTintColor: Colors.transparent,
+        title: Text('Bilgilerim & Adres', style: TextStyle(color: textColor)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => context.pop(),
         ),
       ),
@@ -445,19 +508,27 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionTitle('Kişisel Bilgiler'),
+              _buildSectionTitle('Kişisel Bilgiler', textColor),
               const SizedBox(height: 16),
               _buildTextField(
                 controller: _nameController,
                 label: 'Ad Soyad',
                 icon: Icons.person_outline,
+                textColor: textColor,
+                hintColor: hintColor,
+                borderColor: borderColor,
+                fillColor: cardBg,
               ),
               const SizedBox(height: 12),
               _buildTextField(
                 controller: _emailController,
                 label: 'E-posta',
                 icon: Icons.email_outlined,
-                readOnly: true, // Email usually read-only
+                readOnly: true,
+                textColor: textColor,
+                hintColor: hintColor,
+                borderColor: borderColor,
+                fillColor: cardBg,
               ),
               const SizedBox(height: 12),
               _buildTextField(
@@ -465,6 +536,10 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                 label: 'Telefon',
                 icon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
+                textColor: textColor,
+                hintColor: hintColor,
+                borderColor: borderColor,
+                fillColor: cardBg,
               ),
               
               const SizedBox(height: 32),
@@ -472,7 +547,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildSectionTitle('Teslimat Adresi'),
+                  _buildSectionTitle('Teslimat Adresi', textColor),
                   TextButton.icon(
                     onPressed: _getCurrentLocation,
                     icon: const Icon(Icons.my_location, color: Color(0xFFE30A17)),
@@ -491,7 +566,6 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sokak/Cadde - Autocomplete (3/4 width)
                   Expanded(
                     flex: 3,
                     child: RawAutocomplete<String>(
@@ -506,73 +580,25 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                         return TextField(
                           controller: textEditingController,
                           focusNode: focusNode,
-                          style: const TextStyle(color: Colors.white, fontSize: 15),
-                          decoration: InputDecoration(
-                            labelText: 'Sokak / Cadde',
-                            prefixIcon: const Icon(Icons.location_on_outlined, color: Colors.white70, size: 20),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white24)),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white24)),
-                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE30A17))),
-                            filled: true,
-                            fillColor: const Color(0xFF1F2937),
-                            labelStyle: const TextStyle(color: Colors.white70, fontSize: 13),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                            isDense: true,
-                          ),
+                          style: TextStyle(color: textColor, fontSize: 15),
+                          decoration: buildInputDecoration(label: 'Sokak / Cadde', icon: Icons.location_on_outlined),
                           onSubmitted: (value) => onFieldSubmitted(),
                         );
                       },
                       optionsViewBuilder: (context, onSelected, options) {
-                        return Align(
-                          alignment: Alignment.topLeft,
-                          child: Material(
-                            color: const Color(0xFF1F2937),
-                            elevation: 8,
-                            borderRadius: BorderRadius.circular(8),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(maxHeight: 180, maxWidth: MediaQuery.of(context).size.width * 0.7),
-                              child: ListView.separated(
-                                padding: const EdgeInsets.symmetric(vertical: 4),
-                                shrinkWrap: true,
-                                itemCount: options.length,
-                                separatorBuilder: (_, __) => const Divider(color: Colors.white10, height: 1),
-                                itemBuilder: (context, index) {
-                                  final option = options.elementAt(index);
-                                  return ListTile(
-                                    dense: true,
-                                    visualDensity: VisualDensity.compact,
-                                    title: Text(option, style: const TextStyle(color: Colors.white, fontSize: 13), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                    leading: const Icon(Icons.place, color: Color(0xFFE30A17), size: 18),
-                                    onTap: () => onSelected(option),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        );
+                        return buildAutocompleteSuggestions(options, onSelected);
                       },
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // Ev Numarası (1/4 width)
                   Expanded(
                     flex: 1,
                     child: TextField(
                       controller: _houseNumberController,
-                      style: const TextStyle(color: Colors.white, fontSize: 15),
+                      style: TextStyle(color: textColor, fontSize: 15),
                       keyboardType: TextInputType.text,
                       textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                        labelText: 'No',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white24)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white24)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE30A17))),
-                        filled: true,
-                        fillColor: const Color(0xFF1F2937),
-                        labelStyle: const TextStyle(color: Colors.white70, fontSize: 13),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-                        isDense: true,
-                      ),
+                      decoration: buildInputDecoration(label: 'No'),
                     ),
                   ),
                 ],
@@ -580,22 +606,11 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
               
               const SizedBox(height: 10),
               
-              // Row 2: Adres Satırı 2 (Full width)
+              // Row 2: Adres Satırı 2
               TextField(
                 controller: _addressLine2Controller,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
-                decoration: InputDecoration(
-                  labelText: 'Daire, Kat, Kapı No (Opsiyonel)',
-                  prefixIcon: const Icon(Icons.apartment_outlined, color: Colors.white70, size: 20),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white24)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white24)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE30A17))),
-                  filled: true,
-                  fillColor: const Color(0xFF1F2937),
-                  labelStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                  isDense: true,
-                ),
+                style: TextStyle(color: textColor, fontSize: 15),
+                decoration: buildInputDecoration(label: 'Daire, Kat, Kapı No (Opsiyonel)', icon: Icons.apartment_outlined, isOptional: true),
               ),
               
               const SizedBox(height: 10),
@@ -607,24 +622,12 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                     flex: 2,
                     child: TextField(
                       controller: _postalCodeController,
-                      style: const TextStyle(color: Colors.white, fontSize: 15),
+                      style: TextStyle(color: textColor, fontSize: 15),
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Posta Kodu',
-                        prefixIcon: const Icon(Icons.local_post_office_outlined, color: Colors.white70, size: 20),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white24)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white24)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE30A17))),
-                        filled: true,
-                        fillColor: const Color(0xFF1F2937),
-                        labelStyle: const TextStyle(color: Colors.white70, fontSize: 13),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                        isDense: true,
-                      ),
+                      decoration: buildInputDecoration(label: 'Posta Kodu', icon: Icons.local_post_office_outlined),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // City Autocomplete
                   Expanded(
                     flex: 3,
                     child: RawAutocomplete<String>(
@@ -639,50 +642,13 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                         return TextField(
                           controller: textEditingController,
                           focusNode: focusNode,
-                          style: const TextStyle(color: Colors.white, fontSize: 15),
-                          decoration: InputDecoration(
-                            labelText: 'Şehir',
-                            prefixIcon: const Icon(Icons.location_city_outlined, color: Colors.white70, size: 20),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white24)),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.white24)),
-                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE30A17))),
-                            filled: true,
-                            fillColor: const Color(0xFF1F2937),
-                            labelStyle: const TextStyle(color: Colors.white70, fontSize: 13),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                            isDense: true,
-                          ),
+                          style: TextStyle(color: textColor, fontSize: 15),
+                          decoration: buildInputDecoration(label: 'Şehir', icon: Icons.location_city_outlined),
                           onSubmitted: (value) => onFieldSubmitted(),
                         );
                       },
                       optionsViewBuilder: (context, onSelected, options) {
-                        return Align(
-                          alignment: Alignment.topLeft,
-                          child: Material(
-                            color: const Color(0xFF1F2937),
-                            elevation: 8,
-                            borderRadius: BorderRadius.circular(8),
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(maxHeight: 150, maxWidth: MediaQuery.of(context).size.width * 0.5),
-                              child: ListView.separated(
-                                padding: const EdgeInsets.symmetric(vertical: 4),
-                                shrinkWrap: true,
-                                itemCount: options.length,
-                                separatorBuilder: (_, __) => const Divider(color: Colors.white10, height: 1),
-                                itemBuilder: (context, index) {
-                                  final option = options.elementAt(index);
-                                  return ListTile(
-                                    dense: true,
-                                    visualDensity: VisualDensity.compact,
-                                    title: Text(option, style: const TextStyle(color: Colors.white, fontSize: 13)),
-                                    leading: const Icon(Icons.location_city, color: Color(0xFFE30A17), size: 16),
-                                    onTap: () => onSelected(option),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        );
+                        return buildAutocompleteSuggestions(options, onSelected, maxWidth: 0.5);
                       },
                     ),
                   ),
@@ -713,11 +679,11 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, Color textColor) {
     return Text(
       title,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: textColor,
         fontSize: 18,
         fontWeight: FontWeight.bold,
       ),
@@ -728,6 +694,10 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
     required TextEditingController controller,
     required String label,
     required IconData icon,
+    required Color textColor,
+    required Color hintColor,
+    required Color borderColor,
+    required Color fillColor,
     bool readOnly = false,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
@@ -737,25 +707,25 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
       readOnly: readOnly,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: textColor),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Colors.white70),
+        prefixIcon: Icon(icon, color: hintColor),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.white24),
+          borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.white24),
+          borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE30A17)),
         ),
         filled: true,
-        fillColor: const Color(0xFF1F2937),
-        labelStyle: const TextStyle(color: Colors.white70),
+        fillColor: fillColor,
+        labelStyle: TextStyle(color: hintColor),
       ),
       validator: (value) {
         if (!readOnly && (value == null || value.isEmpty)) {
