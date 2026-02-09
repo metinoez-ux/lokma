@@ -34,6 +34,7 @@ import { useSectors } from "@/hooks/useSectors";
 import { subscriptionService } from "@/services/subscriptionService";
 
 import { Star, History } from "lucide-react";
+import ReservationsPanel from "./ReservationsPanel";
 
 // Local interface for meat orders
 interface MeatOrder {
@@ -217,13 +218,13 @@ export default function BusinessDetailPage() {
   } | null>(null);
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "orders" | "settings" | "products"
+    "overview" | "orders" | "settings" | "products" | "reservations"
   >(initialTab);
 
   // Update tab when URL changes
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['overview', 'orders', 'products', 'settings'].includes(tab)) {
+    if (tab && ['overview', 'orders', 'products', 'settings', 'reservations'].includes(tab)) {
       setActiveTab(tab as any);
     }
   }, [searchParams]);
@@ -314,6 +315,10 @@ export default function BusinessDetailPage() {
     // 🆕 Lieferando-style fields
     cuisineType: "",      // "Kebap, Döner, Türkisch" - Mutfak türü/alt başlık
     logoUrl: "",          // Kare işletme logosu URL'i
+    // 🆕 Masa Rezervasyonu
+    hasReservation: false,   // Masa rezervasyonu aktif mi?
+    tableCapacity: 0,        // Toplam oturma kapasitesi (kişi)
+    maxReservationTables: 0, // Aynı anda rezerve edilebilecek max masa sayısı
   });
 
   // Google Places search states
@@ -539,6 +544,10 @@ export default function BusinessDetailPage() {
           // 🆕 Lieferando-style fields
           cuisineType: d.cuisineType || "",
           logoUrl: d.logoUrl || "",
+          // 🆕 Masa Rezervasyonu
+          hasReservation: d.hasReservation || false,
+          tableCapacity: d.tableCapacity || 0,
+          maxReservationTables: d.maxReservationTables || 0,
         });
       }
     } catch (error) {
@@ -1062,6 +1071,10 @@ export default function BusinessDetailPage() {
         freeDeliveryThreshold: Number(formData.freeDeliveryThreshold) || 0,
         // 🆕 Geçici Kurye Kapatma
         temporaryDeliveryPaused: formData.temporaryDeliveryPaused || false,
+        // 🆕 Masa Rezervasyonu
+        hasReservation: formData.hasReservation || false,
+        tableCapacity: Number(formData.tableCapacity) || 0,
+        maxReservationTables: Number(formData.maxReservationTables) || 0,
         acceptsCardPayment: formData.acceptsCardPayment || false,
         vatNumber: formData.vatNumber || "", // Added missing vatNumber
         imageUrl: downloadURL || "",
@@ -1419,6 +1432,14 @@ export default function BusinessDetailPage() {
             >
               ⚙️ Ayarlar
             </button>
+            {formData.hasReservation && (
+              <button
+                onClick={() => setActiveTab("reservations")}
+                className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+              >
+                🍽️ Rezervasyonlar
+              </button>
+            )}
 
             {/* Separator */}
             <div className="w-px h-8 bg-gray-600 mx-2" />
@@ -3131,6 +3152,81 @@ export default function BusinessDetailPage() {
                   </div>
                 </div>
 
+                {/* 🍽️ Masa Rezervasyonu */}
+                <div className="space-y-4">
+                  <h4 className="text-white font-medium border-b border-gray-700 pb-2">
+                    🍽️ Masa Rezervasyonu
+                  </h4>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={formData.hasReservation}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          hasReservation: e.target.checked,
+                        })
+                      }
+                      disabled={!isEditing}
+                      className="w-5 h-5 accent-orange-500"
+                    />
+                    <div>
+                      <span className="text-white">Masa Rezervasyonu Aktif</span>
+                      <p className="text-xs text-gray-400">
+                        Müşteriler mobil uygulamadan masa rezervasyonu yapabilir
+                      </p>
+                    </div>
+                  </div>
+                  {formData.hasReservation && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-gray-400 text-sm">
+                          Oturma Kapasitesi (Kişi)
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.tableCapacity}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              tableCapacity: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          disabled={!isEditing}
+                          min="0"
+                          className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                          placeholder="ör: 50"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Toplam oturma kapasitesi (kişi)
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-gray-400 text-sm">
+                          Max Masa Rezervasyonu
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.maxReservationTables}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              maxReservationTables: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          disabled={!isEditing}
+                          min="0"
+                          className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                          placeholder="ör: 10"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Aynı saat diliminde max rezervasyon
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Subscription */}
                 <div className="space-y-4">
                   <h4 className="text-white font-medium border-b border-gray-700 pb-2">
@@ -3652,6 +3748,17 @@ export default function BusinessDetailPage() {
           </div>
         )
       }
+
+      {/* 🍽️ Reservations Tab */}
+      {activeTab === "reservations" && formData.hasReservation && (
+        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+          <ReservationsPanel
+            businessId={businessId}
+            businessName={formData.companyName || ""}
+            staffName={admin?.displayName || admin?.email || "Admin"}
+          />
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {

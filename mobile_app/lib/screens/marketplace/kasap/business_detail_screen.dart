@@ -12,6 +12,7 @@ import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/data/product_catalog_data.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'cart_screen.dart';
+import 'reservation_booking_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/providers/theme_provider.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
@@ -1710,6 +1711,80 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                    ),
                  ),
               ),
+
+              // 🍽️ RESERVATION CTA BANNER
+              if ((data?['hasReservation'] as bool? ?? false) && (data?['maxReservationTables'] as int? ?? 0) > 0)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ReservationBookingScreen(
+                                businessId: widget.businessId,
+                                businessName: data?['companyName'] ?? data?['name'] ?? 'İşletme',
+                              ),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [_getAccent(context).withOpacity(0.15), _getAccent(context).withOpacity(0.05)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: _getAccent(context).withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: _getAccent(context).withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(Icons.restaurant, color: _getAccent(context), size: 22),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Masa Rezervasyonu Yap',
+                                      style: TextStyle(
+                                        color: textPrimary,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Tarih ve saat seçerek masanızı ayırtın',
+                                      style: TextStyle(
+                                        color: textSecondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(Icons.arrow_forward_ios, color: _getAccent(context), size: 16),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
 
               // 3. LIEFERANDO STYLE: Sticky Horizontal Category Tabs
               SliverPersistentHeader(

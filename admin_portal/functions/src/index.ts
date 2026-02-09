@@ -1268,3 +1268,346 @@ export const onScheduledFeedbackRequests = onSchedule(
         }
     }
 );
+
+// =============================================================================
+// TABLE RESERVATION — STAFF NOTIFICATION ON NEW BOOKING
+// Notifies all business staff when a customer submits a reservation
+// =============================================================================
+
+/**
+ * When a new reservation is created under a business,
+ * send push notifications to ALL staff members of that business.
+ */
+export const onNewReservation = onDocumentCreated(
+    "businesses/{businessId}/reservations/{reservationId}",
+    async (event) => {
+        const reservation = event.data?.data();
+        if (!reservation) return;
+
+        const businessId = event.params.businessId;
+        const customerName = reservation.userName || reservation.customerName || "Müşteri";
+        const partySize = reservation.partySize || 0;
+        const resDate = reservation.reservationDate?.toDate?.() ?? new Date();
+        const dateStr = resDate.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
+        const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+
+        console.log(`[Reservation] New reservation at business ${businessId} by ${customerName}`);
+
+        try {
+            // Collect FCM tokens from all staff assigned to this business
+            const staffTokens: string[] = [];
+            const processedIds = new Set<string>();
+
+            // 1. Drivers/staff assigned to the business
+            const adminsSnap = await db.collection("admins")
+                .where("assignedBusinesses", "array-contains", businessId)
+                .get();
+
+            adminsSnap.docs.forEach(doc => {
+                processedIds.add(doc.id);
+                const data = doc.data();
+                if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                    staffTokens.push(...data.fcmTokens);
+                }
+            });
+
+            // 2. Legacy butcher_admins
+            const legacySnap = await db.collection("butcher_admins")
+                .where("butcherId", "==", businessId)
+                .get();
+
+            legacySnap.docs.forEach(doc => {
+                if (processedIds.has(doc.id)) return;
+                processedIds.add(doc.id);
+                const data = doc.data();
+                if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                    staffTokens.push(...data.fcmTokens);
+                } else if (data.fcmToken) {
+                    staffTokens.push(data.fcmToken);
+                }
+            });
+
+            if (staffTokens.length === 0) {
+                console.log(`[Reservation] No staff tokens found for business ${businessId}`);
+                return;
+            }
+
+            // Remove duplicates
+            const uniqueTokens = [...new Set(staffTokens)];
+
+            const message = {
+                notification: {
+                    title: "🍽️ Yeni Masa Rezervasyonu!",
+                    body: `${customerName} – ${partySize} kişi – ${dateStr} ${timeStr}`,
+                },
+                data: {
+                    type: "new_reservation",
+                    reservationId: event.params.reservationId,
+                    businessId: businessId,
+                    customerName: customerName,
+                },
+                tokens: uniqueTokens,
+            };
+
+            const response = await messaging.sendEachForMulticast(message);
+            console.log(`[Reservation] Notified ${response.successCount}/${uniqueTokens.length} staff devices`);
+
+        } catch (error) {
+            console.error("[Reservation] Error notifying staff:", error);
+        }
+    }
+);
+
+// =============================================================================
+// TABLE RESERVATION — CUSTOMER NOTIFICATION ON STATUS CHANGE
+// Notifies the customer when staff confirms or rejects a reservation
+// =============================================================================
+
+/**
+ * When a reservation status changes (pending → confirmed/rejected),
+ * send push notification to the customer.
+ */
+export const onReservationStatusChange = onDocumentUpdated(
+    "businesses/{businessId}/reservations/{reservationId}",
+    async (event) => {
+        const before = event.data?.before.data();
+        const after = event.data?.after.data();
+        if (!before || !after) return;
+
+        // Only process if status changed
+        if (before.status === after.status) return;
+
+        const newStatus = after.status;
+        const businessId = event.params.businessId;
+        const businessName = after.businessName || "İşletme";
+        const resDate = after.reservationDate?.toDate?.() ?? new Date();
+        const dateStr = resDate.toLocaleDateString("tr-TR", { day: "numeric", month: "long" });
+        const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+        const partySize = after.partySize || 0;
+        const customerName = after.userName || after.customerName || "Müşteri";
+
+        // ─── Customer-initiated cancellation → notify staff ───
+        if (newStatus === "cancelled") {
+            console.log(`[Reservation] Customer cancelled reservation ${event.params.reservationId}`);
+            try {
+                const staffTokens: string[] = [];
+                const processedIds = new Set<string>();
+
+                const adminsSnap = await db.collection("admins")
+                    .where("assignedBusinesses", "array-contains", businessId)
+                    .get();
+                adminsSnap.docs.forEach(doc => {
+                    processedIds.add(doc.id);
+                    const data = doc.data();
+                    if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                        staffTokens.push(...data.fcmTokens);
+                    }
+                });
+
+                const legacySnap = await db.collection("butcher_admins")
+                    .where("butcherId", "==", businessId)
+                    .get();
+                legacySnap.docs.forEach(doc => {
+                    if (processedIds.has(doc.id)) return;
+                    processedIds.add(doc.id);
+                    const data = doc.data();
+                    if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                        staffTokens.push(...data.fcmTokens);
+                    } else if (data.fcmToken) {
+                        staffTokens.push(data.fcmToken);
+                    }
+                });
+
+                if (staffTokens.length > 0) {
+                    const uniqueTokens = [...new Set(staffTokens)];
+                    await messaging.sendEachForMulticast({
+                        notification: {
+                            title: "🚫 Rezervasyon İptal Edildi",
+                            body: `${customerName} – ${partySize} kişi – ${dateStr} ${timeStr} iptal etti`,
+                        },
+                        data: {
+                            type: "reservation_cancelled",
+                            reservationId: event.params.reservationId,
+                            businessId: businessId,
+                        },
+                        tokens: uniqueTokens,
+                    });
+                    console.log(`[Reservation] Notified staff about cancellation`);
+                }
+            } catch (error) {
+                console.error("[Reservation] Error notifying staff about cancellation:", error);
+            }
+            return;
+        }
+
+        // ─── Staff-initiated status change → notify customer ───
+        if (newStatus !== "confirmed" && newStatus !== "rejected") return;
+
+        const customerFcmToken = after.customerFcmToken || after.userFcmToken;
+        if (!customerFcmToken) {
+            console.log(`[Reservation] No customer FCM token for reservation ${event.params.reservationId}`);
+            return;
+        }
+
+        let title = "";
+        let body = "";
+
+        if (newStatus === "confirmed") {
+            title = "✅ Rezervasyonunuz Onaylandı!";
+            body = `${businessName} – ${dateStr} ${timeStr} – ${partySize} kişi. Afiyet olsun!`;
+        } else {
+            title = "❌ Rezervasyonunuz Reddedildi";
+            body = `${businessName} – ${dateStr} ${timeStr} için rezervasyonunuz maalesef onaylanmadı.`;
+        }
+
+        try {
+            await messaging.send({
+                notification: { title, body },
+                data: {
+                    type: "reservation_status",
+                    reservationId: event.params.reservationId,
+                    businessId: businessId,
+                    status: newStatus,
+                },
+                token: customerFcmToken,
+            });
+            console.log(`[Reservation] Sent ${newStatus} notification to customer`);
+        } catch (error) {
+            console.error(`[Reservation] Error sending ${newStatus} notification:`, error);
+        }
+    }
+);
+
+// =============================================================================
+// TABLE RESERVATION — REMINDER NOTIFICATIONS (24h and 2h before)
+// Runs hourly, checks confirmed reservations and sends reminders
+// =============================================================================
+
+/**
+ * Hourly scheduled function to send reservation reminders.
+ * - 24h before: reminder with cancel/confirm action
+ * - 2h before: final reminder (no cancel option)
+ */
+export const onScheduledReservationReminders = onSchedule(
+    {
+        schedule: "0 * * * *", // Every hour at minute 0
+        timeZone: "Europe/Berlin",
+        memory: "256MiB",
+        timeoutSeconds: 120,
+    },
+    async () => {
+        console.log("[Reservation Reminder] Starting hourly reminder check...");
+
+        const now = new Date();
+        let sent24h = 0;
+        let sent2h = 0;
+
+        try {
+            // Window for 24h reminders: reservations between 23-25 hours from now
+            const reminder24hStart = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+            const reminder24hEnd = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+
+            // Window for 2h reminders: reservations between 1-3 hours from now
+            const reminder2hStart = new Date(now.getTime() + 1 * 60 * 60 * 1000);
+            const reminder2hEnd = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+
+            // Get all businesses with reservations enabled
+            const businessesSnapshot = await db.collection("businesses")
+                .where("hasReservation", "==", true)
+                .get();
+
+            for (const businessDoc of businessesSnapshot.docs) {
+                const businessId = businessDoc.id;
+                const businessName = businessDoc.data().companyName || "İşletme";
+
+                // ─── 24h Reminders ───
+                const upcoming24h = await db.collection("businesses")
+                    .doc(businessId)
+                    .collection("reservations")
+                    .where("status", "==", "confirmed")
+                    .where("reminder24hSent", "==", false)
+                    .where("reservationDate", ">=", admin.firestore.Timestamp.fromDate(reminder24hStart))
+                    .where("reservationDate", "<=", admin.firestore.Timestamp.fromDate(reminder24hEnd))
+                    .get();
+
+                for (const resDoc of upcoming24h.docs) {
+                    const res = resDoc.data();
+                    const token = res.customerFcmToken || res.userFcmToken;
+                    if (!token) continue;
+
+                    const resDate = res.reservationDate?.toDate?.() ?? new Date();
+                    const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+
+                    try {
+                        await messaging.send({
+                            notification: {
+                                title: "🍽️ Yarınki Rezervasyonunuz",
+                                body: `${businessName} – Saat ${timeStr} – ${res.partySize || 0} kişi. İptal etmek isterseniz uygulamadan yapabilirsiniz.`,
+                            },
+                            data: {
+                                type: "reservation_reminder_24h",
+                                reservationId: resDoc.id,
+                                businessId: businessId,
+                            },
+                            token: token,
+                        });
+
+                        await resDoc.ref.update({ reminder24hSent: true });
+                        sent24h++;
+                    } catch (e) {
+                        console.error(`[Reservation Reminder] 24h send failed for ${resDoc.id}:`, e);
+                    }
+                }
+
+                // ─── 2h Reminders ───
+                const upcoming2h = await db.collection("businesses")
+                    .doc(businessId)
+                    .collection("reservations")
+                    .where("status", "==", "confirmed")
+                    .where("reminder2hSent", "==", false)
+                    .where("reservationDate", ">=", admin.firestore.Timestamp.fromDate(reminder2hStart))
+                    .where("reservationDate", "<=", admin.firestore.Timestamp.fromDate(reminder2hEnd))
+                    .get();
+
+                for (const resDoc of upcoming2h.docs) {
+                    const res = resDoc.data();
+                    const token = res.customerFcmToken || res.userFcmToken;
+                    if (!token) continue;
+
+                    const resDate = res.reservationDate?.toDate?.() ?? new Date();
+                    const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+
+                    try {
+                        await messaging.send({
+                            notification: {
+                                title: "⏰ Rezervasyonunuz 2 Saat Sonra!",
+                                body: `${businessName} – Saat ${timeStr} – ${res.partySize || 0} kişi. Afiyet olsun!`,
+                            },
+                            data: {
+                                type: "reservation_reminder_2h",
+                                reservationId: resDoc.id,
+                                businessId: businessId,
+                            },
+                            token: token,
+                        });
+
+                        await resDoc.ref.update({ reminder2hSent: true });
+                        sent2h++;
+                    } catch (e) {
+                        console.error(`[Reservation Reminder] 2h send failed for ${resDoc.id}:`, e);
+                    }
+                }
+            }
+
+            console.log("========================================");
+            console.log("[Reservation Reminder] COMPLETED");
+            console.log(`  24h reminders sent: ${sent24h}`);
+            console.log(`  2h reminders sent: ${sent2h}`);
+            console.log("========================================");
+
+        } catch (error) {
+            console.error("[Reservation Reminder] Critical error:", error);
+            throw error;
+        }
+    }
+);

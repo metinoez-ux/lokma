@@ -409,6 +409,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 _buildQuickAccessChip(Icons.location_on_outlined, 'Adreslerim', () => context.push('/my-info')),
                               ],
                             ),
+                            const SizedBox(height: 12),
+                            // Second row: Reservations
+                            Row(
+                              children: [
+                                _buildQuickAccessChip(Icons.restaurant_outlined, 'Rezervasyonlarım', () => context.push('/my-reservations')),
+                                const SizedBox(width: 12),
+                                const Expanded(child: SizedBox()), // Spacer
+                                const SizedBox(width: 12),
+                                const Expanded(child: SizedBox()), // Spacer
+                              ],
+                            ),
                             // Teslimat Paneli removed - consolidated into Teslimatlarım
                           ],
                         );

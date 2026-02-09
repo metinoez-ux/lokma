@@ -565,8 +565,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     // Arama çubuğu (teslimat/gel al altında)
                                     _buildSearchBar(),
                                     
-                                    // Distance slider - Sadece Gel-Al modunda göster (Kurye'de gizle)
-                                    if (_deliveryMode == 'gelal')
+                                    // Distance slider - Gel-Al ve Rezervasyon modunda göster (Kurye'de gizle)
+                                    if (_deliveryMode == 'gelal' || _deliveryMode == 'masa')
                                       _buildDistanceSlider()
                                     else
                                       // Kurye modunda sadece TUNA toggle göster
