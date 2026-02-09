@@ -11,6 +11,7 @@ import 'services/stripe_payment_service.dart';
 import 'services/fcm_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'providers/theme_provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 String? _initError;
 
@@ -39,6 +40,10 @@ void main() async {
       
       // Initialize FCM for push notifications
       await FCMService().initialize();
+      
+      // Initialize date formatting for all locales (multi-language ready)
+      await initializeDateFormatting('tr');
+      // Future: add more locales here (de, en, ar, etc.)
       
       // Request location permission
       LocationPermission permission = await Geolocator.checkPermission();
