@@ -3471,463 +3471,449 @@ export default function BusinessDetailPage() {
           </div >
         )
         }
-      </main >
 
-      {/* Staff Management Modal */}
-      {
-        showStaffModal && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-white">
-                    👷 Personel Yönetimi
-                  </h2>
-                  <p className="text-gray-400 text-sm">{business?.companyName}</p>
-                </div>
-                <button
-                  onClick={() => setShowStaffModal(false)}
-                  className="text-gray-400 hover:text-white text-2xl"
-                >
-                  ×
-                </button>
-              </div>
 
-              <div className="p-6 space-y-6">
-                {/* Aktif / Arşivlenmiş Tabs */}
-                <div className="flex gap-2 mb-4">
+        {/* Staff Management Modal */}
+        {
+          showStaffModal && (
+            <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+              <div className="bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-gray-800 border-b border-gray-700 p-6 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-white">
+                      👷 Personel Yönetimi
+                    </h2>
+                    <p className="text-gray-400 text-sm">{business?.companyName}</p>
+                  </div>
                   <button
-                    onClick={() => setStaffStatusFilter('active')}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'active'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                      }`}
+                    onClick={() => setShowStaffModal(false)}
+                    className="text-gray-400 hover:text-white text-2xl"
                   >
-                    ✅ Aktif ({staffList.filter(s => s.isActive !== false).length})
-                  </button>
-                  <button
-                    onClick={() => setStaffStatusFilter('archived')}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'archived'
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                      }`}
-                  >
-                    📦 Arşivlenmiş ({staffList.filter(s => s.isActive === false).length})
+                    ×
                   </button>
                 </div>
 
-                {/* Search */}
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
-                  <input
-                    type="text"
-                    placeholder="İsim, e-posta veya telefon ile ara..."
-                    value={staffSearchQuery}
-                    onChange={(e) => setStaffSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                <div className="p-6 space-y-6">
+                  {/* Aktif / Arşivlenmiş Tabs */}
+                  <div className="flex gap-2 mb-4">
+                    <button
+                      onClick={() => setStaffStatusFilter('active')}
+                      className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'active'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                        }`}
+                    >
+                      ✅ Aktif ({staffList.filter(s => s.isActive !== false).length})
+                    </button>
+                    <button
+                      onClick={() => setStaffStatusFilter('archived')}
+                      className={`px-4 py-2 rounded-lg font-medium transition ${staffStatusFilter === 'archived'
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                        }`}
+                    >
+                      📦 Arşivlenmiş ({staffList.filter(s => s.isActive === false).length})
+                    </button>
+                  </div>
 
-                {/* Staff Table */}
-                <div>
-                  <h3 className="text-white font-medium mb-3">
-                    Mevcut Personel ({staffList.filter(s => {
-                      const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
-                      const matchesSearch = !staffSearchQuery ||
-                        s.displayName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
-                        s.email?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
-                        s.phoneNumber?.includes(staffSearchQuery);
-                      return matchesStatus && matchesSearch;
-                    }).length})
-                  </h3>
+                  {/* Search */}
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+                    <input
+                      type="text"
+                      placeholder="İsim, e-posta veya telefon ile ara..."
+                      value={staffSearchQuery}
+                      onChange={(e) => setStaffSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
 
-                  {staffList.length === 0 ? (
-                    <div className="text-center py-8 text-gray-400">
-                      <p className="text-4xl mb-2">👥</p>
-                      <p>Henüz personel yok</p>
-                    </div>
-                  ) : (
-                    <table className="w-full text-left">
-                      <thead className="text-gray-400 border-b border-gray-700">
-                        <tr>
-                          <th className="pb-3 py-2">Kullanıcı</th>
-                          <th className="pb-3 py-2">Rol</th>
-                          <th className="pb-3 py-2">Durum</th>
-                          <th className="pb-3 py-2">İşlemler</th>
-                        </tr>
-                      </thead>
-                      <tbody className="text-white">
-                        {staffList.filter(s => {
-                          const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
-                          const matchesSearch = !staffSearchQuery ||
-                            s.displayName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
-                            s.email?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
-                            s.phoneNumber?.includes(staffSearchQuery);
-                          return matchesStatus && matchesSearch;
-                        }).length === 0 && (
-                            <tr>
-                              <td colSpan={4} className="py-8 text-center text-gray-400">
-                                <p className="text-2xl mb-2">👥</p>
-                                <p>{staffStatusFilter === 'archived' ? 'Arşivlenmiş personel bulunamadı' : 'Personel bulunamadı'}</p>
+                  {/* Staff Table */}
+                  <div>
+                    <h3 className="text-white font-medium mb-3">
+                      Mevcut Personel ({staffList.filter(s => {
+                        const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
+                        const matchesSearch = !staffSearchQuery ||
+                          s.displayName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+                          s.email?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+                          s.phoneNumber?.includes(staffSearchQuery);
+                        return matchesStatus && matchesSearch;
+                      }).length})
+                    </h3>
+
+                    {staffList.length === 0 ? (
+                      <div className="text-center py-8 text-gray-400">
+                        <p className="text-4xl mb-2">👥</p>
+                        <p>Henüz personel yok</p>
+                      </div>
+                    ) : (
+                      <table className="w-full text-left">
+                        <thead className="text-gray-400 border-b border-gray-700">
+                          <tr>
+                            <th className="pb-3 py-2">Kullanıcı</th>
+                            <th className="pb-3 py-2">Rol</th>
+                            <th className="pb-3 py-2">Durum</th>
+                            <th className="pb-3 py-2">İşlemler</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-white">
+                          {staffList.filter(s => {
+                            const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
+                            const matchesSearch = !staffSearchQuery ||
+                              s.displayName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+                              s.email?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+                              s.phoneNumber?.includes(staffSearchQuery);
+                            return matchesStatus && matchesSearch;
+                          }).length === 0 && (
+                              <tr>
+                                <td colSpan={4} className="py-8 text-center text-gray-400">
+                                  <p className="text-2xl mb-2">👥</p>
+                                  <p>{staffStatusFilter === 'archived' ? 'Arşivlenmiş personel bulunamadı' : 'Personel bulunamadı'}</p>
+                                </td>
+                              </tr>
+                            )}
+                          {staffList.filter(s => {
+                            const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
+                            const matchesSearch = !staffSearchQuery ||
+                              s.displayName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+                              s.email?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
+                              s.phoneNumber?.includes(staffSearchQuery);
+                            return matchesStatus && matchesSearch;
+                          }).map((staff) => (
+                            <tr key={staff.id} className="border-b border-gray-700 hover:bg-gray-750">
+                              <td className="py-4">
+                                <div>
+                                  <p className="font-medium">{staff.displayName}</p>
+                                  <p className="text-gray-400 text-sm">{staff.email || '-'}</p>
+                                  <p className="text-gray-500 text-xs">{staff.phoneNumber}</p>
+                                </div>
                               </td>
-                            </tr>
-                          )}
-                        {staffList.filter(s => {
-                          const matchesStatus = staffStatusFilter === 'active' ? s.isActive !== false : s.isActive === false;
-                          const matchesSearch = !staffSearchQuery ||
-                            s.displayName?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
-                            s.email?.toLowerCase().includes(staffSearchQuery.toLowerCase()) ||
-                            s.phoneNumber?.includes(staffSearchQuery);
-                          return matchesStatus && matchesSearch;
-                        }).map((staff) => (
-                          <tr key={staff.id} className="border-b border-gray-700 hover:bg-gray-750">
-                            <td className="py-4">
-                              <div>
-                                <p className="font-medium">{staff.displayName}</p>
-                                <p className="text-gray-400 text-sm">{staff.email || '-'}</p>
-                                <p className="text-gray-500 text-xs">{staff.phoneNumber}</p>
-                              </div>
-                            </td>
-                            <td className="py-4">
-                              <span className={`px-2 py-1 rounded text-xs ${staff.adminType?.includes('Admin') || staff.adminType?.includes('_admin')
-                                ? 'bg-purple-600'
-                                : 'bg-blue-600'
-                                }`}>
-                                {staff.adminType || 'Personel'}
-                              </span>
-                            </td>
-                            <td className="py-4">
-                              <span className={`px-2 py-1 rounded text-xs ${staff.isActive !== false ? 'bg-green-600' : 'bg-red-600'}`}>
-                                {staff.isActive !== false ? 'Aktif' : 'Pasif'}
-                              </span>
-                            </td>
-                            <td className="py-4">
-                              <div className="flex flex-wrap gap-2">
-                                {/* Arşivle / Aktifleştir toggle */}
-                                <button
-                                  onClick={() => {
-                                    const isActive = staff.isActive !== false;
-                                    setConfirmModal({
-                                      show: true,
-                                      title: isActive ? 'Personel Arşivle' : 'Personel Aktifleştir',
-                                      message: isActive
-                                        ? `${staff.displayName} adlı personeli arşivlemek istediğinize emin misiniz?`
-                                        : `${staff.displayName} adlı personeli tekrar aktifleştirmek istediğinize emin misiniz?`,
-                                      confirmText: isActive ? 'Evet, Arşivle' : 'Evet, Aktifleştir',
-                                      confirmColor: isActive ? 'bg-amber-600 hover:bg-amber-500' : 'bg-green-600 hover:bg-green-500',
-                                      onConfirm: async () => {
-                                        setConfirmModal(prev => ({ ...prev, show: false }));
-                                        try {
-                                          const adminRef = doc(db, 'admins', staff.id);
-                                          const now = new Date();
-                                          if (isActive) {
+                              <td className="py-4">
+                                <span className={`px-2 py-1 rounded text-xs ${staff.adminType?.includes('Admin') || staff.adminType?.includes('_admin')
+                                  ? 'bg-purple-600'
+                                  : 'bg-blue-600'
+                                  }`}>
+                                  {staff.adminType || 'Personel'}
+                                </span>
+                              </td>
+                              <td className="py-4">
+                                <span className={`px-2 py-1 rounded text-xs ${staff.isActive !== false ? 'bg-green-600' : 'bg-red-600'}`}>
+                                  {staff.isActive !== false ? 'Aktif' : 'Pasif'}
+                                </span>
+                              </td>
+                              <td className="py-4">
+                                <div className="flex flex-wrap gap-2">
+                                  {/* Arşivle / Aktifleştir toggle */}
+                                  <button
+                                    onClick={() => {
+                                      const isActive = staff.isActive !== false;
+                                      setConfirmModal({
+                                        show: true,
+                                        title: isActive ? 'Personel Arşivle' : 'Personel Aktifleştir',
+                                        message: isActive
+                                          ? `${staff.displayName} adlı personeli arşivlemek istediğinize emin misiniz?`
+                                          : `${staff.displayName} adlı personeli tekrar aktifleştirmek istediğinize emin misiniz?`,
+                                        confirmText: isActive ? 'Evet, Arşivle' : 'Evet, Aktifleştir',
+                                        confirmColor: isActive ? 'bg-amber-600 hover:bg-amber-500' : 'bg-green-600 hover:bg-green-500',
+                                        onConfirm: async () => {
+                                          setConfirmModal(prev => ({ ...prev, show: false }));
+                                          try {
+                                            const adminRef = doc(db, 'admins', staff.id);
+                                            const now = new Date();
+                                            if (isActive) {
+                                              await updateDoc(adminRef, {
+                                                isActive: false,
+                                                deactivatedAt: now,
+                                                deactivationReason: 'İşletme panelinden arşivlendi',
+                                              });
+                                              showToast(`${staff.displayName} arşivlendi`, 'success');
+                                            } else {
+                                              await updateDoc(adminRef, {
+                                                isActive: true,
+                                                deactivatedAt: null,
+                                                deactivationReason: null,
+                                              });
+                                              showToast(`${staff.displayName} tekrar aktifleştirildi`, 'success');
+                                            }
+                                            loadStaff();
+                                          } catch (error) {
+                                            console.error('Archive error:', error);
+                                            showToast('İşlem başarısız', 'error');
+                                          }
+                                        },
+                                      });
+                                    }}
+                                    className={`text-xs px-2 py-1 rounded ${staff.isActive !== false
+                                      ? 'bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white'
+                                      : 'bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white'}`}
+                                  >
+                                    {staff.isActive !== false ? '📦 Arşivle' : '✅ Aktifleştir'}
+                                  </button>
+                                  {/* Yetkiyi Kaldır */}
+                                  <button
+                                    onClick={() => {
+                                      setConfirmModal({
+                                        show: true,
+                                        title: 'Yetkiyi Kaldır',
+                                        message: `${staff.displayName} adlı personelin yetkisini kaldırmak istediğinize emin misiniz?`,
+                                        confirmText: 'Evet, Kaldır',
+                                        confirmColor: 'bg-red-600 hover:bg-red-500',
+                                        onConfirm: async () => {
+                                          setConfirmModal(prev => ({ ...prev, show: false }));
+                                          try {
+                                            const adminRef = doc(db, 'admins', staff.id);
                                             await updateDoc(adminRef, {
                                               isActive: false,
-                                              deactivatedAt: now,
-                                              deactivationReason: 'İşletme panelinden arşivlendi',
+                                              adminType: null,
+                                              butcherId: null,
+                                              butcherName: null,
+                                              deactivatedAt: new Date(),
+                                              deactivationReason: 'Yetki kaldırıldı',
                                             });
-                                            showToast(`${staff.displayName} arşivlendi`, 'success');
-                                          } else {
-                                            await updateDoc(adminRef, {
-                                              isActive: true,
-                                              deactivatedAt: null,
-                                              deactivationReason: null,
-                                            });
-                                            showToast(`${staff.displayName} tekrar aktifleştirildi`, 'success');
+                                            showToast(`${staff.displayName} yetkisi kaldırıldı`, 'success');
+                                            loadStaff();
+                                          } catch (error) {
+                                            console.error('Remove permission error:', error);
+                                            showToast('İşlem başarısız', 'error');
                                           }
-                                          loadStaff();
-                                        } catch (error) {
-                                          console.error('Archive error:', error);
-                                          showToast('İşlem başarısız', 'error');
-                                        }
-                                      },
-                                    });
-                                  }}
-                                  className={`text-xs px-2 py-1 rounded ${staff.isActive !== false
-                                    ? 'bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white'
-                                    : 'bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white'}`}
-                                >
-                                  {staff.isActive !== false ? '📦 Arşivle' : '✅ Aktifleştir'}
-                                </button>
-                                {/* Yetkiyi Kaldır */}
-                                <button
-                                  onClick={() => {
-                                    setConfirmModal({
-                                      show: true,
-                                      title: 'Yetkiyi Kaldır',
-                                      message: `${staff.displayName} adlı personelin yetkisini kaldırmak istediğinize emin misiniz?`,
-                                      confirmText: 'Evet, Kaldır',
-                                      confirmColor: 'bg-red-600 hover:bg-red-500',
-                                      onConfirm: async () => {
-                                        setConfirmModal(prev => ({ ...prev, show: false }));
-                                        try {
-                                          const adminRef = doc(db, 'admins', staff.id);
-                                          await updateDoc(adminRef, {
-                                            isActive: false,
-                                            adminType: null,
-                                            butcherId: null,
-                                            butcherName: null,
-                                            deactivatedAt: new Date(),
-                                            deactivationReason: 'Yetki kaldırıldı',
-                                          });
-                                          showToast(`${staff.displayName} yetkisi kaldırıldı`, 'success');
-                                          loadStaff();
-                                        } catch (error) {
-                                          console.error('Remove permission error:', error);
-                                          showToast('İşlem başarısız', 'error');
-                                        }
-                                      },
-                                    });
-                                  }}
-                                  className="text-xs px-2 py-1 rounded bg-orange-600/20 text-orange-400 hover:bg-orange-600 hover:text-white"
-                                >
-                                  🔓 Yetkiyi Kaldır
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
+                                        },
+                                      });
+                                    }}
+                                    className="text-xs px-2 py-1 rounded bg-orange-600/20 text-orange-400 hover:bg-orange-600 hover:text-white"
+                                  >
+                                    🔓 Yetkiyi Kaldır
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
 
-                {/* Invite New Staff */}
-                <div>
-                  <h3 className="text-white font-medium mb-3">
-                    ➕ Yeni Personel Ekle
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="İsim *"
-                      value={inviteFirstName}
-                      onChange={(e) => setInviteFirstName(e.target.value)}
-                      className="bg-gray-700 text-white px-3 py-2 rounded-lg"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Soyisim (opsiyonel)"
-                      value={inviteLastName}
-                      onChange={(e) => setInviteLastName(e.target.value)}
-                      className="bg-gray-700 text-white px-3 py-2 rounded-lg"
-                    />
-                  </div>
-                  <div className="flex gap-2 mt-3">
-                    <select
-                      value={inviteCountryCode}
-                      onChange={(e) => setInviteCountryCode(e.target.value)}
-                      className="bg-gray-700 text-white px-3 py-2 rounded-lg w-24"
-                    >
-                      <option value="+49">🇩🇪 +49</option>
-                      <option value="+90">🇹🇷 +90</option>
-                      <option value="+43">🇦🇹 +43</option>
-                    </select>
-                    <input
-                      type="tel"
-                      placeholder="Telefon numarası *"
-                      value={invitePhone}
-                      onChange={(e) =>
-                        setInvitePhone(e.target.value.replace(/\D/g, ""))
-                      }
-                      className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg"
-                    />
-                  </div>
-                  <input
-                    type="email"
-                    placeholder="E-posta (opsiyonel, bildirim için)"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    className="w-full mt-3 bg-gray-700 text-white px-3 py-2 rounded-lg"
-                  />
-                  <div className="mt-3">
-                    <label className="text-gray-400 text-sm">Rol</label>
-                    <select
-                      value={inviteRole}
-                      onChange={(e) => setInviteRole(e.target.value)}
-                      className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1"
-                    >
-                      <option value="Personel">👤 Personel</option>
-                      <option value="Admin">👑 İşletme Admin</option>
-                    </select>
-                  </div>
-                  <button
-                    onClick={handleInviteStaff}
-                    disabled={staffLoading}
-                    className="w-full mt-3 bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 disabled:opacity-50 font-medium"
-                  >
-                    {staffLoading
-                      ? "Hesap oluşturuluyor..."
-                      : "🚀 Hesap Oluştur & Davet Gönder"}
-                  </button>
-
-                  {/* Invite Result Feedback */}
-                  {inviteResult && inviteResult.success && (
-                    <div className="mt-4 p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-3">
-                      <p className="text-green-300 font-medium">✅ Personel başarıyla eklendi!</p>
-                      <div className="bg-gray-800 p-3 rounded text-sm">
-                        <p className="text-gray-400">Geçici Şifre:</p>
-                        <p className="text-white font-mono text-lg">{inviteResult.tempPassword}</p>
-                      </div>
-                      {inviteResult.notifications && (
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          <span className={`px-2 py-1 rounded ${inviteResult.notifications.email?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
-                            {inviteResult.notifications.email?.sent ? '✅' : '❌'} Email
-                          </span>
-                          <span className={`px-2 py-1 rounded ${inviteResult.notifications.whatsapp?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
-                            {inviteResult.notifications.whatsapp?.sent ? '✅' : '❌'} WhatsApp
-                          </span>
-                          <span className={`px-2 py-1 rounded ${inviteResult.notifications.sms?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
-                            {inviteResult.notifications.sms?.sent ? '✅' : '❌'} SMS
-                          </span>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => setInviteResult(null)}
-                        className="text-xs text-gray-400 hover:text-white"
-                      >
-                        Kapat
-                      </button>
+                  {/* Invite New Staff */}
+                  <div>
+                    <h3 className="text-white font-medium mb-3">
+                      ➕ Yeni Personel Ekle
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        type="text"
+                        placeholder="İsim *"
+                        value={inviteFirstName}
+                        onChange={(e) => setInviteFirstName(e.target.value)}
+                        className="bg-gray-700 text-white px-3 py-2 rounded-lg"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Soyisim (opsiyonel)"
+                        value={inviteLastName}
+                        onChange={(e) => setInviteLastName(e.target.value)}
+                        className="bg-gray-700 text-white px-3 py-2 rounded-lg"
+                      />
                     </div>
-                  )}
+                    <div className="flex gap-2 mt-3">
+                      <select
+                        value={inviteCountryCode}
+                        onChange={(e) => setInviteCountryCode(e.target.value)}
+                        className="bg-gray-700 text-white px-3 py-2 rounded-lg w-24"
+                      >
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+90">🇹🇷 +90</option>
+                        <option value="+43">🇦🇹 +43</option>
+                      </select>
+                      <input
+                        type="tel"
+                        placeholder="Telefon numarası *"
+                        value={invitePhone}
+                        onChange={(e) =>
+                          setInvitePhone(e.target.value.replace(/\D/g, ""))
+                        }
+                        className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg"
+                      />
+                    </div>
+                    <input
+                      type="email"
+                      placeholder="E-posta (opsiyonel, bildirim için)"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      className="w-full mt-3 bg-gray-700 text-white px-3 py-2 rounded-lg"
+                    />
+                    <div className="mt-3">
+                      <label className="text-gray-400 text-sm">Rol</label>
+                      <select
+                        value={inviteRole}
+                        onChange={(e) => setInviteRole(e.target.value)}
+                        className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1"
+                      >
+                        <option value="Personel">👤 Personel</option>
+                        <option value="Admin">👑 İşletme Admin</option>
+                      </select>
+                    </div>
+                    <button
+                      onClick={handleInviteStaff}
+                      disabled={staffLoading}
+                      className="w-full mt-3 bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 disabled:opacity-50 font-medium"
+                    >
+                      {staffLoading
+                        ? "Hesap oluşturuluyor..."
+                        : "🚀 Hesap Oluştur & Davet Gönder"}
+                    </button>
+
+                    {/* Invite Result Feedback */}
+                    {inviteResult && inviteResult.success && (
+                      <div className="mt-4 p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-3">
+                        <p className="text-green-300 font-medium">✅ Personel başarıyla eklendi!</p>
+                        <div className="bg-gray-800 p-3 rounded text-sm">
+                          <p className="text-gray-400">Geçici Şifre:</p>
+                          <p className="text-white font-mono text-lg">{inviteResult.tempPassword}</p>
+                        </div>
+                        {inviteResult.notifications && (
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            <span className={`px-2 py-1 rounded ${inviteResult.notifications.email?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
+                              {inviteResult.notifications.email?.sent ? '✅' : '❌'} Email
+                            </span>
+                            <span className={`px-2 py-1 rounded ${inviteResult.notifications.whatsapp?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
+                              {inviteResult.notifications.whatsapp?.sent ? '✅' : '❌'} WhatsApp
+                            </span>
+                            <span className={`px-2 py-1 rounded ${inviteResult.notifications.sms?.sent ? 'bg-green-600' : 'bg-gray-600'}`}>
+                              {inviteResult.notifications.sms?.sent ? '✅' : '❌'} SMS
+                            </span>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => setInviteResult(null)}
+                          className="text-xs text-gray-400 hover:text-white"
+                        >
+                          Kapat
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )
-      }
+          )
+        }
 
-      {/* 🍽️ Reservations Tab */}
-      {activeTab === "reservations" && formData.hasReservation && (
-        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
-          <ReservationsPanel
-            businessId={businessId}
-            businessName={formData.companyName || ""}
-            staffName={admin?.displayName || admin?.email || "Admin"}
-          />
-        </div>
-      )}
-
-      {/* 🪑 Dine-In Tab */}
-      {activeTab === "dineIn" && (planFeatures.dineInQR || planFeatures.waiterOrder) && (
-        <div className="space-y-6">
-          {/* ── Header Stats Row ── */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
-              <p className="text-3xl font-bold text-orange-400">{formData.maxReservationTables || 0}</p>
-              <p className="text-xs text-gray-400 mt-1">Toplam Masa</p>
-            </div>
-            <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
-              <p className="text-3xl font-bold text-teal-400">{formData.tableCapacity || 0}</p>
-              <p className="text-xs text-gray-400 mt-1">Oturma Kapasitesi</p>
-            </div>
-            <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
-              <p className="text-3xl font-bold text-green-400">{planFeatures.dineInQR ? '✓' : '✕'}</p>
-              <p className="text-xs text-gray-400 mt-1">QR Sipariş</p>
-            </div>
-            <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
-              <p className="text-3xl font-bold text-blue-400">{planFeatures.waiterOrder ? '✓' : '✕'}</p>
-              <p className="text-xs text-gray-400 mt-1">Garson Sipariş</p>
-            </div>
-          </div>
-
-          {/* ── Table Count Configuration ── */}
+        {/* 🍽️ Reservations Tab */}
+        {activeTab === "reservations" && formData.hasReservation && (
           <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <ReservationsPanel
+              businessId={businessId}
+              businessName={formData.companyName || ""}
+              staffName={admin?.displayName || admin?.email || "Admin"}
+            />
+          </div>
+        )}
+
+        {/* 🪑 Dine-In Tab */}
+        {activeTab === "dineIn" && (planFeatures.dineInQR || planFeatures.waiterOrder) && (
+          <div className="space-y-6">
+            {/* ── Header Stats Row ── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+                <p className="text-2xl font-bold text-orange-400">{formData.maxReservationTables || 0}</p>
+                <p className="text-xs text-gray-400 mt-1">Toplam Masa</p>
+              </div>
+              <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+                <p className="text-2xl font-bold text-teal-400">{formData.tableCapacity || 0}</p>
+                <p className="text-xs text-gray-400 mt-1">Oturma Kapasitesi</p>
+              </div>
+              <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+                <p className="text-2xl font-bold text-green-400">{planFeatures.dineInQR ? '✓' : '✕'}</p>
+                <p className="text-xs text-gray-400 mt-1">QR Sipariş</p>
+              </div>
+              <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+                <p className="text-2xl font-bold text-blue-400">{planFeatures.waiterOrder ? '✓' : '✕'}</p>
+                <p className="text-xs text-gray-400 mt-1">Garson Sipariş</p>
+              </div>
+            </div>
+
+            {/* ── Table Count Configuration ── */}
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
                 🪑 Masa Sayısı Ayarı
               </h2>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex-1 max-w-xs">
-                <label className="text-gray-400 text-sm block mb-1">Masa Adedi</label>
-                <input
-                  type="number"
-                  value={formData.maxReservationTables}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      maxReservationTables: Math.max(0, parseInt(e.target.value) || 0),
-                    })
-                  }
-                  min="0"
-                  max="100"
-                  className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none text-lg font-medium"
-                  placeholder="ör: 20"
-                />
-                <p className="text-xs text-gray-500 mt-1">İşletmedeki toplam masa sayısı</p>
-              </div>
-              <div className="flex-1 max-w-xs">
-                <label className="text-gray-400 text-sm block mb-1">Oturma Kapasitesi (Kişi)</label>
-                <input
-                  type="number"
-                  value={formData.tableCapacity}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      tableCapacity: Math.max(0, parseInt(e.target.value) || 0),
-                    })
-                  }
-                  min="0"
-                  className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none text-lg font-medium"
-                  placeholder="ör: 80"
-                />
-                <p className="text-xs text-gray-500 mt-1">Toplam müşteri kapasitesi</p>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Table Grid with QR Codes ── */}
-          {planFeatures.dineInQR && (formData.maxReservationTables || 0) > 0 && (
-            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  📱 Masa QR Kodları
-                  <span className="text-sm font-normal text-gray-400">
-                    Her masa için benzersiz QR kod
-                  </span>
-                </h2>
-                <button
-                  onClick={() => {
-                    // Download all QR codes as a batch
-                    const tableCount = formData.maxReservationTables || 0;
-                    for (let i = 1; i <= tableCount; i++) {
-                      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://lokma.web.app/dinein/${businessId}/table/${i}`)}`;
-                      const link = document.createElement('a');
-                      link.href = qrUrl;
-                      link.download = `Masa_${i}_QR.png`;
-                      link.target = '_blank';
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
+              <div className="grid grid-cols-2 gap-4 max-w-lg">
+                <div>
+                  <label className="text-gray-400 text-sm block mb-1">Masa Adedi</label>
+                  <input
+                    type="number"
+                    value={formData.maxReservationTables}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        maxReservationTables: Math.max(0, parseInt(e.target.value) || 0),
+                      })
                     }
-                  }}
-                  className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
-                >
-                  📥 Tümünü İndir
-                </button>
+                    min="0"
+                    max="100"
+                    className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none text-lg font-medium"
+                    placeholder="ör: 20"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">İşletmedeki toplam masa sayısı</p>
+                </div>
+                <div>
+                  <label className="text-gray-400 text-sm block mb-1">Oturma Kapasitesi (Kişi)</label>
+                  <input
+                    type="number"
+                    value={formData.tableCapacity}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        tableCapacity: Math.max(0, parseInt(e.target.value) || 0),
+                      })
+                    }
+                    min="0"
+                    className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none text-lg font-medium"
+                    placeholder="ör: 80"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Toplam müşteri kapasitesi</p>
+                </div>
               </div>
+            </div>
 
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                {Array.from({ length: formData.maxReservationTables || 0 }, (_, i) => {
-                  const tableNum = i + 1;
-                  const qrData = `https://lokma.web.app/dinein/${businessId}/table/${tableNum}`;
-                  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}&bgcolor=1a1a2e&color=f97316`;
-                  return (
-                    <div
-                      key={tableNum}
-                      className="bg-gray-800 rounded-xl border border-gray-700 p-3 flex flex-col items-center gap-2 hover:border-orange-500/50 transition group"
-                    >
-                      <div className="w-full aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                        <img
-                          src={qrImageUrl}
-                          alt={`Masa ${tableNum} QR`}
-                          className="w-full h-full object-contain p-1"
-                          loading="lazy"
-                        />
-                      </div>
-                      <p className="text-sm font-bold text-white">Masa {tableNum}</p>
+            {/* ── Table QR Codes — Compact Table Layout ── */}
+            {planFeatures.dineInQR && (formData.maxReservationTables || 0) > 0 && (
+              <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                    📱 Masa QR Kodları
+                    <span className="text-sm font-normal text-gray-400">
+                      · {formData.maxReservationTables} masa
+                    </span>
+                  </h2>
+                  <button
+                    onClick={() => {
+                      const tableCount = formData.maxReservationTables || 0;
+                      for (let i = 1; i <= tableCount; i++) {
+                        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://lokma.web.app/dinein/${businessId}/table/${i}`)}`;
+                        const link = document.createElement('a');
+                        link.href = qrUrl;
+                        link.download = `Masa_${i}_QR.png`;
+                        link.target = '_blank';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }
+                    }}
+                    className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
+                  >
+                    📥 Tümünü İndir
+                  </button>
+                </div>
+
+                {/* Compact grid — small QR thumbnails */}
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
+                  {Array.from({ length: formData.maxReservationTables || 0 }, (_, i) => {
+                    const tableNum = i + 1;
+                    const qrData = `https://lokma.web.app/dinein/${businessId}/table/${tableNum}`;
+                    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrData)}`;
+                    return (
                       <button
+                        key={tableNum}
                         onClick={() => {
                           const downloadUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}`;
                           const link = document.createElement('a');
@@ -3938,69 +3924,80 @@ export default function BusinessDetailPage() {
                           link.click();
                           document.body.removeChild(link);
                         }}
-                        className="w-full px-2 py-1.5 bg-orange-600/20 hover:bg-orange-600 text-orange-400 hover:text-white text-xs rounded-lg transition font-medium opacity-80 group-hover:opacity-100"
+                        className="bg-gray-800 rounded-lg border border-gray-700 p-2 flex flex-col items-center gap-1 hover:border-orange-500 hover:bg-gray-700/50 transition cursor-pointer group"
+                        title={`Masa ${tableNum} QR kodunu indir`}
                       >
-                        📥 İndir
+                        <div className="w-full aspect-square bg-white rounded flex items-center justify-center overflow-hidden">
+                          <img
+                            src={qrImageUrl}
+                            alt={`Masa ${tableNum}`}
+                            className="w-full h-full object-contain"
+                            loading="lazy"
+                          />
+                        </div>
+                        <span className="text-xs font-bold text-gray-300 group-hover:text-orange-400 transition">M{tableNum}</span>
                       </button>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500 mt-3">💡 QR koduna tıklayarak tek tek indirebilirsiniz</p>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* ── Empty State ── */}
-          {planFeatures.dineInQR && (formData.maxReservationTables || 0) === 0 && (
-            <div className="bg-gray-900 rounded-2xl p-8 border border-dashed border-orange-700/50 text-center">
-              <span className="text-4xl">🪑</span>
-              <p className="text-white font-semibold mt-3">Henüz masa tanımlanmadı</p>
-              <p className="text-gray-400 text-sm mt-1">
-                Yukarıdan masa sayısını girerek QR kodlarınızı oluşturun
+            {/* ── Empty State ── */}
+            {planFeatures.dineInQR && (formData.maxReservationTables || 0) === 0 && (
+              <div className="bg-gray-900 rounded-2xl p-8 border border-dashed border-orange-700/50 text-center">
+                <span className="text-4xl">🪑</span>
+                <p className="text-white font-semibold mt-3">Henüz masa tanımlanmadı</p>
+                <p className="text-gray-400 text-sm mt-1">
+                  Yukarıdan masa sayısını girerek QR kodlarınızı oluşturun
+                </p>
+              </div>
+            )}
+
+            {/* ── Garson Sipariş Card ── */}
+            {planFeatures.waiterOrder && (
+              <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-teal-600/20 flex items-center justify-center">
+                    <span className="text-xl">👨‍🍳</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold">Garson Sipariş Sistemi</h3>
+                    <p className="text-xs text-gray-400">Personel tablet/telefon ile masada sipariş alır</p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white">
+                    ✓ AKTİF
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                  <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                    <p className="text-teal-400 font-medium text-sm">1. Masa Seç</p>
+                    <p className="text-gray-400 text-xs mt-1">Garson masayı seçer</p>
+                  </div>
+                  <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                    <p className="text-teal-400 font-medium text-sm">2. Ürün Ekle</p>
+                    <p className="text-gray-400 text-xs mt-1">Menüden ürün ekler</p>
+                  </div>
+                  <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                    <p className="text-teal-400 font-medium text-sm">3. Sipariş Gönder</p>
+                    <p className="text-gray-400 text-xs mt-1">Mutfağa iletilir</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── Plan Info Footer ── */}
+            <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700">
+              <p className="text-sm text-gray-400">
+                💡 Bu özellikler işletmenin <strong className="text-white">{business?.subscriptionPlan || 'basic'}</strong> planı üzerinden yönetilmektedir.
+                Değişiklik yapmak için <a href="/admin/plans" className="text-blue-400 hover:underline">Plan Yönetimi</a> sayfasını ziyaret edin.
               </p>
             </div>
-          )}
-
-          {/* ── Garson Sipariş Card ── */}
-          {planFeatures.waiterOrder && (
-            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-teal-600/20 flex items-center justify-center">
-                  <span className="text-xl">👨‍🍳</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-semibold">Garson Sipariş Sistemi</h3>
-                  <p className="text-xs text-gray-400">Personel tablet/telefon ile masada sipariş alır</p>
-                </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white">
-                  ✓ AKTİF
-                </span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
-                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                  <p className="text-teal-400 font-medium text-sm">1. Masa Seç</p>
-                  <p className="text-gray-400 text-xs mt-1">Garson masayı seçer</p>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                  <p className="text-teal-400 font-medium text-sm">2. Ürün Ekle</p>
-                  <p className="text-gray-400 text-xs mt-1">Menüden ürün ekler</p>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                  <p className="text-teal-400 font-medium text-sm">3. Sipariş Gönder</p>
-                  <p className="text-gray-400 text-xs mt-1">Mutfağa iletilir</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Plan Info Footer ── */}
-          <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-            <p className="text-sm text-gray-400">
-              💡 Bu özellikler işletmenin <strong className="text-white">{business?.subscriptionPlan || 'basic'}</strong> planı üzerinden yönetilmektedir.
-              Değişiklik yapmak için <a href="/admin/plans" className="text-blue-400 hover:underline">Plan Yönetimi</a> sayfasını ziyaret edin.
-            </p>
           </div>
-        </div>
-      )}
+        )}
+
+      </main >
 
       {/* Confirmation Modal */}
       {

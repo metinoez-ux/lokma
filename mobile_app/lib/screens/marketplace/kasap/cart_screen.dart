@@ -25,7 +25,8 @@ import 'package:lokma_app/utils/opening_hours_helper.dart';
 class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
   final bool initialDineIn;
-  const CartScreen({super.key, this.initialPickUp = false, this.initialDineIn = false});
+  final String? initialTableNumber;
+  const CartScreen({super.key, this.initialPickUp = false, this.initialDineIn = false, this.initialTableNumber});
 
   @override
   ConsumerState<CartScreen> createState() => _CartScreenState();
@@ -41,6 +42,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   bool _canDeliver = false;
   bool _checkingDelivery = true;
   String _paymentMethod = 'cash';
+  final TextEditingController _tableNumberController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
   Map<String, dynamic>? _butcherData;
@@ -66,8 +68,18 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     super.initState();
     _isPickUp = widget.initialPickUp;
     _isDineIn = widget.initialDineIn;
+    // Auto-set table number from deep link (QR code on table)
+    if (widget.initialTableNumber != null) {
+      _scannedTableNumber = widget.initialTableNumber;
+      _isDineIn = true;
+      _isPickUp = false;
+      _paymentMethod = 'payLater';
+    }
     // If dine-in, ensure pickup is false
-    if (_isDineIn) _isPickUp = false;
+    if (_isDineIn) {
+      _isPickUp = false;
+      _paymentMethod = 'payLater'; // Default for dine-in
+    }
     _tabController = TabController(length: 2, vsync: this);
     
     // Pulse animation for active orders indicator
@@ -283,10 +295,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         'pickupTime': (_isPickUp || _isDineIn) ? Timestamp.fromDate(pickupDateTime) : null,
         'deliveryAddress': (!_isPickUp && !_isDineIn) ? userAddress : null,
         'paymentMethod': _paymentMethod,
-        'paymentStatus': _paymentMethod == 'cash' ? 'pending' : 'pending',
+        'paymentStatus': _paymentMethod == 'payLater' ? 'payLater' : 'pending',
         'status': 'pending',
         if (_orderNote.trim().isNotEmpty) 'orderNote': _orderNote.trim(),
-        if (_isDineIn && _scannedTableNumber != null) 'tableNumber': _scannedTableNumber,
+        if (_isDineIn && (_scannedTableNumber ?? _tableNumberController.text.trim()).isNotEmpty)
+          'tableNumber': _scannedTableNumber ?? _tableNumberController.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -333,6 +346,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   void dispose() {
     _tabController.dispose();
     _pulseController.dispose();
+    _tableNumberController.dispose();
     super.dispose();
   }
 
@@ -2101,7 +2115,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         setState(() {
           _isPickUp = index == 1;
           _isDineIn = index == 2;
-          if (!_isDineIn) _scannedTableNumber = null; // Reset QR on mode switch
+          if (_isDineIn) {
+            _paymentMethod = 'payLater'; // Default for dine-in
+          } else {
+            _scannedTableNumber = null; // Reset QR on mode switch
+            _tableNumberController.clear();
+            if (_paymentMethod == 'payLater') _paymentMethod = 'cash';
+          }
         });
       },
       tabs: const [
@@ -2496,7 +2516,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ],
               Text(
                 (_isDineIn && _scannedTableNumber == null)
-                    ? 'QR Kod Tara · ${total.toStringAsFixed(2)} €'
+                    ? 'Masa QR Kodunu Tara · ${total.toStringAsFixed(2)} €'
                     : 'Siparişi Onayla · ${total.toStringAsFixed(2)} €',
                 style: const TextStyle(
                   color: Colors.white,
@@ -3292,6 +3312,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final deliveryFee = (!_isPickUp && !_isDineIn ? (_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50 : 0.0);
     final grandTotal = total + deliveryFee;
     final noteController = TextEditingController(text: _orderNote);
+    // Pre-fill table number from QR scan
+    if (_isDineIn && _scannedTableNumber != null) {
+      _tableNumberController.text = _scannedTableNumber!;
+    }
 
     showModalBottomSheet(
       context: context,
@@ -3448,21 +3472,84 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.grey.shade300),
                               ),
-                              child: Row(
+                              child: Column(
                                 children: [
-                                  Icon(_isDineIn ? Icons.restaurant : Icons.store, color: _accentColor, size: 22),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      _butcherData?['companyName'] ?? cart.butcherName ?? 'İşletme',
+                                  Row(
+                                    children: [
+                                      Icon(_isDineIn ? Icons.restaurant : Icons.store, color: _accentColor, size: 22),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              _butcherData?['companyName'] ?? cart.butcherName ?? 'İşletme',
+                                              style: TextStyle(
+                                                color: Theme.of(context).colorScheme.onSurface,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            if (_isDineIn && _scannedTableNumber != null)
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 2),
+                                                child: Text(
+                                                  'Masa $_scannedTableNumber  ✓',
+                                                  style: TextStyle(
+                                                    color: Colors.green[700],
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                    ],
+                                  ),
+                                  // 🪑 Dine-in: Table number input
+                                  if (_isDineIn) ...[
+                                    const SizedBox(height: 12),
+                                    TextField(
+                                      controller: _tableNumberController,
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.done,
+                                      onSubmitted: (_) => FocusScope.of(ctx).unfocus(),
+                                      onChanged: (val) {
+                                        setSheetState(() {});
+                                        setState(() {
+                                          _scannedTableNumber = val.trim().isNotEmpty ? val.trim() : null;
+                                        });
+                                      },
+                                      decoration: InputDecoration(
+                                        hintText: 'Masa numaranızı girin',
+                                        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+                                        prefixIcon: Icon(Icons.table_bar, color: _accentColor, size: 20),
+                                        filled: true,
+                                        fillColor: Theme.of(context).colorScheme.surface,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide(color: Colors.grey.shade300),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide(color: _accentColor),
+                                        ),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                        isDense: true,
+                                      ),
                                       style: TextStyle(
                                         color: Theme.of(context).colorScheme.onSurface,
                                         fontSize: 14,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
-                                  ),
-                                  Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                  ],
                                 ],
                               ),
                             ),
@@ -3479,33 +3566,35 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.grey.shade300),
                             ),
-                            child: Row(
+                            child: Column(
                               children: [
-                                Expanded(
-                                  child: GestureDetector(
+                                // 🪑 DINE-IN: "Sonra Ödeyeceğim" option (top row)
+                                if (_isDineIn) ...[
+                                  GestureDetector(
                                     onTap: () {
                                       setSheetState(() {});
-                                      setState(() => _paymentMethod = 'cash');
+                                      setState(() => _paymentMethod = 'payLater');
                                     },
                                     child: Container(
+                                      width: double.infinity,
                                       padding: const EdgeInsets.symmetric(vertical: 12),
                                       decoration: BoxDecoration(
-                                        color: _paymentMethod == 'cash' ? _accentColor : Colors.transparent,
+                                        color: _paymentMethod == 'payLater' ? _accentColor : Colors.transparent,
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Icon(
-                                            (_isPickUp || _isDineIn) ? Icons.store_outlined : Icons.payments_outlined,
+                                            Icons.schedule,
                                             size: 18,
-                                            color: _paymentMethod == 'cash' ? Colors.white : Colors.grey[600],
+                                            color: _paymentMethod == 'payLater' ? Colors.white : Colors.grey[600],
                                           ),
                                           const SizedBox(width: 6),
                                           Text(
-                                            (_isPickUp || _isDineIn) ? 'İşletmede Öde' : 'Kapıda Nakit',
+                                            'Sonra Ödeyeceğim',
                                             style: TextStyle(
-                                              color: _paymentMethod == 'cash' ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                              color: _paymentMethod == 'payLater' ? Colors.white : Theme.of(context).colorScheme.onSurface,
                                               fontWeight: FontWeight.w600,
                                               fontSize: 13,
                                             ),
@@ -3514,40 +3603,80 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       ),
                                     ),
                                   ),
-                                ),
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setSheetState(() {});
-                                      setState(() => _paymentMethod = 'card');
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: _paymentMethod == 'card' ? _accentColor : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.credit_card,
-                                            size: 18,
-                                            color: _paymentMethod == 'card' ? Colors.white : Colors.grey[600],
+                                  const SizedBox(height: 2),
+                                ],
+                                // Cash / Card row
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setSheetState(() {});
+                                          setState(() => _paymentMethod = 'cash');
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          decoration: BoxDecoration(
+                                            color: _paymentMethod == 'cash' ? _accentColor : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(10),
                                           ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            'Kart ile',
-                                            style: TextStyle(
-                                              color: _paymentMethod == 'card' ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 14,
-                                            ),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                (_isPickUp || _isDineIn) ? Icons.store_outlined : Icons.payments_outlined,
+                                                size: 18,
+                                                color: _paymentMethod == 'cash' ? Colors.white : Colors.grey[600],
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                (_isPickUp || _isDineIn) ? 'İşletmede Öde' : 'Kapıda Nakit',
+                                                style: TextStyle(
+                                                  color: _paymentMethod == 'cash' ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setSheetState(() {});
+                                          setState(() => _paymentMethod = 'card');
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          decoration: BoxDecoration(
+                                            color: _paymentMethod == 'card' ? _accentColor : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.credit_card,
+                                                size: 18,
+                                                color: _paymentMethod == 'card' ? Colors.white : Colors.grey[600],
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'Kart ile',
+                                                style: TextStyle(
+                                                  color: _paymentMethod == 'card' ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -3556,7 +3685,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           AnimatedSize(
                             duration: const Duration(milliseconds: 250),
                             curve: Curves.easeInOut,
-                            child: _paymentMethod == 'card'
+                            child: (_paymentMethod == 'card' || _paymentMethod == 'payLater')
                                 ? Padding(
                                     padding: const EdgeInsets.only(top: 10),
                                     child: Container(
@@ -3572,7 +3701,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
-                                              'Apple Pay · Google Pay · Visa · Mastercard',
+                                              _paymentMethod == 'payLater'
+                                                ? 'Hesabınızı masada kapatabilirsiniz'
+                                                : 'Apple Pay · Google Pay · Visa · Mastercard',
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.grey[600],
@@ -3718,6 +3849,18 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     ),
                     child: GestureDetector(
                       onTap: _isSubmitting ? null : () {
+                        // Dine-in: require table number
+                        if (_isDineIn && (_scannedTableNumber ?? _tableNumberController.text.trim()).isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Lütfen masa numaranızı girin'),
+                              backgroundColor: Colors.orange,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                          return;
+                        }
                         _orderNote = noteController.text;
                         Navigator.pop(ctx);
                         _submitOrder();
@@ -3740,7 +3883,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           child: _isSubmitting
                               ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
                               : Text(
-                                  'Siparişi Gönder · ${grandTotal.toStringAsFixed(2)} €',
+                                  _isDineIn && _scannedTableNumber != null
+                                    ? 'Siparişi Gönder · Masa $_scannedTableNumber'
+                                    : 'Siparişi Gönder · ${grandTotal.toStringAsFixed(2)} €',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 16,

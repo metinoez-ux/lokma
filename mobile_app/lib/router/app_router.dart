@@ -119,7 +119,21 @@ class AppRouter {
           final businessId = state.pathParameters['id']!;
           final modeStr = state.uri.queryParameters['mode'] ?? 'teslimat';
           final deliveryMode = modeStr == 'masa' ? 2 : (modeStr == 'gelal' ? 1 : 0);
-          return BusinessDetailScreen(businessId: businessId, initialDeliveryMode: deliveryMode);
+          final tableNumber = state.uri.queryParameters['table'];
+          return BusinessDetailScreen(
+            businessId: businessId,
+            initialDeliveryMode: deliveryMode,
+            initialTableNumber: tableNumber,
+          );
+        },
+      ),
+      // DINE-IN DEEP LINK: QR code → app opens → correct business + table
+      GoRoute(
+        path: '/dinein/:businessId/table/:tableNum',
+        redirect: (context, state) {
+          final id = state.pathParameters['businessId']!;
+          final table = state.pathParameters['tableNum']!;
+          return '/kasap/$id?mode=masa&table=$table';
         },
       ),
       // BACKWARD COMPATIBILITY ALIASES: Redirect to primary Turkish route

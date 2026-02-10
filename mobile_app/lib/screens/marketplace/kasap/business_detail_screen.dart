@@ -20,8 +20,9 @@ import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 class BusinessDetailScreen extends ConsumerStatefulWidget {
   final String businessId;
   final int initialDeliveryMode;
+  final String? initialTableNumber;
   
-  const BusinessDetailScreen({super.key, required this.businessId, this.initialDeliveryMode = 0});
+  const BusinessDetailScreen({super.key, required this.businessId, this.initialDeliveryMode = 0, this.initialTableNumber});
 
   @override
   ConsumerState<BusinessDetailScreen> createState() => _BusinessDetailScreenState();
@@ -1648,6 +1649,56 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                               ),
                             ),
+                          // Brand Badge (Top Left - matching list view)
+                          if (showBrandBadge)
+                            Positioned(
+                              top: 12,
+                              left: 0,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFD32F2F),
+                                  borderRadius: BorderRadius.only(
+                                    topRight: Radius.circular(8),
+                                    bottomRight: Radius.circular(8),
+                                  ),
+                                ),
+                                child: Text(
+                                  _getBrandLabel(brand).toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          // Favorite Heart (Top Right - overlay on image)
+                          Positioned(
+                            right: 12,
+                            top: 12,
+                            child: Material(
+                              color: isFavorite 
+                                  ? accent.withOpacity(0.9) 
+                                  : Colors.black.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(20),
+                              child: InkWell(
+                                onTap: () {
+                                  ref.read(butcherFavoritesProvider.notifier).toggleFavorite(widget.businessId);
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8),
+                                  child: Icon(
+                                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1696,28 +1747,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                ),
                              ),
                            ),
-                           const SizedBox(width: 8),
-                           // Favorite Button (heart icon)
-                           Material(
-                             color: isFavorite 
-                                 ? accent.withOpacity(0.1) 
-                                 : (isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]),
-                             borderRadius: BorderRadius.circular(8),
-                             child: InkWell(
-                               onTap: () {
-                                 ref.read(butcherFavoritesProvider.notifier).toggleFavorite(widget.businessId);
-                               },
-                               borderRadius: BorderRadius.circular(8),
-                               child: Padding(
-                                 padding: const EdgeInsets.all(8),
-                                 child: Icon(
-                                   isFavorite ? Icons.favorite : Icons.favorite_border,
-                                   color: isFavorite ? accent : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                   size: 20,
-                                 ),
-                               ),
-                             ),
-                           ),
+
                          ],
                        ),
                        
@@ -1729,23 +1759,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                          runSpacing: 8,
                          crossAxisAlignment: WrapCrossAlignment.center,
                          children: [
-                           // Brand Badge (if TUNA)
-                           if (showBrandBadge)
-                             InkWell(
-                               onTap: _showTunaBrandInfo,
-                               child: Container(
-                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                 decoration: BoxDecoration(
-                                   color: const Color(0xFFD32F2F),
-                                   borderRadius: BorderRadius.circular(4),
-                                 ),
-                                 child: Text(
-                                   _getBrandLabel(brand),
-                                   style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
-                                 ),
-                               ),
-                             ),
-                           
                            // Rating
                            if (_placeDetails != null)
                              InkWell(
@@ -1808,45 +1821,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              ),
                            ],
 
-                            // 🆕 Dine-In Badges (Plan-gated)
-                            if (_planFeatures['dineInQR'] == true) ...[
-                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.qr_code_2, size: 12, color: Colors.orange),
-                                    SizedBox(width: 4),
-                                    Text('QR Sipariş', style: TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.w600)),
-                                  ],
-                                ),
-                              ),
-                            ],
-                            if (_planFeatures['waiterOrder'] == true) ...[
-                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: Colors.teal.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: Colors.teal.withOpacity(0.3)),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.room_service, size: 12, color: Colors.teal),
-                                    SizedBox(width: 4),
-                                    Text('Garson', style: TextStyle(color: Colors.teal, fontSize: 11, fontWeight: FontWeight.w600)),
-                                  ],
-                                ),
-                              ),
-                            ],
+
                          ],
                        ),
                      ],
@@ -2428,7 +2403,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
            ElevatedButton(
              onPressed: () {
                Navigator.of(context).push(
-                 MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode)),
+                 MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber)),
                );
              },
              style: ElevatedButton.styleFrom(
@@ -2453,7 +2428,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // LIEFERANDO STYLE: Quick Add Product Bottom Sheet
   void _showProductBottomSheet(ButcherProduct product) {
     final isByWeight = product.unitType == 'kg';
-    double selectedQty = _selections[product.sku] ?? product.minQuantity;
+    final cart = ref.read(cartProvider);
+    final existingCartItem = cart.items.firstWhere(
+      (item) => item.product.sku == product.sku,
+      orElse: () => CartItem(product: product, quantity: 0),
+    );
+    final isEditing = existingCartItem.quantity > 0;
+    double selectedQty = isEditing ? existingCartItem.quantity : (_selections[product.sku] ?? product.minQuantity);
     
     showModalBottomSheet(
       context: context,
@@ -2546,12 +2527,29 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Decrease
+                        // Decrease / Delete
                         Material(
-                          color: isDark ? Colors.white12 : Colors.grey[300],
+                          color: (isEditing && selectedQty <= product.minQuantity)
+                            ? Colors.red.withOpacity(0.15)
+                            : (isDark ? Colors.white12 : Colors.grey[300]),
                           borderRadius: BorderRadius.circular(8),
                           child: InkWell(
                             onTap: () {
+                              if (isEditing && selectedQty <= product.minQuantity) {
+                                // Remove from cart
+                                ref.read(cartProvider.notifier).removeFromCart(product.sku);
+                                setState(() => _selections.remove(product.sku));
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('${product.name} sepetten kaldırıldı'),
+                                    duration: const Duration(seconds: 2),
+                                    behavior: SnackBarBehavior.floating,
+                                    backgroundColor: Colors.red[600],
+                                  ),
+                                );
+                                return;
+                              }
                               final newQty = selectedQty - product.stepQuantity;
                               if (newQty >= product.minQuantity) {
                                 setStateModal(() => selectedQty = newQty);
@@ -2562,7 +2560,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               width: 44,
                               height: 44,
                               alignment: Alignment.center,
-                              child: Icon(Icons.remove, color: isDark ? Colors.white : Colors.black87),
+                              child: Icon(
+                                (isEditing && selectedQty <= product.minQuantity)
+                                  ? Icons.delete_outline
+                                  : Icons.remove,
+                                color: (isEditing && selectedQty <= product.minQuantity)
+                                  ? Colors.red
+                                  : (isDark ? Colors.white : Colors.black87),
+                              ),
                             ),
                           ),
                         ),
@@ -2636,7 +2641,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       child: Text(
-                        'Sepete Ekle - €${(product.price * selectedQty).toStringAsFixed(2)}',
+                        isEditing
+                          ? 'Güncelle - €${(product.price * selectedQty).toStringAsFixed(2)}'
+                          : 'Sepete Ekle - €${(product.price * selectedQty).toStringAsFixed(2)}',
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),

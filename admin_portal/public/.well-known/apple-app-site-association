@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "Y834B2NJY9.com.lokma.lokma_app",
+        "paths": [
+          "/dinein/*"
+        ]
+      }
+    ]
+  }
+}
