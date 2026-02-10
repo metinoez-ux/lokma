@@ -121,6 +121,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           if (data != null && data['openingHours'] != null) {
             _hoursHelper = OpeningHoursHelper(data['openingHours']);
           }
+          // If dine-in and business requires payFirst, reset payment method
+          if (_isDineIn && data?['dineInPaymentMode'] == 'payFirst' && _paymentMethod == 'payLater') {
+            _paymentMethod = 'cash';
+          }
         });
       }
     } catch (e) {
@@ -365,14 +369,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         backgroundColor: colorScheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.chevron_left,
-            color: colorScheme.onSurface,
-            size: 28,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: false,
         title: const SizedBox.shrink(),
         centerTitle: true,
         bottom: TabBar(
@@ -1412,7 +1409,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           fontFamily: 'Courier',
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: const Color(0xFF3E2723),
                           letterSpacing: 2,
                         ),
                         textAlign: TextAlign.center,
@@ -1455,7 +1452,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 fontFamily: 'Courier',
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
+                                color: const Color(0xFF3E2723),
                               ),
                             ),
                           ),
@@ -1467,7 +1464,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 fontFamily: 'Courier',
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
+                                color: const Color(0xFF3E2723),
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -1480,7 +1477,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 fontFamily: 'Courier',
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
+                                color: const Color(0xFF3E2723),
                               ),
                               textAlign: TextAlign.right,
                             ),
@@ -1501,7 +1498,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 style: TextStyle(
                                   fontFamily: 'Courier',
                                   fontSize: 11,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: const Color(0xFF3E2723),
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -1514,7 +1511,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 style: TextStyle(
                                   fontFamily: 'Courier',
                                   fontSize: 11,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: const Color(0xFF3E2723),
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -1526,7 +1523,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 style: TextStyle(
                                   fontFamily: 'Courier',
                                   fontSize: 11,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: const Color(0xFF3E2723),
                                 ),
                                 textAlign: TextAlign.right,
                               ),
@@ -1549,7 +1546,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               fontFamily: 'Courier',
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
+                              color: const Color(0xFF3E2723),
                             ),
                           ),
                           Text(
@@ -1558,7 +1555,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               fontFamily: 'Courier',
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
+                              color: const Color(0xFF3E2723),
                             ),
                           ),
                         ],
@@ -1574,7 +1571,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           fontFamily: 'Courier',
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: const Color(0xFF3E2723),
                           letterSpacing: 2,
                         ),
                         textAlign: TextAlign.center,
@@ -1600,7 +1597,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           children: List.generate(30, (index) => Container(
                             width: index % 3 == 0 ? 3 : 1.5,
                             height: 50,
-                            color: Theme.of(context).colorScheme.onSurface,
+                            color: const Color(0xFF3E2723),
                             margin: const EdgeInsets.symmetric(horizontal: 1),
                           )),
                         ),
@@ -1611,7 +1608,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         style: TextStyle(
                           fontFamily: 'Courier',
                           fontSize: 10,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: const Color(0xFF3E2723),
                           letterSpacing: 3,
                         ),
                         textAlign: TextAlign.center,
@@ -1652,7 +1649,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           style: TextStyle(
             fontFamily: 'Courier',
             fontSize: 12,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: const Color(0xFF3E2723),
           ),
         ),
         Text(
@@ -1661,7 +1658,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             fontFamily: 'Courier',
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
+            color: const Color(0xFF3E2723),
           ),
         ),
       ],
@@ -2116,7 +2113,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           _isPickUp = index == 1;
           _isDineIn = index == 2;
           if (_isDineIn) {
-            _paymentMethod = 'payLater'; // Default for dine-in
+            // Respect business payment mode setting
+            _paymentMethod = (_butcherData?['dineInPaymentMode'] == 'payFirst') ? 'cash' : 'payLater';
           } else {
             _scannedTableNumber = null; // Reset QR on mode switch
             _tableNumberController.clear();
@@ -3517,19 +3515,25 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     const SizedBox(height: 12),
                                     TextField(
                                       controller: _tableNumberController,
+                                      readOnly: _scannedTableNumber != null,
+                                      enabled: _scannedTableNumber == null,
                                       keyboardType: TextInputType.number,
                                       textInputAction: TextInputAction.done,
                                       onSubmitted: (_) => FocusScope.of(ctx).unfocus(),
-                                      onChanged: (val) {
+                                      onChanged: _scannedTableNumber != null ? null : (val) {
                                         setSheetState(() {});
                                         setState(() {
                                           _scannedTableNumber = val.trim().isNotEmpty ? val.trim() : null;
                                         });
                                       },
                                       decoration: InputDecoration(
-                                        hintText: 'Masa numaranızı girin',
+                                        hintText: _scannedTableNumber != null ? 'QR ile belirlendi' : 'Masa numaranızı girin',
                                         hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
-                                        prefixIcon: Icon(Icons.table_bar, color: _accentColor, size: 20),
+                                        prefixIcon: Icon(
+                                          _scannedTableNumber != null ? Icons.lock : Icons.table_bar,
+                                          color: _scannedTableNumber != null ? Colors.green : _accentColor,
+                                          size: 20,
+                                        ),
                                         filled: true,
                                         fillColor: Theme.of(context).colorScheme.surface,
                                         border: OutlineInputBorder(
@@ -3572,8 +3576,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                             child: Column(
                               children: [
-                                // 🪑 DINE-IN: "Sonra Ödeyeceğim" option (top row)
-                                if (_isDineIn) ...[
+                                // 🪑 DINE-IN: "Sonra Ödeyeceğim" option (top row) — only if business allows payLater
+                                if (_isDineIn && _butcherData?['dineInPaymentMode'] != 'payFirst') ...[
                                   GestureDetector(
                                     onTap: () {
                                       setSheetState(() {});

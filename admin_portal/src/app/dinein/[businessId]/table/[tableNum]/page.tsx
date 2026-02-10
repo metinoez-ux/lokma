@@ -20,13 +20,20 @@ export default function DineInTablePage() {
         // Fetch business name from Firestore
         const fetchBusiness = async () => {
             try {
+                console.log('[DineIn] Fetching business:', businessId);
                 const docRef = doc(db, 'businesses', businessId);
                 const docSnap = await getDoc(docRef);
+                console.log('[DineIn] Doc exists:', docSnap.exists(), docSnap.data());
                 if (docSnap.exists()) {
-                    setBusinessName(docSnap.data().name || docSnap.data().businessName || 'İşletme');
+                    const data = docSnap.data();
+                    setBusinessName(data.name || data.businessName || data.companyName || 'İşletme');
+                } else {
+                    console.warn('[DineIn] Business not found:', businessId);
+                    setBusinessName('İşletme');
                 }
-            } catch {
-                // Silently fail — show generic text
+            } catch (err) {
+                console.error('[DineIn] Firestore error:', err);
+                setBusinessName('İşletme');
             } finally {
                 setLoading(false);
             }

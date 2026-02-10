@@ -336,6 +336,9 @@ export default function BusinessDetailPage() {
     hasReservation: false,   // Masa rezervasyonu aktif mi?
     tableCapacity: 0,        // Toplam oturma kapasitesi (kişi)
     maxReservationTables: 0, // Aynı anda rezerve edilebilecek max masa sayısı
+    // 🆕 Yerinde Sipariş Ayarları
+    dineInPaymentMode: 'payLater' as string,  // 'payFirst' = Hemen öde (fast food), 'payLater' = Çıkışta öde (restoran)
+    hasTableService: false,   // Garson servisi var mı?
   });
 
   // Google Places search states
@@ -568,6 +571,9 @@ export default function BusinessDetailPage() {
           hasReservation: d.hasReservation || false,
           tableCapacity: d.tableCapacity || 0,
           maxReservationTables: d.maxReservationTables || 0,
+          // 🆕 Yerinde Sipariş Ayarları
+          dineInPaymentMode: d.dineInPaymentMode || 'payLater',
+          hasTableService: d.hasTableService || false,
         });
 
         // 🆕 Resolve plan features from subscription_plans collection
@@ -1122,6 +1128,9 @@ export default function BusinessDetailPage() {
         hasReservation: formData.hasReservation || false,
         tableCapacity: Number(formData.tableCapacity) || 0,
         maxReservationTables: Number(formData.maxReservationTables) || 0,
+        // 🆕 Yerinde Sipariş Ayarları
+        dineInPaymentMode: formData.dineInPaymentMode || 'payLater',
+        hasTableService: formData.hasTableService || false,
         acceptsCardPayment: formData.acceptsCardPayment || false,
         vatNumber: formData.vatNumber || "", // Added missing vatNumber
         imageUrl: downloadURL || "",
@@ -3273,6 +3282,75 @@ export default function BusinessDetailPage() {
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* 🍽️ Yerinde Sipariş Ayarları */}
+                <div className="space-y-4">
+                  <h4 className="text-white font-medium border-b border-gray-700 pb-2">
+                    🍽️ Yerinde Sipariş Ayarları
+                  </h4>
+
+                  {/* Ödeme Zamanlaması */}
+                  <div>
+                    <label className="text-gray-400 text-sm block mb-2">Ödeme Zamanlaması</label>
+                    <div className="flex gap-3">
+                      <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payFirst'
+                          ? 'bg-orange-600/20 border-orange-500 text-orange-300'
+                          : 'bg-gray-700 border-gray-600 text-gray-300'
+                        } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        <input
+                          type="radio"
+                          name="dineInPaymentMode"
+                          value="payFirst"
+                          checked={formData.dineInPaymentMode === 'payFirst'}
+                          onChange={(e) => setFormData({ ...formData, dineInPaymentMode: e.target.value })}
+                          disabled={!isEditing}
+                          className="accent-orange-500"
+                        />
+                        <div>
+                          <span className="font-medium">🍔 Hemen Öde</span>
+                          <p className="text-xs text-gray-400">Fast food — sipariş öncesi ödeme zorunlu</p>
+                        </div>
+                      </label>
+                      <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payLater'
+                          ? 'bg-orange-600/20 border-orange-500 text-orange-300'
+                          : 'bg-gray-700 border-gray-600 text-gray-300'
+                        } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        <input
+                          type="radio"
+                          name="dineInPaymentMode"
+                          value="payLater"
+                          checked={formData.dineInPaymentMode === 'payLater'}
+                          onChange={(e) => setFormData({ ...formData, dineInPaymentMode: e.target.value })}
+                          disabled={!isEditing}
+                          className="accent-orange-500"
+                        />
+                        <div>
+                          <span className="font-medium">🍽️ Çıkışta Öde</span>
+                          <p className="text-xs text-gray-400">Restoran — masada hesap isteme</p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Garson Servisi */}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={formData.hasTableService}
+                      onChange={(e) => setFormData({ ...formData, hasTableService: e.target.checked })}
+                      disabled={!isEditing}
+                      className="w-5 h-5 accent-orange-500"
+                    />
+                    <div>
+                      <span className="text-white">Garson Servisi Aktif</span>
+                      <p className="text-xs text-gray-400">
+                        {formData.hasTableService
+                          ? '✅ Sipariş hazır olunca müşteriye "Siparişiniz masanıza geliyor" bildirimi gider'
+                          : '📱 Sipariş hazır olunca müşteriye "Gelip alabilirsiniz" bildirimi gider (self-service)'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Subscription */}

@@ -294,6 +294,42 @@ export default function OrdersPage() {
                 }
             }
 
+            // Send push notification to customer when order is ready
+            if (newStatus === 'ready') {
+                try {
+                    const order = orders.find(o => o.id === orderId);
+                    if (order?.customerId) {
+                        const { getDoc } = await import('firebase/firestore');
+                        const userDoc = await getDoc(doc(db, 'users', order.customerId));
+                        const fcmToken = userDoc.data()?.fcmToken;
+
+                        // Fetch business settings for hasTableService
+                        let hasTableService = false;
+                        if (order.businessId) {
+                            const bizDoc = await getDoc(doc(db, 'businesses', order.businessId));
+                            hasTableService = bizDoc.data()?.hasTableService || false;
+                        }
+
+                        if (fcmToken) {
+                            await fetch('/api/orders/notify', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    orderId,
+                                    type: 'order_ready',
+                                    customerFcmToken: fcmToken,
+                                    butcherName: order.businessName || businesses[order.businessId] || '',
+                                    hasTableService,
+                                    isDineIn: order.type === 'dine_in',
+                                }),
+                            });
+                        }
+                    }
+                } catch (notifyError) {
+                    console.error('Error sending ready notification:', notifyError);
+                }
+            }
+
             showToast('Sipariş durumu güncellendi', 'success');
             setSelectedOrder(null);
         } catch (error) {
@@ -755,8 +791,8 @@ export default function OrdersPage() {
                                     <div className="flex items-center justify-between">
                                         <span className="text-gray-400">Ödeme</span>
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedOrder.paymentStatus === 'paid'
-                                                ? 'bg-green-600/20 text-green-400'
-                                                : 'bg-red-600/20 text-red-400'
+                                            ? 'bg-green-600/20 text-green-400'
+                                            : 'bg-red-600/20 text-red-400'
                                             }`}>
                                             {selectedOrder.paymentStatus === 'paid'
                                                 ? `✅ Ödendi${selectedOrder.paymentMethod === 'card' ? ' (Kart)' : selectedOrder.paymentMethod === 'cash' ? ' (Nakit)' : ''}`
@@ -994,15 +1030,20 @@ function OrderCard({
             <p className="text-gray-400 text-xs mb-1">
                 {businesses[order.businessId] || 'İşletme'}
             </p>
-            {/* Dine-in table badge */}
-            {order.type === 'dine_in' && order.tableNumber && (
-                <div className="flex items-center gap-2 mb-1">
-                    <span className="px-2 py-0.5 rounded bg-orange-600/30 text-orange-300 text-xs font-medium">
-                        🍽️ Masa #{order.tableNumber}
-                    </span>
-                    {order.paymentStatus === 'paid' && (
-                        <span className="px-1.5 py-0.5 rounded bg-green-600/30 text-green-400 text-xs">✓</span>
-                    )}
+            {/* Dine-in table badge + source */}
+            {order.type === 'dine_in' && (
+                <div className="mb-1 space-y-0.5">
+                    <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded bg-orange-600/30 text-orange-300 text-xs font-medium">
+                            🍽️ Masa {order.tableNumber ? `#${order.tableNumber}` : ''}
+                        </span>
+                        {order.paymentStatus === 'paid' && (
+                            <span className="px-1.5 py-0.5 rounded bg-green-600/30 text-green-400 text-xs">✓</span>
+                        )}
+                    </div>
+                    <p className="text-gray-400 text-xs pl-0.5">
+                        {order.waiterName ? `👤 ${order.waiterName}` : '📱 Müşteri-App'}
+                    </p>
                 </div>
             )}
             <div className="flex items-center justify-between">

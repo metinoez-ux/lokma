@@ -151,12 +151,28 @@ export async function POST(request: NextRequest) {
                     console.log('Order ready email sent to:', customerEmail);
                 }
 
-                // Send push notification
+                // Send push notification with dynamic message based on table service
                 if (customerFcmToken) {
+                    const hasTableService = body.hasTableService || false;
+                    const isDineIn = body.isDineIn || false;
+
+                    let readyTitle = '🎉 Siparişiniz Hazır!';
+                    let readyBody = `${butcherName || 'Kasap'} siparişinizi hazırladı. Şimdi alabilirsiniz!`;
+
+                    if (isDineIn) {
+                        if (hasTableService) {
+                            readyTitle = '🍽️ Siparişiniz Geliyor!';
+                            readyBody = `${butcherName || 'Kasap'} siparişiniz masanıza geliyor. Afiyet olsun!`;
+                        } else {
+                            readyTitle = '✅ Siparişiniz Hazır!';
+                            readyBody = `${butcherName || 'Kasap'} siparişiniz hazır. Gelip alabilirsiniz!`;
+                        }
+                    }
+
                     results.push = await sendPushNotification(
                         customerFcmToken,
-                        '🎉 Siparişiniz Hazır!',
-                        `${butcherName || 'Kasap'} siparişinizi hazırladı. Şimdi alabilirsiniz!`,
+                        readyTitle,
+                        readyBody,
                         { orderId, type: 'order_ready' }
                     );
                 }
