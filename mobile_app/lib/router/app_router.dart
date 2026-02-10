@@ -23,6 +23,8 @@ import '../screens/driver/driver_delivery_screen.dart';
 import '../screens/profile/my_reservations_screen.dart';
 import '../screens/staff/staff_reservations_screen.dart';
 import '../screens/staff/staff_hub_screen.dart';
+import '../screens/staff/waiter_order_screen.dart';
+import '../screens/customer/table_order_view_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 
@@ -115,7 +117,9 @@ class AppRouter {
         path: '/kasap/:id',
         builder: (context, state) {
           final businessId = state.pathParameters['id']!;
-          return BusinessDetailScreen(businessId: businessId);
+          final modeStr = state.uri.queryParameters['mode'] ?? 'teslimat';
+          final deliveryMode = modeStr == 'masa' ? 2 : (modeStr == 'gelal' ? 1 : 0);
+          return BusinessDetailScreen(businessId: businessId, initialDeliveryMode: deliveryMode);
         },
       ),
       // BACKWARD COMPATIBILITY ALIASES: Redirect to primary Turkish route
@@ -123,14 +127,16 @@ class AppRouter {
         path: '/butcher/:id',
         redirect: (context, state) {
           final id = state.pathParameters['id']!;
-          return '/kasap/$id';
+          final query = state.uri.query.isNotEmpty ? '?${state.uri.query}' : '';
+          return '/kasap/$id$query';
         },
       ),
       GoRoute(
         path: '/business/:id',
         redirect: (context, state) {
           final id = state.pathParameters['id']!;
-          return '/kasap/$id';
+          final query = state.uri.query.isNotEmpty ? '?${state.uri.query}' : '';
+          return '/kasap/$id$query';
         },
       ),
       GoRoute(
@@ -180,6 +186,16 @@ class AppRouter {
       GoRoute(
         path: '/staff-hub',
         builder: (context, state) => const StaffHubScreen(),
+      ),
+      // Waiter Order Screen
+      GoRoute(
+        path: '/waiter-order',
+        builder: (context, state) => const WaiterOrderScreen(),
+      ),
+      // Customer Table Order View
+      GoRoute(
+        path: '/table-order',
+        builder: (context, state) => const TableOrderViewScreen(),
       ),
     ],
   );

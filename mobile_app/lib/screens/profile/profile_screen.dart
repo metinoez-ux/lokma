@@ -413,9 +413,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             // Second row: Reservations
                             Row(
                               children: [
-                                _buildQuickAccessChip(Icons.restaurant_outlined, 'Rezervasyonlarım', () => context.push('/my-reservations')),
+                                _buildQuickAccessChip(Icons.table_restaurant, 'Masa\nRezervasyonum', () => context.push('/my-reservations')),
                                 const SizedBox(width: 12),
-                                const Expanded(child: SizedBox()), // Spacer
+                                _buildQuickAccessChip(Icons.restaurant_menu, 'Masa\nHesabım', () => context.push('/table-order')),
                                 const SizedBox(width: 12),
                                 const Expanded(child: SizedBox()), // Spacer
                               ],
@@ -625,10 +625,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 6),
               Text(
                 label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
+                  height: 1.2,
                 ),
               ),
             ],

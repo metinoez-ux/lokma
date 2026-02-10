@@ -61,6 +61,7 @@ dependencies:
   screen_brightness: ^2.1.7
   flutter_svg: ^2.2.3
   path_provider: ^2.1.5
+  mobile_scanner: ^7.1.4
 
 dev_dependencies:
   flutter_test:

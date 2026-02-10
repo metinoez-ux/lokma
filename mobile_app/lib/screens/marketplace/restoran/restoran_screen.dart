@@ -327,9 +327,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         final offersPickup = data['offersPickup'] as bool? ?? true; // Default to true if missing
         if (!offersPickup) return false;
       } else if (_deliveryMode == 'masa') {
+        // Masa mode: show businesses with reservation OR dine-in features
         final hasReservation = data['hasReservation'] as bool? ?? false;
         final tableCapacity = data['tableCapacity'] as int? ?? 0;
-        if (!hasReservation && tableCapacity <= 0) return false;
+        final hasDineInQR = data['hasDineInQR'] as bool? ?? false;
+        final hasWaiterOrder = data['hasWaiterOrder'] as bool? ?? false;
+        if (!hasReservation && tableCapacity <= 0 && !hasDineInQR && !hasWaiterOrder) return false;
       }
       
       // Category filter
@@ -804,7 +807,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       tabs: const [
         TabItem(title: 'Kurye', icon: Icons.delivery_dining),
         TabItem(title: 'Gel Al', icon: Icons.shopping_bag_outlined),
-        TabItem(title: 'Rezervasyon', icon: Icons.calendar_month_outlined),
+        TabItem(title: 'Masa', icon: Icons.restaurant),
       ],
       onTabSelected: (index) {
         String newMode = 'teslimat';
@@ -1389,7 +1392,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               // Navigate to business detail
               final businessId = _currentBusinessIdForDialog;
               if (businessId != null) {
-                context.push('/business/$businessId');
+                context.push('/business/$businessId?mode=$_deliveryMode');
               }
             },
             style: ElevatedButton.styleFrom(
@@ -1478,7 +1481,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           _currentBusinessIdForDialog = id;
           _showClosedBusinessDialog(context, name, unavailableReason);
         } else {
-          context.push('/business/$id');
+          context.push('/business/$id?mode=$_deliveryMode');
         }
       },
       child: Container(

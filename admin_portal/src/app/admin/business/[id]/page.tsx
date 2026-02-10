@@ -40,19 +40,36 @@ import ReservationsPanel from "./ReservationsPanel";
 interface MeatOrder {
   id: string;
   businessId: string;
+  butcherId?: string;
   orderNumber?: string;
   customerName?: string;
   customerPhone?: string;
   totalPrice?: number;
+  totalAmount?: number;
+  total?: number;
   status:
   | "pending"
+  | "accepted"
   | "preparing"
   | "ready"
+  | "onTheWay"
   | "delivered"
   | "completed"
   | "cancelled";
   createdAt?: { toDate: () => Date };
 }
+
+// Turkish status labels for order display
+const orderStatusLabels: Record<string, { label: string; color: string }> = {
+  pending: { label: "Beklemede", color: "bg-yellow-600" },
+  accepted: { label: "Onaylandı", color: "bg-blue-600" },
+  preparing: { label: "Hazırlanıyor", color: "bg-blue-600" },
+  ready: { label: "Hazır", color: "bg-green-600" },
+  onTheWay: { label: "Yolda", color: "bg-indigo-600" },
+  delivered: { label: "Teslim Edildi", color: "bg-gray-600" },
+  completed: { label: "Tamamlandı", color: "bg-gray-600" },
+  cancelled: { label: "İptal", color: "bg-red-600" },
+};
 
 // Fallback plan labels for badge display (dynamic plans override these)
 const defaultPlanLabels: Record<string, { label: string; color: string }> = {
@@ -218,7 +235,7 @@ export default function BusinessDetailPage() {
   } | null>(null);
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "orders" | "settings" | "products" | "reservations"
+    "overview" | "orders" | "settings" | "products" | "reservations" | "dineIn"
   >(initialTab);
 
   // Update tab when URL changes
@@ -452,6 +469,9 @@ export default function BusinessDetailPage() {
   }>({ show: false, title: "", message: "", onConfirm: () => { } });
   const [selectedNewRole, setSelectedNewRole] = useState("");
 
+  // 🆕 Plan features resolved from subscription_plans collection
+  const [planFeatures, setPlanFeatures] = useState<Record<string, boolean>>({});
+
   // Load admin data - REMOVED (Handled by AdminProvider)
 
   // Check if admin is ready to load data
@@ -549,6 +569,22 @@ export default function BusinessDetailPage() {
           tableCapacity: d.tableCapacity || 0,
           maxReservationTables: d.maxReservationTables || 0,
         });
+
+        // 🆕 Resolve plan features from subscription_plans collection
+        const planCode = d.subscriptionPlan || 'basic';
+        try {
+          const plansQuery = query(
+            collection(db, 'subscription_plans'),
+            where('code', '==', planCode)
+          );
+          const planSnap = await getDocs(plansQuery);
+          if (!planSnap.empty) {
+            const planData = planSnap.docs[0].data();
+            setPlanFeatures(planData.features || {});
+          }
+        } catch (e) {
+          console.error('Error loading plan features:', e);
+        }
       }
     } catch (error) {
       console.error("Error loading business:", error);
@@ -569,7 +605,18 @@ export default function BusinessDetailPage() {
       );
       const ordersSnap = await getDocs(ordersQuery);
       const ordersData = ordersSnap.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }) as MeatOrder)
+        .map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            ...d,
+            // Normalize total price with fallbacks (matches main orders page)
+            totalPrice: d.totalPrice || d.totalAmount || d.total || 0,
+            customerName: d.customerName || d.userDisplayName || d.userName || '',
+            customerPhone: d.customerPhone || d.userPhone || '',
+            orderNumber: d.orderNumber || doc.id.slice(0, 6).toUpperCase(),
+          } as MeatOrder;
+        })
         .sort((a, b) => {
           const aTime = a.createdAt?.toDate?.()?.getTime() || 0;
           const bTime = b.createdAt?.toDate?.()?.getTime() || 0;
@@ -1332,7 +1379,7 @@ export default function BusinessDetailPage() {
 
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
@@ -1342,7 +1389,7 @@ export default function BusinessDetailPage() {
                 ← Geri
               </Link>
               <div>
-                <h1 className="text-xl font-bold text-white">
+                <h1 className="text-lg font-bold text-white">
                   {businessId === 'new' ? '🆕 Yeni İşletme Ekle' : (business?.companyName || 'İşletme Detayı')}
                 </h1>
                 {business && (
@@ -1363,6 +1410,12 @@ export default function BusinessDetailPage() {
                   >
                     {planInfo.label}
                   </span>
+                  {planFeatures.dineInQR && (
+                    <span className="px-2 py-0.5 rounded-full text-xs bg-orange-600 text-white">📱 QR</span>
+                  )}
+                  {planFeatures.waiterOrder && (
+                    <span className="px-2 py-0.5 rounded-full text-xs bg-teal-600 text-white">👨‍🍳 Garson</span>
+                  )}
                   <span
                     className={`px-3 py-1 rounded-full text-sm ${business?.isActive ? "bg-green-600" : "bg-red-600"} text-white`}
                   >
@@ -1412,32 +1465,40 @@ export default function BusinessDetailPage() {
           </div>
 
           {/* Tabs + Quick Actions */}
-          <div className="flex flex-wrap items-center gap-2 mt-4">
+          <div className="flex flex-wrap items-center gap-1.5 mt-3">
             {/* Navigation Tabs */}
             <button
               onClick={() => setActiveTab("overview")}
-              className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "overview" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
             >
               📊 Genel Bakış
             </button>
             <button
               onClick={() => setActiveTab("orders")}
-              className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
             >
               📦 Siparişler ({orders.length})
             </button>
             <button
               onClick={() => setActiveTab("settings")}
-              className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "settings" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
             >
               ⚙️ Ayarlar
             </button>
             {formData.hasReservation && (
               <button
                 onClick={() => setActiveTab("reservations")}
-                className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
               >
                 🍽️ Rezervasyonlar
+              </button>
+            )}
+            {(planFeatures.dineInQR || planFeatures.waiterOrder) && (
+              <button
+                onClick={() => setActiveTab("dineIn")}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "dineIn" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+              >
+                🪑 Masada Sipariş
               </button>
             )}
 
@@ -1447,19 +1508,19 @@ export default function BusinessDetailPage() {
             {/* Quick Action Chips */}
             <a
               href={`/admin/business/${businessId}/categories`}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 font-medium transition"
+              className="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-500 text-sm font-medium transition"
             >
               📁 Kategoriler
             </a>
             <a
               href={`/admin/business/${businessId}/products`}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 font-medium transition"
+              className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-500 text-sm font-medium transition"
             >
               📦 Ürünler
             </a>
             <button
               onClick={() => setShowStaffModal(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 font-medium transition"
+              className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm font-medium transition"
             >
               👷 Personel Yönetimi
             </button>
@@ -1467,13 +1528,13 @@ export default function BusinessDetailPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-6">
         {/* Overview Tab */}
         {activeTab === "overview" && (
           <div className="space-y-6">
 
             {/* Active Staff & Couriers Panel */}
-            <div className="bg-gray-800 rounded-xl p-6">
+            <div className="bg-gray-800 rounded-xl p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-bold">
                   👥 Aktif Personel & Kuryeler
@@ -1528,13 +1589,13 @@ export default function BusinessDetailPage() {
                     🏍️ Kuryeler (Dağıtımda)
                   </h4>
                   <div className="space-y-2">
-                    {/* Demo kurye bilgileri - gerçek veri yoksa */}
-                    {orders.filter((o) => o.status === "delivered").length >
-                      0 ? (
-                      orders
-                        .filter((o) => o.status === "delivered")
-                        .slice(0, 3)
-                        .map((order, idx) => (
+                    {/* Gerçek kurye bilgileri - onTheWay veya claimedBy olan siparişler */}
+                    {(() => {
+                      const activeDeliveries = orders.filter(
+                        (o) => o.status === "onTheWay" || (o.status === "ready" && (o as any).claimedBy)
+                      );
+                      if (activeDeliveries.length > 0) {
+                        return activeDeliveries.slice(0, 5).map((order, idx) => (
                           <div
                             key={order.id}
                             className="flex items-center justify-between bg-orange-600/20 border border-orange-600/30 rounded-lg px-3 py-2"
@@ -1543,40 +1604,39 @@ export default function BusinessDetailPage() {
                               <span className="text-xl">🏍️</span>
                               <div>
                                 <span className="text-white text-sm">
-                                  Kurye {idx + 1}
+                                  {(order as any).driverName || (order as any).claimedByName || `Kurye ${idx + 1}`}
                                 </span>
                                 <p className="text-orange-400 text-xs">
-                                  #{order.orderNumber || order.id.slice(0, 6)}
+                                  #{order.orderNumber || order.id.slice(0, 6)} → {order.customerName || 'Müşteri'}
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-orange-400 text-sm font-medium">
-                                {(Math.random() * 5 + 1).toFixed(1)} km
-                              </p>
-                              <p className="text-gray-400 text-xs">
-                                ~{Math.floor(Math.random() * 15 + 5)} dk ETA
-                              </p>
+                              <span className={`text-xs px-2 py-0.5 rounded ${order.status === 'onTheWay' ? 'bg-orange-600/50 text-orange-300' : 'bg-green-600/50 text-green-300'}`}>
+                                {order.status === 'onTheWay' ? '🚚 Yolda' : '📦 Hazır'}
+                              </span>
                             </div>
                           </div>
-                        ))
-                    ) : (
-                      <div className="text-center py-4">
-                        <p className="text-gray-500 text-sm">
-                          🏍️ Şu an dağıtımda kurye yok
-                        </p>
-                        <p className="text-gray-600 text-xs mt-1">
-                          Teslimat başladığında burada görünecek
-                        </p>
-                      </div>
-                    )}
+                        ));
+                      }
+                      return (
+                        <div className="text-center py-4">
+                          <p className="text-gray-500 text-sm">
+                            🏍️ Şu an dağıtımda kurye yok
+                          </p>
+                          <p className="text-gray-600 text-xs mt-1">
+                            Teslimat başladığında burada görünecek
+                          </p>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Order Status Timeline */}
-            <div className="bg-gray-800 rounded-xl p-6">
+            <div className="bg-gray-800 rounded-xl p-4">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-white font-bold">
                   📊 Sipariş Durumları (Anlık)
@@ -1621,7 +1681,7 @@ export default function BusinessDetailPage() {
                   <p className="text-purple-400 text-3xl font-bold">
                     {
                       orders.filter(
-                        (o) => o.status === "ready" || o.status === "delivered",
+                        (o) => o.status === "ready" || o.status === "onTheWay",
                       ).length
                     }
                   </p>
@@ -1634,7 +1694,7 @@ export default function BusinessDetailPage() {
                 <div className="flex-1 min-w-[100px] bg-green-600/20 border border-green-600/30 rounded-lg p-4 text-center relative">
                   <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-800"></div>
                   <p className="text-green-400 text-3xl font-bold">
-                    {orders.filter((o) => o.status === "completed").length}
+                    {orders.filter((o) => o.status === "completed" || o.status === "delivered").length}
                   </p>
                   <p className="text-gray-400 text-sm">✓ Tamamlanan</p>
                 </div>
@@ -1645,7 +1705,7 @@ export default function BusinessDetailPage() {
             </div>
 
             {/* Revenue Summary */}
-            <div className="bg-gray-800 rounded-xl p-6">
+            <div className="bg-gray-800 rounded-xl p-4">
               <h3 className="text-white font-bold mb-4">💰 Gelir Özeti</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
@@ -1687,9 +1747,9 @@ export default function BusinessDetailPage() {
             </div>
 
             {/* Contact Info & Membership Details */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-4">
               {/* Contact Info */}
-              <div className="bg-gray-800 rounded-xl p-6">
+              <div className="bg-gray-800 rounded-xl p-4">
                 <h3 className="text-white font-bold mb-4">
                   📞 İletişim Bilgileri
                 </h3>
@@ -1788,7 +1848,7 @@ export default function BusinessDetailPage() {
               </div>
 
               {/* Subscription & Membership Status */}
-              <div className="bg-gray-800 rounded-xl p-6">
+              <div className="bg-gray-800 rounded-xl p-4">
                 <h3 className="text-white font-bold mb-4">
                   💳 Üyelik & Abonelik
                 </h3>
@@ -2124,21 +2184,9 @@ export default function BusinessDetailPage() {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`px-2 py-1 rounded text-xs ${order.status === "pending"
-                            ? "bg-yellow-600"
-                            : order.status === "preparing"
-                              ? "bg-blue-600"
-                              : order.status === "ready"
-                                ? "bg-green-600"
-                                : order.status === "delivered" ||
-                                  order.status === "completed"
-                                  ? "bg-gray-600"
-                                  : order.status === "cancelled"
-                                    ? "bg-red-600"
-                                    : "bg-gray-700"
-                            }`}
+                          className={`px-2 py-1 rounded text-xs ${orderStatusLabels[order.status]?.color || "bg-gray-700"}`}
                         >
-                          {order.status}
+                          {orderStatusLabels[order.status]?.label || order.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-400 text-sm">
@@ -3757,6 +3805,200 @@ export default function BusinessDetailPage() {
             businessName={formData.companyName || ""}
             staffName={admin?.displayName || admin?.email || "Admin"}
           />
+        </div>
+      )}
+
+      {/* 🪑 Dine-In Tab */}
+      {activeTab === "dineIn" && (planFeatures.dineInQR || planFeatures.waiterOrder) && (
+        <div className="space-y-6">
+          {/* ── Header Stats Row ── */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+              <p className="text-3xl font-bold text-orange-400">{formData.maxReservationTables || 0}</p>
+              <p className="text-xs text-gray-400 mt-1">Toplam Masa</p>
+            </div>
+            <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+              <p className="text-3xl font-bold text-teal-400">{formData.tableCapacity || 0}</p>
+              <p className="text-xs text-gray-400 mt-1">Oturma Kapasitesi</p>
+            </div>
+            <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+              <p className="text-3xl font-bold text-green-400">{planFeatures.dineInQR ? '✓' : '✕'}</p>
+              <p className="text-xs text-gray-400 mt-1">QR Sipariş</p>
+            </div>
+            <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
+              <p className="text-3xl font-bold text-blue-400">{planFeatures.waiterOrder ? '✓' : '✕'}</p>
+              <p className="text-xs text-gray-400 mt-1">Garson Sipariş</p>
+            </div>
+          </div>
+
+          {/* ── Table Count Configuration ── */}
+          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                🪑 Masa Sayısı Ayarı
+              </h2>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1 max-w-xs">
+                <label className="text-gray-400 text-sm block mb-1">Masa Adedi</label>
+                <input
+                  type="number"
+                  value={formData.maxReservationTables}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      maxReservationTables: Math.max(0, parseInt(e.target.value) || 0),
+                    })
+                  }
+                  min="0"
+                  max="100"
+                  className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none text-lg font-medium"
+                  placeholder="ör: 20"
+                />
+                <p className="text-xs text-gray-500 mt-1">İşletmedeki toplam masa sayısı</p>
+              </div>
+              <div className="flex-1 max-w-xs">
+                <label className="text-gray-400 text-sm block mb-1">Oturma Kapasitesi (Kişi)</label>
+                <input
+                  type="number"
+                  value={formData.tableCapacity}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      tableCapacity: Math.max(0, parseInt(e.target.value) || 0),
+                    })
+                  }
+                  min="0"
+                  className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none text-lg font-medium"
+                  placeholder="ör: 80"
+                />
+                <p className="text-xs text-gray-500 mt-1">Toplam müşteri kapasitesi</p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Table Grid with QR Codes ── */}
+          {planFeatures.dineInQR && (formData.maxReservationTables || 0) > 0 && (
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  📱 Masa QR Kodları
+                  <span className="text-sm font-normal text-gray-400">
+                    Her masa için benzersiz QR kod
+                  </span>
+                </h2>
+                <button
+                  onClick={() => {
+                    // Download all QR codes as a batch
+                    const tableCount = formData.maxReservationTables || 0;
+                    for (let i = 1; i <= tableCount; i++) {
+                      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://lokma.web.app/dinein/${businessId}/table/${i}`)}`;
+                      const link = document.createElement('a');
+                      link.href = qrUrl;
+                      link.download = `Masa_${i}_QR.png`;
+                      link.target = '_blank';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }
+                  }}
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
+                >
+                  📥 Tümünü İndir
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                {Array.from({ length: formData.maxReservationTables || 0 }, (_, i) => {
+                  const tableNum = i + 1;
+                  const qrData = `https://lokma.web.app/dinein/${businessId}/table/${tableNum}`;
+                  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}&bgcolor=1a1a2e&color=f97316`;
+                  return (
+                    <div
+                      key={tableNum}
+                      className="bg-gray-800 rounded-xl border border-gray-700 p-3 flex flex-col items-center gap-2 hover:border-orange-500/50 transition group"
+                    >
+                      <div className="w-full aspect-square bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                        <img
+                          src={qrImageUrl}
+                          alt={`Masa ${tableNum} QR`}
+                          className="w-full h-full object-contain p-1"
+                          loading="lazy"
+                        />
+                      </div>
+                      <p className="text-sm font-bold text-white">Masa {tableNum}</p>
+                      <button
+                        onClick={() => {
+                          const downloadUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}`;
+                          const link = document.createElement('a');
+                          link.href = downloadUrl;
+                          link.download = `Masa_${tableNum}_QR.png`;
+                          link.target = '_blank';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }}
+                        className="w-full px-2 py-1.5 bg-orange-600/20 hover:bg-orange-600 text-orange-400 hover:text-white text-xs rounded-lg transition font-medium opacity-80 group-hover:opacity-100"
+                      >
+                        📥 İndir
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Empty State ── */}
+          {planFeatures.dineInQR && (formData.maxReservationTables || 0) === 0 && (
+            <div className="bg-gray-900 rounded-2xl p-8 border border-dashed border-orange-700/50 text-center">
+              <span className="text-4xl">🪑</span>
+              <p className="text-white font-semibold mt-3">Henüz masa tanımlanmadı</p>
+              <p className="text-gray-400 text-sm mt-1">
+                Yukarıdan masa sayısını girerek QR kodlarınızı oluşturun
+              </p>
+            </div>
+          )}
+
+          {/* ── Garson Sipariş Card ── */}
+          {planFeatures.waiterOrder && (
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-teal-600/20 flex items-center justify-center">
+                  <span className="text-xl">👨‍🍳</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-white font-semibold">Garson Sipariş Sistemi</h3>
+                  <p className="text-xs text-gray-400">Personel tablet/telefon ile masada sipariş alır</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white">
+                  ✓ AKTİF
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                  <p className="text-teal-400 font-medium text-sm">1. Masa Seç</p>
+                  <p className="text-gray-400 text-xs mt-1">Garson masayı seçer</p>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                  <p className="text-teal-400 font-medium text-sm">2. Ürün Ekle</p>
+                  <p className="text-gray-400 text-xs mt-1">Menüden ürün ekler</p>
+                </div>
+                <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                  <p className="text-teal-400 font-medium text-sm">3. Sipariş Gönder</p>
+                  <p className="text-gray-400 text-xs mt-1">Mutfağa iletilir</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Plan Info Footer ── */}
+          <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700">
+            <p className="text-sm text-gray-400">
+              💡 Bu özellikler işletmenin <strong className="text-white">{business?.subscriptionPlan || 'basic'}</strong> planı üzerinden yönetilmektedir.
+              Değişiklik yapmak için <a href="/admin/plans" className="text-blue-400 hover:underline">Plan Yönetimi</a> sayfasını ziyaret edin.
+            </p>
+          </div>
         </div>
       )}
 

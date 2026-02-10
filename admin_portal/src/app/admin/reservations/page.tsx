@@ -362,7 +362,7 @@ export default function ReservationsPage() {
             )}
 
             {/* Header */}
-            <div className="max-w-7xl mx-auto mb-6">
+            <div className="max-w-6xl mx-auto mb-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -398,7 +398,7 @@ export default function ReservationsPage() {
             </div>
 
             {/* Filters */}
-            <div className="max-w-7xl mx-auto mb-6">
+            <div className="max-w-6xl mx-auto mb-6">
                 <div className="bg-gray-800 rounded-xl p-4">
                     <div className="flex flex-wrap gap-4">
                         {/* Date Filter */}
@@ -495,7 +495,7 @@ export default function ReservationsPage() {
             </div>
 
             {/* Status Flow */}
-            <div className="max-w-7xl mx-auto mb-6">
+            <div className="max-w-6xl mx-auto mb-6">
                 <div className="bg-gray-800 rounded-xl p-6">
                     <div className="flex items-center gap-2">
                         <div className={`flex-1 min-w-[100px] bg-yellow-600/20 border-2 border-yellow-500 rounded-lg p-4 text-center ${stats.pending > 0 ? 'animate-pulse' : ''}`}>
@@ -522,7 +522,7 @@ export default function ReservationsPage() {
             </div>
 
             {/* Reservations List */}
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 {loading ? (
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
@@ -812,10 +812,10 @@ export default function ReservationsPage() {
                                                     });
                                                 }}
                                                 className={`aspect-square rounded-xl text-xl font-bold transition-all ${isOccupied
-                                                        ? 'bg-red-900/30 border border-red-500/30 text-red-400/50 cursor-not-allowed'
-                                                        : isSelected
-                                                            ? 'bg-green-500 border-2 border-green-400 text-white shadow-lg shadow-green-500/30 scale-105'
-                                                            : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500'
+                                                    ? 'bg-red-900/30 border border-red-500/30 text-red-400/50 cursor-not-allowed'
+                                                    : isSelected
+                                                        ? 'bg-green-500 border-2 border-green-400 text-white shadow-lg shadow-green-500/30 scale-105'
+                                                        : 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 hover:border-gray-500'
                                                     }`}
                                             >
                                                 {num}
@@ -839,8 +839,8 @@ export default function ReservationsPage() {
                                     confirmWithCards(showCardModal.reservation, sorted);
                                 }}
                                 className={`flex-[2] py-3 rounded-lg font-medium transition ${selectedCards.size === 0
-                                        ? 'bg-gray-600 text-gray-500 cursor-not-allowed'
-                                        : 'bg-green-600 hover:bg-green-500 text-white'
+                                    ? 'bg-gray-600 text-gray-500 cursor-not-allowed'
+                                    : 'bg-green-600 hover:bg-green-500 text-white'
                                     }`}
                             >
                                 {selectedCards.size === 0

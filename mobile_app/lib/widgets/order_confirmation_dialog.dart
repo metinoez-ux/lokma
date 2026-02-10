@@ -7,6 +7,7 @@ class OrderConfirmationDialog extends StatelessWidget {
   final String? businessHours;
   final String? businessName;
   final bool isPickUp;
+  final bool isDineIn;
   final VoidCallback? onDismiss;
 
   const OrderConfirmationDialog({
@@ -15,6 +16,7 @@ class OrderConfirmationDialog extends StatelessWidget {
     this.businessHours,
     this.businessName,
     this.isPickUp = true,
+    this.isDineIn = false,
     this.onDismiss,
   });
 
@@ -118,7 +120,7 @@ class OrderConfirmationDialog extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isPickUp ? 'Gel Al' : 'Kurye ile Teslimat',
+                      isDineIn ? 'Masa Siparişi' : (isPickUp ? 'Gel Al' : 'Kurye ile Teslimat'),
                       style: TextStyle(
                         color: subtextColor,
                         fontSize: 12,
@@ -127,9 +129,11 @@ class OrderConfirmationDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      isPickUp 
-                          ? _formatPickupTime()
-                          : 'Tahmini süre: 30-45 dk',
+                      isDineIn
+                          ? 'Masanızda servis edilecek'
+                          : (isPickUp 
+                              ? _formatPickupTime()
+                              : 'Tahmini süre: 30-45 dk'),
                       style: TextStyle(
                         color: textColor,
                         fontSize: 15,
@@ -152,9 +156,11 @@ class OrderConfirmationDialog extends StatelessWidget {
                   border: Border.all(color: Colors.amber.withOpacity(0.3)),
                 ),
                 child: Text(
-                  isPickUp
-                      ? 'Siparişiniz hazır olduğunda bildirim alacaksınız. Hazır bildirimi gelmeden lütfen mağazaya gitmeyiniz.'
-                      : 'Kuryenizi canlı takip edebilirsiniz.',
+                  isDineIn
+                      ? 'Siparişiniz mutfağa iletildi. Masanızda bekleyiniz.'
+                      : (isPickUp
+                          ? 'Siparişiniz hazır olduğunda bildirim alacaksınız. Hazır bildirimi gelmeden lütfen mağazaya gitmeyiniz.'
+                          : 'Kuryenizi canlı takip edebilirsiniz.'),
                   style: TextStyle(color: subtextColor, fontSize: 13, height: 1.4),
                 ),
               ),

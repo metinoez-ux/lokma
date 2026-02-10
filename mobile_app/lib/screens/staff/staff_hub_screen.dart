@@ -266,15 +266,17 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
                       if (_hasReservation) const SizedBox(height: 16),
 
-                      // ─── Future: Take Orders ───
+                      // ─── Take Orders (Garson Sipariş) ───
                       _buildFeatureCard(
                         icon: Icons.receipt_long,
                         title: 'Sipariş Al',
-                        subtitle: 'Yakında...',
-                        color: Colors.grey,
-                        gradient: [Colors.grey.shade400, Colors.grey.shade600],
-                        disabled: true,
-                        onTap: () {},
+                        subtitle: 'Masa siparişi al',
+                        color: Colors.orange.shade700,
+                        gradient: [Colors.orange.shade400, Colors.orange.shade700],
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.push('/waiter-order');
+                        },
                       ),
 
                       const SizedBox(height: 32),

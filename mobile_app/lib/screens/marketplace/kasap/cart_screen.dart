@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,6 +13,7 @@ import 'package:lokma_app/providers/auth_provider.dart';
 import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/models/kermes_order_model.dart';
 import 'package:lokma_app/widgets/order_confirmation_dialog.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:lokma_app/widgets/kermes/order_qr_dialog.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/services/fcm_service.dart';
@@ -22,7 +24,8 @@ import 'package:lokma_app/utils/opening_hours_helper.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
-  const CartScreen({super.key, this.initialPickUp = false});
+  final bool initialDineIn;
+  const CartScreen({super.key, this.initialPickUp = false, this.initialDineIn = false});
 
   @override
   ConsumerState<CartScreen> createState() => _CartScreenState();
@@ -33,6 +36,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   late bool _isPickUp;
+  late bool _isDineIn;
+  String? _scannedTableNumber; // QR-scanned table number for dine-in
   bool _canDeliver = false;
   bool _checkingDelivery = true;
   String _paymentMethod = 'cash';
@@ -60,6 +65,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   void initState() {
     super.initState();
     _isPickUp = widget.initialPickUp;
+    _isDineIn = widget.initialDineIn;
+    // If dine-in, ensure pickup is false
+    if (_isDineIn) _isPickUp = false;
     _tabController = TabController(length: 2, vsync: this);
     
     // Pulse animation for active orders indicator
@@ -231,7 +239,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       
       // Build full delivery address from Firestore user document
       String? userAddress;
-      if (!_isPickUp) {
+      if (!_isPickUp && !_isDineIn) {
         try {
           final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
           if (userDoc.exists) {
@@ -271,13 +279,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           'imageUrl': item.product.imageUrl,
         }).toList(),
         'totalAmount': cart.totalAmount,
-        'deliveryMethod': _isPickUp ? 'pickup' : 'delivery',
-        'pickupTime': _isPickUp ? Timestamp.fromDate(pickupDateTime) : null,
-        'deliveryAddress': !_isPickUp ? userAddress : null,
+        'deliveryMethod': _isDineIn ? 'dineIn' : (_isPickUp ? 'pickup' : 'delivery'),
+        'pickupTime': (_isPickUp || _isDineIn) ? Timestamp.fromDate(pickupDateTime) : null,
+        'deliveryAddress': (!_isPickUp && !_isDineIn) ? userAddress : null,
         'paymentMethod': _paymentMethod,
         'paymentStatus': _paymentMethod == 'cash' ? 'pending' : 'pending',
         'status': 'pending',
         if (_orderNote.trim().isNotEmpty) 'orderNote': _orderNote.trim(),
+        if (_isDineIn && _scannedTableNumber != null) 'tableNumber': _scannedTableNumber,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -304,6 +313,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             businessHours: _hoursHelper?.getHoursStringForDate(pickupDateTime),
             businessName: _butcherData?['companyName'],
             isPickUp: _isPickUp,
+            isDineIn: _isDineIn,
           ),
         );
       }
@@ -2003,7 +2013,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               SizedBox(height: 16),
               
               // 🟡 Minimum Order Bar (Yellow - Lieferando style) - ONLY for Kurye mode
-              if (hasKasap && _butcherData != null && !_isPickUp)
+              if (hasKasap && _butcherData != null && !_isPickUp && !_isDineIn)
                 _buildLieferandoMinimumBar(cart.totalAmount),
               
               // 📦 Kermes Items (if any)
@@ -2038,6 +2048,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              _buildScannedTableBanner(),
               _buildLieferandoCheckoutButton(grandTotal),
               SizedBox(height: 12),
               // Legal terms footer (Lieferando style)
@@ -2083,15 +2094,20 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       );
     }
     
-    // 3D Switch for Kurye / Gel Al (Kurye on LEFT as standard)
+    // 3D Switch for Kurye / Gel Al / Masa
     return ThreeDimensionalPillTabBar(
-      selectedIndex: _isPickUp ? 1 : 0, // Kurye=0, Gel Al=1
+      selectedIndex: _isDineIn ? 2 : (_isPickUp ? 1 : 0), // Kurye=0, Gel Al=1, Masa=2
       onTabSelected: (index) {
-        setState(() => _isPickUp = index == 1); // index 1 = Gel Al
+        setState(() {
+          _isPickUp = index == 1;
+          _isDineIn = index == 2;
+          if (!_isDineIn) _scannedTableNumber = null; // Reset QR on mode switch
+        });
       },
       tabs: const [
         TabItem(title: 'Kurye', icon: Icons.delivery_dining), // LEFT
-        TabItem(title: 'Gel Al', icon: Icons.store_outlined), // RIGHT
+        TabItem(title: 'Gel Al', icon: Icons.store_outlined), // MIDDLE
+        TabItem(title: 'Masa', icon: Icons.restaurant),       // RIGHT
       ],
     );
   }
@@ -2412,7 +2428,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         ),
         SizedBox(height: 8),
         // Service fee (if applicable)
-        if (!_isPickUp && _butcherData?['deliveryFee'] != null) ...[
+        if (!_isPickUp && !_isDineIn && _butcherData?['deliveryFee'] != null) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -2436,8 +2452,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Widget _buildLieferandoCheckoutButton(double total) {
     return GestureDetector(
       onTap: () {
+        // 🪑 DINE-IN QR GATE: Require QR scan before checkout
+        if (_isDineIn && _scannedTableNumber == null) {
+          _showQrScanSheet();
+          return;
+        }
         // Check minimum order ONLY for Kurye (delivery) mode - Gel Al has no minimum
-        if (!_isPickUp) {
+        if (!_isPickUp && !_isDineIn) {
           final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
           if (total < minOrder) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -2466,19 +2487,344 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           ],
         ),
         child: Center(
-          child: Text(
-            'Siparişi Onayla · ${total.toStringAsFixed(2)} €',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isDineIn && _scannedTableNumber == null) ...[
+                const Icon(Icons.qr_code_scanner, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                (_isDineIn && _scannedTableNumber == null)
+                    ? 'QR Kod Tara · ${total.toStringAsFixed(2)} €'
+                    : 'Siparişi Onayla · ${total.toStringAsFixed(2)} €',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
   
+  /// 📱 QR Scan Bottom Sheet for Dine-In Table Verification
+  void _showQrScanSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = _accentColor;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 30,
+                offset: const Offset(0, -10),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Header
+              Icon(Icons.qr_code_scanner, size: 36, color: accent),
+              const SizedBox(height: 12),
+              Text(
+                'Masanızdaki QR Kodu Okutun',
+                style: TextStyle(
+                  fontSize: 20, 
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Sipariş vermek için masanızdaki QR kodu taratın',
+                style: TextStyle(
+                  fontSize: 14, 
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Camera Scanner
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 32),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: accent.withOpacity(0.4), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: accent.withOpacity(0.1),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: MobileScanner(
+                      onDetect: (capture) {
+                        final barcodes = capture.barcodes;
+                        if (barcodes.isEmpty) return;
+                        
+                        final rawValue = barcodes.first.rawValue ?? '';
+                        if (rawValue.isEmpty) return;
+                        
+                        // Extract table number from QR data
+                        // QR format could be: "masa:5", "table:5", "MASA-5", or just "5"
+                        String tableNum = rawValue;
+                        if (rawValue.toLowerCase().contains('masa')) {
+                          final match = RegExp(r'(\d+)').firstMatch(rawValue);
+                          tableNum = match?.group(1) ?? rawValue;
+                        } else if (rawValue.toLowerCase().contains('table')) {
+                          final match = RegExp(r'(\d+)').firstMatch(rawValue);
+                          tableNum = match?.group(1) ?? rawValue;
+                        }
+                        
+                        // Success haptic + close
+                        HapticFeedback.heavyImpact();
+                        Navigator.pop(ctx);
+                        
+                        setState(() {
+                          _scannedTableNumber = tableNum;
+                        });
+                        
+                        // Show success snackbar
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                                const SizedBox(width: 8),
+                                Text('Masa $tableNum doğrulandı ✓'),
+                              ],
+                            ),
+                            backgroundColor: Colors.green,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Manual entry option
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _showManualTableEntry();
+                },
+                icon: Icon(Icons.edit, size: 18, color: accent),
+                label: Text(
+                  'Manuel masa numarası gir',
+                  style: TextStyle(color: accent, fontSize: 14),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  /// 🔢 Manual Table Number Entry Dialog
+  void _showManualTableEntry() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final controller = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.restaurant, color: _accentColor, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Masa Numarası',
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+            ),
+          ],
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          style: TextStyle(
+            fontSize: 24, 
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+          textAlign: TextAlign.center,
+          decoration: InputDecoration(
+            hintText: 'Örn: 5',
+            hintStyle: TextStyle(color: Colors.grey[500]),
+            filled: true,
+            fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: _accentColor, width: 2),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('İptal', style: TextStyle(color: Colors.grey[500])),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isNotEmpty) {
+                HapticFeedback.mediumImpact();
+                Navigator.pop(ctx);
+                setState(() => _scannedTableNumber = text);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                        const SizedBox(width: 8),
+                        Text('Masa $text seçildi ✓'),
+                      ],
+                    ),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _accentColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Onayla'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// 🪑 Scanned Table Banner — shows in cart when table QR is verified
+  Widget _buildScannedTableBanner() {
+    if (!_isDineIn || _scannedTableNumber == null) return const SizedBox.shrink();
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.green.withOpacity(isDark ? 0.2 : 0.1),
+            Colors.green.withOpacity(isDark ? 0.1 : 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.green.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.restaurant, color: Colors.green, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Masa $_scannedTableNumber',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                Text(
+                  'QR kod ile doğrulandı ✓',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.green[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Change table button
+          GestureDetector(
+            onTap: () {
+              setState(() => _scannedTableNumber = null);
+              _showQrScanSheet();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Değiştir',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 📜 Legal Terms Footer (Lieferando style)
   Widget _buildLegalTermsFooter() {
     return Padding(
@@ -2943,7 +3289,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     }
 
     final cart = ref.read(cartProvider);
-    final deliveryFee = (!_isPickUp ? (_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50 : 0.0);
+    final deliveryFee = (!_isPickUp && !_isDineIn ? (_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50 : 0.0);
     final grandTotal = total + deliveryFee;
     final noteController = TextEditingController(text: _orderNote);
 
@@ -3025,8 +3371,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // 📍 DELIVERY ADDRESS (only for delivery)
-                          if (!_isPickUp) ...[
+                          // 📍 DELIVERY ADDRESS (only for delivery — not pickup or dine-in)
+                          if (!_isPickUp && !_isDineIn) ...[
                             _buildCheckoutSectionHeader('📍', 'Teslimat Adresi'),
                             const SizedBox(height: 8),
                             FutureBuilder<DocumentSnapshot>(
@@ -3091,9 +3437,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             const SizedBox(height: 20),
                           ],
 
-                          // 🏪 GEL AL info
-                          if (_isPickUp) ...[
-                            _buildCheckoutSectionHeader('🏪', 'Gel Al'),
+                          // 🏪 GEL AL / MASA info
+                          if (_isPickUp || _isDineIn) ...[
+                            _buildCheckoutSectionHeader(_isDineIn ? '🪑' : '🏪', _isDineIn ? 'Masada Sipariş' : 'Gel Al'),
                             const SizedBox(height: 8),
                             Container(
                               padding: const EdgeInsets.all(16),
@@ -3104,7 +3450,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.store, color: _accentColor, size: 22),
+                                  Icon(_isDineIn ? Icons.restaurant : Icons.store, color: _accentColor, size: 22),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
@@ -3151,13 +3497,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
                                           Icon(
-                                            _isPickUp ? Icons.store_outlined : Icons.payments_outlined,
+                                            (_isPickUp || _isDineIn) ? Icons.store_outlined : Icons.payments_outlined,
                                             size: 18,
                                             color: _paymentMethod == 'cash' ? Colors.white : Colors.grey[600],
                                           ),
                                           const SizedBox(width: 6),
                                           Text(
-                                            _isPickUp ? 'İşletmede Öde' : 'Kapıda Nakit',
+                                            (_isPickUp || _isDineIn) ? 'İşletmede Öde' : 'Kapıda Nakit',
                                             style: TextStyle(
                                               color: _paymentMethod == 'cash' ? Colors.white : Theme.of(context).colorScheme.onSurface,
                                               fontWeight: FontWeight.w600,
@@ -3295,7 +3641,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     Text('${total.toStringAsFixed(2)} €', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
                                   ],
                                 ),
-                                if (!_isPickUp) ...[
+                                if (!_isPickUp && !_isDineIn) ...[
                                   const SizedBox(height: 4),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -3439,7 +3785,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     
     return GestureDetector(
       onTap: () {
-        // Toggle between pickup and delivery
+        // Toggle between pickup and delivery (not for dine-in; dine-in uses 3-tab bar)
+        if (_isDineIn) return;
         if (_canDeliver || _isPickUp) {
           setState(() => _isPickUp = !_isPickUp);
         }
@@ -3455,7 +3802,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _isPickUp ? Icons.store_outlined : Icons.local_shipping_outlined,
+              _isDineIn ? Icons.restaurant : (_isPickUp ? Icons.store_outlined : Icons.local_shipping_outlined),
               color: _accentColor, // 🎨 BRAND COLOUR
               size: 20,
             ),
@@ -3465,7 +3812,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _isPickUp ? 'Gel Al' : 'Kurye',
+                  _isDineIn ? 'Masa' : (_isPickUp ? 'Gel Al' : 'Kurye'),
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
@@ -3473,7 +3820,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   ),
                 ),
                 Text(
-                  _isPickUp ? '15-20 Dk.' : '$estimatedTime Dk.',
+                  _isDineIn ? 'Masada Sipariş' : (_isPickUp ? '15-20 Dk.' : '$estimatedTime Dk.'),
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
@@ -3482,7 +3829,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ],
             ),
             const Spacer(),
-            if (!_isPickUp && deliveryFee != null)
+            if (!_isPickUp && !_isDineIn && deliveryFee != null)
               Text(
                 '+${deliveryFee.toStringAsFixed(2)} €',
                 style: TextStyle(
@@ -3514,7 +3861,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _isPickUp ? 'Gel Al Zamanı' : 'Teslimat Zamanı',
+            _isDineIn ? 'Sipariş Zamanı' : (_isPickUp ? 'Gel Al Zamanı' : 'Teslimat Zamanı'),
             style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 12),

@@ -75,6 +75,7 @@ class LokmaOrder {
   final DateTime? lastLocationUpdate;
   final Map<String, double>? claimLocation; // Business pickup location {lat, lng}
   final String? paymentMethod; // 'cash', 'card', 'online'
+  final String paymentStatus; // 'unpaid', 'paid'
   final DateTime? deliveredAt;
   final Map<String, dynamic>? deliveryProof; // {type, gps, photoUrl, completedAt}
   final DateTime createdAt;
@@ -104,6 +105,7 @@ class LokmaOrder {
     this.lastLocationUpdate,
     this.claimLocation,
     this.paymentMethod,
+    this.paymentStatus = 'unpaid',
     this.deliveredAt,
     this.deliveryProof,
     required this.createdAt,
@@ -157,6 +159,7 @@ class LokmaOrder {
             }
           : null,
       paymentMethod: data['paymentMethod'],
+      paymentStatus: data['paymentStatus'] ?? 'unpaid',
       deliveredAt: (data['deliveredAt'] as Timestamp?)?.toDate(),
       deliveryProof: data['deliveryProof'] as Map<String, dynamic>?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -251,6 +254,76 @@ class OrderService {
     });
 
     return docRef.id;
+  }
+
+  /// Create a dine-in order from waiter
+  /// Tags order with table number, session, and waiter info
+  Future<String> createDineInOrder({
+    required String butcherId,
+    required String butcherName,
+    required String waiterId,
+    required String waiterName,
+    required int tableNumber,
+    required String tableSessionId,
+    required List<OrderItem> items,
+    required double totalAmount,
+    String? notes,
+  }) async {
+    final docRef = _db.collection(_collection).doc();
+    final orderNumber = docRef.id.substring(0, 6).toUpperCase();
+
+    await docRef.set({
+      'butcherId': butcherId,
+      'butcherName': butcherName,
+      'userId': waiterId, // Waiter places the order
+      'userName': waiterName,
+      'userPhone': '',
+      'items': items.map((item) => item.toMap()).toList(),
+      'totalAmount': totalAmount,
+      'orderType': OrderType.dineIn.name,
+      'status': OrderStatus.pending.name,
+      'tableNumber': tableNumber,
+      'tableSessionId': tableSessionId,
+      'waiterId': waiterId,
+      'waiterName': waiterName,
+      'paymentStatus': 'unpaid',
+      'paymentMethod': null,
+      'notes': notes,
+      'orderNumber': orderNumber,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    return docRef.id;
+  }
+
+  /// Get all orders for a table session (realtime)
+  Stream<List<LokmaOrder>> getTableSessionOrdersStream(String sessionId) {
+    return _db
+        .collection(_collection)
+        .where('tableSessionId', isEqualTo: sessionId)
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => LokmaOrder.fromFirestore(doc))
+            .toList())
+        .handleError((e) {
+          print('Error fetching table session orders: $e');
+          return <LokmaOrder>[];
+        });
+  }
+
+  /// Update payment status for dine-in order
+  Future<void> updatePaymentStatus({
+    required String orderId,
+    required String paymentStatus,
+    String? paymentMethod,
+  }) async {
+    await _db.collection(_collection).doc(orderId).update({
+      'paymentStatus': paymentStatus,
+      if (paymentMethod != null) 'paymentMethod': paymentMethod,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
   }
 
   /// Get user's orders stream (from meat_orders - canonical collection)

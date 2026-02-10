@@ -65,6 +65,12 @@ interface Order {
         postalCode?: string;
     };
     notes?: string;
+    // Dine-in fields
+    tableNumber?: number;
+    waiterName?: string;
+    tableSessionId?: string;
+    paymentStatus?: string;
+    paymentMethod?: string;
 }
 
 export default function OrdersPage() {
@@ -182,6 +188,12 @@ export default function OrdersPage() {
                     scheduledAt: d.deliveryDate || d.scheduledDateTime,
                     address: d.deliveryAddress ? { street: d.deliveryAddress } : d.address,
                     notes: d.notes || d.orderNote || d.customerNote || '',
+                    // Dine-in fields
+                    tableNumber: d.tableNumber,
+                    waiterName: d.waiterName,
+                    tableSessionId: d.tableSessionId,
+                    paymentStatus: d.paymentStatus || 'unpaid',
+                    paymentMethod: d.paymentMethod,
                 };
             }) as Order[];
             setOrders(data);
@@ -724,6 +736,36 @@ export default function OrdersPage() {
                                 </span>
                             </div>
 
+                            {/* Dine-in Info */}
+                            {selectedOrder.type === 'dine_in' && (
+                                <div className="bg-orange-600/10 border border-orange-500/30 rounded-xl p-4 space-y-3">
+                                    <h4 className="text-orange-400 font-medium text-sm flex items-center gap-2">🍽️ Yerinde Sipariş Detayı</h4>
+                                    {selectedOrder.tableNumber && (
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-gray-400">Masa</span>
+                                            <span className="text-white font-bold text-lg">#{selectedOrder.tableNumber}</span>
+                                        </div>
+                                    )}
+                                    {selectedOrder.waiterName && (
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-gray-400">Garson</span>
+                                            <span className="text-white">{selectedOrder.waiterName}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-gray-400">Ödeme</span>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedOrder.paymentStatus === 'paid'
+                                                ? 'bg-green-600/20 text-green-400'
+                                                : 'bg-red-600/20 text-red-400'
+                                            }`}>
+                                            {selectedOrder.paymentStatus === 'paid'
+                                                ? `✅ Ödendi${selectedOrder.paymentMethod === 'card' ? ' (Kart)' : selectedOrder.paymentMethod === 'cash' ? ' (Nakit)' : ''}`
+                                                : '⏳ Ödenmedi'}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Customer */}
                             <div className="flex items-center justify-between">
                                 <span className="text-gray-400">Müşteri</span>
@@ -952,6 +994,17 @@ function OrderCard({
             <p className="text-gray-400 text-xs mb-1">
                 {businesses[order.businessId] || 'İşletme'}
             </p>
+            {/* Dine-in table badge */}
+            {order.type === 'dine_in' && order.tableNumber && (
+                <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2 py-0.5 rounded bg-orange-600/30 text-orange-300 text-xs font-medium">
+                        🍽️ Masa #{order.tableNumber}
+                    </span>
+                    {order.paymentStatus === 'paid' && (
+                        <span className="px-1.5 py-0.5 rounded bg-green-600/30 text-green-400 text-xs">✓</span>
+                    )}
+                </div>
+            )}
             <div className="flex items-center justify-between">
                 <span className="text-green-400 font-bold">€{order.total?.toFixed(2)}</span>
                 <span className="text-gray-500 text-xs">

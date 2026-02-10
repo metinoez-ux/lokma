@@ -19,8 +19,9 @@ import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 
 class BusinessDetailScreen extends ConsumerStatefulWidget {
   final String businessId;
+  final int initialDeliveryMode;
   
-  const BusinessDetailScreen({super.key, required this.businessId});
+  const BusinessDetailScreen({super.key, required this.businessId, this.initialDeliveryMode = 0});
 
   @override
   ConsumerState<BusinessDetailScreen> createState() => _BusinessDetailScreenState();
@@ -79,7 +80,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
   
   // 🚀 Service Mode (Lieferando-style toggle)
-  bool _isDeliveryMode = true; // true = Kurye/Teslimat, false = Gel Al/Abholung
+  // 0 = Kurye/Teslimat, 1 = Gel Al/Abholung, 2 = Masa/Dine-in
+  late int _deliveryModeIndex;
+  bool get _isDeliveryMode => _deliveryModeIndex == 0;
+  bool get _isMasaMode => _deliveryModeIndex == 2;
   
   // 🔍 Menu Search
   String _menuSearchQuery = '';
@@ -98,6 +102,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
   Map<String, dynamic>? _placeDetails;
   DocumentSnapshot? _butcherDoc;
+
+  // 🆕 Plan features resolved from subscription_plans collection
+  Map<String, dynamic> _planFeatures = {};
   
   // Local Cart/Selection State (simple map: sku -> quantity)
   final Map<String, double> _selections = {};
@@ -108,6 +115,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _deliveryModeIndex = widget.initialDeliveryMode;
     _loadButcherAndReviews();
     _setupCategoriesListener(); // 🔄 Real-time listener for categories
     
@@ -250,6 +258,24 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           debugPrint('Google Places Error: $e');
         }
       } 
+
+      // 🆕 Resolve plan features from subscription_plans collection
+      final planCode = data['subscriptionPlan'] as String? ?? 'basic';
+      try {
+        final planSnap = await FirebaseFirestore.instance
+            .collection('subscription_plans')
+            .where('code', isEqualTo: planCode)
+            .limit(1)
+            .get();
+        if (planSnap.docs.isNotEmpty) {
+          final planData = planSnap.docs.first.data();
+          if (mounted) {
+            setState(() => _planFeatures = (planData['features'] as Map<String, dynamic>?) ?? {});
+          }
+        }
+      } catch (e) {
+        debugPrint('Error loading plan features: $e');
+      }
     } catch (e) {
       debugPrint('Error loading data: $e');
     }
@@ -263,78 +289,82 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       showDialog(
         context: context,
         barrierDismissible: true,
-        builder: (context) => AlertDialog(
-          backgroundColor: const Color(0xFF1E1E1E),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              const Icon(Icons.schedule, color: Colors.orange, size: 28),
-              const SizedBox(width: 12),
-              const Text(
-                'İşletme Şu An Kapalı',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                preOrderEnabled
-                    ? 'Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Sipariş verirseniz işletme açıldığında hazırlanacaktır.'
-                    : 'Bu işletme şu an sipariş kabul etmiyor. Çalışma saatlerinde tekrar deneyebilir veya açık işletmeleri görebilirsiniz.',
-                style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
-              ),
-              if (preOrderEnabled) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.withOpacity(0.3)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Colors.green, size: 18),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Ön Sipariş Aktif',
-                          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
-                        ),
-                      ),
-                    ],
-                  ),
+        builder: (dialogContext) {
+          final theme = Theme.of(dialogContext);
+          final isDark = theme.brightness == Brightness.dark;
+          return AlertDialog(
+            backgroundColor: theme.dialogBackgroundColor,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: Row(
+              children: [
+                const Icon(Icons.schedule, color: Colors.orange, size: 28),
+                const SizedBox(width: 12),
+                Text(
+                  'İşletme Şu An Kapalı',
+                  style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                preOrderEnabled ? 'Ön Sipariş Ver' : 'Göz At',
-                style: const TextStyle(color: Colors.white54),
-              ),
             ),
-            if (!preOrderEnabled)
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  context.pop(); // Go back to list
-                },
-                icon: const Icon(Icons.search, size: 18),
-                label: const Text('Açık İşletmeleri Bul'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _getAccent(context),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  preOrderEnabled
+                      ? 'Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Sipariş verirseniz işletme açıldığında hazırlanacaktır.'
+                      : 'Bu işletme şu an sipariş kabul etmiyor. Çalışma saatlerinde tekrar deneyebilir veya açık işletmeleri görebilirsiniz.',
+                  style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7), fontSize: 14, height: 1.4),
+                ),
+                if (preOrderEnabled) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green, size: 18),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Ön Sipariş Aktif',
+                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(
+                  preOrderEnabled ? 'Ön Sipariş Ver' : 'Göz At',
+                  style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.5)),
                 ),
               ),
-          ],
-        ),
+              if (!preOrderEnabled)
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(dialogContext); // Close dialog
+                    context.pop(); // Go back to list
+                  },
+                  icon: const Icon(Icons.search, size: 18),
+                  label: const Text('Açık İşletmeleri Bul'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _getAccent(context),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+            ],
+          );
+        },
       );
     });
   }
@@ -1538,13 +1568,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         ),
                       )
                     : ThreeDimensionalPillTabBar(
-                        selectedIndex: _isDeliveryMode ? 0 : 1,
-                        tabs: const [
-                          TabItem(title: 'Kurye', icon: Icons.delivery_dining),
-                          TabItem(title: 'Gel Al', icon: Icons.shopping_bag_outlined),
+                        selectedIndex: _deliveryModeIndex,
+                        tabs: [
+                          const TabItem(title: 'Kurye', icon: Icons.delivery_dining),
+                          const TabItem(title: 'Gel Al', icon: Icons.shopping_bag_outlined),
+                          // Show Masa tab if business supports dine-in or reservations
+                          if ((data?['hasReservation'] as bool? ?? false) ||
+                              (_planFeatures['dineInQR'] == true) ||
+                              (_planFeatures['waiterOrder'] == true))
+                            const TabItem(title: 'Masa', icon: Icons.restaurant),
                         ],
                         onTabSelected: (index) {
-                          setState(() => _isDeliveryMode = index == 0);
+                          setState(() => _deliveryModeIndex = index);
                         },
                       ),
                 centerTitle: true,
@@ -1772,86 +1807,52 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                ),
                              ),
                            ],
+
+                            // 🆕 Dine-In Badges (Plan-gated)
+                            if (_planFeatures['dineInQR'] == true) ...[
+                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.qr_code_2, size: 12, color: Colors.orange),
+                                    SizedBox(width: 4),
+                                    Text('QR Sipariş', style: TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            if (_planFeatures['waiterOrder'] == true) ...[
+                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.teal.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: Colors.teal.withOpacity(0.3)),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.room_service, size: 12, color: Colors.teal),
+                                    SizedBox(width: 4),
+                                    Text('Garson', style: TextStyle(color: Colors.teal, fontSize: 11, fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                              ),
+                            ],
                          ],
                        ),
                      ],
                    ),
                  ),
               ),
-
-              // 🍽️ RESERVATION CTA BANNER
-              if ((data?['hasReservation'] as bool? ?? false) && (data?['maxReservationTables'] as int? ?? 0) > 0)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => ReservationBookingScreen(
-                                businessId: widget.businessId,
-                                businessName: data?['companyName'] ?? data?['name'] ?? 'İşletme',
-                              ),
-                            ),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [_getAccent(context).withOpacity(0.15), _getAccent(context).withOpacity(0.05)],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: _getAccent(context).withOpacity(0.3)),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: _getAccent(context).withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(Icons.restaurant, color: _getAccent(context), size: 22),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Masa Rezervasyonu Yap',
-                                      style: TextStyle(
-                                        color: textPrimary,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Tarih ve saat seçerek masanızı ayırtın',
-                                      style: TextStyle(
-                                        color: textSecondary,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(Icons.arrow_forward_ios, color: _getAccent(context), size: 16),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
 
               // 3. LIEFERANDO STYLE: Sticky Horizontal Category Tabs
               SliverPersistentHeader(
@@ -2427,7 +2428,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
            ElevatedButton(
              onPressed: () {
                Navigator.of(context).push(
-                 MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: !_isDeliveryMode)),
+                 MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode)),
                );
              },
              style: ElevatedButton.styleFrom(
@@ -2436,11 +2437,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
              ),
-             child: const Row(
+             child: Row(
                children: [
-                 Text('Sepete Git', style: TextStyle(fontWeight: FontWeight.bold)),
-                 SizedBox(width: 8),
-                 Icon(Icons.arrow_forward, size: 16),
+                 Text(_isMasaMode ? 'Siparişi Gönder' : 'Sepete Git', style: const TextStyle(fontWeight: FontWeight.bold)),
+                 const SizedBox(width: 8),
+                 Icon(_isMasaMode ? Icons.restaurant : Icons.arrow_forward, size: 16),
                ],
              ),
            ),
@@ -2837,6 +2838,179 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       ),
     );
   }
+
+  /// Reusable action card for Masa section (QR, Garson, Rezervasyon)
+  Widget _buildMasaActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimary = Theme.of(context).colorScheme.onSurface;
+    final textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: color.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios, color: color, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// MVP: Confirm dine-in with GPS proximity check
+  void _startDineInOrder(BuildContext context, Map<String, dynamic>? data) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.restaurant, color: Colors.orange, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Masada Sipariş',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Icon(Icons.location_on, color: Colors.orange, size: 32),
+                  const SizedBox(height: 8),
+                  Text(
+                    data?['companyName'] ?? data?['name'] ?? 'İşletme',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Bu işletmede masada olduğunuzu onaylıyor musunuz?',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      fontSize: 13,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'İptal',
+              style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              // Set mode to Masa and show confirmation
+              setState(() => _deliveryModeIndex = 2);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Row(
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.white, size: 20),
+                      SizedBox(width: 8),
+                      Text('Masada sipariş modu aktif! Menüden ürün ekleyin.'),
+                    ],
+                  ),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              );
+            },
+            icon: const Icon(Icons.check, size: 18),
+            label: const Text('Onaylıyorum'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // LIEFERANDO STYLE: Sticky Header Delegate for Category Tabs
@@ -2927,6 +3101,12 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
       _focusNode.requestFocus();
     });
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🪑 MASA (DINE-IN) HELPERS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+
 
   @override
   void dispose() {
