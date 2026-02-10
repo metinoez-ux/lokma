@@ -2618,9 +2618,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         if (rawValue.isEmpty) return;
                         
                         // Extract table number from QR data
-                        // QR format could be: "masa:5", "table:5", "MASA-5", or just "5"
+                        // Priority 1: URL format - https://lokma.web.app/dinein/{id}/table/{num}
+                        // Priority 2: Simple format - "masa:5", "table:5", "MASA-5", or just "5"
                         String tableNum = rawValue;
-                        if (rawValue.toLowerCase().contains('masa')) {
+                        final urlMatch = RegExp(r'/table/(\d+)').firstMatch(rawValue);
+                        if (urlMatch != null) {
+                          tableNum = urlMatch.group(1)!;
+                        } else if (rawValue.toLowerCase().contains('masa')) {
                           final match = RegExp(r'(\d+)').firstMatch(rawValue);
                           tableNum = match?.group(1) ?? rawValue;
                         } else if (rawValue.toLowerCase().contains('table')) {
