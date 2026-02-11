@@ -613,7 +613,7 @@ class _OrderCardState extends State<_OrderCard> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE53935),
+                            color: const Color(0xFFFB335B),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(

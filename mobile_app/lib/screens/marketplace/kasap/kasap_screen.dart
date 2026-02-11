@@ -7,10 +7,10 @@ import 'package:lokma_app/providers/cart_provider.dart';
 
 // Business sector definitions - mirrors admin_portal business-types.ts
 const Map<String, Map<String, dynamic>> BUSINESS_SECTORS = {
-  'kasap': {'label': 'Kasap', 'icon': '🥩', 'color': 0xFFE53935},
+  'kasap': {'label': 'Kasap', 'icon': '🥩', 'color': 0xFFFB335B},
   'market': {'label': 'Market', 'icon': '🛒', 'color': 0xFF4CAF50},
   'restoran': {'label': 'Restoran ve Fastfood', 'icon': '🍽️', 'color': 0xFFFF9800},
-  'pastane': {'label': 'Pastane & Tatlıcı', 'icon': '🎂', 'color': 0xFFE91E63},
+  'pastane': {'label': 'Pastane & Tatlıcı', 'icon': '🎂', 'color': 0xFFFB335B},
   'cicekci': {'label': 'Çiçekçi', 'icon': '🌸', 'color': 0xFF9C27B0},
   'cigkofte': {'label': 'Çiğ Köfteci', 'icon': '🥙', 'color': 0xFF00BCD4},
   'cafe': {'label': 'Kafe', 'icon': '☕', 'color': 0xFF795548},

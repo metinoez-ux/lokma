@@ -182,10 +182,10 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFD03140).withOpacity(0.1),
+                                  color: const Color(0xFFFB335B).withOpacity(0.1),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.store, color: Color(0xFFD03140), size: 24),
+                                child: const Icon(Icons.store, color: Color(0xFFFB335B), size: 24),
                               ),
                               const SizedBox(width: 14),
                               Expanded(

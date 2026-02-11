@@ -46,7 +46,7 @@ export default function PartnerApplyPage() {
                     <p className="text-white/60 mb-8">
                         Ekibimiz 24 saat içinde sizinle iletişime geçecektir. Teşekkür ederiz!
                     </p>
-                    <Link href="/" className="inline-block bg-[#ec131e] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all">
+                    <Link href="/" className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all">
                         Ana Sayfaya Dön
                     </Link>
                 </div>
@@ -80,7 +80,7 @@ export default function PartnerApplyPage() {
                             <input
                                 type="text"
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#ec131e] focus:outline-none transition-all"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                 placeholder="Örn: Özkan Kasap"
                                 value={formData.businessName}
                                 onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
@@ -91,7 +91,7 @@ export default function PartnerApplyPage() {
                             <label className="block text-sm font-medium mb-2">İşletme Türü *</label>
                             <select
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#ec131e] focus:outline-none transition-all"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                 value={formData.businessType}
                                 onChange={(e) => setFormData({ ...formData, businessType: e.target.value })}
                             >
@@ -107,7 +107,7 @@ export default function PartnerApplyPage() {
                             <input
                                 type="text"
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#ec131e] focus:outline-none transition-all"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                 placeholder="Adınız Soyadınız"
                                 value={formData.ownerName}
                                 onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
@@ -120,7 +120,7 @@ export default function PartnerApplyPage() {
                                 <input
                                     type="email"
                                     required
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#ec131e] focus:outline-none transition-all"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                     placeholder="ornek@email.com"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -131,7 +131,7 @@ export default function PartnerApplyPage() {
                                 <input
                                     type="tel"
                                     required
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#ec131e] focus:outline-none transition-all"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                     placeholder="+49 176 123 456 78"
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -144,7 +144,7 @@ export default function PartnerApplyPage() {
                             <input
                                 type="text"
                                 required
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#ec131e] focus:outline-none transition-all"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                 placeholder="Örn: Berlin, Köln, München"
                                 value={formData.city}
                                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
@@ -155,7 +155,7 @@ export default function PartnerApplyPage() {
                             <label className="block text-sm font-medium mb-2">Adres</label>
                             <input
                                 type="text"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#ec131e] focus:outline-none transition-all"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all"
                                 placeholder="Tam adres (opsiyonel)"
                                 value={formData.address}
                                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
@@ -166,7 +166,7 @@ export default function PartnerApplyPage() {
                             <label className="block text-sm font-medium mb-2">İşletmeniz Hakkında</label>
                             <textarea
                                 rows={3}
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#ec131e] focus:outline-none transition-all resize-none"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:border-[#fb335b] focus:outline-none transition-all resize-none"
                                 placeholder="Kısa bir açıklama (opsiyonel)"
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -175,7 +175,7 @@ export default function PartnerApplyPage() {
 
                         <button
                             type="submit"
-                            className="w-full bg-[#ec131e] hover:bg-red-600 text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-[#ec131e]/20"
+                            className="w-full bg-[#fb335b] hover:bg-red-600 text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-[#fb335b]/20"
                         >
                             Başvuruyu Gönder
                         </button>

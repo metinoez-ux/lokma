@@ -40,7 +40,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
   bool _isLoadingSlots = true;
 
   // Accent color
-  static const Color _accent = Color(0xFFD03140);
+  static const Color _accent = Color(0xFFFB335B);
 
   @override
   void initState() {

@@ -60,7 +60,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       return Color(int.parse('FF$hex', radix: 16));
     }
     // Fallback to LOKMA Rose-500
-    return const Color(0xFFF43F5E);
+    return const Color(0xFFFB335B);
   }
 
   @override
@@ -374,7 +374,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFFEC131E),
+          indicatorColor: const Color(0xFFFB335B),
           indicatorWeight: 3,
           labelColor: colorScheme.onSurface,
           unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
@@ -447,7 +447,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         }
         
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFEC131E)));
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFFB335B)));
         }
         
         final allOrders = snapshot.data ?? [];
@@ -553,7 +553,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           SizedBox(height: 24),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEC131E),
+              backgroundColor: const Color(0xFFFB335B),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -683,7 +683,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFD32F2F),
+                                        color: const Color(0xFFFB335B),
                                         borderRadius: const BorderRadius.only(
                                           bottomLeft: Radius.circular(12),
                                           bottomRight: Radius.circular(12),
@@ -1217,7 +1217,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   
   /// Fetch brand color from Firestore
   Future<Color> _fetchBrandColor(String businessId) async {
-    if (businessId.isEmpty) return const Color(0xFFEC131E);
+    if (businessId.isEmpty) return const Color(0xFFFB335B);
     try {
       final doc = await FirebaseFirestore.instance
           .collection('businesses')
@@ -1234,7 +1234,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     } catch (e) {
       debugPrint('Error fetching brand color: $e');
     }
-    return const Color(0xFFEC131E); // Default LOKMA red
+    return const Color(0xFFFB335B); // Default LOKMA red
   }
   
   /// Open maps for business location
@@ -1761,7 +1761,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${order.butcherName} sayfasına yönlendiriliyorsunuz'),
-        backgroundColor: const Color(0xFFEC131E),
+        backgroundColor: const Color(0xFFFB335B),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -1876,7 +1876,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               children: [
                 Text(
                   '${item.quantity}x',
-                  style: TextStyle(color: Color(0xFFF43F5E), fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Color(0xFFFB335B), fontWeight: FontWeight.bold),
                 ),
                 SizedBox(width: 8),
                 Expanded(
@@ -1963,7 +1963,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               icon: const Icon(Icons.qr_code, size: 20),
               label: Text('Hesabı Göster'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF43F5E),
+                backgroundColor: const Color(0xFFFB335B),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -2918,7 +2918,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF43F5E).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFFB335B).withOpacity(0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -2936,10 +2936,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF43F5E).withOpacity(0.1),
+                  color: const Color(0xFFFB335B).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.restaurant_menu, color: Color(0xFFF43F5E), size: 20),
+                child: const Icon(Icons.restaurant_menu, color: Color(0xFFFB335B), size: 20),
               ),
               SizedBox(width: 12),
               Expanded(
@@ -2980,7 +2980,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF43F5E),
+                    color: const Color(0xFFFB335B),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Center(
@@ -3051,13 +3051,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 }
               },
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFF43F5E)),
+                side: const BorderSide(color: Color(0xFFFB335B)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               child: Text(
                 'Kermes Menüsüne Dön',
-                style: TextStyle(color: Color(0xFFF43F5E), fontWeight: FontWeight.bold),
+                style: TextStyle(color: Color(0xFFFB335B), fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -3237,7 +3237,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               child: ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitOrder,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF43F5E),
+                  backgroundColor: const Color(0xFFFB335B),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
@@ -3285,7 +3285,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => context.go('/'),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE53935)),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
               child: Text('Ana Sayfaya Dön'),
             ),
           ],

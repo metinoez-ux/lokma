@@ -653,10 +653,10 @@ export default function LandingPage() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link className="text-sm font-medium hover:text-[#ec131e] transition-colors" href="/">{t.home}</Link>
-            <Link className="text-sm font-medium hover:text-[#ec131e] transition-colors" href="/about">{t.about}</Link>
-            <Link className="text-sm font-medium hover:text-[#ec131e] transition-colors" href="/vendor">{t.vendorPortal}</Link>
-            <Link className="text-sm font-medium hover:text-[#ec131e] transition-colors" href="/support">{t.support}</Link>
+            <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/">{t.home}</Link>
+            <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/about">{t.about}</Link>
+            <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/vendor">{t.vendorPortal}</Link>
+            <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/support">{t.support}</Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -673,7 +673,7 @@ export default function LandingPage() {
               {countryMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-80 bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden z-50 shadow-2xl">
                   {/* Header */}
-                  <div className="px-5 py-4 border-b border-white/10 bg-gradient-to-r from-[#ec131e]/10 to-transparent">
+                  <div className="px-5 py-4 border-b border-white/10 bg-gradient-to-r from-[#fb335b]/10 to-transparent">
                     <h3 className="font-bold text-base">Bölge & Dil Ayarları</h3>
                     <p className="text-xs text-white/50 mt-1">Tercihlerinizi seçin</p>
                   </div>
@@ -690,7 +690,7 @@ export default function LandingPage() {
                           <button
                             key={lang.code}
                             className={`flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left ${currentLang === lang.code
-                              ? 'bg-[#ec131e]/20 border border-[#ec131e]/50 text-white'
+                              ? 'bg-[#fb335b]/20 border border-[#fb335b]/50 text-white'
                               : 'bg-white/5 hover:bg-white/10 border border-transparent'
                               }`}
                             onClick={() => handleLangChange(lang.code)}
@@ -698,7 +698,7 @@ export default function LandingPage() {
                             <span className="text-base">{lang.flag}</span>
                             <span className="font-medium">{lang.name}</span>
                             {currentLang === lang.code && (
-                              <span className="material-symbols-outlined text-[#ec131e] ml-auto text-[14px]">check_circle</span>
+                              <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px]">check_circle</span>
                             )}
                           </button>
                         ))}
@@ -716,7 +716,7 @@ export default function LandingPage() {
                           <button
                             key={country.code}
                             className={`flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left ${currentCountry === country.code
-                              ? 'bg-[#ec131e]/20 border border-[#ec131e]/50 text-white'
+                              ? 'bg-[#fb335b]/20 border border-[#fb335b]/50 text-white'
                               : 'bg-white/5 hover:bg-white/10 border border-transparent'
                               }`}
                             onClick={() => handleCountryChange(country.code)}
@@ -724,7 +724,7 @@ export default function LandingPage() {
                             <span className="text-base">{country.flag}</span>
                             <span className="font-medium truncate">{country.name}</span>
                             {currentCountry === country.code && (
-                              <span className="material-symbols-outlined text-[#ec131e] ml-auto text-[14px] flex-shrink-0">check_circle</span>
+                              <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px] flex-shrink-0">check_circle</span>
                             )}
                           </button>
                         ))}
@@ -742,7 +742,7 @@ export default function LandingPage() {
               )}
             </div>
 
-            <Link href="/login" className="hidden sm:flex bg-[#ec131e] hover:bg-red-600 px-5 py-2 rounded-lg text-sm font-bold transition-all">
+            <Link href="/login" className="hidden sm:flex bg-[#fb335b] hover:bg-red-600 px-5 py-2 rounded-lg text-sm font-bold transition-all">
               {t.login}
             </Link>
 
@@ -761,7 +761,7 @@ export default function LandingPage() {
               <Link className="text-sm font-medium py-2" href="/about">{t.about}</Link>
               <Link className="text-sm font-medium py-2" href="/vendor">{t.vendorPortal}</Link>
               <Link className="text-sm font-medium py-2" href="/support">{t.support}</Link>
-              <Link className="bg-[#ec131e] text-center py-3 rounded-lg font-bold" href="/login">{t.login}</Link>
+              <Link className="bg-[#fb335b] text-center py-3 rounded-lg font-bold" href="/login">{t.login}</Link>
             </nav>
           </div>
         )}
@@ -780,7 +780,7 @@ export default function LandingPage() {
         <div className="relative z-20 container mx-auto px-6 text-center">
           <div className="max-w-4xl mx-auto space-y-8">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tight drop-shadow-2xl">
-              {t.heroTitle} <span className="text-[#ec131e] italic">{t.heroHighlight}</span> {t.heroTitleEnd}
+              {t.heroTitle} <span className="text-[#fb335b] italic">{t.heroHighlight}</span> {t.heroTitleEnd}
             </h1>
             <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-medium">
               {t.heroSubtitle}
@@ -788,7 +788,7 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
               <button
                 onClick={scrollToCategories}
-                className="bg-[#ec131e] hover:bg-red-600 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-[#ec131e]/20 transition-all flex items-center justify-center gap-2"
+                className="bg-[#fb335b] hover:bg-red-600 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-[#fb335b]/20 transition-all flex items-center justify-center gap-2"
               >
                 {t.exploreBtn}
                 <span className="material-symbols-outlined">arrow_forward</span>
@@ -812,7 +812,7 @@ export default function LandingPage() {
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">{t.discoverTitle}</h2>
               <p className="text-white/60 mt-2">{t.discoverSubtitle}</p>
             </div>
-            <Link className="text-[#ec131e] font-bold flex items-center gap-1 group" href="/categories">
+            <Link className="text-[#fb335b] font-bold flex items-center gap-1 group" href="/categories">
               {t.seeAll}
               <span className="material-symbols-outlined transition-transform group-hover:translate-x-1">chevron_right</span>
             </Link>
@@ -840,7 +840,7 @@ export default function LandingPage() {
           <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-[2rem] overflow-hidden flex flex-col lg:flex-row items-stretch">
             <div className="flex-1 p-8 md:p-16 flex flex-col justify-center space-y-8">
               <div>
-                <span className="inline-block bg-[#ec131e]/20 text-[#ec131e] px-4 py-1 rounded-full text-sm font-bold mb-4 tracking-wider uppercase">{t.b2bBadge}</span>
+                <span className="inline-block bg-[#fb335b]/20 text-[#fb335b] px-4 py-1 rounded-full text-sm font-bold mb-4 tracking-wider uppercase">{t.b2bBadge}</span>
                 <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-tight">{t.b2bTitle}</h2>
                 <p className="text-white/60 text-lg mt-6 max-w-lg">
                   {t.b2bSubtitle}
@@ -850,7 +850,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {benefits.map((b) => (
                   <div key={b.title} className="flex items-start gap-4">
-                    <div className="bg-[#ec131e]/20 p-2 rounded-lg text-[#ec131e]">
+                    <div className="bg-[#fb335b]/20 p-2 rounded-lg text-[#fb335b]">
                       <span className="material-symbols-outlined">{b.icon}</span>
                     </div>
                     <div>
@@ -864,7 +864,7 @@ export default function LandingPage() {
               <div className="pt-4">
                 <Link
                   href="/partner/apply"
-                  className="inline-block bg-[#ec131e] hover:bg-red-600 text-white px-10 py-4 rounded-xl font-extrabold transition-all shadow-lg shadow-[#ec131e]/20"
+                  className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-10 py-4 rounded-xl font-extrabold transition-all shadow-lg shadow-[#fb335b]/20"
                 >
                   {t.applyNow}
                 </Link>
@@ -914,7 +914,7 @@ export default function LandingPage() {
             Alışveriş Uygulamada
           </div>
           <h2 className="text-3xl md:text-4xl font-black mb-4">
-            <span className="text-[#ec131e]">LOKMA</span> Uygulamasını İndir
+            <span className="text-[#fb335b]">LOKMA</span> Uygulamasını İndir
           </h2>
           <p className="text-white/60 mb-8 max-w-xl mx-auto text-lg">
             Tüm kategoriler, özel kampanyalar ve anlık teslimat takibi uygulamamızda.
@@ -955,30 +955,30 @@ export default function LandingPage() {
           <div className="space-y-4">
             <h4 className="font-bold uppercase text-xs tracking-widest">{t.footerPlatform}</h4>
             <ul className="space-y-2 text-sm text-white/50">
-              <li><Link className="hover:text-[#ec131e]" href="/how-it-works">{t.howItWorks}</Link></li>
-              <li><Link className="hover:text-[#ec131e]" href="/categories">{t.categories}</Link></li>
-              <li><Link className="hover:text-[#ec131e]" href="/popular">{t.popularShops}</Link></li>
-              <li><Link className="hover:text-[#ec131e]" href="/deals">{t.deals}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/how-it-works">{t.howItWorks}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/categories">{t.categories}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/popular">{t.popularShops}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/deals">{t.deals}</Link></li>
             </ul>
           </div>
 
           <div className="space-y-4">
             <h4 className="font-bold uppercase text-xs tracking-widest">{t.footerCorporate}</h4>
             <ul className="space-y-2 text-sm text-white/50">
-              <li><Link className="hover:text-[#ec131e]" href="/about">{t.about}</Link></li>
-              <li><Link className="hover:text-[#ec131e]" href="/careers">{t.career}</Link></li>
-              <li><Link className="hover:text-[#ec131e]" href="/press">{t.press}</Link></li>
-              <li><Link className="hover:text-[#ec131e]" href="/contact">{t.contact}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/about">{t.about}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/careers">{t.career}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/press">{t.press}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/contact">{t.contact}</Link></li>
             </ul>
           </div>
 
           <div className="space-y-4">
             <h4 className="font-bold uppercase text-xs tracking-widest">{t.footerLegal}</h4>
             <ul className="space-y-2 text-sm text-white/50">
-              <li><Link className="hover:text-[#ec131e]" href="/terms">{t.terms}</Link></li>
-              <li><Link className="hover:text-[#ec131e]" href="/privacy">{t.privacy}</Link></li>
-              <li><Link className="hover:text-[#ec131e]" href="/kvkk">{t.kvkk}</Link></li>
-              <li><Link className="hover:text-[#ec131e]" href="/cookies">{t.cookies}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/terms">{t.terms}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/privacy">{t.privacy}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/kvkk">{t.kvkk}</Link></li>
+              <li><Link className="hover:text-[#fb335b]" href="/cookies">{t.cookies}</Link></li>
             </ul>
           </div>
         </div>

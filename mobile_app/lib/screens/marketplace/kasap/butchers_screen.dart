@@ -25,7 +25,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
   // Dark theme colors
   static const Color darkBg = Color(0xFF121212);
   static const Color cardBg = Color(0xFF1E1E1E);
-  static const Color accent = Color(0xFFE53935);
+  static const Color accent = Color(0xFFFB335B);
   
   bool _isPickup = true; // Gel Al vs Kurye
   bool _showKuryeInfo = true;
@@ -1061,7 +1061,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: const BoxDecoration(
-                        color: Color(0xFFD32F2F),
+                        color: Color(0xFFFB335B),
                         borderRadius: BorderRadius.only(
                           topRight: Radius.circular(8),
                           bottomRight: Radius.circular(8),
@@ -1143,7 +1143,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isOpen ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F), // Green or Red
+                          color: isOpen ? const Color(0xFF2E7D32) : const Color(0xFFFB335B), // Green or Red
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -1175,14 +1175,14 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                   // D. Distance & Phone
                   Row(
                     children: [
-                      const Icon(Icons.navigation, color: Color(0xFFD32F2F), size: 16),
+                      const Icon(Icons.navigation, color: Color(0xFFFB335B), size: 16),
                       const SizedBox(width: 4),
                       Text(
                         (butcher['distance'] as double) >= 900 
                             ? '...' 
                             : '${(butcher['distance'] as double).toStringAsFixed(1)} km',
                         style: const TextStyle(
-                          color: Color(0xFFD32F2F),
+                          color: Color(0xFFFB335B),
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1227,7 +1227,7 @@ class _ButcherBannerCarousel extends StatefulWidget {
 class _ButcherBannerCarouselState extends State<_ButcherBannerCarousel> {
   int _currentBanner = 0;
   final PageController _bannerController = PageController();
-  static const Color accent = Color(0xFFE53935);
+  static const Color accent = Color(0xFFFB335B);
 
   Widget _build3DCard(Map<String, dynamic> banner) {
     return Container(

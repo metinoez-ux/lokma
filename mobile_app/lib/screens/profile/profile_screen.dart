@@ -189,7 +189,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   height: 120,
                   width: 120,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF43F5E),
+                    color: const Color(0xFFFB335B),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: const Center(
@@ -202,7 +202,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const Text(
               'LOKMA',
               style: TextStyle(
-                color: const Color(0xFFF43F5E),
+                color: const Color(0xFFFB335B),
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
@@ -234,11 +234,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF43F5E),
+                  color: const Color(0xFFFB335B),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFF43F5E).withOpacity(0.3),
+                      color: const Color(0xFFFB335B).withOpacity(0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -382,7 +382,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   : Colors.white.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.notifications_outlined, color: const Color(0xFFEC131E), size: 22),
+                            child: Icon(Icons.notifications_outlined, color: const Color(0xFFFB335B), size: 22),
                           ),
                         ),
                       ],
@@ -454,22 +454,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
-                                          const Color(0xFFD03140).withOpacity(0.08),
-                                          const Color(0xFFD03140).withOpacity(0.03),
+                                          const Color(0xFFFB335B).withOpacity(0.08),
+                                          const Color(0xFFFB335B).withOpacity(0.03),
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: const Color(0xFFD03140), width: 1.5),
+                                      border: Border.all(color: const Color(0xFFFB335B), width: 1.5),
                                     ),
                                     child: Row(
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFD03140).withOpacity(0.1),
+                                            color: const Color(0xFFFB335B).withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(10),
                                           ),
-                                          child: const Icon(Icons.badge, color: Color(0xFFD03140), size: 22),
+                                          child: const Icon(Icons.badge, color: Color(0xFFFB335B), size: 22),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
@@ -479,7 +479,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                               const Text(
                                                 'Personel Girişi',
                                                 style: TextStyle(
-                                                  color: Color(0xFFD03140),
+                                                  color: Color(0xFFFB335B),
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.w700,
                                                 ),
@@ -497,7 +497,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                             ],
                                           ),
                                         ),
-                                        Icon(Icons.arrow_forward_ios, size: 16, color: const Color(0xFFD03140).withOpacity(0.5)),
+                                        Icon(Icons.arrow_forward_ios, size: 16, color: const Color(0xFFFB335B).withOpacity(0.5)),
                                       ],
                                     ),
                                   ),
@@ -621,7 +621,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: const Color(0xFFEC131E), size: 22),
+              Icon(icon, color: const Color(0xFFFB335B), size: 22),
               const SizedBox(height: 6),
               Text(
                 label,

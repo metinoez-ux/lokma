@@ -28,7 +28,7 @@ class OrderConfirmationDialog extends StatelessWidget {
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
     final subtextColor = isDark ? Colors.white70 : Colors.grey.shade600;
     final borderColor = isDark ? Colors.white10 : Colors.grey.shade200;
-    final accentColor = const Color(0xFFE53935);
+    final accentColor = const Color(0xFFFB335B);
 
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),

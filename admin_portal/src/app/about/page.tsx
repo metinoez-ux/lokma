@@ -43,20 +43,20 @@ export default function AboutPage() {
                         <h2 className="text-2xl font-bold text-white mt-12 mb-6">Değerlerimiz</h2>
 
                         <div className="grid md:grid-cols-2 gap-6">
-                            <div className="bg-[#ec131e]/10 border border-[#ec131e]/20 rounded-xl p-6">
-                                <h3 className="font-bold text-[#ec131e] mb-2">Adalet</h3>
+                            <div className="bg-[#fb335b]/10 border border-[#fb335b]/20 rounded-xl p-6">
+                                <h3 className="font-bold text-[#fb335b] mb-2">Adalet</h3>
                                 <p className="text-sm">Sektörün en düşük komisyon oranları ile esnafın kazancını koruyoruz.</p>
                             </div>
-                            <div className="bg-[#ec131e]/10 border border-[#ec131e]/20 rounded-xl p-6">
-                                <h3 className="font-bold text-[#ec131e] mb-2">Şeffaflık</h3>
+                            <div className="bg-[#fb335b]/10 border border-[#fb335b]/20 rounded-xl p-6">
+                                <h3 className="font-bold text-[#fb335b] mb-2">Şeffaflık</h3>
                                 <p className="text-sm">Gizli ücret yok, karmaşık sözleşme yok. Her şey açık ve net.</p>
                             </div>
-                            <div className="bg-[#ec131e]/10 border border-[#ec131e]/20 rounded-xl p-6">
-                                <h3 className="font-bold text-[#ec131e] mb-2">Topluluk</h3>
+                            <div className="bg-[#fb335b]/10 border border-[#fb335b]/20 rounded-xl p-6">
+                                <h3 className="font-bold text-[#fb335b] mb-2">Topluluk</h3>
                                 <p className="text-sm">Mahalle kültürünü dijital dünyada yaşatıyoruz.</p>
                             </div>
-                            <div className="bg-[#ec131e]/10 border border-[#ec131e]/20 rounded-xl p-6">
-                                <h3 className="font-bold text-[#ec131e] mb-2">Yenilikçilik</h3>
+                            <div className="bg-[#fb335b]/10 border border-[#fb335b]/20 rounded-xl p-6">
+                                <h3 className="font-bold text-[#fb335b] mb-2">Yenilikçilik</h3>
                                 <p className="text-sm">En son teknolojiler ile esnafımızın işini kolaylaştırıyoruz.</p>
                             </div>
                         </div>
@@ -64,7 +64,7 @@ export default function AboutPage() {
                         <div className="mt-12 text-center">
                             <Link
                                 href="/partner"
-                                className="inline-block bg-[#ec131e] hover:bg-red-600 text-white px-8 py-4 rounded-xl font-bold transition-all"
+                                className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-8 py-4 rounded-xl font-bold transition-all"
                             >
                                 Partnerimiz Olun
                             </Link>

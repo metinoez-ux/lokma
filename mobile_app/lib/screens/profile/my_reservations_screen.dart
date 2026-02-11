@@ -12,7 +12,7 @@ import 'package:path_provider/path_provider.dart';
 class MyReservationsScreen extends StatelessWidget {
   const MyReservationsScreen({super.key});
 
-  static const Color _accent = Color(0xFFD03140);
+  static const Color _accent = Color(0xFFFB335B);
 
   @override
   Widget build(BuildContext context) {

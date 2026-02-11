@@ -133,7 +133,7 @@ export default function CiftcidenPage() {
                             Alışveriş Uygulamada
                         </div>
                         <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                            Sipariş vermek için <span className="text-[#ec131e]">LOKMA</span> uygulamasını indir
+                            Sipariş vermek için <span className="text-[#fb335b]">LOKMA</span> uygulamasını indir
                         </h2>
                         <p className="text-white/60 mb-8 max-w-xl mx-auto">
                             Tarladan sofraya taze ürünler, çiftçi pazarı ve özel kampanyalar uygulamamızda.

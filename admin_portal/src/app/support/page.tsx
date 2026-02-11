@@ -55,18 +55,18 @@ export default function SupportPage() {
 
                     {/* Contact Cards */}
                     <div className="grid md:grid-cols-3 gap-6 mb-16">
-                        <a href="mailto:destek@lokma.shop" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#ec131e]/50 transition-all text-center">
-                            <span className="material-symbols-outlined text-[#ec131e] text-4xl mb-4 block">mail</span>
+                        <a href="mailto:destek@lokma.shop" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
+                            <span className="material-symbols-outlined text-[#fb335b] text-4xl mb-4 block">mail</span>
                             <h3 className="font-bold mb-2">E-posta</h3>
                             <p className="text-sm text-white/60">destek@lokma.shop</p>
                         </a>
-                        <a href="tel:+4917612345678" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#ec131e]/50 transition-all text-center">
-                            <span className="material-symbols-outlined text-[#ec131e] text-4xl mb-4 block">phone</span>
+                        <a href="tel:+4917612345678" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
+                            <span className="material-symbols-outlined text-[#fb335b] text-4xl mb-4 block">phone</span>
                             <h3 className="font-bold mb-2">Telefon</h3>
                             <p className="text-sm text-white/60">+49 176 123 456 78</p>
                         </a>
-                        <a href="https://wa.me/4917612345678" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#ec131e]/50 transition-all text-center">
-                            <span className="material-symbols-outlined text-[#ec131e] text-4xl mb-4 block">chat</span>
+                        <a href="https://wa.me/4917612345678" className="bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all text-center">
+                            <span className="material-symbols-outlined text-[#fb335b] text-4xl mb-4 block">chat</span>
                             <h3 className="font-bold mb-2">WhatsApp</h3>
                             <p className="text-sm text-white/60">Hızlı destek</p>
                         </a>
@@ -77,7 +77,7 @@ export default function SupportPage() {
 
                     {faqs.map((section) => (
                         <div key={section.category} className="mb-8">
-                            <h3 className="text-lg font-bold text-[#ec131e] mb-4">{section.category}</h3>
+                            <h3 className="text-lg font-bold text-[#fb335b] mb-4">{section.category}</h3>
                             <div className="space-y-3">
                                 {section.items.map((faq, idx) => (
                                     <div key={idx} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">

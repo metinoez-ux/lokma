@@ -68,22 +68,22 @@ export default function CareersPage() {
                     {/* Benefits */}
                     <div className="grid md:grid-cols-4 gap-6 mb-16">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
-                            <span className="material-symbols-outlined text-[#ec131e] text-3xl mb-3 block">work_history</span>
+                            <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-3 block">work_history</span>
                             <h4 className="font-bold">Esnek Çalışma</h4>
                             <p className="text-sm text-white/60">Remote & hybrid seçenekler</p>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
-                            <span className="material-symbols-outlined text-[#ec131e] text-3xl mb-3 block">trending_up</span>
+                            <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-3 block">trending_up</span>
                             <h4 className="font-bold">Büyüme</h4>
                             <p className="text-sm text-white/60">Kariyer gelişimi fırsatları</p>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
-                            <span className="material-symbols-outlined text-[#ec131e] text-3xl mb-3 block">diversity_3</span>
+                            <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-3 block">diversity_3</span>
                             <h4 className="font-bold">Çeşitlilik</h4>
                             <p className="text-sm text-white/60">Kapsayıcı iş ortamı</p>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center">
-                            <span className="material-symbols-outlined text-[#ec131e] text-3xl mb-3 block">favorite</span>
+                            <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-3 block">favorite</span>
                             <h4 className="font-bold">Yan Haklar</h4>
                             <p className="text-sm text-white/60">Rekabetçi maaş & primler</p>
                         </div>
@@ -96,26 +96,26 @@ export default function CareersPage() {
                             <a
                                 key={index}
                                 href={`mailto:kariyer@lokma.shop?subject=${encodeURIComponent(job.title + ' Başvurusu')}`}
-                                className="flex flex-col md:flex-row md:items-center justify-between bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#ec131e]/50 transition-all group"
+                                className="flex flex-col md:flex-row md:items-center justify-between bg-white/5 border border-white/10 rounded-xl p-6 hover:border-[#fb335b]/50 transition-all group"
                             >
                                 <div className="mb-4 md:mb-0">
-                                    <h3 className="font-bold text-lg group-hover:text-[#ec131e] transition-colors">{job.title}</h3>
+                                    <h3 className="font-bold text-lg group-hover:text-[#fb335b] transition-colors">{job.title}</h3>
                                     <p className="text-sm text-white/60">{job.department}</p>
                                 </div>
                                 <div className="flex flex-wrap gap-3">
                                     <span className="bg-white/10 px-3 py-1 rounded-full text-xs">{job.location}</span>
-                                    <span className="bg-[#ec131e]/20 text-[#ec131e] px-3 py-1 rounded-full text-xs">{job.type}</span>
+                                    <span className="bg-[#fb335b]/20 text-[#fb335b] px-3 py-1 rounded-full text-xs">{job.type}</span>
                                 </div>
                             </a>
                         ))}
                     </div>
 
-                    <div className="mt-12 bg-gradient-to-br from-[#ec131e]/10 to-transparent border border-[#ec131e]/20 rounded-2xl p-8 text-center">
+                    <div className="mt-12 bg-gradient-to-br from-[#fb335b]/10 to-transparent border border-[#fb335b]/20 rounded-2xl p-8 text-center">
                         <h3 className="text-xl font-bold mb-4">Aradığınız pozisyonu bulamadınız mı?</h3>
                         <p className="text-white/60 mb-6">Açık başvuru yapın, uygun pozisyon açıldığında sizinle iletişime geçelim.</p>
                         <a
                             href="mailto:kariyer@lokma.shop?subject=Açık Başvuru"
-                            className="inline-block bg-[#ec131e] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all"
+                            className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all"
                         >
                             CV Gönder
                         </a>

@@ -17,7 +17,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   // LOKMA Brand Colors
-  static const Color lokmaRed = Color(0xFFF43F5E); // Rose-500 brand color
+  static const Color lokmaRed = Color(0xFFFB335B); // Rose-500 brand color
   static const Color lokmaOrange = Color(0xFFFF6B35);
   static const Color lokmaDark = Color(0xFF1A1A1A);
   

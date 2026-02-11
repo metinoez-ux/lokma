@@ -6,7 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../providers/search_provider.dart';
 
 // 🎨 LOKMA marka rengi (Rose-500)
-const Color lokmaPink = Color(0xFFF43F5E);
+const Color lokmaPink = Color(0xFFFB335B);
 
 class SmartSearchScreen extends ConsumerStatefulWidget {
   final String segment;

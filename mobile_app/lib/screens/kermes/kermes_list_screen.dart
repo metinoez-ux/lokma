@@ -31,7 +31,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   static const Color subtleDark = Color(0xFF374151); // Gray-700
   
   // Brand Colors
-  static const Color primaryRose = Color(0xFFF43F5E); // Rose-500
+  static const Color primaryRose = Color(0xFFFB335B); // Rose-500
   static const Color roseLight = Color(0xFFFEE2E2); // red-100
   
   // ============== STATE ==============

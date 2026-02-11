@@ -501,7 +501,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                     decoration: BoxDecoration(
                       gradient: isSelected
                           ? const LinearGradient(
-                              colors: [lokmaPink, Color(0xFFD32F2F)],
+                              colors: [lokmaPink, Color(0xFFFB335B)],
                             )
                           : null,
                       color: isSelected ? null : cardBg,
@@ -564,7 +564,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
           ? Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [lokmaPink.withOpacity(0.9), const Color(0xFFD32F2F)],
+                  colors: [lokmaPink.withOpacity(0.9), const Color(0xFFFB335B)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -839,7 +839,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                       height: 40,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [lokmaPink, Color(0xFFD32F2F)],
+                          colors: [lokmaPink, Color(0xFFFB335B)],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [

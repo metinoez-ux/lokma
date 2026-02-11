@@ -86,13 +86,13 @@ export const OrderEmailTemplates = {
                 
                 <!-- Content -->
                 <div style="padding: 30px;">
-                    <h2 style="color: #E53935; margin: 0 0 15px 0; font-size: 22px;">Merhaba ${details.customerName}!</h2>
+                    <h2 style="color: #fb335b; margin: 0 0 15px 0; font-size: 22px;">Merhaba ${details.customerName}!</h2>
                     <p style="color: #ccc; line-height: 1.6; margin: 0 0 25px 0;">
                         Siparişiniz başarıyla oluşturuldu. ${details.butcherName} siparişinizi hazırlıyor.
                     </p>
                     
                     <!-- Order Details Box -->
-                    <div style="background: #2a2a2a; border-radius: 12px; padding: 20px; border-left: 4px solid #E53935;">
+                    <div style="background: #2a2a2a; border-radius: 12px; padding: 20px; border-left: 4px solid #fb335b;">
                         <table style="width: 100%; border-collapse: collapse;">
                             <tr>
                                 <td style="padding: 10px 0; color: #888; font-size: 14px;">Sipariş No:</td>
@@ -124,7 +124,7 @@ export const OrderEmailTemplates = {
                     </div>
                     
                     <!-- Warning -->
-                    <div style="background: #3d2020; border-radius: 8px; padding: 15px; margin-top: 20px; border-left: 3px solid #E53935;">
+                    <div style="background: #3d2020; border-radius: 8px; padding: 15px; margin-top: 20px; border-left: 3px solid #fb335b;">
                         <p style="margin: 0; color: #ffaaaa; font-size: 13px;">
                             <strong>Önemli:</strong> Lütfen "Siparişiniz Hazır" bildirimi gelmeden mağazaya gitmeyiniz.
                         </p>
@@ -345,7 +345,7 @@ export const OrderEmailTemplates = {
                 
                 <!-- Content -->
                 <div style="padding: 30px;">
-                    <h2 style="color: #E53935; margin: 0 0 15px 0; font-size: 22px;">Sipariş #${details.orderId.slice(0, 6).toUpperCase()}</h2>
+                    <h2 style="color: #fb335b; margin: 0 0 15px 0; font-size: 22px;">Sipariş #${details.orderId.slice(0, 6).toUpperCase()}</h2>
                     
                     <!-- Customer Info -->
                     <div style="background: #2a2a2a; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
@@ -355,7 +355,7 @@ export const OrderEmailTemplates = {
                     </div>
                     
                     <!-- Order Details -->
-                    <div style="background: #2a2a2a; border-radius: 12px; padding: 15px; border-left: 4px solid #E53935;">
+                    <div style="background: #2a2a2a; border-radius: 12px; padding: 15px; border-left: 4px solid #fb335b;">
                         <p style="margin: 0 0 10px 0; color: #888; font-size: 12px;">SİPARİŞ DETAYLARI</p>
                         ${details.items.map(item => `
                             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333;">

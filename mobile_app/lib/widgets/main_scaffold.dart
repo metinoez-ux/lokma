@@ -313,8 +313,8 @@ class GlassBottomBar extends StatelessWidget {
   }
 
   Widget _buildItemContent(_NavItemData item, bool isActive, BuildContext context, bool isDark) {
-    // Brand Rose (Kermes Kırmızısı) - 0xFFF43F5E
-    const activeColor = Color(0xFFF43F5E); 
+    // Brand Rose (Kermes Kırmızısı) - 0xFFFB335B
+    const activeColor = Color(0xFFFB335B); 
     final inactiveColor = (isDark ? Colors.white : Colors.black).withOpacity(0.6);
     final color = isActive ? activeColor : inactiveColor;
     const iconSize = 24.0; // İkon biraz küçüldü metin için yer açıldı

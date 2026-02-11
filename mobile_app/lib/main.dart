@@ -116,7 +116,7 @@ class LokmaApp extends ConsumerWidget {
         brightness: Brightness.light,
         scaffoldBackgroundColor: const Color(0xFFE8E8EC), // Hafif gri - kontrastlı arka plan
         colorScheme: ColorScheme.light(
-          primary: const Color(0xFFF43F5E), // LOKMA Brand Color
+          primary: const Color(0xFFFB335B), // LOKMA Brand Color
           secondary: const Color(0xFFFFB347),
           surface: Colors.white,
           error: Colors.redAccent,
@@ -135,7 +135,7 @@ class LokmaApp extends ConsumerWidget {
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Colors.white,
-          selectedItemColor: Color(0xFFF43F5E), // LOKMA Brand Color
+          selectedItemColor: Color(0xFFFB335B), // LOKMA Brand Color
           unselectedItemColor: Colors.grey,
         ),
       ),
@@ -144,7 +144,7 @@ class LokmaApp extends ConsumerWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF121212),
         colorScheme: ColorScheme.dark(
-          primary: const Color(0xFFF43F5E), // LOKMA Brand Color
+          primary: const Color(0xFFFB335B), // LOKMA Brand Color
           secondary: const Color(0xFFFFB347),
           surface: const Color(0xFF1E1E1E),
           error: Colors.redAccent,
@@ -160,7 +160,7 @@ class LokmaApp extends ConsumerWidget {
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Color(0xFF1E1E1E),
-          selectedItemColor: Color(0xFFF43F5E), // LOKMA Brand Color
+          selectedItemColor: Color(0xFFFB335B), // LOKMA Brand Color
           unselectedItemColor: Colors.grey,
         ),
       ),

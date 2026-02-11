@@ -64,7 +64,7 @@ export default function CookiesPage() {
                                 </div>
                                 <button
                                     onClick={() => setPreferences({ ...preferences, analytics: !preferences.analytics })}
-                                    className={`w-12 h-6 rounded-full transition-all ${preferences.analytics ? 'bg-[#ec131e]' : 'bg-white/20'}`}
+                                    className={`w-12 h-6 rounded-full transition-all ${preferences.analytics ? 'bg-[#fb335b]' : 'bg-white/20'}`}
                                 >
                                     <div className={`w-5 h-5 bg-white rounded-full transition-all ${preferences.analytics ? 'ml-6' : 'ml-0.5'}`} />
                                 </button>
@@ -83,7 +83,7 @@ export default function CookiesPage() {
                                 </div>
                                 <button
                                     onClick={() => setPreferences({ ...preferences, marketing: !preferences.marketing })}
-                                    className={`w-12 h-6 rounded-full transition-all ${preferences.marketing ? 'bg-[#ec131e]' : 'bg-white/20'}`}
+                                    className={`w-12 h-6 rounded-full transition-all ${preferences.marketing ? 'bg-[#fb335b]' : 'bg-white/20'}`}
                                 >
                                     <div className={`w-5 h-5 bg-white rounded-full transition-all ${preferences.marketing ? 'ml-6' : 'ml-0.5'}`} />
                                 </button>
@@ -97,7 +97,7 @@ export default function CookiesPage() {
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button
                             onClick={handleSave}
-                            className="bg-[#ec131e] hover:bg-red-600 text-white px-8 py-4 rounded-xl font-bold transition-all"
+                            className="bg-[#fb335b] hover:bg-red-600 text-white px-8 py-4 rounded-xl font-bold transition-all"
                         >
                             Tercihleri Kaydet
                         </button>

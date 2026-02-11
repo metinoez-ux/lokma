@@ -112,7 +112,7 @@ class StripePaymentService {
           style: ThemeMode.dark,
           appearance: const PaymentSheetAppearance(
             colors: PaymentSheetAppearanceColors(
-              primary: Color(0xFFE53935),
+              primary: Color(0xFFFB335B),
               background: Color(0xFF1E1E1E),
               componentBackground: Color(0xFF2C2C2C),
               componentText: Colors.white,

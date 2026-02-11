@@ -16,7 +16,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
   bool _isActivating = false;
 
   // LOKMA Design Tokens
-  static const Color lokmaRed = Color(0xFFEC131E);
+  static const Color lokmaRed = Color(0xFFFB335B);
   static const Color cardGold = Color(0xFFD4AF37);
   static const Color cardDark = Color(0xFF1A1A2E);
   static const Color accentGlow = Color(0xFFFF4757);

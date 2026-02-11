@@ -14,7 +14,7 @@ class Lokma3DSwitch extends StatelessWidget {
     super.key,
     required this.value,
     required this.onChanged,
-    this.activeColor = const Color(0xFFE53935),
+    this.activeColor = const Color(0xFFFB335B),
     this.width = 50,
     this.height = 30,
   });

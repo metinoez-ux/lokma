@@ -40,7 +40,7 @@ class _RatingScreenState extends State<RatingScreen> {
   int _businessRating = 0; // 1-5 stars
   int _experienceRating = 0; // 1=Bad, 2=OK, 3=Great
   bool _isSubmitting = false;
-  Color _brandColor = const Color(0xFFEC131E); // Default LOKMA red
+  Color _brandColor = const Color(0xFFFB335B); // Default LOKMA red
 
   // Check if order is completed (delivered)
   bool get _isOrderCompleted => widget.orderStatus == 'delivered';

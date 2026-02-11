@@ -59,8 +59,8 @@ export default function DineInTablePage() {
             <div className="min-h-screen bg-[#120a0a] text-white flex flex-col items-center justify-center px-6 font-['Plus_Jakarta_Sans',sans-serif]">
                 {/* Animated Background */}
                 <div className="fixed inset-0 z-0">
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#ec131e]/10 via-[#120a0a] to-[#120a0a]" />
-                    <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#ec131e]/5 rounded-full blur-3xl animate-pulse" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#fb335b]/10 via-[#120a0a] to-[#120a0a]" />
+                    <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#fb335b]/5 rounded-full blur-3xl animate-pulse" />
                 </div>
 
                 <div className="relative z-10 max-w-md w-full text-center space-y-8">
@@ -88,7 +88,7 @@ export default function DineInTablePage() {
                             ) : (
                                 <>
                                     {businessName && (
-                                        <span className="text-lg font-semibold text-[#ec131e]">{businessName}</span>
+                                        <span className="text-lg font-semibold text-[#fb335b]">{businessName}</span>
                                     )}
                                     <span className="text-white/30">•</span>
                                     <span className="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full text-sm font-medium">
@@ -102,13 +102,13 @@ export default function DineInTablePage() {
                     {/* QR Icon */}
                     <div className="flex justify-center py-4">
                         <div className="relative">
-                            <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-[#ec131e]/20 to-[#ec131e]/5 border border-[#ec131e]/30 flex items-center justify-center">
-                                <svg className="w-14 h-14 text-[#ec131e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-[#fb335b]/20 to-[#fb335b]/5 border border-[#fb335b]/30 flex items-center justify-center">
+                                <svg className="w-14 h-14 text-[#fb335b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
                             </div>
                             {/* Pulse ring */}
-                            <div className="absolute inset-0 rounded-3xl border-2 border-[#ec131e]/20 animate-ping" />
+                            <div className="absolute inset-0 rounded-3xl border-2 border-[#fb335b]/20 animate-ping" />
                         </div>
                     </div>
 

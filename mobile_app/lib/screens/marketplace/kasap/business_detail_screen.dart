@@ -31,8 +31,8 @@ class BusinessDetailScreen extends ConsumerStatefulWidget {
 class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // Theme-aware colors (resolved in build method)
   // 🎨 BRAND COLOUR: Fallback when no brandColor in Firestore
-  static const Color _defaultBrandColor = Color(0xFFD03140);  // LOKMA default red
-  static const Color _accentRed = Color(0xFFE53935);    // Legacy red accent
+  static const Color _defaultBrandColor = Color(0xFFFB335B);  // LOKMA brand color
+  static const Color _accentRed = Color(0xFFFB335B);    // Legacy red accent
   
   // 🎨 BRAND COLOUR: Get merchant's brand color from Firestore
   // Reads 'brandColor' field (hex string like '#FF5733') from business document
@@ -56,7 +56,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // Check for legacy brand field
     final brand = data?['brand']?.toString().toLowerCase();
     if (brand == 'tuna') {
-      return const Color(0xFFE91E63); // 🎨 BRAND COLOUR: TUNA pink/magenta
+      return const Color(0xFFFB335B); // 🎨 BRAND COLOUR: TUNA pink/magenta
     } else if (brand == 'akdeniz_toros') {
       return const Color(0xFF1B5E20); // 🎨 BRAND COLOUR: Akdeniz Toros green
     }
@@ -789,7 +789,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                 decoration: const BoxDecoration(
-                  color: Color(0xFFB71C1C), // Deep Red
+                  color: Color(0xFFFB335B), // Deep Red
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
                 child: Column(
@@ -978,7 +978,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFD32F2F),
+                                color: const Color(0xFFFB335B),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row( // Added Row for Arrow hint
@@ -1440,7 +1440,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // 🎨 BRAND COLOR SYSTEM: Use brand-specific colors when available
     Color accent;
     if (brand?.toString().toLowerCase() == 'tuna') {
-      accent = const Color(0xFFE91E63); // 🎨 BRAND COLOUR: TUNA pink/magenta
+      accent = const Color(0xFFFB335B); // 🎨 BRAND COLOUR: TUNA pink/magenta
     } else if (brand?.toString().toLowerCase() == 'akdeniz_toros') {
       accent = const Color(0xFF1B5E20); // 🎨 BRAND COLOUR: Akdeniz Toros green
     } else {
@@ -1657,7 +1657,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFFD32F2F),
+                                  color: Color(0xFFFB335B),
                                   borderRadius: BorderRadius.only(
                                     topRight: Radius.circular(8),
                                     bottomRight: Radius.circular(8),
@@ -2041,7 +2041,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     decoration: BoxDecoration(
                       color: product.allowBackorder 
                         ? (product.expectedRestockDate != null ? Colors.blue[800] : Colors.orange[800])
-                        : const Color(0xFFD32F2F), // Red Pill if truly out
+                        : const Color(0xFFFB335B), // Red Pill if truly out
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                          BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 4, offset:const Offset(0,2))
@@ -2137,7 +2137,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       Text(
                         '${product.price.toStringAsFixed(0)} €',
                         style: const TextStyle(
-                          color: Color(0xFFE53935), // Red Price
+                          color: Color(0xFFFB335B), // Red Price
                           fontWeight: FontWeight.w800, 
                           fontSize: 18
                         ),
@@ -3156,7 +3156,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
     final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF8F8F8);
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.grey[400] : Colors.grey[600];
-    final accent = const Color(0xFFD03140); // Brand color
+    final accent = const Color(0xFFFB335B); // Brand color
     final topPadding = MediaQuery.of(context).padding.top;
     final filtered = _filteredProducts;
 

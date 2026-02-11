@@ -69,16 +69,16 @@ export default function HowItWorksPage() {
                         {steps.map((step, index) => (
                             <div
                                 key={step.number}
-                                className={`flex flex-col md:flex-row items-start gap-8 p-8 rounded-2xl ${index % 2 === 0 ? 'bg-white/5' : 'bg-[#ec131e]/5'
+                                className={`flex flex-col md:flex-row items-start gap-8 p-8 rounded-2xl ${index % 2 === 0 ? 'bg-white/5' : 'bg-[#fb335b]/5'
                                     } border border-white/10`}
                             >
                                 <div className="flex-shrink-0">
-                                    <div className="w-16 h-16 bg-[#ec131e] rounded-2xl flex items-center justify-center">
+                                    <div className="w-16 h-16 bg-[#fb335b] rounded-2xl flex items-center justify-center">
                                         <span className="material-symbols-outlined text-white text-3xl">{step.icon}</span>
                                     </div>
                                 </div>
                                 <div>
-                                    <div className="text-[#ec131e] font-bold text-sm mb-2">{step.number}</div>
+                                    <div className="text-[#fb335b] font-bold text-sm mb-2">{step.number}</div>
                                     <h3 className="text-2xl font-bold mb-3">{step.title}</h3>
                                     <p className="text-white/60 text-lg">{step.description}</p>
                                 </div>

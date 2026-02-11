@@ -47,7 +47,7 @@ class RestoranScreen extends ConsumerStatefulWidget {
 class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   // Theme colors
   // Theme colors
-  static const Color lokmaPink = Color(0xFFF43F5E); // Rose-500 brand color
+  static const Color lokmaPink = Color(0xFFFB335B); // Rose-500 brand color
   static const Color tunaGreen = Color(0xFF4CAF50);
   
   // Dynamic card background getter for theme-aware colors
@@ -940,10 +940,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: _onlyTuna ? const Color(0xFFB71C1C) : Colors.transparent,
+                color: _onlyTuna ? const Color(0xFFFB335B) : Colors.transparent,
                 borderRadius: BorderRadius.circular(20), // Pill shape
                 border: Border.all(
-                  color: _onlyTuna ? const Color(0xFFB71C1C) : Colors.grey.shade400,
+                  color: _onlyTuna ? const Color(0xFFFB335B) : Colors.grey.shade400,
                   width: 1.5,
                 ),
               ),
@@ -988,10 +988,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: _onlyTuna ? const Color(0xFFB71C1C) : Colors.transparent,
+                color: _onlyTuna ? const Color(0xFFFB335B) : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: _onlyTuna ? const Color(0xFFB71C1C) : Colors.grey.shade400,
+                  color: _onlyTuna ? const Color(0xFFFB335B) : Colors.grey.shade400,
                   width: 1.5,
                 ),
               ),
@@ -1607,7 +1607,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFB71C1C), // TUNA red
+                              color: const Color(0xFFFB335B), // TUNA red
                               borderRadius: BorderRadius.circular(16), // Pill shape
                               boxShadow: [
                                 BoxShadow(

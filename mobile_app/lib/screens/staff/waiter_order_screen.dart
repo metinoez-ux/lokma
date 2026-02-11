@@ -148,7 +148,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
 
   /// Shows a bottom sheet with the table's current order summary and payment status
   void _showTableOverviewSheet(TableSession session, int tableNumber) {
-    const brandColor = Color(0xFFF43F5E);
+    const brandColor = Color(0xFFFB335B);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -674,7 +674,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
   Widget _buildTableSelection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    const brandColor = Color(0xFFF43F5E);
+    const brandColor = Color(0xFFFB335B);
     
     return Padding(
       padding: const EdgeInsets.all(20),

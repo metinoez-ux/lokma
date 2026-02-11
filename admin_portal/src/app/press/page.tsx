@@ -28,7 +28,7 @@ export default function PressPage() {
                         </p>
                         <a
                             href="mailto:presse@lokma.shop"
-                            className="inline-flex items-center gap-2 bg-[#ec131e] hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all"
+                            className="inline-flex items-center gap-2 bg-[#fb335b] hover:bg-red-600 text-white px-6 py-3 rounded-xl font-bold transition-all"
                         >
                             <span className="material-symbols-outlined">mail</span>
                             presse@lokma.shop
@@ -38,16 +38,16 @@ export default function PressPage() {
                     <h2 className="text-2xl font-bold mb-6">Basın Kiti</h2>
                     <div className="grid md:grid-cols-2 gap-6 mb-12">
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                            <span className="material-symbols-outlined text-[#ec131e] text-3xl mb-4 block">image</span>
+                            <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-4 block">image</span>
                             <h3 className="font-bold mb-2">Logo & Marka Kılavuzu</h3>
                             <p className="text-sm text-white/60 mb-4">LOKMA logoları ve marka kullanım kılavuzu</p>
-                            <button className="text-[#ec131e] font-bold text-sm">İndir (Coming Soon)</button>
+                            <button className="text-[#fb335b] font-bold text-sm">İndir (Coming Soon)</button>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                            <span className="material-symbols-outlined text-[#ec131e] text-3xl mb-4 block">description</span>
+                            <span className="material-symbols-outlined text-[#fb335b] text-3xl mb-4 block">description</span>
                             <h3 className="font-bold mb-2">Şirket Bilgileri</h3>
                             <p className="text-sm text-white/60 mb-4">Şirket profili ve istatistikler</p>
-                            <button className="text-[#ec131e] font-bold text-sm">İndir (Coming Soon)</button>
+                            <button className="text-[#fb335b] font-bold text-sm">İndir (Coming Soon)</button>
                         </div>
                     </div>
 

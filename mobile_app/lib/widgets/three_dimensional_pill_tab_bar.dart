@@ -21,7 +21,7 @@ class ThreeDimensionalPillTabBar extends StatelessWidget {
   });
 
   // 🎨 BRAND COLOUR - LOKMA Red (#EC131E) with gradient shades
-  static const Color lokmaPink = Color(0xFFEC131E);      // Main brand color
+  static const Color lokmaPink = Color(0xFFFB335B);      // Main brand color
   static const Color lokmaPinkLight = Color(0xFFF54D4D); // Light top (reflection)
   static const Color lokmaPinkDark = Color(0xFFC41017);  // Dark shadow bottom
 
