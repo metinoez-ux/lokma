@@ -323,6 +323,7 @@ export default function AdminHeader() {
                                 { href: '/admin/kermes', icon: '🎪', label: 'Kermes' },
                                 { href: '/admin/drivers', icon: '🚗', label: 'Sürücüler' },
                                 { href: '/admin/reservations', icon: '🍽️', label: 'Rezervasyonlar' },
+                                { href: '/admin/image-generator', icon: '🎨', label: 'Görsel Üret' },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);
                                 return (
@@ -532,6 +533,12 @@ export default function AdminHeader() {
                             <Link href="/admin/statistics" className="flex items-center gap-2 bg-cyan-700/50 hover:bg-cyan-700 px-4 py-2 rounded-lg transition-all border border-cyan-600">
                                 <img src="/icons/istatistik.png" alt="İstatistik" className="w-5 h-5" />
                                 <span className="text-cyan-200 text-sm font-medium">İstatistikler</span>
+                            </Link>
+
+                            {/* Görsel Kütüphanesi */}
+                            <Link href="/admin/image-generator" className="flex items-center gap-2 bg-violet-700/50 hover:bg-violet-700 px-4 py-2 rounded-lg transition-all border border-violet-600">
+                                <span className="text-lg">🎨</span>
+                                <span className="text-violet-200 text-sm font-medium">Görseller</span>
                             </Link>
                         </div>
                     </div>
