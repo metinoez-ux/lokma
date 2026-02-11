@@ -59,6 +59,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   
   // Distance slider (km) - Market için max 15 km
   double _maxDistance = 100.0;
+  bool _sliderAutoSet = false; // Auto-snap slider to nearest business once
   
   // Dynamic categories from Firestore
   Map<String, int> _businessTypeCounts = {};
@@ -150,6 +151,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           _businessTypeCounts = typeCounts;
           _isLoading = false;
         });
+        // Auto-snap slider to nearest business (only once)
+        if (!_sliderAutoSet) {
+          _autoSetSliderToNearestBusiness();
+        }
       }
     }, onError: (e) {
       debugPrint('❌ Error loading businesses: $e');
@@ -554,12 +559,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                     // Search bar (teslimat/gel al altında)
                                     _buildSearchBar(),
                                     
-                                    // Distance slider + TUNA toggle - Sadece Gel-Al modunda göster (Kurye'de gizle)
-                                    if (_deliveryMode == 'gelal')
-                                      _buildDistanceSliderWithTuna()
-                                    else
-                                      // Kurye modunda sadece TUNA Kasaplar toggle göster
-                                      _buildTunaToggleOnly(),
+                                    // Distance slider - Tüm modlarda göster
+                                    _buildDistanceSliderWithTuna(),
                                   ],
                                 ),
                               ),
@@ -690,7 +691,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     children: [
                       Icon(
                         hasAny ? Icons.favorite : Icons.favorite_border,
-                        color: const Color(0xFFFF3333),
+                        color: lokmaPink,
                         size: 24,
                       ),
                       if (hasAny)
@@ -700,7 +701,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF3333),
+                              color: lokmaPink,
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(color: Colors.white, width: 1),
                             ),
@@ -837,6 +838,56 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   }
 
   int _currentStepIndex = 9; // Varsayılan: 100 km (index 9)
+
+  /// Auto-snap slider to nearest market business distance
+  void _autoSetSliderToNearestBusiness() {
+    if (_userLat == null || _userLng == null || _allBusinesses.isEmpty) return;
+    
+    double nearestKm = double.infinity;
+    
+    for (final doc in _allBusinesses) {
+      final data = doc.data() as Map<String, dynamic>;
+      if (!_hasMarketSector(data)) continue;
+      final isActive = data['isActive'] as bool? ?? true;
+      if (!isActive) continue;
+      
+      double? lat, lng;
+      if (data['lat'] is num) lat = (data['lat'] as num).toDouble();
+      if (data['lng'] is num) lng = (data['lng'] as num).toDouble();
+      if (lat == null || lng == null) {
+        final addr = data['address'] as Map<String, dynamic>?;
+        if (addr != null) {
+          if (addr['lat'] is num) lat = (addr['lat'] as num).toDouble();
+          if (addr['lng'] is num) lng = (addr['lng'] as num).toDouble();
+        }
+      }
+      
+      if (lat != null && lng != null) {
+        final distKm = Geolocator.distanceBetween(_userLat!, _userLng!, lat, lng) / 1000;
+        if (distKm < nearestKm) nearestKm = distKm;
+      }
+    }
+    
+    if (nearestKm == double.infinity) return;
+    
+    // Find the first step index that covers the nearest business
+    int targetIndex = _kmSteps.length - 1; // fallback to max
+    for (int i = 0; i < _kmSteps.length; i++) {
+      if (_kmSteps[i] >= nearestKm) {
+        targetIndex = i;
+        break;
+      }
+    }
+    
+    if (mounted) {
+      setState(() {
+        _currentStepIndex = targetIndex;
+        _maxDistance = _kmSteps[targetIndex];
+        _sliderAutoSet = true;
+      });
+      debugPrint('🎯 Market auto-set slider: nearest at ${nearestKm.toStringAsFixed(1)}km → step ${_kmSteps[targetIndex]}km');
+    }
+  }
 
   Widget _buildDistanceSliderWithTuna() {
     final businessKms = _businessKmSet;
