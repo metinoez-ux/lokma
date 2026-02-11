@@ -82,6 +82,23 @@ const categories: Category[] = [
     },
 ];
 
+// ── Output format (aspect ratio) definitions ────────────────────────────
+interface OutputFormat {
+    id: string;
+    name: string;
+    label: string;
+    aspectRatio: string;
+    icon: string;
+}
+
+const outputFormats: OutputFormat[] = [
+    { id: '1:1', name: 'Kare', label: '1:1', aspectRatio: '1:1', icon: '⬜' },
+    { id: '3:4', name: 'Portre', label: '3:4', aspectRatio: '3:4', icon: '📱' },
+    { id: '4:3', name: 'Klasik', label: '4:3', aspectRatio: '4:3', icon: '🖼️' },
+    { id: '16:9', name: 'Geniş Ekran', label: '16:9', aspectRatio: '16:9', icon: '🖥️' },
+    { id: '9:16', name: 'Hikaye', label: '9:16', aspectRatio: '9:16', icon: '📲' },
+];
+
 // ── Firestore collection path ───────────────────────────────────────────
 const GALLERY_COLLECTION = 'generated_images';
 
@@ -93,6 +110,7 @@ interface GalleryImage {
     keyword: string;
     imageUrl: string;
     storagePath: string;
+    aspectRatio?: string;
     createdAt: Timestamp;
     createdBy: string;
     createdByName: string;
@@ -104,6 +122,7 @@ export default function ImageGeneratorPage() {
 
     // ── State ────────────────────────────────────────────────────────────
     const [activeCategory, setActiveCategory] = useState<string>('kasap');
+    const [activeFormat, setActiveFormat] = useState<string>('1:1');
     const [keyword, setKeyword] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [gallery, setGallery] = useState<GalleryImage[]>([]);
@@ -173,14 +192,19 @@ export default function ImageGeneratorPage() {
             const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
             if (!apiKey) throw new Error('API key not configured');
 
+            const formatInfo = outputFormats.find((f) => f.id === activeFormat);
+
             const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:generateImages?key=${apiKey}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        instances: { prompt: fullPrompt },
-                        parameters: { sampleCount: 1 },
+                        prompt: fullPrompt,
+                        config: {
+                            numberOfImages: 1,
+                            aspectRatio: formatInfo?.aspectRatio || '1:1',
+                        },
                     }),
                 }
             );
@@ -192,12 +216,14 @@ export default function ImageGeneratorPage() {
 
             const result = await response.json();
 
-            if (!result.predictions?.[0]?.bytesBase64Encoded) {
+            // Imagen 4 generateImages response format
+            const imageData = result.generatedImages?.[0]?.image?.imageBytes;
+            if (!imageData) {
                 throw new Error('API yanıtında görsel bulunamadı');
             }
 
             // Convert base64 → blob
-            const base64 = result.predictions[0].bytesBase64Encoded;
+            const base64 = imageData;
             const byteChars = atob(base64);
             const byteNumbers = new Array(byteChars.length);
             for (let i = 0; i < byteChars.length; i++) {
@@ -226,6 +252,7 @@ export default function ImageGeneratorPage() {
                 keyword: keyword.trim(),
                 imageUrl: downloadUrl,
                 storagePath,
+                aspectRatio: activeFormat,
                 createdAt: Timestamp.now(),
                 createdBy: admin.id || admin.email || 'unknown',
                 createdByName: admin.displayName || admin.email || 'Admin',
@@ -323,12 +350,31 @@ export default function ImageGeneratorPage() {
                                     key={cat.id}
                                     onClick={() => setActiveCategory(cat.id)}
                                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${activeCategory === cat.id
-                                            ? 'bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-600/30 scale-105'
-                                            : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600'
+                                        ? 'bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-600/30 scale-105'
+                                        : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:border-gray-600'
                                         }`}
                                 >
                                     <span className="text-lg">{cat.icon}</span>
                                     {cat.name}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Output Format / Aspect Ratio */}
+                        <div className="flex flex-wrap items-center gap-2 mb-5">
+                            <span className="text-xs text-gray-500 font-bold mr-1">📐 Format:</span>
+                            {outputFormats.map((fmt) => (
+                                <button
+                                    key={fmt.id}
+                                    onClick={() => setActiveFormat(fmt.id)}
+                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${activeFormat === fmt.id
+                                            ? 'bg-pink-600 border-pink-500 text-white shadow-lg shadow-pink-600/30 scale-105'
+                                            : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:border-gray-600'
+                                        }`}
+                                >
+                                    <span>{fmt.icon}</span>
+                                    {fmt.name}
+                                    <span className="text-[10px] opacity-70">({fmt.label})</span>
                                 </button>
                             ))}
                         </div>
@@ -415,8 +461,8 @@ export default function ImageGeneratorPage() {
                             <button
                                 onClick={() => setFilterCategory('all')}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filterCategory === 'all'
-                                        ? 'bg-white text-gray-900'
-                                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                    ? 'bg-white text-gray-900'
+                                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                     }`}
                             >
                                 Hepsi ({gallery.length})
@@ -429,8 +475,8 @@ export default function ImageGeneratorPage() {
                                         key={cat.id}
                                         onClick={() => setFilterCategory(cat.id)}
                                         className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filterCategory === cat.id
-                                                ? 'bg-violet-600 text-white'
-                                                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                                            ? 'bg-violet-600 text-white'
+                                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                             }`}
                                     >
                                         {cat.icon} {cat.name} ({count})
@@ -485,8 +531,8 @@ export default function ImageGeneratorPage() {
                                                 copyUrl(image);
                                             }}
                                             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${copiedId === image.id
-                                                    ? 'bg-emerald-600 text-white'
-                                                    : 'bg-white/10 backdrop-blur-xl text-white hover:bg-white/20'
+                                                ? 'bg-emerald-600 text-white'
+                                                : 'bg-white/10 backdrop-blur-xl text-white hover:bg-white/20'
                                                 }`}
                                         >
                                             {copiedId === image.id ? '✓ Kopyalandı' : '📋 URL Kopyala'}
@@ -593,8 +639,8 @@ export default function ImageGeneratorPage() {
                                 <button
                                     onClick={() => copyUrl(previewImage)}
                                     className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${copiedId === previewImage.id
-                                            ? 'bg-emerald-600 text-white'
-                                            : 'bg-violet-600 text-white hover:bg-violet-500'
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-violet-600 text-white hover:bg-violet-500'
                                         }`}
                                 >
                                     {copiedId === previewImage.id ? '✓ Kopyalandı' : '📋 URL Kopyala'}
@@ -616,8 +662,8 @@ export default function ImageGeneratorPage() {
                 <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
                     <div
                         className={`${toast.type === 'error'
-                                ? 'bg-red-600 border-red-500/50'
-                                : 'bg-gray-800 border-gray-700/50'
+                            ? 'bg-red-600 border-red-500/50'
+                            : 'bg-gray-800 border-gray-700/50'
                             } text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border`}
                     >
                         <span>{toast.type === 'error' ? '⚠️' : '✅'}</span>

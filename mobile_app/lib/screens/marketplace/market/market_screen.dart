@@ -606,6 +606,12 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           _userLat = location.latitude;
           _userLng = location.longitude;
           _isLoadingLocation = false;
+          // Re-trigger auto-set when location becomes available
+          if (!_sliderAutoSet && _allBusinesses.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _autoSetSliderToNearestBusiness();
+            });
+          }
         } else {
           cityName = location.address.isNotEmpty ? location.address : 'Konum izni verilmedi';
         }

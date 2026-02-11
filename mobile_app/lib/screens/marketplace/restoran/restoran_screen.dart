@@ -621,6 +621,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           _userLat = location.latitude;
           _userLng = location.longitude;
           _isLoadingLocation = false;
+          // Re-trigger auto-set when location becomes available
+          if (!_sliderAutoSet && _allBusinesses.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _autoSetSliderToNearestBusiness();
+            });
+          }
         } else {
           cityName = location.address.isNotEmpty ? location.address : 'Konum izni verilmedi';
         }
@@ -815,7 +821,15 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         if (index == 1) newMode = 'gelal';
         if (index == 2) newMode = 'masa';
         
-        setState(() => _deliveryMode = newMode);
+        setState(() {
+          _deliveryMode = newMode;
+          // Reset auto-set so slider re-snaps to nearest business for new mode
+          _sliderAutoSet = false;
+          _currentStepIndex = 9; // Reset to 10km default
+          _maxDistance = 10.0;
+        });
+        // Re-trigger auto-set for the new delivery mode
+        _autoSetSliderToNearestBusiness();
       },
     );
   }
@@ -858,7 +872,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   int _currentStepIndex = 9; // Varsayılan: 10 km (index 9)
   double _lastSliderValue = 10.0;
 
-  /// Auto-snap slider to nearest business distance
+  /// Auto-snap slider to nearest business distance (respects delivery mode)
   void _autoSetSliderToNearestBusiness() {
     if (_userLat == null || _userLng == null || _allBusinesses.isEmpty) return;
     
@@ -869,6 +883,21 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       if (!_hasYemekSector(data)) continue;
       final isActive = data['isActive'] as bool? ?? true;
       if (!isActive) continue;
+      
+      // Also check delivery mode compatibility
+      if (_deliveryMode == 'teslimat') {
+        final offersDelivery = data['offersDelivery'] as bool? ?? true;
+        if (!offersDelivery) continue;
+      } else if (_deliveryMode == 'gelal') {
+        final offersPickup = data['offersPickup'] as bool? ?? true;
+        if (!offersPickup) continue;
+      } else if (_deliveryMode == 'masa') {
+        final hasReservation = data['hasReservation'] as bool? ?? false;
+        final tableCapacity = data['tableCapacity'] as int? ?? 0;
+        final hasDineInQR = data['hasDineInQR'] as bool? ?? false;
+        final hasWaiterOrder = data['hasWaiterOrder'] as bool? ?? false;
+        if (!hasReservation && tableCapacity <= 0 && !hasDineInQR && !hasWaiterOrder) continue;
+      }
       
       double? lat, lng;
       if (data['lat'] is num) lat = (data['lat'] as num).toDouble();
@@ -887,7 +916,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       }
     }
     
-    if (nearestKm == double.infinity) return;
+    // If no matching business found, keep default (10km) 
+    if (nearestKm == double.infinity) {
+      if (mounted) {
+        setState(() => _sliderAutoSet = true);
+      }
+      debugPrint('🎯 Auto-set: no matching business for mode=$_deliveryMode, keeping default 10km');
+      return;
+    }
     
     // Find the first step index that covers the nearest business
     int targetIndex = _kmSteps.length - 1; // fallback to max
