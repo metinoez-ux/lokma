@@ -183,7 +183,12 @@ export default function OrdersPage() {
                     deliveryFee: d.deliveryFee || 0,
                     total: d.totalPrice || d.totalAmount || d.total || 0,
                     status: d.status || 'pending',
-                    type: d.orderType || d.deliveryMethod || d.deliveryType || d.fulfillmentType || 'pickup',
+                    type: (() => {
+                        const raw = d.orderType || d.deliveryMethod || d.deliveryType || d.fulfillmentType || 'pickup';
+                        // Normalize camelCase to snake_case (Dart stores 'dineIn', admin expects 'dine_in')
+                        if (raw === 'dineIn') return 'dine_in';
+                        return raw;
+                    })(),
                     createdAt: d.createdAt,
                     scheduledAt: d.deliveryDate || d.scheduledDateTime,
                     address: d.deliveryAddress ? { street: d.deliveryAddress } : d.address,
