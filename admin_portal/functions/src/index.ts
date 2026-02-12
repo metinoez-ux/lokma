@@ -210,11 +210,15 @@ async function createCommissionRecord(orderId: string, orderData: any) {
         let sponsoredFee = 0;
         if (orderData.hasSponsoredItems && Array.isArray(orderData.sponsoredItemIds) && orderData.sponsoredItemIds.length > 0) {
             try {
-                // Read global sponsored settings
+                // Read global sponsored settings (for enabled flag and fallback fee)
                 const sponsoredSettingsDoc = await db.collection("platformSettings").doc("sponsored").get();
                 const sponsoredSettings = sponsoredSettingsDoc.exists ? sponsoredSettingsDoc.data() : null;
-                const feePerConversion = sponsoredSettings?.feePerConversion ?? 0.40;
                 const sponsoredEnabled = sponsoredSettings?.enabled ?? true;
+
+                // Per-plan fee takes priority over global setting
+                const feePerConversion = (plan?.sponsoredFeePerConversion !== undefined && plan?.sponsoredFeePerConversion !== null)
+                    ? plan.sponsoredFeePerConversion
+                    : (sponsoredSettings?.feePerConversion ?? 0.40);
 
                 if (sponsoredEnabled && feePerConversion > 0) {
                     const sponsoredItemCount = orderData.sponsoredItemIds.length;

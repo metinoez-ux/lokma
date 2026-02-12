@@ -115,6 +115,8 @@ export const subscriptionService = {
                 perOrderFeeAmount: 0,
                 tableReservationLimit: null,
                 tableReservationOverageFee: 0,
+                sponsoredFeePerConversion: 0.50,
+                sponsoredMaxProducts: 3,
                 trialDays: 0,
 
                 color: 'bg-gray-600',
@@ -167,6 +169,8 @@ export const subscriptionService = {
                 perOrderFeeAmount: 0,
                 tableReservationLimit: null,
                 tableReservationOverageFee: 0,
+                sponsoredFeePerConversion: 0.40,
+                sponsoredMaxProducts: 5,
                 trialDays: 30,
 
                 color: 'bg-green-600',
@@ -219,6 +223,8 @@ export const subscriptionService = {
                 perOrderFeeAmount: 0.50,
                 tableReservationLimit: 100,
                 tableReservationOverageFee: 1.00,
+                sponsoredFeePerConversion: 0.20,
+                sponsoredMaxProducts: 10,
                 trialDays: 30,
 
                 color: 'bg-blue-600',
@@ -271,6 +277,8 @@ export const subscriptionService = {
                 perOrderFeeAmount: 0,
                 tableReservationLimit: null,
                 tableReservationOverageFee: 0,
+                sponsoredFeePerConversion: 0,
+                sponsoredMaxProducts: 20,
                 trialDays: 60,
 
                 color: 'bg-yellow-600',

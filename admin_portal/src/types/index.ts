@@ -515,6 +515,10 @@ export interface ButcherSubscriptionPlan {
     tableReservationLimit: number | null; // Dahil masa sayısı (null = sınırsız)
     tableReservationOverageFee: number;   // Limit aşım ücreti (€/rezervasyon)
 
+    // Sponsored Products (Öne Çıkan Ürünler)
+    sponsoredFeePerConversion: number;    // Plan bazlı sipariş başı ücret (€) — 0 = bedava
+    sponsoredMaxProducts: number;         // Bu plandaki max öne çıkan ürün sayısı
+
     trialDays: number;
 
     // Feature Toggles (Granular Control)

@@ -63,6 +63,8 @@ export default function PlansPage() {
         freeOrderCount: 0,
         tableReservationLimit: null,
         tableReservationOverageFee: 0,
+        sponsoredFeePerConversion: 0.40,
+        sponsoredMaxProducts: 5,
     });
 
     const colorOptions = [
@@ -114,6 +116,8 @@ export default function PlansPage() {
             commissionOwnCourier: plan.commissionOwnCourier ?? 4,
             commissionLokmaCourier: plan.commissionLokmaCourier ?? 7,
             freeOrderCount: plan.freeOrderCount ?? 0,
+            sponsoredFeePerConversion: (plan as any).sponsoredFeePerConversion ?? 0.40,
+            sponsoredMaxProducts: (plan as any).sponsoredMaxProducts ?? 5,
         });
         setIsModalOpen(true);
     };
@@ -156,6 +160,9 @@ export default function PlansPage() {
                 // Masa rezervasyonu
                 tableReservationLimit: (formData as any).tableReservationLimit ?? null,
                 tableReservationOverageFee: (formData as any).tableReservationOverageFee ?? 0,
+                // Sponsored Products
+                sponsoredFeePerConversion: (formData as any).sponsoredFeePerConversion ?? 0.40,
+                sponsoredMaxProducts: (formData as any).sponsoredMaxProducts ?? 5,
                 stripePriceId: {
                     monthly: formData.stripePriceId?.monthly || '',
                     yearly: formData.stripePriceId?.yearly || '',
@@ -308,7 +315,7 @@ export default function PlansPage() {
                                                 {(plan.features as any)?.waiterOrder ? '✓' : '·'} Garson
                                             </span>
                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.sponsoredProducts ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {(plan.features as any)?.sponsoredProducts ? '✓' : '·'} Öne Çıkan
+                                                {(plan.features as any)?.sponsoredProducts ? '✓' : '·'} Öne Çıkan {(plan.features as any)?.sponsoredProducts && <span className="opacity-70">€{((plan as any).sponsoredFeePerConversion ?? 0.40).toFixed(2)}</span>}
                                             </span>
                                         </div>
 
@@ -714,7 +721,7 @@ export default function PlansPage() {
                                                         { key: 'liveCourierTracking', label: 'Canlı Kurye Takibi', color: 'text-purple-400' },
                                                         { key: 'dineInQR', label: '🪑 Masada Sipariş (QR Kod)', color: 'text-orange-400' },
                                                         { key: 'waiterOrder', label: '👨‍🍳 Garson Sipariş', color: 'text-teal-400' },
-                                                        { key: 'sponsoredProducts', label: '⭐ Öne Çıkan Ürünler', color: 'text-yellow-400' },
+                                                        { key: 'sponsoredProducts', label: '⭐ Öne Çıkan Ürünler', color: 'text-yellow-400', hasSubFields: true },
                                                         { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-gray-400', invert: true }, // Logic invert handled in render
                                                     ].map((feature) => (
                                                         <label key={feature.key} className="flex items-center p-3 rounded-lg bg-gray-900 border border-gray-800 hover:border-gray-600 hover:bg-gray-800 transition-all cursor-pointer group">
@@ -734,6 +741,50 @@ export default function PlansPage() {
                                                         </label>
                                                     ))}
                                                 </div>
+
+                                                {/* Sponsored Products Sub-Settings */}
+                                                {(formData.features as any)?.sponsoredProducts && (
+                                                    <div className="mt-4 bg-yellow-900/10 border border-yellow-700/30 rounded-xl p-4">
+                                                        <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">⭐ Öne Çıkan Ürün Ayarları</h4>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="block text-xs text-gray-400 mb-1.5">Sipariş Başı Ücret (€)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0"
+                                                                    value={(formData as any).sponsoredFeePerConversion ?? 0.40}
+                                                                    onChange={e => setFormData({ ...formData, sponsoredFeePerConversion: parseFloat(e.target.value) || 0 } as any)}
+                                                                    className="w-full bg-gray-900 border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
+                                                                    placeholder="0.40"
+                                                                />
+                                                                <p className="text-xs text-gray-500 mt-1">0 = Bedava (bu plan için sponsored ücretsiz)</p>
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-xs text-gray-400 mb-1.5">Max Ürün Sayısı</label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="1"
+                                                                    max="50"
+                                                                    value={(formData as any).sponsoredMaxProducts ?? 5}
+                                                                    onChange={e => setFormData({ ...formData, sponsoredMaxProducts: parseInt(e.target.value) || 5 } as any)}
+                                                                    className="w-full bg-gray-900 border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
+                                                                    placeholder="5"
+                                                                />
+                                                                <p className="text-xs text-gray-500 mt-1">Bu plandaki işletme kaç ürün öne çıkarabilir</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-3 bg-gray-900/50 rounded-lg px-3 py-2">
+                                                            <p className="text-xs text-yellow-300/80">
+                                                                📊 Bu plandaki işletmeler max <strong>{(formData as any).sponsoredMaxProducts ?? 5}</strong> ürün seçebilir.
+                                                                {((formData as any).sponsoredFeePerConversion ?? 0.40) > 0
+                                                                    ? <> Her sipariş başı <strong>€{((formData as any).sponsoredFeePerConversion ?? 0.40).toFixed(2)}</strong> ücretlendirilir.</>
+                                                                    : <> Sponsored ürünler <strong className="text-green-400">ücretsiz</strong> olarak sunulur.</>
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
 
                                                 <div className="mt-8">
                                                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-1">Gelecek Entegrasyonlar</h4>
