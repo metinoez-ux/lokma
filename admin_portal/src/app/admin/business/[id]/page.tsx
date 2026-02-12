@@ -235,8 +235,17 @@ export default function BusinessDetailPage() {
   } | null>(null);
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "orders" | "settings" | "products" | "reservations" | "dineIn"
+    "overview" | "orders" | "settings" | "products" | "reservations" | "dineIn" | "sponsored"
   >(initialTab);
+
+  // 🌟 Sponsored Products state
+  const [sponsoredProducts, setSponsoredProducts] = useState<string[]>([]);
+  const [sponsoredSettings, setSponsoredSettings] = useState<{
+    enabled: boolean;
+    feePerConversion: number;
+    maxProductsPerBusiness: number;
+  }>({ enabled: false, feePerConversion: 0.40, maxProductsPerBusiness: 5 });
+  const [sponsoredSaving, setSponsoredSaving] = useState(false);
 
   // Update tab when URL changes
   useEffect(() => {
@@ -506,6 +515,8 @@ export default function BusinessDetailPage() {
         setBusiness(data);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const d = data as any;
+        // 🌟 Load sponsored products list
+        setSponsoredProducts(d.sponsoredProducts || []);
         setFormData({
           companyName: d.companyName || "",
           customerId: d.customerId || "",
@@ -794,6 +805,23 @@ export default function BusinessDetailPage() {
   useEffect(() => {
     if (business) {
       loadMasterProducts();
+      // 🌟 Load platform sponsored settings
+      const loadSponsoredSettings = async () => {
+        try {
+          const sponsoredDoc = await getDoc(doc(db, 'platformSettings', 'sponsored'));
+          if (sponsoredDoc.exists()) {
+            const sData = sponsoredDoc.data();
+            setSponsoredSettings({
+              enabled: sData.enabled ?? false,
+              feePerConversion: sData.feePerConversion ?? 0.40,
+              maxProductsPerBusiness: sData.maxProductsPerBusiness ?? 5,
+            });
+          }
+        } catch (e) {
+          console.error('Error loading sponsored settings:', e);
+        }
+      };
+      loadSponsoredSettings();
     }
   }, [business, loadMasterProducts]);
 
@@ -1508,6 +1536,14 @@ export default function BusinessDetailPage() {
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "dineIn" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
               >
                 🪑 Masada Sipariş
+              </button>
+            )}
+            {sponsoredSettings.enabled && (
+              <button
+                onClick={() => setActiveTab("sponsored")}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "sponsored" ? "bg-orange-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+              >
+                ⭐ Öne Çıkan
               </button>
             )}
 
@@ -3295,8 +3331,8 @@ export default function BusinessDetailPage() {
                     <label className="text-gray-400 text-sm block mb-2">Ödeme Zamanlaması</label>
                     <div className="flex gap-3">
                       <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payFirst'
-                          ? 'bg-orange-600/20 border-orange-500 text-orange-300'
-                          : 'bg-gray-700 border-gray-600 text-gray-300'
+                        ? 'bg-orange-600/20 border-orange-500 text-orange-300'
+                        : 'bg-gray-700 border-gray-600 text-gray-300'
                         } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                         <input
                           type="radio"
@@ -3313,8 +3349,8 @@ export default function BusinessDetailPage() {
                         </div>
                       </label>
                       <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payLater'
-                          ? 'bg-orange-600/20 border-orange-500 text-orange-300'
-                          : 'bg-gray-700 border-gray-600 text-gray-300'
+                        ? 'bg-orange-600/20 border-orange-500 text-orange-300'
+                        : 'bg-gray-700 border-gray-600 text-gray-300'
                         } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                         <input
                           type="radio"
@@ -4071,6 +4107,128 @@ export default function BusinessDetailPage() {
                 💡 Bu özellikler işletmenin <strong className="text-white">{business?.subscriptionPlan || 'basic'}</strong> planı üzerinden yönetilmektedir.
                 Değişiklik yapmak için <a href="/admin/plans" className="text-blue-400 hover:underline">Plan Yönetimi</a> sayfasını ziyaret edin.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* ⭐ Sponsored Products Tab */}
+        {activeTab === "sponsored" && sponsoredSettings.enabled && (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">⭐</span>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Öne Çıkan Ürünler</h2>
+                  <p className="text-gray-400 text-sm">
+                    Sepette "Bir şey mi unuttun?" bölümünde gösterilecek ürünleri seçin.
+                    Sipariş başı <strong className="text-orange-400">{sponsoredSettings.feePerConversion.toFixed(2)} €</strong> ücret kesilir.
+                  </p>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="bg-gray-800 rounded-xl p-4 text-center border border-gray-700">
+                  <p className="text-2xl font-bold text-orange-400">{sponsoredProducts.length}</p>
+                  <p className="text-xs text-gray-400 mt-1">Seçili Ürün</p>
+                </div>
+                <div className="bg-gray-800 rounded-xl p-4 text-center border border-gray-700">
+                  <p className="text-2xl font-bold text-gray-300">{sponsoredSettings.maxProductsPerBusiness}</p>
+                  <p className="text-xs text-gray-400 mt-1">Max Ürün</p>
+                </div>
+                <div className="bg-gray-800 rounded-xl p-4 text-center border border-gray-700">
+                  <p className="text-2xl font-bold text-green-400">{sponsoredSettings.feePerConversion.toFixed(2)} €</p>
+                  <p className="text-xs text-gray-400 mt-1">Sipariş Başı</p>
+                </div>
+              </div>
+
+              {/* Product Selection */}
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-gray-300 mb-3">📦 Ürünleriniz</h3>
+                {products.length === 0 ? (
+                  <p className="text-gray-500 text-sm">Henüz ürün eklenmemiş.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {products
+                      .filter((p: any) => p.isActive !== false)
+                      .map((product: any) => {
+                        const isSponsored = sponsoredProducts.includes(product.id);
+                        const isAtLimit = sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness && !isSponsored;
+                        return (
+                          <label
+                            key={product.id}
+                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${isSponsored
+                                ? 'bg-orange-950/40 border-orange-600/50'
+                                : isAtLimit
+                                  ? 'bg-gray-800/50 border-gray-700 opacity-50 cursor-not-allowed'
+                                  : 'bg-gray-800 border-gray-700 hover:border-gray-500'
+                              }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSponsored}
+                              disabled={isAtLimit}
+                              onChange={() => {
+                                if (isSponsored) {
+                                  setSponsoredProducts(prev => prev.filter(id => id !== product.id));
+                                } else if (!isAtLimit) {
+                                  setSponsoredProducts(prev => [...prev, product.id]);
+                                }
+                              }}
+                              className="accent-orange-500 w-5 h-5 flex-shrink-0"
+                            />
+                            {product.imageUrl && (
+                              <img src={product.imageUrl} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-sm font-medium truncate">{product.name}</p>
+                              <p className="text-gray-400 text-xs">
+                                {product.price ? `${Number(product.price).toFixed(2)} €` : ''}
+                                {product.unit ? ` / ${product.unit}` : ''}
+                              </p>
+                            </div>
+                            {isSponsored && (
+                              <span className="text-orange-400 text-xs font-bold">⭐</span>
+                            )}
+                          </label>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+
+              {/* Limit Warning */}
+              {sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness && (
+                <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-700/40 rounded-xl">
+                  <p className="text-yellow-300 text-sm">⚠️ Maksimum {sponsoredSettings.maxProductsPerBusiness} ürün seçebilirsiniz.</p>
+                </div>
+              )}
+
+              {/* Save Button */}
+              <button
+                onClick={async () => {
+                  if (!businessId) return;
+                  setSponsoredSaving(true);
+                  try {
+                    await updateDoc(doc(db, 'businesses', businessId), {
+                      sponsoredProducts,
+                      hasSponsoredProducts: sponsoredProducts.length > 0,
+                      sponsoredUpdatedAt: serverTimestamp(),
+                    });
+                    showToast('✅ Öne çıkan ürünler kaydedildi!', 'success');
+                  } catch (error) {
+                    console.error('Error saving sponsored products:', error);
+                    showToast('Hata oluştu', 'error');
+                  } finally {
+                    setSponsoredSaving(false);
+                  }
+                }}
+                disabled={sponsoredSaving}
+                className="w-full mt-6 bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-orange-900/20 disabled:opacity-50"
+              >
+                {sponsoredSaving ? 'Kaydediliyor...' : '⭐ Öne Çıkan Ürünleri Kaydet'}
+              </button>
             </div>
           </div>
         )}

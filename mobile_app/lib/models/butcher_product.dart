@@ -1,3 +1,5 @@
+import 'product_option.dart';
+
 class ButcherProduct {
   final String butcherId;
   final String id;
@@ -16,6 +18,7 @@ class ButcherProduct {
   final bool isCustom;
   final bool allowBackorder;
   final DateTime? expectedRestockDate;
+  final List<OptionGroup> optionGroups;
 
   ButcherProduct({
     required this.butcherId,
@@ -35,6 +38,7 @@ class ButcherProduct {
     this.isCustom = false,
     this.allowBackorder = false,
     this.expectedRestockDate,
+    this.optionGroups = const [],
   });
 
   factory ButcherProduct.fromFirestore(Map<String, dynamic> data, String id, {required String butcherId, Map<String, dynamic>? masterData}) {
@@ -73,6 +77,9 @@ class ButcherProduct {
       expectedRestockDate: data['expectedRestockDate'] != null 
           ? DateTime.tryParse(data['expectedRestockDate']) 
           : null,
+      optionGroups: (data['optionGroups'] as List<dynamic>?)
+          ?.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>))
+          .toList() ?? [],
     );
   }
 }

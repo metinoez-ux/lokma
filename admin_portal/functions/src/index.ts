@@ -196,12 +196,53 @@ async function createCommissionRecord(orderId: string, orderData: any) {
             collectionStatus,
             invoiceId: null,
             isFreeOrder,
+            sponsoredFee: 0, // Will be updated below if applicable
             period: currentMonth,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
         };
 
-        await db.collection("commission_records").add(commissionRecord);
+        const commRecordRef = await db.collection("commission_records").add(commissionRecord);
         console.log(`[Commission] Created record: ${orderId} | ${businessName} | ${totalCommission}€ (${collectionStatus})`);
+
+        // =====================================================================
+        // SPONSORED PRODUCT CONVERSION BILLING
+        // =====================================================================
+        let sponsoredFee = 0;
+        if (orderData.hasSponsoredItems && Array.isArray(orderData.sponsoredItemIds) && orderData.sponsoredItemIds.length > 0) {
+            try {
+                // Read global sponsored settings
+                const sponsoredSettingsDoc = await db.collection("platformSettings").doc("sponsored").get();
+                const sponsoredSettings = sponsoredSettingsDoc.exists ? sponsoredSettingsDoc.data() : null;
+                const feePerConversion = sponsoredSettings?.feePerConversion ?? 0.40;
+                const sponsoredEnabled = sponsoredSettings?.enabled ?? true;
+
+                if (sponsoredEnabled && feePerConversion > 0) {
+                    const sponsoredItemCount = orderData.sponsoredItemIds.length;
+                    sponsoredFee = Math.round(sponsoredItemCount * feePerConversion * 100) / 100;
+
+                    // Create sponsored conversion record
+                    await db.collection("sponsored_conversions").add({
+                        orderId,
+                        orderNumber: orderData.orderNumber || null,
+                        businessId,
+                        businessName,
+                        sponsoredItemIds: orderData.sponsoredItemIds,
+                        sponsoredItemCount,
+                        feePerConversion,
+                        totalFee: sponsoredFee,
+                        period: currentMonth,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+
+                    // Update commission record with sponsored fee
+                    await commRecordRef.update({ sponsoredFee });
+
+                    console.log(`[Sponsored] Created conversion: ${orderId} | ${businessName} | ${sponsoredItemCount} items × €${feePerConversion} = €${sponsoredFee}`);
+                }
+            } catch (sponsoredError) {
+                console.error(`[Sponsored] Error tracking conversion for order ${orderId}:`, sponsoredError);
+            }
+        }
 
         // Update business usage counters
         const usageUpdate: any = {
@@ -210,13 +251,19 @@ async function createCommissionRecord(orderId: string, orderData: any) {
             "usage.lastOrderAt": admin.firestore.FieldValue.serverTimestamp(),
         };
 
-        // For cash orders: accumulate balance owed to LOKMA
-        if (!isCardPayment && totalCommission > 0) {
-            usageUpdate.accountBalance = admin.firestore.FieldValue.increment(totalCommission);
+        // Add sponsored fee to usage tracking
+        if (sponsoredFee > 0) {
+            usageUpdate[`usage.sponsoredFee.${currentMonth}`] = admin.firestore.FieldValue.increment(sponsoredFee);
+        }
+
+        // For cash orders: accumulate balance owed to LOKMA (include sponsored fee)
+        const totalOwed = totalCommission + sponsoredFee;
+        if (!isCardPayment && totalOwed > 0) {
+            usageUpdate.accountBalance = admin.firestore.FieldValue.increment(totalOwed);
         }
 
         await db.collection("businesses").doc(businessId).update(usageUpdate);
-        console.log(`[Commission] Updated usage for ${businessName}: +1 order, +${totalCommission}€ commission`);
+        console.log(`[Commission] Updated usage for ${businessName}: +1 order, +${totalCommission}€ commission${sponsoredFee > 0 ? `, +${sponsoredFee}€ sponsored fee` : ""}`);
 
     } catch (error) {
         console.error(`[Commission] Error creating record for order ${orderId}:`, error);
@@ -804,7 +851,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
 
             console.log(`[Monthly Invoicing] Found commission records for ${Object.keys(businessCommissions).length} businesses in ${periodString}`);
 
-            // Create commission invoices
+            // Create commission invoices (including sponsored fees)
             for (const [businessId, commData] of Object.entries(businessCommissions)) {
                 if (commData.totalCommission <= 0) continue;
 
@@ -824,6 +871,35 @@ export const onScheduledMonthlyInvoicing = onSchedule(
 
                     const invoiceNumber = await getNextInvoiceNumber();
 
+                    // Aggregate sponsored conversion fees for this business
+                    let sponsoredFeeTotal = 0;
+                    let sponsoredConversionCount = 0;
+                    const sponsoredRecordIds: string[] = [];
+                    try {
+                        const sponsoredSnapshot = await db.collection("sponsored_conversions")
+                            .where("businessId", "==", businessId)
+                            .where("period", "==", periodString)
+                            .get();
+                        for (const sDoc of sponsoredSnapshot.docs) {
+                            const sData = sDoc.data();
+                            sponsoredFeeTotal += sData.totalFee || 0;
+                            sponsoredConversionCount += sData.sponsoredItemCount || 0;
+                            sponsoredRecordIds.push(sDoc.id);
+                        }
+                        sponsoredFeeTotal = Math.round(sponsoredFeeTotal * 100) / 100;
+                    } catch (sponsoredErr) {
+                        console.error(`[Monthly Invoicing] Error aggregating sponsored fees for ${businessId}:`, sponsoredErr);
+                    }
+
+                    // Grand total = commission + sponsored fees
+                    const grandTotalWithSponsored = Math.round((commData.totalCommission + sponsoredFeeTotal) * 100) / 100;
+                    const netWithSponsored = Math.round((grandTotalWithSponsored / 1.19) * 100) / 100;
+                    const vatWithSponsored = Math.round((grandTotalWithSponsored - netWithSponsored) * 100) / 100;
+
+                    const sponsoredDescription = sponsoredFeeTotal > 0
+                        ? ` + ${sponsoredConversionCount} Öne Çıkan (€${sponsoredFeeTotal.toFixed(2)})`
+                        : "";
+
                     const commissionInvoiceData = {
                         invoiceNumber,
                         type: "commission",
@@ -836,15 +912,17 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                         periodStart: admin.firestore.Timestamp.fromDate(periodStart),
                         periodEnd: admin.firestore.Timestamp.fromDate(periodEnd),
 
-                        description: `LOKMA Provision - ${commData.orderCount} Bestellungen - ${periodString}`,
-                        subtotal: commData.netCommission,
+                        description: `LOKMA Provision - ${commData.orderCount} Bestellungen${sponsoredDescription} - ${periodString}`,
+                        subtotal: netWithSponsored,
                         taxRate: 19,
-                        taxAmount: commData.vatAmount,
-                        grandTotal: commData.totalCommission,
+                        taxAmount: vatWithSponsored,
+                        grandTotal: grandTotalWithSponsored,
                         currency: "EUR",
                         orderCount: commData.orderCount,
                         cardCommission: commData.cardCommission,
                         cashCommission: commData.cashCommission,
+                        sponsoredFee: sponsoredFeeTotal,
+                        sponsoredConversionCount,
 
                         issueDate: admin.firestore.FieldValue.serverTimestamp(),
                         dueDate: admin.firestore.Timestamp.fromDate(dueDate),
@@ -853,6 +931,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
 
                         generatedBy: "cron_job",
                         commissionRecordIds: commData.recordIds,
+                        sponsoredRecordIds,
                     };
 
                     const commInvoiceRef = await db.collection("invoices").add(commissionInvoiceData);

@@ -131,6 +131,9 @@ export default function ImageGeneratorPage() {
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [previewImage, setPreviewImage] = useState<GalleryImage | null>(null);
+    const [backgroundPrompt, setBackgroundPrompt] = useState('');
+    const [negativePrompt, setNegativePrompt] = useState('');
+    const [showAdvanced, setShowAdvanced] = useState(false);
 
     // ── Toast helper ─────────────────────────────────────────────────────
     const showToast = useCallback((text: string, type: 'success' | 'error' = 'success') => {
@@ -185,24 +188,31 @@ export default function ImageGeneratorPage() {
             return;
         }
 
-        // Build optimized prompt: base context + user keyword
-        const fullPrompt = `${keyword.trim()}, ${categoryInfo.basePrompt}`;
+        // Build optimized prompt: keyword + base context + background + negative
+        let fullPrompt = `${keyword.trim()}, ${categoryInfo.basePrompt}`;
+        if (backgroundPrompt.trim()) {
+            fullPrompt += `, ${backgroundPrompt.trim()}`;
+        }
+        if (negativePrompt.trim()) {
+            fullPrompt += `. Absolutely avoid and do NOT include: ${negativePrompt.trim()}`;
+        }
 
         try {
-            const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+            // Dedicated AI Studio key for Generative Language API (not the restricted Firebase key)
+            const apiKey = process.env.NEXT_PUBLIC_IMAGEN_API_KEY || 'AIzaSyDL6yzW9O5MvXQBDaHyFhSGGHMhuQ1Z_sM';
             if (!apiKey) throw new Error('API key not configured');
 
             const formatInfo = outputFormats.find((f) => f.id === activeFormat);
 
             const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:generateImages?key=${apiKey}`,
+                `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        prompt: fullPrompt,
-                        config: {
-                            numberOfImages: 1,
+                        instances: [{ prompt: fullPrompt }],
+                        parameters: {
+                            sampleCount: 1,
                             aspectRatio: formatInfo?.aspectRatio || '1:1',
                         },
                     }),
@@ -216,8 +226,8 @@ export default function ImageGeneratorPage() {
 
             const result = await response.json();
 
-            // Imagen 4 generateImages response format
-            const imageData = result.generatedImages?.[0]?.image?.imageBytes;
+            // Imagen 4 predict response format
+            const imageData = result.predictions?.[0]?.bytesBase64Encoded;
             if (!imageData) {
                 throw new Error('API yanıtında görsel bulunamadı');
             }
@@ -368,8 +378,8 @@ export default function ImageGeneratorPage() {
                                     key={fmt.id}
                                     onClick={() => setActiveFormat(fmt.id)}
                                     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${activeFormat === fmt.id
-                                            ? 'bg-pink-600 border-pink-500 text-white shadow-lg shadow-pink-600/30 scale-105'
-                                            : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:border-gray-600'
+                                        ? 'bg-pink-600 border-pink-500 text-white shadow-lg shadow-pink-600/30 scale-105'
+                                        : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700 hover:border-gray-600'
                                         }`}
                                 >
                                     <span>{fmt.icon}</span>
@@ -377,6 +387,54 @@ export default function ImageGeneratorPage() {
                                     <span className="text-[10px] opacity-70">({fmt.label})</span>
                                 </button>
                             ))}
+                        </div>
+
+                        {/* ── Gelişmiş Ayarlar (Background + Negative Prompt) ── */}
+                        <div className="mb-5">
+                            <button
+                                onClick={() => setShowAdvanced(!showAdvanced)}
+                                className="flex items-center gap-2 text-xs text-gray-400 hover:text-violet-400 font-bold transition-colors"
+                            >
+                                <span className={`transition-transform ${showAdvanced ? 'rotate-90' : ''}`}>▶</span>
+                                ⚙️ Gelişmiş Ayarlar
+                                {(backgroundPrompt.trim() || negativePrompt.trim()) && (
+                                    <span className="w-2 h-2 bg-violet-500 rounded-full animate-pulse" />
+                                )}
+                            </button>
+
+                            {showAdvanced && (
+                                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Background Prompt */}
+                                    <div>
+                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-2">
+                                            <span className="text-emerald-400">🧠</span> Arka Plan Promptları
+                                            <span className="text-[10px] text-gray-600 font-normal">(her üretimde eklenir)</span>
+                                        </label>
+                                        <textarea
+                                            value={backgroundPrompt}
+                                            onChange={(e) => setBackgroundPrompt(e.target.value)}
+                                            placeholder="ör. beyaz arka plan, stüdyo ışığı, profesyonel çekim, yüksek çözünürlük..."
+                                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-sm h-20 resize-none"
+                                            disabled={isGenerating}
+                                        />
+                                    </div>
+
+                                    {/* Negative Prompt */}
+                                    <div>
+                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-2">
+                                            <span className="text-red-400">🚫</span> Negatif Promptlar
+                                            <span className="text-[10px] text-gray-600 font-normal">(üretilmemesi gerekenler)</span>
+                                        </label>
+                                        <textarea
+                                            value={negativePrompt}
+                                            onChange={(e) => setNegativePrompt(e.target.value)}
+                                            placeholder="ör. tahta yüzey, plastik tabak, bulanık, düşük kalite, watermark..."
+                                            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 text-sm h-20 resize-none"
+                                            disabled={isGenerating}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Prompt Input + Generate Button */}
@@ -433,11 +491,23 @@ export default function ImageGeneratorPage() {
 
                         {/* Active prompt preview */}
                         {keyword.trim() && (
-                            <div className="mt-3 px-4 py-2 bg-gray-800/50 rounded-xl border border-gray-700/50">
+                            <div className="mt-3 px-4 py-2 bg-gray-800/50 rounded-xl border border-gray-700/50 space-y-1">
                                 <p className="text-xs text-gray-500">
                                     <span className="text-violet-400 font-bold">Prompt:</span>{' '}
                                     {keyword.trim()}, {categories.find((c) => c.id === activeCategory)?.basePrompt?.substring(0, 80)}...
                                 </p>
+                                {backgroundPrompt.trim() && (
+                                    <p className="text-xs text-gray-500">
+                                        <span className="text-emerald-400 font-bold">+ Arka Plan:</span>{' '}
+                                        {backgroundPrompt.trim().substring(0, 100)}{backgroundPrompt.trim().length > 100 ? '...' : ''}
+                                    </p>
+                                )}
+                                {negativePrompt.trim() && (
+                                    <p className="text-xs text-gray-500">
+                                        <span className="text-red-400 font-bold">🚫 Negatif:</span>{' '}
+                                        {negativePrompt.trim().substring(0, 100)}{negativePrompt.trim().length > 100 ? '...' : ''}
+                                    </p>
+                                )}
                             </div>
                         )}
                     </div>

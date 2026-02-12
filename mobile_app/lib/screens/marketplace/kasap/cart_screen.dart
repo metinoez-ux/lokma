@@ -51,6 +51,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   OpeningHoursHelper? _hoursHelper;
   String _orderNote = '';
 
+  // 🌟 Sponsored Products ("Bir şey mi unuttun?")
+  List<Map<String, dynamic>> _sponsoredProductsList = [];
+  bool _loadingSponsoredProducts = false;
+  final Set<String> _sponsoredItemIds = {}; // Track IDs added from sponsored section
+
   /// 🎨 BRAND COLOUR - Dynamic resolution per Design System Protocol
   Color get _accentColor {
     final brandColorHex = _butcherData?['brandColor']?.toString();
@@ -100,6 +105,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       await _fetchButcherDetails();
       _checkDeliverySupport();
       _updateEarliestPickupTime();
+      _fetchSponsoredProducts();
     });
   }
 
@@ -130,6 +136,88 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     } catch (e) {
       debugPrint('Error fetching butcher details: $e');
       if (mounted) setState(() => _loadingButcherParams = false);
+    }
+  }
+
+  /// 🌟 Fetch sponsored products for the current business
+  Future<void> _fetchSponsoredProducts() async {
+    final cart = ref.read(cartProvider);
+    final butcherId = cart.butcherId;
+    if (butcherId == null) return;
+
+    setState(() => _loadingSponsoredProducts = true);
+
+    try {
+      // 1. Get the business doc to find sponsoredProducts IDs
+      final businessDoc = await FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(butcherId)
+          .get();
+
+      if (!businessDoc.exists) return;
+      final businessData = businessDoc.data();
+      final List<dynamic> sponsoredIds = businessData?['sponsoredProducts'] ?? [];
+      final bool hasSponsoredProducts = businessData?['hasSponsoredProducts'] ?? false;
+
+      if (!hasSponsoredProducts || sponsoredIds.isEmpty) {
+        if (mounted) setState(() => _loadingSponsoredProducts = false);
+        return;
+      }
+
+      // 2. Check platform-level feature enabled
+      final settingsDoc = await FirebaseFirestore.instance
+          .collection('platformSettings')
+          .doc('sponsored')
+          .get();
+
+      if (!settingsDoc.exists || !(settingsDoc.data()?['enabled'] ?? false)) {
+        if (mounted) setState(() => _loadingSponsoredProducts = false);
+        return;
+      }
+
+      // 3. Fetch each sponsored product from the business products sub-collection
+      final List<Map<String, dynamic>> fetchedProducts = [];
+      for (final productId in sponsoredIds) {
+        try {
+          final productDoc = await FirebaseFirestore.instance
+              .collection('businesses')
+              .doc(butcherId)
+              .collection('products')
+              .doc(productId.toString())
+              .get();
+
+          if (productDoc.exists) {
+            final pData = productDoc.data()!;
+            // Only include active/available products
+            if (pData['isActive'] != false && pData['isAvailable'] != false) {
+              fetchedProducts.add({
+                'id': productDoc.id,
+                'name': pData['name'] ?? '',
+                'price': (pData['price'] ?? 0).toDouble(),
+                'unit': pData['unit'] ?? 'adet',
+                'imageUrl': pData['imageUrl'] ?? '',
+                'category': pData['category'] ?? '',
+              });
+            }
+          }
+        } catch (e) {
+          debugPrint('Error fetching sponsored product $productId: $e');
+        }
+      }
+
+      // 4. Filter out products already in cart
+      final cartItemIds = cart.items.map((i) => i.product.id).toSet();
+      final filtered = fetchedProducts.where((p) => !cartItemIds.contains(p['id'])).toList();
+
+      if (mounted) {
+        setState(() {
+          _sponsoredProductsList = filtered;
+          _loadingSponsoredProducts = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching sponsored products: $e');
+      if (mounted) setState(() => _loadingSponsoredProducts = false);
     }
   }
 
@@ -304,6 +392,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         if (_orderNote.trim().isNotEmpty) 'orderNote': _orderNote.trim(),
         if (_isDineIn && (_scannedTableNumber ?? _tableNumberController.text.trim()).isNotEmpty)
           'tableNumber': _scannedTableNumber ?? _tableNumberController.text.trim(),
+        // Sponsored product conversion tracking
+        if (_sponsoredItemIds.isNotEmpty) 'sponsoredItemIds': _sponsoredItemIds.toList(),
+        if (_sponsoredItemIds.isNotEmpty) 'hasSponsoredItems': true,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -2042,6 +2133,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ...cart.items.map((item) => _buildLieferandoCartItem(item)),
                 SizedBox(height: 16),
               ],
+              // ⭐ Sponsored Products ("Bir şey mi unuttun?")
+              if (_sponsoredProductsList.isNotEmpty) ...[
+                SizedBox(height: 8),
+                _buildSponsoredProductsSection(),
+                SizedBox(height: 16),
+              ],
               
               // 💰 Price Summary
               _buildLieferandoPriceSummary(kermesTotal, kasapTotal, grandTotal),
@@ -2329,6 +2426,21 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     fontSize: 15,
                   ),
                 ),
+                // Selected options inline (Lieferando-style)
+                if (item.selectedOptions.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(
+                      item.selectedOptions.map((o) => o.optionName).join(', '),
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 12,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 if (isKg)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
@@ -2373,9 +2485,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             final step = isKg ? 100.0 : 1.0;
                             final minQty = isKg ? 100.0 : 1.0;
                             if (quantity > minQty) {
-                              ref.read(cartProvider.notifier).updateQuantity(item.product.sku, quantity - step);
+                              ref.read(cartProvider.notifier).updateQuantity(item.uniqueKey, quantity - step);
                             } else {
-                              ref.read(cartProvider.notifier).removeFromCart(item.product.sku);
+                              ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey);
                             }
                           },
                           child: Container(
@@ -2404,7 +2516,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         GestureDetector(
                           onTap: () {
                             ref.read(cartProvider.notifier).updateQuantity(
-                              item.product.sku, 
+                              item.uniqueKey, 
                               isKg ? quantity + 100 : quantity + 1,
                             );
                           },
@@ -2425,6 +2537,220 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
   
+  /// ⭐ Sponsored Products — "Bir şey mi unuttun?" (Lieferando "Gesponsert" style)
+  Widget _buildSponsoredProductsSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cart = ref.read(cartProvider);
+    final butcherId = cart.butcherId ?? '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section Header
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              Icon(Icons.lightbulb_outline, color: Colors.orange, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Bir şey mi unuttun?',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              Spacer(),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Gesponsert',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange[700],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Horizontal Product Cards
+        SizedBox(
+          height: 150,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _sponsoredProductsList.length,
+            separatorBuilder: (_, __) => SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final product = _sponsoredProductsList[index];
+              final name = product['name'] as String;
+              final price = product['price'] as double;
+              final unit = product['unit'] as String;
+              final imageUrl = product['imageUrl'] as String;
+
+              return Container(
+                width: 130,
+                decoration: BoxDecoration(
+                  color: isDark ? Color(0xFF1E1E1E) : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Image
+                    ClipRRect(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+                      child: imageUrl.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              width: 130,
+                              height: 70,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => Container(
+                                width: 130,
+                                height: 70,
+                                color: isDark ? Colors.grey[800] : Colors.grey[100],
+                                child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+                              ),
+                              errorWidget: (_, __, ___) => Container(
+                                width: 130,
+                                height: 70,
+                                color: isDark ? Colors.grey[800] : Colors.grey[100],
+                                child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+                              ),
+                            )
+                          : Container(
+                              width: 130,
+                              height: 70,
+                              color: isDark ? Colors.grey[800] : Colors.grey[100],
+                              child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+                            ),
+                    ),
+                    // Product Info + Add button
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            Spacer(),
+                            Row(
+                              children: [
+                                Text(
+                                  '${price.toStringAsFixed(2)} €',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: _accentColor,
+                                  ),
+                                ),
+                                if (unit.isNotEmpty)
+                                  Text(
+                                    ' /$unit',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                Spacer(),
+                                // Add to cart button
+                                GestureDetector(
+                                  onTap: () {
+                                    // Create a ButcherProduct from sponsored data and add to cart
+                                    final butcherProduct = ButcherProduct(
+                                      id: product['id'] as String,
+                                      name: name,
+                                      price: price,
+                                      unitType: unit,
+                                      imageUrl: imageUrl,
+                                      category: product['category'] as String? ?? '',
+                                      butcherId: butcherId,
+                                      sku: product['id'] as String,
+                                      masterId: '',
+                                      description: '',
+                                      inStock: true,
+                                    );
+                                    ref.read(cartProvider.notifier).addToCart(
+                                      butcherProduct,
+                                      1,
+                                      butcherId,
+                                      _butcherData?['companyName'] ?? '',
+                                    );
+                                    
+                                    // Track this product as a sponsored conversion
+                                    _sponsoredItemIds.add(product['id'] as String);
+                                    
+                                    // Remove from sponsored list
+                                    setState(() {
+                                      _sponsoredProductsList.removeAt(index);
+                                    });
+                                    
+                                    // Haptic feedback
+                                    HapticFeedback.lightImpact();
+                                    
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('$name sepete eklendi ⭐'),
+                                        duration: Duration(seconds: 2),
+                                        backgroundColor: _accentColor,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 26,
+                                    height: 26,
+                                    decoration: BoxDecoration(
+                                      color: _accentColor,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(Icons.add, color: Colors.white, size: 16),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   /// 💰 Price Summary
   Widget _buildLieferandoPriceSummary(double kermesTotal, double kasapTotal, double grandTotal) {
     return Column(
@@ -4194,7 +4520,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               // Trash button (always deletes)
               GestureDetector(
                 onTap: () {
-                  ref.read(cartProvider.notifier).removeFromCart(item.product.sku);
+                  ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey);
                 },
                 child: Container(
                   padding: const EdgeInsets.all(8),
@@ -4223,7 +4549,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               // Plus button
               GestureDetector(
                 onTap: () {
-                  ref.read(cartProvider.notifier).updateQuantity(item.product.sku, quantity + 1);
+                  ref.read(cartProvider.notifier).updateQuantity(item.uniqueKey, quantity + 1);
                 },
                 child: Container(
                   padding: const EdgeInsets.all(8),

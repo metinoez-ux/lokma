@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 import '../../providers/theme_provider.dart';
 import '../../providers/driver_provider.dart';
@@ -417,7 +418,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 const SizedBox(width: 12),
                                 _buildQuickAccessChip(Icons.restaurant_menu, 'Masa\nHesabım', () => context.push('/table-order')),
                                 const SizedBox(width: 12),
-                                const Expanded(child: SizedBox()), // Spacer
+                                _buildQuickAccessChip(Icons.card_giftcard_outlined, 'Kuponlarım', () => context.push('/coupons')),
                               ],
                             ),
                             // Teslimat Paneli removed - consolidated into Teslimatlarım
@@ -525,6 +526,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               _buildSectionItem(Icons.article_outlined, 'Kullanım Koşulları ve Veri Politikası', () {
                 context.push('/help');
               }),
+              _buildSectionItem(Icons.rate_review_outlined, 'Geri Bildirim', () {
+                context.push('/help');
+              }),
 
               const SizedBox(height: 24),
 
@@ -585,9 +589,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               // === VERSION ===
               Center(
-                child: Text(
-                  'Versiyon 1.0.0 (2026)',
-                  style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                child: FutureBuilder<String>(
+                  future: _getVersionString(),
+                  builder: (context, snap) => Text(
+                    snap.data ?? 'Versiyon ...',
+                    style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                  ),
                 ),
               ),
 
@@ -640,6 +647,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<String> _getVersionString() async {
+    final info = await PackageInfo.fromPlatform();
+    return 'Versiyon ${info.version} (${info.buildNumber})';
   }
 
   /// Check if current user is staff for a business with reservation support

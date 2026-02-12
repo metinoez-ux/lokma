@@ -29,6 +29,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
   // Live counters
   int _pendingReservations = 0;
+  int _activeTableSessions = 0;
 
   @override
   void initState() {
@@ -103,6 +104,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       if (_hasReservation && _businessId != null) {
         _loadPendingReservationCount();
       }
+
+      // Load active table session count for waiter view
+      if (_businessId != null) {
+        _loadActiveTableSessionCount();
+      }
     } catch (e) {
       debugPrint('[StaffHub] Error: $e');
     }
@@ -120,6 +126,20 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         .listen((snap) {
       if (mounted) {
         setState(() => _pendingReservations = snap.docs.length);
+      }
+    });
+  }
+
+  void _loadActiveTableSessionCount() {
+    FirebaseFirestore.instance
+        .collection('businesses')
+        .doc(_businessId)
+        .collection('table_sessions')
+        .where('isActive', isEqualTo: true)
+        .snapshots()
+        .listen((snap) {
+      if (mounted) {
+        setState(() => _activeTableSessions = snap.docs.length);
       }
     });
   }
@@ -267,17 +287,23 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       if (_hasReservation) const SizedBox(height: 16),
 
                       // ─── Take Orders (Garson Sipariş) ───
-                      _buildFeatureCard(
-                        icon: Icons.receipt_long,
-                        title: 'Sipariş Al',
-                        subtitle: 'Masa siparişi al',
-                        color: Colors.orange.shade700,
-                        gradient: [Colors.orange.shade400, Colors.orange.shade700],
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          context.push('/waiter-order');
-                        },
-                      ),
+                      if (_businessId != null)
+                        _buildFeatureCard(
+                          icon: Icons.receipt_long,
+                          title: 'Sipariş Al',
+                          subtitle: _activeTableSessions > 0
+                              ? '$_activeTableSessions aktif masa'
+                              : 'Masa siparişi al',
+                          color: Colors.orange.shade700,
+                          gradient: [Colors.orange.shade400, Colors.orange.shade700],
+                          badgeCount: _activeTableSessions,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            context.push('/waiter-order');
+                          },
+                        ),
+
+                      if (_businessId != null) const SizedBox(height: 16),
 
                       const SizedBox(height: 32),
                     ],

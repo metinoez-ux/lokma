@@ -196,9 +196,9 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
   }
 
   double get _cartTotal =>
-      _cart.values.fold(0, (sum, item) => sum + (item.product.price * item.quantity));
+      _cart.values.fold(0.0, (total, item) => total + (item.product.price * item.quantity));
   int get _cartItemCount =>
-      _cart.values.fold(0, (sum, item) => sum + (item.quantity ~/ item.product.stepQuantity));
+      _cart.values.fold(0, (total, item) => total + (item.quantity ~/ item.product.stepQuantity));
 
   Future<void> _submitOrder() async {
     if (_cart.isEmpty || _businessId == null || _tableNumber == null) return;

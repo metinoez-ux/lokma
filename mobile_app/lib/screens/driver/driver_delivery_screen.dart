@@ -22,10 +22,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
   String? _driverName;
   String? _driverPhone;
   bool _isLoading = false;
-  bool _checkedActiveDelivery = false;
   bool _showAllOrders = false;
-  String _selectedStatusTab = 'ready'; // Default to Hazır (claimable)
-  Map<String, String> _businessNames = {}; // Cache for business names
 
   @override
   void initState() {
@@ -37,10 +34,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
   /// Check if user has an active delivery - no longer redirects
   /// Active deliveries are now shown inline in the main list
   Future<void> _checkForActiveDelivery() async {
-    // Just mark as checked - we'll show active deliveries inline now
-    if (mounted) {
-      setState(() => _checkedActiveDelivery = true);
-    }
+    // Active deliveries are shown inline now - no action needed
   }
 
   Future<void> _loadDriverInfo() async {
@@ -128,7 +122,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
 
   /// Show bottom sheet with list of assigned businesses and their order counts
   void _showBusinessListSheet(List<String> businessIds) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Theme.of(context).cardColor,

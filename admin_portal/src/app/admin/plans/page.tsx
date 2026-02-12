@@ -307,6 +307,9 @@ export default function PlansPage() {
                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.waiterOrder ? 'bg-teal-900/40 text-teal-400 border border-teal-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
                                                 {(plan.features as any)?.waiterOrder ? '✓' : '·'} Garson
                                             </span>
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.sponsoredProducts ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
+                                                {(plan.features as any)?.sponsoredProducts ? '✓' : '·'} Öne Çıkan
+                                            </span>
                                         </div>
 
                                         {/* Limits */}
@@ -711,6 +714,7 @@ export default function PlansPage() {
                                                         { key: 'liveCourierTracking', label: 'Canlı Kurye Takibi', color: 'text-purple-400' },
                                                         { key: 'dineInQR', label: '🪑 Masada Sipariş (QR Kod)', color: 'text-orange-400' },
                                                         { key: 'waiterOrder', label: '👨‍🍳 Garson Sipariş', color: 'text-teal-400' },
+                                                        { key: 'sponsoredProducts', label: '⭐ Öne Çıkan Ürünler', color: 'text-yellow-400' },
                                                         { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-gray-400', invert: true }, // Logic invert handled in render
                                                     ].map((feature) => (
                                                         <label key={feature.key} className="flex items-center p-3 rounded-lg bg-gray-900 border border-gray-800 hover:border-gray-600 hover:bg-gray-800 transition-all cursor-pointer group">
