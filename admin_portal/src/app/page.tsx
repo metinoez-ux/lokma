@@ -634,7 +634,7 @@ export default function LandingPage() {
     return (
       <div className="min-h-screen bg-[#120a0a] flex items-center justify-center">
         <div className="animate-pulse">
-          <Image src="/lokma_logo.png" alt="LOKMA" width={80} height={80} />
+          <Image src="/lokma_logo_wide.png" alt="LOKMA" width={160} height={40} className="object-contain" />
         </div>
       </div>
     );
@@ -647,8 +647,7 @@ export default function LandingPage() {
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <Image src="/lokma_logo.png" alt="LOKMA" width={40} height={40} className="rounded-lg" />
-            <h2 className="text-2xl font-extrabold tracking-tighter uppercase">LOKMA</h2>
+            <Image src="/lokma_logo_wide.png" alt="LOKMA" width={140} height={36} className="object-contain" />
           </Link>
 
           {/* Desktop Nav */}
@@ -944,8 +943,7 @@ export default function LandingPage() {
         <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/lokma_logo.png" alt="LOKMA" width={32} height={32} className="rounded-lg" />
-              <h2 className="text-xl font-black tracking-tight">LOKMA</h2>
+              <Image src="/lokma_logo_wide.png" alt="LOKMA" width={120} height={30} className="object-contain" />
             </Link>
             <p className="text-sm text-white/40 leading-relaxed">
               LOKMA, geleneksel ticaretin gücünü modern teknolojiyle birleştiren adil bir pazar yeridir.

@@ -13,18 +13,19 @@ echo "CI_PRIMARY_REPOSITORY_PATH: $CI_PRIMARY_REPOSITORY_PATH"
 cd "$CI_PRIMARY_REPOSITORY_PATH/mobile_app"
 echo "Changed to Flutter project: $(pwd)"
 
-# Install Flutter SDK
-FLUTTER_VERSION="3.38.7"
+# Install Flutter SDK using stable channel
 FLUTTER_HOME="$HOME/flutter"
 
 if [ ! -d "$FLUTTER_HOME" ]; then
-    echo "Installing Flutter SDK $FLUTTER_VERSION..."
-    git clone https://github.com/flutter/flutter.git -b stable "$FLUTTER_HOME"
-    cd "$FLUTTER_HOME"
-    git checkout $FLUTTER_VERSION
-    cd "$CI_PRIMARY_REPOSITORY_PATH/mobile_app"
+    echo "Installing Flutter SDK (stable channel)..."
+    git clone https://github.com/flutter/flutter.git -b stable --depth 1 "$FLUTTER_HOME"
 else
     echo "Flutter SDK already exists at $FLUTTER_HOME"
+    cd "$FLUTTER_HOME"
+    git fetch --depth 1
+    git checkout stable
+    git pull
+    cd "$CI_PRIMARY_REPOSITORY_PATH/mobile_app"
 fi
 
 # Add Flutter to PATH
@@ -32,9 +33,6 @@ export PATH="$FLUTTER_HOME/bin:$PATH"
 
 echo "Flutter version:"
 flutter --version
-
-# Accept licenses
-flutter doctor --android-licenses 2>/dev/null || true
 
 # Clean and get dependencies
 echo "Running flutter clean..."

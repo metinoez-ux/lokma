@@ -10,8 +10,7 @@ export default function PressPage() {
             <header className="fixed top-0 z-50 w-full bg-[#120a0a]/80 backdrop-blur-xl border-b border-white/10 px-4 md:px-20 lg:px-40 py-4">
                 <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3">
-                        <Image src="/lokma_logo.png" alt="LOKMA" width={40} height={40} className="rounded-lg" />
-                        <h2 className="text-2xl font-extrabold tracking-tighter uppercase">LOKMA</h2>
+                        <Image src="/lokma_logo_wide.png" alt="LOKMA" width={140} height={36} className="object-contain" />
                     </Link>
                     <Link href="/" className="text-sm text-white/60 hover:text-white">← Ana Sayfa</Link>
                 </div>
