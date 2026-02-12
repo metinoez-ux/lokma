@@ -14,7 +14,7 @@ cd "$CI_PRIMARY_REPOSITORY_PATH/mobile_app"
 echo "Changed to Flutter project: $(pwd)"
 
 # Install Flutter SDK
-FLUTTER_VERSION="3.27.4"
+FLUTTER_VERSION="3.38.7"
 FLUTTER_HOME="$HOME/flutter"
 
 if [ ! -d "$FLUTTER_HOME" ]; then

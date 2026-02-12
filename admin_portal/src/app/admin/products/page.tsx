@@ -348,6 +348,7 @@ function GlobalProductsPageContent() {
                 // 🆕 Hangi işletme türleri satabilir
                 allowedBusinessTypes: (formData as any).allowedBusinessTypes || [],
                 defaultUnit: formData.defaultUnit || 'kg',
+                unit: formData.defaultUnit || 'kg', // 🆕 Mobile app reads 'unit' field
                 description: formData.description || "",
                 // Brand & Labels
                 brand: (formData as any).brand || null,
@@ -370,6 +371,7 @@ function GlobalProductsPageContent() {
                 productionDate: (formData as any).productionDate || null,
                 expirationDate: (formData as any).expirationDate || null,
                 imageAsset: (formData as any).imageAsset || null,
+                imageUrl: (formData as any).imageAsset || (formData as any).imageUrl || ((formData as any).images || [])[0] || null, // 🆕 Mobile app reads 'imageUrl' field
                 // Stock Management (Stok Yönetimi)
                 currentStock: (formData as any).currentStock || 0,
                 minStock: (formData as any).minStock || 0, // Minimum stok seviyesi

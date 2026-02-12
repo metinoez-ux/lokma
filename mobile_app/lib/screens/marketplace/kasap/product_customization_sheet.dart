@@ -205,80 +205,86 @@ class _ProductCustomizationSheetState
               color: bg,
               border: Border(top: BorderSide(color: divider)),
             ),
-            child: Row(
-              children: [
-                // Quantity selector
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white10 : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _qtyButton(
-                        icon: _quantity <= (isByWeight ? product.minQuantity : 1)
-                            ? Icons.delete_outline
-                            : Icons.remove,
-                        color: _quantity <= (isByWeight ? product.minQuantity : 1)
-                            ? Colors.red
-                            : textPrimary,
-                        onTap: () {
-                          if (_quantity <= (isByWeight ? product.minQuantity : 1)) {
-                            Navigator.pop(context);
-                            return;
-                          }
-                          setState(() => _quantity -= isByWeight ? product.stepQuantity : 1);
-                        },
+            child: Opacity(
+              opacity: _allRequiredGroupsSelected ? 1.0 : 0.4,
+              child: IgnorePointer(
+                ignoring: !_allRequiredGroupsSelected,
+                child: Row(
+                  children: [
+                    // Quantity selector
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white10 : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        child: Text(
-                          isByWeight
-                              ? '${(_quantity * 1000).toStringAsFixed(0)}g'
-                              : _quantity.toStringAsFixed(0),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: textPrimary,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _qtyButton(
+                            icon: _quantity <= (isByWeight ? product.minQuantity : 1)
+                                ? Icons.delete_outline
+                                : Icons.remove,
+                            color: _quantity <= (isByWeight ? product.minQuantity : 1)
+                                ? Colors.red
+                                : textPrimary,
+                            onTap: () {
+                              if (_quantity <= (isByWeight ? product.minQuantity : 1)) {
+                                Navigator.pop(context);
+                                return;
+                              }
+                              setState(() => _quantity -= isByWeight ? product.stepQuantity : 1);
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            child: Text(
+                              isByWeight
+                                  ? '${(_quantity * 1000).toStringAsFixed(0)}g'
+                                  : _quantity.toStringAsFixed(0),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: textPrimary,
+                              ),
+                            ),
+                          ),
+                          _qtyButton(
+                            icon: Icons.add,
+                            color: accent,
+                            onTap: () {
+                              setState(() => _quantity += isByWeight ? product.stepQuantity : 1);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    // Add to cart button
+                    Expanded(
+                      child: SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: _allRequiredGroupsSelected ? _addToCart : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: accent,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: isDark ? Colors.white12 : Colors.grey[300],
+                            disabledForegroundColor: isDark ? Colors.white30 : Colors.grey,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Hinzufügen  €${_totalPrice.toStringAsFixed(2)}',
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                           ),
                         ),
                       ),
-                      _qtyButton(
-                        icon: Icons.add,
-                        color: accent,
-                        onTap: () {
-                          setState(() => _quantity += isByWeight ? product.stepQuantity : 1);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                // Add to cart button
-                Expanded(
-                  child: SizedBox(
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: _allRequiredGroupsSelected ? _addToCart : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: isDark ? Colors.white12 : Colors.grey[300],
-                        disabledForegroundColor: isDark ? Colors.white30 : Colors.grey,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        'Hinzufügen  €${_totalPrice.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ],

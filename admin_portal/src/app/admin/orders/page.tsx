@@ -93,6 +93,36 @@ export default function OrdersPage() {
     const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
     const [cancelReason, setCancelReason] = useState('');
 
+    // KDS Checklist state
+    const [checkedItems, setCheckedItems] = useState<Record<string, Record<number, boolean>>>({});
+
+    // Toggle item checked state and persist to Firestore
+    const toggleItemChecked = async (orderId: string, itemIdx: number) => {
+        const orderChecks = checkedItems[orderId] || {};
+        const newChecked = !orderChecks[itemIdx];
+        const updated = { ...orderChecks, [itemIdx]: newChecked };
+        setCheckedItems(prev => ({ ...prev, [orderId]: updated }));
+        // Persist to Firestore
+        try {
+            await updateDoc(doc(db, 'meat_orders', orderId), {
+                [`checkedItems.${itemIdx}`]: newChecked,
+            });
+        } catch (e) {
+            console.error('Error updating checkedItems:', e);
+        }
+    };
+
+    // Get checked count for an order
+    const getCheckedCount = (orderId: string, totalItems: number) => {
+        const orderChecks = checkedItems[orderId] || {};
+        return Object.values(orderChecks).filter(Boolean).length;
+    };
+
+    const allItemsChecked = (orderId: string, totalItems: number) => {
+        if (totalItems === 0) return false;
+        return getCheckedCount(orderId, totalItems) >= totalItems;
+    };
+
     // Filter businesses based on search
     const filteredBusinesses = Object.entries(businesses).filter(([id, name]) =>
         name.toLowerCase().includes(businessSearch.toLowerCase())
@@ -202,6 +232,16 @@ export default function OrdersPage() {
                 };
             }) as Order[];
             setOrders(data);
+            // Hydrate KDS checklist state from Firestore
+            const checks: Record<string, Record<number, boolean>> = {};
+            snapshot.docs.forEach(d => {
+                const ci = d.data().checkedItems;
+                if (ci && typeof ci === 'object') {
+                    checks[d.id] = {};
+                    Object.entries(ci).forEach(([k, v]) => { checks[d.id][Number(k)] = !!v; });
+                }
+            });
+            setCheckedItems(prev => ({ ...prev, ...checks }));
             setLoading(false);
         }, (error) => {
             console.error('Error loading orders:', error);
@@ -661,7 +701,7 @@ export default function OrdersPage() {
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                                 {pendingOrders.slice(0, 10).map(order => (
-                                    <OrderCard key={order.id} order={order} businesses={businesses} onClick={() => setSelectedOrder(order)} />
+                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
                                 ))}
                                 {pendingOrders.length > 10 && (
                                     <p className="text-gray-500 text-center text-sm">+{pendingOrders.length - 10} daha</p>
@@ -677,7 +717,7 @@ export default function OrdersPage() {
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                                 {preparingOrders.slice(0, 10).map(order => (
-                                    <OrderCard key={order.id} order={order} businesses={businesses} onClick={() => setSelectedOrder(order)} />
+                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
                                 ))}
                                 {preparingOrders.length > 10 && (
                                     <p className="text-gray-500 text-center text-sm">+{preparingOrders.length - 10} daha</p>
@@ -693,7 +733,7 @@ export default function OrdersPage() {
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                                 {readyOrders.slice(0, 10).map(order => (
-                                    <OrderCard key={order.id} order={order} businesses={businesses} onClick={() => setSelectedOrder(order)} />
+                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
                                 ))}
                                 {readyOrders.length > 10 && (
                                     <p className="text-gray-500 text-center text-sm">+{readyOrders.length - 10} daha</p>
@@ -709,7 +749,7 @@ export default function OrdersPage() {
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                                 {inTransitOrders.slice(0, 10).map(order => (
-                                    <OrderCard key={order.id} order={order} businesses={businesses} onClick={() => setSelectedOrder(order)} />
+                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
                                 ))}
                                 {inTransitOrders.length > 10 && (
                                     <p className="text-gray-500 text-center text-sm">+{inTransitOrders.length - 10} daha</p>
@@ -725,7 +765,7 @@ export default function OrdersPage() {
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                                 {completedOrders.slice(0, 10).map(order => (
-                                    <OrderCard key={order.id} order={order} businesses={businesses} onClick={() => setSelectedOrder(order)} />
+                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
                                 ))}
                                 {completedOrders.length > 10 && (
                                     <p className="text-gray-500 text-center text-sm">+{completedOrders.length - 10} daha</p>
@@ -833,17 +873,65 @@ export default function OrdersPage() {
 
                             {/* Items */}
                             <div className="border-t border-gray-700 pt-4">
-                                <h4 className="text-white font-medium mb-2">Ürünler</h4>
-                                <div className="space-y-2">
-                                    {selectedOrder.items?.map((item: any, idx: number) => (
-                                        <div key={idx} className="flex justify-between text-sm">
-                                            <span className="text-gray-300">
-                                                {item.quantity}x {item.productName || item.name}
-                                            </span>
-                                            <span className="text-white">{formatCurrency(item.totalPrice ?? ((item.unitPrice || item.price || 0) * (item.quantity || 1)))}</span>
-                                        </div>
-                                    ))}
+                                <div className="flex items-center justify-between mb-2">
+                                    <h4 className="text-white font-medium">Ürünler</h4>
+                                    {selectedOrder.items?.length > 0 && (
+                                        <span className={`text-xs px-2 py-0.5 rounded-full ${allItemsChecked(selectedOrder.id, selectedOrder.items.length)
+                                            ? 'bg-green-600/30 text-green-400'
+                                            : 'bg-gray-700 text-gray-400'
+                                            }`}>
+                                            ✓ {getCheckedCount(selectedOrder.id, selectedOrder.items.length)}/{selectedOrder.items.length}
+                                        </span>
+                                    )}
                                 </div>
+                                <div className="space-y-1">
+                                    {selectedOrder.items?.map((item: any, idx: number) => {
+                                        const isChecked = checkedItems[selectedOrder.id]?.[idx] || false;
+                                        return (
+                                            <div key={idx} className={`rounded-lg px-2 py-1.5 transition-all ${isChecked ? 'bg-green-600/10' : 'hover:bg-gray-700/50'}`}>
+                                                <div className="flex items-center gap-2 text-sm">
+                                                    <button
+                                                        onClick={() => toggleItemChecked(selectedOrder.id, idx)}
+                                                        className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${isChecked
+                                                            ? 'bg-green-500 border-green-500 text-white'
+                                                            : 'border-gray-500 hover:border-green-400'
+                                                            }`}
+                                                    >
+                                                        {isChecked && <span className="text-xs">✓</span>}
+                                                    </button>
+                                                    <span className={`flex-1 ${isChecked ? 'text-green-300 line-through opacity-70' : 'text-gray-300'}`}>
+                                                        {item.quantity}x {item.productName || item.name}
+                                                    </span>
+                                                    <span className={`${isChecked ? 'text-green-400 opacity-70' : 'text-white'}`}>
+                                                        {formatCurrency(item.totalPrice ?? ((item.unitPrice || item.price || 0) * (item.quantity || 1)))}
+                                                    </span>
+                                                </div>
+                                                {/* Show selected options */}
+                                                {item.selectedOptions && item.selectedOptions.length > 0 && (
+                                                    <div className="pl-8 space-y-0.5 mt-0.5">
+                                                        {item.selectedOptions.map((opt: any, optIdx: number) => (
+                                                            <div key={optIdx} className="flex justify-between text-xs">
+                                                                <span className={`${isChecked ? 'text-green-300/50 line-through' : 'text-purple-300'}`}>↳ {opt.optionName || opt.name}</span>
+                                                                {(opt.priceModifier || opt.price) ? (
+                                                                    <span className={`${isChecked ? 'text-green-400/50' : 'text-purple-400'}`}>+{formatCurrency(opt.priceModifier || opt.price)}</span>
+                                                                ) : null}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                {/* Auto-ready prompt when all items checked */}
+                                {selectedOrder.items?.length > 0 && allItemsChecked(selectedOrder.id, selectedOrder.items.length) && selectedOrder.status !== 'ready' && selectedOrder.status !== 'delivered' && selectedOrder.status !== 'onTheWay' && (
+                                    <button
+                                        onClick={() => updateOrderStatus(selectedOrder.id, 'ready')}
+                                        className="w-full mt-3 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2 font-medium animate-pulse"
+                                    >
+                                        🎉 Tüm kalemler hazır — Durumu "Hazır" yap
+                                    </button>
+                                )}
                             </div>
 
                             {/* Totals */}
@@ -1010,14 +1098,19 @@ export default function OrdersPage() {
 function OrderCard({
     order,
     businesses,
+    checkedItems,
     onClick
 }: {
     order: Order;
     businesses: Record<string, string>;
+    checkedItems: Record<string, Record<number, boolean>>;
     onClick: () => void;
 }) {
     const statusInfo = orderStatuses[order.status];
     const typeInfo = orderTypes[order.type];
+    const itemCount = order.items?.length || 0;
+    const checked = checkedItems[order.id] || {};
+    const checkedCount = Object.values(checked).filter(Boolean).length;
 
     return (
         <button
@@ -1053,9 +1146,16 @@ function OrderCard({
             )}
             <div className="flex items-center justify-between">
                 <span className="text-green-400 font-bold">€{order.total?.toFixed(2)}</span>
-                <span className="text-gray-500 text-xs">
-                    {order.createdAt?.toDate().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                </span>
+                <div className="flex items-center gap-2">
+                    {itemCount > 0 && (order.status === 'preparing' || order.status === 'accepted') && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${checkedCount >= itemCount ? 'bg-green-600/30 text-green-400' : 'bg-gray-600 text-gray-400'}`}>
+                            ✓{checkedCount}/{itemCount}
+                        </span>
+                    )}
+                    <span className="text-gray-500 text-xs">
+                        {order.createdAt?.toDate().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                </div>
             </div>
         </button>
     );

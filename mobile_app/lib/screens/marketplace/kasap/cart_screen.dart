@@ -381,6 +381,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           'unitPrice': item.product.price,
           'totalPrice': item.totalPrice,
           'imageUrl': item.product.imageUrl,
+          if (item.selectedOptions.isNotEmpty)
+            'selectedOptions': item.selectedOptions.map((o) => {
+              'groupId': o.groupId,
+              'groupName': o.groupName,
+              'optionId': o.optionId,
+              'optionName': o.optionName,
+              'priceModifier': o.priceModifier,
+            }).toList(),
         }).toList(),
         'totalAmount': cart.totalAmount,
         'deliveryMethod': _isDineIn ? 'dineIn' : (_isPickUp ? 'pickup' : 'delivery'),
