@@ -1,10 +1,12 @@
 import * as admin from "firebase-admin";
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import Stripe from "stripe";
 import { Resend } from "resend";
 import { generateInvoicePDF } from "./invoicePdf";
+import { iotApp } from "./iot-gateway";
 
 // Define secrets for secure key management
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -63,6 +65,40 @@ export const onNewOrder = onDocumentCreated(
             console.log(`Sent to ${response.successCount}/${fcmTokens.length} devices`);
         } catch (error) {
             console.error("Error sending notification to butcher:", error);
+        }
+
+        // ── IoT Gateway Notification (Alexa + LED) ──────────────────────────
+        try {
+            const businessDoc = await db.collection("businesses").doc(butcherId).get();
+            const smartConfig = businessDoc.data()?.smartNotifications;
+
+            if (smartConfig?.enabled && smartConfig?.gatewayUrl) {
+                const gatewayPayload = {
+                    businessId: butcherId,
+                    event: "new_order",
+                    orderNumber: rawOrderNum || event.params.orderId.substring(0, 6).toUpperCase(),
+                    amount: totalAmount,
+                    items: order.items?.length || 0,
+                    language: smartConfig.alexaLanguage || "de-DE",
+                    alexaEnabled: smartConfig.alexaEnabled !== false,
+                    ledEnabled: smartConfig.ledEnabled !== false,
+                    hueEnabled: smartConfig.hueEnabled === true,
+                };
+
+                // Fire and forget — don't block the function
+                fetch(smartConfig.gatewayUrl + "/notify", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-api-key": smartConfig.gatewayApiKey || "",
+                    },
+                    body: JSON.stringify(gatewayPayload),
+                }).catch((err: any) => console.error("[IoT Gateway] Error:", err.message));
+
+                console.log(`[IoT Gateway] Notification sent for order ${rawOrderNum} → ${smartConfig.gatewayUrl}`);
+            }
+        } catch (iotError) {
+            console.error("[IoT Gateway] Error:", iotError);
         }
     }
 );
@@ -1969,5 +2005,32 @@ export const onScheduledReservationReminders = onSchedule(
             console.error("[Reservation Reminder] Critical error:", error);
             throw error;
         }
+    }
+);
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// IoT Gateway — Alexa + WLED + Hue notification service
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const iotApiKey = defineSecret("IOT_GATEWAY_API_KEY");
+
+export const iotGateway = onRequest(
+    {
+        region: "europe-west1",
+        memory: "1GiB",
+        timeoutSeconds: 300,
+        minInstances: 0,
+        maxInstances: 5,
+        secrets: [iotApiKey],
+    },
+    (req, res) => {
+        // API Key auth (skip for health check)
+        if (req.path !== "/health") {
+            const apiKey = req.headers["x-api-key"] || req.query.apiKey;
+            if (apiKey !== iotApiKey.value()) {
+                res.status(401).json({ error: "Unauthorized — invalid API key" });
+                return;
+            }
+        }
+        iotApp(req, res);
     }
 );

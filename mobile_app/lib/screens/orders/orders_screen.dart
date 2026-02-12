@@ -435,31 +435,68 @@ class _OrderCardState extends State<_OrderCard> {
               ),
               const SizedBox(height: 12),
               // Items
-              ...order.items.map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 30,
-                      child: Text(
-                        '${item.quantity.toStringAsFixed(item.quantity == item.quantity.roundToDouble() ? 0 : 1)}x',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              ...order.items.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final item = entry.value;
+                final posNum = item.positionNumber ?? (idx + 1);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Position badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                            margin: const EdgeInsets.only(right: 8, top: 1),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFF8000),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '#$posNum',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          // Quantity
+                          SizedBox(
+                            width: 26,
+                            child: Text(
+                              '${item.quantity.toStringAsFixed(item.quantity == item.quantity.roundToDouble() ? 0 : 1)}x',
+                              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              item.name,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                          Text(
+                            '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                          ),
+                        ],
                       ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        item.name,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                    Text(
-                      '€${(item.price * item.quantity).toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-              )),
+                      // Item note
+                      if (item.itemNote != null && item.itemNote!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 40, top: 2),
+                          child: Text(
+                            '📝 ${item.itemNote}',
+                            style: TextStyle(fontSize: 12, color: Colors.orange[400]),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              }),
               const Divider(height: 16),
               // Total
               Row(

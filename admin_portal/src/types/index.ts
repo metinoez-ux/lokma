@@ -480,9 +480,16 @@ export interface ButcherSubscriptionPlan {
     // Smart Notifications (IoT/Webhook)
     smartNotifications?: {
         enabled: boolean;
-        webhookUrl?: string; // IFTTT, Home Assistant etc.
-        soundEnabled: boolean; // Browser audio
-        flashScreen?: boolean; // Visual alert
+        gatewayUrl?: string;        // IoT Gateway adresi
+        gatewayApiKey?: string;     // Gateway API key
+        webhookUrl?: string;        // Legacy: IFTTT, Home Assistant etc.
+        alexaEnabled?: boolean;     // Alexa ses bildirimi
+        alexaLanguage?: 'tr' | 'de'; // Duyuru dili
+        ledEnabled?: boolean;       // WLED LED bildirim
+        ledColor?: string;          // Hex renk
+        hueEnabled?: boolean;       // Philips Hue
+        soundEnabled: boolean;      // Browser audio
+        flashScreen?: boolean;      // Visual alert
     };
 
     miraAppConnected?: boolean; // App Store app indirdi mi?: string;
@@ -681,7 +688,14 @@ export interface Admin {
     subscriptionStatus?: 'active' | 'cancelled' | 'past_due' | 'trialing' | 'none';
     smartNotifications?: {
         enabled?: boolean;
+        gatewayUrl?: string;
+        gatewayApiKey?: string;
         webhookUrl?: string;
+        alexaEnabled?: boolean;
+        alexaLanguage?: 'tr' | 'de';
+        ledEnabled?: boolean;
+        ledColor?: string;
+        hueEnabled?: boolean;
         soundEnabled?: boolean;
         flashScreen?: boolean;
     };
@@ -860,7 +874,14 @@ export interface ButcherPartner {
     // Smart Notifications & IOT
     smartNotifications?: {
         enabled?: boolean;
+        gatewayUrl?: string;
+        gatewayApiKey?: string;
         webhookUrl?: string;
+        alexaEnabled?: boolean;
+        alexaLanguage?: 'tr' | 'de';
+        ledEnabled?: boolean;
+        ledColor?: string;
+        hueEnabled?: boolean;
         soundEnabled?: boolean;
         flashScreen?: boolean;
     };

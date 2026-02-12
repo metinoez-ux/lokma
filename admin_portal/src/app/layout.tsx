@@ -11,9 +11,12 @@ export const metadata: Metadata = {
   title: "LOKMA | Mahalleni Keşfet",
   description: "Yerel esnaf ve müşterileri bir araya getiren dijital pazar yeri. Kasap, market, çiçekçi ve daha fazlası tek platformda.",
   icons: {
-    icon: '/lokma_logo.png',
-    shortcut: '/lokma_logo.png',
-    apple: '/lokma_logo.png',
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/lokma_logo.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   },
 };
 

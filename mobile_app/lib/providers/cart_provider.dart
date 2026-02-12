@@ -6,11 +6,13 @@ class CartItem {
   final ButcherProduct product;
   final double quantity;
   final List<SelectedOption> selectedOptions;
+  final String? note; // Per-item note (e.g. "Hasan Usta", "Yonca Hanım")
 
   CartItem({
     required this.product,
     required this.quantity,
     this.selectedOptions = const [],
+    this.note,
   });
 
   /// Unique key: SKU + sorted option IDs (same product, different options = different cart items)
@@ -50,7 +52,7 @@ class CartNotifier extends Notifier<CartState> {
     return CartState();
   }
 
-  void addToCart(ButcherProduct product, double quantity, String currentButcherId, String currentButcherName, {List<SelectedOption> selectedOptions = const []}) {
+  void addToCart(ButcherProduct product, double quantity, String currentButcherId, String currentButcherName, {List<SelectedOption> selectedOptions = const [], String? note}) {
     if (quantity <= 0) return;
 
     // Check if adding from a different butcher
@@ -58,13 +60,13 @@ class CartNotifier extends Notifier<CartState> {
        state = CartState(
          butcherId: currentButcherId,
          butcherName: currentButcherName,
-         items: [CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions)],
+         items: [CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions, note: note)],
        );
        return;
     }
 
     // Build a temporary item to get its unique key
-    final newItem = CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions);
+    final newItem = CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions, note: note);
 
     // Check if same product + same options already exists
     final existingIndex = state.items.indexWhere((item) => item.uniqueKey == newItem.uniqueKey);
@@ -77,6 +79,7 @@ class CartNotifier extends Notifier<CartState> {
         product: product,
         quantity: existingItem.quantity + quantity,
         selectedOptions: selectedOptions,
+        note: existingItem.note,
       );
       state = CartState(
         items: updatedItems,
@@ -120,12 +123,32 @@ class CartNotifier extends Notifier<CartState> {
          product: existing.product,
          quantity: quantity,
          selectedOptions: existing.selectedOptions,
+         note: existing.note,
        );
        state = CartState(
          items: updatedItems,
          butcherId: state.butcherId,
          butcherName: state.butcherName,
        );
+    }
+  }
+
+  void updateNote(String uniqueKey, String? note) {
+    final index = state.items.indexWhere((item) => item.uniqueKey == uniqueKey);
+    if (index >= 0) {
+      final updatedItems = List<CartItem>.from(state.items);
+      final existing = updatedItems[index];
+      updatedItems[index] = CartItem(
+        product: existing.product,
+        quantity: existing.quantity,
+        selectedOptions: existing.selectedOptions,
+        note: (note != null && note.trim().isNotEmpty) ? note.trim() : null,
+      );
+      state = CartState(
+        items: updatedItems,
+        butcherId: state.butcherId,
+        butcherName: state.butcherName,
+      );
     }
   }
 }

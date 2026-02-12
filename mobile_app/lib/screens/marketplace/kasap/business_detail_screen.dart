@@ -2467,6 +2467,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     if (product.optionGroups.isNotEmpty) {
       final data = _butcherDoc?.data() as Map<String, dynamic>?;
       final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+      // Always open fresh sheet from product listing (edit happens in cart screen)
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -2488,6 +2489,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     );
     final isEditing = existingCartItem.quantity > 0;
     double selectedQty = isEditing ? existingCartItem.quantity : (_selections[product.sku] ?? product.minQuantity);
+    final noteController = TextEditingController(text: isEditing ? (existingCartItem.note ?? '') : '');
     
     showModalBottomSheet(
       context: context,
@@ -2569,7 +2571,31 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
+                  // Note Field (optional)
+                  TextField(
+                    controller: noteController,
+                    maxLength: 40,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontSize: 14,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Not ekle (opsiyonel)  Ör: Hasan Usta',
+                      hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+                      prefixIcon: Icon(Icons.edit_note_rounded, color: accent, size: 20),
+                      filled: true,
+                      fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      counterText: '',
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      isDense: true,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   // Quantity Selector
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -2676,7 +2702,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       onPressed: () {
                         final data = _butcherDoc?.data() as Map<String, dynamic>?;
                         final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
-                        ref.read(cartProvider.notifier).addToCart(product, selectedQty, widget.businessId, butcherName);
+                        final noteText = noteController.text.trim().isNotEmpty ? noteController.text.trim() : null;
+                        ref.read(cartProvider.notifier).addToCart(product, selectedQty, widget.businessId, butcherName, note: noteText);
                         setState(() => _selections[product.sku] = selectedQty);
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -2926,9 +2953,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     Icon(Icons.check_circle, color: accent, size: 12),
                                     const SizedBox(width: 4),
                                     Text(
-                                      isByWeight 
-                                        ? '${cartItem.quantity.toStringAsFixed(0)}g'
-                                        : '${cartItem.quantity.toInt()} adet',
+                                      product.optionGroups.isNotEmpty
+                                        ? '${productCartItems.length} çeşit'
+                                        : isByWeight 
+                                          ? '${cartItem.quantity.toStringAsFixed(0)}g'
+                                          : '${cartItem.quantity.toInt()} adet',
                                       style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.w600),
                                     ),
                                   ],
@@ -2947,10 +2976,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(inCart ? Icons.edit : Icons.add, color: Colors.white, size: 16),
+                                      Icon(
+                                        // Option products always show add, simple products show edit when in cart
+                                        (inCart && product.optionGroups.isEmpty) ? Icons.edit : Icons.add, 
+                                        color: Colors.white, size: 16,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        inCart ? 'Düzenle' : 'Ekle',
+                                        (inCart && product.optionGroups.isEmpty) ? 'Düzenle' : '+ Ekle',
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 13,

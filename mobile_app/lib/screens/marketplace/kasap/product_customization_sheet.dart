@@ -12,12 +12,14 @@ class ProductCustomizationSheet extends ConsumerStatefulWidget {
   final ButcherProduct product;
   final String businessId;
   final String businessName;
+  final CartItem? existingItem;
 
   const ProductCustomizationSheet({
     super.key,
     required this.product,
     required this.businessId,
     required this.businessName,
+    this.existingItem,
   });
 
   @override
@@ -30,20 +32,35 @@ class _ProductCustomizationSheetState
   /// Map<groupId, Set<optionId>> for selected options
   final Map<String, Set<String>> _selections = {};
   double _quantity = 1;
+  final _noteController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _quantity = widget.product.unitType == 'kg'
-        ? widget.product.minQuantity
-        : 1;
-
-    // Pre-select default options
-    for (final group in widget.product.optionGroups) {
-      _selections[group.id] = {};
-      for (final option in group.options) {
-        if (option.defaultSelected) {
-          _selections[group.id]!.add(option.id);
+    final existing = widget.existingItem;
+    if (existing != null && existing.selectedOptions.isNotEmpty) {
+      // Editing: restore previous selections
+      _quantity = existing.quantity;
+      if (existing.note != null) _noteController.text = existing.note!;
+      // Build selections from existing cart item
+      for (final group in widget.product.optionGroups) {
+        _selections[group.id] = {};
+      }
+      for (final opt in existing.selectedOptions) {
+        _selections.putIfAbsent(opt.groupId, () => {});
+        _selections[opt.groupId]!.add(opt.optionId);
+      }
+    } else {
+      // New item: use defaults
+      _quantity = widget.product.unitType == 'kg'
+          ? widget.product.minQuantity
+          : 1;
+      for (final group in widget.product.optionGroups) {
+        _selections[group.id] = {};
+        for (final option in group.options) {
+          if (option.defaultSelected) {
+            _selections[group.id]!.add(option.id);
+          }
         }
       }
     }
@@ -115,23 +132,34 @@ class _ProductCustomizationSheetState
   }
 
   void _addToCart() {
-    ref.read(cartProvider.notifier).addToCart(
-      widget.product,
-      _quantity,
-      widget.businessId,
-      widget.businessName,
-      selectedOptions: _selectedOptions,
-    );
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${widget.product.name} sepete eklendi'),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: const Color(0xFFFF8000),
-      ),
-    );
+  final noteText = _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null;
+  final cartNotifier = ref.read(cartProvider.notifier);
+  
+  // If editing, remove the old variant first (options may have changed → different uniqueKey)
+  if (widget.existingItem != null) {
+    cartNotifier.removeFromCart(widget.existingItem!.uniqueKey);
   }
+  
+  cartNotifier.addToCart(
+    widget.product,
+    _quantity,
+    widget.businessId,
+    widget.businessName,
+    selectedOptions: _selectedOptions,
+    note: noteText,
+  );
+  Navigator.pop(context);
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(widget.existingItem != null 
+        ? '${widget.product.name} güncellendi' 
+        : '${widget.product.name} sepete eklendi'),
+      duration: const Duration(seconds: 2),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: const Color(0xFFFF8000),
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -187,6 +215,31 @@ class _ProductCustomizationSheetState
                     ..._buildVisibleOptionGroups(isDark, textPrimary, textSecondary, accent, divider),
                   ],
 
+                  // ── Note Field (optional, only after all required options selected) ──
+                  if (_allRequiredGroupsSelected) ...[
+                    TextField(
+                      controller: _noteController,
+                      maxLength: 40,
+                      style: TextStyle(
+                        color: textPrimary,
+                        fontSize: 14,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Not ekle (opsiyonel)  Ör: Hasan Usta',
+                        hintStyle: TextStyle(color: textSecondary, fontSize: 13),
+                        prefixIcon: Icon(Icons.edit_note_rounded, color: accent, size: 20),
+                        filled: true,
+                        fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        counterText: '',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        isDense: true,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                 ],
               ),
@@ -276,7 +329,7 @@ class _ProductCustomizationSheetState
                             elevation: 0,
                           ),
                           child: Text(
-                            'Hinzufügen  €${_totalPrice.toStringAsFixed(2)}',
+                            '${widget.existingItem != null ? 'Güncelle' : 'Hinzufügen'}  €${_totalPrice.toStringAsFixed(2)}',
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                           ),
                         ),

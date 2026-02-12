@@ -21,6 +21,7 @@ import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:lokma_app/services/order_service.dart';
 import 'package:lokma_app/screens/orders/rating_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
+import 'package:lokma_app/screens/marketplace/kasap/product_customization_sheet.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
@@ -373,7 +374,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         'fcmToken': fcmToken,
         'butcherId': cart.butcherId,
         'butcherName': cart.butcherName,
-        'items': cart.items.map((item) => {
+        'items': cart.items.asMap().entries.map((entry) {
+          final item = entry.value;
+          final positionNumber = entry.key + 1;
+          return {
           'productId': item.product.id,
           'productName': item.product.name,
           'quantity': item.quantity,
@@ -381,6 +385,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           'unitPrice': item.product.price,
           'totalPrice': item.totalPrice,
           'imageUrl': item.product.imageUrl,
+          'positionNumber': positionNumber,
+          if (item.note != null && item.note!.trim().isNotEmpty) 'itemNote': item.note!.trim(),
           if (item.selectedOptions.isNotEmpty)
             'selectedOptions': item.selectedOptions.map((o) => {
               'groupId': o.groupId,
@@ -389,6 +395,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               'optionName': o.optionName,
               'priceModifier': o.priceModifier,
             }).toList(),
+        };
         }).toList(),
         'totalAmount': cart.totalAmount,
         'deliveryMethod': _isDineIn ? 'dineIn' : (_isPickUp ? 'pickup' : 'delivery'),
@@ -468,8 +475,25 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         backgroundColor: colorScheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        automaticallyImplyLeading: false,
-        title: const SizedBox.shrink(),
+        toolbarHeight: 40,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, size: 20, color: colorScheme.onSurface),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
+        title: Text(
+          'Sepetim',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
+          ),
+        ),
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
@@ -2138,7 +2162,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 if (hasKermes) const Divider(height: 32),
                 if (_butcherData != null)
                   _buildLieferandoSectionHeader(_butcherData!['companyName'] ?? 'Kasap'),
-                ...cart.items.map((item) => _buildLieferandoCartItem(item)),
+                ...cart.items.asMap().entries.map((entry) => _buildLieferandoCartItem(entry.value, entry.key + 1)),
                 SizedBox(height: 16),
               ],
               // ⭐ Sponsored Products ("Bir şey mi unuttun?")
@@ -2406,7 +2430,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   }
   
   /// 🥩 Lieferando-style Kasap cart item
-  Widget _buildLieferandoCartItem(CartItem item) {
+  Widget _buildLieferandoCartItem(CartItem item, int positionNumber) {
     final productName = item.product.name;
     final quantity = item.quantity;
     final totalPrice = item.totalPrice;
@@ -2421,6 +2445,25 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // POSITION BADGE
+          Container(
+            width: 28,
+            height: 28,
+            margin: const EdgeInsets.only(right: 10, top: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF6B00),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '#$positionNumber',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+              ),
+            ),
+          ),
           // LEFT: Product name and details
           Expanded(
             child: Column(
@@ -2438,15 +2481,46 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 if (item.selectedOptions.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 3),
-                    child: Text(
-                      item.selectedOptions.map((o) => o.optionName).join(', '),
-                      style: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 12,
-                        height: 1.2,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            item.selectedOptions.map((o) => o.optionName).join(', '),
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 12,
+                              height: 1.2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () {
+                            final cart = ref.read(cartProvider);
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (ctx) => ProductCustomizationSheet(
+                                product: item.product,
+                                businessId: cart.butcherId ?? '',
+                                businessName: cart.butcherName ?? '',
+                                existingItem: item,
+                              ),
+                            );
+                          },
+                          child: Text(
+                            'Düzenle',
+                            style: TextStyle(
+                              color: const Color(0xFFFF6B00),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 if (isKg)
@@ -2457,6 +2531,36 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       style: TextStyle(color: Colors.grey[600], fontSize: 13),
                     ),
                   ),
+                // NOTE FIELD
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: GestureDetector(
+                    onTap: () => _showNoteDialog(item),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.edit_note_rounded,
+                          size: 16,
+                          color: item.note != null ? const Color(0xFFFF6B00) : Colors.grey[400],
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            item.note ?? 'Not ekle...',
+                            style: TextStyle(
+                              color: item.note != null ? const Color(0xFFFF6B00) : Colors.grey[400],
+                              fontSize: 12,
+                              fontStyle: item.note == null ? FontStyle.italic : FontStyle.normal,
+                              fontWeight: item.note != null ? FontWeight.w500 : FontWeight.normal,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -2539,6 +2643,63 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 },
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 📝 Note dialog for a specific cart item
+  void _showNoteDialog(CartItem item) {
+    final controller = TextEditingController(text: item.note ?? '');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Ürün Notu',
+          style: TextStyle(
+            color: isDark ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: TextField(
+          controller: controller,
+          maxLength: 40,
+          autofocus: true,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+          decoration: InputDecoration(
+            hintText: 'Ör: Hasan Usta, Marulsuz...',
+            hintStyle: TextStyle(color: Colors.grey[500]),
+            filled: true,
+            fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            counterStyle: TextStyle(color: Colors.grey[500]),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              ref.read(cartProvider.notifier).updateNote(item.uniqueKey, null);
+              Navigator.pop(ctx);
+            },
+            child: Text('Sil', style: TextStyle(color: Colors.red[400])),
+          ),
+          FilledButton(
+            onPressed: () {
+              ref.read(cartProvider.notifier).updateNote(item.uniqueKey, controller.text);
+              Navigator.pop(ctx);
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFFF6B00),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Kaydet', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

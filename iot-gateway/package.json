@@ -1,0 +1,26 @@
+{
+    "name": "lokma-iot-gateway",
+    "version": "1.0.0",
+    "description": "Self-hosted IoT notification gateway for LOKMA — Alexa + WLED + Hue",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "dev": "tsx watch src/index.ts"
+    },
+    "dependencies": {
+        "alexa-remote2": "^8.0.4",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.7",
+        "express": "^4.21.2",
+        "node-fetch": "^2.7.0"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.17",
+        "@types/express": "^5.0.0",
+        "@types/node": "^22.13.4",
+        "@types/node-fetch": "^2.6.12",
+        "tsx": "^4.19.2",
+        "typescript": "^5.7.3"
+    }
+}

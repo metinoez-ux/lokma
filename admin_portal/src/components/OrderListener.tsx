@@ -1,61 +1,172 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
-import { ButcherPartner } from '@/types';
-import { doc, getDoc } from 'firebase/firestore';
 
+/**
+ * OrderListener — Global browser notification component
+ * 
+ * Sits in the admin layout and listens for new orders in real-time.
+ * When a new order arrives:
+ *   🔔 Plays a gong/bell sound
+ *   🚨 Flashes the screen red
+ *   📱 Shows browser push notification
+ *   📳 Vibrates (mobile/tablet)
+ * 
+ * Controlled by admin.smartNotifications settings from the Settings page.
+ */
 export default function OrderListener() {
     const { admin } = useAdmin();
-    const [butcherConfig, setButcherConfig] = useState<ButcherPartner['smartNotifications'] | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const firstLoad = useRef(true);
+    const notificationPermissionAsked = useRef(false);
 
-    // Load butcher config
+    // Resolve the business ID from whichever field the admin has
+    const businessId = admin?.butcherId
+        || admin?.businessId
+        || (admin as any)?.restaurantId
+        || (admin as any)?.marketId
+        || (admin as any)?.kermesId
+        || null;
+
+    // Get smart notification settings (with sensible defaults)
+    const settings = admin?.smartNotifications || {};
+    const enabled = settings.enabled !== false; // Default: on
+    const soundEnabled = settings.soundEnabled !== false; // Default: on
+    const flashScreen = settings.flashScreen !== false; // Default: on
+
+    // Pre-load audio
     useEffect(() => {
-        if (!admin?.butcherId) return;
-
-        const loadConfig = async () => {
-            // In a real app, this should probably be real-time too, or loaded from context
-            // For now, we fetch once on mount
-            try {
-                const docRef = doc(db, 'businesses', admin.butcherId!);
-                const snapshot = await getDoc(docRef);
-                if (snapshot.exists()) {
-                    const data = snapshot.data() as ButcherPartner;
-                    setButcherConfig(data.smartNotifications || null);
-                }
-            } catch (e) {
-                console.error("Error loading smart notifications config", e);
-            }
-        };
-        loadConfig();
-    }, [admin]);
-
-    // Setup Audio
-    useEffect(() => {
-        audioRef.current = new Audio('/sounds/gong.mp3');
+        audioRef.current = new Audio('/sounds/gong.wav');
+        audioRef.current.volume = 1.0;
+        // Pre-load to avoid delay on first play
+        audioRef.current.load();
     }, []);
 
-    // Listen for orders
+    // Request notification permission on first interaction
     useEffect(() => {
-        if (!admin?.butcherId) return;
-        if (!butcherConfig?.enabled) return; // Don't listen if disabled
+        if (notificationPermissionAsked.current) return;
+        if (typeof Notification === 'undefined') return;
+        if (Notification.permission === 'default') {
+            // We'll ask for permission when the first order comes in,
+            // or the user can grant it via browser
+            const askPermission = () => {
+                Notification.requestPermission();
+                notificationPermissionAsked.current = true;
+                document.removeEventListener('click', askPermission);
+            };
+            document.addEventListener('click', askPermission, { once: true });
+        }
+    }, []);
+
+    // Trigger all alert mechanisms
+    const triggerAlert = useCallback((orderData: any) => {
+        const orderNum = orderData.orderNumber || 'Yeni';
+        const total = orderData.totalPrice || orderData.totalAmount || orderData.total || 0;
+        const customerName = orderData.customerName || orderData.userDisplayName || '';
+
+        console.log('🔔 YENİ SİPARİŞ!', { orderNum, total, customerName });
+
+        // 1. 🔔 GONG SOUND
+        if (soundEnabled && audioRef.current) {
+            // Clone the audio so multiple rapid orders don't overlap awkwardly
+            const sound = audioRef.current.cloneNode() as HTMLAudioElement;
+            sound.volume = 1.0;
+            sound.play().catch(err => {
+                console.warn('Audio play failed (browser policy?):', err);
+            });
+        }
+
+        // 2. 🚨 SCREEN FLASH (red pulsing overlay)
+        if (flashScreen) {
+            // Create a full-screen overlay for the flash effect
+            const overlay = document.createElement('div');
+            overlay.id = 'order-flash-overlay';
+            overlay.style.cssText = `
+                position: fixed; inset: 0; z-index: 9999;
+                background: rgba(239, 68, 68, 0.4);
+                pointer-events: none;
+                animation: flash-red 0.8s ease-in-out 4;
+            `;
+            document.body.appendChild(overlay);
+            // Remove after animation
+            setTimeout(() => {
+                overlay.remove();
+            }, 3500);
+        }
+
+        // 3. 📱 BROWSER NOTIFICATION
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            try {
+                new Notification('🔔 Yeni Sipariş!', {
+                    body: `${customerName ? customerName + ' — ' : ''}€${Number(total).toFixed(2)} • #${orderNum}`,
+                    icon: '/lokma_logo.png',
+                    tag: `order-${orderData.id || Date.now()}`, // Prevent duplicate notifications
+                    requireInteraction: true, // Keep notification visible until dismissed
+                });
+            } catch (err) {
+                console.warn('Browser notification failed:', err);
+            }
+        }
+
+        // 4. 📳 VIBRATION (mobile/tablet)
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate([300, 100, 300, 100, 500]);
+        }
+    }, [soundEnabled, flashScreen]);
+
+    // Listen for new orders
+    useEffect(() => {
+        if (!businessId) return;
+        if (!enabled) return;
+
+        // Reset firstLoad flag when businessId or enabled changes
+        firstLoad.current = true;
 
         // Query: Pending orders for this business, ordered by creation
-        // We limit to recent to avoid pulling huge history
         const q = query(
             collection(db, 'meat_orders'),
-            where('businessId', '==', admin.butcherId),
+            where('businessId', '==', businessId),
             where('status', '==', 'pending'),
             orderBy('createdAt', 'desc'),
             limit(10)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            // Skip the very first snapshot (initial load) to avoid alerting for existing orders
+            // Skip the very first snapshot (initial data load) to avoid alerting for existing orders
+            if (firstLoad.current) {
+                firstLoad.current = false;
+                return;
+            }
+
+            // Only trigger for NEWLY ADDED documents
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    triggerAlert({ id: change.doc.id, ...change.doc.data() });
+                }
+            });
+        });
+
+        return () => unsubscribe();
+    }, [businessId, enabled, triggerAlert]);
+
+    // Also listen for super admins (all businesses)
+    useEffect(() => {
+        if (admin?.adminType !== 'super') return;
+        if (!enabled) return;
+
+        firstLoad.current = true;
+
+        const q = query(
+            collection(db, 'meat_orders'),
+            where('status', '==', 'pending'),
+            orderBy('createdAt', 'desc'),
+            limit(10)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             if (firstLoad.current) {
                 firstLoad.current = false;
                 return;
@@ -63,92 +174,13 @@ export default function OrderListener() {
 
             snapshot.docChanges().forEach((change) => {
                 if (change.type === 'added') {
-                    // NEW ORDER DETECTED!
-                    triggerAlert(change.doc.data());
+                    triggerAlert({ id: change.doc.id, ...change.doc.data() });
                 }
             });
         });
 
         return () => unsubscribe();
-    }, [admin?.butcherId, butcherConfig]);
+    }, [admin?.adminType, enabled, triggerAlert]);
 
-    const triggerAlert = async (orderData: any) => {
-        console.log("🔔 NEW ORDER ALERT!", orderData);
-
-        // 1. Audio Alert
-        if (butcherConfig?.soundEnabled && audioRef.current) {
-            try {
-                // User interaction usually required for audio, but often works if registered after interaction
-                await audioRef.current.play();
-            } catch (err) {
-                console.warn("Audio play failed (browser policy?):", err);
-            }
-        }
-
-        // 2. Webhook Alert
-        if (butcherConfig?.webhookUrl) {
-            try {
-                // Fire and forget
-                fetch(butcherConfig.webhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        event: 'new_order',
-                        orderId: orderData.id || 'unknown',
-                        amount: orderData.totalAmount || 0,
-                        items: orderData.items?.length || 0,
-                        timestamp: new Date().toISOString()
-                    })
-                }).catch(err => console.error("Webhook triggers failed:", err));
-            } catch (e) {
-                console.error("Webhook error:", e);
-            }
-        }
-
-        // 3. Visual Flash (Screen)
-        if (butcherConfig?.flashScreen) {
-            document.body.classList.add('animate-flash-red');
-            // Flash longer (5 seconds loop)
-            setTimeout(() => document.body.classList.remove('animate-flash-red'), 5000);
-        }
-
-        // 4. Vibration (Mobile/Tablet)
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            // Vibrate pattern: 200ms on, 100ms off, 200ms on...
-            navigator.vibrate([200, 100, 200, 100, 200, 100, 500]);
-        }
-
-        // 5. Torch/Flashlight (Experimental - Phone/Tablet)
-        // Requires camera permission to be granted previously
-        try {
-            // Check if we can access the flashlight
-            // Note: This often requires a user gesture or active stream. 
-            // In a real PWA context, we might keep a track open or request it here.
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            const track = stream.getVideoTracks()[0];
-            const capabilities = track.getCapabilities() as any; // Cast for TS
-
-            if (capabilities.torch) {
-                // Strobe effect: On/Off/On/Off
-                const flash = async (on: boolean) => {
-                    await track.applyConstraints({ advanced: [{ torch: on }] } as any);
-                };
-
-                await flash(true);
-                setTimeout(async () => await flash(false), 500);
-                setTimeout(async () => await flash(true), 1000);
-                setTimeout(async () => await flash(false), 1500);
-                setTimeout(async () => {
-                    await flash(false);
-                    track.stop(); // Release camera
-                }, 2000);
-            } else {
-                track.stop();
-            }
-        } catch (e) {
-            console.warn("Torch access denied or not available:", e);
-        }
-    };
-
-    return null; // Invisible component
+    return null; // Invisible component — renders nothing
 }

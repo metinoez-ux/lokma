@@ -324,6 +324,7 @@ export default function AdminHeader() {
                                 { href: '/admin/drivers', icon: '🚗', label: 'Sürücüler' },
                                 { href: '/admin/reservations', icon: '🍽️', label: 'Rezervasyonlar' },
                                 { href: '/admin/image-generator', icon: '🎨', label: 'Görsel Üret' },
+                                { href: '/admin/settings', icon: '⚙️', label: 'Ayarlar' },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);
                                 return (
@@ -539,6 +540,12 @@ export default function AdminHeader() {
                             <Link href="/admin/image-generator" className="flex items-center gap-2 bg-violet-700/50 hover:bg-violet-700 px-4 py-2 rounded-lg transition-all border border-violet-600">
                                 <span className="text-lg">🎨</span>
                                 <span className="text-violet-200 text-sm font-medium">Görseller</span>
+                            </Link>
+
+                            {/* Ayarlar (IoT / Smart Notifications) */}
+                            <Link href="/admin/settings" className="flex items-center gap-2 bg-gray-700/50 hover:bg-gray-700 px-4 py-2 rounded-lg transition-all border border-gray-600">
+                                <span className="text-lg">⚙️</span>
+                                <span className="text-gray-200 text-sm font-medium">Ayarlar</span>
                             </Link>
                         </div>
                     </div>

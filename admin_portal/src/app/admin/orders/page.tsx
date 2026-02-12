@@ -653,21 +653,32 @@ export default function OrdersPage() {
 
                         <div className="text-gray-500 text-xl">→</div>
 
-                        {/* Hazır / Yolda */}
-                        <div className="flex-1 min-w-[100px] bg-purple-600/20 border border-purple-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-purple-500 rounded-full border-2 border-gray-800"></div>
-                            <p className="text-purple-400 text-3xl font-bold">
-                                {stats.ready + stats.inTransit}
+                        {/* Hazır */}
+                        <div className="flex-1 min-w-[100px] bg-green-600/20 border border-green-600/30 rounded-lg p-4 text-center relative">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-800"></div>
+                            <p className="text-green-400 text-3xl font-bold">
+                                {stats.ready}
                             </p>
-                            <p className="text-gray-400 text-sm">🚚 Hazır/Yolda</p>
+                            <p className="text-gray-400 text-sm">📦 Hazır</p>
+                        </div>
+
+                        <div className="text-gray-500 text-xl">→</div>
+
+                        {/* Yolda */}
+                        <div className="flex-1 min-w-[100px] bg-indigo-600/20 border border-indigo-600/30 rounded-lg p-4 text-center relative">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-indigo-500 rounded-full border-2 border-gray-800"></div>
+                            <p className="text-indigo-400 text-3xl font-bold">
+                                {stats.inTransit}
+                            </p>
+                            <p className="text-gray-400 text-sm">🛵 Yolda</p>
                         </div>
 
                         <div className="text-gray-500 text-xl">→</div>
 
                         {/* Tamamlanan */}
-                        <div className="flex-1 min-w-[100px] bg-green-600/20 border border-green-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-800"></div>
-                            <p className="text-green-400 text-3xl font-bold">
+                        <div className="flex-1 min-w-[100px] bg-emerald-600/20 border border-emerald-600/30 rounded-lg p-4 text-center relative">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-emerald-500 rounded-full border-2 border-gray-800"></div>
+                            <p className="text-emerald-400 text-3xl font-bold">
                                 {stats.completed}
                             </p>
                             <p className="text-gray-400 text-sm">✓ Tamamlanan</p>
@@ -675,7 +686,7 @@ export default function OrdersPage() {
                     </div>
 
                     {/* Timeline line */}
-                    <div className="relative mt-2 h-1 bg-gradient-to-r from-yellow-500 via-orange-500 via-purple-500 to-green-500 rounded-full opacity-50"></div>
+                    <div className="relative mt-2 h-1 bg-gradient-to-r from-yellow-500 via-orange-500 via-green-500 via-indigo-500 to-emerald-500 rounded-full opacity-50"></div>
                 </div>
             </div>
 
@@ -887,6 +898,7 @@ export default function OrdersPage() {
                                 <div className="space-y-1">
                                     {selectedOrder.items?.map((item: any, idx: number) => {
                                         const isChecked = checkedItems[selectedOrder.id]?.[idx] || false;
+                                        const posNum = item.positionNumber || (idx + 1);
                                         return (
                                             <div key={idx} className={`rounded-lg px-2 py-1.5 transition-all ${isChecked ? 'bg-green-600/10' : 'hover:bg-gray-700/50'}`}>
                                                 <div className="flex items-center gap-2 text-sm">
@@ -899,6 +911,7 @@ export default function OrdersPage() {
                                                     >
                                                         {isChecked && <span className="text-xs">✓</span>}
                                                     </button>
+                                                    <span className="bg-orange-500 text-white text-xs font-bold rounded px-1.5 py-0.5 flex-shrink-0">#{posNum}</span>
                                                     <span className={`flex-1 ${isChecked ? 'text-green-300 line-through opacity-70' : 'text-gray-300'}`}>
                                                         {item.quantity}x {item.productName || item.name}
                                                     </span>
@@ -908,7 +921,7 @@ export default function OrdersPage() {
                                                 </div>
                                                 {/* Show selected options */}
                                                 {item.selectedOptions && item.selectedOptions.length > 0 && (
-                                                    <div className="pl-8 space-y-0.5 mt-0.5">
+                                                    <div className="pl-14 space-y-0.5 mt-0.5">
                                                         {item.selectedOptions.map((opt: any, optIdx: number) => (
                                                             <div key={optIdx} className="flex justify-between text-xs">
                                                                 <span className={`${isChecked ? 'text-green-300/50 line-through' : 'text-purple-300'}`}>↳ {opt.optionName || opt.name}</span>
@@ -919,19 +932,27 @@ export default function OrdersPage() {
                                                         ))}
                                                     </div>
                                                 )}
+                                                {/* Show item note */}
+                                                {item.itemNote && (
+                                                    <div className="pl-14 mt-0.5">
+                                                        <span className="text-xs text-orange-300">📝 {item.itemNote}</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
                                 </div>
                                 {/* Auto-ready prompt when all items checked */}
-                                {selectedOrder.items?.length > 0 && allItemsChecked(selectedOrder.id, selectedOrder.items.length) && selectedOrder.status !== 'ready' && selectedOrder.status !== 'delivered' && selectedOrder.status !== 'onTheWay' && (
-                                    <button
-                                        onClick={() => updateOrderStatus(selectedOrder.id, 'ready')}
-                                        className="w-full mt-3 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2 font-medium animate-pulse"
-                                    >
-                                        🎉 Tüm kalemler hazır — Durumu "Hazır" yap
-                                    </button>
-                                )}
+                                {
+                                    selectedOrder.items?.length > 0 && allItemsChecked(selectedOrder.id, selectedOrder.items.length) && selectedOrder.status !== 'ready' && selectedOrder.status !== 'delivered' && selectedOrder.status !== 'onTheWay' && (
+                                        <button
+                                            onClick={() => updateOrderStatus(selectedOrder.id, 'ready')}
+                                            className="w-full mt-3 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2 font-medium animate-pulse"
+                                        >
+                                            🎉 Tüm kalemler hazır — Durumu "Hazır" yap
+                                        </button>
+                                    )
+                                }
                             </div>
 
                             {/* Totals */}

@@ -36,14 +36,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onScheduledReservationReminders = exports.onReservationStatusChange = exports.onNewReservation = exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
+exports.iotGateway = exports.onScheduledReservationReminders = exports.onReservationStatusChange = exports.onNewReservation = exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-functions/v2/firestore");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
+const https_1 = require("firebase-functions/v2/https");
 const params_1 = require("firebase-functions/params");
 const stripe_1 = __importDefault(require("stripe"));
 const resend_1 = require("resend");
 const invoicePdf_1 = require("./invoicePdf");
+const iot_gateway_1 = require("./iot-gateway");
 // Define secrets for secure key management
 const stripeSecretKey = (0, params_1.defineSecret)("STRIPE_SECRET_KEY");
 const resendApiKey = (0, params_1.defineSecret)("RESEND_API_KEY");
@@ -92,6 +94,37 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
     }
     catch (error) {
         console.error("Error sending notification to butcher:", error);
+    }
+    // ── IoT Gateway Notification (Alexa + LED) ──────────────────────────
+    try {
+        const businessDoc = await db.collection("businesses").doc(butcherId).get();
+        const smartConfig = businessDoc.data()?.smartNotifications;
+        if (smartConfig?.enabled && smartConfig?.gatewayUrl) {
+            const gatewayPayload = {
+                businessId: butcherId,
+                event: "new_order",
+                orderNumber: rawOrderNum || event.params.orderId.substring(0, 6).toUpperCase(),
+                amount: totalAmount,
+                items: order.items?.length || 0,
+                language: smartConfig.alexaLanguage || "de-DE",
+                alexaEnabled: smartConfig.alexaEnabled !== false,
+                ledEnabled: smartConfig.ledEnabled !== false,
+                hueEnabled: smartConfig.hueEnabled === true,
+            };
+            // Fire and forget — don't block the function
+            fetch(smartConfig.gatewayUrl + "/notify", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-api-key": smartConfig.gatewayApiKey || "",
+                },
+                body: JSON.stringify(gatewayPayload),
+            }).catch((err) => console.error("[IoT Gateway] Error:", err.message));
+            console.log(`[IoT Gateway] Notification sent for order ${rawOrderNum} → ${smartConfig.gatewayUrl}`);
+        }
+    }
+    catch (iotError) {
+        console.error("[IoT Gateway] Error:", iotError);
     }
 });
 /**
@@ -212,23 +245,68 @@ async function createCommissionRecord(orderId, orderData) {
             collectionStatus,
             invoiceId: null,
             isFreeOrder,
+            sponsoredFee: 0, // Will be updated below if applicable
             period: currentMonth,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
         };
-        await db.collection("commission_records").add(commissionRecord);
+        const commRecordRef = await db.collection("commission_records").add(commissionRecord);
         console.log(`[Commission] Created record: ${orderId} | ${businessName} | ${totalCommission}€ (${collectionStatus})`);
+        // =====================================================================
+        // SPONSORED PRODUCT CONVERSION BILLING
+        // =====================================================================
+        let sponsoredFee = 0;
+        if (orderData.hasSponsoredItems && Array.isArray(orderData.sponsoredItemIds) && orderData.sponsoredItemIds.length > 0) {
+            try {
+                // Read global sponsored settings (for enabled flag and fallback fee)
+                const sponsoredSettingsDoc = await db.collection("platformSettings").doc("sponsored").get();
+                const sponsoredSettings = sponsoredSettingsDoc.exists ? sponsoredSettingsDoc.data() : null;
+                const sponsoredEnabled = sponsoredSettings?.enabled ?? true;
+                // Per-plan fee takes priority over global setting
+                const feePerConversion = (plan?.sponsoredFeePerConversion !== undefined && plan?.sponsoredFeePerConversion !== null)
+                    ? plan.sponsoredFeePerConversion
+                    : (sponsoredSettings?.feePerConversion ?? 0.40);
+                if (sponsoredEnabled && feePerConversion > 0) {
+                    const sponsoredItemCount = orderData.sponsoredItemIds.length;
+                    sponsoredFee = Math.round(sponsoredItemCount * feePerConversion * 100) / 100;
+                    // Create sponsored conversion record
+                    await db.collection("sponsored_conversions").add({
+                        orderId,
+                        orderNumber: orderData.orderNumber || null,
+                        businessId,
+                        businessName,
+                        sponsoredItemIds: orderData.sponsoredItemIds,
+                        sponsoredItemCount,
+                        feePerConversion,
+                        totalFee: sponsoredFee,
+                        period: currentMonth,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                    // Update commission record with sponsored fee
+                    await commRecordRef.update({ sponsoredFee });
+                    console.log(`[Sponsored] Created conversion: ${orderId} | ${businessName} | ${sponsoredItemCount} items × €${feePerConversion} = €${sponsoredFee}`);
+                }
+            }
+            catch (sponsoredError) {
+                console.error(`[Sponsored] Error tracking conversion for order ${orderId}:`, sponsoredError);
+            }
+        }
         // Update business usage counters
         const usageUpdate = {
             [`usage.orders.${currentMonth}`]: admin.firestore.FieldValue.increment(1),
             [`usage.totalCommission.${currentMonth}`]: admin.firestore.FieldValue.increment(totalCommission),
             "usage.lastOrderAt": admin.firestore.FieldValue.serverTimestamp(),
         };
-        // For cash orders: accumulate balance owed to LOKMA
-        if (!isCardPayment && totalCommission > 0) {
-            usageUpdate.accountBalance = admin.firestore.FieldValue.increment(totalCommission);
+        // Add sponsored fee to usage tracking
+        if (sponsoredFee > 0) {
+            usageUpdate[`usage.sponsoredFee.${currentMonth}`] = admin.firestore.FieldValue.increment(sponsoredFee);
+        }
+        // For cash orders: accumulate balance owed to LOKMA (include sponsored fee)
+        const totalOwed = totalCommission + sponsoredFee;
+        if (!isCardPayment && totalOwed > 0) {
+            usageUpdate.accountBalance = admin.firestore.FieldValue.increment(totalOwed);
         }
         await db.collection("businesses").doc(businessId).update(usageUpdate);
-        console.log(`[Commission] Updated usage for ${businessName}: +1 order, +${totalCommission}€ commission`);
+        console.log(`[Commission] Updated usage for ${businessName}: +1 order, +${totalCommission}€ commission${sponsoredFee > 0 ? `, +${sponsoredFee}€ sponsored fee` : ""}`);
     }
     catch (error) {
         console.error(`[Commission] Error creating record for order ${orderId}:`, error);
@@ -723,7 +801,7 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
             }
         }
         console.log(`[Monthly Invoicing] Found commission records for ${Object.keys(businessCommissions).length} businesses in ${periodString}`);
-        // Create commission invoices
+        // Create commission invoices (including sponsored fees)
         for (const [businessId, commData] of Object.entries(businessCommissions)) {
             if (commData.totalCommission <= 0)
                 continue;
@@ -740,6 +818,33 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
                     continue;
                 }
                 const invoiceNumber = await getNextInvoiceNumber();
+                // Aggregate sponsored conversion fees for this business
+                let sponsoredFeeTotal = 0;
+                let sponsoredConversionCount = 0;
+                const sponsoredRecordIds = [];
+                try {
+                    const sponsoredSnapshot = await db.collection("sponsored_conversions")
+                        .where("businessId", "==", businessId)
+                        .where("period", "==", periodString)
+                        .get();
+                    for (const sDoc of sponsoredSnapshot.docs) {
+                        const sData = sDoc.data();
+                        sponsoredFeeTotal += sData.totalFee || 0;
+                        sponsoredConversionCount += sData.sponsoredItemCount || 0;
+                        sponsoredRecordIds.push(sDoc.id);
+                    }
+                    sponsoredFeeTotal = Math.round(sponsoredFeeTotal * 100) / 100;
+                }
+                catch (sponsoredErr) {
+                    console.error(`[Monthly Invoicing] Error aggregating sponsored fees for ${businessId}:`, sponsoredErr);
+                }
+                // Grand total = commission + sponsored fees
+                const grandTotalWithSponsored = Math.round((commData.totalCommission + sponsoredFeeTotal) * 100) / 100;
+                const netWithSponsored = Math.round((grandTotalWithSponsored / 1.19) * 100) / 100;
+                const vatWithSponsored = Math.round((grandTotalWithSponsored - netWithSponsored) * 100) / 100;
+                const sponsoredDescription = sponsoredFeeTotal > 0
+                    ? ` + ${sponsoredConversionCount} Öne Çıkan (€${sponsoredFeeTotal.toFixed(2)})`
+                    : "";
                 const commissionInvoiceData = {
                     invoiceNumber,
                     type: "commission",
@@ -749,21 +854,24 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
                     period: periodString,
                     periodStart: admin.firestore.Timestamp.fromDate(periodStart),
                     periodEnd: admin.firestore.Timestamp.fromDate(periodEnd),
-                    description: `LOKMA Provision - ${commData.orderCount} Bestellungen - ${periodString}`,
-                    subtotal: commData.netCommission,
+                    description: `LOKMA Provision - ${commData.orderCount} Bestellungen${sponsoredDescription} - ${periodString}`,
+                    subtotal: netWithSponsored,
                     taxRate: 19,
-                    taxAmount: commData.vatAmount,
-                    grandTotal: commData.totalCommission,
+                    taxAmount: vatWithSponsored,
+                    grandTotal: grandTotalWithSponsored,
                     currency: "EUR",
                     orderCount: commData.orderCount,
                     cardCommission: commData.cardCommission,
                     cashCommission: commData.cashCommission,
+                    sponsoredFee: sponsoredFeeTotal,
+                    sponsoredConversionCount,
                     issueDate: admin.firestore.FieldValue.serverTimestamp(),
                     dueDate: admin.firestore.Timestamp.fromDate(dueDate),
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
                     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                     generatedBy: "cron_job",
                     commissionRecordIds: commData.recordIds,
+                    sponsoredRecordIds,
                 };
                 const commInvoiceRef = await db.collection("invoices").add(commissionInvoiceData);
                 const commInvoiceId = commInvoiceRef.id;
@@ -1450,6 +1558,7 @@ exports.onScheduledReservationReminders = (0, scheduler_1.onSchedule)({
     let sent24h = 0;
     let sent2h = 0;
     let sentStaff30m = 0;
+    let sentCustomer30m = 0;
     try {
         // Window for 24h reminders: reservations between 23-25 hours from now
         const reminder24hStart = new Date(now.getTime() + 23 * 60 * 60 * 1000);
@@ -1610,8 +1719,41 @@ exports.onScheduledReservationReminders = (0, scheduler_1.onSchedule)({
                             console.error(`[Reservation Reminder] Staff 30m send failed for ${resDoc.id}:`, e);
                         }
                     }
-                    // Mark as sent so we don't re-notify
+                    // Mark staff reminder as sent
                     await resDoc.ref.update({ staffReminder30mSent: true });
+                    // ─── 30-min CUSTOMER Notification — Masa numarası + hatırlatma ───
+                    if (!res.customerReminder30mSent) {
+                        const customerToken = res.customerFcmToken || res.userFcmToken;
+                        if (customerToken) {
+                            const hasTable = tableCards.length > 0;
+                            const customerTitle = hasTable
+                                ? `🪑 Masanız Hazırlandı! Masa ${tableCards.join(", ")}`
+                                : "🍽️ Rezervasyon Hatırlatma – 30 Dakika!";
+                            const customerBody = hasTable
+                                ? `${businessName} – Saat ${timeStr} – ${partySize} kişi. Masa numaranız: ${tableCards.join(", ")}. Afiyet olsun!`
+                                : `${businessName} – Saat ${timeStr} – ${partySize} kişi. Görüşmek üzere!`;
+                            try {
+                                await messaging.send({
+                                    notification: {
+                                        title: customerTitle,
+                                        body: customerBody,
+                                    },
+                                    data: {
+                                        type: "reservation_customer_30m_table",
+                                        reservationId: resDoc.id,
+                                        businessId: businessId,
+                                    },
+                                    token: customerToken,
+                                });
+                                sentCustomer30m++;
+                                console.log(`[Reservation Reminder] Sent 30m customer notification for ${resDoc.id}`);
+                            }
+                            catch (e) {
+                                console.error(`[Reservation Reminder] Customer 30m send failed for ${resDoc.id}:`, e);
+                            }
+                            await resDoc.ref.update({ customerReminder30mSent: true });
+                        }
+                    }
                 }
             }
         }
@@ -1620,11 +1762,34 @@ exports.onScheduledReservationReminders = (0, scheduler_1.onSchedule)({
         console.log(`  24h customer reminders: ${sent24h}`);
         console.log(`  2h customer reminders: ${sent2h}`);
         console.log(`  30m staff reminders: ${sentStaff30m}`);
+        console.log(`  30m customer table notifications: ${sentCustomer30m}`);
         console.log("========================================");
     }
     catch (error) {
         console.error("[Reservation Reminder] Critical error:", error);
         throw error;
     }
+});
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// IoT Gateway — Alexa + WLED + Hue notification service
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const iotApiKey = (0, params_1.defineSecret)("IOT_GATEWAY_API_KEY");
+exports.iotGateway = (0, https_1.onRequest)({
+    region: "europe-west1",
+    memory: "1GiB",
+    timeoutSeconds: 300,
+    minInstances: 0,
+    maxInstances: 5,
+    secrets: [iotApiKey],
+}, (req, res) => {
+    // API Key auth (skip for health check)
+    if (req.path !== "/health") {
+        const apiKey = req.headers["x-api-key"] || req.query.apiKey;
+        if (apiKey !== iotApiKey.value()) {
+            res.status(401).json({ error: "Unauthorized — invalid API key" });
+            return;
+        }
+    }
+    (0, iot_gateway_1.iotApp)(req, res);
 });
 //# sourceMappingURL=index.js.map

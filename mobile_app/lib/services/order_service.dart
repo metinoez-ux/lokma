@@ -174,6 +174,8 @@ class OrderItem {
   final double price;
   final double quantity;
   final String unit;
+  final int? positionNumber;
+  final String? itemNote;
 
   OrderItem({
     required this.sku,
@@ -181,6 +183,8 @@ class OrderItem {
     required this.price,
     required this.quantity,
     required this.unit,
+    this.positionNumber,
+    this.itemNote,
   });
 
   Map<String, dynamic> toMap() => {
@@ -189,6 +193,8 @@ class OrderItem {
     'price': price,
     'quantity': quantity,
     'unit': unit,
+    if (positionNumber != null) 'positionNumber': positionNumber,
+    if (itemNote != null) 'itemNote': itemNote,
   };
 
   factory OrderItem.fromMap(Map<String, dynamic> map) => OrderItem(
@@ -197,6 +203,8 @@ class OrderItem {
     price: (map['price'] ?? map['unitPrice'] ?? 0).toDouble(),
     quantity: (map['quantity'] ?? 0).toDouble(),
     unit: map['unit'] ?? 'kg',
+    positionNumber: map['positionNumber'] as int?,
+    itemNote: map['itemNote'] as String?,
   );
 
   factory OrderItem.fromCartItem(CartItem cartItem) => OrderItem(
