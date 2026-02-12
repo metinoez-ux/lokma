@@ -377,14 +377,30 @@ function GlobalProductsPageContent() {
                 stockUnit: (formData as any).stockUnit || 'kg', // Stok birimi
                 stockLocation: (formData as any).stockLocation || '', // Depo/Raf konumu
                 lastStockUpdate: new Date().toISOString(),
+                // 🎛️ Ürün Seçenekleri (Lieferando-style Option Groups)
+                optionGroups: (formData as any).optionGroups || [],
             };
 
             await setDoc(productRef, productData, { merge: true });
+
+            // 🆕 If in business context, ALSO update the business product subcollection
+            if (isBusinessContext && contextBusinessId) {
+                try {
+                    const businessProductRef = doc(db, `businesses/${contextBusinessId}/products`, productId);
+                    await setDoc(businessProductRef, productData, { merge: true });
+                } catch (bizErr) {
+                    console.warn('Business product update failed (may not exist in subcollection):', bizErr);
+                }
+            }
 
             setShowModal(false);
             setEditingProduct(null);
             setFormData({ id: "", name: "", category: "dana", defaultUnit: "kg", description: "" });
             fetchProducts();
+            // Also refresh business products if in business context
+            if (isBusinessContext) {
+                fetchBusinessProducts();
+            }
         } catch (error: any) {
             console.error("Error saving product:", error);
             alert(`Ürün kaydedilirken hata oluştu: ${error?.message || 'Bilinmeyen hata'}`);
@@ -667,7 +683,8 @@ function GlobalProductsPageContent() {
             images: product.images || [],
             brand: product.brand || '',
             isActive: product.isActive !== false,
-            brandLabels: (product as any).brandLabels || []
+            brandLabels: (product as any).brandLabels || [],
+            optionGroups: (product as any).optionGroups || []
         } as any);
         setShowModal(true);
     };
@@ -677,7 +694,7 @@ function GlobalProductsPageContent() {
         setEditingProduct(null);
         setValidationErrors({});
         setFormData({
-            id: `MIRA-PROD-${Date.now()}`,
+            id: `LK-${Date.now()}`,
             name: "",
             category: "dana",
             categories: [],
@@ -686,7 +703,8 @@ function GlobalProductsPageContent() {
             brand: "",
             brandLabels: [],
             images: [],
-            isActive: true
+            isActive: true,
+            optionGroups: []
         } as any);
         setShowModal(true);
     };
@@ -1489,14 +1507,14 @@ function GlobalProductsPageContent() {
                                         <h2 className="text-xl font-bold mb-4">{editingProduct ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}</h2>
 
                                         {/* Validation Errors Banner */}
-                                        {Object.keys(validationErrors).length > 0 && (
+                                        {Object.entries(validationErrors).filter(([, v]) => !!v).length > 0 && (
                                             <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-xl">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <span className="text-red-400 text-lg">⚠️</span>
                                                     <h4 className="text-red-400 font-semibold">Lütfen aşağıdaki zorunlu alanları doldurun:</h4>
                                                 </div>
                                                 <ul className="list-disc list-inside space-y-1">
-                                                    {Object.entries(validationErrors).map(([field, message]) => (
+                                                    {Object.entries(validationErrors).filter(([, v]) => !!v).map(([field, message]) => (
                                                         <li key={field} className="text-red-300 text-sm">{message}</li>
                                                     ))}
                                                 </ul>
@@ -1516,7 +1534,7 @@ function GlobalProductsPageContent() {
                                                         <input
                                                             type="text"
                                                             value={formData.id}
-                                                            onChange={e => { setFormData({ ...formData, id: e.target.value }); setValidationErrors(prev => ({ ...prev, id: undefined })); }}
+                                                            onChange={e => { const v = e.target.value; setFormData(prev => ({ ...prev, id: v })); setValidationErrors(prev => { const next = { ...prev }; delete next.id; return next; }); }}
                                                             className={`w-full bg-gray-900 border rounded-lg px-4 py-2 font-mono text-sm ${validationErrors.id ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-600'}`}
                                                             placeholder="MIRA-MEAT-..."
                                                         />
@@ -1578,7 +1596,7 @@ function GlobalProductsPageContent() {
                                                             <input
                                                                 type="text"
                                                                 value={formData.name}
-                                                                onChange={e => { setFormData({ ...formData, name: e.target.value }); setValidationErrors(prev => ({ ...prev, name: undefined })); }}
+                                                                onChange={e => { const v = e.target.value; setFormData(prev => ({ ...prev, name: v })); setValidationErrors(prev => { const next = { ...prev }; delete next.name; return next; }); }}
                                                                 className={`w-full bg-gray-900 border rounded-lg px-4 py-2 ${validationErrors.name ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-600'}`}
                                                             />
                                                             {validationErrors.name && <p className="text-red-400 text-xs mt-1">{validationErrors.name}</p>}
@@ -1622,61 +1640,47 @@ function GlobalProductsPageContent() {
                                                         </div>
                                                     </div>
 
-                                                    {/* Ürün Türü & Attributeler */}
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div>
-                                                            <label className="block text-sm text-gray-400 mb-1">Ürün Türü</label>
-                                                            <select
-                                                                value={formData.category}
-                                                                onChange={e => setFormData({ ...formData, category: e.target.value as any })}
-                                                                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2"
-                                                            >
-                                                                {PRODUCT_TYPE_OPTIONS.map(pt => (
-                                                                    <option key={pt.value} value={pt.value}>{pt.label}</option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
-                                                        <div className="flex flex-wrap items-end gap-4">
-                                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={(formData as any).isProcessed || false}
-                                                                    onChange={e => setFormData({ ...formData, isProcessed: e.target.checked } as any)}
-                                                                    className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600"
-                                                                />
-                                                                <span className="text-sm text-gray-300">Hazır/İşlenmiş</span>
-                                                            </label>
-                                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={(formData as any).isPackaged || false}
-                                                                    onChange={e => {
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            isPackaged: e.target.checked,
-                                                                            isLoose: e.target.checked ? false : (formData as any).isLoose  // Paketli ise Açık olamaz
-                                                                        } as any);
-                                                                    }}
-                                                                    className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-600"
-                                                                />
-                                                                <span className="text-sm text-gray-300">📦 Paketli</span>
-                                                            </label>
-                                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={(formData as any).isLoose || false}
-                                                                    onChange={e => {
-                                                                        setFormData({
-                                                                            ...formData,
-                                                                            isLoose: e.target.checked,
-                                                                            isPackaged: e.target.checked ? false : (formData as any).isPackaged  // Açık ise Paketli olamaz
-                                                                        } as any);
-                                                                    }}
-                                                                    className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-green-600"
-                                                                />
-                                                                <span className="text-sm text-gray-300">🥬 Açık (Lose Ware)</span>
-                                                            </label>
-                                                        </div>
+                                                    {/* Attributeler (Ürün Türü kaldırıldı) */}
+                                                    <div className="flex flex-wrap items-center gap-4">
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(formData as any).isProcessed || false}
+                                                                onChange={e => setFormData(prev => ({ ...prev, isProcessed: e.target.checked } as any))}
+                                                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600"
+                                                            />
+                                                            <span className="text-sm text-gray-300">Hazır/İşlenmiş</span>
+                                                        </label>
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(formData as any).isPackaged || false}
+                                                                onChange={e => {
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        isPackaged: e.target.checked,
+                                                                        isLoose: e.target.checked ? false : (prev as any).isLoose
+                                                                    } as any));
+                                                                }}
+                                                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-600"
+                                                            />
+                                                            <span className="text-sm text-gray-300">📦 Paketli</span>
+                                                        </label>
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(formData as any).isLoose || false}
+                                                                onChange={e => {
+                                                                    setFormData(prev => ({
+                                                                        ...prev,
+                                                                        isLoose: e.target.checked,
+                                                                        isPackaged: e.target.checked ? false : (prev as any).isPackaged
+                                                                    } as any));
+                                                                }}
+                                                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-green-600"
+                                                            />
+                                                            <span className="text-sm text-gray-300">🥬 Açık (Lose Ware)</span>
+                                                        </label>
                                                     </div>
 
                                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1809,10 +1813,17 @@ function GlobalProductsPageContent() {
                                                 </div>
                                             </div>
 
-                                            {/* Tedarik & İzlenebilirlik */}
+                                            {/* Tedarik & İzlenebilirlik (Collapsible) */}
                                             <div className="border-b border-gray-700 pb-4">
-                                                <h3 className="text-sm font-medium text-orange-400 mb-3">🚚 Tedarik & İzlenebilirlik</h3>
-                                                <div className="grid grid-cols-2 gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({ ...prev, _tedarikOpen: !(prev as any)._tedarikOpen } as any))}
+                                                    className="flex items-center justify-between w-full text-sm font-medium text-orange-400 mb-1 hover:text-orange-300 transition-colors"
+                                                >
+                                                    <span>🚚 Tedarik & İzlenebilirlik</span>
+                                                    <span className="text-xs text-gray-500">{(formData as any)._tedarikOpen ? '▲ Kapat' : '▼ Aç'}</span>
+                                                </button>
+                                                {(formData as any)._tedarikOpen && <div className="grid grid-cols-2 gap-3 mt-3">
                                                     <div>
                                                         <label className="block text-sm text-gray-400 mb-1">Toptancı Adı</label>
                                                         <input
@@ -1855,7 +1866,7 @@ function GlobalProductsPageContent() {
                                                             placeholder="0.00"
                                                         />
                                                     </div>
-                                                </div>
+                                                </div>}
                                             </div>
 
                                             {/* Tarihler */}
@@ -1966,6 +1977,254 @@ function GlobalProductsPageContent() {
                                                 {(formData as any).currentStock > 0 && (formData as any).currentStock <= (formData as any).minStock && (
                                                     <div className="mt-3 bg-red-900/30 border border-red-500/30 rounded-lg p-3">
                                                         <p className="text-red-300 text-sm">⚠️ Stok minimum seviyenin altında! Yeniden sipariş verin.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* 🎛️ Ürün Seçenekleri (Lieferando-style Option Groups) */}
+                                            <div className="lg:col-span-2 border-t border-gray-700 pt-4">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <h3 className="text-sm font-medium text-amber-400">🎛️ Ürün Seçenekleri (Varyantlar / Ekstralar)</h3>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const groups = (formData as any).optionGroups || [];
+                                                            const newGroup = {
+                                                                id: `grp_${Date.now()}`,
+                                                                name: '',
+                                                                type: 'radio',
+                                                                required: false,
+                                                                minSelect: 0,
+                                                                maxSelect: 1,
+                                                                options: []
+                                                            };
+                                                            setFormData({ ...formData, optionGroups: [...groups, newGroup] } as any);
+                                                        }}
+                                                        className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
+                                                    >
+                                                        ➕ Grup Ekle
+                                                    </button>
+                                                </div>
+
+                                                {((formData as any).optionGroups || []).length === 0 ? (
+                                                    <div className="bg-gray-900/50 border border-dashed border-gray-600 rounded-xl p-6 text-center">
+                                                        <p className="text-gray-500 text-sm">Henüz seçenek grubu yok</p>
+                                                        <p className="text-gray-600 text-xs mt-1">Boyut seçimi, ekstralar veya Sonderwunsch eklemek için &quot;Grup Ekle&quot; butonuna tıklayın</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-4">
+                                                        {((formData as any).optionGroups || []).map((group: any, groupIdx: number) => (
+                                                            <div key={group.id} className="bg-gray-900/60 border border-gray-600 rounded-xl p-4">
+                                                                {/* Group Header */}
+                                                                <div className="flex items-center gap-3 mb-3">
+                                                                    <span className="text-gray-500 font-mono text-xs">#{groupIdx + 1}</span>
+                                                                    <input
+                                                                        type="text"
+                                                                        value={group.name}
+                                                                        onChange={e => {
+                                                                            const groups = [...(formData as any).optionGroups];
+                                                                            groups[groupIdx] = { ...groups[groupIdx], name: e.target.value };
+                                                                            setFormData({ ...formData, optionGroups: groups } as any);
+                                                                        }}
+                                                                        className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-sm font-semibold"
+                                                                        placeholder="Grup adı (örn: Boyut Seçimi, Ekstralar, Sonderwunsch)"
+                                                                    />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const groups = [...(formData as any).optionGroups];
+                                                                            groups.splice(groupIdx, 1);
+                                                                            setFormData({ ...formData, optionGroups: groups } as any);
+                                                                        }}
+                                                                        className="text-red-400 hover:text-red-300 text-sm px-2 py-1"
+                                                                        title="Grubu Sil"
+                                                                    >
+                                                                        🗑️
+                                                                    </button>
+                                                                </div>
+
+                                                                {/* Group Settings */}
+                                                                <div className="flex flex-wrap items-center gap-3 mb-3 pb-3 border-b border-gray-700">
+                                                                    <select
+                                                                        value={group.type}
+                                                                        onChange={e => {
+                                                                            const groups = [...(formData as any).optionGroups];
+                                                                            const newType = e.target.value;
+                                                                            groups[groupIdx] = {
+                                                                                ...groups[groupIdx],
+                                                                                type: newType,
+                                                                                maxSelect: newType === 'radio' ? 1 : -1
+                                                                            };
+                                                                            setFormData({ ...formData, optionGroups: groups } as any);
+                                                                        }}
+                                                                        className="bg-gray-800 border border-gray-600 rounded-lg px-2 py-1 text-xs"
+                                                                    >
+                                                                        <option value="radio">🔘 Tek Seçim (Radio)</option>
+                                                                        <option value="checkbox">☑️ Çoklu Seçim (Checkbox)</option>
+                                                                    </select>
+
+                                                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={group.required}
+                                                                            onChange={e => {
+                                                                                const groups = [...(formData as any).optionGroups];
+                                                                                groups[groupIdx] = {
+                                                                                    ...groups[groupIdx],
+                                                                                    required: e.target.checked,
+                                                                                    minSelect: e.target.checked ? 1 : 0
+                                                                                };
+                                                                                setFormData({ ...formData, optionGroups: groups } as any);
+                                                                            }}
+                                                                            className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-700 text-red-500"
+                                                                        />
+                                                                        <span className="text-xs text-gray-400">Zorunlu</span>
+                                                                    </label>
+
+                                                                    {group.type === 'checkbox' && (
+                                                                        <>
+                                                                            <div className="flex items-center gap-1">
+                                                                                <span className="text-xs text-gray-500">Min:</span>
+                                                                                <input
+                                                                                    type="number"
+                                                                                    min="0"
+                                                                                    value={group.minSelect}
+                                                                                    onChange={e => {
+                                                                                        const groups = [...(formData as any).optionGroups];
+                                                                                        groups[groupIdx] = { ...groups[groupIdx], minSelect: parseInt(e.target.value) || 0 };
+                                                                                        setFormData({ ...formData, optionGroups: groups } as any);
+                                                                                    }}
+                                                                                    className="w-14 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-center"
+                                                                                />
+                                                                            </div>
+                                                                            <div className="flex items-center gap-1">
+                                                                                <span className="text-xs text-gray-500">Max:</span>
+                                                                                <input
+                                                                                    type="number"
+                                                                                    min="-1"
+                                                                                    value={group.maxSelect}
+                                                                                    onChange={e => {
+                                                                                        const groups = [...(formData as any).optionGroups];
+                                                                                        groups[groupIdx] = { ...groups[groupIdx], maxSelect: parseInt(e.target.value) || -1 };
+                                                                                        setFormData({ ...formData, optionGroups: groups } as any);
+                                                                                    }}
+                                                                                    className="w-14 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-center"
+                                                                                />
+                                                                                <span className="text-[10px] text-gray-600">(-1 = sınırsız)</span>
+                                                                            </div>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Options List */}
+                                                                <div className="space-y-2">
+                                                                    {(group.options || []).map((opt: any, optIdx: number) => (
+                                                                        <div key={opt.id} className="flex items-center gap-2 bg-gray-800/50 rounded-lg px-3 py-2">
+                                                                            <span className="text-gray-600 text-xs w-4">{optIdx + 1}.</span>
+                                                                            <input
+                                                                                type="text"
+                                                                                value={opt.name}
+                                                                                onChange={e => {
+                                                                                    const groups = [...(formData as any).optionGroups];
+                                                                                    const opts = [...groups[groupIdx].options];
+                                                                                    opts[optIdx] = { ...opts[optIdx], name: e.target.value };
+                                                                                    groups[groupIdx] = { ...groups[groupIdx], options: opts };
+                                                                                    setFormData({ ...formData, optionGroups: groups } as any);
+                                                                                }}
+                                                                                className="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm"
+                                                                                placeholder="Seçenek adı (örn: Klein, Groß, mit Käse)"
+                                                                            />
+                                                                            <div className="flex items-center gap-1">
+                                                                                <span className="text-xs text-gray-500">+€</span>
+                                                                                <input
+                                                                                    type="number"
+                                                                                    step="0.10"
+                                                                                    min="0"
+                                                                                    value={opt.priceModifier || ''}
+                                                                                    onChange={e => {
+                                                                                        const groups = [...(formData as any).optionGroups];
+                                                                                        const opts = [...groups[groupIdx].options];
+                                                                                        opts[optIdx] = { ...opts[optIdx], priceModifier: parseFloat(e.target.value) || 0 };
+                                                                                        groups[groupIdx] = { ...groups[groupIdx], options: opts };
+                                                                                        setFormData({ ...formData, optionGroups: groups } as any);
+                                                                                    }}
+                                                                                    className="w-20 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm text-right"
+                                                                                    placeholder="0.00"
+                                                                                />
+                                                                            </div>
+                                                                            <label className="flex items-center gap-1 cursor-pointer" title="Varsayılan seçili">
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    checked={opt.defaultSelected || false}
+                                                                                    onChange={e => {
+                                                                                        const groups = [...(formData as any).optionGroups];
+                                                                                        const opts = [...groups[groupIdx].options];
+                                                                                        // For radio type, uncheck all others first
+                                                                                        if (group.type === 'radio' && e.target.checked) {
+                                                                                            opts.forEach((o: any, i: number) => {
+                                                                                                opts[i] = { ...o, defaultSelected: i === optIdx };
+                                                                                            });
+                                                                                        } else {
+                                                                                            opts[optIdx] = { ...opts[optIdx], defaultSelected: e.target.checked };
+                                                                                        }
+                                                                                        groups[groupIdx] = { ...groups[groupIdx], options: opts };
+                                                                                        setFormData({ ...formData, optionGroups: groups } as any);
+                                                                                    }}
+                                                                                    className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-700 text-amber-500"
+                                                                                />
+                                                                                <span className="text-[10px] text-gray-500">Varsayılan</span>
+                                                                            </label>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    const groups = [...(formData as any).optionGroups];
+                                                                                    const opts = [...groups[groupIdx].options];
+                                                                                    opts.splice(optIdx, 1);
+                                                                                    groups[groupIdx] = { ...groups[groupIdx], options: opts };
+                                                                                    setFormData({ ...formData, optionGroups: groups } as any);
+                                                                                }}
+                                                                                className="text-red-400 hover:text-red-300 text-xs px-1"
+                                                                                title="Seçeneği Sil"
+                                                                            >
+                                                                                ✕
+                                                                            </button>
+                                                                        </div>
+                                                                    ))}
+
+                                                                    {/* Add Option Button */}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const groups = [...(formData as any).optionGroups];
+                                                                            const newOption = {
+                                                                                id: `opt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+                                                                                name: '',
+                                                                                priceModifier: 0,
+                                                                                defaultSelected: false
+                                                                            };
+                                                                            groups[groupIdx] = {
+                                                                                ...groups[groupIdx],
+                                                                                options: [...(groups[groupIdx].options || []), newOption]
+                                                                            };
+                                                                            setFormData({ ...formData, optionGroups: groups } as any);
+                                                                        }}
+                                                                        className="w-full py-1.5 border border-dashed border-gray-600 hover:border-amber-500 rounded-lg text-xs text-gray-500 hover:text-amber-400 transition-colors"
+                                                                    >
+                                                                        + Seçenek Ekle
+                                                                    </button>
+                                                                </div>
+
+                                                                {/* Group Summary Badge */}
+                                                                {group.options && group.options.length > 0 && (
+                                                                    <div className="mt-2 flex gap-2 text-[10px] text-gray-500">
+                                                                        <span>{group.options.length} seçenek</span>
+                                                                        <span>•</span>
+                                                                        <span>{group.type === 'radio' ? 'Tek seçim' : 'Çoklu seçim'}</span>
+                                                                        {group.required && <><span>•</span><span className="text-red-400">Zorunlu</span></>}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 )}
                                             </div>

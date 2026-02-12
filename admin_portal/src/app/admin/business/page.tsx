@@ -164,6 +164,18 @@ export default function BusinessesPage() {
     const [orgPage, setOrgPage] = useState(1);
     const ORGS_PER_PAGE = 10;
 
+    // 🕐 Son Kullanılanlar - Recent businesses from localStorage
+    const [recentBusinesses, setRecentBusinesses] = useState<any[]>([]);
+    const [showRecent, setShowRecent] = useState(false);
+    useEffect(() => {
+        try {
+            const stored = JSON.parse(localStorage.getItem('lokma_recent_businesses') || '[]');
+            setRecentBusinesses(stored);
+        } catch (e) {
+            // Ignore
+        }
+    }, []);
+
     // 🆕 KERMES EVENTS - Ana liste
     const [kermesEvents, setKermesEvents] = useState<any[]>([]);
     const [loadingKermesEvents, setLoadingKermesEvents] = useState(false);
@@ -895,6 +907,49 @@ export default function BusinessesPage() {
                         );
                     })}
                 </div>
+
+                {/* 🕐 Son Kullanılanlar - Quick Access Chip */}
+                {recentBusinesses.length > 0 && (
+                    <div className="mt-4">
+                        <button
+                            onClick={() => setShowRecent(!showRecent)}
+                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-all text-sm font-medium ${showRecent
+                                ? 'bg-amber-600/30 border-amber-500 ring-2 ring-amber-500 text-amber-300'
+                                : 'bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600 text-gray-300'
+                                }`}
+                        >
+                            <span>🕐</span>
+                            Son Kullanılanlar
+                            <span className="bg-amber-600/40 text-amber-200 text-xs px-2 py-0.5 rounded-full">{recentBusinesses.length}</span>
+                            <span className={`transition-transform ${showRecent ? 'rotate-180' : ''}`}>▾</span>
+                        </button>
+
+                        {showRecent && (
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                                {recentBusinesses.map((rb: any) => (
+                                    <Link
+                                        key={rb.id}
+                                        href={`/admin/business/${rb.id}`}
+                                        className="flex items-center gap-3 px-4 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-700 hover:border-amber-600/50 rounded-xl transition-all group"
+                                    >
+                                        <span className="text-xl">
+                                            {businessTypes.find(t => t.value === rb.type)?.icon || '🏪'}
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="text-white text-sm font-medium truncate group-hover:text-amber-300 transition-colors">
+                                                {rb.name}
+                                            </div>
+                                            {rb.city && (
+                                                <div className="text-gray-500 text-xs truncate">{rb.city}</div>
+                                            )}
+                                        </div>
+                                        <span className="text-gray-600 group-hover:text-amber-500 transition-colors">→</span>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Filters */}

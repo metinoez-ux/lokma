@@ -183,9 +183,8 @@ class _ProductCustomizationSheetState
                   if (product.optionGroups.isNotEmpty) ...[
                     Divider(color: divider, height: 24),
 
-                    // ── Option Groups ──
-                    ...product.optionGroups.map((group) =>
-                      _buildOptionGroup(group, isDark, textPrimary, textSecondary, accent, divider)),
+                    // ── Option Groups (sorted: required first, progressive reveal) ──
+                    ..._buildVisibleOptionGroups(isDark, textPrimary, textSecondary, accent, divider),
                   ],
 
                   const SizedBox(height: 16),
@@ -360,6 +359,40 @@ class _ProductCustomizationSheetState
         ),
       ],
     );
+  }
+
+  // ── Sorted & Progressive Option Groups ──
+  List<Widget> _buildVisibleOptionGroups(bool isDark,
+      Color textPrimary, Color textSecondary, Color accent, Color divider) {
+    final groups = List<OptionGroup>.from(widget.product.optionGroups);
+    // Sort: required groups first, optional groups last
+    groups.sort((a, b) {
+      if (a.required && !b.required) return -1;
+      if (!a.required && b.required) return 1;
+      return 0;
+    });
+
+    final List<Widget> widgets = [];
+    for (final group in groups) {
+      // Check if all PREVIOUS required groups have been satisfied
+      bool allPreviousRequiredSatisfied = true;
+      for (final prev in groups) {
+        if (identical(prev, group)) break; // reached current group
+        if (prev.required) {
+          final selected = _selections[prev.id] ?? {};
+          if (selected.length < prev.minSelect) {
+            allPreviousRequiredSatisfied = false;
+            break;
+          }
+        }
+      }
+
+      if (!allPreviousRequiredSatisfied) break; // stop rendering further groups
+
+      widgets.add(_buildOptionGroup(group, isDark, textPrimary, textSecondary, accent, divider));
+    }
+
+    return widgets;
   }
 
   // ── Option Group ──

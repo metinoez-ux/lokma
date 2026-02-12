@@ -763,6 +763,8 @@ export default function BusinessDetailPage() {
         productData.unit = 'kg'; // Default unit
         productData.price = parseFloat(customProductForm.price) || 0;
         productData.isCustom = false;
+        // Copy optionGroups from master product (Lieferando-style variants/extras)
+        productData.optionGroups = (masterProduct as any).optionGroups || [];
       } else if (productMode === 'custom') {
         // Custom product
         productData.name = customProductForm.name;
@@ -800,6 +802,29 @@ export default function BusinessDetailPage() {
       loadProducts(); // Load products when admin is ready
     }
   }, [admin, loadBusiness, loadOrders, loadStaff, loadProducts]);
+
+  // 🕐 Record recent visit to localStorage for quick-access chip on list page
+  useEffect(() => {
+    if (business && businessId && businessId !== 'new') {
+      try {
+        const key = 'lokma_recent_businesses';
+        const stored = JSON.parse(localStorage.getItem(key) || '[]');
+        const bd = business as any;
+        const entry = {
+          id: businessId,
+          name: bd.companyName || 'İsimsiz',
+          city: bd.address?.city || bd.city || '',
+          type: bd.businessCategories?.[0] || bd.types?.[0] || bd.type || '',
+          visitedAt: Date.now(),
+        };
+        // Remove duplicate, prepend, keep max 5
+        const updated = [entry, ...stored.filter((e: any) => e.id !== businessId)].slice(0, 5);
+        localStorage.setItem(key, JSON.stringify(updated));
+      } catch (e) {
+        // Ignore localStorage errors (private browsing etc.)
+      }
+    }
+  }, [business, businessId]);
 
   // 🆕 Load master products when business is loaded (for type filtering)
   useEffect(() => {
@@ -4159,10 +4184,10 @@ export default function BusinessDetailPage() {
                           <label
                             key={product.id}
                             className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition ${isSponsored
-                                ? 'bg-orange-950/40 border-orange-600/50'
-                                : isAtLimit
-                                  ? 'bg-gray-800/50 border-gray-700 opacity-50 cursor-not-allowed'
-                                  : 'bg-gray-800 border-gray-700 hover:border-gray-500'
+                              ? 'bg-orange-950/40 border-orange-600/50'
+                              : isAtLimit
+                                ? 'bg-gray-800/50 border-gray-700 opacity-50 cursor-not-allowed'
+                                : 'bg-gray-800 border-gray-700 hover:border-gray-500'
                               }`}
                           >
                             <input
