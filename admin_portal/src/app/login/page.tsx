@@ -256,7 +256,7 @@ export default function LoginPage() {
                     }, { merge: true });
 
                     // Role-based redirect
-                    router.push(getAdminRedirectPath(matchedAdminData.role, matchedAdminData.adminType));
+                    router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
                     return;
                 }
             }
