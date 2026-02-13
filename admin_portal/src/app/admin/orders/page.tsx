@@ -71,6 +71,7 @@ interface Order {
     tableSessionId?: string;
     paymentStatus?: string;
     paymentMethod?: string;
+    stripePaymentIntentId?: string;
 }
 
 export default function OrdersPage() {
@@ -96,7 +97,7 @@ export default function OrdersPage() {
     // Unavailable items modal state
     const [showUnavailableModal, setShowUnavailableModal] = useState(false);
     const [unavailableOrderId, setUnavailableOrderId] = useState<string | null>(null);
-    const [unavailableItems, setUnavailableItems] = useState<{ idx: number; name: string; quantity: number }[]>([]);
+    const [unavailableItems, setUnavailableItems] = useState<{ idx: number; name: string; quantity: number; price: number }[]>([]);
 
     // KDS Checklist state
     const [checkedItems, setCheckedItems] = useState<Record<string, Record<number, boolean>>>({});
@@ -132,7 +133,7 @@ export default function OrdersPage() {
     const getUncheckedItems = (orderId: string, items: any[]) => {
         const orderChecks = checkedItems[orderId] || {};
         return items
-            .map((item, idx) => ({ idx, name: item.productName || item.name, quantity: item.quantity, checked: !!orderChecks[idx] }))
+            .map((item, idx) => ({ idx, name: item.productName || item.name, quantity: item.quantity, price: item.price || 0, checked: !!orderChecks[idx] }))
             .filter(i => !i.checked);
     };
 
@@ -272,6 +273,7 @@ export default function OrdersPage() {
                     tableSessionId: d.tableSessionId,
                     paymentStatus: d.paymentStatus || 'unpaid',
                     paymentMethod: d.paymentMethod,
+                    stripePaymentIntentId: d.stripePaymentIntentId,
                 };
             }) as Order[];
             setOrders(data);
@@ -325,7 +327,7 @@ export default function OrdersPage() {
     };
 
     // Actual status update function
-    const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, cancellationReason?: string, unavailableItemsList?: { idx: number; name: string; quantity: number }[]) => {
+    const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, cancellationReason?: string, unavailableItemsList?: { idx: number; name: string; quantity: number; price: number }[]) => {
         try {
             // Statuses that should clear courier assignment when set
             const unclamedStatuses: OrderStatus[] = ['pending', 'preparing', 'ready'];
@@ -355,6 +357,7 @@ export default function OrdersPage() {
                     positionNumber: i.idx + 1,
                     productName: i.name,
                     quantity: i.quantity,
+                    price: i.price || 0,
                 }));
             }
 
@@ -391,10 +394,42 @@ export default function OrdersPage() {
                 }
             }
 
-            // Send push notification to customer when order is accepted with unavailable items
+            // Send push notification + partial refund when order is accepted with unavailable items
             if (newStatus === 'accepted' && unavailableItemsList && unavailableItemsList.length > 0) {
                 try {
                     const order = orders.find(o => o.id === orderId);
+                    let refundAmount = 0;
+                    let refundSucceeded = false;
+
+                    // Issue partial refund if customer paid by card
+                    if (order?.paymentMethod === 'card' && order?.paymentStatus === 'paid') {
+                        try {
+                            const refundRes = await fetch('/api/orders/partial-refund', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    orderId,
+                                    unavailableItems: unavailableItemsList.map(i => ({
+                                        positionNumber: i.idx + 1,
+                                        productName: i.name,
+                                        quantity: i.quantity,
+                                        price: i.price || 0,
+                                    })),
+                                }),
+                            });
+                            const refundData = await refundRes.json();
+                            if (refundData.refunded) {
+                                refundAmount = refundData.refundAmount;
+                                refundSucceeded = true;
+                                showToast(`€${refundAmount.toFixed(2)} kısmi iade işlendi`, 'success');
+                            }
+                        } catch (refundError) {
+                            console.error('Error processing partial refund:', refundError);
+                            showToast('Kısmi iade işlenemedi — manuel kontrol gerekli', 'error');
+                        }
+                    }
+
+                    // Send push notification to customer
                     if (order?.customerId) {
                         const { getDoc } = await import('firebase/firestore');
                         const userDoc = await getDoc(doc(db, 'users', order.customerId));
@@ -411,6 +446,7 @@ export default function OrdersPage() {
                                     customerFcmToken: fcmToken,
                                     butcherName: order.businessName || businesses[order.businessId] || '',
                                     unavailableItems: unavailableNames,
+                                    refundAmount: refundSucceeded ? refundAmount : 0,
                                 }),
                             });
                         }
@@ -1248,10 +1284,29 @@ export default function OrdersPage() {
                                     <div key={idx} className="flex items-center gap-3 bg-red-600/10 border border-red-500/30 rounded-lg px-3 py-2">
                                         <span className="text-red-400 font-bold">❌</span>
                                         <span className="text-white flex-1">{item.quantity}x {item.name}</span>
+                                        <span className="text-gray-400 text-sm">€{((item.price || 0) * item.quantity).toFixed(2)}</span>
                                         <span className="bg-red-500/20 text-red-300 text-xs px-2 py-0.5 rounded-full">Mevcut Değil</span>
                                     </div>
                                 ))}
                             </div>
+
+                            {/* Refund info for card payments */}
+                            {(() => {
+                                const order = unavailableOrderId ? orders.find(o => o.id === unavailableOrderId) : null;
+                                const refundTotal = unavailableItems.reduce((sum, i) => sum + ((i.price || 0) * i.quantity), 0);
+                                const isCardPaid = order?.paymentMethod === 'card' && order?.paymentStatus === 'paid';
+                                return (
+                                    <>
+                                        {isCardPaid && refundTotal > 0 && (
+                                            <div className="bg-blue-600/20 border border-blue-500/50 rounded-lg p-3">
+                                                <p className="text-blue-400 text-sm">
+                                                    💳 Müşteri kartla ödeme yapmış. <strong className="text-blue-300">€{refundTotal.toFixed(2)}</strong> kısmi iade aynı yoldan yapılacak.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
 
                             {/* Warning */}
                             <div className="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-3">

@@ -179,14 +179,20 @@ export async function POST(request: NextRequest) {
                 break;
 
             case 'order_accepted_with_unavailable':
-                // Send notification about unavailable items
+                // Send notification about unavailable items (with optional refund info)
                 const unavailableItemsStr = body.unavailableItems || '';
+                const refundAmount = body.refundAmount || 0;
                 if (customerFcmToken) {
+                    let notifBody = `${butcherName || 'İşletme'}: Siparişiniz onaylandı ancak şu ürünler maalesef mevcut değil: ${unavailableItemsStr}.`;
+                    if (refundAmount > 0) {
+                        notifBody += ` 💳 €${refundAmount.toFixed(2)} iade kartınıza yapılacaktır.`;
+                    }
+                    notifBody += ' Anlayışınız için teşekkür ederiz. 🙏';
                     results.push = await sendPushNotification(
                         customerFcmToken,
-                        '✅ Sipariş Onaylandı — Eksik Ürünler',
-                        `${butcherName || 'İşletme'}: Siparişiniz onaylandı ancak şu ürünler maalesef mevcut değil: ${unavailableItemsStr}. Anlayışınız için teşekkür ederiz. 🙏`,
-                        { orderId, type: 'order_accepted_with_unavailable', unavailableItems: unavailableItemsStr }
+                        refundAmount > 0 ? '✅ Sipariş Onaylandı — Kısmi İade' : '✅ Sipariş Onaylandı — Eksik Ürünler',
+                        notifBody,
+                        { orderId, type: 'order_accepted_with_unavailable', unavailableItems: unavailableItemsStr, refundAmount: String(refundAmount) }
                     );
                 }
                 break;
