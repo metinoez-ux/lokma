@@ -23,7 +23,7 @@ type OrderStatus = keyof typeof orderStatuses;
 
 const orderTypes = {
     pickup: { label: 'Gel Al', icon: '🏃', color: 'green' },
-    delivery: { label: 'Kurye', icon: '🚚', color: 'blue' },
+    delivery: { label: 'Kurye', icon: '🛵', color: 'blue' },
     dine_in: { label: 'Yerinde', icon: '🍽️', color: 'orange' },
 } as const;
 

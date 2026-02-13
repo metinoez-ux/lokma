@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
                     const courierName = body.courierName || 'Kurye';
                     results.push = await sendPushNotification(
                         customerFcmToken,
-                        '🚚 Siparişiniz Yolda!',
+                        '🛵 Siparişiniz Yolda!',
                         `${courierName} siparişinizi teslim etmek için yola çıktı. Canlı takip edebilirsiniz!`,
                         { orderId, type: 'order_in_transit' }
                     );

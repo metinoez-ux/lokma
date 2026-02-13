@@ -590,7 +590,7 @@ export default function BusinessOrdersPage() {
                                                             {order.fulfillmentType === 'pickup' ? (
                                                                 <span className="text-blue-400">🏪 Gel Al</span>
                                                             ) : (
-                                                                <span className="text-orange-400">🚚 Kurye</span>
+                                                                <span className="text-orange-400">🛵 Kurye</span>
                                                             )}
                                                         </div>
                                                         <div className="text-xs text-gray-400">{formatDate(order.scheduledDateTime)}</div>
@@ -692,7 +692,7 @@ export default function BusinessOrdersPage() {
                                                                 {/* Delivery Info */}
                                                                 <div className="bg-gray-800 rounded-lg p-4">
                                                                     <h4 className="text-sm font-medium text-gray-400 mb-2">📦 Teslim</h4>
-                                                                    <p className="text-white">{order.fulfillmentType === 'pickup' ? '🏪 Gel Al' : '🚚 Kurye'}</p>
+                                                                    <p className="text-white">{order.fulfillmentType === 'pickup' ? '🏪 Gel Al' : '🛵 Kurye'}</p>
                                                                     <p className="text-gray-400 text-sm">{formatDate(order.scheduledDateTime)}</p>
                                                                 </div>
                                                                 {/* Order Total */}

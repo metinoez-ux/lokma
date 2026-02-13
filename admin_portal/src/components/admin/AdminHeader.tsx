@@ -25,7 +25,7 @@ const adminTypeLabels: Record<AdminType, string> = {
     market: '🛒 Market Sahibi',
     market_staff: '🛒 Market Personel',
     hali_yikama: '🧹 Halı Yıkama',
-    hali_surucu: '🚚 Halı Sürücü',
+    hali_surucu: '🛵 Halı Sürücü',
     transfer_surucu: '✈️ Transfer Sürücü',
     tur_rehberi: '🗺️ Tur Rehberi',
 };

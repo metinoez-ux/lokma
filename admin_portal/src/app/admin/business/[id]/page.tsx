@@ -1511,7 +1511,7 @@ export default function BusinessDetailPage() {
                         : "bg-blue-600 hover:bg-blue-500 text-white"
                         }`}
                     >
-                      {formData.temporaryDeliveryPaused ? "⏸️ Kurye Durduruldu" : "🚚 Kurye Aktif"}
+                      {formData.temporaryDeliveryPaused ? "⏸️ Kurye Durduruldu" : "🛵 Kurye Aktif"}
                     </button>
                   )}
                   {/* 📊 Performans Sayfası Linki */}
@@ -1683,7 +1683,7 @@ export default function BusinessDetailPage() {
                             </div>
                             <div className="text-right">
                               <span className={`text-xs px-2 py-0.5 rounded ${order.status === 'onTheWay' ? 'bg-orange-600/50 text-orange-300' : 'bg-green-600/50 text-green-300'}`}>
-                                {order.status === 'onTheWay' ? '🚚 Yolda' : '📦 Hazır'}
+                                {order.status === 'onTheWay' ? '🛵 Yolda' : '📦 Hazır'}
                               </span>
                             </div>
                           </div>
@@ -3119,7 +3119,7 @@ export default function BusinessDetailPage() {
                       {/* Kurye Başlangıç Saati */}
                       <div>
                         <label className="text-gray-400 text-sm flex items-center gap-1">
-                          🚚 Kurye Başlangıç
+                          🛵 Kurye Başlangıç
                         </label>
                         <input
                           type="time"
@@ -3142,7 +3142,7 @@ export default function BusinessDetailPage() {
                       {/* Kurye Bitiş Saati */}
                       <div>
                         <label className="text-gray-400 text-sm flex items-center gap-1">
-                          🚚 Kurye Bitiş
+                          🛵 Kurye Bitiş
                         </label>
                         <input
                           type="time"

@@ -37,7 +37,7 @@ const ACTION_LABELS: Record<string, string> = {
     'order.completed': '🎉 Teslim Edildi',
     'order.cancelled': '🚫 İptal Edildi',
     'order.edited': '✏️ Sipariş Düzenlendi',
-    'delivery.claimed': '🚚 Kurye Teslimatı Aldı',
+    'delivery.claimed': '🛵 Kurye Teslimatı Aldı',
     'delivery.pickedUp': '📤 Ürün Alındı',
     'delivery.inTransit': '🚗 Yolda',
     'delivery.delivered': '🎉 Teslim Edildi',
@@ -310,7 +310,7 @@ export default function ActivityLogsPage() {
                         >
                             <option value="all">Tümü</option>
                             <option value="order">🛒 Siparişler</option>
-                            <option value="delivery">🚚 Teslimatlar</option>
+                            <option value="delivery">🛵 Teslimatlar</option>
                             <option value="carpet">🧹 Halı Yıkama</option>
                             <option value="payment">💳 Ödemeler</option>
                         </select>
@@ -365,7 +365,7 @@ export default function ActivityLogsPage() {
                                     <div className={`w-10 h-10 rounded-full ${CATEGORY_COLORS[log.actionCategory] || 'bg-gray-600'} flex items-center justify-center flex-shrink-0`}>
                                         <span className="text-xl">
                                             {log.actionCategory === 'order' ? '🛒' :
-                                                log.actionCategory === 'delivery' ? '🚚' :
+                                                log.actionCategory === 'delivery' ? '🛵' :
                                                     log.actionCategory === 'carpet' ? '🧹' : '📋'}
                                         </span>
                                     </div>

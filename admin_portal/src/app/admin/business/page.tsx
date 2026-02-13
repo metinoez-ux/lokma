@@ -1313,7 +1313,7 @@ export default function BusinessesPage() {
                                                         <td className="px-4 py-4">
                                                             <div className="flex gap-1">
                                                                 {business.services?.delivery && (
-                                                                    <span title="Teslimat" className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs">🚚</span>
+                                                                    <span title="Teslimat" className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs">🛵</span>
                                                                 )}
                                                                 {business.services?.pickup && (
                                                                     <span title="Gel Al" className="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs">🏃</span>
@@ -1645,7 +1645,7 @@ export default function BusinessesPage() {
                                 <h3 className="text-white font-medium mb-3">🛎️ Hizmetler</h3>
                                 <div className="flex flex-wrap gap-3">
                                     {[
-                                        { key: 'delivery', label: '🚚 Teslimat', desc: 'Kurye ile gönderim' },
+                                        { key: 'delivery', label: '🛵 Teslimat', desc: 'Kurye ile gönderim' },
                                         { key: 'pickup', label: '🏃 Gel Al', desc: 'Müşteri alır' },
                                         { key: 'dineIn', label: '🍽️ Yerinde', desc: 'Masa servisi' },
                                         { key: 'reservation', label: '📅 Rezervasyon', desc: 'Masa ayırtma' },

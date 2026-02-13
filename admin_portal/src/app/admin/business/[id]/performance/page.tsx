@@ -321,7 +321,7 @@ export default function BusinessPerformancePage() {
                 <div className="bg-gray-800 rounded-lg overflow-hidden">
                     <div className="px-4 py-3 bg-gray-750 border-b border-gray-700">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                            <span>🚚</span> Kurye Açma/Kapama Geçmişi
+                            <span>🛵</span> Kurye Açma/Kapama Geçmişi
                         </h2>
                     </div>
                     <div className="overflow-x-auto">
