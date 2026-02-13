@@ -10,6 +10,12 @@ import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lokma_app/services/table_group_service.dart';
+import 'package:lokma_app/providers/table_group_provider.dart';
+import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
+import 'package:lokma_app/screens/marketplace/kasap/reservation_booking_screen.dart';
 
 /// Business type labels for display
 const Map<String, String> BUSINESS_TYPE_LABELS = {
@@ -55,6 +61,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
   // Delivery mode
   String _deliveryMode = 'teslimat'; // Varsayılan: Kurye
+  
+  // QR scan state for Masa mode
+  String? _scannedTableNumber;
+  String? _scannedBusinessId;
+  String? _scannedBusinessName;
   
   // Category filter - 'all' or specific businessType
   String _categoryFilter = 'all';
@@ -570,6 +581,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     // Delivery mode tabs
                                     _buildDeliveryModeTabs(),
                                     
+                                    // 🆕 QR Scan banner for Masa mode
+                                    if (_deliveryMode == 'masa') _buildMasaQrBanner(),
+                                    
                                     // Arama çubuğu (teslimat/gel al altında)
                                     _buildSearchBar(),
                                     
@@ -827,6 +841,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           _sliderAutoSet = false;
           _currentStepIndex = 9; // Reset to 10km default
           _maxDistance = 10.0;
+          // Reset QR scan state when leaving Masa mode
+          if (newMode != 'masa') {
+            _scannedTableNumber = null;
+            _scannedBusinessId = null;
+            _scannedBusinessName = null;
+          }
         });
         // Re-trigger auto-set for the new delivery mode
         _autoSetSliderToNearestBusiness();
@@ -2463,5 +2483,918 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         ),
       ),
     );
+  }
+
+  // =====================================================
+  // 🔳 MASA QR SCANNER — In-App QR Code Scanning
+  // =====================================================
+
+  /// 🔳 QR Scan Banner — shown when Masa delivery mode is active
+  Widget _buildMasaQrBanner() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // If table already scanned, show verified banner
+    if (_scannedTableNumber != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.green.withOpacity(isDark ? 0.2 : 0.12),
+                Colors.green.withOpacity(isDark ? 0.1 : 0.06),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.green.withOpacity(0.3)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.check_circle, color: Colors.green, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Masa $_scannedTableNumber${_scannedBusinessName != null ? ' — $_scannedBusinessName' : ''}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      'QR kod ile doğrulandı ✓',
+                      style: TextStyle(fontSize: 12, color: Colors.green[700]),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _scannedTableNumber = null;
+                    _scannedBusinessId = null;
+                    _scannedBusinessName = null;
+                  });
+                  _showMasaQrScanSheet();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Değiştir',
+                    style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    // Default: Show compact action pills
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
+        children: [
+          // 1) QR Sipariş Ver
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _showMasaQrScanSheet,
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.qr_code_scanner, color: lokmaPink, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        'QR Sipariş',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // 2) Rezervasyon
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _showReservationBusinessPicker,
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.calendar_month, color: lokmaPink, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Rezervasyon',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 📅 Show business picker for reservation
+  void _showReservationBusinessPicker() async {
+    try {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      
+      // Query businesses that have reservation enabled
+      final snapshot = await FirebaseFirestore.instance
+          .collection('businesses')
+          .where('hasReservation', isEqualTo: true)
+          .get();
+      
+      if (!mounted) return;
+      
+      final businesses = snapshot.docs.map((doc) {
+        final data = doc.data();
+        // Address can be a Map or String depending on business data
+        String addressStr = '';
+        final rawAddress = data['address'];
+        if (rawAddress is Map) {
+          final street = rawAddress['street'] ?? '';
+          final city = rawAddress['city'] ?? '';
+          addressStr = [street, city].where((s) => s.toString().isNotEmpty).join(', ');
+        } else if (rawAddress is String) {
+          addressStr = rawAddress;
+        }
+        return {
+          'id': doc.id,
+          'name': data['name'] as String? ?? 'İşletme',
+          'logoUrl': data['logoUrl'] as String? ?? '',
+          'address': addressStr,
+        };
+      }).toList();
+
+      if (businesses.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Rezervasyon yapılabilecek işletme bulunamadı'),
+            backgroundColor: Colors.orange[700],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        );
+        return;
+      }
+      
+      // If only one business, go directly
+      if (businesses.length == 1) {
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (_) => ReservationBookingScreen(
+              businessId: businesses[0]['id']!,
+              businessName: businesses[0]['name']!,
+            ),
+          ),
+        );
+        return;
+      }
+      
+      // Show picker bottom sheet
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) {
+          return Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // Title
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_month, color: lokmaPink, size: 24),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Nerede rezervasyon yapmak istersiniz?',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                // Business list
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: businesses.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1, indent: 72),
+                    itemBuilder: (_, index) {
+                      final biz = businesses[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          radius: 22,
+                          backgroundColor: lokmaPink.withOpacity(0.1),
+                          backgroundImage: biz['logoUrl']!.isNotEmpty
+                              ? NetworkImage(biz['logoUrl']!)
+                              : null,
+                          child: biz['logoUrl']!.isEmpty
+                              ? Icon(Icons.restaurant, color: lokmaPink, size: 22)
+                              : null,
+                        ),
+                        title: Text(
+                          biz['name']!,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        subtitle: biz['address']!.isNotEmpty
+                            ? Text(
+                                biz['address']!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              )
+                            : null,
+                        trailing: Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[500]),
+                        onTap: () {
+                          Navigator.of(ctx).pop();
+                          Navigator.of(context, rootNavigator: true).push(
+                            MaterialPageRoute(
+                              builder: (_) => ReservationBookingScreen(
+                                businessId: biz['id']!,
+                                businessName: biz['name']!,
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
+              ],
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Hata: $e'),
+          backgroundColor: Colors.red[700],
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  /// 📷 QR Scanner Bottom Sheet (Masa mode)
+  void _showMasaQrScanSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.75,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 30,
+                offset: const Offset(0, -10),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Header
+              Icon(Icons.qr_code_scanner, size: 36, color: lokmaPink),
+              const SizedBox(height: 12),
+              Text(
+                'Masanızdaki QR Kodu Okutun',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Sipariş vermek için masanızdaki QR kodu taratın',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Camera Scanner
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 32),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: lokmaPink.withOpacity(0.4), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: lokmaPink.withOpacity(0.1),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: MobileScanner(
+                      onDetect: (capture) {
+                        final barcodes = capture.barcodes;
+                        if (barcodes.isEmpty) return;
+
+                        final rawValue = barcodes.first.rawValue ?? '';
+                        if (rawValue.isEmpty) return;
+
+                        // Extract table number + businessId from QR data
+                        // Format: https://lokma.web.app/dinein/{businessId}/table/{num}
+                        // Simple: "masa:5", "table:5", "MASA-5", or just "5"
+                        String tableNum = rawValue;
+                        String? businessId;
+
+                        final urlMatch = RegExp(r'/dinein/([^/]+)/table/(\d+)').firstMatch(rawValue);
+                        if (urlMatch != null) {
+                          businessId = urlMatch.group(1)!;
+                          tableNum = urlMatch.group(2)!;
+                        } else {
+                          // Try /table/{num} format without businessId
+                          final tableMatch = RegExp(r'/table/(\d+)').firstMatch(rawValue);
+                          if (tableMatch != null) {
+                            tableNum = tableMatch.group(1)!;
+                          } else if (rawValue.toLowerCase().contains('masa')) {
+                            final match = RegExp(r'(\d+)').firstMatch(rawValue);
+                            tableNum = match?.group(1) ?? rawValue;
+                          } else if (rawValue.toLowerCase().contains('table')) {
+                            final match = RegExp(r'(\d+)').firstMatch(rawValue);
+                            tableNum = match?.group(1) ?? rawValue;
+                          }
+                        }
+
+                        // Success haptic + close
+                        HapticFeedback.heavyImpact();
+                        Navigator.pop(ctx);
+
+                        _handleMasaQrScanned(tableNum, businessId);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Manual entry option
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _showMasaManualTableEntry();
+                },
+                icon: Icon(Icons.edit, size: 18, color: lokmaPink),
+                label: Text(
+                  'Manuel masa numarası gir',
+                  style: TextStyle(color: lokmaPink, fontSize: 14),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// 🔢 Manual Table Number Entry Dialog (Masa mode)
+  void _showMasaManualTableEntry() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final controller = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.restaurant, color: lokmaPink, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Masa Numarası',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+          ],
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Örn: 5',
+            hintStyle: TextStyle(color: Colors.grey[500]),
+            filled: true,
+            fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            prefixIcon: Icon(Icons.tag, color: lokmaPink),
+          ),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('İptal', style: TextStyle(color: Colors.grey[500])),
+          ),
+          FilledButton(
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isNotEmpty) {
+                Navigator.pop(ctx);
+                _handleMasaQrScanned(text, null);
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: lokmaPink,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Onayla'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 🎯 Handle QR table scanned — check for active group session
+  Future<void> _handleMasaQrScanned(String tableNum, String? businessId) async {
+    // If businessId came from QR code, try to resolve business name 
+    String? businessName;
+    
+    if (businessId != null && businessId.isNotEmpty) {
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('businesses')
+            .doc(businessId)
+            .get();
+        if (doc.exists) {
+          final data = doc.data()!;
+          businessName = data['companyName'] as String? ?? data['businessName'] as String? ?? 'İşletme';
+        }
+      } catch (e) {
+        debugPrint('Error resolving business: $e');
+      }
+    }
+
+    // If no businessId, try to use the first visible Masa business
+    if (businessId == null || businessId.isEmpty) {
+      final masaBusinesses = _filteredBusinesses;
+      if (masaBusinesses.isNotEmpty) {
+        final first = masaBusinesses.first;
+        businessId = first.id;
+        final data = first.data() as Map<String, dynamic>;
+        businessName = data['companyName'] as String? ?? data['businessName'] as String? ?? 'İşletme';
+      }
+    }
+
+    if (businessId == null || businessId.isEmpty) {
+      // No business found — just set table number
+      setState(() {
+        _scannedTableNumber = tableNum;
+        _scannedBusinessId = null;
+        _scannedBusinessName = null;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text('Masa $tableNum seçildi ✓'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Check for active group session at this table
+    try {
+      final activeSession = await TableGroupService.instance
+          .findActiveSession(businessId, tableNum);
+
+      if (!mounted) return;
+
+      if (activeSession != null) {
+        // Active session found — show join dialog
+        _showMasaJoinGroupDialog(activeSession, tableNum, businessId, businessName ?? 'İşletme');
+      } else {
+        // No active session — show create or solo option
+        _showMasaCreateGroupDialog(tableNum, businessId, businessName ?? 'İşletme');
+      }
+    } catch (e) {
+      debugPrint('Error checking group session: $e');
+      // Fallback: just set table number
+      if (mounted) {
+        setState(() {
+          _scannedTableNumber = tableNum;
+          _scannedBusinessId = businessId;
+          _scannedBusinessName = businessName;
+        });
+      }
+    }
+  }
+
+  /// 🤝 Join existing group session dialog
+  void _showMasaJoinGroupDialog(
+    dynamic activeSession,
+    String tableNum,
+    String businessId,
+    String businessName,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final participantCount = (activeSession as dynamic).participantCount ?? 1;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Icon(Icons.groups, size: 48, color: lokmaPink),
+            const SizedBox(height: 12),
+            Text(
+              'Masa $tableNum — Aktif Grup Siparişi',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Bu masada $participantCount kişilik aktif bir grup siparişi var.\nKatılmak ister misiniz?',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 24),
+
+            // Join group button
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _joinAndNavigateGroupFromMasa(activeSession.id, tableNum, businessId, businessName);
+                },
+                icon: const Icon(Icons.group_add),
+                label: const Text('Gruba Katıl', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                style: FilledButton.styleFrom(
+                  backgroundColor: lokmaPink,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Solo dine-in option
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    _scannedTableNumber = tableNum;
+                    _scannedBusinessId = businessId;
+                    _scannedBusinessName = businessName;
+                  });
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.grey[600],
+                  side: BorderSide(color: Colors.grey[300]!),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: const Text('Hayır, tek başıma sipariş vereyim'),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 🆕 Create new group session dialog
+  void _showMasaCreateGroupDialog(
+    String tableNum,
+    String businessId,
+    String businessName,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Icon(Icons.restaurant, size: 48, color: lokmaPink),
+            const SizedBox(height: 12),
+            Text(
+              'Masa $tableNum — $businessName',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Birden fazla kişi mi sipariş verecek?',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 24),
+
+            // Start group order
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _createAndNavigateGroupFromMasa(tableNum, businessId, businessName);
+                },
+                icon: const Icon(Icons.groups),
+                label: const Text('Grup Siparişi Başlat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                style: FilledButton.styleFrom(
+                  backgroundColor: lokmaPink,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Solo dine-in
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    _scannedTableNumber = tableNum;
+                    _scannedBusinessId = businessId;
+                    _scannedBusinessName = businessName;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                          const SizedBox(width: 8),
+                          Text('Masa $tableNum doğrulandı ✓'),
+                        ],
+                      ),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.person, color: Colors.grey[600]),
+                label: Text(
+                  'Tek Kişi Sipariş',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.grey[300]!),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Navigate to group order screen after joining
+  Future<void> _joinAndNavigateGroupFromMasa(
+    String sessionId,
+    String tableNum,
+    String businessId,
+    String businessName,
+  ) async {
+    try {
+      final groupNotifier = ref.read(tableGroupProvider.notifier);
+      await groupNotifier.joinSession(sessionId);
+
+      if (mounted) {
+        setState(() {
+          _scannedTableNumber = tableNum;
+          _scannedBusinessId = businessId;
+          _scannedBusinessName = businessName;
+        });
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (_) => GroupTableOrderScreen(
+              businessId: businessId,
+              businessName: businessName,
+              tableNumber: tableNum,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gruba katılırken hata: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  /// Create new group session and navigate
+  Future<void> _createAndNavigateGroupFromMasa(
+    String tableNum,
+    String businessId,
+    String businessName,
+  ) async {
+    try {
+      final groupNotifier = ref.read(tableGroupProvider.notifier);
+      await groupNotifier.createSession(
+        businessId: businessId,
+        businessName: businessName,
+        tableNumber: tableNum,
+      );
+
+      if (mounted) {
+        setState(() {
+          _scannedTableNumber = tableNum;
+          _scannedBusinessId = businessId;
+          _scannedBusinessName = businessName;
+        });
+        Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (_) => GroupTableOrderScreen(
+              businessId: businessId,
+              businessName: businessName,
+              tableNumber: tableNum,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Grup oluşturulurken hata: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 }

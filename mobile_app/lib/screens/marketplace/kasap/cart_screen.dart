@@ -19,6 +19,9 @@ import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/services/fcm_service.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:lokma_app/services/order_service.dart';
+import 'package:lokma_app/services/table_group_service.dart';
+import 'package:lokma_app/providers/table_group_provider.dart';
+import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
 import 'package:lokma_app/screens/orders/rating_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/screens/marketplace/kasap/product_customization_sheet.dart';
@@ -3129,26 +3132,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         HapticFeedback.heavyImpact();
                         Navigator.pop(ctx);
                         
-                        setState(() {
-                          _scannedTableNumber = tableNum;
-                        });
-                        
-                        // Show success snackbar
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                                const SizedBox(width: 8),
-                                Text('Masa $tableNum doğrulandı ✓'),
-                              ],
-                            ),
-                            backgroundColor: Colors.green,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
+                        // Check for active group session at this table
+                        _handleQrTableScanned(tableNum);
                       },
                     ),
                   ),
@@ -3234,22 +3219,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               if (text.isNotEmpty) {
                 HapticFeedback.mediumImpact();
                 Navigator.pop(ctx);
-                setState(() => _scannedTableNumber = text);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Row(
-                      children: [
-                        const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                        const SizedBox(width: 8),
-                        Text('Masa $text seçildi ✓'),
-                      ],
-                    ),
-                    backgroundColor: Colors.green,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
+                _handleQrTableScanned(text);
               }
             },
             style: ElevatedButton.styleFrom(
@@ -3262,6 +3232,320 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         ],
       ),
     );
+  }
+  
+  /// 🔀 Handle QR Table Scanned — check for active group session
+  Future<void> _handleQrTableScanned(String tableNum) async {
+    final cart = ref.read(cartProvider);
+    final businessId = cart.butcherId ?? '';
+    final businessName = _butcherData?['name'] ?? 'İşletme';
+    
+    if (businessId.isEmpty) {
+      // No business — just set table number directly
+      setState(() => _scannedTableNumber = tableNum);
+      return;
+    }
+    
+    // Check for active group session at this table
+    try {
+      final activeSession = await TableGroupService.instance
+          .findActiveSession(businessId, tableNum);
+      
+      if (!mounted) return;
+      
+      if (activeSession != null) {
+        // Active session found! Show join dialog
+        _showJoinGroupDialog(activeSession, tableNum, businessId, businessName);
+      } else {
+        // No active session — show create or solo option
+        _showCreateGroupDialog(tableNum, businessId, businessName);
+      }
+    } catch (e) {
+      debugPrint('Error checking group session: $e');
+      // Fallback: just set table number for solo dine-in
+      if (mounted) {
+        setState(() => _scannedTableNumber = tableNum);
+      }
+    }
+  }
+  
+  /// 🤝 Join existing group session dialog
+  void _showJoinGroupDialog(
+    dynamic activeSession,
+    String tableNum,
+    String businessId,
+    String businessName,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final participantCount = (activeSession as dynamic).participantCount ?? 1;
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Icon(Icons.groups, size: 48, color: _accentColor),
+            const SizedBox(height: 12),
+            Text(
+              'Masa $tableNum — Aktif Grup Siparişi',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Bu masada $participantCount kişilik aktif bir grup siparişi var.\nKatılmak ister misiniz?',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Join group button
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _joinAndNavigateGroup(activeSession.id, tableNum, businessId, businessName);
+                },
+                icon: const Icon(Icons.group_add),
+                label: const Text(
+                  'Gruba Katıl',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _accentColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 10),
+            
+            // Solo dine-in option
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  setState(() => _scannedTableNumber = tableNum);
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.grey[600],
+                  side: BorderSide(color: Colors.grey[300]!),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: const Text('Hayır, tek başıma sipariş vereyim'),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// 🆕 Create new group session dialog
+  void _showCreateGroupDialog(
+    String tableNum,
+    String businessId,
+    String businessName,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      isScrollControlled: true,
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Icon(Icons.restaurant, size: 48, color: _accentColor),
+            const SizedBox(height: 12),
+            Text(
+              'Masa $tableNum',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Birden fazla kişi mi sipariş verecek?',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Start group order
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _createAndNavigateGroup(tableNum, businessId, businessName);
+                },
+                icon: const Icon(Icons.groups),
+                label: const Text(
+                  'Grup Siparişi Başlat',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _accentColor,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 10),
+            
+            // Solo dine-in
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  setState(() => _scannedTableNumber = tableNum);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                          const SizedBox(width: 8),
+                          Text('Masa $tableNum doğrulandı ✓'),
+                        ],
+                      ),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.person, color: Colors.grey[600]),
+                label: Text(
+                  'Tek Kişi Sipariş',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.grey[300]!),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  /// Navigate to group order screen after joining
+  Future<void> _joinAndNavigateGroup(
+    String sessionId,
+    String tableNum,
+    String businessId,
+    String businessName,
+  ) async {
+    try {
+      final groupNotifier = ref.read(tableGroupProvider.notifier);
+      await groupNotifier.joinSession(sessionId);
+      
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GroupTableOrderScreen(
+              businessId: businessId,
+              businessName: businessName,
+              tableNumber: tableNum,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gruba katılırken hata: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+  
+  /// Create new group session and navigate
+  Future<void> _createAndNavigateGroup(
+    String tableNum,
+    String businessId,
+    String businessName,
+  ) async {
+    try {
+      final groupNotifier = ref.read(tableGroupProvider.notifier);
+      await groupNotifier.createSession(
+        businessId: businessId,
+        businessName: businessName,
+        tableNumber: tableNum,
+      );
+      
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => GroupTableOrderScreen(
+              businessId: businessId,
+              businessName: businessName,
+              tableNumber: tableNum,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Grup oluşturulurken hata: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
   
   /// 🪑 Scanned Table Banner — shows in cart when table QR is verified

@@ -1,0 +1,293 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/table_group_session_model.dart';
+import '../services/table_group_service.dart';
+
+/// State for table group session
+class TableGroupState {
+  final TableGroupSession? session;
+  final String? myParticipantId;
+  final bool isLoading;
+  final String? error;
+
+  const TableGroupState({
+    this.session,
+    this.myParticipantId,
+    this.isLoading = false,
+    this.error,
+  });
+
+  /// My participant data
+  TableGroupParticipant? get myParticipant {
+    if (session == null || myParticipantId == null) return null;
+    return session!.participants.cast<TableGroupParticipant?>().firstWhere(
+      (p) => p?.participantId == myParticipantId,
+      orElse: () => null,
+    );
+  }
+
+  /// Am I the host?
+  bool get isHost => myParticipant?.isHost ?? false;
+
+  TableGroupState copyWith({
+    TableGroupSession? session,
+    String? myParticipantId,
+    bool? isLoading,
+    String? error,
+  }) {
+    return TableGroupState(
+      session: session ?? this.session,
+      myParticipantId: myParticipantId ?? this.myParticipantId,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+    );
+  }
+}
+
+/// Table group notifier (Riverpod 3.x Notifier pattern)
+class TableGroupNotifier extends Notifier<TableGroupState> {
+  final TableGroupService _service = TableGroupService.instance;
+  StreamSubscription? _sessionSub;
+
+  @override
+  TableGroupState build() {
+    ref.onDispose(() {
+      _sessionSub?.cancel();
+    });
+    return const TableGroupState();
+  }
+
+  /// Create a new group session (auto-resolves current user)
+  Future<TableGroupSession?> createSession({
+    required String businessId,
+    required String businessName,
+    required String tableNumber,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Giriş yapmanız gerekli');
+    
+    final hostUserId = user.uid;
+    final hostName = user.displayName ?? user.email?.split('@').first ?? 'Misafir';
+    
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final session = await _service.createSession(
+        businessId: businessId,
+        businessName: businessName,
+        tableNumber: tableNumber,
+        hostUserId: hostUserId,
+        hostName: hostName,
+      );
+
+      final participantId = session.participants.first.participantId;
+      state = state.copyWith(
+        session: session,
+        myParticipantId: participantId,
+        isLoading: false,
+      );
+
+      // Start listening for real-time updates
+      _startListening(session.id);
+      return session;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return null;
+    }
+  }
+
+  /// Find active session for a table
+  Future<TableGroupSession?> findActiveSession(String businessId, String tableNumber) async {
+    return _service.findActiveSession(businessId, tableNumber);
+  }
+
+  /// Join an existing session (auto-resolves current user)
+  Future<bool> joinSession(String sessionId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Giriş yapmanız gerekli');
+    
+    final userId = user.uid;
+    final userName = user.displayName ?? user.email?.split('@').first ?? 'Misafir';
+    
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final participantId = await _service.joinSession(
+        sessionId: sessionId,
+        userId: userId,
+        userName: userName,
+      );
+
+      // Fetch current session data
+      final doc = await FirebaseFirestore.instance
+          .collection('table_group_sessions')
+          .doc(sessionId)
+          .get();
+      
+      if (!doc.exists) throw Exception('Session not found after join');
+      final session = TableGroupSession.fromFirestore(doc);
+
+      state = state.copyWith(
+        session: session,
+        myParticipantId: participantId,
+        isLoading: false,
+      );
+
+      _startListening(sessionId);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  /// Add an item to my cart in the session
+  Future<void> addItem(TableGroupItem item) async {
+    final currentSession = state.session;
+    final participantId = state.myParticipantId;
+    if (currentSession == null || participantId == null) return;
+
+    // Find my current items
+    final myParticipant = state.myParticipant;
+    if (myParticipant == null) return;
+
+    // Check if item already in cart → increase quantity
+    final existingIndex = myParticipant.items.indexWhere(
+      (i) => i.productId == item.productId,
+    );
+
+    List<TableGroupItem> updatedItems;
+    if (existingIndex >= 0) {
+      updatedItems = [...myParticipant.items];
+      final existing = updatedItems[existingIndex];
+      final newQty = existing.quantity + item.quantity;
+      updatedItems[existingIndex] = existing.copyWith(
+        quantity: newQty,
+        totalPrice: newQty * existing.unitPrice,
+      );
+    } else {
+      updatedItems = [...myParticipant.items, item];
+    }
+
+    await _service.updateParticipantItems(
+      sessionId: currentSession.id,
+      participantId: participantId,
+      items: updatedItems,
+    );
+  }
+
+  /// Remove an item from my cart
+  Future<void> removeItem(String productId) async {
+    final currentSession = state.session;
+    final participantId = state.myParticipantId;
+    if (currentSession == null || participantId == null) return;
+
+    final myParticipant = state.myParticipant;
+    if (myParticipant == null) return;
+
+    final updatedItems = myParticipant.items
+        .where((i) => i.productId != productId)
+        .toList();
+
+    await _service.updateParticipantItems(
+      sessionId: currentSession.id,
+      participantId: participantId,
+      items: updatedItems,
+    );
+  }
+
+  /// Update item quantity
+  Future<void> updateItemQuantity(String productId, int newQuantity) async {
+    final currentSession = state.session;
+    final participantId = state.myParticipantId;
+    if (currentSession == null || participantId == null) return;
+
+    final myParticipant = state.myParticipant;
+    if (myParticipant == null) return;
+
+    if (newQuantity <= 0) {
+      return removeItem(productId);
+    }
+
+    final updatedItems = myParticipant.items.map((item) {
+      if (item.productId == productId) {
+        return item.copyWith(
+          quantity: newQuantity,
+          totalPrice: newQuantity * item.unitPrice,
+        );
+      }
+      return item;
+    }).toList();
+
+    await _service.updateParticipantItems(
+      sessionId: currentSession.id,
+      participantId: participantId,
+      items: updatedItems,
+    );
+  }
+
+  /// Submit all orders to kitchen
+  Future<List<String>> submitOrder() async {
+    if (state.session == null) return [];
+    return _service.submitGroupOrder(state.session!.id);
+  }
+
+  /// Mark my payment as done
+  Future<void> markMyPayment(String paymentMethod) async {
+    final currentSession = state.session;
+    final participantId = state.myParticipantId;
+    if (currentSession == null || participantId == null) return;
+
+    await _service.markParticipantPaid(
+      sessionId: currentSession.id,
+      participantId: participantId,
+      paymentMethod: paymentMethod,
+    );
+  }
+
+  /// Pay for all remaining unpaid
+  Future<void> payForAll(String paymentMethod) async {
+    final currentSession = state.session;
+    final participantId = state.myParticipantId;
+    if (currentSession == null || participantId == null) return;
+
+    final myParticipant = state.myParticipant;
+    if (myParticipant == null) return;
+
+    await _service.payForAll(
+      sessionId: currentSession.id,
+      paidByUserId: myParticipant.userId,
+      paymentMethod: paymentMethod,
+    );
+  }
+
+  /// Start real-time Firestore listener
+  void _startListening(String sessionId) {
+    _sessionSub?.cancel();
+    _sessionSub = _service.getSessionStream(sessionId).listen(
+      (session) {
+        if (session != null) {
+          state = state.copyWith(session: session);
+        }
+      },
+      onError: (e) {
+        debugPrint('❌ Session stream error: $e');
+      },
+    );
+  }
+
+  /// Clear session and stop listening
+  void clearSession() {
+    _sessionSub?.cancel();
+    _sessionSub = null;
+    state = const TableGroupState();
+  }
+}
+
+/// Global provider
+final tableGroupProvider = NotifierProvider<TableGroupNotifier, TableGroupState>(() {
+  return TableGroupNotifier();
+});

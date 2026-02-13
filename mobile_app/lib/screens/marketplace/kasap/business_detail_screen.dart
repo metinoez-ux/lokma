@@ -2880,56 +2880,83 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         ...productCartItems.where((ci) => ci.selectedOptions.isNotEmpty).map((ci) =>
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[50],
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      ci.selectedOptions.map((o) => o.optionName).join(', '),
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: textSecondary,
-                                        height: 1.2,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  final data = _butcherDoc?.data() as Map<String, dynamic>?;
+                                  final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (ctx) => ProductCustomizationSheet(
+                                      product: product,
+                                      businessId: widget.businessId,
+                                      businessName: butcherName,
+                                      existingItem: ci,
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[50],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
+                                      width: 0.5,
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '€${ci.unitPrice.toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: accent,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  if (ci.quantity > 1) ...[
-                                    const SizedBox(width: 4),
-                                    Container(
-                                      width: 18,
-                                      height: 18,
-                                      decoration: BoxDecoration(
-                                        color: accent,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text(
-                                        '${ci.quantity.toInt()}',
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit_outlined, size: 12, color: textSecondary.withOpacity(0.5)),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          ci.selectedOptions.map((o) => o.optionName).join(', '),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: textSecondary,
+                                            height: 1.2,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ],
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '€${ci.unitPrice.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: accent,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      if (ci.quantity > 1) ...[
+                                        const SizedBox(width: 4),
+                                        Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                            color: accent,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            '${ci.quantity.toInt()}',
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
