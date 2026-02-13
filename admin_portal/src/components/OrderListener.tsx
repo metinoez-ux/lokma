@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useFcmToken } from '@/hooks/useFcmToken';
 
 /**
  * OrderListener — Global browser notification component
@@ -15,6 +16,9 @@ import { useAdmin } from '@/components/providers/AdminProvider';
  *   📱 Shows browser push notification
  *   📳 Vibrates (mobile/tablet)
  * 
+ * Also registers FCM Web Push token for background notifications
+ * (when tab is closed or browser is in background).
+ * 
  * Controlled by admin.smartNotifications settings from the Settings page.
  */
 export default function OrderListener() {
@@ -22,6 +26,9 @@ export default function OrderListener() {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const firstLoad = useRef(true);
     const notificationPermissionAsked = useRef(false);
+
+    // Register FCM web push token for background notifications
+    useFcmToken(admin?.id);
 
     // Resolve the business ID from whichever field the admin has
     const businessId = admin?.butcherId

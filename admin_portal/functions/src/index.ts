@@ -32,7 +32,7 @@ export const onNewOrder = onDocumentCreated(
         const totalAmount = order.totalAmount || 0;
         const customerName = order.customerName || "Müşteri";
 
-        // Get butcher admin FCM tokens
+        // Get butcher admin FCM tokens (mobile)
         try {
             const butcherDoc = await admin.firestore()
                 .collection("butcher_admins")
@@ -42,29 +42,97 @@ export const onNewOrder = onDocumentCreated(
             const butcherData = butcherDoc.data();
             const fcmTokens: string[] = butcherData?.fcmTokens || [];
 
-            if (fcmTokens.length === 0) {
-                console.log(`No FCM tokens for butcher ${butcherId}`);
-                return;
-            }
+            if (fcmTokens.length > 0) {
+                const message = {
+                    notification: {
+                        title: "🔔 Yeni Sipariş!",
+                        body: `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`,
+                    },
+                    data: {
+                        type: "new_order",
+                        orderId: event.params.orderId,
+                        orderNumber: orderNumber,
+                    },
+                    tokens: fcmTokens,
+                };
 
-            // Send notification to all butcher admin devices
-            const message = {
-                notification: {
-                    title: "🔔 Yeni Sipariş!",
-                    body: `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`,
-                },
-                data: {
-                    type: "new_order",
-                    orderId: event.params.orderId,
-                    orderNumber: orderNumber,
-                },
-                tokens: fcmTokens,
+                const response = await messaging.sendEachForMulticast(message);
+                console.log(`[Mobile] Sent to ${response.successCount}/${fcmTokens.length} devices`);
+            } else {
+                console.log(`No mobile FCM tokens for butcher ${butcherId}`);
+            }
+        } catch (error) {
+            console.error("Error sending mobile notification to butcher:", error);
+        }
+
+        // ── Web Push to Admin Portal (desktop browser) ──────────────────────
+        try {
+            // Find admins linked to this business (by butcherId or businessId)
+            const adminsSnapshot = await db.collection("admins")
+                .where("butcherId", "==", butcherId)
+                .get();
+
+            // Also query by businessId
+            const adminsSnapshot2 = await db.collection("admins")
+                .where("businessId", "==", butcherId)
+                .get();
+
+            const webTokens: string[] = [];
+            const processedIds = new Set<string>();
+
+            const processDoc = (doc: admin.firestore.QueryDocumentSnapshot) => {
+                if (processedIds.has(doc.id)) return;
+                processedIds.add(doc.id);
+                const data = doc.data();
+                if (data.webFcmTokens && Array.isArray(data.webFcmTokens)) {
+                    webTokens.push(...data.webFcmTokens);
+                }
             };
 
-            const response = await messaging.sendEachForMulticast(message);
-            console.log(`Sent to ${response.successCount}/${fcmTokens.length} devices`);
-        } catch (error) {
-            console.error("Error sending notification to butcher:", error);
+            adminsSnapshot.docs.forEach(processDoc);
+            adminsSnapshot2.docs.forEach(processDoc);
+
+            // Also send to super admins
+            const superSnapshot = await db.collection("admins")
+                .where("adminType", "==", "super")
+                .get();
+            superSnapshot.docs.forEach(processDoc);
+
+            if (webTokens.length > 0) {
+                const webMessage = {
+                    notification: {
+                        title: "🔔 Yeni Sipariş!",
+                        body: `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`,
+                    },
+                    data: {
+                        type: "new_order",
+                        orderId: event.params.orderId,
+                        orderNumber: orderNumber,
+                    },
+                    tokens: webTokens,
+                };
+
+                const webResponse = await messaging.sendEachForMulticast(webMessage);
+                console.log(`[Web Push] Sent to ${webResponse.successCount}/${webTokens.length} browsers`);
+
+                // Clean up invalid tokens
+                if (webResponse.failureCount > 0) {
+                    const invalidTokens: string[] = [];
+                    webResponse.responses.forEach((resp, idx) => {
+                        if (!resp.success && resp.error?.code === "messaging/registration-token-not-registered") {
+                            invalidTokens.push(webTokens[idx]);
+                        }
+                    });
+                    // TODO: Remove invalid tokens from Firestore
+                    if (invalidTokens.length > 0) {
+                        console.log(`[Web Push] ${invalidTokens.length} invalid tokens detected`);
+                    }
+                }
+            } else {
+                console.log(`No web FCM tokens for business ${butcherId}`);
+            }
+        } catch (webError) {
+            console.error("[Web Push] Error:", webError);
         }
 
         // ── IoT Gateway Notification (Alexa + LED) ──────────────────────────
