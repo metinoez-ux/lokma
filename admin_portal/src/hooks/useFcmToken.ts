@@ -75,8 +75,17 @@ export function useFcmToken(adminId: string | null | undefined) {
                 // Listen for foreground messages
                 onMessage(messaging, (payload) => {
                     console.log('📩 [Foreground] FCM message:', payload);
-                    // Foreground messages are handled by OrderListener's onSnapshot
-                    // We still show a notification for messages from other sources
+
+                    // 🔊 Play gong sound for foreground push
+                    try {
+                        const sound = new Audio('/sounds/gong.wav');
+                        sound.volume = 1.0;
+                        sound.play().catch(err => console.warn('🔇 Audio play blocked:', err));
+                    } catch (e) {
+                        console.warn('🔇 Sound error:', e);
+                    }
+
+                    // Show notification
                     if (payload.notification) {
                         const { title, body } = payload.notification;
                         if (title) {
@@ -84,6 +93,7 @@ export function useFcmToken(adminId: string | null | undefined) {
                                 body: body || '',
                                 icon: '/lokma_logo.png',
                                 tag: `fcm-${Date.now()}`,
+                                silent: false,
                             });
                         }
                     }
@@ -94,7 +104,23 @@ export function useFcmToken(adminId: string | null | undefined) {
             }
         }
 
+        // Listen for service worker messages (play sound on background push)
+        const handleSwMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'PLAY_NOTIFICATION_SOUND') {
+                try {
+                    const sound = new Audio('/sounds/gong.wav');
+                    sound.volume = 1.0;
+                    sound.play().catch(() => { });
+                } catch (e) { /* ignore */ }
+            }
+        };
+        navigator.serviceWorker?.addEventListener('message', handleSwMessage);
+
         initFcm();
+
+        return () => {
+            navigator.serviceWorker?.removeEventListener('message', handleSwMessage);
+        };
     }, [adminId]);
 
     return { token, permissionStatus };

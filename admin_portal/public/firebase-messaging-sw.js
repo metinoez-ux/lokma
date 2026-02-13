@@ -24,16 +24,29 @@ messaging.onBackgroundMessage((payload) => {
     const icon = '/lokma_logo.png';
     const tag = payload.data?.orderId || `notification-${Date.now()}`;
 
+    // Show notification with native OS sound
     self.registration.showNotification(title, {
         body,
         icon,
         tag,
         badge: '/lokma_logo.png',
         requireInteraction: true,
+        silent: false,  // Enable native OS notification sound
+        vibrate: [200, 100, 200, 100, 200],  // Vibrate pattern for mobile
         data: payload.data || {},
         actions: [
             { action: 'open', title: 'Görüntüle' },
         ],
+    });
+
+    // Post message to any open admin tab to play gong sound
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        clientList.forEach((client) => {
+            client.postMessage({
+                type: 'PLAY_NOTIFICATION_SOUND',
+                payload: payload.data,
+            });
+        });
     });
 });
 
