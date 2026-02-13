@@ -178,6 +178,19 @@ export async function POST(request: NextRequest) {
                 }
                 break;
 
+            case 'order_accepted_with_unavailable':
+                // Send notification about unavailable items
+                const unavailableItemsStr = body.unavailableItems || '';
+                if (customerFcmToken) {
+                    results.push = await sendPushNotification(
+                        customerFcmToken,
+                        '✅ Sipariş Onaylandı — Eksik Ürünler',
+                        `${butcherName || 'İşletme'}: Siparişiniz onaylandı ancak şu ürünler maalesef mevcut değil: ${unavailableItemsStr}. Anlayışınız için teşekkür ederiz. 🙏`,
+                        { orderId, type: 'order_accepted_with_unavailable', unavailableItems: unavailableItemsStr }
+                    );
+                }
+                break;
+
             case 'order_cancelled':
                 // Send cancellation notification with reason
                 const cancellationReason = body.cancellationReason || '';

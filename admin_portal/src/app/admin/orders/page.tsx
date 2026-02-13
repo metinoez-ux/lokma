@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { collection, getDocs, doc, updateDoc, deleteDoc, deleteField, query, orderBy, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, deleteField, query, orderBy, where, onSnapshot, Timestamp, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
@@ -93,6 +93,11 @@ export default function OrdersPage() {
     const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
     const [cancelReason, setCancelReason] = useState('');
 
+    // Unavailable items modal state
+    const [showUnavailableModal, setShowUnavailableModal] = useState(false);
+    const [unavailableOrderId, setUnavailableOrderId] = useState<string | null>(null);
+    const [unavailableItems, setUnavailableItems] = useState<{ idx: number; name: string; quantity: number }[]>([]);
+
     // KDS Checklist state
     const [checkedItems, setCheckedItems] = useState<Record<string, Record<number, boolean>>>({});
 
@@ -121,6 +126,44 @@ export default function OrdersPage() {
     const allItemsChecked = (orderId: string, totalItems: number) => {
         if (totalItems === 0) return false;
         return getCheckedCount(orderId, totalItems) >= totalItems;
+    };
+
+    // Get unchecked (unavailable) items for an order
+    const getUncheckedItems = (orderId: string, items: any[]) => {
+        const orderChecks = checkedItems[orderId] || {};
+        return items
+            .map((item, idx) => ({ idx, name: item.productName || item.name, quantity: item.quantity, checked: !!orderChecks[idx] }))
+            .filter(i => !i.checked);
+    };
+
+    // Get the next logical status action button config
+    const getNextStatusAction = (order: Order) => {
+        const status = order.status;
+        const totalItems = order.items?.length || 0;
+        const checkedCount = getCheckedCount(order.id, totalItems);
+        const allChecked = allItemsChecked(order.id, totalItems);
+        const hasItems = totalItems > 0;
+
+        if (['pending', 'accepted'].includes(status) && status === 'pending') {
+            if (hasItems && checkedCount > 0) {
+                if (allChecked) {
+                    return { label: '✅ Siparişi Onayla', action: 'accepted' as OrderStatus, style: 'bg-blue-600 hover:bg-blue-700', hasUnavailable: false };
+                } else {
+                    return { label: '⚠️ Eksik ürünlerle onayla', action: 'accepted' as OrderStatus, style: 'bg-yellow-600 hover:bg-yellow-700', hasUnavailable: true };
+                }
+            }
+            return null; // No action yet — need to check some items first
+        }
+
+        if (status === 'accepted') {
+            return { label: '👨‍🍳 Hazırlamaya Başla', action: 'preparing' as OrderStatus, style: 'bg-orange-600 hover:bg-orange-700', hasUnavailable: false };
+        }
+
+        if (status === 'preparing') {
+            return { label: '📦 Sipariş Hazır', action: 'ready' as OrderStatus, style: 'bg-green-600 hover:bg-green-700', hasUnavailable: false };
+        }
+
+        return null; // No action for ready, onTheWay, delivered, cancelled
     };
 
     // Filter businesses based on search
@@ -282,7 +325,7 @@ export default function OrdersPage() {
     };
 
     // Actual status update function
-    const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, cancellationReason?: string) => {
+    const updateOrderStatus = async (orderId: string, newStatus: OrderStatus, cancellationReason?: string, unavailableItemsList?: { idx: number; name: string; quantity: number }[]) => {
         try {
             // Statuses that should clear courier assignment when set
             const unclamedStatuses: OrderStatus[] = ['pending', 'preparing', 'ready'];
@@ -304,6 +347,15 @@ export default function OrdersPage() {
             // Add cancellation reason if provided
             if (newStatus === 'cancelled' && cancellationReason) {
                 updateData.cancellationReason = cancellationReason;
+            }
+
+            // Save unavailable items when accepting with missing items
+            if (newStatus === 'accepted' && unavailableItemsList && unavailableItemsList.length > 0) {
+                updateData.unavailableItems = unavailableItemsList.map(i => ({
+                    positionNumber: i.idx + 1,
+                    productName: i.name,
+                    quantity: i.quantity,
+                }));
             }
 
             await updateDoc(doc(db, 'meat_orders', orderId), updateData);
@@ -336,6 +388,44 @@ export default function OrdersPage() {
                 } catch (notifyError) {
                     console.error('Error sending cancellation notification:', notifyError);
                     // Don't fail the status update if notification fails
+                }
+            }
+
+            // Send push notification to customer when order is accepted with unavailable items
+            if (newStatus === 'accepted' && unavailableItemsList && unavailableItemsList.length > 0) {
+                try {
+                    const order = orders.find(o => o.id === orderId);
+                    if (order?.customerId) {
+                        const { getDoc } = await import('firebase/firestore');
+                        const userDoc = await getDoc(doc(db, 'users', order.customerId));
+                        const fcmToken = userDoc.data()?.fcmToken;
+
+                        if (fcmToken) {
+                            const unavailableNames = unavailableItemsList.map(i => i.name).join(', ');
+                            await fetch('/api/orders/notify', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    orderId,
+                                    type: 'order_accepted_with_unavailable',
+                                    customerFcmToken: fcmToken,
+                                    butcherName: order.businessName || businesses[order.businessId] || '',
+                                    unavailableItems: unavailableNames,
+                                }),
+                            });
+                        }
+                    }
+
+                    // Update business fulfillment score
+                    if (order?.businessId) {
+                        const bizRef = doc(db, 'businesses', order.businessId);
+                        await updateDoc(bizRef, {
+                            [`fulfillmentIssues`]: increment(unavailableItemsList.length),
+                            [`lastFulfillmentIssue`]: new Date(),
+                        });
+                    }
+                } catch (notifyError) {
+                    console.error('Error sending unavailable items notification:', notifyError);
                 }
             }
 
@@ -942,17 +1032,32 @@ export default function OrdersPage() {
                                         );
                                     })}
                                 </div>
-                                {/* Auto-ready prompt when all items checked */}
-                                {
-                                    selectedOrder.items?.length > 0 && allItemsChecked(selectedOrder.id, selectedOrder.items.length) && selectedOrder.status !== 'ready' && selectedOrder.status !== 'delivered' && selectedOrder.status !== 'onTheWay' && (
+                                {/* Step-by-step status transition button */}
+                                {(() => {
+                                    const action = getNextStatusAction(selectedOrder);
+                                    if (!action) return null;
+
+                                    const handleClick = () => {
+                                        if (action.hasUnavailable) {
+                                            // Show unavailable items confirmation modal
+                                            const unchecked = getUncheckedItems(selectedOrder.id, selectedOrder.items || []);
+                                            setUnavailableItems(unchecked);
+                                            setUnavailableOrderId(selectedOrder.id);
+                                            setShowUnavailableModal(true);
+                                        } else {
+                                            updateOrderStatus(selectedOrder.id, action.action);
+                                        }
+                                    };
+
+                                    return (
                                         <button
-                                            onClick={() => updateOrderStatus(selectedOrder.id, 'ready')}
-                                            className="w-full mt-3 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2 font-medium animate-pulse"
+                                            onClick={handleClick}
+                                            className={`w-full mt-3 px-4 py-3 text-white rounded-lg transition flex items-center justify-center gap-2 font-medium ${action.style} ${action.hasUnavailable ? '' : 'animate-pulse'}`}
                                         >
-                                            🎉 Tüm kalemler hazır — Durumu "Hazır" yap
+                                            {action.label}
                                         </button>
-                                    )
-                                }
+                                    );
+                                })()}
                             </div>
 
                             {/* Totals */}
@@ -1105,6 +1210,80 @@ export default function OrdersPage() {
                                         }`}
                                 >
                                     ❌ İptal Et
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Unavailable Items Confirmation Modal */}
+            {showUnavailableModal && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-2xl w-full max-w-md">
+                        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-white">
+                                ⚠️ Eksik Ürünler
+                            </h2>
+                            <button
+                                onClick={() => {
+                                    setShowUnavailableModal(false);
+                                    setUnavailableOrderId(null);
+                                    setUnavailableItems([]);
+                                }}
+                                className="text-gray-400 hover:text-white"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            <p className="text-gray-400 text-sm">
+                                Aşağıdaki ürünler işaretlenmedi ve <strong className="text-yellow-400">mevcut değil</strong> olarak kaydedilecek. Müşteriye bildirim gönderilecektir.
+                            </p>
+
+                            {/* Unavailable items list */}
+                            <div className="space-y-2">
+                                {unavailableItems.map((item, idx) => (
+                                    <div key={idx} className="flex items-center gap-3 bg-red-600/10 border border-red-500/30 rounded-lg px-3 py-2">
+                                        <span className="text-red-400 font-bold">❌</span>
+                                        <span className="text-white flex-1">{item.quantity}x {item.name}</span>
+                                        <span className="bg-red-500/20 text-red-300 text-xs px-2 py-0.5 rounded-full">Mevcut Değil</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Warning */}
+                            <div className="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-3">
+                                <p className="text-yellow-400 text-sm">
+                                    ⚠️ Müşteriye eksik ürün bildirimi gönderilecek. Bu durum işletme performans puanına yansıyacaktır.
+                                </p>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowUnavailableModal(false);
+                                        setUnavailableOrderId(null);
+                                        setUnavailableItems([]);
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+                                >
+                                    Vazgeç
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (unavailableOrderId) {
+                                            await updateOrderStatus(unavailableOrderId, 'accepted', undefined, unavailableItems);
+                                        }
+                                        setShowUnavailableModal(false);
+                                        setUnavailableOrderId(null);
+                                        setUnavailableItems([]);
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition flex items-center justify-center gap-2"
+                                >
+                                    ⚠️ Eksiklerle Onayla
                                 </button>
                             </div>
                         </div>
