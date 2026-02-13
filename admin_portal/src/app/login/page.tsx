@@ -102,6 +102,12 @@ export default function LoginPage() {
         }
     }, []);
 
+    // Helper: determine redirect path based on role
+    const getAdminRedirectPath = (role?: string, adminType?: string) => {
+        if (role === 'super_admin' || adminType === 'super_admin') return '/admin/analytics';
+        return '/admin/orders';
+    };
+
     // Check if user is already logged in
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -109,12 +115,13 @@ export default function LoginPage() {
                 // User is already logged in, redirect them
                 console.log('Login page - User already logged in:', user.email);
                 if (isSuperAdmin(user.email)) {
-                    console.log('Login page - Redirecting super admin to admin dashboard');
-                    router.push('/admin/dashboard');
+                    console.log('Login page - Redirecting super admin to analytics');
+                    router.push('/admin/analytics');
                 } else {
                     const adminDoc = await getDoc(doc(db, 'admins', user.uid));
                     if (adminDoc.exists() && adminDoc.data().isActive) {
-                        router.push(adminDoc.data().role === 'super_admin' ? '/admin/dashboard' : '/dashboard');
+                        const data = adminDoc.data();
+                        router.push(getAdminRedirectPath(data.role, data.adminType));
                     } else {
                         router.push('/profile');
                     }
@@ -129,7 +136,7 @@ export default function LoginPage() {
     const handleUserRedirect = async (userId: string, userEmail: string | null, userPhone?: string | null) => {
         // Check if super admin by email whitelist
         if (isSuperAdmin(userEmail)) {
-            router.push('/admin/dashboard');
+            router.push('/admin/analytics');
             return;
         }
 
@@ -140,8 +147,8 @@ export default function LoginPage() {
         if (adminDocById.exists() && adminDocById.data().isActive) {
             const adminData = adminDocById.data();
             console.log('Found admin by UID:', userId, 'adminType:', adminData.adminType);
-            // ALL active admins go to admin dashboard (not just super admins)
-            router.push('/admin/dashboard');
+            // Role-based redirect
+            router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
             return;
         }
 
@@ -152,8 +159,8 @@ export default function LoginPage() {
             const adminData = uidSnapshot.docs[0].data();
             if (adminData.isActive) {
                 console.log('Found admin by firebaseUid field:', userId);
-                // ALL active admins go to admin dashboard
-                router.push('/admin/dashboard');
+                // Role-based redirect
+                router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
                 return;
             }
         }
@@ -196,8 +203,8 @@ export default function LoginPage() {
                 }, { merge: true });
                 console.log('📸 Admin linked with photoURL:', auth.currentUser?.photoURL);
 
-                // ALL active admins go to admin dashboard
-                router.push('/admin/dashboard');
+                // Role-based redirect
+                router.push(getAdminRedirectPath(adminData.role, adminData.adminType));
                 return;
             }
         }
@@ -248,8 +255,8 @@ export default function LoginPage() {
                         linkedFromAdmin: true,
                     }, { merge: true });
 
-                    // ALL active admins go to admin dashboard
-                    router.push('/admin/dashboard');
+                    // Role-based redirect
+                    router.push(getAdminRedirectPath(matchedAdminData.role, matchedAdminData.adminType));
                     return;
                 }
             }
@@ -576,8 +583,8 @@ export default function LoginPage() {
             if (matchedAdminData) {
                 console.log('Phone matched admin record:', matchedAdminDoc!.id, 'adminType:', matchedAdminData.adminType);
 
-                // ALL active admins go to admin dashboard
-                router.push('/admin/dashboard');
+                // Role-based redirect
+                router.push(getAdminRedirectPath(matchedAdminData.role, matchedAdminData.adminType));
                 return;
             }
 
