@@ -434,11 +434,38 @@ class _OrderCardState extends State<_OrderCard> {
                 ],
               ),
               const SizedBox(height: 12),
+              // Unavailable items warning banner
+              if (order.unavailableItems.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.red[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning_amber_rounded, color: Colors.red[700], size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${order.unavailableItems.length} ürün mevcut değil',
+                          style: TextStyle(fontSize: 13, color: Colors.red[700], fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               // Items
               ...order.items.asMap().entries.map((entry) {
                 final idx = entry.key;
                 final item = entry.value;
                 final posNum = item.positionNumber ?? (idx + 1);
+                // Check if this item is in the unavailable list
+                final isUnavailable = order.unavailableItems.any(
+                  (u) => (u['positionNumber'] as int?) == posNum,
+                );
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Column(
@@ -452,7 +479,7 @@ class _OrderCardState extends State<_OrderCard> {
                             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                             margin: const EdgeInsets.only(right: 8, top: 1),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF8000),
+                              color: isUnavailable ? Colors.red[400] : const Color(0xFFFF8000),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -469,19 +496,42 @@ class _OrderCardState extends State<_OrderCard> {
                             width: 26,
                             child: Text(
                               '${item.quantity.toStringAsFixed(item.quantity == item.quantity.roundToDouble() ? 0 : 1)}x',
-                              style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                              style: TextStyle(
+                                color: isUnavailable ? Colors.red[300] : Colors.grey[600],
+                                fontSize: 13,
+                                decoration: isUnavailable ? TextDecoration.lineThrough : null,
+                              ),
                             ),
                           ),
                           Expanded(
                             child: Text(
                               item.name,
-                              style: const TextStyle(fontSize: 14),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isUnavailable ? Colors.red[300] : null,
+                                decoration: isUnavailable ? TextDecoration.lineThrough : null,
+                              ),
                             ),
                           ),
-                          Text(
-                            '€${(item.price * item.quantity).toStringAsFixed(2)}',
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                          ),
+                          if (isUnavailable)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              margin: const EdgeInsets.only(left: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.red[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.red[200]!),
+                              ),
+                              child: Text(
+                                '❌ Mevcut Değil',
+                                style: TextStyle(fontSize: 10, color: Colors.red[700], fontWeight: FontWeight.w600),
+                              ),
+                            )
+                          else
+                            Text(
+                              '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                            ),
                         ],
                       ),
                       // Item note

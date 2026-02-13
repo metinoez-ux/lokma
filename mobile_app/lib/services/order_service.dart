@@ -78,6 +78,7 @@ class LokmaOrder {
   final String paymentStatus; // 'unpaid', 'paid'
   final DateTime? deliveredAt;
   final Map<String, dynamic>? deliveryProof; // {type, gps, photoUrl, completedAt}
+  final List<Map<String, dynamic>> unavailableItems; // [{positionNumber, productName, quantity}]
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -108,6 +109,7 @@ class LokmaOrder {
     this.paymentStatus = 'unpaid',
     this.deliveredAt,
     this.deliveryProof,
+    this.unavailableItems = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -162,6 +164,9 @@ class LokmaOrder {
       paymentStatus: data['paymentStatus'] ?? 'unpaid',
       deliveredAt: (data['deliveredAt'] as Timestamp?)?.toDate(),
       deliveryProof: data['deliveryProof'] as Map<String, dynamic>?,
+      unavailableItems: (data['unavailableItems'] as List<dynamic>?)
+          ?.map((e) => Map<String, dynamic>.from(e as Map))
+          .toList() ?? [],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
