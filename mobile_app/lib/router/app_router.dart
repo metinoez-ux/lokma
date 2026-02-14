@@ -204,7 +204,14 @@ class AppRouter {
       // Waiter Order Screen
       GoRoute(
         path: '/waiter-order',
-        builder: (context, state) => const WaiterOrderScreen(),
+        builder: (context, state) {
+          final businessId = state.uri.queryParameters['businessId'];
+          final businessName = state.uri.queryParameters['businessName'];
+          return WaiterOrderScreen(
+            businessId: businessId,
+            businessName: businessName,
+          );
+        },
       ),
       // Customer Table Order View
       GoRoute(

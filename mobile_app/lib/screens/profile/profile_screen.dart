@@ -416,7 +416,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               children: [
                                 _buildQuickAccessChip(Icons.table_restaurant, 'Masa\nRezervasyonum', () => context.push('/my-reservations')),
                                 const SizedBox(width: 12),
-                                _buildQuickAccessChip(Icons.card_giftcard_outlined, 'Kuponlarım', () => context.push('/coupons')),
+                                const Expanded(child: SizedBox()), // Placeholder for grid alignment
                                 const SizedBox(width: 12),
                                 const Expanded(child: SizedBox()), // Placeholder for grid alignment
                               ],

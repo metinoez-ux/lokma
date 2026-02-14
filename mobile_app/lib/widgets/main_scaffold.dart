@@ -119,12 +119,10 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
     final cartItemCount = cartState.items.length + kermesCartState.items.length;
     final selectedIndex = _getSelectedIndex(context);
     
-    // Route'a göre koyu/açık sayfa tespiti (Status bar için)
-    final currentPath = GoRouterState.of(context).uri.path;
-    final isDarkPage = currentPath == '/restoran' || currentPath == '/market';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Status Bar ayarı
-    SystemChrome.setSystemUIOverlayStyle(isDarkPage 
+    // Status Bar: dark mode → white icons, light mode → dark icons
+    SystemChrome.setSystemUIOverlayStyle(isDark 
       ? SystemUiOverlayStyle.light 
       : SystemUiOverlayStyle.dark
     );

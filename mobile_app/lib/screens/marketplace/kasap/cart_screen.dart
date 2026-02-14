@@ -2294,7 +2294,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     if (isReached) {
-      // ✅ SUCCESS: Minimum reached - show green bar (Lieferando style)
+      // ✅ SUCCESS: Minimum reached - show green bar with min order info
       return Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -2314,12 +2314,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               child: const Icon(Icons.check, color: Colors.white, size: 14),
             ),
             SizedBox(width: 10),
-            Text(
-              'Harika! Teslimat şimdi mümkün',
-              style: TextStyle(
-                color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Text(
+                'Min. ${minOrder.toStringAsFixed(0)} € ✓ Teslimat için yeterli',
+                style: TextStyle(
+                  color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],

@@ -84,18 +84,24 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       // Check direct business for reservation support
       final bizId = data['businessId'] ?? data['butcherId'];
       if (bizId != null) {
-        _businessId ??= bizId;
         final bizDoc = await FirebaseFirestore.instance
             .collection('businesses')
             .doc(bizId)
             .get();
         if (bizDoc.exists) {
-          if (_businessName.isEmpty) {
-            _businessName = bizDoc.data()?['companyName'] ?? bizDoc.data()?['name'] ?? '';
+          final bizName = bizDoc.data()?['companyName'] ?? bizDoc.data()?['name'] ?? '';
+          // Set businessId and name if not yet set (from assignedBusinesses)
+          if (_businessId == null) {
+            _businessId = bizId;
+            if (_businessName.isEmpty) {
+              _businessName = bizName;
+            }
           }
           if (bizDoc.data()?['hasReservation'] == true) {
             _hasReservation = true;
+            // Override businessId AND name together to keep them in sync
             _businessId = bizId;
+            _businessName = bizName;
           }
         }
       }
@@ -299,7 +305,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                           badgeCount: _activeTableSessions,
                           onTap: () {
                             HapticFeedback.lightImpact();
-                            context.push('/waiter-order');
+                            context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}');
                           },
                         ),
 

@@ -153,6 +153,7 @@ class LokmaApp extends ConsumerWidget {
           backgroundColor: Color(0xFF1E1E1E),
           foregroundColor: Colors.white,
           elevation: 0,
+          systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
         cardTheme: const CardThemeData(
           color: Color(0xFF1E1E1E),
