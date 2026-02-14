@@ -8,6 +8,9 @@ import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/product_favorites_provider.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/screens/orders/rating_screen.dart';
+import 'package:lokma_app/models/butcher_product.dart';
+import 'package:lokma_app/models/product_option.dart';
+import 'package:lokma_app/providers/cart_provider.dart';
 
 
 class FavoritesScreen extends ConsumerStatefulWidget {
@@ -434,7 +437,42 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                       height: 40,
                       child: ElevatedButton(
                         onPressed: () {
-                          context.push('/kasap/$businessId');
+                          // Reorder: reconstruct cart from raw Firestore order data
+                          final cartNotifier = ref.read(cartProvider.notifier);
+                          cartNotifier.clearCart();
+
+                          for (final rawItem in items) {
+                            final itemMap = rawItem as Map<String, dynamic>;
+                            final product = ButcherProduct(
+                              butcherId: businessId,
+                              id: itemMap['productId'] ?? '',
+                              sku: itemMap['productId'] ?? '',
+                              masterId: '',
+                              name: itemMap['productName'] ?? itemMap['name'] ?? '',
+                              description: '',
+                              category: '',
+                              price: (itemMap['unitPrice'] ?? itemMap['price'] ?? 0).toDouble(),
+                              unitType: itemMap['unit'] ?? 'adet',
+                              imageUrl: itemMap['imageUrl'] as String?,
+                              minQuantity: (itemMap['unit'] ?? 'adet') == 'kg' ? 0.5 : 1.0,
+                              stepQuantity: (itemMap['unit'] ?? 'adet') == 'kg' ? 0.5 : 1.0,
+                            );
+
+                            final selectedOpts = (itemMap['selectedOptions'] as List<dynamic>?)
+                                ?.map((o) => SelectedOption.fromMap(o as Map<String, dynamic>))
+                                .toList() ?? [];
+
+                            cartNotifier.addToCart(
+                              product,
+                              (itemMap['quantity'] ?? 1).toDouble(),
+                              businessId,
+                              businessName,
+                              selectedOptions: selectedOpts,
+                              note: itemMap['itemNote'] as String?,
+                            );
+                          }
+
+                          context.push('/cart');
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isDark ? const Color(0xFF3A3A3C) : const Color(0xFF1A1A1A),

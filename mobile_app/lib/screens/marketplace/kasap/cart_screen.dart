@@ -25,6 +25,7 @@ import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
 import 'package:lokma_app/screens/orders/rating_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/screens/marketplace/kasap/product_customization_sheet.dart';
+import 'package:lokma_app/models/product_option.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
@@ -1878,19 +1879,42 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
   
-  /// Tekrar Sipariş Ver - Add items to cart and navigate to business
+  /// Tekrar Sipariş Ver - Add items to cart and navigate to cart
   void _reorder(LokmaOrder order) {
-    // Navigate to the business page
-    context.go('/kasap/${order.butcherId}');
-    
-    // Show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${order.butcherName} sayfasına yönlendiriliyorsunuz'),
-        backgroundColor: const Color(0xFFFB335B),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    final cartNotifier = ref.read(cartProvider.notifier);
+    cartNotifier.clearCart();
+
+    for (final item in order.items) {
+      final product = ButcherProduct(
+        butcherId: order.butcherId,
+        id: item.sku,
+        sku: item.sku,
+        masterId: '',
+        name: item.name,
+        description: '',
+        category: '',
+        price: item.price,
+        unitType: item.unit,
+        imageUrl: item.imageUrl,
+        minQuantity: item.unit == 'kg' ? 0.5 : 1.0,
+        stepQuantity: item.unit == 'kg' ? 0.5 : 1.0,
+      );
+
+      final selectedOpts = item.selectedOptions
+          .map((o) => SelectedOption.fromMap(o))
+          .toList();
+
+      cartNotifier.addToCart(
+        product,
+        item.quantity,
+        order.butcherId,
+        order.butcherName,
+        selectedOptions: selectedOpts,
+        note: item.itemNote,
+      );
+    }
+
+    context.push('/cart');
   }
   
   /// Sipariş kartı

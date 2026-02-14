@@ -140,7 +140,7 @@ class LokmaOrder {
           .toList() ?? [],
       totalAmount: (data['totalAmount'] ?? 0).toDouble(),
       orderType: OrderType.values.firstWhere(
-        (e) => e.name == data['orderType'],
+        (e) => e.name == (data['orderType'] ?? data['deliveryMethod']),
         orElse: () => OrderType.pickup,
       ),
       status: _parseOrderStatus(data['status']),
@@ -181,6 +181,8 @@ class OrderItem {
   final String unit;
   final int? positionNumber;
   final String? itemNote;
+  final String? imageUrl;
+  final List<Map<String, dynamic>> selectedOptions;
 
   OrderItem({
     required this.sku,
@@ -190,6 +192,8 @@ class OrderItem {
     required this.unit,
     this.positionNumber,
     this.itemNote,
+    this.imageUrl,
+    this.selectedOptions = const [],
   });
 
   Map<String, dynamic> toMap() => {
@@ -210,6 +214,10 @@ class OrderItem {
     unit: map['unit'] ?? 'kg',
     positionNumber: map['positionNumber'] as int?,
     itemNote: map['itemNote'] as String?,
+    imageUrl: map['imageUrl'] as String?,
+    selectedOptions: (map['selectedOptions'] as List<dynamic>?)
+        ?.map((e) => Map<String, dynamic>.from(e as Map))
+        .toList() ?? [],
   );
 
   factory OrderItem.fromCartItem(CartItem cartItem) => OrderItem(

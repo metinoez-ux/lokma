@@ -416,9 +416,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               children: [
                                 _buildQuickAccessChip(Icons.table_restaurant, 'Masa\nRezervasyonum', () => context.push('/my-reservations')),
                                 const SizedBox(width: 12),
-                                _buildQuickAccessChip(Icons.restaurant_menu, 'Masa\nHesabım', () => context.push('/table-order')),
-                                const SizedBox(width: 12),
                                 _buildQuickAccessChip(Icons.card_giftcard_outlined, 'Kuponlarım', () => context.push('/coupons')),
+                                const SizedBox(width: 12),
+                                const Expanded(child: SizedBox()), // Placeholder for grid alignment
                               ],
                             ),
                             // Teslimat Paneli removed - consolidated into Teslimatlarım

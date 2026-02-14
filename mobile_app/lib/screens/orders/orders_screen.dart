@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/cart_provider.dart';
+import '../../models/butcher_product.dart';
+import '../../models/product_option.dart';
 import '../../services/order_service.dart';
 import 'rating_screen.dart';
 import 'courier_tracking_screen.dart';
@@ -207,17 +210,17 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   }
 }
 
-class _OrderCard extends StatefulWidget {
+class _OrderCard extends ConsumerStatefulWidget {
   final LokmaOrder order;
   final bool isDark;
 
   const _OrderCard({required this.order, required this.isDark});
 
   @override
-  State<_OrderCard> createState() => _OrderCardState();
+  ConsumerState<_OrderCard> createState() => _OrderCardState();
 }
 
-class _OrderCardState extends State<_OrderCard> {
+class _OrderCardState extends ConsumerState<_OrderCard> {
   static const Color lokmaOrange = Color(0xFFFF8000);
   String? _businessImageUrl;
   bool? _isTuna;
@@ -634,6 +637,52 @@ class _OrderCardState extends State<_OrderCard> {
     );
   }
 
+  Widget _buildOrderModeTag(OrderType type, bool isDark) {
+    final IconData icon;
+    final String label;
+    final Color color;
+
+    switch (type) {
+      case OrderType.delivery:
+        icon = Icons.delivery_dining;
+        label = 'Kurye';
+        color = const Color(0xFF2196F3); // Blue
+      case OrderType.pickup:
+        icon = Icons.storefront;
+        label = 'Gel Al';
+        color = const Color(0xFFFF9800); // Orange
+      case OrderType.dineIn:
+        icon = Icons.restaurant;
+        label = 'Masa';
+        color = const Color(0xFF9C27B0); // Purple
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(isDark ? 0.2 : 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.4), width: 0.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
@@ -748,7 +797,10 @@ class _OrderCardState extends State<_OrderCard> {
                         '${_getStatusText(order.status)} • ${_formatDate(order.createdAt)}',
                         style: TextStyle(color: subtitleColor, fontSize: 13),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
+                      // Order mode tag (Kurye / Gel Al / Masa)
+                      _buildOrderModeTag(order.orderType, isDark),
+                      const SizedBox(height: 6),
                       // "Siparişi Görüntüle" link
                       GestureDetector(
                         onTap: _showOrderDetails,
@@ -966,7 +1018,44 @@ class _OrderCardState extends State<_OrderCard> {
                   height: 40,
                   child: ElevatedButton(
                     onPressed: () {
-                      context.push('/kasap/${order.butcherId}');
+                      // Reorder: reconstruct cart items from order data
+                      final cartNotifier = ref.read(cartProvider.notifier);
+                      cartNotifier.clearCart();
+
+                      for (final item in order.items) {
+                        // Reconstruct ButcherProduct from stored order item data
+                        final product = ButcherProduct(
+                          butcherId: order.butcherId,
+                          id: item.sku,
+                          sku: item.sku,
+                          masterId: '',
+                          name: item.name,
+                          description: '',
+                          category: '',
+                          price: item.price,
+                          unitType: item.unit,
+                          imageUrl: item.imageUrl,
+                          minQuantity: item.unit == 'kg' ? 0.5 : 1.0,
+                          stepQuantity: item.unit == 'kg' ? 0.5 : 1.0,
+                        );
+
+                        // Reconstruct selected options (Dönertasche, küçük, ohne Zwiebel etc.)
+                        final selectedOpts = item.selectedOptions
+                            .map((o) => SelectedOption.fromMap(o))
+                            .toList();
+
+                        cartNotifier.addToCart(
+                          product,
+                          item.quantity,
+                          order.butcherId,
+                          order.butcherName,
+                          selectedOptions: selectedOpts,
+                          note: item.itemNote,
+                        );
+                      }
+
+                      // Navigate directly to cart screen — ready for checkout
+                      context.push('/cart');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isDark ? const Color(0xFF3A3A3C) : const Color(0xFF1A1A1A),
