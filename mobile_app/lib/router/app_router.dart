@@ -207,9 +207,12 @@ class AppRouter {
         builder: (context, state) {
           final businessId = state.uri.queryParameters['businessId'];
           final businessName = state.uri.queryParameters['businessName'];
+          final tableNumStr = state.uri.queryParameters['tableNumber'];
+          final tableNumber = tableNumStr != null ? int.tryParse(tableNumStr) : null;
           return WaiterOrderScreen(
             businessId: businessId,
             businessName: businessName,
+            tableNumber: tableNumber,
           );
         },
       ),

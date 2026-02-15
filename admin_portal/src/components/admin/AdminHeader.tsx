@@ -325,6 +325,7 @@ export default function AdminHeader() {
                                 { href: '/admin/reservations', icon: '🍽️', label: 'Rezervasyonlar' },
                                 { href: '/admin/table-orders', icon: '🪑', label: 'Masa Grupları' },
                                 { href: '/admin/image-generator', icon: '🎨', label: 'Görsel Üret' },
+                                { href: '/admin/ai-menu', icon: '🤖', label: 'AI Menü' },
                                 { href: '/admin/settings', icon: '⚙️', label: 'Ayarlar' },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);
@@ -517,6 +518,12 @@ export default function AdminHeader() {
                             <Link href="/admin/categories" className="flex items-center gap-2 bg-violet-700/50 hover:bg-violet-700 px-4 py-2 rounded-lg transition-all border border-violet-600">
                                 <span className="text-lg">🗂️</span>
                                 <span className="text-violet-200 text-sm font-medium">Kategoriler</span>
+                            </Link>
+
+                            {/* Masa Grupları */}
+                            <Link href="/admin/table-orders" className="flex items-center gap-2 bg-teal-700/50 hover:bg-teal-700 px-4 py-2 rounded-lg transition-all border border-teal-600">
+                                <span className="text-lg">🪑</span>
+                                <span className="text-teal-200 text-sm font-medium">Masa Grupları</span>
                             </Link>
 
                             {/* Faturalarım */}

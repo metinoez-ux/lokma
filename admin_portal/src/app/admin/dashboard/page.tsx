@@ -177,6 +177,7 @@ export default function SuperAdminDashboard() {
         isPrimaryAdmin?: boolean; // 🟣 Primary Admin / İşletme Sahibi flag
         isDriver?: boolean; // 🚗 Driver / Sürücü flag
         driverType?: 'lokma_fleet' | 'business'; // 🚚 Driver fleet type
+        assignedTables?: number[]; // 🪑 Assigned tables for waiter
         // 🆕 ÇOKLU ROL DESTEĞİ
         roles?: {
             type: string;
@@ -190,6 +191,7 @@ export default function SuperAdminDashboard() {
             assignedBy: string;
         }[];
     } | null>(null);
+    const [maxTablesForBusiness, setMaxTablesForBusiness] = useState<number>(0); // 🪑 Total tables for the user's business
     const [savingProfile, setSavingProfile] = useState(false);
 
     // New user modal states
@@ -2120,6 +2122,7 @@ export default function SuperAdminDashboard() {
                                                     isPrimaryAdmin: (user.adminProfile as any)?.isPrimaryAdmin || false,
                                                     isDriver: (user.adminProfile as any)?.isDriver || false, // 🚗 Load isDriver from admin record
                                                     driverType: (user.adminProfile as any)?.driverType || 'business', // 🚚 Load driverType
+                                                    assignedTables: (user.adminProfile as any)?.assignedTables || [], // 🪑 Load assigned tables
 
                                                     // 🆕 ÇOKLU ROL DESTEĞİ - Mevcut rolden roles dizisi oluştur
                                                     roles: (user.adminProfile as any)?.roles || (user.isAdmin && user.adminType ? [{
@@ -4686,6 +4689,91 @@ export default function SuperAdminDashboard() {
                                                     </div>
                                                 )}
 
+                                                {/* 🪑 MASA ATAMASI - Garson masa ataması */}
+                                                {editingUserProfile.isAdmin && editingUserProfile.butcherId && (
+                                                    (() => {
+                                                        // Load maxReservationTables on first render for this business
+                                                        const bizId = editingUserProfile.butcherId;
+                                                        if (bizId && maxTablesForBusiness === 0) {
+                                                            getDoc(doc(db, 'businesses', bizId)).then(bizDoc => {
+                                                                if (bizDoc.exists()) {
+                                                                    const maxT = bizDoc.data()?.maxReservationTables as number || 0;
+                                                                    if (maxT > 0) setMaxTablesForBusiness(maxT);
+                                                                }
+                                                            });
+                                                        }
+                                                        if (maxTablesForBusiness <= 0) return null;
+
+                                                        const selectedTables = (editingUserProfile as any).assignedTables || [];
+                                                        const toggleTable = (num: number) => {
+                                                            const current = [...selectedTables];
+                                                            const idx = current.indexOf(num);
+                                                            if (idx >= 0) current.splice(idx, 1);
+                                                            else current.push(num);
+                                                            current.sort((a: number, b: number) => a - b);
+                                                            setEditingUserProfile({ ...editingUserProfile, assignedTables: current } as any);
+                                                        };
+                                                        const selectAll = () => {
+                                                            const all = Array.from({ length: maxTablesForBusiness }, (_, i) => i + 1);
+                                                            setEditingUserProfile({ ...editingUserProfile, assignedTables: all } as any);
+                                                        };
+                                                        const clearAll = () => {
+                                                            setEditingUserProfile({ ...editingUserProfile, assignedTables: [] } as any);
+                                                        };
+
+                                                        return (
+                                                            <div className="mt-4 bg-amber-900/30 border border-amber-700 rounded-lg p-4">
+                                                                <div className="flex items-center justify-between mb-3">
+                                                                    <div>
+                                                                        <p className="text-amber-200 font-medium flex items-center gap-2">
+                                                                            🪑 Masa Ataması
+                                                                        </p>
+                                                                        <p className="text-amber-400 text-xs mt-1">
+                                                                            Toplam {maxTablesForBusiness} masa · Seçili: {selectedTables.length}
+                                                                        </p>
+                                                                    </div>
+                                                                    <div className="flex gap-2">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={selectAll}
+                                                                            className="px-3 py-1 text-xs bg-amber-700 text-amber-100 rounded hover:bg-amber-600 transition"
+                                                                        >
+                                                                            Tümünü Seç
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={clearAll}
+                                                                            className="px-3 py-1 text-xs bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition"
+                                                                        >
+                                                                            Temizle
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="grid grid-cols-10 gap-1.5 max-h-48 overflow-y-auto">
+                                                                    {Array.from({ length: maxTablesForBusiness }, (_, i) => i + 1).map(num => (
+                                                                        <button
+                                                                            key={num}
+                                                                            type="button"
+                                                                            onClick={() => toggleTable(num)}
+                                                                            className={`w-full aspect-square flex items-center justify-center rounded text-xs font-medium transition-all ${selectedTables.includes(num)
+                                                                                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105'
+                                                                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                                                }`}
+                                                                        >
+                                                                            {num}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                                {selectedTables.length > 0 && (
+                                                                    <div className="mt-2 text-amber-300/70 text-xs">
+                                                                        Atanan masalar: {selectedTables.join(', ')}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()
+                                                )}
+
                                                 {/* 🆕 ROLLER BÖLÜMÜ - Çoklu Rol Listesi ve Rol Ekleme */}
                                                 {editingUserProfile.isAdmin && admin?.adminType === 'super' && (
                                                     <div className="mt-6 bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-700 rounded-xl p-4">
@@ -5020,6 +5108,8 @@ export default function SuperAdminDashboard() {
                                                         ...(admin?.adminType === 'super' ? { isDriver: (editingUserProfile as any).isDriver || false } : {}),
                                                         // 🚚 Driver type - lokma_fleet or business
                                                         ...(admin?.adminType === 'super' && (editingUserProfile as any).isDriver ? { driverType: (editingUserProfile as any).driverType || 'business' } : {}),
+                                                        // 🪑 Assigned tables for waiter
+                                                        assignedTables: (editingUserProfile as any).assignedTables || [],
                                                     });
                                                 } else {
                                                     // Create new admin record with userId as doc ID
@@ -5051,6 +5141,8 @@ export default function SuperAdminDashboard() {
                                                         ...(admin?.adminType === 'super' ? { isDriver: (editingUserProfile as any).isDriver || false } : {}),
                                                         // 🚚 Driver type - lokma_fleet or business
                                                         ...(admin?.adminType === 'super' && (editingUserProfile as any).isDriver ? { driverType: (editingUserProfile as any).driverType || 'business' } : {}),
+                                                        // 🪑 Assigned tables for waiter
+                                                        assignedTables: (editingUserProfile as any).assignedTables || [],
                                                     });
 
                                                     // 🎉 SEND ADMIN PROMOTION NOTIFICATIONS

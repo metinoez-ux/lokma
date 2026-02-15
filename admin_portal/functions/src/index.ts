@@ -436,44 +436,49 @@ export const onOrderStatusChange = onDocumentUpdated(
                     const deliveryAddress = after.deliveryAddress || "";
 
                     // Get all driver FCM tokens who are assigned to this business
+                    // SHIFT GATING: Only notify staff who are on an active shift
                     try {
-                        // Query 1: Drivers assigned via assignedBusinesses array
+                        // Query 1: Drivers assigned via assignedBusinesses array + on shift
                         const driversSnapshot = await db.collection("admins")
                             .where("isDriver", "==", true)
                             .where("assignedBusinesses", "array-contains", butcherId)
+                            .where("isOnShift", "==", true)
                             .get();
 
-                        // Query 2: Staff with direct businessId match (legacy support)
+                        // Query 2: Staff with direct businessId match + on shift (legacy support)
                         const staffSnapshot = await db.collection("admins")
                             .where("businessId", "==", butcherId)
+                            .where("isOnShift", "==", true)
                             .get();
 
                         const staffTokens: string[] = [];
                         const processedIds = new Set<string>();
+                        let skippedPaused = 0;
 
-                        // Process drivers first
-                        driversSnapshot.docs.forEach(doc => {
+                        const collectTokens = (doc: admin.firestore.QueryDocumentSnapshot) => {
                             if (processedIds.has(doc.id)) return;
                             processedIds.add(doc.id);
 
                             const data = doc.data();
+
+                            // Skip staff on break (paused shift)
+                            if (data.shiftStatus === "paused") {
+                                skippedPaused++;
+                                return;
+                            }
+
                             if (data.fcmToken) staffTokens.push(data.fcmToken);
                             if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
                                 staffTokens.push(...data.fcmTokens);
                             }
-                        });
+                        };
 
-                        // Process legacy staff (only if not already processed as driver)
-                        staffSnapshot.docs.forEach(doc => {
-                            if (processedIds.has(doc.id)) return;
-                            processedIds.add(doc.id);
+                        driversSnapshot.docs.forEach(collectTokens);
+                        staffSnapshot.docs.forEach(collectTokens);
 
-                            const data = doc.data();
-                            if (data.fcmToken) staffTokens.push(data.fcmToken);
-                            if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
-                                staffTokens.push(...data.fcmTokens);
-                            }
-                        });
+                        if (skippedPaused > 0) {
+                            console.log(`[Shift Gate] Skipped ${skippedPaused} paused staff for business ${butcherId}`);
+                        }
 
                         if (staffTokens.length > 0) {
                             const staffMessage = {
@@ -489,9 +494,9 @@ export const onOrderStatusChange = onDocumentUpdated(
                                 tokens: staffTokens,
                             };
                             const response = await messaging.sendEachForMulticast(staffMessage);
-                            console.log(`Sent delivery notification to ${response.successCount}/${staffTokens.length} drivers/staff`);
+                            console.log(`[Shift Gate] Sent delivery notification to ${response.successCount}/${staffTokens.length} on-shift drivers/staff`);
                         } else {
-                            console.log(`No driver tokens found for business ${butcherId}`);
+                            console.log(`[Shift Gate] No on-shift driver tokens found for business ${butcherId} (${processedIds.size} total staff, ${skippedPaused} paused)`);
                         }
                     } catch (staffErr) {
                         console.error("Error notifying drivers:", staffErr);
@@ -2100,5 +2105,135 @@ export const iotGateway = onRequest(
             }
         }
         iotApp(req, res);
+    }
+);
+
+// =============================================================================
+// SHIFT MANAGEMENT: Orphan Table Detection on Shift End
+// =============================================================================
+
+/**
+ * When a staff member ends their shift (isOnShift: true → false),
+ * detect orphan tables and notify business admins + remaining active staff.
+ */
+export const onShiftEnd = onDocumentUpdated(
+    "admins/{adminId}",
+    async (event) => {
+        const before = event.data?.before.data();
+        const after = event.data?.after.data();
+        if (!before || !after) return;
+
+        // Only trigger when isOnShift changes from true to false
+        if (before.isOnShift !== true || after.isOnShift !== false) return;
+
+        const staffName = after.displayName || after.email || "Personel";
+        const businessId = before.shiftBusinessId || before.businessId;
+        if (!businessId) {
+            console.log(`[Shift End] No businessId for ${staffName}, skipping orphan check`);
+            return;
+        }
+
+        const endedTables: string[] = before.shiftAssignedTables || [];
+        if (endedTables.length === 0) {
+            console.log(`[Shift End] ${staffName} had no assigned tables, skipping orphan check`);
+            return;
+        }
+
+        console.log(`[Shift End] ${staffName} ended shift at business ${businessId}, had tables: ${endedTables.join(", ")}`);
+
+        try {
+            // Find all other on-shift staff at the same business
+            const activeStaffSnapshot = await db.collection("admins")
+                .where("isOnShift", "==", true)
+                .where("shiftBusinessId", "==", businessId)
+                .get();
+
+            // Also check via assignedBusinesses
+            const activeStaffSnapshot2 = await db.collection("admins")
+                .where("isOnShift", "==", true)
+                .where("assignedBusinesses", "array-contains", businessId)
+                .get();
+
+            // Merge and deduplicate
+            const processedIds = new Set<string>();
+            const coveredTables = new Set<string>();
+            const activeStaffTokens: string[] = [];
+
+            const processActiveStaff = (doc: admin.firestore.QueryDocumentSnapshot) => {
+                if (processedIds.has(doc.id)) return;
+                if (doc.id === event.params.adminId) return; // Skip the person who just ended shift
+                processedIds.add(doc.id);
+
+                const data = doc.data();
+                if (data.shiftStatus === "paused") return; // Don't count paused staff
+
+                // Collect covered tables
+                const tables: string[] = data.shiftAssignedTables || [];
+                tables.forEach(t => coveredTables.add(t));
+
+                // Collect FCM tokens for notification
+                if (data.fcmToken) activeStaffTokens.push(data.fcmToken);
+                if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                    activeStaffTokens.push(...data.fcmTokens);
+                }
+            };
+
+            activeStaffSnapshot.docs.forEach(processActiveStaff);
+            activeStaffSnapshot2.docs.forEach(processActiveStaff);
+
+            // Detect orphan tables
+            const orphanTables = endedTables.filter(t => !coveredTables.has(t));
+
+            if (orphanTables.length === 0) {
+                console.log(`[Shift End] All tables covered. No orphan tables after ${staffName}'s shift.`);
+                return;
+            }
+
+            console.log(`[Shift End] ⚠️ Orphan tables detected: ${orphanTables.join(", ")} — notifying admins`);
+
+            // Get business admin tokens (business owners + super admins)
+            const adminTokens: string[] = [...activeStaffTokens];
+            const adminProcessed = new Set<string>([...processedIds]);
+
+            // Business admins
+            const businessAdmins = await db.collection("admins")
+                .where("businessId", "==", businessId)
+                .where("adminType", "in", ["admin", "super"])
+                .get();
+
+            businessAdmins.docs.forEach(doc => {
+                if (adminProcessed.has(doc.id)) return;
+                adminProcessed.add(doc.id);
+                const data = doc.data();
+                if (data.fcmToken) adminTokens.push(data.fcmToken);
+                if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                    adminTokens.push(...data.fcmTokens);
+                }
+                if (data.webFcmTokens && Array.isArray(data.webFcmTokens)) {
+                    adminTokens.push(...data.webFcmTokens);
+                }
+            });
+
+            if (adminTokens.length > 0) {
+                const orphanMessage = {
+                    notification: {
+                        title: "⚠️ Sahipsiz Masa Uyarısı",
+                        body: `${staffName} vardiyasını bitirdi. Masa ${orphanTables.join(", ")} şu an atanmamış!`,
+                    },
+                    data: {
+                        type: "orphan_tables",
+                        businessId: businessId,
+                        tables: orphanTables.join(","),
+                    },
+                    tokens: adminTokens,
+                };
+                const response = await messaging.sendEachForMulticast(orphanMessage);
+                console.log(`[Shift End] Orphan alert sent to ${response.successCount}/${adminTokens.length} recipients`);
+            } else {
+                console.log(`[Shift End] No admin tokens to notify about orphan tables`);
+            }
+        } catch (err) {
+            console.error(`[Shift End] Error during orphan table check:`, err);
+        }
     }
 );

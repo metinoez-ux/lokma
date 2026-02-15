@@ -969,28 +969,40 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
   Widget _statusChip(String status) {
     Color color;
     String label;
+    String emoji;
     switch (status) {
       case 'pending':
         color = Colors.amber;
         label = 'Beklemede';
+        emoji = '⏳';
       case 'accepted':
         color = Colors.blue;
         label = 'Onaylandı';
+        emoji = '✅';
       case 'preparing':
         color = Colors.orange;
         label = 'Hazırlanıyor';
+        emoji = '👨‍🍳';
       case 'ready':
         color = Colors.green;
         label = 'Hazır';
+        emoji = '📦';
+      case 'served':
+        color = Colors.teal;
+        label = 'Servis Edildi';
+        emoji = '🍽️';
       case 'delivered':
         color = Colors.teal;
         label = 'Teslim';
+        emoji = '✅';
       case 'cancelled':
         color = Colors.red;
         label = 'İptal';
+        emoji = '❌';
       default:
         color = Colors.grey;
         label = status;
+        emoji = '•';
     }
 
     return Container(
@@ -1001,7 +1013,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
-        label,
+        '$emoji $label',
         style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
       ),
     );

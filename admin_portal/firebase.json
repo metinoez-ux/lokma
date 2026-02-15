@@ -38,10 +38,21 @@
         ],
         "frameworksBackend": {
             "region": "europe-west1",
+            "memory": "2GiB",
+            "maxInstances": 10,
+            "timeoutSeconds": 300,
             "env": [
                 {
                     "variable": "FIREBASE_SERVICE_ACCOUNT_KEY",
                     "secret": "FB_SERVICE_ACCOUNT"
+                },
+                {
+                    "variable": "GEMINI_API_KEY",
+                    "secret": "GEMINI_API_KEY"
+                },
+                {
+                    "variable": "ANTHROPIC_API_KEY",
+                    "secret": "ANTHROPIC_API_KEY"
                 }
             ]
         }

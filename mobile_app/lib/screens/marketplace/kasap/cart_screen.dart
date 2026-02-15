@@ -1803,6 +1803,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         return Icons.restaurant;
       case OrderStatus.ready:
         return Icons.inventory_2_outlined;
+      case OrderStatus.served:
+        return Icons.table_bar;
       case OrderStatus.onTheWay:
         return Icons.delivery_dining;
       case OrderStatus.delivered:
@@ -1829,6 +1831,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         return Colors.purple;
       case OrderStatus.ready:
         return Colors.green;
+      case OrderStatus.served:
+        return Colors.teal;
       case OrderStatus.onTheWay:
         return Colors.teal;
       case OrderStatus.delivered:
@@ -1848,6 +1852,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         return 'Hazırlanıyor';
       case OrderStatus.ready:
         return 'Hazır';
+      case OrderStatus.served:
+        return 'Servis Edildi';
       case OrderStatus.onTheWay:
         return 'Yolda';
       case OrderStatus.delivered:

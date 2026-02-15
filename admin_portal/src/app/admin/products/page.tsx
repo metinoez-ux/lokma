@@ -347,8 +347,8 @@ function GlobalProductsPageContent() {
                 categories: (formData as any).categories || [],
                 // 🆕 Hangi işletme türleri satabilir
                 allowedBusinessTypes: (formData as any).allowedBusinessTypes || [],
-                defaultUnit: formData.defaultUnit || 'kg',
-                unit: formData.defaultUnit || 'kg', // 🆕 Mobile app reads 'unit' field
+                defaultUnit: formData.defaultUnit || 'adet',
+                unit: formData.defaultUnit || 'adet', // 🆕 Mobile app reads 'unit' field
                 description: formData.description || "",
                 // Brand & Labels
                 brand: (formData as any).brand || null,
@@ -679,12 +679,14 @@ function GlobalProductsPageContent() {
     const openEdit = (product: ExtendedProduct) => {
         setEditingProduct(product);
         setValidationErrors({});
+        const resolvedUnit = (product as any).defaultUnit || (product as any).unit || 'adet';
         setFormData({
             ...product,
             categories: product.categories || [product.category],
             images: product.images || [],
             brand: product.brand || '',
             isActive: product.isActive !== false,
+            defaultUnit: resolvedUnit,
             brandLabels: (product as any).brandLabels || [],
             optionGroups: (product as any).optionGroups || []
         } as any);
@@ -1093,9 +1095,22 @@ function GlobalProductsPageContent() {
                                                 {businessProducts.map((product: any) => (
                                                     <tr key={product.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
                                                         <td className="py-3 pr-2">
-                                                            <span className={`px-2 py-1 rounded-full text-xs ${product.isActive !== false ? 'bg-green-900/50 text-green-300' : 'bg-gray-700 text-gray-400'}`}>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    const newStatus = product.isActive === false ? true : false;
+                                                                    try {
+                                                                        await updateDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id), { isActive: newStatus });
+                                                                        setBusinessProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: newStatus } : p));
+                                                                    } catch (err) {
+                                                                        console.error('Toggle error:', err);
+                                                                        alert('Durum güncellenirken hata oluştu.');
+                                                                    }
+                                                                }}
+                                                                className={`px-2 py-1 rounded-full text-xs cursor-pointer transition-all hover:ring-2 hover:ring-offset-1 hover:ring-offset-gray-900 ${product.isActive !== false ? 'bg-green-900/50 text-green-300 hover:ring-green-500' : 'bg-gray-700 text-gray-400 hover:ring-gray-500'}`}
+                                                                title={product.isActive !== false ? 'Pasif yap' : 'Aktif yap'}
+                                                            >
                                                                 {product.isActive !== false ? '🟢 Aktif' : '⚫ Pasif'}
-                                                            </span>
+                                                            </button>
                                                         </td>
                                                         <td className="py-3 pr-2 text-gray-400 font-mono text-xs">
                                                             {product.id?.substring(0, 15)}...
@@ -1130,6 +1145,22 @@ function GlobalProductsPageContent() {
                                                                     className="px-2 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50 text-xs"
                                                                 >
                                                                     ✏️ Düzenle
+                                                                </button>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        if (!window.confirm(`"${product.name}" ürününü silmek istediğinize emin misiniz?`)) return;
+                                                                        try {
+                                                                            await deleteDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id));
+                                                                            setBusinessProducts(prev => prev.filter(p => p.id !== product.id));
+                                                                        } catch (err) {
+                                                                            console.error('Delete error:', err);
+                                                                            alert('Ürün silinirken hata oluştu.');
+                                                                        }
+                                                                    }}
+                                                                    className="px-2 py-1 bg-red-600/30 text-red-300 rounded hover:bg-red-600/50 text-xs"
+                                                                    title="Ürünü sil"
+                                                                >
+                                                                    🗑
                                                                 </button>
                                                             </div>
                                                         </td>

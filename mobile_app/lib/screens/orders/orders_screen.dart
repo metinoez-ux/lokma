@@ -26,6 +26,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
            status == OrderStatus.accepted ||
            status == OrderStatus.preparing ||
            status == OrderStatus.ready ||
+           status == OrderStatus.served ||
            status == OrderStatus.onTheWay;
   }
 
@@ -266,6 +267,8 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         return Colors.purple;
       case OrderStatus.ready:
         return Colors.green;
+      case OrderStatus.served:
+        return Colors.teal;
       case OrderStatus.onTheWay:
         return Colors.teal;
       case OrderStatus.delivered:
@@ -285,6 +288,8 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         return 'Hazırlanıyor';
       case OrderStatus.ready:
         return 'Hazır';
+      case OrderStatus.served:
+        return 'Servis Edildi';
       case OrderStatus.onTheWay:
         return 'Yolda';
       case OrderStatus.delivered:

@@ -13,8 +13,9 @@ import '../../data/product_catalog_data.dart';
 class WaiterOrderScreen extends StatefulWidget {
   final String? businessId;
   final String? businessName;
+  final int? tableNumber;
 
-  const WaiterOrderScreen({super.key, this.businessId, this.businessName});
+  const WaiterOrderScreen({super.key, this.businessId, this.businessName, this.tableNumber});
 
   @override
   State<WaiterOrderScreen> createState() => _WaiterOrderScreenState();
@@ -47,6 +48,23 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
     // If no businessId provided, load from user's admin profile
     if (_businessId == null) {
       _loadBusinessFromProfile();
+    }
+    
+    // If tableNumber provided (from dashboard), auto-select and skip to menu
+    if (widget.tableNumber != null && _businessId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final existingSession = await _sessionService.getActiveSession(_businessId!, widget.tableNumber!);
+        if (existingSession != null && mounted) {
+          setState(() {
+            _selectedTable = widget.tableNumber;
+            _activeSession = existingSession;
+            _currentStep = _WaiterStep.browseMenu;
+          });
+        } else {
+          // No session yet — create one via normal flow
+          _selectTable(widget.tableNumber!);
+        }
+      });
     }
   }
 
@@ -283,6 +301,15 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                             // Individual orders
                             ...orders.map((order) {
                               final isPaid = order.paymentStatus == 'paid';
+                              // Status badge config
+                              final statusConfig = <OrderStatus, Map<String, dynamic>>{
+                                OrderStatus.pending: {'label': '⏳ Beklemede', 'color': Colors.yellow.shade700, 'bg': Colors.yellow.shade50},
+                                OrderStatus.preparing: {'label': '👨‍🍳 Hazırlanıyor', 'color': Colors.orange.shade700, 'bg': Colors.orange.shade50},
+                                OrderStatus.ready: {'label': '📦 Hazır', 'color': Colors.green.shade700, 'bg': Colors.green.shade50},
+                                OrderStatus.served: {'label': '🍽️ Servis Edildi', 'color': Colors.teal.shade700, 'bg': Colors.teal.shade50},
+                              };
+                              final sc = statusConfig[order.status];
+                              
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 padding: const EdgeInsets.all(14),
@@ -291,7 +318,9 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                   borderRadius: BorderRadius.circular(14),
                                   border: isPaid
                                       ? Border.all(color: Colors.green.shade200)
-                                      : null,
+                                      : order.status == OrderStatus.ready
+                                          ? Border.all(color: Colors.green.shade400, width: 2)
+                                          : null,
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,38 +332,25 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                                         ),
                                         const SizedBox(width: 8),
-                                        if (isPaid)
+                                        // Order status badge
+                                        if (sc != null)
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: Colors.green.shade50,
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(Icons.check_circle, size: 12, color: Colors.green.shade700),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  order.paymentMethod == 'card' ? 'Kart' : order.paymentMethod == 'cash' ? 'Nakit' : 'Online',
-                                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.green.shade700),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        else
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: Colors.red.shade50,
+                                              color: (sc['bg'] as Color),
                                               borderRadius: BorderRadius.circular(8),
                                             ),
                                             child: Text(
-                                              'Ödenmedi',
-                                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.red.shade700),
+                                              sc['label'] as String,
+                                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: sc['color'] as Color),
                                             ),
                                           ),
                                         const Spacer(),
+                                        if (isPaid)
+                                          Icon(Icons.check_circle, size: 14, color: Colors.green.shade700)
+                                        else
+                                          Icon(Icons.circle_outlined, size: 14, color: Colors.red.shade400),
+                                        const SizedBox(width: 6),
                                         Text(
                                           '€${order.totalAmount.toStringAsFixed(2)}',
                                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: brandColor),
@@ -349,6 +365,45 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                         style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                                       ),
                                     )),
+                                    // "Servis Edildi" action button for ready orders
+                                    if (order.status == OrderStatus.ready)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 10),
+                                        child: SizedBox(
+                                          width: double.infinity,
+                                          child: FilledButton.icon(
+                                            icon: const Icon(Icons.restaurant, size: 16),
+                                            label: const Text('Servis Edildi', style: TextStyle(fontWeight: FontWeight.w700)),
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: Colors.teal.shade600,
+                                              padding: const EdgeInsets.symmetric(vertical: 10),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            ),
+                                            onPressed: () async {
+                                              try {
+                                                await _orderService.markAsServed(order.id);
+                                                if (mounted) {
+                                                  HapticFeedback.mediumImpact();
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: const Text('✅ Sipariş servis edildi!'),
+                                                      backgroundColor: Colors.teal.shade700,
+                                                      behavior: SnackBarBehavior.floating,
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                    ),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                  );
+                                                }
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               );

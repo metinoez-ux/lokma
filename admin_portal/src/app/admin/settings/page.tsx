@@ -569,6 +569,47 @@ export default function SettingsPage() {
                         {sponsoredLoading ? 'Kaydediliyor...' : sponsoredSuccess ? '✅ Kaydedildi!' : 'Sponsored Ayarlarını Kaydet'}
                     </button>
                 </div>
+
+                {/* 🪑 MASA GRUPLARI (Table Groups) */}
+                <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8 mb-8">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="text-3xl">🪑</span>
+                        <div>
+                            <h2 className="text-xl font-bold">Masa Grupları & Personel Atama</h2>
+                            <p className="text-gray-400 text-sm">Masalarınızı yönetin, personel atayın ve aktif masa oturumlarını takip edin.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <a
+                            href={`/admin/table-orders${admin?.butcherId ? `?businessId=${admin.butcherId}` : ''}`}
+                            className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-teal-600 hover:bg-teal-950/20 transition-all group"
+                        >
+                            <div className="w-12 h-12 rounded-xl bg-teal-900/50 flex items-center justify-center text-2xl group-hover:bg-teal-800/50 transition">
+                                🪑
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white group-hover:text-teal-300 transition">Masa Oturumları</h3>
+                                <p className="text-xs text-gray-500">Aktif ve geçmiş masa oturumlarını görüntüle</p>
+                            </div>
+                            <span className="ml-auto text-gray-600 group-hover:text-teal-400 transition text-xl">→</span>
+                        </a>
+
+                        <a
+                            href={`/admin/reservations${admin?.butcherId ? `?businessId=${admin.butcherId}` : ''}`}
+                            className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-rose-600 hover:bg-rose-950/20 transition-all group"
+                        >
+                            <div className="w-12 h-12 rounded-xl bg-rose-900/50 flex items-center justify-center text-2xl group-hover:bg-rose-800/50 transition">
+                                🍽️
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-white group-hover:text-rose-300 transition">Rezervasyonlar</h3>
+                                <p className="text-xs text-gray-500">Masa rezervasyonlarını yönet</p>
+                            </div>
+                            <span className="ml-auto text-gray-600 group-hover:text-rose-400 transition text-xl">→</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     );

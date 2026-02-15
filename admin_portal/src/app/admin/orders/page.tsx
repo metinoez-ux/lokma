@@ -14,6 +14,7 @@ const orderStatuses = {
     accepted: { label: 'Onaylandı', color: 'blue', icon: '✅' },
     preparing: { label: 'Hazırlanıyor', color: 'orange', icon: '👨‍🍳' },
     ready: { label: 'Hazır', color: 'green', icon: '📦' },
+    served: { label: 'Servis Edildi', color: 'teal', icon: '🍽️' },
     onTheWay: { label: 'Yolda', color: 'indigo', icon: '🛵' },
     delivered: { label: 'Teslim Edildi', color: 'emerald', icon: '🎉' },
     cancelled: { label: 'İptal', color: 'red', icon: '❌' },
@@ -164,7 +165,12 @@ export default function OrdersPage() {
             return { label: '📦 Sipariş Hazır', action: 'ready' as OrderStatus, style: 'bg-green-600 hover:bg-green-700', hasUnavailable: false };
         }
 
-        return null; // No action for ready, onTheWay, delivered, cancelled
+        // For dine-in ready orders, offer "Servis Edildi" action
+        if (status === 'ready' && order.type === 'dine_in') {
+            return { label: '🍽️ Servis Edildi', action: 'served' as OrderStatus, style: 'bg-teal-600 hover:bg-teal-700', hasUnavailable: false };
+        }
+
+        return null; // No action for ready (non-dine-in), onTheWay, delivered, cancelled
     };
 
     // Filter businesses based on search
@@ -308,8 +314,9 @@ export default function OrdersPage() {
     const pendingOrders = filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status));
     const preparingOrders = filteredOrders.filter(o => o.status === 'preparing');
     const readyOrders = filteredOrders.filter(o => o.status === 'ready');
+    const servedOrders = filteredOrders.filter(o => o.status === 'served');
     const inTransitOrders = filteredOrders.filter(o => o.status === 'onTheWay');
-    const completedOrders = filteredOrders.filter(o => o.status === 'delivered');
+    const completedOrders = filteredOrders.filter(o => ['delivered', 'served'].includes(o.status));
 
     // Update order status
     // When status is reset backward (pending/preparing/ready), clear courier assignment
@@ -877,6 +884,24 @@ export default function OrdersPage() {
                                 )}
                             </div>
                         </div>
+
+                        {/* Served Column (Dine-in only) */}
+                        {servedOrders.length > 0 && (
+                            <div className="bg-gray-800 rounded-xl p-4">
+                                <h3 className="text-teal-400 font-medium mb-4 flex items-center gap-2">
+                                    <span className="w-3 h-3 bg-teal-400 rounded-full"></span>
+                                    Servis Edildi ({servedOrders.length})
+                                </h3>
+                                <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                                    {servedOrders.slice(0, 10).map(order => (
+                                        <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
+                                    ))}
+                                    {servedOrders.length > 10 && (
+                                        <p className="text-gray-500 text-center text-sm">+{servedOrders.length - 10} daha</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {/* In Transit Column */}
                         <div className="bg-gray-800 rounded-xl p-4">
