@@ -27,12 +27,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   bool _isLoading = true;
   bool _isDriver = false;
   bool _hasReservation = false;
+  bool _hasTables = false;
+  bool _hasShiftTracking = false;
   String _staffName = '';
   String _businessName = '';
   String? _businessId;
   int _assignedBusinessCount = 0;
   int _maxTables = 20; // default
   List<int> _assignedTables = []; // waiter's assigned tables
+  final Set<String> _expandedShiftDays = {}; // tracks expanded days in shift history
 
   // Live counters
   int _pendingReservations = 0;
@@ -93,24 +96,352 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
   Future<void> _handleStartShift() async {
     if (_businessId == null) return;
-    // Show table selection
-    final selectedTables = await _showTableSelectionSheet();
-    if (selectedTables == null) return; // user cancelled
+
+    final hasTables = _hasTables;
+    final hasCourier = _isDriver;
+
+    // Scenario 1: No tables, no courier → direct start (time tracking only)
+    if (!hasTables && !hasCourier) {
+      setState(() => _shiftLoading = true);
+      HapticFeedback.heavyImpact();
+      final shiftId = await _shiftService.startShift(
+        businessId: _businessId!,
+        staffName: _staffName,
+        tables: [],
+      );
+      if (shiftId != null) _startTimerFresh();
+      if (mounted) setState(() => _shiftLoading = false);
+      return;
+    }
+
+    // Scenario 2: Has tables but no courier → table selection only
+    if (hasTables && !hasCourier) {
+      final selectedTables = await _showTableSelectionSheet();
+      if (selectedTables == null) return;
+      setState(() => _shiftLoading = true);
+      HapticFeedback.heavyImpact();
+      final shiftId = await _shiftService.startShift(
+        businessId: _businessId!,
+        staffName: _staffName,
+        tables: selectedTables,
+      );
+      if (shiftId != null) _startTimerFresh();
+      if (mounted) setState(() => _shiftLoading = false);
+      return;
+    }
+
+    // Scenario 3: Courier available → role selection sheet
+    final result = await _showRoleSelectionSheet();
+    if (result == null) return;
 
     setState(() => _shiftLoading = true);
     HapticFeedback.heavyImpact();
-
     final shiftId = await _shiftService.startShift(
       businessId: _businessId!,
       staffName: _staffName,
-      tables: selectedTables,
+      tables: result['tables'] as List<int>,
+      isDeliveryDriver: result['isDeliveryDriver'] as bool,
     );
-
-    if (shiftId != null) {
-      _startTimerFresh();
-    }
-
+    if (shiftId != null) _startTimerFresh();
     if (mounted) setState(() => _shiftLoading = false);
+  }
+
+  /// Role selection sheet with masa servisi + kurye toggles
+  Future<Map<String, dynamic>?> _showRoleSelectionSheet() async {
+    bool masaEnabled = _hasTables; // default ON if business has tables
+    bool kuryeEnabled = _isDriver; // default ON only if user is a driver
+    bool digerEnabled = true; // default ON always
+    final Set<int> selectedTables = Set<int>.from(_assignedTables);
+    final max = _maxTables;
+
+    // Determine which roles are available
+    final bool showKurye = _isDriver; // plan has delivery AND user is assigned as driver
+    final bool showMasa = _hasTables; // plan has table service
+
+    return showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final isDark = Theme.of(ctx).brightness == Brightness.dark;
+            // At least one role must be selected
+            final hasAnyRole = digerEnabled || kuryeEnabled || (masaEnabled && (selectedTables.isNotEmpty || !_hasTables));
+            final canStart = hasAnyRole;
+
+            return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.85,
+              ),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'Görev Seçimi',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Bu vardiyada hangi görevleri üstleneceksiniz?',
+                          style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── Masa Servisi Toggle ── (only if plan has tables)
+                          if (showMasa) ...[
+                            _buildRoleToggle(
+                              icon: Icons.table_restaurant,
+                              title: 'Masa Servisi',
+                              subtitle: masaEnabled
+                                  ? 'Masalardan gelen siparişleri alın'
+                                  : 'Masalara bakmıyorum',
+                              color: Colors.teal,
+                              isEnabled: masaEnabled,
+                              onChanged: (val) => setSheetState(() {
+                                masaEnabled = val;
+                                if (!val) selectedTables.clear();
+                              }),
+                            ),
+                            // Table grid (only visible when masaEnabled)
+                            AnimatedCrossFade(
+                              firstChild: Padding(
+                                padding: const EdgeInsets.only(top: 12, bottom: 8),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        TextButton.icon(
+                                          onPressed: () => setSheetState(() {
+                                            selectedTables.clear();
+                                            for (int i = 1; i <= max; i++) selectedTables.add(i);
+                                          }),
+                                          icon: const Icon(Icons.select_all, size: 16),
+                                          label: const Text('Tümü', style: TextStyle(fontSize: 12)),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        TextButton.icon(
+                                          onPressed: () => setSheetState(() => selectedTables.clear()),
+                                          icon: const Icon(Icons.deselect, size: 16),
+                                          label: const Text('Temizle', style: TextStyle(fontSize: 12)),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    GridView.builder(
+                                      shrinkWrap: true,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 5,
+                                        mainAxisSpacing: 8,
+                                        crossAxisSpacing: 8,
+                                      ),
+                                      itemCount: max,
+                                      itemBuilder: (_, i) {
+                                        final tableNum = i + 1;
+                                        final isSelected = selectedTables.contains(tableNum);
+                                        return GestureDetector(
+                                          onTap: () {
+                                            HapticFeedback.selectionClick();
+                                            setSheetState(() {
+                                              if (isSelected) {
+                                                selectedTables.remove(tableNum);
+                                              } else {
+                                                selectedTables.add(tableNum);
+                                              }
+                                            });
+                                          },
+                                          child: AnimatedContainer(
+                                            duration: const Duration(milliseconds: 200),
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? Colors.teal
+                                                  : (isDark ? const Color(0xFF2A2A2A) : Colors.grey[100]),
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: isSelected ? Colors.teal : Colors.grey.withOpacity(0.3),
+                                                width: isSelected ? 2 : 1,
+                                              ),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                '$tableNum',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              secondChild: const SizedBox.shrink(),
+                              crossFadeState: masaEnabled ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+                              duration: const Duration(milliseconds: 300),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          // ── Kurye Görevi Toggle ── (only if plan has delivery AND user is driver)
+                          if (showKurye) ...[
+                            _buildRoleToggle(
+                              icon: Icons.delivery_dining,
+                              title: 'Sürücü Görevi',
+                              subtitle: kuryeEnabled
+                                  ? 'Teslimat siparişlerini alın'
+                                  : 'Kurye olarak çalışmıyorum',
+                              color: Colors.orange,
+                              isEnabled: kuryeEnabled,
+                              onChanged: (val) => setSheetState(() => kuryeEnabled = val),
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+
+                          // ── Diğer Görevler Toggle ── (always visible)
+                          _buildRoleToggle(
+                            icon: Icons.work_outline,
+                            title: 'Diğer Görevler',
+                            subtitle: digerEnabled
+                                ? 'Genel işletme görevleri'
+                                : 'Diğer görevlere bakmıyorum',
+                            color: Colors.indigo,
+                            isEnabled: digerEnabled,
+                            onChanged: (val) => setSheetState(() => digerEnabled = val),
+                          ),
+
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // ── Confirm Button ──
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: canStart
+                            ? () => Navigator.pop(ctx, {
+                                'tables': masaEnabled ? (selectedTables.toList()..sort()) : <int>[],
+                                'isDeliveryDriver': kuryeEnabled,
+                                'isDiger': digerEnabled,
+                              })
+                            : null,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFFB335B),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: Text(
+                          _buildStartButtonLabel(masaEnabled, kuryeEnabled, digerEnabled, selectedTables.length),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(ctx).padding.bottom),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _buildStartButtonLabel(bool masa, bool kurye, bool diger, int tableCount) {
+    final parts = <String>[];
+    if (masa && tableCount > 0) parts.add('$tableCount masa');
+    if (kurye) parts.add('sürücü');
+    if (diger) parts.add('diğer');
+    if (parts.isEmpty) return 'En az bir görev seçin';
+    return 'Vardiyayı Başlat (${parts.join(' + ')})';
+  }
+
+  Widget _buildRoleToggle({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required bool isEnabled,
+    required ValueChanged<bool> onChanged,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: isEnabled
+            ? color.withOpacity(0.08)
+            : (isDark ? const Color(0xFF2A2A2A) : Colors.grey[100]),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isEnabled ? color.withOpacity(0.4) : Colors.grey.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isEnabled ? color.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: isEnabled ? color : Colors.grey, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: TextStyle(
+                  fontSize: 15, fontWeight: FontWeight.w600,
+                  color: isEnabled ? null : Colors.grey,
+                )),
+                Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: isEnabled,
+            onChanged: onChanged,
+            activeColor: color,
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handlePauseShift() async {
@@ -377,7 +708,38 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             _summaryRow('📋', 'Toplam', formatDuration(totalMin)),
             if (tables.isNotEmpty) ...[
               const Divider(height: 20),
-              _summaryRow('🪑', 'Masalar', tables.join(', ')),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('🪑', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Masa Numaraları', style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: tables.map((t) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.teal.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.teal.withOpacity(0.3)),
+                            ),
+                            child: Text(
+                              '$t',
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.teal),
+                            ),
+                          )).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
             if (orphans.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -427,6 +789,445 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
         ],
       ),
+    );
+  }
+
+  /// Show shift history bottom sheet
+  void _showShiftHistorySheet() async {
+    if (_businessId == null) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    List<Map<String, dynamic>> shifts = [];
+    try {
+      shifts = await _shiftService.getShiftHistory(
+        businessId: _businessId!,
+        staffId: FirebaseAuth.instance.currentUser?.uid,
+        limit: 30,
+      );
+    } catch (e) {
+      debugPrint('[StaffHub] getShiftHistory error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Vardiya geçmişi yüklenemedi: $e'), duration: const Duration(seconds: 3)),
+        );
+      }
+      return;
+    }
+
+    // Filter out shifts shorter than 1 minute (accidental taps)
+    shifts.removeWhere((s) => (s['totalMinutes'] as int? ?? 0) < 1);
+
+    if (!mounted) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          maxChildSize: 0.9,
+          minChildSize: 0.4,
+          builder: (_, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  // Handle
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 8),
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Row(
+                      children: [
+                        Icon(Icons.schedule, color: Colors.indigo.shade400, size: 22),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Çalışma Saatlerim',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: shifts.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Henüz vardiya kaydı yok',
+                              style: TextStyle(color: Colors.grey[500], fontSize: 15),
+                            ),
+                          )
+                        : _buildDailyGroupedShiftList(shifts, isDark, scrollController),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDailyGroupedShiftList(List<Map<String, dynamic>> shifts, bool isDark, ScrollController scrollController) {
+    // Group shifts by date key (dd.MM.yyyy)
+    final Map<String, List<Map<String, dynamic>>> grouped = {};
+    for (final shift in shifts) {
+      final startedAt = (shift['startedAt'] as Timestamp?)?.toDate();
+      if (startedAt == null) continue;
+      final key = '${startedAt.day.toString().padLeft(2, '0')}.${startedAt.month.toString().padLeft(2, '0')}.${startedAt.year}';
+      grouped.putIfAbsent(key, () => []);
+      grouped[key]!.add(shift);
+    }
+
+    // Sort each day's shifts by startedAt ascending
+    for (final dayShifts in grouped.values) {
+      dayShifts.sort((a, b) {
+        final aStart = (a['startedAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        final bStart = (b['startedAt'] as Timestamp?)?.toDate() ?? DateTime(2000);
+        return aStart.compareTo(bStart);
+      });
+    }
+
+    // Sort day keys descending (newest first)
+    final dayKeys = grouped.keys.toList()
+      ..sort((a, b) {
+        final aParts = a.split('.').reversed.join();
+        final bParts = b.split('.').reversed.join();
+        return bParts.compareTo(aParts);
+      });
+
+    // Turkish day names
+    const dayNames = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        return ListView.separated(
+          controller: scrollController,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          itemCount: dayKeys.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (_, dayIndex) {
+            final dateStr = dayKeys[dayIndex];
+            final dayShifts = grouped[dateStr]!;
+
+            // Calculate daily summary
+            int totalWorkMinutes = 0;
+            int totalBreakMinutes = 0;
+            DateTime? firstStart;
+            DateTime? lastEnd;
+            bool hasActiveShift = false;
+
+            for (final s in dayShifts) {
+              final sTotalMins = s['totalMinutes'] as int? ?? 0;
+              totalWorkMinutes += sTotalMins;
+
+              final sStart = (s['startedAt'] as Timestamp?)?.toDate();
+              final sEnd = (s['endedAt'] as Timestamp?)?.toDate();
+              if (s['status'] == 'active' || s['status'] == 'paused') hasActiveShift = true;
+              if (sStart != null && (firstStart == null || sStart.isBefore(firstStart))) firstStart = sStart;
+              if (sEnd != null && (lastEnd == null || sEnd.isAfter(lastEnd))) lastEnd = sEnd;
+
+              // Internal break = elapsed time - totalMinutes (pause within a shift)
+              if (sStart != null && sEnd != null) {
+                final elapsed = sEnd.difference(sStart).inMinutes;
+                final internalBreak = elapsed - sTotalMins;
+                if (internalBreak > 0) totalBreakMinutes += internalBreak;
+              }
+            }
+
+            // Gap breaks between consecutive shifts (only count gaps < 2 hours as "mola")
+            for (int i = 0; i < dayShifts.length - 1; i++) {
+              final currentEnd = (dayShifts[i]['endedAt'] as Timestamp?)?.toDate();
+              final nextStart = (dayShifts[i + 1]['startedAt'] as Timestamp?)?.toDate();
+              if (currentEnd != null && nextStart != null && nextStart.isAfter(currentEnd)) {
+                final gapMins = nextStart.difference(currentEnd).inMinutes;
+                if (gapMins <= 120) { // Only count gaps ≤ 2 hours as breaks
+                  totalBreakMinutes += gapMins;
+                }
+              }
+            }
+
+            // Format times
+            String firstStartStr = firstStart != null
+                ? '${firstStart.hour.toString().padLeft(2, '0')}:${firstStart.minute.toString().padLeft(2, '0')}'
+                : '--:--';
+            String lastEndStr = lastEnd != null
+                ? '${lastEnd.hour.toString().padLeft(2, '0')}:${lastEnd.minute.toString().padLeft(2, '0')}'
+                : hasActiveShift ? 'Devam' : '--:--';
+
+            // Format durations
+            final wHours = totalWorkMinutes ~/ 60;
+            final wMins = totalWorkMinutes % 60;
+            final workStr = wHours > 0 ? '${wHours}s ${wMins}dk' : '${wMins}dk';
+
+            final bHours = totalBreakMinutes ~/ 60;
+            final bMins = totalBreakMinutes % 60;
+            final breakStr = totalBreakMinutes > 0
+                ? (bHours > 0 ? '${bHours}s ${bMins}dk' : '${bMins}dk')
+                : '';
+
+            // Day name
+            String dayName = '';
+            if (firstStart != null) {
+              dayName = dayNames[firstStart.weekday - 1];
+            }
+
+            // Expanded state tracking
+            final isExpanded = _expandedShiftDays.contains(dateStr);
+
+            // Build interleaved entries (work + gap breaks)
+            final List<Map<String, dynamic>> timelineEntries = [];
+            for (int i = 0; i < dayShifts.length; i++) {
+              // Add work entry
+              timelineEntries.add({...dayShifts[i], '_type': 'work'});
+              // Add gap as break entry (only if gap <= 2 hours)
+              if (i < dayShifts.length - 1) {
+                final currentEnd = (dayShifts[i]['endedAt'] as Timestamp?)?.toDate();
+                final nextStart = (dayShifts[i + 1]['startedAt'] as Timestamp?)?.toDate();
+                if (currentEnd != null && nextStart != null && nextStart.isAfter(currentEnd)) {
+                  final gapMins = nextStart.difference(currentEnd).inMinutes;
+                  if (gapMins <= 120 && gapMins >= 1) {
+                    timelineEntries.add({
+                      '_type': 'break',
+                      '_start': currentEnd,
+                      '_end': nextStart,
+                      '_minutes': gapMins,
+                    });
+                  }
+                }
+              }
+            }
+
+            return GestureDetector(
+              onTap: () {
+                setLocalState(() {
+                  if (isExpanded) {
+                    _expandedShiftDays.remove(dateStr);
+                  } else {
+                    _expandedShiftDays.add(dateStr);
+                  }
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF252525) : Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: hasActiveShift
+                        ? const Color(0xFF4CAF50).withOpacity(0.4)
+                        : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Day header row
+                    Row(
+                      children: [
+                        // Date + day name
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              dateStr,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                            Text(
+                              dayName,
+                              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 16),
+                        // Time range
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '$firstStartStr – $lastEndStr',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Row(
+                                children: [
+                                  Icon(Icons.work_outline, size: 13, color: Colors.indigo.shade300),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    workStr,
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.indigo.shade300),
+                                  ),
+                                  if (totalBreakMinutes > 0) ...[
+                                    const SizedBox(width: 12),
+                                    Icon(Icons.free_breakfast, size: 13, color: Colors.amber[700]),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      breakStr,
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.amber[700]),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Expand icon
+                        AnimatedRotation(
+                          turns: isExpanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 200),
+                          child: Icon(
+                            Icons.keyboard_arrow_down,
+                            color: Colors.grey[500],
+                            size: 22,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Expanded detail entries (work + breaks interleaved)
+                    if (isExpanded) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Divider(height: 1, color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                      ),
+                      const SizedBox(height: 10),
+                      ...timelineEntries.map((entry) {
+                        final isBreak = entry['_type'] == 'break';
+
+                        if (isBreak) {
+                          // ── Break entry (amber/yellow) ──
+                          final bStart = entry['_start'] as DateTime;
+                          final bEnd = entry['_end'] as DateTime;
+                          final bMins = entry['_minutes'] as int;
+                          final bH = bMins ~/ 60;
+                          final bM = bMins % 60;
+                          final bDurStr = bH > 0 ? '${bH}s ${bM}dk' : '${bM}dk';
+                          final bTimeStr = '${bStart.hour.toString().padLeft(2, '0')}:${bStart.minute.toString().padLeft(2, '0')}'
+                              ' – ${bEnd.hour.toString().padLeft(2, '0')}:${bEnd.minute.toString().padLeft(2, '0')}';
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 6, height: 6,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.amber[700],
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  bTimeStr,
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.amber[700]),
+                                ),
+                                const SizedBox(width: 10),
+                                Icon(Icons.free_breakfast, size: 12, color: Colors.amber[700]),
+                                const SizedBox(width: 3),
+                                Text(
+                                  bDurStr,
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.amber[700]),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Mola',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.amber[700]),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        // ── Work entry (green/normal) ──
+                        final sStart = (entry['startedAt'] as Timestamp?)?.toDate();
+                        final sEnd = (entry['endedAt'] as Timestamp?)?.toDate();
+                        final sMins = entry['totalMinutes'] as int? ?? 0;
+                        final sStatus = entry['status']?.toString() ?? 'unknown';
+                        final sTables = (entry['tables'] as List<dynamic>?)?.cast<int>() ?? [];
+
+                        String sTimeStr = '';
+                        if (sStart != null) {
+                          sTimeStr = '${sStart.hour.toString().padLeft(2, '0')}:${sStart.minute.toString().padLeft(2, '0')}';
+                          if (sEnd != null) {
+                            sTimeStr += ' – ${sEnd.hour.toString().padLeft(2, '0')}:${sEnd.minute.toString().padLeft(2, '0')}';
+                          } else {
+                            sTimeStr += ' – Devam';
+                          }
+                        }
+
+                        final sH = sMins ~/ 60;
+                        final sM = sMins % 60;
+                        final sDurStr = sH > 0 ? '${sH}s ${sM}dk' : '${sM}dk';
+
+                        final sIsActive = sStatus == 'active' || sStatus == 'paused';
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 6, height: 6,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: sIsActive ? const Color(0xFF4CAF50) : Colors.indigo.shade300,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                sTimeStr,
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.grey[300] : Colors.grey[700]),
+                              ),
+                              const SizedBox(width: 10),
+                              Icon(Icons.timer_outlined, size: 12, color: Colors.indigo.shade300),
+                              const SizedBox(width: 3),
+                              Text(
+                                sDurStr,
+                                style: TextStyle(fontSize: 12, color: Colors.indigo.shade300),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Çalışma',
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.indigo.shade300),
+                              ),
+                              if (sTables.isNotEmpty) ...[
+                                const SizedBox(width: 8),
+                                Icon(Icons.table_restaurant, size: 12, color: Colors.grey[500]),
+                                const SizedBox(width: 3),
+                                Text(
+                                  sTables.join(', '),
+                                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                                ),
+                              ],
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -482,7 +1283,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             .doc(bizId)
             .get();
         if (bizDoc.exists) {
-          final bizName = bizDoc.data()?['companyName'] ?? bizDoc.data()?['name'] ?? '';
+          final bizData = bizDoc.data()!;
+          final bizName = bizData['companyName'] ?? bizData['name'] ?? '';
           // Set businessId and name if not yet set (from assignedBusinesses)
           if (_businessId == null) {
             _businessId = bizId;
@@ -490,15 +1292,76 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               _businessName = bizName;
             }
           }
-          if (bizDoc.data()?['hasReservation'] == true) {
+          if (bizData['hasReservation'] == true) {
             _hasReservation = true;
             // Override businessId AND name together to keep them in sync
             _businessId = bizId;
             _businessName = bizName;
           }
-          // Load max tables for dashboard
-          final maxT = bizDoc.data()?['maxReservationTables'] as int?;
-          if (maxT != null && maxT > 0) _maxTables = maxT;
+          // Load table count for dashboard — check both fields
+          final tableCount = bizData['tableCount'] as int? ?? 0;
+          final maxResT = bizData['maxReservationTables'] as int? ?? 0;
+          final effectiveTables = tableCount > 0 ? tableCount : maxResT;
+          debugPrint('[StaffHub] tableCount=$tableCount, maxReservationTables=$maxResT, effectiveTables=$effectiveTables');
+          if (effectiveTables > 0) {
+            _maxTables = effectiveTables;
+            _hasTables = true;
+          }
+          debugPrint('[StaffHub] _hasTables=$_hasTables, _maxTables=$_maxTables');
+        }
+      }
+
+      // ── Plan feature gating (runs after businessId is resolved from any source) ──
+      if (_businessId != null) {
+        final bizDoc = await FirebaseFirestore.instance
+            .collection('businesses')
+            .doc(_businessId)
+            .get();
+        if (bizDoc.exists) {
+          final bizData = bizDoc.data()!;
+          // Load plan features to gate courier/table/shift capabilities
+          // Admin portal saves plan code in multiple places — check all:
+          // 1) Top-level subscriptionPlan (newer saves)
+          // 2) Top-level plan (legacy)
+          // 3) subscription.planName (business page save format)
+          final planCode = (bizData['subscriptionPlan'] as String?)
+              ?? (bizData['plan'] as String?)
+              ?? ((bizData['subscription'] as Map<String, dynamic>?)?['planName'] as String?)
+              ?? 'free';
+          debugPrint('[StaffHub] businessId=$_businessId, planCode=$planCode');
+          if (planCode.isNotEmpty && planCode != 'none') {
+            try {
+              final planDoc = await FirebaseFirestore.instance
+                  .collection('subscription_plans')
+                  .doc(planCode)
+                  .get();
+              debugPrint('[StaffHub] Plan doc exists: ${planDoc.exists}');
+              if (planDoc.exists) {
+                final features = (planDoc.data()?['features'] as Map<String, dynamic>?) ?? {};
+                debugPrint('[StaffHub] Features: $features');
+                // Gate courier: plan must have delivery feature
+                final planHasDelivery = features['delivery'] == true || features['liveCourierTracking'] == true;
+                if (!planHasDelivery) {
+                  _isDriver = false;
+                }
+                // Gate tables: plan must have dineInQR or waiterOrder or tableReservation
+                final planHasTables = features['dineInQR'] == true ||
+                    features['waiterOrder'] == true ||
+                    features['tableReservation'] == true;
+                if (!planHasTables) {
+                  _hasTables = false;
+                  debugPrint('[StaffHub] Plan DISABLED tables: planHasTables=$planHasTables');
+                } else {
+                  debugPrint('[StaffHub] Plan ALLOWS tables: dineInQR=${features['dineInQR']}, waiterOrder=${features['waiterOrder']}');
+                }
+                // Gate shift tracking
+                _hasShiftTracking = features['staffShiftTracking'] == true;
+                debugPrint('[StaffHub] hasShiftTracking: $_hasShiftTracking');
+              }
+            } catch (e) {
+              debugPrint('[StaffHub] Plan feature lookup failed: $e');
+            }
+          }
         }
       }
 
@@ -576,15 +1439,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Personel Girişi',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            Text(
+              _staffName.isNotEmpty ? _staffName : 'Personel Girişi',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
             ),
-            if (_staffName.isNotEmpty)
+            if (_businessName.isNotEmpty)
               Text(
-                _staffName,
+                _businessName,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
                 ),
               ),
@@ -698,130 +1561,109 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Business name header
-                      if (_businessName.isNotEmpty) ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFB335B).withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.store, color: Color(0xFFFB335B), size: 24),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      _businessName,
-                                      style: const TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    if (_assignedBusinessCount > 1)
-                                      Text(
-                                        '$_assignedBusinessCount işletme atandı',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[500],
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
+                      // Business name moved to AppBar subtitle
 
-                      // ─── Shift Status Banner ───
+                      // ─── Compact Date + Shift Info Row ───
                       if (_shiftService.isOnShift) ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: _shiftService.shiftStatus == 'paused'
-                                  ? [Colors.orange.withOpacity(0.15), Colors.orange.withOpacity(0.05)]
-                                  : [const Color(0xFF4CAF50).withOpacity(0.15), const Color(0xFF4CAF50).withOpacity(0.05)],
+                        Builder(builder: (_) {
+                          final now = DateTime.now();
+                          const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+                            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+                          const days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+                          final dateStr = '${now.day} ${months[now.month - 1]} ${now.year}, ${days[now.weekday - 1]}';
+                          final isPaused = _shiftService.shiftStatus == 'paused';
+                          final accentColor = isPaused ? Colors.orange : const Color(0xFF4CAF50);
+
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: accentColor.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: accentColor.withOpacity(0.25)),
                             ),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: _shiftService.shiftStatus == 'paused'
-                                  ? Colors.orange.withOpacity(0.3)
-                                  : const Color(0xFF4CAF50).withOpacity(0.3),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: (_shiftService.shiftStatus == 'paused'
-                                          ? Colors.orange
-                                          : const Color(0xFF4CAF50))
-                                      .withOpacity(0.2),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  _shiftService.shiftStatus == 'paused'
-                                      ? Icons.pause_circle
-                                      : Icons.work,
-                                  color: _shiftService.shiftStatus == 'paused'
-                                      ? Colors.orange
-                                      : const Color(0xFF4CAF50),
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Date row
+                                Row(
                                   children: [
-                                    Text(
-                                      _shiftService.shiftStatus == 'paused'
-                                          ? 'Mola'
-                                          : 'Aktif Vardiya',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color: _shiftService.shiftStatus == 'paused'
-                                            ? Colors.orange
-                                            : const Color(0xFF4CAF50),
+                                    Icon(
+                                      isPaused ? Icons.pause_circle : Icons.calendar_today,
+                                      size: 16,
+                                      color: accentColor,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        dateStr,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: accentColor,
+                                        ),
                                       ),
                                     ),
-                                    if (_shiftService.currentTables.isNotEmpty)
-                                      Text(
-                                        'Masalar: ${_shiftService.currentTables.join(", ")}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
+                                    if (isPaused)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange.withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Text(
+                                          'Mola',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.orange),
                                         ),
                                       ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
+                                // Tables + Reservations row
+                                if (_shiftService.currentTables.isNotEmpty || (_hasReservation && _businessId != null)) ...[
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
+                                      if (_shiftService.currentTables.isNotEmpty) ...[
+                                        Icon(Icons.table_restaurant, size: 13, color: Colors.grey[500]),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${_shiftService.currentTables.length} masa',
+                                          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                                        ),
+                                      ],
+                                      if (_shiftService.currentTables.isNotEmpty && _hasReservation)
+                                        const SizedBox(width: 12),
+                                      if (_hasReservation && _businessId != null)
+                                        StreamBuilder<QuerySnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('businesses')
+                                              .doc(_businessId)
+                                              .collection('reservations')
+                                              .where('date', isEqualTo: '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}')
+                                              .where('status', whereIn: ['confirmed', 'pending'])
+                                              .snapshots(),
+                                          builder: (_, snap) {
+                                            final count = snap.data?.docs.length ?? 0;
+                                            if (count == 0) return const SizedBox.shrink();
+                                            return Row(
+                                              children: [
+                                                Icon(Icons.event_seat, size: 13, color: Colors.amber[700]),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  '$count rezervasyon',
+                                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.amber[700]),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        }),
                         const SizedBox(height: 24),
                       ],
 
@@ -838,23 +1680,19 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         ),
                       ),
 
-                      // ─── Deliveries Card ───
+                      // ─── Deliveries Card (enriched with live counts) ───
                       if (_isDriver)
-                        _buildFeatureCard(
-                          icon: Icons.local_shipping,
-                          title: 'Teslimatlar',
-                          subtitle: driverState.isDriver
-                              ? '${driverState.driverInfo?.assignedBusinesses.length ?? 0} işletme'
-                              : 'Teslimat yönetimi',
-                          color: const Color(0xFFFE0032),
-                          gradient: const [Color(0xFFFA4C71), Color(0xFFFE0032)],
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            context.push('/driver-deliveries');
-                          },
+                        _buildEnrichedDeliveryCard(
+                          businessIds: driverState.driverInfo?.assignedBusinesses ?? [],
                         ),
 
-                      if (_isDriver) const SizedBox(height: 16),
+                      if (_isDriver) const SizedBox(height: 12),
+
+                      // ─── Table Service Card (if business has tables) ───
+                      if (_hasTables && _businessId != null)
+                        _buildTableServiceCard(businessId: _businessId!),
+
+                      if (_hasTables && _businessId != null) const SizedBox(height: 12),
 
                       // ─── Reservations Card ───
                       if (_hasReservation)
@@ -873,26 +1711,37 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                           },
                         ),
 
-                      if (_hasReservation) const SizedBox(height: 16),
+                      if (_hasReservation) const SizedBox(height: 12),
 
-                      // ─── Take Orders (Garson Sipariş) ───
+                      // "Sipariş Al" removed — empty table taps handle order creation directly
+
+                      // ─── Çalışma Saatlerim ───
                       if (_businessId != null)
                         _buildFeatureCard(
-                          icon: Icons.receipt_long,
-                          title: 'Sipariş Al',
-                          subtitle: _activeTableSessions > 0
-                              ? '$_activeTableSessions aktif masa'
-                              : 'Masa siparişi al',
-                          color: Colors.orange.shade700,
-                          gradient: [Colors.orange.shade400, Colors.orange.shade700],
-                          badgeCount: _activeTableSessions,
+                          icon: Icons.schedule,
+                          title: 'Çalışma Saatlerim',
+                          subtitle: _hasShiftTracking ? 'Vardiya geçmişi' : 'Paketinizde aktif değil',
+                          color: _hasShiftTracking ? Colors.indigo.shade700 : Colors.grey,
+                          gradient: _hasShiftTracking
+                              ? [Colors.indigo.shade400, Colors.indigo.shade700]
+                              : [Colors.grey.shade400, Colors.grey.shade600],
+                          disabled: !_hasShiftTracking,
                           onTap: () {
                             HapticFeedback.lightImpact();
-                            context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}');
+                            if (_hasShiftTracking) {
+                              _showShiftHistorySheet();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Paketinizde bu özellik aktif değil. Lütfen yöneticinizle iletişime geçin.'),
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                            }
                           },
                         ),
 
-                      if (_businessId != null) const SizedBox(height: 16),
+                      if (_businessId != null) const SizedBox(height: 12),
 
                       // ─── Masa Durumu Dashboard ───
                       if (_businessId != null) ...[
@@ -963,6 +1812,262 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     );
   }
 
+  /// Enriched delivery card with live order status counts
+  Widget _buildEnrichedDeliveryCard({required List<String> businessIds}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const brandColor = Color(0xFFFE0032);
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        context.push('/driver-deliveries');
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: brandColor.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: brandColor.withValues(alpha: 0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Icon circle with gradient
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFA4C71), Color(0xFFFE0032)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.local_shipping, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 16),
+            // Title + live status chips
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Kurye Siparişleri',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Live order status counts via StreamBuilder
+                  StreamBuilder<List<LokmaOrder>>(
+                    stream: businessIds.isNotEmpty
+                        ? OrderService().getDriverDeliveriesStream(businessIds, courierId: userId)
+                        : Stream.value([]),
+                    builder: (context, snapshot) {
+                      final orders = snapshot.data ?? [];
+
+                      // Count by status
+                      int pending = 0, preparing = 0, ready = 0, onTheWay = 0;
+                      for (final o in orders) {
+                        switch (o.status) {
+                          case OrderStatus.pending:
+                            pending++;
+                            break;
+                          case OrderStatus.preparing:
+                            preparing++;
+                            break;
+                          case OrderStatus.ready:
+                            ready++;
+                            break;
+                          case OrderStatus.accepted:
+                          case OrderStatus.onTheWay:
+                            onTheWay++;
+                            break;
+                          default:
+                            break;
+                        }
+                      }
+
+                      return Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          _statusChip('⏳ $pending', Colors.amber, pending > 0),
+                          _statusChip('🔥 $preparing', Colors.orange, preparing > 0),
+                          _statusChip('✅ $ready', Colors.green, ready > 0),
+                          _statusChip('🚗 $onTheWay', Colors.blue, onTheWay > 0),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 18,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Table service card with live order status counts
+  Widget _buildTableServiceCard({required String businessId}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const brandColor = Color(0xFF4CAF50);
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        context.push('/waiter-order?businessId=$businessId&businessName=${Uri.encodeComponent(_businessName)}');
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: brandColor.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: brandColor.withValues(alpha: 0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF66BB6A), Color(0xFF388E3C)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.restaurant, color: Colors.white, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Masa Servisleri',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('meat_orders')
+                        .where('butcherId', isEqualTo: businessId)
+                        .where('status', whereIn: ['pending', 'preparing', 'ready', 'accepted'])
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      final docs = snapshot.data?.docs ?? [];
+                      // Filter to dine-in / table orders only (exclude delivery)
+                      final tableOrders = docs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final method = data['deliveryMethod']?.toString() ?? data['orderType']?.toString() ?? '';
+                        return method != 'delivery';
+                      }).toList();
+
+                      int pending = 0, preparing = 0, ready = 0, serving = 0;
+                      for (final doc in tableOrders) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        final status = data['status']?.toString() ?? '';
+                        switch (status) {
+                          case 'pending':
+                            pending++;
+                            break;
+                          case 'preparing':
+                            preparing++;
+                            break;
+                          case 'ready':
+                            ready++;
+                            break;
+                          case 'accepted':
+                            serving++;
+                            break;
+                          default:
+                            break;
+                        }
+                      }
+
+                      return Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          _statusChip('⏳ $pending', Colors.amber, pending > 0),
+                          _statusChip('🔥 $preparing', Colors.orange, preparing > 0),
+                          _statusChip('✅ $ready', Colors.green, ready > 0),
+                          _statusChip('🍽️ $serving', Colors.cyan, serving > 0),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 18,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Mini status chip for delivery card
+  Widget _statusChip(String label, Color color, bool active) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: active
+            ? color.withValues(alpha: 0.15)
+            : Colors.grey.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: active ? null : Border.all(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: active ? FontWeight.bold : FontWeight.w500,
+          color: active ? color : Colors.grey[600],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFeatureCard({
     required IconData icon,
     required String title,
@@ -981,10 +2086,10 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         opacity: disabled ? 0.45 : 1.0,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: disabled ? Colors.grey.withOpacity(0.2) : color.withOpacity(0.3),
               width: 1.5,
@@ -993,8 +2098,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               if (!disabled)
                 BoxShadow(
                   color: color.withOpacity(0.1),
-                  blurRadius: 15,
-                  offset: const Offset(0, 4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
                 ),
             ],
           ),
@@ -1002,17 +2107,17 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             children: [
               // Icon circle with gradient
               Container(
-                width: 56,
-                height: 56,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: gradient,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(icon, color: Colors.white, size: 28),
+                child: Icon(icon, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 16),
               // Text
@@ -1023,11 +2128,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: TextStyle(
@@ -1106,6 +2211,34 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           }
         }
 
+        // Also query orders collection for active dine-in orders with table numbers
+        return StreamBuilder<QuerySnapshot>(
+          stream: _businessId != null
+              ? FirebaseFirestore.instance
+                  .collection('meat_orders')
+                  .where('butcherId', isEqualTo: _businessId)
+                  .where('status', whereIn: ['pending', 'preparing', 'ready', 'accepted'])
+                  .snapshots()
+              : const Stream<QuerySnapshot>.empty(),
+          builder: (context, ordersSnapshot) {
+            // Merge table numbers from orders (covers admin-panel-created orders)
+            final orderTableNums = <int>{};
+            final orderCountPerTable = <int, int>{};
+            if (ordersSnapshot.hasData) {
+              for (final doc in ordersSnapshot.data!.docs) {
+                final data = doc.data() as Map<String, dynamic>;
+                final tableNum = data['tableNumber'] as int?;
+                final method = data['deliveryMethod']?.toString() ?? data['orderType']?.toString() ?? '';
+                // Only count dine-in / table orders (exclude delivery)
+                if (tableNum != null && method != 'delivery') {
+                  orderTableNums.add(tableNum);
+                  orderCountPerTable[tableNum] = (orderCountPerTable[tableNum] ?? 0) + 1;
+                }
+              }
+            }
+            // Combine: tables active via sessions OR via direct orders
+            final allActiveTableNums = {...activeTableNums, ...orderTableNums};
+
         return StreamBuilder<QuerySnapshot>(
           stream: _businessId != null
               ? FirebaseFirestore.instance
@@ -1128,11 +2261,12 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
             // Build tile helper
             Widget buildTileForTable(int tableNum) {
-              final hasOrders = activeTableNums.contains(tableNum);
+              final hasOrders = allActiveTableNums.contains(tableNum);
               final hasReservation = reservedTableNums.contains(tableNum);
-              final session = hasOrders
+              final session = activeTableNums.contains(tableNum)
                   ? activeSessions.firstWhere((s) => s.tableNumber == tableNum)
                   : null;
+              final orderCount = orderCountPerTable[tableNum] ?? 0;
               return _buildDashboardTile(
                 tableNum: tableNum,
                 cardBg: cardBg,
@@ -1141,6 +2275,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                 hasReservation: hasReservation,
                 brandColor: brandColor,
                 session: session,
+                orderCount: orderCount,
               );
             }
 
@@ -1267,6 +2402,326 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             );
           },
         );
+          },
+        );
+      },
+    );
+  }
+
+  /// Shows a bottom sheet with existing orders for a table (admin-created / session-less orders)
+  void _showTableOrdersSheet(int tableNum) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const brandColor = Color(0xFFFB335B);
+    final sheetBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
+    final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.55,
+          maxChildSize: 0.85,
+          minChildSize: 0.3,
+          builder: (_, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: sheetBg,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 8),
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40, height: 40,
+                          decoration: BoxDecoration(
+                            color: brandColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.table_restaurant, color: brandColor, size: 22),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Masa $tableNum — Siparişler',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        // Add new order button
+                        FilledButton.icon(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}&tableNumber=$tableNum');
+                          },
+                          icon: const Icon(Icons.add, size: 16),
+                          label: const Text('Yeni Sipariş'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: brandColor,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  // Orders list
+                  Expanded(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: _businessId != null
+                          ? FirebaseFirestore.instance
+                              .collection('meat_orders')
+                              .where('butcherId', isEqualTo: _businessId)
+                              .where('tableNumber', isEqualTo: tableNum)
+                              .where('status', whereIn: ['pending', 'preparing', 'ready', 'accepted'])
+                              .snapshots()
+                          : const Stream<QuerySnapshot>.empty(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        final orders = snapshot.data?.docs ?? [];
+                        if (orders.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.receipt_long, size: 48, color: Colors.grey[400]),
+                                const SizedBox(height: 12),
+                                Text('Bu masa için aktif sipariş yok', style: TextStyle(color: Colors.grey[500])),
+                              ],
+                            ),
+                          );
+                        }
+                        return ListView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: orders.length,
+                          itemBuilder: (context, index) {
+                            final data = orders[index].data() as Map<String, dynamic>;
+                            final orderId = data['shortId'] ?? orders[index].id.substring(0, 6).toUpperCase();
+                            final status = data['status']?.toString() ?? 'pending';
+                            final total = (data['totalAmount'] as num?)?.toDouble() ?? (data['totalPrice'] as num?)?.toDouble() ?? (data['total'] as num?)?.toDouble() ?? 0.0;
+                            final items = data['items'] as List<dynamic>? ?? [];
+                            final createdAt = data['createdAt'];
+                            String timeStr = '';
+                            if (createdAt != null) {
+                              final ts = createdAt is Timestamp ? createdAt.toDate() : DateTime.now();
+                              timeStr = '${ts.hour.toString().padLeft(2, '0')}:${ts.minute.toString().padLeft(2, '0')}';
+                            }
+
+                            // Status styling
+                            Color statusColor;
+                            String statusText;
+                            switch (status) {
+                              case 'pending':
+                                statusColor = Colors.orange;
+                                statusText = 'Bekleyen';
+                                break;
+                              case 'accepted':
+                                statusColor = Colors.blue;
+                                statusText = 'Onaylandı';
+                                break;
+                              case 'preparing':
+                                statusColor = Colors.purple;
+                                statusText = 'Hazırlanıyor';
+                                break;
+                              case 'ready':
+                                statusColor = Colors.green;
+                                statusText = 'Hazır';
+                                break;
+                              default:
+                                statusColor = Colors.grey;
+                                statusText = status;
+                            }
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: cardBg,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '#$orderId',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                          color: brandColor,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: statusColor.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          statusText,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: statusColor,
+                                          ),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      if (timeStr.isNotEmpty)
+                                        Text(timeStr, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // Items summary
+                                  ...items.take(3).map((item) {
+                                    final name = item['name']?.toString() ?? item['productName']?.toString() ?? '?';
+                                    final qty = item['quantity'] ?? 1;
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 2),
+                                      child: Text(
+                                        '${qty}x $name',
+                                        style: TextStyle(fontSize: 13, color: isDark ? Colors.grey[300] : Colors.grey[700]),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  }),
+                                  if (items.length > 3)
+                                    Text(
+                                      '+${items.length - 3} ürün daha',
+                                      style: TextStyle(fontSize: 12, color: Colors.grey[500], fontStyle: FontStyle.italic),
+                                    ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        '€${total.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: isDark ? Colors.white : Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Shows confirmation dialog on staff hub for empty table tap.
+  /// If confirmed, creates a session and navigates directly to menu.
+  Future<void> _handleEmptyTableTap(int tableNum) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const brandColor = Color(0xFFFB335B);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle
+                Container(
+                  width: 40, height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // Title
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.table_restaurant, color: Colors.grey[600], size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Masa $tableNum',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Boş masa',
+                            style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Start Order button
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}&tableNumber=$tableNum');
+                    },
+                    icon: const Icon(Icons.receipt_long, size: 20),
+                    label: const Text('Sipariş Başlat', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: brandColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
     );
   }
@@ -1279,6 +2734,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     required bool hasReservation,
     required Color brandColor,
     TableSession? session,
+    int orderCount = 0,
   }) {
     // If there's a session, wrap in StreamBuilder for live order data
     if (session != null) {
@@ -1286,13 +2742,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         stream: _orderService.getTableSessionOrdersStream(session.id),
         builder: (context, orderSnap) {
           final allOrders = orderSnap.data ?? [];
-          // Only count non-terminal orders as "active"
-          // served = dine-in completed, delivered = delivery completed
-          final activeOrders = allOrders.where((o) =>
-            o.status != OrderStatus.delivered &&
-            o.status != OrderStatus.served &&
-            o.status != OrderStatus.cancelled
-          ).toList();
+          // Keep orders "active" unless cancelled or fully paid+completed
+          // Unpaid served/delivered orders stay active so the table doesn't go empty
+          final activeOrders = allOrders.where((o) {
+            if (o.status == OrderStatus.cancelled) return false;
+            if (o.status == OrderStatus.delivered || o.status == OrderStatus.served) {
+              return o.paymentStatus != 'paid'; // Keep unpaid served orders active
+            }
+            return true;
+          }).toList();
           final effectiveHasOrders = activeOrders.isNotEmpty;
 
           // Auto-close stale sessions: no active orders left (or never had matching orders)
@@ -1315,6 +2773,12 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           }
           final allPaid = allOrders.isNotEmpty && allOrders.every((o) => o.paymentStatus == 'paid');
 
+          // Detect unpaid served/delivered orders (table served but bill open)
+          final hasUnpaidServed = activeOrders.any((o) =>
+            (o.status == OrderStatus.served || o.status == OrderStatus.delivered) &&
+            o.paymentStatus != 'paid'
+          );
+
           // Determine colors based on LIVE order data
           Color bgColor;
           Color borderColor;
@@ -1325,6 +2789,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               bgColor = Colors.green.shade50;
               borderColor = Colors.green.shade400;
               textColor = Colors.green.shade800;
+            } else if (hasUnpaidServed) {
+              // Amber/orange for served-but-unpaid tables
+              bgColor = Colors.amber.shade50;
+              borderColor = Colors.amber.shade600;
+              textColor = Colors.amber.shade800;
             } else {
               bgColor = brandColor.withValues(alpha: 0.1);
               borderColor = brandColor;
@@ -1343,7 +2812,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           // Kitchen badge data
           final hasReady = activeOrders.any((o) => o.status == OrderStatus.ready);
           final hasPreparing = activeOrders.any((o) => o.status == OrderStatus.preparing);
-          final hasServed = activeOrders.any((o) => o.status == OrderStatus.served);
+          final hasServed = activeOrders.any((o) => o.status == OrderStatus.served || o.status == OrderStatus.delivered);
 
           // Payment dot data
           final paidCount = activeOrders.where((o) => o.paymentStatus == 'paid').length;
@@ -1361,7 +2830,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                 if (effectiveHasOrders) {
                   _showTableOverview(session, tableNum);
                 } else {
-                  context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}');
+                  _handleEmptyTableTap(tableNum);
                 }
               },
               child: Container(
@@ -1405,22 +2874,27 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         }),
                       ),
 
-                    // Payment status dot (top-left)
+                    // Payment status dot (top-left) — blinks for unpaid served tables
                     if (effectiveHasOrders)
                       Positioned(
                         top: 3,
                         left: 3,
-                        child: Container(
-                          width: 8, height: 8,
-                          decoration: BoxDecoration(
-                            color: allActivePaid
-                                ? Colors.green
-                                : somePaid
-                                    ? Colors.orange
-                                    : Colors.red.shade400,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
+                        child: hasUnpaidServed
+                            ? _BlinkingDot(
+                                color: Colors.amber.shade600,
+                                size: 8,
+                              )
+                            : Container(
+                                width: 8, height: 8,
+                                decoration: BoxDecoration(
+                                  color: allActivePaid
+                                      ? Colors.green
+                                      : somePaid
+                                          ? Colors.orange
+                                          : Colors.red.shade400,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
                       ),
 
                     // Reservation indicator
@@ -1474,12 +2948,19 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       );
     }
 
-    // No session — simple static tile
+    // No session — check if there are direct orders from admin/customer
+    final hasDirectOrders = orderCount > 0;
+
     Color bgColor;
     Color borderColor;
     Color textColor;
 
-    if (hasReservation) {
+    if (hasDirectOrders) {
+      // Table has orders but no session — show as active
+      bgColor = brandColor.withValues(alpha: 0.1);
+      borderColor = brandColor;
+      textColor = brandColor;
+    } else if (hasReservation) {
       bgColor = Colors.orange.shade50;
       borderColor = Colors.orange.shade400;
       textColor = Colors.orange.shade800;
@@ -1492,20 +2973,30 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     return Material(
       color: bgColor,
       borderRadius: BorderRadius.circular(12),
+      elevation: hasDirectOrders ? 2 : 0,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           HapticFeedback.lightImpact();
-          context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}');
+          if (hasDirectOrders) {
+            // Table has active orders — show them directly
+            _showTableOrdersSheet(tableNum);
+          } else {
+            // Empty table — show confirmation on staff hub, then navigate to menu
+            _handleEmptyTableTap(tableNum);
+          }
         },
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: borderColor),
+            border: Border.all(
+              color: borderColor,
+              width: hasDirectOrders ? 1.5 : 1,
+            ),
           ),
           child: Stack(
             children: [
-              if (hasReservation)
+              if (hasReservation && !hasDirectOrders)
                 Positioned(
                   top: 2,
                   right: 2,
@@ -1520,14 +3011,41 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     ),
                   ),
                 ),
-              Center(
-                child: Text(
-                  '$tableNum',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: textColor,
+              // Order count badge for direct orders (top-left dot)
+              if (hasDirectOrders)
+                Positioned(
+                  top: 3,
+                  left: 3,
+                  child: Container(
+                    width: 8, height: 8,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade400,
+                      shape: BoxShape.circle,
+                    ),
                   ),
+                ),
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '$tableNum',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: textColor,
+                      ),
+                    ),
+                    if (hasDirectOrders)
+                      Text(
+                        '$orderCount sip.',
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w600,
+                          color: brandColor,
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -1601,11 +3119,14 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       stream: _orderService.getTableSessionOrdersStream(session.id),
                       builder: (context, snapshot) {
                         final allOrders = snapshot.data ?? [];
-                        // Filter out completed/cancelled orders
-                        final orders = allOrders.where((o) =>
-                          o.status != OrderStatus.delivered &&
-                          o.status != OrderStatus.cancelled
-                        ).toList();
+                        // Keep unpaid served/delivered orders visible, filter out paid+completed and cancelled
+                        final orders = allOrders.where((o) {
+                          if (o.status == OrderStatus.cancelled) return false;
+                          if (o.status == OrderStatus.delivered || o.status == OrderStatus.served) {
+                            return o.paymentStatus != 'paid';
+                          }
+                          return true;
+                        }).toList();
                         // Sort newest first
                         orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
                         if (orders.isEmpty) {
@@ -1685,6 +3206,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                 OrderStatus.preparing: {'label': '👨‍🍳 Hazırlanıyor', 'color': Colors.orange.shade700, 'bg': Colors.orange.shade50},
                                 OrderStatus.ready: {'label': '📦 Hazır', 'color': Colors.green.shade700, 'bg': Colors.green.shade50},
                                 OrderStatus.served: {'label': '🍽️ Servis Edildi', 'color': Colors.teal.shade700, 'bg': Colors.teal.shade50},
+                                OrderStatus.delivered: {'label': '🍽️ Servis Edildi', 'color': Colors.teal.shade700, 'bg': Colors.teal.shade50},
                               };
                               final sc = statusConfig[order.status];
 
@@ -1781,6 +3303,90 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           ),
                                         ),
                                       ),
+                                    // Payment collection buttons for served/delivered unpaid orders
+                                    if ((order.status == OrderStatus.served || order.status == OrderStatus.delivered) && !isPaid)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 10),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: FilledButton.icon(
+                                                icon: const Icon(Icons.money, size: 16),
+                                                label: const Text('💵 Nakit', style: TextStyle(fontWeight: FontWeight.w700)),
+                                                style: FilledButton.styleFrom(
+                                                  backgroundColor: Colors.green.shade700,
+                                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                                ),
+                                                onPressed: () async {
+                                                  try {
+                                                    await _orderService.updatePaymentStatus(
+                                                      orderId: order.id,
+                                                      paymentStatus: 'paid',
+                                                      paymentMethod: 'cash',
+                                                    );
+                                                    if (mounted) {
+                                                      HapticFeedback.mediumImpact();
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(
+                                                          content: const Text('✅ Nakit ödeme alındı!'),
+                                                          backgroundColor: Colors.green.shade700,
+                                                          behavior: SnackBarBehavior.floating,
+                                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                        ),
+                                                      );
+                                                    }
+                                                  } catch (e) {
+                                                    if (mounted) {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                      );
+                                                    }
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: FilledButton.icon(
+                                                icon: const Icon(Icons.credit_card, size: 16),
+                                                label: const Text('💳 Kart', style: TextStyle(fontWeight: FontWeight.w700)),
+                                                style: FilledButton.styleFrom(
+                                                  backgroundColor: Colors.blue.shade700,
+                                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                                ),
+                                                onPressed: () async {
+                                                  try {
+                                                    await _orderService.updatePaymentStatus(
+                                                      orderId: order.id,
+                                                      paymentStatus: 'paid',
+                                                      paymentMethod: 'card',
+                                                    );
+                                                    if (mounted) {
+                                                      HapticFeedback.mediumImpact();
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(
+                                                          content: const Text('✅ Kart ödeme alındı!'),
+                                                          backgroundColor: Colors.blue.shade700,
+                                                          behavior: SnackBarBehavior.floating,
+                                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                        ),
+                                                      );
+                                                    }
+                                                  } catch (e) {
+                                                    if (mounted) {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                      );
+                                                    }
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                   ],
                                 ),
                               );
@@ -1818,6 +3424,53 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           },
         );
       },
+    );
+  }
+}
+
+/// Blinking dot widget for unpaid served tables
+class _BlinkingDot extends StatefulWidget {
+  final Color color;
+  final double size;
+  const _BlinkingDot({required this.color, this.size = 8});
+
+  @override
+  State<_BlinkingDot> createState() => _BlinkingDotState();
+}
+
+class _BlinkingDotState extends State<_BlinkingDot> with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, __) => Opacity(
+        opacity: 0.3 + (_ctrl.value * 0.7),
+        child: Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            color: widget.color,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
     );
   }
 }

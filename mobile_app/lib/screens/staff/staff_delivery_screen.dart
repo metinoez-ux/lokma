@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/order_service.dart';
+import '../../services/shift_service.dart';
 import '../../services/location_tracking_service.dart';
 
 /// Staff Delivery Screen - Shows pending deliveries for staff to claim
@@ -79,6 +80,46 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || _staffName == null) return;
 
+    // Check if staff is on break — ask to end break first
+    final shiftService = ShiftService();
+    if (shiftService.shiftStatus == 'paused') {
+      final endBreak = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('☕ Molanız Devam Ediyor'),
+          content: const Text(
+            'Teslimat üstlenmek için molanız sonlandırılacak.\n\n'
+            'Devam etmek istiyor musunuz?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('İptal'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Molayı Bitir ve Üstlen', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+
+      if (endBreak != true) return;
+
+      // Resume shift (end break)
+      final resumed = await shiftService.resumeShift();
+      if (!resumed && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Mola sonlandırılamadı. Lütfen tekrar deneyin.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+
     // Confirm dialog
     final confirm = await showDialog<bool>(
       context: context,
@@ -117,9 +158,14 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
     setState(() => _isLoading = false);
 
     if (success && mounted) {
+      final breakEnded = shiftService.shiftStatus == 'active' && shiftService.isOnShift;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Teslimat üstlenildi! Konum takibi başladı.'),
+        SnackBar(
+          content: Text(
+            breakEnded
+                ? '☕ Molanız durduruldu. Teslimatınızı teslim edebilirsiniz!'
+                : '✅ Teslimat üstlenildi! Konum takibi başladı.',
+          ),
           backgroundColor: Colors.green,
         ),
       );

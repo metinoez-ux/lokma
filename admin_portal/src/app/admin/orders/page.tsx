@@ -165,9 +165,9 @@ export default function OrdersPage() {
             return { label: '📦 Sipariş Hazır', action: 'ready' as OrderStatus, style: 'bg-green-600 hover:bg-green-700', hasUnavailable: false };
         }
 
-        // For dine-in ready orders, offer "Servis Edildi" action
+        // For dine-in ready orders, mark as delivered (= completed)
         if (status === 'ready' && order.type === 'dine_in') {
-            return { label: '🍽️ Servis Edildi', action: 'served' as OrderStatus, style: 'bg-teal-600 hover:bg-teal-700', hasUnavailable: false };
+            return { label: '🍽️ Servis Edildi', action: 'delivered' as OrderStatus, style: 'bg-teal-600 hover:bg-teal-700', hasUnavailable: false };
         }
 
         return null; // No action for ready (non-dine-in), onTheWay, delivered, cancelled
@@ -314,7 +314,7 @@ export default function OrdersPage() {
     const pendingOrders = filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status));
     const preparingOrders = filteredOrders.filter(o => o.status === 'preparing');
     const readyOrders = filteredOrders.filter(o => o.status === 'ready');
-    const servedOrders = filteredOrders.filter(o => o.status === 'served');
+    // Note: 'served' orders (legacy dine-in) are included in completedOrders below
     const inTransitOrders = filteredOrders.filter(o => o.status === 'onTheWay');
     const completedOrders = filteredOrders.filter(o => ['delivered', 'served'].includes(o.status));
 
@@ -598,149 +598,138 @@ export default function OrdersPage() {
                 </div>
             )}
 
-            {/* Header */}
+            {/* Header + Filters in one compact row */}
             <div className="max-w-7xl mx-auto mb-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                    <div className="flex flex-col gap-2">
+                        <h1 className="text-xl font-bold text-white flex items-center gap-2">
                             📦 Sipariş Merkezi
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">
-                            Tüm platformdaki siparişleri gerçek zamanlı takip edin
-                        </p>
-                    </div>
+                        {/* Filters inline */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <select
+                                value={dateFilter}
+                                onChange={(e) => setDateFilter(e.target.value)}
+                                className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                            >
+                                <option value="today">📅 Bugün</option>
+                                <option value="week">📅 Bu Hafta</option>
+                                <option value="month">📅 Bu Ay</option>
+                                <option value="all">📅 Tümü</option>
+                            </select>
 
-                    {/* Quick Stats */}
-                    <div className="flex gap-3">
-                        <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl px-4 py-2 text-center">
-                            <p className="text-2xl font-bold text-blue-400">{stats.total}</p>
-                            <p className="text-xs text-blue-300">Toplam</p>
-                        </div>
-                        <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-4 py-2 text-center">
-                            <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
-                            <p className="text-xs text-yellow-300">Bekleyen</p>
-                        </div>
-                        <div className="bg-orange-600/20 border border-orange-500/30 rounded-xl px-4 py-2 text-center">
-                            <p className="text-2xl font-bold text-orange-400">{stats.preparing}</p>
-                            <p className="text-xs text-orange-300">Hazırlanan</p>
-                        </div>
-                        <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-4 py-2 text-center">
-                            <p className="text-2xl font-bold text-green-400">{formatCurrency(stats.revenue)}</p>
-                            <p className="text-xs text-green-300">Ciro</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                            >
+                                <option value="all">Tüm Durumlar</option>
+                                {Object.entries(orderStatuses).map(([key, value]) => (
+                                    <option key={key} value={key}>{value.icon} {value.label}</option>
+                                ))}
+                            </select>
 
-            {/* Filters */}
-            <div className="max-w-7xl mx-auto mb-6">
-                <div className="bg-gray-800 rounded-xl p-4">
-                    <div className="flex flex-wrap gap-4">
-                        {/* Date Filter */}
-                        <select
-                            value={dateFilter}
-                            onChange={(e) => setDateFilter(e.target.value)}
-                            className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                        >
-                            <option value="today">📅 Bugün</option>
-                            <option value="week">📅 Bu Hafta</option>
-                            <option value="month">📅 Bu Ay</option>
-                            <option value="all">📅 Tümü</option>
-                        </select>
+                            <select
+                                value={typeFilter}
+                                onChange={(e) => setTypeFilter(e.target.value)}
+                                className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
+                            >
+                                <option value="all">Tüm Tipler</option>
+                                {Object.entries(orderTypes).map(([key, value]) => (
+                                    <option key={key} value={key}>{value.icon} {value.label}</option>
+                                ))}
+                            </select>
 
-                        {/* Status Filter */}
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                        >
-                            <option value="all">Tüm Durumlar</option>
-                            {Object.entries(orderStatuses).map(([key, value]) => (
-                                <option key={key} value={key}>{value.icon} {value.label}</option>
-                            ))}
-                        </select>
-
-                        {/* Type Filter */}
-                        <select
-                            value={typeFilter}
-                            onChange={(e) => setTypeFilter(e.target.value)}
-                            className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                        >
-                            <option value="all">Tüm Tipler</option>
-                            {Object.entries(orderTypes).map(([key, value]) => (
-                                <option key={key} value={key}>{value.icon} {value.label}</option>
-                            ))}
-                        </select>
-
-                        {/* Business Filter - Only show to Super Admins */}
-                        {admin?.adminType === 'super' && (
-                            <div ref={businessSearchRef} className="relative">
-                                <div className="flex items-center">
-                                    <input
-                                        type="text"
-                                        value={businessFilter === 'all' ? businessSearch : (businesses[businessFilter] || businessSearch)}
-                                        onChange={(e) => {
-                                            setBusinessSearch(e.target.value);
-                                            setShowBusinessDropdown(true);
-                                            if (e.target.value === '') {
-                                                setBusinessFilter('all');
-                                            }
-                                        }}
-                                        onFocus={() => setShowBusinessDropdown(true)}
-                                        placeholder="🔍 İşletme Ara..."
-                                        className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 w-64"
-                                    />
-                                    {businessFilter !== 'all' && (
-                                        <button
-                                            onClick={() => {
-                                                setBusinessFilter('all');
-                                                setBusinessSearch('');
+                            {/* Business Filter - Only show to Super Admins */}
+                            {admin?.adminType === 'super' && (
+                                <div ref={businessSearchRef} className="relative">
+                                    <div className="flex items-center">
+                                        <input
+                                            type="text"
+                                            value={businessFilter === 'all' ? businessSearch : (businesses[businessFilter] || businessSearch)}
+                                            onChange={(e) => {
+                                                setBusinessSearch(e.target.value);
+                                                setShowBusinessDropdown(true);
+                                                if (e.target.value === '') {
+                                                    setBusinessFilter('all');
+                                                }
                                             }}
-                                            className="ml-2 text-gray-400 hover:text-white"
-                                        >
-                                            ✕
-                                        </button>
-                                    )}
-                                </div>
-                                {showBusinessDropdown && (
-                                    <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50">
-                                        <div
-                                            className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-green-400 font-medium"
-                                            onClick={() => {
-                                                setBusinessFilter('all');
-                                                setBusinessSearch('');
-                                                setShowBusinessDropdown(false);
-                                            }}
-                                        >
-                                            ✓ Tüm İşletmeler
-                                        </div>
-                                        {filteredBusinesses.slice(0, 15).map(([id, name]) => (
-                                            <div
-                                                key={id}
-                                                className={`px-4 py-2 hover:bg-gray-700 cursor-pointer text-white ${businessFilter === id ? 'bg-purple-600/30 text-purple-300' : ''}`}
+                                            onFocus={() => setShowBusinessDropdown(true)}
+                                            placeholder="🔍 İşletme Ara..."
+                                            className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600 w-48"
+                                        />
+                                        {businessFilter !== 'all' && (
+                                            <button
                                                 onClick={() => {
-                                                    setBusinessFilter(id);
+                                                    setBusinessFilter('all');
+                                                    setBusinessSearch('');
+                                                }}
+                                                className="ml-1 text-gray-400 hover:text-white text-sm"
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+                                    {showBusinessDropdown && (
+                                        <div className="absolute top-full left-0 mt-1 w-80 max-h-64 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg shadow-xl z-50">
+                                            <div
+                                                className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-green-400 font-medium"
+                                                onClick={() => {
+                                                    setBusinessFilter('all');
                                                     setBusinessSearch('');
                                                     setShowBusinessDropdown(false);
                                                 }}
                                             >
-                                                {name}
+                                                ✓ Tüm İşletmeler
                                             </div>
-                                        ))}
-                                        {filteredBusinesses.length === 0 && businessSearch && (
-                                            <div className="px-4 py-2 text-gray-500">
-                                                Sonuç bulunamadı
-                                            </div>
-                                        )}
-                                        {filteredBusinesses.length > 15 && (
-                                            <div className="px-4 py-2 text-gray-500 text-sm">
-                                                +{filteredBusinesses.length - 15} daha... (Aramayı daraltın)
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                                            {filteredBusinesses.slice(0, 15).map(([id, name]) => (
+                                                <div
+                                                    key={id}
+                                                    className={`px-4 py-2 hover:bg-gray-700 cursor-pointer text-white ${businessFilter === id ? 'bg-purple-600/30 text-purple-300' : ''}`}
+                                                    onClick={() => {
+                                                        setBusinessFilter(id);
+                                                        setBusinessSearch('');
+                                                        setShowBusinessDropdown(false);
+                                                    }}
+                                                >
+                                                    {name}
+                                                </div>
+                                            ))}
+                                            {filteredBusinesses.length === 0 && businessSearch && (
+                                                <div className="px-4 py-2 text-gray-500">
+                                                    Sonuç bulunamadı
+                                                </div>
+                                            )}
+                                            {filteredBusinesses.length > 15 && (
+                                                <div className="px-4 py-2 text-gray-500 text-sm">
+                                                    +{filteredBusinesses.length - 15} daha... (Aramayı daraltın)
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Quick Stats */}
+                    <div className="flex gap-2 shrink-0">
+                        <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl px-3 py-1.5 text-center">
+                            <p className="text-xl font-bold text-blue-400">{stats.total}</p>
+                            <p className="text-[10px] text-blue-300">Toplam</p>
+                        </div>
+                        <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-3 py-1.5 text-center">
+                            <p className="text-xl font-bold text-yellow-400">{stats.pending}</p>
+                            <p className="text-[10px] text-yellow-300">Bekleyen</p>
+                        </div>
+                        <div className="bg-orange-600/20 border border-orange-500/30 rounded-xl px-3 py-1.5 text-center">
+                            <p className="text-xl font-bold text-orange-400">{stats.preparing}</p>
+                            <p className="text-[10px] text-orange-300">Hazırlanan</p>
+                        </div>
+                        <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-3 py-1.5 text-center">
+                            <p className="text-xl font-bold text-green-400">{formatCurrency(stats.revenue)}</p>
+                            <p className="text-[10px] text-green-300">Ciro</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -886,22 +875,7 @@ export default function OrdersPage() {
                         </div>
 
                         {/* Served Column (Dine-in only) */}
-                        {servedOrders.length > 0 && (
-                            <div className="bg-gray-800 rounded-xl p-4">
-                                <h3 className="text-teal-400 font-medium mb-4 flex items-center gap-2">
-                                    <span className="w-3 h-3 bg-teal-400 rounded-full"></span>
-                                    Servis Edildi ({servedOrders.length})
-                                </h3>
-                                <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                                    {servedOrders.slice(0, 10).map(order => (
-                                        <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
-                                    ))}
-                                    {servedOrders.length > 10 && (
-                                        <p className="text-gray-500 text-center text-sm">+{servedOrders.length - 10} daha</p>
-                                    )}
-                                </div>
-                            </div>
-                        )}
+                        {/* Servis Edildi column removed — dine-in orders now go directly to Tamamlanan */}
 
                         {/* In Transit Column */}
                         <div className="bg-gray-800 rounded-xl p-4">

@@ -324,6 +324,7 @@ export default function AdminHeader() {
                                 { href: '/admin/drivers', icon: '🚗', label: 'Sürücüler' },
                                 { href: '/admin/reservations', icon: '🍽️', label: 'Rezervasyonlar' },
                                 { href: '/admin/table-orders', icon: '🪑', label: 'Masa Grupları' },
+                                { href: '/admin/staff-shifts', icon: '⏱️', label: 'Vardiyalar' },
                                 { href: '/admin/image-generator', icon: '🎨', label: 'Görsel Üret' },
                                 { href: '/admin/ai-menu', icon: '🤖', label: 'AI Menü' },
                                 { href: '/admin/settings', icon: '⚙️', label: 'Ayarlar' },
@@ -353,62 +354,74 @@ export default function AdminHeader() {
             )}
 
             {/* ═══════════════════════════════════════════════════════════════════
-                BUSINESS INFO BAR - İşletme bilgileri (butcherId olanlar görür)
-                Shows company name, address, phone - persistent across all pages
+                UNIFIED ADMIN BAR - Business info + Navigation in one compact row
             ═══════════════════════════════════════════════════════════════════ */}
-            {admin && businessInfo && admin.adminType !== 'super' && (
-                <div className="bg-gradient-to-r from-red-800 to-red-700 border-b border-red-600">
-                    <div className="max-w-7xl mx-auto px-4 py-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                {/* Business Icon/Logo */}
-                                <div className="w-12 h-12 bg-white/20 rounded-xl overflow-hidden flex items-center justify-center shrink-0">
-                                    {businessInfo.imageUrl ? (
-                                        <img
-                                            src={businessInfo.imageUrl}
-                                            alt={businessInfo.companyName}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <span className="text-2xl">🏪</span>
-                                    )}
-                                </div>
-                                {/* Business Info */}
-                                <div className="min-w-0">
-                                    <h1 className="text-white font-bold text-lg truncate">
-                                        {businessInfo.companyName}
-                                    </h1>
-                                    <div className="flex flex-wrap items-center gap-3 text-red-200 text-sm">
-                                        {/* Address */}
-                                        {(businessInfo.streetAddress || businessInfo.city) && (
-                                            <span className="flex items-center gap-1">
-                                                📍 {businessInfo.streetAddress && `${businessInfo.streetAddress}, `}{businessInfo.postalCode} {businessInfo.city}
+            {admin && admin.adminType !== 'super' && (
+                <div className="bg-slate-800 border-b border-slate-700">
+                    <div className="max-w-7xl mx-auto px-4 py-2">
+                        <div className="flex items-center gap-4">
+                            {/* Business Logo + Name + Address (compact) */}
+                            {businessInfo && (
+                                <div className="flex items-center gap-3 shrink-0 mr-2">
+                                    <div className="w-9 h-9 bg-white/10 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                                        {businessInfo.imageUrl ? (
+                                            <img
+                                                src={businessInfo.imageUrl}
+                                                alt={businessInfo.companyName}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-white font-bold text-sm">
+                                                {businessInfo.companyName.charAt(0).toUpperCase()}
                                             </span>
                                         )}
-                                        {/* Phone */}
-                                        {businessInfo.phone && (
-                                            <a
-                                                href={`tel:${businessInfo.phone}`}
-                                                className="flex items-center gap-1 hover:text-white transition"
-                                            >
-                                                📞 {businessInfo.phone}
-                                            </a>
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h1 className="text-white font-semibold text-sm truncate leading-tight">
+                                            {businessInfo.companyName}
+                                        </h1>
+                                        {(businessInfo.streetAddress || businessInfo.city) && (
+                                            <p className="text-slate-400 text-xs truncate leading-tight">
+                                                {businessInfo.streetAddress && `${businessInfo.streetAddress}, `}{businessInfo.postalCode} {businessInfo.city}
+                                            </p>
                                         )}
                                     </div>
                                 </div>
-                            </div>
-                            {/* Profile & Logout */}
-                            <div className="flex items-center gap-3 shrink-0">
-                                {/* Role Badge */}
-                                <span className="px-3 py-1 bg-white/20 text-white text-xs rounded-full hidden sm:block">
-                                    {getRoleLabel(admin.adminType) || adminTypeLabels[admin.adminType as AdminType] || admin.adminType}
-                                </span>
+                            )}
 
-                                {/* Profile Picture & Dropdown */}
+                            {/* Separator */}
+                            {businessInfo && <div className="w-px h-6 bg-slate-600 shrink-0" />}
+
+                            {/* Navigation Chips — uniform muted style, no icons */}
+                            <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                                {[
+                                    { href: '/admin/orders', label: 'Siparişler' },
+                                    { href: '/admin/statistics', label: 'Dashboard' },
+                                    { href: '/admin/reservations', label: 'Rezervasyonlar' },
+                                    { href: '/admin/dashboard?view=customers', label: 'Müşteriler' },
+                                    { href: '/admin/orders/suppliers', label: 'Toptancı' },
+                                    { href: '/admin/products', label: 'Ürünler & Kategoriler' },
+                                    { href: '/admin/staff-dashboard', label: 'Personel' },
+                                    { href: '/admin/settings', label: 'Ayarlar' },
+                                ].map(({ href, label }) => (
+                                    <Link
+                                        key={href}
+                                        href={href}
+                                        className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav(href)
+                                            ? 'bg-white/15 text-white'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                                            }`}
+                                    >
+                                        {label}
+                                    </Link>
+                                ))}
+                            </div>
+
+                            {/* Profile & Role */}
+                            <div className="flex items-center shrink-0">
                                 <div className="relative group">
-                                    <button className="flex items-center gap-2 hover:bg-white/10 rounded-lg px-2 py-1 transition">
-                                        {/* Profile Picture */}
-                                        <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-white/30 flex items-center justify-center bg-white/20">
+                                    <button className="flex items-center gap-1.5 hover:bg-white/5 rounded-lg px-2 py-1 transition">
+                                        <div className="w-7 h-7 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10">
                                             {(admin as any).photoURL ? (
                                                 <img
                                                     src={(admin as any).photoURL}
@@ -416,19 +429,21 @@ export default function AdminHeader() {
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
-                                                <span className="text-white font-bold text-sm">
+                                                <span className="text-white font-bold text-xs">
                                                     {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
                                                 </span>
                                             )}
                                         </div>
-                                        {/* Name (hidden on mobile) */}
-                                        <span className="text-white text-sm font-medium hidden md:block max-w-[120px] truncate">
-                                            {admin.displayName || admin.email?.split('@')[0] || 'Admin'}
-                                        </span>
-                                        <span className="text-white/60 text-xs">▼</span>
+                                        <div className="hidden md:flex flex-col items-start">
+                                            <span className="text-slate-300 text-xs font-medium max-w-[100px] truncate leading-tight">
+                                                {admin.displayName || admin.email?.split('@')[0] || 'Admin'}
+                                            </span>
+                                            <span className="text-slate-500 text-[10px] leading-tight">
+                                                {getRoleLabel(admin.adminType) || adminTypeLabels[admin.adminType as AdminType] || admin.adminType}
+                                            </span>
+                                        </div>
+                                        <span className="text-slate-500 text-[10px]">▼</span>
                                     </button>
-
-                                    {/* Dropdown Menu */}
                                     <div className="absolute right-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px]">
                                         <div className="px-4 py-3 border-b border-gray-700">
                                             <p className="text-white text-sm font-medium truncate">
@@ -442,119 +457,17 @@ export default function AdminHeader() {
                                             href="/account"
                                             className="w-full flex items-center gap-2 px-4 py-3 text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 transition text-sm border-b border-gray-700"
                                         >
-                                            💼 Hesabım
+                                            Hesabım
                                         </Link>
                                         <button
                                             onClick={handleLogout}
                                             className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition text-sm"
                                         >
-                                            🚪 Çıkış Yap
+                                            Çıkış Yap
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ═══════════════════════════════════════════════════════════════════
-                ADMIN TOOLBAR - Normal adminler için gri bar (Super Admin DIŞINDA herkes görür)
-            ═══════════════════════════════════════════════════════════════════ */}
-            {admin && admin.adminType !== 'super' && (
-                <div className="bg-slate-800 border-b border-slate-700">
-                    <div className="max-w-7xl mx-auto px-4 py-3">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-slate-300 text-sm font-semibold">⚡ Yönetim Paneli</h2>
-                        </div>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                            {/* Sipariş Merkezi */}
-                            <Link href="/admin/orders" className="flex items-center gap-2 bg-slate-700/50 hover:bg-slate-700 px-4 py-2 rounded-lg transition-all border border-slate-600">
-                                <span className="text-lg">📦</span>
-                                <span className="text-slate-200 text-sm font-medium">Siparişler</span>
-                            </Link>
-
-                            {/* Rezervasyonlar */}
-                            <Link href="/admin/reservations" className="flex items-center gap-2 bg-rose-700/50 hover:bg-rose-700 px-4 py-2 rounded-lg transition-all border border-rose-600">
-                                <span className="text-lg">🍽️</span>
-                                <span className="text-rose-200 text-sm font-medium">Rezervasyonlar</span>
-                            </Link>
-
-                            {/* Personeller - Business Admin/Staff -> filtered view */}
-                            {!admin.adminType?.includes('_staff') && (
-                                <Link
-                                    href="/admin/dashboard?view=staff"
-                                    className="flex items-center gap-2 bg-slate-700/50 hover:bg-slate-700 px-4 py-2 rounded-lg transition-all border border-slate-600"
-                                >
-                                    <span className="text-lg">👥</span>
-                                    <span className="text-slate-200 text-sm font-medium">Personel</span>
-                                </Link>
-                            )}
-
-                            {/* Müşteriler - Business Admin -> customers from their orders */}
-                            {admin.butcherId && (
-                                <Link href="/admin/dashboard?view=customers" className="flex items-center gap-2 bg-blue-700/50 hover:bg-blue-700 px-4 py-2 rounded-lg transition-all border border-blue-600">
-                                    <span className="text-lg">👤</span>
-                                    <span className="text-blue-200 text-sm font-medium">Müşteriler</span>
-                                </Link>
-                            )}
-
-                            {/* Toptancı / Tedarikçiler */}
-                            <Link href="/admin/orders/suppliers" className="flex items-center gap-2 bg-slate-700/50 hover:bg-slate-700 px-4 py-2 rounded-lg transition-all border border-slate-600">
-                                <span className="text-lg">🚚</span>
-                                <span className="text-slate-200 text-sm font-medium">Toptancı</span>
-                            </Link>
-
-                            {/* Ürün Yönetimi - Unified route with context-aware detection */}
-                            <Link
-                                href="/admin/products"
-                                className="flex items-center gap-2 bg-emerald-700/50 hover:bg-emerald-700 px-4 py-2 rounded-lg transition-all border border-emerald-600"
-                            >
-                                <span className="text-lg">🏷️</span>
-                                <span className="text-emerald-200 text-sm font-medium">Ürünler</span>
-                            </Link>
-
-                            {/* Kategori Yönetimi */}
-                            <Link href="/admin/categories" className="flex items-center gap-2 bg-violet-700/50 hover:bg-violet-700 px-4 py-2 rounded-lg transition-all border border-violet-600">
-                                <span className="text-lg">🗂️</span>
-                                <span className="text-violet-200 text-sm font-medium">Kategoriler</span>
-                            </Link>
-
-                            {/* Masa Grupları */}
-                            <Link href="/admin/table-orders" className="flex items-center gap-2 bg-teal-700/50 hover:bg-teal-700 px-4 py-2 rounded-lg transition-all border border-teal-600">
-                                <span className="text-lg">🪑</span>
-                                <span className="text-teal-200 text-sm font-medium">Masa Grupları</span>
-                            </Link>
-
-                            {/* Faturalarım */}
-                            <Link href="/admin/invoices" className="flex items-center gap-2 bg-amber-700/50 hover:bg-amber-700 px-4 py-2 rounded-lg transition-all border border-amber-600">
-                                <span className="text-lg">📄</span>
-                                <span className="text-amber-200 text-sm font-medium">Faturalarım</span>
-                            </Link>
-
-                            {/* Hesabım - Komisyon & Bakiye */}
-                            <Link href="/admin/account" className="flex items-center gap-2 bg-orange-700/50 hover:bg-orange-700 px-4 py-2 rounded-lg transition-all border border-orange-600">
-                                <span className="text-lg">💼</span>
-                                <span className="text-orange-200 text-sm font-medium">Hesabım</span>
-                            </Link>
-
-                            {/* İstatistikler */}
-                            <Link href="/admin/statistics" className="flex items-center gap-2 bg-cyan-700/50 hover:bg-cyan-700 px-4 py-2 rounded-lg transition-all border border-cyan-600">
-                                <img src="/icons/istatistik.png" alt="İstatistik" className="w-5 h-5" />
-                                <span className="text-cyan-200 text-sm font-medium">İstatistikler</span>
-                            </Link>
-
-                            {/* Görsel Kütüphanesi */}
-                            <Link href="/admin/image-generator" className="flex items-center gap-2 bg-violet-700/50 hover:bg-violet-700 px-4 py-2 rounded-lg transition-all border border-violet-600">
-                                <span className="text-lg">🎨</span>
-                                <span className="text-violet-200 text-sm font-medium">Görseller</span>
-                            </Link>
-
-                            {/* Ayarlar (IoT / Smart Notifications) */}
-                            <Link href="/admin/settings" className="flex items-center gap-2 bg-gray-700/50 hover:bg-gray-700 px-4 py-2 rounded-lg transition-all border border-gray-600">
-                                <span className="text-lg">⚙️</span>
-                                <span className="text-gray-200 text-sm font-medium">Ayarlar</span>
-                            </Link>
                         </div>
                     </div>
                 </div>

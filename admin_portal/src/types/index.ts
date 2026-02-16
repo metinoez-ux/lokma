@@ -540,6 +540,7 @@ export interface ButcherSubscriptionPlan {
         liveCourierTracking: boolean; // Canlı Kurye (ETA) Takibi
         aiBestPrice?: boolean;         // AI Fiyat Önerisi (ortalama + satış günü bazlı)
         tableReservation?: boolean;    // Masa Rezervasyonu
+        staffShiftTracking?: boolean;  // İşçi Çalışma Saatleri Takibi & Export
         [key: string]: boolean | string | number | undefined;
     };
 

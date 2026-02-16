@@ -12,6 +12,7 @@ interface AdminStaff {
     phone?: string;
     role: 'admin' | 'staff' | 'driver';
     isDriver?: boolean;
+    driverType?: 'business' | 'lokma';
     assignedBusinesses?: string[];
     assignedBusinessNames?: string[];
     businessId?: string;
@@ -40,6 +41,7 @@ export default function DriverManagementPage() {
     // Form state for business assignment
     const [selectedBusinessIds, setSelectedBusinessIds] = useState<string[]>([]);
     const [businessSearchQuery, setBusinessSearchQuery] = useState('');
+    const [selectedDriverType, setSelectedDriverType] = useState<'business' | 'lokma'>('business');
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
@@ -122,9 +124,11 @@ export default function DriverManagementPage() {
         if (staff) {
             setSelectedStaff(staff);
             setSelectedBusinessIds(staff.assignedBusinesses || []);
+            setSelectedDriverType(staff.driverType || 'business');
         } else {
             setSelectedStaff(null);
             setSelectedBusinessIds([]);
+            setSelectedDriverType('business');
         }
         setBusinessSearchQuery('');
         setShowModal(true);
@@ -150,6 +154,7 @@ export default function DriverManagementPage() {
 
             await updateDoc(doc(db, 'admins', selectedStaff.id), {
                 isDriver: true,
+                driverType: selectedDriverType,
                 assignedBusinesses: selectedBusinessIds,
                 assignedBusinessNames: businessNames,
                 updatedAt: new Date(),
@@ -171,6 +176,7 @@ export default function DriverManagementPage() {
         try {
             await updateDoc(doc(db, 'admins', confirmRemoveDriver.id), {
                 isDriver: false,
+                driverType: null,
                 assignedBusinesses: [],
                 assignedBusinessNames: [],
                 updatedAt: new Date(),
@@ -288,9 +294,17 @@ export default function DriverManagementPage() {
                                                 {person.role}
                                             </span>
                                             {(person.isDriver || person.role === 'driver') && (
-                                                <span className="px-2 py-0.5 text-xs rounded-full bg-green-900/50 text-green-300">
-                                                    🚗 Sürücü
-                                                </span>
+                                                <>
+                                                    <span className="px-2 py-0.5 text-xs rounded-full bg-green-900/50 text-green-300">
+                                                        🚗 Sürücü
+                                                    </span>
+                                                    <span className={`px-2 py-0.5 text-xs rounded-full ${person.driverType === 'lokma'
+                                                            ? 'bg-blue-900/50 text-blue-300'
+                                                            : 'bg-orange-900/50 text-orange-300'
+                                                        }`}>
+                                                        {person.driverType === 'lokma' ? '🔵 LOKMA' : '🟠 İşletme'}
+                                                    </span>
+                                                </>
                                             )}
                                         </div>
                                     </div>
@@ -436,6 +450,35 @@ export default function DriverManagementPage() {
                                     <div className="bg-gray-700 rounded-lg p-3 mb-4">
                                         <div className="font-medium">{selectedStaff.name}</div>
                                         <div className="text-sm text-gray-400">{selectedStaff.email}</div>
+                                    </div>
+
+                                    {/* Driver Type Selection */}
+                                    <div className="mb-4">
+                                        <label className="block text-sm text-gray-400 mb-2">Sürücü Tipi:</label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedDriverType('business')}
+                                                className={`p-3 rounded-lg border-2 text-left transition-all ${selectedDriverType === 'business'
+                                                        ? 'border-orange-500 bg-orange-900/30'
+                                                        : 'border-gray-600 bg-gray-700 hover:border-gray-500'
+                                                    }`}
+                                            >
+                                                <div className="font-medium text-sm">🟠 İşletme Kuryesi</div>
+                                                <div className="text-xs text-gray-400 mt-1">İşletmenin kendi çalışanı</div>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedDriverType('lokma')}
+                                                className={`p-3 rounded-lg border-2 text-left transition-all ${selectedDriverType === 'lokma'
+                                                        ? 'border-blue-500 bg-blue-900/30'
+                                                        : 'border-gray-600 bg-gray-700 hover:border-gray-500'
+                                                    }`}
+                                            >
+                                                <div className="font-medium text-sm">🔵 LOKMA Kuryesi</div>
+                                                <div className="text-xs text-gray-400 mt-1">LOKMA platformu kuryesi</div>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* Selected Businesses */}

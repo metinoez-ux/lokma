@@ -227,8 +227,29 @@ async function createCommissionRecord(orderId: string, orderData: any) {
         const orderType = orderData.orderType || orderData.deliveryMethod || "click_collect";
         let courierType = "click_collect";
         if (orderType === "delivery") {
-            // Check if business has own courier or uses LOKMA courier
-            courierType = orderData.assignedCourierId ? "lokma_courier" : (businessData.hasOwnCourier ? "own_courier" : "lokma_courier");
+            const courierId = orderData.courierId || orderData.assignedCourierId;
+            if (courierId) {
+                // Look up the courier's driverType from their admin record
+                try {
+                    const courierDoc = await db.collection("admins").doc(courierId).get();
+                    const courierData = courierDoc.exists ? courierDoc.data() : null;
+                    if (courierData?.driverType === "lokma") {
+                        courierType = "lokma_courier";
+                    } else if (courierData?.driverType === "business") {
+                        courierType = "own_courier";
+                    } else {
+                        // Fallback: check if courier belongs to the same business
+                        courierType = (courierData?.businessId === businessId) ? "own_courier" : "lokma_courier";
+                    }
+                } catch (courierLookupErr) {
+                    console.warn(`[Commission] Could not look up courier ${courierId}, using fallback`);
+                    courierType = businessData.hasOwnCourier ? "own_courier" : "lokma_courier";
+                }
+            } else {
+                // No courier assigned yet — use business preference
+                courierType = businessData.hasOwnCourier ? "own_courier" : "lokma_courier";
+            }
+            console.log(`[Commission] Resolved courierType=${courierType} for order ${orderId} (courierId=${courierId || "none"})`);
         }
 
         // Get commission rate based on courier type
@@ -435,22 +456,28 @@ export const onOrderStatusChange = onDocumentUpdated(
                     const butcherId = after.butcherId || after.businessId;
                     const deliveryAddress = after.deliveryAddress || "";
 
-                    // Get all driver FCM tokens who are assigned to this business
+                    // Fetch business doc for lokmaDriverEnabled + deliveryPreference
+                    let lokmaDriverEnabled = true; // Default: LOKMA drivers receive notifications
+                    let deliveryPreference = "hybrid"; // Default: notify both own staff and LOKMA
+                    try {
+                        const bizDoc = await db.collection("businesses").doc(butcherId).get();
+                        if (bizDoc.exists) {
+                            const bizData = bizDoc.data()!;
+                            lokmaDriverEnabled = bizData.lokmaDriverEnabled !== false; // opt-out model
+                            deliveryPreference = bizData.deliveryPreference || "hybrid";
+                        }
+                    } catch (bizErr) {
+                        console.warn(`[Driver Gate] Could not fetch business ${butcherId} for driver preferences`);
+                    }
+
+                    // Determine which driver groups to notify based on preference
+                    const notifyOwnStaff = deliveryPreference !== "lokma_only";
+                    const notifyLokmaDrivers = lokmaDriverEnabled && deliveryPreference !== "own_only";
+
+                    console.log(`[Driver Gate] Business ${butcherId}: lokmaDriverEnabled=${lokmaDriverEnabled}, deliveryPreference=${deliveryPreference}, notifyOwn=${notifyOwnStaff}, notifyLokma=${notifyLokmaDrivers}`);
+
                     // SHIFT GATING: Only notify staff who are on an active shift
                     try {
-                        // Query 1: Drivers assigned via assignedBusinesses array + on shift
-                        const driversSnapshot = await db.collection("admins")
-                            .where("isDriver", "==", true)
-                            .where("assignedBusinesses", "array-contains", butcherId)
-                            .where("isOnShift", "==", true)
-                            .get();
-
-                        // Query 2: Staff with direct businessId match + on shift (legacy support)
-                        const staffSnapshot = await db.collection("admins")
-                            .where("businessId", "==", butcherId)
-                            .where("isOnShift", "==", true)
-                            .get();
-
                         const staffTokens: string[] = [];
                         const processedIds = new Set<string>();
                         let skippedPaused = 0;
@@ -473,8 +500,24 @@ export const onOrderStatusChange = onDocumentUpdated(
                             }
                         };
 
-                        driversSnapshot.docs.forEach(collectTokens);
-                        staffSnapshot.docs.forEach(collectTokens);
+                        // Query 1: Own staff with direct businessId match + on shift
+                        if (notifyOwnStaff) {
+                            const staffSnapshot = await db.collection("admins")
+                                .where("businessId", "==", butcherId)
+                                .where("isOnShift", "==", true)
+                                .get();
+                            staffSnapshot.docs.forEach(doc => collectTokens(doc));
+                        }
+
+                        // Query 2: LOKMA/external drivers assigned via assignedBusinesses array + on shift
+                        if (notifyLokmaDrivers) {
+                            const driversSnapshot = await db.collection("admins")
+                                .where("isDriver", "==", true)
+                                .where("assignedBusinesses", "array-contains", butcherId)
+                                .where("isOnShift", "==", true)
+                                .get();
+                            driversSnapshot.docs.forEach(doc => collectTokens(doc));
+                        }
 
                         if (skippedPaused > 0) {
                             console.log(`[Shift Gate] Skipped ${skippedPaused} paused staff for business ${butcherId}`);

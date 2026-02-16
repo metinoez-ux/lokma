@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs, query, orderBy, where, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, where, onSnapshot, Timestamp, doc, getDoc, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 
 interface OrderItem {
     productId: string;
     name: string;
+    productName?: string;
     quantity: number;
     price: number;
     unit?: string;
@@ -26,6 +27,22 @@ interface Order {
 
 type CompareMode = 'none' | 'lastWeek' | 'lastMonth' | 'lastYear';
 
+interface DeliveryPauseLog {
+    id: string;
+    action: 'paused' | 'resumed';
+    timestamp: Date;
+    adminEmail: string;
+    adminId: string;
+    adminName?: string;
+}
+
+interface PerfOrderStats {
+    totalOrders: number;
+    completedOrders: number;
+    avgPreparationTime: number;
+    avgDeliveryTime: number;
+}
+
 export default function StatisticsPage() {
     const { admin, loading: adminLoading } = useAdmin();
     const [orders, setOrders] = useState<Order[]>([]);
@@ -40,6 +57,13 @@ export default function StatisticsPage() {
     const [compareMode, setCompareMode] = useState<CompareMode>('none');
     // Global business filter for super admin
     const [businessFilter, setBusinessFilter] = useState<string>('all');
+
+    // Staff Performance Data
+    const [pauseLogs, setPauseLogs] = useState<DeliveryPauseLog[]>([]);
+    const [perfStats, setPerfStats] = useState<PerfOrderStats>({ totalOrders: 0, completedOrders: 0, avgPreparationTime: 0, avgDeliveryTime: 0 });
+    const [perfLoading, setPerfLoading] = useState(false);
+    const [perfDateRange, setPerfDateRange] = useState<'7d' | '30d' | '90d'>('30d');
+    const [periodTab, setPeriodTab] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
 
     // Load businesses for mapping
     useEffect(() => {
@@ -138,16 +162,24 @@ export default function StatisticsPage() {
         return { startDate: compStartDate, endDate: compEndDate };
     };
 
-    // Real-time orders subscription - load all orders for comparison support
+    // Real-time orders subscription - scoped by business for non-super admins
     useEffect(() => {
+        if (adminLoading) return;
         setLoading(true);
 
-        // Always load from 2020 to support any comparison
-        const q = query(
-            collection(db, 'meat_orders'),
-            where('createdAt', '>=', Timestamp.fromDate(new Date(2020, 0, 1))),
-            orderBy('createdAt', 'desc')
-        );
+        const businessId = admin?.adminType !== 'super'
+            ? ((admin as any)?.butcherId || (admin as any)?.restaurantId || (admin as any)?.marketId || (admin as any)?.kermesId || (admin as any)?.businessId)
+            : null;
+
+        // For non-super admins: simple butcherId query (no composite index needed)
+        // For super admins: full query with date range
+        const q = businessId
+            ? query(collection(db, 'meat_orders'), where('butcherId', '==', businessId))
+            : query(
+                collection(db, 'meat_orders'),
+                where('createdAt', '>=', Timestamp.fromDate(new Date(2020, 0, 1))),
+                orderBy('createdAt', 'desc')
+            );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const data = snapshot.docs.map(doc => {
@@ -171,7 +203,86 @@ export default function StatisticsPage() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [admin, adminLoading]);
+
+    // Staff admin: Load delivery pause logs & order performance stats
+    const staffBusinessId = admin?.adminType !== 'super'
+        ? ((admin as any)?.butcherId || (admin as any)?.restaurantId || (admin as any)?.marketId || (admin as any)?.kermesId || (admin as any)?.businessId)
+        : null;
+
+    useEffect(() => {
+        if (!staffBusinessId) return;
+        setPerfLoading(true);
+        const logsRef = collection(db, 'businesses', staffBusinessId, 'deliveryPauseLogs');
+        const q2 = query(logsRef, orderBy('timestamp', 'desc'), limit(50));
+        const unsubLogs = onSnapshot(q2, (snapshot) => {
+            setPauseLogs(snapshot.docs.map(d => ({ id: d.id, ...d.data(), timestamp: d.data().timestamp?.toDate() || new Date() })) as DeliveryPauseLog[]);
+            setPerfLoading(false);
+        }, () => setPerfLoading(false));
+        return () => unsubLogs();
+    }, [staffBusinessId]);
+
+    useEffect(() => {
+        if (!staffBusinessId) return;
+        const loadPerfStats = async () => {
+            const daysAgo = perfDateRange === '7d' ? 7 : perfDateRange === '30d' ? 30 : 90;
+            const startDate = new Date(); startDate.setDate(startDate.getDate() - daysAgo);
+            const q3 = query(collection(db, 'meat_orders'), where('butcherId', '==', staffBusinessId), limit(500));
+            const snap = await getDocs(q3);
+            const allOrders = snap.docs.map(d => ({ ...d.data(), status: d.data().status || '', createdAt: d.data().createdAt?.toDate() || new Date(), updatedAt: d.data().updatedAt?.toDate() || null, completedAt: d.data().completedAt?.toDate() || null }));
+            const filtered = allOrders.filter(o => o.createdAt >= startDate);
+            const completed = filtered.filter(o => ['delivered', 'picked_up', 'completed'].includes(o.status));
+            let totalPrep = 0, prepN = 0, totalFulfill = 0, fulfillN = 0;
+            completed.forEach(o => {
+                if (o.updatedAt && o.createdAt) {
+                    const d = (o.updatedAt.getTime() - o.createdAt.getTime()) / 60000;
+                    if (d > 0 && d < 360) { totalPrep += d; prepN++; }
+                }
+                const end = o.completedAt || o.updatedAt;
+                if (end && o.createdAt) {
+                    const d = (end.getTime() - o.createdAt.getTime()) / 60000;
+                    if (d > 0 && d < 360) { totalFulfill += d; fulfillN++; }
+                }
+            });
+            setPerfStats({ totalOrders: filtered.length, completedOrders: completed.length, avgPreparationTime: prepN > 0 ? Math.round(totalPrep / prepN) : 0, avgDeliveryTime: fulfillN > 0 ? Math.round(totalFulfill / fulfillN) : 0 });
+        };
+        loadPerfStats();
+    }, [staffBusinessId, perfDateRange]);
+
+    const pauseStats = useMemo(() => {
+        const daysAgo = perfDateRange === '7d' ? 7 : perfDateRange === '30d' ? 30 : 90;
+        const start = new Date(); start.setDate(start.getDate() - daysAgo);
+        const filtered = pauseLogs.filter(l => l.timestamp >= start);
+        const THRESHOLD_MS = 15 * 60 * 1000; // 15 minutes
+        let significantPauses = 0;
+        let totalMs = 0;
+        let pauseStart: Date | null = null;
+        // Walk chronologically to pair pause/resume events
+        [...filtered].reverse().forEach(l => {
+            if (l.action === 'paused') {
+                pauseStart = l.timestamp;
+            } else if (l.action === 'resumed' && pauseStart) {
+                const duration = l.timestamp.getTime() - pauseStart.getTime();
+                if (duration >= THRESHOLD_MS) {
+                    significantPauses++;
+                    totalMs += duration;
+                }
+                pauseStart = null;
+            }
+        });
+        // If currently paused, count from last pause to now
+        if (pauseStart) {
+            const duration = Date.now() - (pauseStart as Date).getTime();
+            if (duration >= THRESHOLD_MS) {
+                significantPauses++;
+                totalMs += duration;
+            }
+        }
+        const resumeCount = filtered.filter(l => l.action === 'resumed').length;
+        return { pauseCount: significantPauses, resumeCount, totalPausedHours: Math.round(totalMs / 3600000) };
+    }, [pauseLogs, perfDateRange]);
+
+    const formatPerfDate = (date: Date) => new Intl.DateTimeFormat('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(date);
 
     // Filter orders by date range and business
     const { startDate: currentStart, endDate: currentEnd } = getDateRange(dateFilter, customStartDate, customEndDate);
@@ -271,27 +382,30 @@ export default function StatisticsPage() {
                 .reduce((sum, o) => sum + (o.total || 0), 0),
         })),
 
-        // Orders by type
+        // Orders by type (deliveryMethod values: 'pickup', 'delivery', 'dineIn')
         typeBreakdown: {
-            pickup: filteredOrders.filter(o => o.type === 'pickup').length,
+            pickup: filteredOrders.filter(o => o.type === 'pickup' || o.type === 'gelAl').length,
             delivery: filteredOrders.filter(o => o.type === 'delivery').length,
-            dineIn: filteredOrders.filter(o => o.type === 'dine_in').length,
+            dineIn: filteredOrders.filter(o => o.type === 'dineIn' || o.type === 'dine_in' || o.type === 'masa').length,
         },
 
         // Top products
         topProducts: (() => {
             const productCounts: Record<string, { name: string; quantity: number; revenue: number }> = {};
             filteredOrders.forEach(order => {
-                order.items?.forEach(item => {
-                    const key = item.name || item.productId;
+                order.items?.forEach((item: any) => {
+                    const itemName = item.productName || item.name || '';
+                    if (!itemName) return; // Skip items with no name at all
+                    const key = itemName;
                     if (!productCounts[key]) {
-                        productCounts[key] = { name: item.name || 'Ürün', quantity: 0, revenue: 0 };
+                        productCounts[key] = { name: itemName, quantity: 0, revenue: 0 };
                     }
                     productCounts[key].quantity += item.quantity || 1;
-                    productCounts[key].revenue += (item.price || 0) * (item.quantity || 1);
+                    productCounts[key].revenue += (item.totalPrice || item.price || 0) * (item.quantity || 1);
                 });
             });
             return Object.values(productCounts)
+                .filter(p => p.name && p.name !== 'Ürün')
                 .sort((a, b) => b.quantity - a.quantity)
                 .slice(0, 10);
         })(),
@@ -537,10 +651,16 @@ export default function StatisticsPage() {
                             <p className="text-white text-xl font-bold">{analytics.slowestDay}</p>
                         </div>
                         <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/30 rounded-xl p-4">
-                            <p className="text-purple-400 text-sm font-medium mb-1">🚚 Teslimat Oranı</p>
-                            <p className="text-white text-xl font-bold">
-                                {filteredOrders.length > 0 ? Math.round((analytics.typeBreakdown.delivery / filteredOrders.length) * 100) : 0}% Kurye
-                            </p>
+                            <p className="text-purple-400 text-sm font-medium mb-1">📊 Sipariş Oranı</p>
+                            {filteredOrders.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                    <span className="text-blue-400 font-bold text-sm">🚚 {Math.round((analytics.typeBreakdown.delivery / filteredOrders.length) * 100)}% Kurye</span>
+                                    <span className="text-orange-400 font-bold text-sm">🪑 {Math.round((analytics.typeBreakdown.dineIn / filteredOrders.length) * 100)}% Masa</span>
+                                    <span className="text-green-400 font-bold text-sm">🛍️ {Math.round((analytics.typeBreakdown.pickup / filteredOrders.length) * 100)}% Gel Al</span>
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 text-sm">Veri yok</p>
+                            )}
                         </div>
                     </div>
 
@@ -549,22 +669,39 @@ export default function StatisticsPage() {
                         {/* Hourly Distribution */}
                         <div className="bg-gray-800 rounded-xl p-6">
                             <h3 className="text-white font-bold mb-4">🕐 Saatlik Sipariş Dağılımı</h3>
-                            <div className="flex items-end gap-1 h-40">
-                                {analytics.hourlyDistribution.slice(8, 22).map((h) => {
-                                    const maxCount = Math.max(...analytics.hourlyDistribution.map(h => h.count), 1);
-                                    const height = (h.count / maxCount) * 100;
-                                    return (
-                                        <div key={h.hour} className="flex-1 flex flex-col items-center">
-                                            <div
-                                                className="w-full bg-blue-500 rounded-t hover:bg-blue-400 transition cursor-pointer"
-                                                style={{ height: `${Math.max(height, 4)}%` }}
-                                                title={`${h.hour}:00 - ${h.count} sipariş, ${formatCurrency(h.revenue)}`}
-                                            />
-                                            <span className="text-[10px] text-gray-500 mt-1">{h.hour}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                            {(() => {
+                                const hourData = analytics.hourlyDistribution.slice(8, 22);
+                                const maxCount = Math.max(...hourData.map(h => h.count), 1);
+                                const chartH = 140; // px
+                                return (
+                                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: `${chartH + 24}px`, paddingTop: '16px' }}>
+                                        {hourData.map((h) => {
+                                            const barH = h.count > 0 ? Math.max((h.count / maxCount) * chartH, 6) : 3;
+                                            return (
+                                                <div key={h.hour} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                                                    {h.count > 0 && (
+                                                        <span style={{ fontSize: '9px', color: '#93c5fd', fontWeight: 600, marginBottom: '2px' }}>{h.count}</span>
+                                                    )}
+                                                    <div
+                                                        style={{
+                                                            width: '100%',
+                                                            height: `${barH}px`,
+                                                            borderRadius: '4px 4px 0 0',
+                                                            background: h.count > 0 ? '#3b82f6' : '#374151',
+                                                            cursor: 'pointer',
+                                                            transition: 'background 0.2s',
+                                                        }}
+                                                        title={`${h.hour}:00 - ${h.count} sipariş, ${formatCurrency(h.revenue)}`}
+                                                        onMouseEnter={e => { if (h.count > 0) (e.target as HTMLDivElement).style.background = '#60a5fa'; }}
+                                                        onMouseLeave={e => { if (h.count > 0) (e.target as HTMLDivElement).style.background = '#3b82f6'; }}
+                                                    />
+                                                    <span style={{ fontSize: '10px', color: '#6b7280', marginTop: '2px' }}>{h.hour}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                );
+                            })()}
                         </div>
 
                         {/* Daily Distribution */}
@@ -590,6 +727,143 @@ export default function StatisticsPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Period Chart: Haftalık / Aylık / Yıllık */}
+                    {(() => {
+                        const now = new Date();
+                        const monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
+                        let periodData: { label: string; count: number; revenue: number }[] = [];
+
+                        if (periodTab === 'weekly') {
+                            for (let i = 6; i >= 0; i--) {
+                                const d = new Date(now);
+                                d.setDate(d.getDate() - i);
+                                const dayStr = d.toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric' });
+                                const dayOrders = orders.filter(o => {
+                                    if (!o.createdAt) return false;
+                                    const od = o.createdAt.toDate();
+                                    return od.getDate() === d.getDate() && od.getMonth() === d.getMonth() && od.getFullYear() === d.getFullYear();
+                                });
+                                periodData.push({
+                                    label: dayStr,
+                                    count: dayOrders.length,
+                                    revenue: dayOrders.reduce((s, o) => s + (o.total || 0), 0),
+                                });
+                            }
+                        } else if (periodTab === 'monthly') {
+                            const daysInMonth = now.getDate();
+                            for (let day = 1; day <= daysInMonth; day++) {
+                                const dayOrders = orders.filter(o => {
+                                    if (!o.createdAt) return false;
+                                    const od = o.createdAt.toDate();
+                                    return od.getDate() === day && od.getMonth() === now.getMonth() && od.getFullYear() === now.getFullYear();
+                                });
+                                periodData.push({
+                                    label: `${day}`,
+                                    count: dayOrders.length,
+                                    revenue: dayOrders.reduce((s, o) => s + (o.total || 0), 0),
+                                });
+                            }
+                        } else {
+                            const currentMonth = now.getMonth();
+                            for (let m = 0; m <= currentMonth; m++) {
+                                const monthOrders = orders.filter(o => {
+                                    if (!o.createdAt) return false;
+                                    const od = o.createdAt.toDate();
+                                    return od.getMonth() === m && od.getFullYear() === now.getFullYear();
+                                });
+                                periodData.push({
+                                    label: monthNames[m],
+                                    count: monthOrders.length,
+                                    revenue: monthOrders.reduce((s, o) => s + (o.total || 0), 0),
+                                });
+                            }
+                        }
+
+                        const maxCount = Math.max(...periodData.map(d => d.count), 1);
+                        const maxRevenue = Math.max(...periodData.map(d => d.revenue), 1);
+
+                        return (
+                            <div className="bg-gray-800 rounded-xl p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-white font-bold">📊 Sipariş & Ciro Trendi</h3>
+                                    <div className="flex bg-gray-700 rounded-lg overflow-hidden">
+                                        {(['weekly', 'monthly', 'yearly'] as const).map(tab => (
+                                            <button
+                                                key={tab}
+                                                onClick={() => setPeriodTab(tab)}
+                                                className={`px-3 py-1 text-xs font-medium transition ${periodTab === tab
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'text-gray-400 hover:text-white'
+                                                    }`}
+                                            >
+                                                {tab === 'weekly' ? 'Haftalık' : tab === 'monthly' ? 'Aylık' : 'Yıllık'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Order Count Bars */}
+                                <div className="mb-4">
+                                    <p className="text-gray-400 text-xs mb-2">Sipariş Sayısı</p>
+                                    <div className="flex items-end gap-1" style={{ height: 120 }}>
+                                        {periodData.map((d, i) => {
+                                            const h = (d.count / maxCount) * 100;
+                                            return (
+                                                <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                                                    {d.count > 0 && (
+                                                        <span className="text-[9px] text-blue-300 mb-0.5">{d.count}</span>
+                                                    )}
+                                                    <div
+                                                        className="w-full bg-blue-500/80 rounded-t hover:bg-blue-400 transition-all"
+                                                        style={{ height: `${Math.max(h, 2)}%`, minHeight: d.count > 0 ? 4 : 2 }}
+                                                        title={`${d.label}: ${d.count} sipariş`}
+                                                    />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="flex gap-1 mt-1">
+                                        {periodData.map((d, i) => (
+                                            <div key={i} className="flex-1 text-center">
+                                                <span className="text-[8px] text-gray-500">{d.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Revenue Bars */}
+                                <div>
+                                    <p className="text-gray-400 text-xs mb-2">Ciro (€)</p>
+                                    <div className="flex items-end gap-1" style={{ height: 120 }}>
+                                        {periodData.map((d, i) => {
+                                            const h = (d.revenue / maxRevenue) * 100;
+                                            return (
+                                                <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
+                                                    {d.revenue > 0 && (
+                                                        <span className="text-[9px] text-green-300 mb-0.5">€{d.revenue.toFixed(0)}</span>
+                                                    )}
+                                                    <div
+                                                        className="w-full bg-green-500/80 rounded-t hover:bg-green-400 transition-all"
+                                                        style={{ height: `${Math.max(h, 2)}%`, minHeight: d.revenue > 0 ? 4 : 2 }}
+                                                        title={`${d.label}: €${d.revenue.toFixed(2)}`}
+                                                    />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="flex gap-1 mt-1">
+                                        {periodData.map((d, i) => (
+                                            <div key={i} className="flex-1 text-center">
+                                                <span className="text-[8px] text-gray-500">{d.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {/* Tables Row */}
                     <div className="grid md:grid-cols-2 gap-6">
@@ -642,6 +916,97 @@ export default function StatisticsPage() {
                                 )}
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* 📊 STAFF PERFORMANCE SECTION — Only for non-super admins */}
+            {admin?.adminType !== 'super' && staffBusinessId && (
+                <div className="max-w-7xl mx-auto mt-6">
+                    <div className="bg-gray-800 rounded-xl p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-white font-bold text-lg flex items-center gap-2">📈 İşletme Performansı</h3>
+                            <select value={perfDateRange} onChange={e => setPerfDateRange(e.target.value as any)} className="bg-purple-600 text-white rounded-lg px-3 py-2 text-sm border-none">
+                                <option value="7d">Son 7 Gün</option>
+                                <option value="30d">Son 30 Gün</option>
+                                <option value="90d">Son 90 Gün</option>
+                            </select>
+                        </div>
+
+                        {/* Performance Stats Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                            <div className="bg-gray-900 rounded-lg p-4">
+                                <div className="text-3xl font-bold text-white">{perfStats.totalOrders}</div>
+                                <div className="text-sm text-gray-400">Toplam Sipariş</div>
+                            </div>
+                            <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
+                                <div className="text-3xl font-bold text-green-400">{perfStats.completedOrders}</div>
+                                <div className="text-sm text-green-300">Tamamlanan</div>
+                            </div>
+                            <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
+                                <div className="text-3xl font-bold text-blue-400">{perfStats.avgPreparationTime}<span className="text-lg">dk</span></div>
+                                <div className="text-sm text-blue-300">Ort. Hazırlama</div>
+                            </div>
+                            <div className="bg-purple-600/20 rounded-lg p-4 border-l-4 border-purple-500">
+                                <div className="text-3xl font-bold text-purple-400">{perfStats.avgDeliveryTime}<span className="text-lg">dk</span></div>
+                                <div className="text-sm text-purple-300">Ort. Teslim</div>
+                            </div>
+                            <div className="bg-orange-600/20 rounded-lg p-4 border-l-4 border-orange-500">
+                                <div className="text-3xl font-bold text-orange-400">{pauseStats.pauseCount}</div>
+                                <div className="text-sm text-orange-300">Kurye Durdurma</div>
+                            </div>
+                        </div>
+
+                        {/* Pause Statistics Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div className="bg-gray-900 rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏸️</span><span className="text-gray-400">Durdurma Sayısı</span></div>
+                                <div className="text-2xl font-bold text-orange-400">{pauseStats.pauseCount}</div>
+                            </div>
+                            <div className="bg-gray-900 rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">▶️</span><span className="text-gray-400">Devam Ettirme</span></div>
+                                <div className="text-2xl font-bold text-green-400">{pauseStats.resumeCount}</div>
+                            </div>
+                            <div className="bg-gray-900 rounded-lg p-4">
+                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏱️</span><span className="text-gray-400">Toplam Durdurma Süresi</span></div>
+                                <div className="text-2xl font-bold text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">saat</span></div>
+                            </div>
+                        </div>
+
+                        {/* Delivery Pause Log Table */}
+                        <div className="bg-gray-900 rounded-lg overflow-hidden">
+                            <div className="px-4 py-3 border-b border-gray-700">
+                                <h4 className="text-white font-bold flex items-center gap-2">🛵 Kurye Açma/Kapama Geçmişi</h4>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-700">
+                                    <thead className="bg-gray-800">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Tarih</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">İşlem</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Admin</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-700">
+                                        {pauseLogs.length === 0 ? (
+                                            <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400">Henüz kurye açma/kapama kaydı yok</td></tr>
+                                        ) : (
+                                            pauseLogs.slice(0, 20).map(log => (
+                                                <tr key={log.id} className={log.action === 'paused' ? 'bg-orange-900/20' : 'bg-green-900/20'}>
+                                                    <td className="px-4 py-3 text-sm text-gray-300">{formatPerfDate(log.timestamp)}</td>
+                                                    <td className="px-4 py-3">
+                                                        {log.action === 'paused'
+                                                            ? <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-orange-600 text-white text-xs font-medium">⏸️ Durduruldu</span>
+                                                            : <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-600 text-white text-xs font-medium">▶️ Devam Etti</span>}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm text-gray-300">{log.adminName || log.adminEmail}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

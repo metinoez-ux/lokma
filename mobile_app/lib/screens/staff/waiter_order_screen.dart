@@ -52,6 +52,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
     
     // If tableNumber provided (from dashboard), auto-select and skip to menu
     if (widget.tableNumber != null && _businessId != null) {
+      _isLoading = true; // Start in loading state — never show table grid
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         final existingSession = await _sessionService.getActiveSession(_businessId!, widget.tableNumber!);
         if (existingSession != null && mounted) {
@@ -59,10 +60,11 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             _selectedTable = widget.tableNumber;
             _activeSession = existingSession;
             _currentStep = _WaiterStep.browseMenu;
+            _isLoading = false;
           });
         } else {
-          // No session yet — create one via normal flow
-          _selectTable(widget.tableNumber!);
+          // No session yet — create one directly (user already confirmed on StaffHub)
+          await _createSessionAndGoToMenu(widget.tableNumber!);
         }
       });
     }
@@ -112,7 +114,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
     }
   }
 
-  Future<void> _selectTable(int tableNumber) async {
+  Future<void> _selectTable(int tableNumber, {bool fromDashboard = false}) async {
     if (_businessId == null) return;
 
     // Check for existing session first
@@ -126,7 +128,47 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
       return;
     }
     
-    // No active session → create new one and go to menu
+    // No active session → ask the user before creating one
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.table_restaurant, color: Colors.orange.shade700),
+            const SizedBox(width: 8),
+            Text('Masa $tableNumber'),
+          ],
+        ),
+        content: Text(
+          'Masa $tableNumber için yeni sipariş oturumu başlatmak istiyor musunuz?',
+          style: const TextStyle(fontSize: 15),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('İptal', style: TextStyle(color: Colors.grey[600])),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.orange.shade700),
+            child: const Text('Evet, Başlat'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) {
+      // User cancelled — if came from dashboard, go back instead of showing table grid
+      if (fromDashboard && mounted) {
+        Navigator.of(context).pop();
+      }
+      return;
+    }
+
+    // User confirmed — create new session
     setState(() => _isLoading = true);
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -160,6 +202,49 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
         );
+      }
+    }
+  }
+
+  /// Creates session directly and goes to menu (used when coming from dashboard,
+  /// where user already confirmed via the StaffHub dialog)
+  Future<void> _createSessionAndGoToMenu(int tableNumber) async {
+    if (_businessId == null) return;
+    // Keep _isLoading = true the entire time (set by initState)
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+
+      final adminDoc = await FirebaseFirestore.instance
+          .collection('admins')
+          .doc(user.uid)
+          .get();
+      final waiterName = adminDoc.data()?['name'] ?? user.displayName ?? 'Garson';
+
+      final session = await _sessionService.createSession(
+        businessId: _businessId!,
+        tableNumber: tableNumber,
+        waiterId: user.uid,
+        waiterName: waiterName,
+      );
+
+      if (mounted) {
+        setState(() {
+          _selectedTable = tableNumber;
+          _activeSession = session;
+          _currentStep = _WaiterStep.browseMenu;
+          _isLoading = false;
+        });
+        _showPinDialog(session.pin);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+        );
+        // Go back to staff hub on error
+        if (Navigator.canPop(context)) Navigator.pop(context);
       }
     }
   }

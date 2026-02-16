@@ -10,7 +10,10 @@ import {
     deleteDoc,
     updateDoc,
     writeBatch,
-    getDoc
+    getDoc,
+    addDoc,
+    query,
+    orderBy
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
@@ -167,6 +170,21 @@ function GlobalProductsPageContent() {
     // 🆕 BUSINESS PRODUCTS STATE - Show business's assigned products first
     const [businessProducts, setBusinessProducts] = useState<any[]>([]);
     const [loadingBusinessProducts, setLoadingBusinessProducts] = useState(false);
+
+    // 🆕 BUSINESS CATEGORIES STATE - Category tabs for filtering
+    const [businessCategories, setBusinessCategories] = useState<{ id: string; name: string; icon: string; order: number; isActive: boolean }[]>([]);
+    const [loadingBusinessCategories, setLoadingBusinessCategories] = useState(false);
+    const [activeCategoryTab, setActiveCategoryTab] = useState<string>('all');
+
+    // 🆕 DUAL VIEW: Kategoriler vs Ürünler toggle
+    const [businessViewMode, setBusinessViewMode] = useState<'products' | 'categories'>('products');
+
+    // 🆕 INLINE CATEGORY MANAGEMENT
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [editingCategoryItem, setEditingCategoryItem] = useState<{ id: string; name: string; icon: string; order: number; isActive: boolean } | null>(null);
+    const [categoryFormData, setCategoryFormData] = useState({ name: '', icon: '📦', isActive: true });
+    const [savingCategory, setSavingCategory] = useState(false);
+    const CATEGORY_ICONS = ['🥩', '🐑', '🐄', '🐔', '🥓', '📦', '🍖', '🌿', '🧈', '🥚', '🍕', '🌯', '🥗', '🍰', '🥤', '🍔', '🌭', '🥙'];
     const [showAllMasterProducts, setShowAllMasterProducts] = useState(false);
 
     // Generic confirm modal state
@@ -288,6 +306,111 @@ function GlobalProductsPageContent() {
             fetchBusinessProducts();
         }
     }, [contextBusinessId, adminLoading]);
+
+    // 🆕 Load business categories for tab display
+    // Helper: reload categories from Firestore
+    const reloadBusinessCategories = async () => {
+        if (!contextBusinessId) return;
+        setLoadingBusinessCategories(true);
+        try {
+            const categoriesRef = collection(db, `businesses/${contextBusinessId}/categories`);
+            const q = query(categoriesRef, orderBy('order', 'asc'));
+            const snapshot = await getDocs(q);
+            const cats = snapshot.docs.map(d => ({
+                id: d.id,
+                name: d.data().name || '',
+                icon: d.data().icon || '📦',
+                order: d.data().order || 0,
+                isActive: d.data().isActive !== false,
+            }));
+            setBusinessCategories(cats);
+        } catch (error) {
+            console.error('Error loading business categories:', error);
+        }
+        setLoadingBusinessCategories(false);
+    };
+
+    useEffect(() => {
+        if (!contextBusinessId || adminLoading) return;
+        reloadBusinessCategories();
+    }, [contextBusinessId, adminLoading]);
+
+    // 🆕 Category CRUD handlers
+    const handleCategorySave = async () => {
+        if (!contextBusinessId || !categoryFormData.name.trim()) return;
+        setSavingCategory(true);
+        try {
+            const categoriesRef = collection(db, `businesses/${contextBusinessId}/categories`);
+            if (editingCategoryItem) {
+                await updateDoc(doc(db, `businesses/${contextBusinessId}/categories`, editingCategoryItem.id), {
+                    name: categoryFormData.name,
+                    icon: categoryFormData.icon,
+                    isActive: categoryFormData.isActive,
+                    updatedAt: new Date(),
+                });
+            } else {
+                await addDoc(categoriesRef, {
+                    name: categoryFormData.name,
+                    icon: categoryFormData.icon,
+                    isActive: categoryFormData.isActive,
+                    order: businessCategories.length,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                });
+            }
+            await reloadBusinessCategories();
+            setShowCategoryModal(false);
+            setEditingCategoryItem(null);
+            setCategoryFormData({ name: '', icon: '📦', isActive: true });
+        } catch (error) {
+            console.error('Error saving category:', error);
+            alert('Kategori kaydedilirken hata oluştu.');
+        }
+        setSavingCategory(false);
+    };
+
+    const handleCategoryDelete = async (cat: { id: string; name: string }) => {
+        if (!contextBusinessId) return;
+        if (!window.confirm(`"${cat.name}" kategorisini silmek istediğinize emin misiniz?`)) return;
+        try {
+            await deleteDoc(doc(db, `businesses/${contextBusinessId}/categories`, cat.id));
+            await reloadBusinessCategories();
+        } catch (error) {
+            console.error('Error deleting category:', error);
+            alert('Kategori silinirken hata oluştu.');
+        }
+    };
+
+    const handleCategoryMove = async (index: number, direction: 'up' | 'down') => {
+        if (!contextBusinessId) return;
+        const newCats = [...businessCategories];
+        const targetIdx = direction === 'up' ? index - 1 : index + 1;
+        if (targetIdx < 0 || targetIdx >= newCats.length) return;
+        [newCats[index], newCats[targetIdx]] = [newCats[targetIdx], newCats[index]];
+        try {
+            for (let i = 0; i < newCats.length; i++) {
+                await updateDoc(doc(db, `businesses/${contextBusinessId}/categories`, newCats[i].id), { order: i });
+            }
+            setBusinessCategories(newCats.map((c, i) => ({ ...c, order: i })));
+        } catch (error) {
+            console.error('Error reordering categories:', error);
+        }
+    };
+
+    const openCategoryEdit = (cat: { id: string; name: string; icon: string; order: number; isActive: boolean }) => {
+        setEditingCategoryItem(cat);
+        setCategoryFormData({ name: cat.name, icon: cat.icon, isActive: cat.isActive });
+        setShowCategoryModal(true);
+    };
+
+    const openCategoryAdd = () => {
+        setEditingCategoryItem(null);
+        setCategoryFormData({ name: '', icon: '📦', isActive: true });
+        setShowCategoryModal(true);
+    };
+
+    // Active categories for filtering
+    const activeBusinessCategories = businessCategories.filter(c => c.isActive);
 
     // Kermes modu seçildiğinde organizations yükle
     useEffect(() => {
@@ -1049,14 +1172,15 @@ function GlobalProductsPageContent() {
                 ) : (
                     /* NORMAL ÜRÜN LİSTESİ MODU */
                     <>
-                        {/* 🆕 BUSINESS CONTEXT: Show business's own products FIRST */}
+                        {/* 🆕 BUSINESS CONTEXT: Dual-Tab Kategoriler & Ürünler */}
                         {isBusinessContext && (
-                            <div className="bg-gray-800 rounded-xl p-4 mb-6 border border-cyan-500/30">
-                                <div className="flex items-center justify-between mb-4">
+                            <div className="bg-gray-800 rounded-xl p-5 mb-6 border border-cyan-500/30">
+                                {/* Section Header with Title + View Mode Toggle */}
+                                <div className="flex items-center justify-between mb-5">
                                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                        🏪 {businessInfo?.companyName || 'İşletme'} Ürünleri
+                                        📋 Menü & Ürünler
                                         <span className="text-sm font-normal text-gray-400">
-                                            ({businessProducts.length} ürün atanmış)
+                                            — {businessInfo?.companyName || 'İşletme'}
                                         </span>
                                     </h2>
                                     <button
@@ -1067,109 +1191,373 @@ function GlobalProductsPageContent() {
                                     </button>
                                 </div>
 
-                                {loadingBusinessProducts ? (
-                                    <div className="text-center py-8 text-gray-400">
-                                        ⏳ Ürünler yükleniyor...
-                                    </div>
-                                ) : businessProducts.length === 0 ? (
-                                    <div className="text-center py-8 bg-gray-700/30 rounded-xl border border-dashed border-gray-600">
-                                        <p className="text-3xl mb-2">📭</p>
-                                        <p className="text-gray-400 mb-2">Bu işletmeye henüz ürün atanmamış</p>
-                                        <p className="text-sm text-gray-500">Aşağıdan Master Katalogdan ürün ekleyebilirsiniz</p>
-                                    </div>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="text-left text-gray-400 border-b border-gray-700">
-                                                    <th className="py-2 pr-2">Durum</th>
-                                                    <th className="py-2 pr-2">SKU</th>
-                                                    <th className="py-2 pr-4 min-w-[200px]">Ürün Adı</th>
-                                                    <th className="py-2 pr-2">Kategoriler</th>
-                                                    <th className="py-2 pr-2">Fiyat</th>
-                                                    <th className="py-2 pr-2">Birim</th>
-                                                    <th className="py-2">İşlemler</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {businessProducts.map((product: any) => (
-                                                    <tr key={product.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                                                        <td className="py-3 pr-2">
-                                                            <button
-                                                                onClick={async () => {
-                                                                    const newStatus = product.isActive === false ? true : false;
-                                                                    try {
-                                                                        await updateDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id), { isActive: newStatus });
-                                                                        setBusinessProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: newStatus } : p));
-                                                                    } catch (err) {
-                                                                        console.error('Toggle error:', err);
-                                                                        alert('Durum güncellenirken hata oluştu.');
-                                                                    }
-                                                                }}
-                                                                className={`px-2 py-1 rounded-full text-xs cursor-pointer transition-all hover:ring-2 hover:ring-offset-1 hover:ring-offset-gray-900 ${product.isActive !== false ? 'bg-green-900/50 text-green-300 hover:ring-green-500' : 'bg-gray-700 text-gray-400 hover:ring-gray-500'}`}
-                                                                title={product.isActive !== false ? 'Pasif yap' : 'Aktif yap'}
-                                                            >
-                                                                {product.isActive !== false ? '🟢 Aktif' : '⚫ Pasif'}
-                                                            </button>
-                                                        </td>
-                                                        <td className="py-3 pr-2 text-gray-400 font-mono text-xs">
-                                                            {product.id?.substring(0, 15)}...
-                                                        </td>
-                                                        <td className="py-3 pr-4">
-                                                            <span className="text-white font-medium">{product.name}</span>
-                                                        </td>
-                                                        <td className="py-3 pr-2">
-                                                            <div className="flex flex-wrap gap-1">
-                                                                {(product.categories || [product.category]).filter(Boolean).slice(0, 2).map((cat: string) => {
-                                                                    const categoryConfig = PRODUCT_TYPE_OPTIONS.find(c => c.value === cat);
-                                                                    return (
-                                                                        <span key={cat} className={`px-2 py-0.5 rounded text-xs ${categoryConfig?.color || 'bg-gray-600'} text-white`}>
-                                                                            {categoryConfig?.label || cat}
-                                                                        </span>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 pr-2">
-                                                            <span className="text-green-400 font-medium">
-                                                                {product.price ? `${product.price}€` : '-'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 pr-2 text-gray-300">
-                                                            {product.defaultUnit || product.unit || 'adet'}
-                                                        </td>
-                                                        <td className="py-3">
-                                                            <div className="flex gap-2">
+                                {/* Kategoriler / Ürünler Tab Toggle */}
+                                <div className="flex items-center gap-2 mb-5">
+                                    <button
+                                        onClick={() => setBusinessViewMode('categories')}
+                                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${businessViewMode === 'categories'
+                                                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/40'
+                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
+                                            }`}
+                                    >
+                                        🗂️ Kategoriler ({businessCategories.length})
+                                    </button>
+                                    <button
+                                        onClick={() => setBusinessViewMode('products')}
+                                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${businessViewMode === 'products'
+                                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/40'
+                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
+                                            }`}
+                                    >
+                                        🏷️ Ürünler ({businessProducts.length})
+                                    </button>
+                                </div>
+
+                                {/* ═══════════════════════════════════════════ */}
+                                {/* CATEGORIES VIEW                            */}
+                                {/* ═══════════════════════════════════════════ */}
+                                {businessViewMode === 'categories' && (
+                                    <div>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="text-gray-400 text-sm">
+                                                🗂️ Kategorileri sıralayın, düzenleyin veya yeni ekleyin
+                                            </div>
+                                            <button
+                                                onClick={openCategoryAdd}
+                                                className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-medium text-sm transition-all"
+                                            >
+                                                + Yeni Kategori
+                                            </button>
+                                        </div>
+
+                                        {loadingBusinessCategories ? (
+                                            <div className="text-center py-8 text-gray-400">⏳ Kategoriler yükleniyor...</div>
+                                        ) : businessCategories.length === 0 ? (
+                                            <div className="text-center py-12 bg-gray-700/30 rounded-xl border border-dashed border-gray-600">
+                                                <p className="text-4xl mb-3">🗂️</p>
+                                                <p className="text-gray-300 font-medium mb-1">Henüz kategori eklenmemiş</p>
+                                                <p className="text-sm text-gray-500 mb-4">Ürünlerinizi düzenlemek için kategori ekleyin</p>
+                                                <button
+                                                    onClick={openCategoryAdd}
+                                                    className="px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-500 transition font-medium"
+                                                >
+                                                    + İlk Kategoriyi Ekle
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {businessCategories.map((cat, index) => {
+                                                    const productCount = businessProducts.filter((p: any) => {
+                                                        const cats = p.categories || [p.category];
+                                                        return cats.some((c: string) => c?.toLowerCase() === cat.name.toLowerCase());
+                                                    }).length;
+                                                    return (
+                                                        <div
+                                                            key={cat.id}
+                                                            className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${cat.isActive
+                                                                    ? 'bg-gray-700/50 border-gray-600 hover:border-gray-500'
+                                                                    : 'bg-gray-800/50 border-red-900/40 opacity-60'
+                                                                }`}
+                                                        >
+                                                            {/* Up/Down Arrows */}
+                                                            <div className="flex flex-col gap-0.5">
                                                                 <button
-                                                                    onClick={() => openEdit(product)}
-                                                                    className="px-2 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50 text-xs"
-                                                                >
-                                                                    ✏️ Düzenle
-                                                                </button>
+                                                                    onClick={() => handleCategoryMove(index, 'up')}
+                                                                    disabled={index === 0}
+                                                                    className="text-gray-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition text-xs px-1"
+                                                                    title="Yukarı Taşı"
+                                                                >▲</button>
+                                                                <span className="text-[10px] text-gray-600 text-center">{index + 1}</span>
                                                                 <button
-                                                                    onClick={async () => {
-                                                                        if (!window.confirm(`"${product.name}" ürününü silmek istediğinize emin misiniz?`)) return;
-                                                                        try {
-                                                                            await deleteDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id));
-                                                                            setBusinessProducts(prev => prev.filter(p => p.id !== product.id));
-                                                                        } catch (err) {
-                                                                            console.error('Delete error:', err);
-                                                                            alert('Ürün silinirken hata oluştu.');
-                                                                        }
-                                                                    }}
-                                                                    className="px-2 py-1 bg-red-600/30 text-red-300 rounded hover:bg-red-600/50 text-xs"
-                                                                    title="Ürünü sil"
-                                                                >
-                                                                    🗑
-                                                                </button>
+                                                                    onClick={() => handleCategoryMove(index, 'down')}
+                                                                    disabled={index === businessCategories.length - 1}
+                                                                    className="text-gray-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition text-xs px-1"
+                                                                    title="Aşağı Taşı"
+                                                                >▼</button>
                                                             </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+
+                                                            {/* Icon */}
+                                                            <span className="text-3xl">{cat.icon}</span>
+
+                                                            {/* Name + Meta */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <h3 className="text-white font-bold text-base">{cat.name}</h3>
+                                                                <p className="text-gray-500 text-xs">
+                                                                    {productCount} ürün • {cat.isActive ? '✅ Aktif' : '🔴 Pasif'}
+                                                                </p>
+                                                            </div>
+
+                                                            {/* Actions */}
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={() => openCategoryEdit(cat)}
+                                                                    className="p-2 bg-yellow-600/80 hover:bg-yellow-500 rounded-lg transition text-white text-sm"
+                                                                    title="Düzenle"
+                                                                >✏️</button>
+                                                                <button
+                                                                    onClick={() => handleCategoryDelete(cat)}
+                                                                    className="p-2 bg-red-600/80 hover:bg-red-500 rounded-lg transition text-white text-sm"
+                                                                    title="Sil"
+                                                                >🗑️</button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
+
+                                {/* ═══════════════════════════════════════════ */}
+                                {/* PRODUCTS VIEW                              */}
+                                {/* ═══════════════════════════════════════════ */}
+                                {businessViewMode === 'products' && (
+                                    <div>
+                                        {/* Category Filter Tabs */}
+                                        {activeBusinessCategories.length > 0 && (
+                                            <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600">
+                                                <button
+                                                    onClick={() => setActiveCategoryTab('all')}
+                                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategoryTab === 'all'
+                                                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                        }`}
+                                                >
+                                                    📋 Tümü
+                                                    <span className={`px-1.5 py-0.5 rounded-full text-xs ${activeCategoryTab === 'all' ? 'bg-emerald-500/50' : 'bg-gray-600'
+                                                        }`}>{businessProducts.length}</span>
+                                                </button>
+                                                {activeBusinessCategories.map(cat => {
+                                                    const count = businessProducts.filter((p: any) => {
+                                                        const cats = p.categories || [p.category];
+                                                        return cats.some((c: string) => c?.toLowerCase() === cat.name.toLowerCase());
+                                                    }).length;
+                                                    return (
+                                                        <button
+                                                            key={cat.id}
+                                                            onClick={() => setActiveCategoryTab(cat.id)}
+                                                            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategoryTab === cat.id
+                                                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                                                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                                }`}
+                                                        >
+                                                            {cat.icon} {cat.name}
+                                                            {count > 0 && (
+                                                                <span className={`px-1.5 py-0.5 rounded-full text-xs ${activeCategoryTab === cat.id ? 'bg-emerald-500/50' : 'bg-gray-600'
+                                                                    }`}>{count}</span>
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
+                                                <button
+                                                    onClick={() => setActiveCategoryTab('uncategorized')}
+                                                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategoryTab === 'uncategorized'
+                                                            ? 'bg-gray-600 text-white shadow-lg'
+                                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                        }`}
+                                                >
+                                                    ❓ Kategorisiz
+                                                    <span className={`px-1.5 py-0.5 rounded-full text-xs ${activeCategoryTab === 'uncategorized' ? 'bg-gray-500/50' : 'bg-gray-600'
+                                                        }`}>
+                                                        {businessProducts.filter((p: any) => {
+                                                            const cats = p.categories || [p.category];
+                                                            return !cats.some((c: string) =>
+                                                                activeBusinessCategories.some(bc => bc.name.toLowerCase() === c?.toLowerCase())
+                                                            );
+                                                        }).length}
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* Product Table */}
+                                        {loadingBusinessProducts ? (
+                                            <div className="text-center py-8 text-gray-400">⏳ Ürünler yükleniyor...</div>
+                                        ) : businessProducts.length === 0 ? (
+                                            <div className="text-center py-8 bg-gray-700/30 rounded-xl border border-dashed border-gray-600">
+                                                <p className="text-3xl mb-2">📭</p>
+                                                <p className="text-gray-400 mb-2">Bu işletmeye henüz ürün atanmamış</p>
+                                                <p className="text-sm text-gray-500">Aşağıdan Master Katalogdan ürün ekleyebilirsiniz</p>
+                                            </div>
+                                        ) : (
+                                            <div className="overflow-x-auto">
+                                                <table className="w-full text-sm">
+                                                    <thead>
+                                                        <tr className="text-left text-gray-400 border-b border-gray-700">
+                                                            <th className="py-2 pr-2">Durum</th>
+                                                            <th className="py-2 pr-2">SKU</th>
+                                                            <th className="py-2 pr-4 min-w-[200px]">Ürün Adı</th>
+                                                            <th className="py-2 pr-2">Kategoriler</th>
+                                                            <th className="py-2 pr-2">Fiyat</th>
+                                                            <th className="py-2 pr-2">Birim</th>
+                                                            <th className="py-2">İşlemler</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {businessProducts
+                                                            .filter((product: any) => {
+                                                                if (activeCategoryTab === 'all') return true;
+                                                                const cats = product.categories || [product.category];
+                                                                if (activeCategoryTab === 'uncategorized') {
+                                                                    return !cats.some((c: string) =>
+                                                                        activeBusinessCategories.some(bc => bc.name.toLowerCase() === c?.toLowerCase())
+                                                                    );
+                                                                }
+                                                                const selectedCat = activeBusinessCategories.find(bc => bc.id === activeCategoryTab);
+                                                                if (!selectedCat) return true;
+                                                                return cats.some((c: string) => c?.toLowerCase() === selectedCat.name.toLowerCase());
+                                                            })
+                                                            .map((product: any) => (
+                                                                <tr key={product.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                                                                    <td className="py-3 pr-2">
+                                                                        <button
+                                                                            onClick={async () => {
+                                                                                const newStatus = product.isActive === false ? true : false;
+                                                                                try {
+                                                                                    await updateDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id), { isActive: newStatus });
+                                                                                    setBusinessProducts(prev => prev.map(p =>
+                                                                                        p.id === product.id ? { ...p, isActive: newStatus } : p
+                                                                                    ));
+                                                                                } catch (err) {
+                                                                                    console.error('Toggle error:', err);
+                                                                                }
+                                                                            }}
+                                                                            className={`px-2 py-0.5 rounded text-xs font-medium transition ${product.isActive === false
+                                                                                ? 'bg-red-600/30 text-red-300 hover:bg-red-600/50'
+                                                                                : 'bg-green-600/30 text-green-300 hover:bg-green-600/50'
+                                                                                }`}
+                                                                        >
+                                                                            {product.isActive === false ? '🔴 Pasif' : '🟢 Aktif'}
+                                                                        </button>
+                                                                    </td>
+                                                                    <td className="py-3 pr-2 text-gray-400 font-mono text-xs">
+                                                                        {product.id?.substring(0, 15)}...
+                                                                    </td>
+                                                                    <td className="py-3 pr-4">
+                                                                        <span className="text-white font-medium">{product.name}</span>
+                                                                    </td>
+                                                                    <td className="py-3 pr-2">
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                            {(product.categories || [product.category]).filter(Boolean).slice(0, 2).map((cat: string) => {
+                                                                                const categoryConfig = PRODUCT_TYPE_OPTIONS.find(c => c.value === cat);
+                                                                                return (
+                                                                                    <span key={cat} className={`px-2 py-0.5 rounded text-xs ${categoryConfig?.color || 'bg-gray-600'} text-white`}>
+                                                                                        {categoryConfig?.label || cat}
+                                                                                    </span>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="py-3 pr-2">
+                                                                        <span className="text-green-400 font-medium">
+                                                                            {product.price ? `${product.price}€` : '-'}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="py-3 pr-2 text-gray-300">
+                                                                        {product.defaultUnit || product.unit || 'adet'}
+                                                                    </td>
+                                                                    <td className="py-3">
+                                                                        <div className="flex gap-2">
+                                                                            <button
+                                                                                onClick={() => openEdit(product)}
+                                                                                className="px-2 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50 text-xs"
+                                                                            >
+                                                                                ✏️ Düzenle
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={async () => {
+                                                                                    if (!window.confirm(`"${product.name}" ürününü silmek istediğinize emin misiniz?`)) return;
+                                                                                    try {
+                                                                                        await deleteDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id));
+                                                                                        setBusinessProducts(prev => prev.filter(p => p.id !== product.id));
+                                                                                    } catch (err) {
+                                                                                        console.error('Delete error:', err);
+                                                                                        alert('Ürün silinirken hata oluştu.');
+                                                                                    }
+                                                                                }}
+                                                                                className="px-2 py-1 bg-red-600/30 text-red-300 rounded hover:bg-red-600/50 text-xs"
+                                                                                title="Ürünü sil"
+                                                                            >
+                                                                                🗑
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 🆕 CATEGORY ADD/EDIT MODAL */}
+                        {showCategoryModal && (
+                            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                                <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700">
+                                    <h2 className="text-xl font-bold text-white mb-4">
+                                        {editingCategoryItem ? '✏️ Kategori Düzenle' : '+ Yeni Kategori'}
+                                    </h2>
+
+                                    {/* Icon Selection */}
+                                    <div className="mb-4">
+                                        <label className="text-gray-400 text-sm mb-2 block">İkon</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {CATEGORY_ICONS.map(icon => (
+                                                <button
+                                                    key={icon}
+                                                    onClick={() => setCategoryFormData({ ...categoryFormData, icon })}
+                                                    className={`w-10 h-10 text-2xl rounded-lg transition ${categoryFormData.icon === icon
+                                                            ? 'bg-violet-600 ring-2 ring-violet-400'
+                                                            : 'bg-gray-700 hover:bg-gray-600'
+                                                        }`}
+                                                >{icon}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Name Input */}
+                                    <div className="mb-4">
+                                        <label className="text-gray-400 text-sm mb-2 block">Kategori Adı</label>
+                                        <input
+                                            type="text"
+                                            value={categoryFormData.name}
+                                            onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                                            placeholder="Örn: Kebab, Pizza, İçecekler..."
+                                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                                        />
+                                    </div>
+
+                                    {/* Active Toggle */}
+                                    <div className="mb-6">
+                                        <label className="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={categoryFormData.isActive}
+                                                onChange={(e) => setCategoryFormData({ ...categoryFormData, isActive: e.target.checked })}
+                                                className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-violet-500 focus:ring-violet-500"
+                                            />
+                                            <span className="text-gray-300">Aktif (uygulamada görünsün)</span>
+                                        </label>
+                                    </div>
+
+                                    {/* Buttons */}
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => { setShowCategoryModal(false); setEditingCategoryItem(null); }}
+                                            className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
+                                        >İptal</button>
+                                        <button
+                                            onClick={handleCategorySave}
+                                            disabled={savingCategory || !categoryFormData.name.trim()}
+                                            className="flex-1 px-4 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-500 transition disabled:opacity-50"
+                                        >
+                                            {savingCategory ? '⏳ Kaydediliyor...' : '💾 Kaydet'}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         )}
 

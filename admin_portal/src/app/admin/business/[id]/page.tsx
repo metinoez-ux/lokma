@@ -1710,12 +1710,14 @@ export default function BusinessDetailPage() {
             >
               📊 Dashboard
             </button>
-            <Link
-              href={`/admin/business/${businessId}/performance`}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium transition bg-purple-600 text-white hover:bg-purple-500"
-            >
-              📈 Performans
-            </Link>
+            {admin?.adminType === 'super' && (
+              <Link
+                href={`/admin/business/${businessId}/performance`}
+                className="px-3 py-1.5 rounded-lg text-sm font-medium transition bg-purple-600 text-white hover:bg-purple-500"
+              >
+                📈 Performans
+              </Link>
+            )}
             <button
               onClick={() => { setActiveTab("orders"); setShowSettingsDropdown(false); }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
@@ -2400,6 +2402,7 @@ export default function BusinessDetailPage() {
                             timestamp: serverTimestamp(),
                             adminEmail: admin?.email || "unknown",
                             adminId: admin?.id || "unknown",
+                            adminName: (admin as any)?.name || (admin as any)?.displayName || admin?.email || "unknown",
                           });
                           setFormData({ ...formData, temporaryDeliveryPaused: newValue });
                           showToast(newValue ? "🚫 Kurye hizmeti durduruldu" : "✅ Kurye hizmeti aktif", "success");

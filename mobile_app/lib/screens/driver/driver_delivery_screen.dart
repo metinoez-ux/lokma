@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/driver_provider.dart';
 import '../../services/order_service.dart';
+import '../../services/shift_service.dart';
 import '../staff/staff_delivery_screen.dart';
 
 /// Driver Delivery Screen - Shows pending deliveries from ALL assigned businesses
@@ -58,6 +59,46 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null || _driverName == null) return;
 
+    // Check if driver is on break — ask to end break first
+    final shiftService = ShiftService();
+    if (shiftService.shiftStatus == 'paused') {
+      final endBreak = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('☕ Molanız Devam Ediyor'),
+          content: const Text(
+            'Teslimat üstlenmek için molanız sonlandırılacak.\n\n'
+            'Devam etmek istiyor musunuz?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('İptal'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              child: const Text('Molayı Bitir ve Üstlen', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      );
+
+      if (endBreak != true) return;
+
+      // Resume shift (end break)
+      final resumed = await shiftService.resumeShift();
+      if (!resumed && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Mola sonlandırılamadı. Lütfen tekrar deneyin.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+    }
+
     // Confirm dialog
     final confirm = await showDialog<bool>(
       context: context,
@@ -97,9 +138,15 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     setState(() => _isLoading = false);
 
     if (success && mounted) {
+      // Show appropriate message based on whether break was ended
+      final breakEnded = shiftService.shiftStatus == 'active' && shiftService.isOnShift;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Teslimat üstlenildi! Konum takibi başladı.'),
+        SnackBar(
+          content: Text(
+            breakEnded
+                ? '☕ Molanız durduruldu. Teslimatınızı teslim edebilirsiniz!'
+                : '✅ Teslimat üstlenildi! Konum takibi başladı.',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -297,12 +344,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
 
         final allOrders = snapshot.data ?? [];
 
-        // Only show ready/accepted/onTheWay — NO pending/preparing in Teslimatlarım
-        final claimableOrders = allOrders.where((order) {
-          return order.status == OrderStatus.ready ||
-              order.status == OrderStatus.accepted ||
-              order.status == OrderStatus.onTheWay;
-        }).toList();
+        // Show ALL delivery orders — claim button is gated to ready-only
+        final claimableOrders = allOrders;
 
         if (claimableOrders.isEmpty) {
           return Column(

@@ -97,6 +97,7 @@ class ShiftService {
     required String businessId,
     required String staffName,
     required List<int> tables,
+    bool isDeliveryDriver = false,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
@@ -131,6 +132,7 @@ class ShiftService {
         'endedAt': null,
         'startLocation': locationData,
         'assignedTables': tables,
+        'isDeliveryDriver': isDeliveryDriver,
         'pauseLog': [],
         'totalMinutes': 0,
         'pauseMinutes': 0,
@@ -147,6 +149,7 @@ class ShiftService {
         'shiftStatus': 'active',
         'shiftStartedAt': now,
         'shiftAssignedTables': tables,
+        'shiftIsDeliveryDriver': isDeliveryDriver,
       });
 
       // Update local state
@@ -464,23 +467,39 @@ class ShiftService {
     String? staffId,
     int limit = 30,
   }) async {
-    Query query = _db
+    final shiftsRef = _db
         .collection('businesses')
         .doc(businessId)
-        .collection('shifts')
-        .orderBy('startedAt', descending: true)
-        .limit(limit);
+        .collection('shifts');
 
+    QuerySnapshot snap;
     if (staffId != null) {
-      query = query.where('staffId', isEqualTo: staffId);
+      // Use staffId filter only — sort client-side to avoid composite index requirement
+      snap = await shiftsRef
+          .where('staffId', isEqualTo: staffId)
+          .limit(limit)
+          .get();
+    } else {
+      snap = await shiftsRef
+          .orderBy('startedAt', descending: true)
+          .limit(limit)
+          .get();
     }
 
-    final snap = await query.get();
-    return snap.docs.map((d) {
+    final results = snap.docs.map((d) {
       final data = d.data() as Map<String, dynamic>;
       data['id'] = d.id;
       return data;
     }).toList();
+
+    // Sort client-side by startedAt descending
+    results.sort((a, b) {
+      final aTime = (a['startedAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+      final bTime = (b['startedAt'] as Timestamp?)?.millisecondsSinceEpoch ?? 0;
+      return bTime.compareTo(aTime);
+    });
+
+    return results;
   }
 
   String _todayString() {

@@ -57,14 +57,6 @@ export default function UnifiedAnalyticsPage() {
     const [userStats, setUserStats] = useState<UserStats | null>(null);
     const [businessStats, setBusinessStats] = useState<BusinessStats | null>(null);
     const [masterProductCount, setMasterProductCount] = useState(0);
-    const [technicalMetrics, setTechnicalMetrics] = useState<{
-        firestoreReads: number;
-        firestoreWrites: number;
-        firestoreStorage: number;
-        functionsInvocations: number;
-        storageBandwidth: number;
-        storageSize: number;
-    } | null>(null);
     const [loading, setLoading] = useState(true);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
@@ -186,32 +178,6 @@ export default function UnifiedAnalyticsPage() {
         loadProducts();
     }, []);
 
-    // Fetch Cloud Monitoring metrics
-    useEffect(() => {
-        const fetchTechnicalMetrics = async () => {
-            try {
-                const response = await fetch('/api/metrics');
-                if (response.ok) {
-                    const data = await response.json();
-                    setTechnicalMetrics({
-                        firestoreReads: data.firestore?.reads?.today || 0,
-                        firestoreWrites: data.firestore?.writes?.today || 0,
-                        firestoreStorage: data.firestore?.storage?.current || 0,
-                        functionsInvocations: data.functions?.invocations?.monthly || 0,
-                        storageBandwidth: data.storage?.bandwidth?.monthly || 0,
-                        storageSize: data.storage?.totalSize?.current || 0,
-                    });
-                }
-            } catch (error) {
-                console.error('Error fetching technical metrics:', error);
-            }
-        };
-        fetchTechnicalMetrics();
-        // Refresh every 5 minutes
-        const interval = setInterval(fetchTechnicalMetrics, 5 * 60 * 1000);
-        return () => clearInterval(interval);
-    }, []);
-
     // Real-time orders subscription
     useEffect(() => {
         setLoading(true);
@@ -284,22 +250,28 @@ export default function UnifiedAnalyticsPage() {
         }));
 
         const typeBreakdown = {
-            pickup: filteredOrders.filter(o => o.type === 'pickup').length,
-            delivery: filteredOrders.filter(o => o.type === 'delivery').length,
+            pickup: filteredOrders.filter(o => o.type === 'pickup' || o.type === 'gelAl').length,
+            delivery: filteredOrders.filter(o => o.type === 'delivery' || o.type === 'kurye').length,
+            dineIn: filteredOrders.filter(o => o.type === 'dineIn' || o.type === 'masa').length,
         };
 
         const productCounts: Record<string, { name: string; quantity: number; revenue: number }> = {};
         filteredOrders.forEach(order => {
-            order.items?.forEach(item => {
-                const key = item.name || item.productId;
+            order.items?.forEach((item: any) => {
+                const itemName = item.productName || item.name || '';
+                if (!itemName) return; // Skip items with no name
+                const key = itemName;
                 if (!productCounts[key]) {
-                    productCounts[key] = { name: item.name || 'Ürün', quantity: 0, revenue: 0 };
+                    productCounts[key] = { name: itemName, quantity: 0, revenue: 0 };
                 }
                 productCounts[key].quantity += item.quantity || 1;
-                productCounts[key].revenue += (item.price || 0) * (item.quantity || 1);
+                productCounts[key].revenue += (item.totalPrice || item.price || 0) * (item.quantity || 1);
             });
         });
-        const topProducts = Object.values(productCounts).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+        const topProducts = Object.values(productCounts)
+            .filter(p => p.name && p.name !== 'Ürün')
+            .sort((a, b) => b.quantity - a.quantity)
+            .slice(0, 5);
 
         const businessPerfMap: Record<string, { id: string; name: string; orders: number; revenue: number }> = {};
         filteredOrders.forEach(order => {
@@ -318,8 +290,10 @@ export default function UnifiedAnalyticsPage() {
         const busiestDay = sortedDays[0]?.day || 'Cmt';
         const slowestDay = sortedDays[sortedDays.length - 1]?.day || 'Paz';
         const deliveryRate = filteredOrders.length > 0 ? Math.round((typeBreakdown.delivery / filteredOrders.length) * 100) : 0;
+        const dineInRate = filteredOrders.length > 0 ? Math.round((typeBreakdown.dineIn / filteredOrders.length) * 100) : 0;
+        const pickupRate = filteredOrders.length > 0 ? Math.round((typeBreakdown.pickup / filteredOrders.length) * 100) : 0;
 
-        return { hourlyDistribution, dailyDistribution, topProducts, businessPerformance, peakHour, busiestDay, slowestDay, deliveryRate };
+        return { hourlyDistribution, dailyDistribution, topProducts, businessPerformance, peakHour, busiestDay, slowestDay, deliveryRate, dineInRate, pickupRate };
     }, [filteredOrders, businesses]);
 
     // Auth check
@@ -453,8 +427,8 @@ export default function UnifiedAnalyticsPage() {
                         <p className="text-white text-lg font-bold">{analytics.peakHour}:00</p>
                     </div>
                     <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/30 rounded-xl p-3">
-                        <p className="text-purple-400 text-xs font-medium mb-1">🚚 Teslimat Oranı</p>
-                        <p className="text-white text-lg font-bold">{analytics.deliveryRate}% Kurye</p>
+                        <p className="text-purple-400 text-xs font-medium mb-1">📊 Sipariş Oranı</p>
+                        <p className="text-white text-sm font-bold">🚚 {analytics.deliveryRate}% Kurye 🍽️ {analytics.dineInRate}% Masa 🏪 {analytics.pickupRate}% Gel Al</p>
                     </div>
                 </div>
 
@@ -463,22 +437,39 @@ export default function UnifiedAnalyticsPage() {
                     {/* Hourly Distribution */}
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                         <h3 className="text-white font-bold mb-3 text-sm">🕐 Saatlik Dağılım</h3>
-                        <div className="flex items-end gap-1 h-24">
-                            {analytics.hourlyDistribution.slice(8, 22).map((h) => {
-                                const maxCount = Math.max(...analytics.hourlyDistribution.map(h => h.count), 1);
-                                const height = (h.count / maxCount) * 100;
-                                return (
-                                    <div key={h.hour} className="flex-1 flex flex-col items-center">
-                                        <div
-                                            className="w-full bg-blue-500 rounded-t hover:bg-blue-400 transition cursor-pointer"
-                                            style={{ height: `${Math.max(height, 4)}%` }}
-                                            title={`${h.hour}:00 - ${h.count} sipariş`}
-                                        />
-                                        <span className="text-[9px] text-gray-500 mt-1">{h.hour}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                        {(() => {
+                            const hourData = analytics.hourlyDistribution.slice(8, 22);
+                            const maxCount = Math.max(...hourData.map(h => h.count), 1);
+                            const chartH = 80;
+                            return (
+                                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: `${chartH + 20}px`, paddingTop: '8px' }}>
+                                    {hourData.map((h) => {
+                                        const barH = h.count > 0 ? Math.max((h.count / maxCount) * chartH, 4) : 2;
+                                        return (
+                                            <div key={h.hour} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%' }}>
+                                                {h.count > 0 && (
+                                                    <span style={{ fontSize: '8px', color: '#93c5fd', fontWeight: 600, marginBottom: '1px' }}>{h.count}</span>
+                                                )}
+                                                <div
+                                                    style={{
+                                                        width: '100%',
+                                                        height: `${barH}px`,
+                                                        borderRadius: '3px 3px 0 0',
+                                                        background: h.count > 0 ? '#3b82f6' : '#374151',
+                                                        cursor: 'pointer',
+                                                        transition: 'background 0.2s',
+                                                    }}
+                                                    title={`${h.hour}:00 - ${h.count} sipariş`}
+                                                    onMouseEnter={e => { if (h.count > 0) (e.target as HTMLDivElement).style.background = '#60a5fa'; }}
+                                                    onMouseLeave={e => { if (h.count > 0) (e.target as HTMLDivElement).style.background = '#3b82f6'; }}
+                                                />
+                                                <span style={{ fontSize: '9px', color: '#6b7280', marginTop: '1px' }}>{h.hour}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        })()}
                     </div>
 
                     {/* Daily Distribution */}
@@ -569,38 +560,47 @@ export default function UnifiedAnalyticsPage() {
                     </div>
                 </div>
 
-                {/* Technical Metrics - Cloud Monitoring */}
-                {technicalMetrics && (
-                    <div className="mb-6">
-                        <h2 className="text-lg font-bold text-white mb-4">🔧 Teknik Metrikler (Cloud Monitoring)</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                            <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
-                                <p className="text-xl font-bold text-white">{technicalMetrics.firestoreReads.toLocaleString()}</p>
-                                <p className="text-xs text-gray-400">Firestore Reads</p>
-                            </div>
-                            <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
-                                <p className="text-xl font-bold text-white">{technicalMetrics.firestoreWrites.toLocaleString()}</p>
-                                <p className="text-xs text-gray-400">Firestore Writes</p>
-                            </div>
-                            <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
-                                <p className="text-xl font-bold text-white">{technicalMetrics.firestoreStorage} GB</p>
-                                <p className="text-xs text-gray-400">Firestore Storage</p>
-                            </div>
-                            <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
-                                <p className="text-xl font-bold text-white">{technicalMetrics.functionsInvocations.toLocaleString()}</p>
-                                <p className="text-xs text-gray-400">Functions Çağrısı</p>
-                            </div>
-                            <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
-                                <p className="text-xl font-bold text-white">{technicalMetrics.storageBandwidth} GB</p>
-                                <p className="text-xs text-gray-400">Storage Bandwidth</p>
-                            </div>
-                            <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
-                                <p className="text-xl font-bold text-white">{technicalMetrics.storageSize} GB</p>
-                                <p className="text-xs text-gray-400">Storage Boyutu</p>
+                {/* Platform Özeti */}
+                {(() => {
+                    const completedOrders = filteredOrders.filter(o => ['delivered', 'picked_up', 'completed'].includes(o.status));
+                    const completionRate = filteredOrders.length > 0 ? Math.round((completedOrders.length / filteredOrders.length) * 100) : 0;
+                    const { start: rangeStart, end: rangeEnd } = getDateRange(dateFilter);
+                    const daysDiff = Math.max(1, Math.ceil((rangeEnd.getTime() - rangeStart.getTime()) / (1000 * 60 * 60 * 24)));
+                    const avgPerDay = filteredOrders.length > 0 ? (filteredOrders.length / daysDiff).toFixed(1) : '0';
+                    const avgRevenuePerDay = completedOrders.length > 0 ? (stats.revenue / daysDiff).toFixed(2) : '0';
+                    const uniqueBusinesses = new Set(filteredOrders.map(o => o.businessId)).size;
+                    return (
+                        <div className="mb-6">
+                            <h2 className="text-lg font-bold text-white mb-4">📈 Platform Özeti</h2>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                    <p className="text-xl font-bold text-white">{orders.length.toLocaleString()}</p>
+                                    <p className="text-xs text-gray-400">Toplam Sipariş (Tüm)</p>
+                                </div>
+                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                    <p className="text-xl font-bold text-green-400">{completionRate}%</p>
+                                    <p className="text-xs text-gray-400">Tamamlanma Oranı</p>
+                                </div>
+                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                    <p className="text-xl font-bold text-emerald-400">€{Number(avgRevenuePerDay).toLocaleString()}</p>
+                                    <p className="text-xs text-gray-400">Günlük Ort. Ciro</p>
+                                </div>
+                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                    <p className="text-xl font-bold text-cyan-400">{avgPerDay}</p>
+                                    <p className="text-xs text-gray-400">Günlük Ort. Sipariş</p>
+                                </div>
+                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                    <p className="text-xl font-bold text-purple-400">{uniqueBusinesses}</p>
+                                    <p className="text-xs text-gray-400">Aktif İşletme</p>
+                                </div>
+                                <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
+                                    <p className="text-xl font-bold text-blue-400">{userStats?.total || 0}</p>
+                                    <p className="text-xs text-gray-400">Toplam Kullanıcı</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
                 {/* Info */}
                 <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-xl p-3">
