@@ -49,6 +49,7 @@ interface StaffOrder {
     startedAt?: Date;
     createdAt?: Date;
     completedAt?: Date;
+    deliveredAt?: Date;
     deliveryType?: string;
     total?: number;
     items?: any[];
@@ -146,9 +147,9 @@ export default function StaffDashboardPage() {
                     if (staffMap.has(docSnap.id)) return;
                     staffMap.set(docSnap.id, {
                         id: docSnap.id,
-                        displayName: d.displayName || d.firstName
+                        displayName: d.displayName || (d.firstName
                             ? `${d.firstName || ''} ${d.lastName || ''}`.trim()
-                            : d.email?.split('@')[0] || 'İsimsiz',
+                            : d.email?.split('@')[0] || 'İsimsiz'),
                         firstName: d.firstName,
                         lastName: d.lastName,
                         email: d.email,
@@ -325,6 +326,7 @@ export default function StaffDashboardPage() {
                     startedAt: d.startedAt?.toDate?.(),
                     createdAt: d.createdAt?.toDate?.(),
                     completedAt: d.completedAt?.toDate?.() || (d.status === 'delivered' ? d.updatedAt?.toDate?.() : null),
+                    deliveredAt: d.deliveredAt?.toDate?.() || (d.status === 'delivered' ? d.updatedAt?.toDate?.() : null),
                     deliveryType: d.deliveryType || d.deliveryMethod || d.fulfillmentType || 'pickup',
                     total: d.totalPrice || d.totalAmount || d.total || 0,
                     items: d.items || [],
@@ -451,7 +453,7 @@ export default function StaffDashboardPage() {
                 weekHours,
                 monthHours,
                 activityStatus,
-                totalDeliveries: deliveryOrders.filter(o => o.status === 'delivered').length,
+                totalDeliveries: deliveryOrders.filter(o => o.status === 'delivered' || o.deliveredAt).length,
                 shiftCount: staffShifts.filter(sh => sh.startedAt && isSameDay(sh.startedAt, today)).length,
             };
         });
