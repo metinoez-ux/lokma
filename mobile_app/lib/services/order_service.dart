@@ -523,6 +523,34 @@ class OrderService {
     return true;
   }
 
+  /// Mark a dine-in order as served by waiter
+  /// Sets status to 'served' and records waiter identity
+  Future<bool> markAsServed({
+    required String orderId,
+    required String waiterId,
+    required String waiterName,
+  }) async {
+    final doc = await _db.collection(_collection).doc(orderId).get();
+    if (!doc.exists) return false;
+
+    final data = doc.data() as Map<String, dynamic>;
+    final currentStatus = data['status'] as String?;
+
+    // Only allow marking as served if order is ready
+    if (currentStatus != OrderStatus.ready.name) {
+      return false;
+    }
+
+    await _db.collection(_collection).doc(orderId).update({
+      'status': OrderStatus.served.name,
+      'servedById': waiterId,
+      'servedByName': waiterName,
+      'servedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    return true;
+  }
+
   /// Update courier location (called every 3 minutes during delivery)
   Future<void> updateCourierLocation({
     required String orderId,

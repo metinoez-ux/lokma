@@ -773,7 +773,6 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('meat_orders')
-          .where('tableNumber', isEqualTo: _tableNumber)
           .where('butcherId', isEqualTo: _businessId)
           .orderBy('createdAt', descending: false)
           .snapshots(),
@@ -784,9 +783,13 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
 
         final allOrders = snapshot.data?.docs ?? [];
 
-        // Filter: show own orders + linked session orders
+        // Filter: match table number (handle int/string mismatch) + show own/linked orders
         final filtered = allOrders.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
+          // First check table number (handle int/string type mismatch)
+          final raw = data['tableNumber'];
+          final orderTable = raw is int ? raw : int.tryParse(raw?.toString() ?? '');
+          if (orderTable != _tableNumber) return false;
           // Always show user's own orders
           if (data['userId'] == user.uid) return true;
           // Show session orders if linked via PIN

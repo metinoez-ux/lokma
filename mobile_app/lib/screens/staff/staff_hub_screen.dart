@@ -33,8 +33,10 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   String _businessName = '';
   String? _businessId;
   int _assignedBusinessCount = 0;
-  int _maxTables = 20; // default
+  int _maxTables = 0;
   List<int> _assignedTables = []; // waiter's assigned tables
+  List<Map<String, dynamic>> _tables = []; // custom table definitions {label, section, sortOrder}
+  List<String> _tableSections = []; // section names
   final Set<String> _expandedShiftDays = {}; // tracks expanded days in shift history
 
   // Live counters
@@ -1299,6 +1301,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             _businessName = bizName;
           }
           // Load table count for dashboard — check both fields
+          debugPrint('[StaffHub] Loading tables from bizId=$bizId, bizData keys: ${bizData.keys.toList()}');
           final tableCount = bizData['tableCount'] as int? ?? 0;
           final maxResT = bizData['maxReservationTables'] as int? ?? 0;
           final effectiveTables = tableCount > 0 ? tableCount : maxResT;
@@ -1352,7 +1355,34 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                   _hasTables = false;
                   debugPrint('[StaffHub] Plan DISABLED tables: planHasTables=$planHasTables');
                 } else {
-                  debugPrint('[StaffHub] Plan ALLOWS tables: dineInQR=${features['dineInQR']}, waiterOrder=${features['waiterOrder']}');
+                  // Plan allows tables — ensure _hasTables is ON even if tableCount was not set
+                  _hasTables = true;
+                  // If _maxTables is still 0 (no tableCount in Firestore), read from business doc or use fallback
+                  if (_maxTables <= 0) {
+                    final bt = bizData['tableCount'] as int? ?? 0;
+                    final mrt = bizData['maxReservationTables'] as int? ?? 0;
+                    _maxTables = bt > 0 ? bt : (mrt > 0 ? mrt : 10); // 10 as last resort fallback
+                  }
+                  debugPrint('[StaffHub] Plan ALLOWS tables: dineInQR=${features['dineInQR']}, waiterOrder=${features['waiterOrder']}, maxTables=$_maxTables');
+
+                  // Load custom tables array (if defined in admin portal)
+                  final rawTables = bizData['tables'] as List<dynamic>?;
+                  final rawSections = bizData['tableSections'] as List<dynamic>?;
+                  if (rawTables != null && rawTables.isNotEmpty) {
+                    _tables = rawTables.map((t) => Map<String, dynamic>.from(t as Map)).toList();
+                    _tableSections = rawSections?.map((s) => s.toString()).toList() ?? [];
+                    _maxTables = _tables.length;
+                    debugPrint('[StaffHub] Loaded ${_tables.length} custom tables, ${_tableSections.length} sections');
+                  } else {
+                    // Fallback: generate default 1..N tables
+                    _tables = List.generate(_maxTables, (i) => {
+                      'label': '${i + 1}',
+                      'section': '',
+                      'sortOrder': i,
+                    });
+                    _tableSections = [];
+                    debugPrint('[StaffHub] Generated $_maxTables default tables (1..N)');
+                  }
                 }
                 // Gate shift tracking
                 _hasShiftTracking = features['staffShiftTracking'] == true;
@@ -2217,7 +2247,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               ? FirebaseFirestore.instance
                   .collection('meat_orders')
                   .where('butcherId', isEqualTo: _businessId)
-                  .where('status', whereIn: ['pending', 'preparing', 'ready', 'accepted'])
+                  .where('status', whereIn: ['pending', 'preparing', 'ready', 'accepted', 'served', 'delivered'])
                   .snapshots()
               : const Stream<QuerySnapshot>.empty(),
           builder: (context, ordersSnapshot) {
@@ -2227,10 +2257,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             if (ordersSnapshot.hasData) {
               for (final doc in ordersSnapshot.data!.docs) {
                 final data = doc.data() as Map<String, dynamic>;
-                final tableNum = data['tableNumber'] as int?;
+                final rawTable = data['tableNumber'];
+                final tableNum = rawTable is int ? rawTable : int.tryParse(rawTable?.toString() ?? '');
                 final method = data['deliveryMethod']?.toString() ?? data['orderType']?.toString() ?? '';
+                final status = data['status']?.toString() ?? '';
+                final payStatus = data['paymentStatus']?.toString() ?? '';
                 // Only count dine-in / table orders (exclude delivery)
                 if (tableNum != null && method != 'delivery') {
+                  // Skip served/delivered orders that are already paid
+                  if ((status == 'served' || status == 'delivered') && payStatus == 'paid') continue;
                   orderTableNums.add(tableNum);
                   orderCountPerTable[tableNum] = (orderCountPerTable[tableNum] ?? 0) + 1;
                 }
@@ -2388,6 +2423,65 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             }
 
             // Fallback: single grid when no tables assigned
+            // If sections exist, group by section
+            if (_tableSections.isNotEmpty) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ..._tableSections.map((section) {
+                    final sectionTables = _tables
+                        .where((t) => t['section'] == section)
+                        .toList();
+                    if (sectionTables.isEmpty) return const SizedBox.shrink();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8, top: 8),
+                          child: Row(
+                            children: [
+                              const Text('📍', style: TextStyle(fontSize: 14)),
+                              const SizedBox(width: 4),
+                              Text(
+                                section,
+                                style: TextStyle(
+                                  color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '(${sectionTables.length})',
+                                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 5,
+                            mainAxisSpacing: 8,
+                            crossAxisSpacing: 8,
+                            childAspectRatio: 1,
+                          ),
+                          itemCount: sectionTables.length,
+                          itemBuilder: (context, index) {
+                            final tableNum = int.tryParse(sectionTables[index]['label']?.toString() ?? '') ?? (index + 1);
+                            return buildTileForTable(tableNum);
+                          },
+                        ),
+                      ],
+                    );
+                  }),
+                  // Unassigned tables (no section)
+                  ..._buildUnassignedSectionTables(buildTileForTable, isDark),
+                ],
+              );
+            }
+
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -2406,6 +2500,88 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         );
       },
     );
+  }
+
+  /// Build grid for tables that have no section assigned (only when sections exist)
+  List<Widget> _buildUnassignedSectionTables(Widget Function(int) buildTile, bool isDark) {
+    final unassigned = _tables.where((t) => (t['section']?.toString() ?? '').isEmpty).toList();
+    if (unassigned.isEmpty) return [];
+    return [
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8, top: 12),
+        child: Text(
+          'Diğer Masalar (${unassigned.length})',
+          style: TextStyle(
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+      ),
+      GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 5,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 1,
+        ),
+        itemCount: unassigned.length,
+        itemBuilder: (context, index) {
+          final tableNum = int.tryParse(unassigned[index]['label']?.toString() ?? '') ?? (index + 1);
+          return buildTile(tableNum);
+        },
+      ),
+    ];
+  }
+
+  /// Mark a ready order as served by this waiter
+  Future<void> _markOrderAsServed(String docId, String displayOrderId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('🍽️ Siparişi Servis Et'),
+        content: Text(
+          'Sipariş #$displayOrderId masaya servis edildi olarak işaretlenecek.\n\n'
+          'Devam etmek istiyor musunuz?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('✅ Servis Ettim', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    final orderService = OrderService();
+    final success = await orderService.markAsServed(
+      orderId: docId,
+      waiterId: user.uid,
+      waiterName: _staffName.isNotEmpty ? _staffName : 'Garson',
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success
+            ? '✅ Sipariş #$displayOrderId servis edildi!'
+            : '❌ Sipariş zaten servis edilmiş veya hazır değil.'),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+    }
   }
 
   /// Shows a bottom sheet with existing orders for a table (admin-created / session-less orders)
@@ -2479,22 +2655,29 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     ),
                   ),
                   const Divider(height: 1),
-                  // Orders list
+                  // Orders list — Note: tableNumber may be stored as int OR string
+                  // depending on how order was created, so we filter client-side
                   Expanded(
                     child: StreamBuilder<QuerySnapshot>(
                       stream: _businessId != null
                           ? FirebaseFirestore.instance
                               .collection('meat_orders')
                               .where('butcherId', isEqualTo: _businessId)
-                              .where('tableNumber', isEqualTo: tableNum)
-                              .where('status', whereIn: ['pending', 'preparing', 'ready', 'accepted'])
+                              .where('status', whereIn: ['pending', 'preparing', 'ready', 'accepted', 'served', 'delivered'])
                               .snapshots()
                           : const Stream<QuerySnapshot>.empty(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const Center(child: CircularProgressIndicator());
                         }
-                        final orders = snapshot.data?.docs ?? [];
+                        // Filter orders for this specific table (handle int/string mismatch)
+                        final allDocs = snapshot.data?.docs ?? [];
+                        final orders = allDocs.where((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          final raw = data['tableNumber'];
+                          final orderTable = raw is int ? raw : int.tryParse(raw?.toString() ?? '');
+                          return orderTable == tableNum;
+                        }).toList();
                         if (orders.isEmpty) {
                           return Center(
                             child: Column(
@@ -2543,6 +2726,14 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               case 'ready':
                                 statusColor = Colors.green;
                                 statusText = 'Hazır';
+                                break;
+                              case 'served':
+                                statusColor = Colors.amber;
+                                statusText = 'Servis Edildi';
+                                break;
+                              case 'delivered':
+                                statusColor = Colors.amber;
+                                statusText = 'Teslim Edildi';
                                 break;
                               default:
                                 statusColor = Colors.grey;
@@ -2625,6 +2816,53 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                       ),
                                     ],
                                   ),
+                                  // Waiter service actions
+                                  if (status == 'ready') ...[
+                                    const SizedBox(height: 10),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () => _markOrderAsServed(
+                                          orders[index].id,
+                                          orderId,
+                                        ),
+                                        icon: const Icon(Icons.restaurant, color: Colors.white, size: 18),
+                                        label: const Text(
+                                          '🍽️ Servis Ettim',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green,
+                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  // Show waiter who served
+                                  if (status == 'served' && data['servedByName'] != null) ...[
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.person, size: 14, color: Colors.amber[700]),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${data['servedByName']} tarafından servis edildi',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.amber[700],
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ],
                               ),
                             );

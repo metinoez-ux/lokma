@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../router/app_router.dart';
+import '../widgets/in_app_notification.dart';
 
 class FCMService {
   static final FCMService _instance = FCMService._internal();
@@ -135,58 +136,58 @@ class FCMService {
     
     if (title == null && body == null) return;
     
-    // Show in-app SnackBar for foreground messages
+    // Determine emoji and accent color based on notification type
+    final data = message.data;
+    final type = data['type'] as String?;
+    
+    String emoji;
+    Color accentColor;
+    
+    switch (type) {
+      case 'order_cancelled':
+        emoji = '❌';
+        accentColor = const Color(0xFFE53935); // Red
+        break;
+      case 'order_status':
+        emoji = '📦';
+        accentColor = const Color(0xFF42A5F5); // Blue
+        break;
+      case 'new_delivery':
+        emoji = '🚚';
+        accentColor = const Color(0xFFFF9800); // Orange
+        break;
+      case 'order_ready':
+        emoji = '✅';
+        accentColor = const Color(0xFF66BB6A); // Green
+        break;
+      default:
+        emoji = '🔔';
+        accentColor = const Color(0xFF6C63FF); // Purple
+    }
+    
+    // Show elegant overlay banner
     try {
       final context = _navigatorKey.currentContext;
       if (context != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (title != null)
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                if (body != null)
-                  Text(
-                    body,
-                    style: const TextStyle(fontSize: 13),
-                  ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF2E7D32),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            duration: const Duration(seconds: 4),
-            action: SnackBarAction(
-              label: 'Göster',
-              textColor: Colors.white,
-              onPressed: () {
-                // Navigate based on notification type
-                final data = message.data;
-                final type = data['type'];
-                final orderId = data['orderId'];
-                if (type == 'new_delivery' && orderId != null) {
-                  _navigateToDriverDeliveries(orderId);
-                } else if (type == 'order_status' && orderId != null) {
-                  _navigateToOrders();
-                }
-              },
-            ),
-          ),
+        InAppNotification.show(
+          context: context,
+          title: title ?? 'Bildirim',
+          body: body,
+          emoji: emoji,
+          accentColor: accentColor,
+          duration: const Duration(seconds: 4),
+          onTap: () {
+            final orderId = data['orderId'];
+            if (type == 'new_delivery' && orderId != null) {
+              _navigateToDriverDeliveries(orderId);
+            } else if ((type == 'order_status' || type == 'order_cancelled') && orderId != null) {
+              _navigateToOrders();
+            }
+          },
         );
-        debugPrint('✅ Foreground notification SnackBar shown');
+        debugPrint('✅ Foreground notification overlay shown');
       } else {
-        debugPrint('⚠️ No context available for SnackBar');
+        debugPrint('⚠️ No context available for notification overlay');
       }
     } catch (e) {
       debugPrint('❌ Error showing foreground notification: $e');

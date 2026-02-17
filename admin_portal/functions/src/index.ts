@@ -545,6 +545,71 @@ export const onOrderStatusChange = onDocumentUpdated(
                         console.error("Error notifying drivers:", staffErr);
                     }
                 }
+
+                // If dine-in (table) order, notify assigned waiters
+                const isDineIn = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
+                if (isDineIn && after.tableNumber != null) {
+                    const butcherId = after.butcherId || after.businessId;
+                    const tableNum = after.tableNumber;
+
+                    try {
+                        const waiterTokens: string[] = [];
+                        const processedWaiterIds = new Set<string>();
+
+                        // Query on-shift staff at this business with assignedTables containing this table
+                        const waiterSnapshot = await db.collection("admins")
+                            .where("businessId", "==", butcherId)
+                            .where("isOnShift", "==", true)
+                            .get();
+
+                        waiterSnapshot.docs.forEach(doc => {
+                            if (processedWaiterIds.has(doc.id)) return;
+                            const data = doc.data();
+
+                            // Skip if on break
+                            if (data.shiftStatus === "paused") return;
+
+                            // Check if this staff has the table assigned
+                            const assignedTables = data.assignedTables as number[] | undefined;
+                            if (assignedTables && Array.isArray(assignedTables)) {
+                                const tableNumInt = typeof tableNum === "number" ? tableNum : parseInt(tableNum, 10);
+                                if (!assignedTables.includes(tableNumInt)) return;
+                            }
+                            // If no assignedTables field, skip (only notify specifically assigned waiters)
+                            else {
+                                return;
+                            }
+
+                            processedWaiterIds.add(doc.id);
+                            if (data.fcmToken) waiterTokens.push(data.fcmToken);
+                            if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                                waiterTokens.push(...data.fcmTokens);
+                            }
+                        });
+
+                        if (waiterTokens.length > 0) {
+                            const waiterMessage = {
+                                notification: {
+                                    title: `🍽️ Masa ${tableNum} Siparişi Hazır!`,
+                                    body: `${orderNumber} - Masaya servis edilmeyi bekliyor`,
+                                },
+                                data: {
+                                    type: "table_order_ready",
+                                    orderId: event.params.orderId,
+                                    businessId: butcherId,
+                                    tableNumber: String(tableNum),
+                                },
+                                tokens: waiterTokens,
+                            };
+                            const response = await messaging.sendEachForMulticast(waiterMessage);
+                            console.log(`[Waiter Gate] Sent table-ready notification to ${response.successCount}/${waiterTokens.length} assigned waiters for table ${tableNum}`);
+                        } else {
+                            console.log(`[Waiter Gate] No assigned waiters found for table ${tableNum} at business ${butcherId}`);
+                        }
+                    } catch (waiterErr) {
+                        console.error("Error notifying waiters:", waiterErr);
+                    }
+                }
                 break;
             case "onTheWay":
                 // Courier has claimed and started delivery

@@ -394,6 +394,9 @@ export default function BusinessDetailPage() {
     hasReservation: false,   // Masa rezervasyonu aktif mi?
     tableCapacity: 0,        // Toplam oturma kapasitesi (kişi)
     maxReservationTables: 0, // Aynı anda rezerve edilebilecek max masa sayısı
+    // 🆕 Gelişmiş Masa Yönetimi
+    tables: [] as { label: string; section: string; sortOrder: number }[],
+    tableSections: [] as string[],
     // 🆕 Yerinde Sipariş Ayarları
     dineInPaymentMode: 'payLater' as string,  // 'payFirst' = Hemen öde (fast food), 'payLater' = Çıkışta öde (restoran)
     hasTableService: false,   // Garson servisi var mı?
@@ -650,6 +653,9 @@ export default function BusinessDetailPage() {
           hasReservation: d.hasReservation || false,
           tableCapacity: d.tableCapacity || 0,
           maxReservationTables: d.maxReservationTables || 0,
+          // 🆕 Gelişmiş Masa Yönetimi
+          tables: Array.isArray(d.tables) ? d.tables : [],
+          tableSections: Array.isArray(d.tableSections) ? d.tableSections : [],
           // 🆕 Yerinde Sipariş Ayarları
           dineInPaymentMode: d.dineInPaymentMode || 'payLater',
           hasTableService: d.hasTableService || false,
@@ -1405,6 +1411,9 @@ export default function BusinessDetailPage() {
         hasReservation: formData.hasReservation || false,
         tableCapacity: Number(formData.tableCapacity) || 0,
         maxReservationTables: Number(formData.maxReservationTables) || 0,
+        // 🆕 Gelişmiş Masa Yönetimi
+        tables: formData.tables || [],
+        tableSections: formData.tableSections || [],
         // 🆕 Yerinde Sipariş Ayarları
         dineInPaymentMode: formData.dineInPaymentMode || 'payLater',
         hasTableService: formData.hasTableService || false,
@@ -4176,14 +4185,16 @@ export default function BusinessDetailPage() {
                 </div>
               </div>
 
-              {/* ── Table Count Configuration ── */}
+              {/* ── Table Management: Masa Yönetimi ── */}
               <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-                  🪑 Masa Sayısı Ayarı
+                  🪑 Masa Yönetimi
                 </h2>
-                <div className="grid grid-cols-2 gap-4 max-w-lg">
+
+                {/* Quick setup row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div>
-                    <label className="text-gray-400 text-sm block mb-1">Masa Adedi</label>
+                    <label className="text-gray-400 text-sm block mb-1">Toplam Masa Adedi</label>
                     <input
                       type="number"
                       value={formData.maxReservationTables}
@@ -4194,11 +4205,10 @@ export default function BusinessDetailPage() {
                         })
                       }
                       min="0"
-                      max="100"
+                      max="200"
                       className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none text-lg font-medium"
                       placeholder="ör: 20"
                     />
-                    <p className="text-xs text-gray-500 mt-1">İşletmedeki toplam masa sayısı</p>
                   </div>
                   <div>
                     <label className="text-gray-400 text-sm block mb-1">Oturma Kapasitesi (Kişi)</label>
@@ -4215,29 +4225,216 @@ export default function BusinessDetailPage() {
                       className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none text-lg font-medium"
                       placeholder="ör: 80"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Toplam müşteri kapasitesi</p>
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      onClick={() => {
+                        const count = formData.maxReservationTables || 0;
+                        if (count <= 0) return;
+                        // Generate tables 1..N with no sections
+                        const newTables = Array.from({ length: count }, (_, i) => ({
+                          label: String(i + 1),
+                          section: '',
+                          sortOrder: i,
+                        }));
+                        setFormData({ ...formData, tables: newTables });
+                        showToast(`${count} masa oluşturuldu (1-${count})`, 'success');
+                      }}
+                      className="w-full px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm font-medium transition"
+                    >
+                      🔄 1&apos;den {formData.maxReservationTables || 'N'}&apos;e Oluştur
+                    </button>
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      onClick={() => {
+                        // Add a single new table
+                        const existingLabels = formData.tables.map((t: any) => t.label);
+                        let nextNum = formData.tables.length + 1;
+                        while (existingLabels.includes(String(nextNum))) nextNum++;
+                        const newTable = { label: String(nextNum), section: '', sortOrder: formData.tables.length };
+                        setFormData({ ...formData, tables: [...formData.tables, newTable], maxReservationTables: formData.tables.length + 1 });
+                      }}
+                      className="w-full px-4 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-sm font-medium transition"
+                    >
+                      ➕ Tek Masa Ekle
+                    </button>
                   </div>
                 </div>
+
+                {/* Section management */}
+                {formData.tables.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <h3 className="text-sm font-semibold text-gray-300">📍 Bölümler</h3>
+                      <button
+                        onClick={() => {
+                          const name = prompt('Yeni bölüm adı (ör: 1. Kat, Aile Bölümü, Bahçe):');
+                          if (!name?.trim()) return;
+                          if (formData.tableSections.includes(name.trim())) {
+                            showToast('Bu bölüm zaten mevcut', 'error');
+                            return;
+                          }
+                          setFormData({ ...formData, tableSections: [...formData.tableSections, name.trim()] });
+                        }}
+                        className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition"
+                      >
+                        + Bölüm Ekle
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {formData.tableSections.length === 0 && (
+                        <span className="text-xs text-gray-500 italic">Henüz bölüm yok — tüm masalar tek grupta gösterilir</span>
+                      )}
+                      {formData.tableSections.map((section: string, idx: number) => (
+                        <div key={idx} className="flex items-center gap-1 bg-gray-700 rounded-lg px-3 py-1.5 text-sm">
+                          <span className="text-white">{section}</span>
+                          <span className="text-gray-500 text-xs ml-1">
+                            ({formData.tables.filter((t: any) => t.section === section).length} masa)
+                          </span>
+                          <button
+                            onClick={() => {
+                              // Remove section and clear it from tables
+                              const updated = formData.tables.map((t: any) =>
+                                t.section === section ? { ...t, section: '' } : t
+                              );
+                              setFormData({
+                                ...formData,
+                                tableSections: formData.tableSections.filter((_: any, i: number) => i !== idx),
+                                tables: updated,
+                              });
+                            }}
+                            className="ml-1 text-red-400 hover:text-red-300 transition text-xs"
+                            title="Bölümü sil"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Table list — editable grid */}
+                {formData.tables.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-gray-300">
+                        🪑 Masalar ({formData.tables.length})
+                      </h3>
+                    </div>
+
+                    {/* Group by section */}
+                    {(() => {
+                      const sections = formData.tableSections.length > 0
+                        ? [...formData.tableSections, '']  // named sections + unassigned
+                        : [''];  // all in one group
+                      return sections.map((sec: string) => {
+                        const tablesInSection = formData.tables
+                          .map((t: any, idx: number) => ({ ...t, _idx: idx }))
+                          .filter((t: any) => t.section === sec);
+                        if (tablesInSection.length === 0 && sec !== '') return null;
+                        return (
+                          <div key={sec || '__nosection'} className="mb-4">
+                            {sec && (
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-orange-400 text-sm font-bold">📍 {sec}</span>
+                                <span className="text-gray-500 text-xs">({tablesInSection.length} masa)</span>
+                              </div>
+                            )}
+                            {!sec && formData.tableSections.length > 0 && tablesInSection.length > 0 && (
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-gray-400 text-sm font-bold">Bölüm Atanmamış</span>
+                                <span className="text-gray-500 text-xs">({tablesInSection.length} masa)</span>
+                              </div>
+                            )}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                              {tablesInSection.map((table: any) => (
+                                <div
+                                  key={table._idx}
+                                  className="bg-gray-800 rounded-lg border border-gray-700 p-3 flex flex-col gap-2 hover:border-orange-500/50 transition"
+                                >
+                                  {/* Table label */}
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-gray-500 text-xs">M</span>
+                                    <input
+                                      type="text"
+                                      value={table.label}
+                                      onChange={(e) => {
+                                        const updated = [...formData.tables];
+                                        updated[table._idx] = { ...updated[table._idx], label: e.target.value };
+                                        setFormData({ ...formData, tables: updated });
+                                      }}
+                                      className="w-full bg-gray-700 text-white text-center px-2 py-1 rounded border border-gray-600 focus:border-orange-500 focus:outline-none text-sm font-bold"
+                                      placeholder="#"
+                                    />
+                                  </div>
+                                  {/* Section dropdown */}
+                                  {formData.tableSections.length > 0 && (
+                                    <select
+                                      value={table.section || ''}
+                                      onChange={(e) => {
+                                        const updated = [...formData.tables];
+                                        updated[table._idx] = { ...updated[table._idx], section: e.target.value };
+                                        setFormData({ ...formData, tables: updated });
+                                      }}
+                                      className="w-full bg-gray-700 text-gray-300 px-2 py-1 rounded border border-gray-600 focus:border-orange-500 focus:outline-none text-xs"
+                                    >
+                                      <option value="">—</option>
+                                      {formData.tableSections.map((s: string) => (
+                                        <option key={s} value={s}>{s}</option>
+                                      ))}
+                                    </select>
+                                  )}
+                                  {/* Delete button */}
+                                  <button
+                                    onClick={() => {
+                                      const updated = formData.tables.filter((_: any, i: number) => i !== table._idx);
+                                      setFormData({ ...formData, tables: updated, maxReservationTables: updated.length });
+                                    }}
+                                    className="text-red-500/60 hover:text-red-400 text-xs transition"
+                                  >
+                                    🗑
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                )}
+
+                {/* Empty state */}
+                {formData.tables.length === 0 && (
+                  <div className="bg-gray-800/50 rounded-xl p-8 border border-dashed border-gray-600 text-center">
+                    <span className="text-4xl">🪑</span>
+                    <p className="text-white font-semibold mt-3">Henüz masa tanımlanmadı</p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      Yukarıdan masa sayısını girerek otomatik oluşturun veya tek tek ekleyin
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* ── Table QR Codes — Compact Table Layout ── */}
-              {planFeatures.dineInQR && (formData.maxReservationTables || 0) > 0 && (
+              {planFeatures.dineInQR && formData.tables.length > 0 && (
                 <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
                       📱 Masa QR Kodları
                       <span className="text-sm font-normal text-gray-400">
-                        · {formData.maxReservationTables} masa
+                        · {formData.tables.length} masa
                       </span>
                     </h2>
                     <button
                       onClick={() => {
-                        const tableCount = formData.maxReservationTables || 0;
-                        for (let i = 1; i <= tableCount; i++) {
-                          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://lokma.web.app/dinein/${businessId}/table/${i}`)}`;
+                        for (const table of formData.tables) {
+                          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://lokma.web.app/dinein/${businessId}/table/${table.label}`)}`;
                           const link = document.createElement('a');
                           link.href = qrUrl;
-                          link.download = `Masa_${i}_QR.png`;
+                          link.download = `Masa_${table.label}_QR.png`;
                           link.target = '_blank';
                           document.body.appendChild(link);
                           link.click();
@@ -4252,51 +4449,42 @@ export default function BusinessDetailPage() {
 
                   {/* Compact grid — small QR thumbnails */}
                   <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-3">
-                    {Array.from({ length: formData.maxReservationTables || 0 }, (_, i) => {
-                      const tableNum = i + 1;
-                      const qrData = `https://lokma.web.app/dinein/${businessId}/table/${tableNum}`;
+                    {formData.tables.map((table: any, idx: number) => {
+                      const qrData = `https://lokma.web.app/dinein/${businessId}/table/${table.label}`;
                       const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrData)}`;
                       return (
                         <button
-                          key={tableNum}
+                          key={idx}
                           onClick={() => {
                             const downloadUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(qrData)}`;
                             const link = document.createElement('a');
                             link.href = downloadUrl;
-                            link.download = `Masa_${tableNum}_QR.png`;
+                            link.download = `Masa_${table.label}_QR.png`;
                             link.target = '_blank';
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
                           }}
                           className="bg-gray-800 rounded-lg border border-gray-700 p-2 flex flex-col items-center gap-1 hover:border-orange-500 hover:bg-gray-700/50 transition cursor-pointer group"
-                          title={`Masa ${tableNum} QR kodunu indir`}
+                          title={`Masa ${table.label} QR kodunu indir`}
                         >
                           <div className="w-full aspect-square bg-white rounded flex items-center justify-center overflow-hidden">
                             <img
                               src={qrImageUrl}
-                              alt={`Masa ${tableNum}`}
+                              alt={`Masa ${table.label}`}
                               className="w-full h-full object-contain"
                               loading="lazy"
                             />
                           </div>
-                          <span className="text-xs font-bold text-gray-300 group-hover:text-orange-400 transition">M{tableNum}</span>
+                          <span className="text-xs font-bold text-gray-300 group-hover:text-orange-400 transition">
+                            M{table.label}
+                            {table.section && <span className="text-gray-500 font-normal ml-0.5 text-[10px]">· {table.section}</span>}
+                          </span>
                         </button>
                       );
                     })}
                   </div>
                   <p className="text-xs text-gray-500 mt-3">💡 QR koduna tıklayarak tek tek indirebilirsiniz</p>
-                </div>
-              )}
-
-              {/* ── Empty State ── */}
-              {planFeatures.dineInQR && (formData.maxReservationTables || 0) === 0 && (
-                <div className="bg-gray-900 rounded-2xl p-8 border border-dashed border-orange-700/50 text-center">
-                  <span className="text-4xl">🪑</span>
-                  <p className="text-white font-semibold mt-3">Henüz masa tanımlanmadı</p>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Yukarıdan masa sayısını girerek QR kodlarınızı oluşturun
-                  </p>
                 </div>
               )}
 

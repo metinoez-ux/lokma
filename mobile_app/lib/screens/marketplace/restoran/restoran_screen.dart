@@ -16,6 +16,7 @@ import 'package:lokma_app/services/table_group_service.dart';
 import 'package:lokma_app/providers/table_group_provider.dart';
 import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
 import 'package:lokma_app/screens/marketplace/kasap/reservation_booking_screen.dart';
+import 'package:lokma_app/utils/opening_hours_helper.dart';
 
 /// Business type labels for display
 const Map<String, String> BUSINESS_TYPE_LABELS = {
@@ -257,50 +258,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   
   // 🆕 Check if business is currently open based on openingHours
   bool _isBusinessOpenNow(Map<String, dynamic> data) {
-    final openingHours = data['openingHours'];
-    if (openingHours == null) return true; // No info = assume open
-    
-    final now = DateTime.now();
-    final weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    final todayName = weekdays[now.weekday - 1];
-    
-    // openingHours can be List<String> (Google format) or Map<String, String>
-    String? todayHours;
-    
-    if (openingHours is List) {
-      // Google format: ["Monday: 09:00 – 18:00", "Tuesday: 09:00 – 18:00", ...]
-      for (final entry in openingHours) {
-        if (entry is String && entry.startsWith(todayName)) {
-          todayHours = entry;
-          break;
-        }
-      }
-    } else if (openingHours is Map) {
-      // Map format: {"monday": "09:00-18:00", ...}
-      todayHours = openingHours[todayName.toLowerCase()] as String?;
-    }
-    
-    if (todayHours == null || todayHours.toLowerCase().contains('closed') || todayHours.toLowerCase().contains('kapalı')) {
-      return false;
-    }
-    
-    // Try to parse hours - format: "09:00 – 18:00" or "09:00-18:00"
-    final timeRegex = RegExp(r'(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})');
-    final match = timeRegex.firstMatch(todayHours);
-    
-    if (match != null) {
-      final openHour = int.parse(match.group(1)!);
-      final openMinute = int.parse(match.group(2)!);
-      final closeHour = int.parse(match.group(3)!);
-      final closeMinute = int.parse(match.group(4)!);
-      
-      final openTime = DateTime(now.year, now.month, now.day, openHour, openMinute);
-      final closeTime = DateTime(now.year, now.month, now.day, closeHour, closeMinute);
-      
-      return now.isAfter(openTime) && now.isBefore(closeTime);
-    }
-    
-    return true; // Can't parse = assume open
+    final openingHelper = OpeningHoursHelper(data['openingHours']);
+    return openingHelper.isOpenAt(DateTime.now());
   }
   
   // Filter businesses based on current filters
@@ -1384,6 +1343,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     
     final deliveryStartTime = data['deliveryStartTime'] as String?;
     final pickupStartTime = data['pickupStartTime'] as String?;
+    
+    // 🆕 First check openingHours — if business is closed per its schedule, mark unavailable
+    if (!_isBusinessOpenNow(data)) {
+      return (isAvailable: false, reason: 'Şu an kapalı', startTime: null, deliveryTime: deliveryStartTime, pickupTime: pickupStartTime);
+    }
     
     // Check if current time is before delivery start
     bool deliveryUnavailable = false;
