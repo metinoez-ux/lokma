@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { collection, getDocs, doc, updateDoc, deleteDoc, deleteField, query, orderBy, where, onSnapshot, Timestamp, increment } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -17,6 +17,7 @@ const orderStatuses = {
     served: { label: 'Servis Edildi', color: 'teal', icon: '🍽️' },
     onTheWay: { label: 'Yolda', color: 'indigo', icon: '🛵' },
     delivered: { label: 'Teslim Edildi', color: 'emerald', icon: '🎉' },
+    completed: { label: 'Tamamlandı', color: 'emerald', icon: '✔️' },
     cancelled: { label: 'İptal', color: 'red', icon: '❌' },
 } as const;
 
@@ -73,6 +74,9 @@ interface Order {
     paymentStatus?: string;
     paymentMethod?: string;
     stripePaymentIntentId?: string;
+    // Served by waiter
+    servedByName?: string;
+    servedAt?: Timestamp;
 }
 
 export default function OrdersPage() {
@@ -351,6 +355,16 @@ export default function OrdersPage() {
                 updateData.courierName = deleteField();
                 updateData.courierPhone = deleteField();
                 updateData.claimedAt = deleteField();
+            }
+
+            // Save who served the order when marking as served/delivered
+            if (newStatus === 'served' || newStatus === 'delivered') {
+                const currentUser = auth.currentUser;
+                if (currentUser) {
+                    updateData.servedByName = currentUser.displayName || currentUser.email || 'Admin';
+                    updateData.servedById = currentUser.uid;
+                    updateData.servedAt = new Date();
+                }
             }
 
             // Add cancellation reason if provided
@@ -980,6 +994,12 @@ export default function OrdersPage() {
                                                 : '⏳ Ödenmedi'}
                                         </span>
                                     </div>
+                                    {selectedOrder.servedByName && (
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-gray-400">Servis Eden</span>
+                                            <span className="text-teal-400 font-medium">🍽️ {selectedOrder.servedByName}</span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -1396,6 +1416,11 @@ function OrderCard({
                     <p className="text-gray-400 text-xs pl-0.5">
                         {order.waiterName ? `👤 ${order.waiterName}` : '📱 Müşteri-App'}
                     </p>
+                    {order.servedByName && (order.status === 'served' || order.status === 'delivered' || order.status === 'completed') && (
+                        <p className="text-teal-400 text-xs pl-0.5">
+                            🍽️ {order.servedByName} tarafından servis edildi
+                        </p>
+                    )}
                 </div>
             )}
             <div className="flex items-center justify-between">

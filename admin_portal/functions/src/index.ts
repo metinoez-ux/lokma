@@ -446,9 +446,16 @@ export const onOrderStatusChange = onDocumentUpdated(
                     title = `📦 Siparişiniz Hazır!${orderTag}`;
                     body = `${orderNumber} - Kuryenin alması bekleniyor. Toplam: ${totalAmount.toFixed(2)}€`;
                 } else {
-                    // Pickup order: customer should come pick it up
-                    title = `✅ Siparişiniz Hazır!${orderTag}`;
-                    body = `${orderNumber} - Alabilirsiniz! Toplam: ${totalAmount.toFixed(2)}€`;
+                    // Check if dine-in
+                    const isDineInReady = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
+                    if (isDineInReady && after.tableNumber != null) {
+                        title = `✅ Siparişiniz Hazır!${orderTag}`;
+                        body = `${orderNumber} - Masa ${after.tableNumber}: Siparişiniz hazır, masanıza servis edilecek!`;
+                    } else {
+                        // Pickup order: customer should come pick it up
+                        title = `✅ Siparişiniz Hazır!${orderTag}`;
+                        body = `${orderNumber} - Alabilirsiniz! Toplam: ${totalAmount.toFixed(2)}€`;
+                    }
                 }
 
                 // If delivery order, also notify staff about pending delivery
@@ -548,9 +555,11 @@ export const onOrderStatusChange = onDocumentUpdated(
 
                 // If dine-in (table) order, notify assigned waiters
                 const isDineIn = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
+                console.log(`[Waiter Debug] isDineIn=${isDineIn}, orderType=${after.orderType}, tableNumber=${after.tableNumber}`);
                 if (isDineIn && after.tableNumber != null) {
                     const butcherId = after.butcherId || after.businessId;
                     const tableNum = after.tableNumber;
+                    console.log(`[Waiter Debug] Looking for on-shift staff at businessId=${butcherId} for table ${tableNum}`);
 
                     try {
                         const waiterTokens: string[] = [];
@@ -561,6 +570,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                             .where("businessId", "==", butcherId)
                             .where("isOnShift", "==", true)
                             .get();
+                        console.log(`[Waiter Debug] Found ${waiterSnapshot.docs.length} on-shift staff for business ${butcherId}`);
 
                         waiterSnapshot.docs.forEach(doc => {
                             if (processedWaiterIds.has(doc.id)) return;
@@ -571,14 +581,11 @@ export const onOrderStatusChange = onDocumentUpdated(
 
                             // Check if this staff has the table assigned
                             const assignedTables = data.assignedTables as number[] | undefined;
-                            if (assignedTables && Array.isArray(assignedTables)) {
+                            if (assignedTables && Array.isArray(assignedTables) && assignedTables.length > 0) {
                                 const tableNumInt = typeof tableNum === "number" ? tableNum : parseInt(tableNum, 10);
                                 if (!assignedTables.includes(tableNumInt)) return;
                             }
-                            // If no assignedTables field, skip (only notify specifically assigned waiters)
-                            else {
-                                return;
-                            }
+                            // If no assignedTables field, treat as responsible for ALL tables
 
                             processedWaiterIds.add(doc.id);
                             if (data.fcmToken) waiterTokens.push(data.fcmToken);
@@ -611,6 +618,25 @@ export const onOrderStatusChange = onDocumentUpdated(
                     }
                 }
                 break;
+            case "served": {
+                // Dine-in order served at the table
+                const isDineInServed = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
+                const servedByName = after.servedByName || "Garson";
+                if (isDineInServed && after.tableNumber != null) {
+                    title = `🍽️ Afiyet Olsun!${orderTag}`;
+                    body = `${orderNumber} - Siparişiniz masanıza servis edildi. Afiyet olsun! 😊`;
+                } else {
+                    title = `🍽️ Siparişiniz Servis Edildi${orderTag}`;
+                    body = `${orderNumber} - ${servedByName} tarafından servis edildi. Afiyet olsun!`;
+                }
+                // Schedule feedback request for dine-in served orders
+                const servedFeedbackSendAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                await db.collection("meat_orders").doc(event.params.orderId).update({
+                    feedbackSendAt: admin.firestore.Timestamp.fromDate(servedFeedbackSendAt),
+                    feedbackSent: false,
+                });
+                break;
+            }
             case "onTheWay":
                 // Courier has claimed and started delivery
                 const courierName = after.courierName || "Kurye";

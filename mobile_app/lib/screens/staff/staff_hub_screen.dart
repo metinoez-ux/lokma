@@ -1784,31 +1784,6 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                   color: Colors.grey[600],
                                 ),
                               ),
-                              const Spacer(),
-                              // Waiter order screen shortcut
-                              if (_hasTables)
-                                GestureDetector(
-                                  onTap: () => context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}'),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.restaurant, size: 14, color: Colors.green.shade700),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          'Sipariş Al',
-                                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.green.shade700),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
                             ],
                           ),
                         ),
@@ -1866,6 +1841,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             runSpacing: 4,
                             children: [
                               _tableLegend(const Color(0xFFFB335B), 'Siparişli'),
+                              _tableLegend(Colors.blue, 'Servis Edildi'),
                               _tableLegend(Colors.green, 'Ödendi'),
                               _tableLegend(Colors.orange, 'Rezerveli'),
                               _tableLegend(Colors.grey.shade400, 'Boş'),
@@ -3052,11 +3028,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         builder: (context, orderSnap) {
           final allOrders = orderSnap.data ?? [];
           // Keep orders "active" unless cancelled or fully paid+completed
-          // Unpaid served/delivered orders stay active so the table doesn't go empty
+          // Unpaid served/delivered/completed orders stay active so the table doesn't go empty
           final activeOrders = allOrders.where((o) {
             if (o.status == OrderStatus.cancelled) return false;
             if (o.status == OrderStatus.delivered || o.status == OrderStatus.served) {
-              return o.paymentStatus != 'paid'; // Keep unpaid served orders active
+              return o.paymentStatus != 'paid'; // Keep unpaid served/completed orders active
             }
             return true;
           }).toList();
@@ -3082,7 +3058,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           }
           final allPaid = allOrders.isNotEmpty && allOrders.every((o) => o.paymentStatus == 'paid');
 
-          // Detect unpaid served/delivered orders (table served but bill open)
+          // Detect unpaid served/delivered/completed orders (table served but bill open)
           final hasUnpaidServed = activeOrders.any((o) =>
             (o.status == OrderStatus.served || o.status == OrderStatus.delivered) &&
             o.paymentStatus != 'paid'
@@ -3095,23 +3071,23 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
           if (effectiveHasOrders) {
             if (allPaid) {
-              bgColor = Colors.green.shade50;
+              bgColor = isDark ? Colors.green.shade900.withOpacity(0.3) : Colors.green.shade50;
               borderColor = Colors.green.shade400;
-              textColor = Colors.green.shade800;
+              textColor = isDark ? Colors.green.shade300 : Colors.green.shade800;
             } else if (hasUnpaidServed) {
-              // Amber/orange for served-but-unpaid tables
-              bgColor = Colors.amber.shade50;
-              borderColor = Colors.amber.shade600;
-              textColor = Colors.amber.shade800;
+              // Blue for served-but-unpaid tables
+              bgColor = isDark ? Colors.blue.shade900.withOpacity(0.35) : Colors.blue.shade50;
+              borderColor = brandColor;
+              textColor = isDark ? Colors.blue.shade300 : Colors.blue.shade800;
             } else {
               bgColor = brandColor.withValues(alpha: 0.1);
               borderColor = brandColor;
-              textColor = brandColor;
+              textColor = isDark ? brandColor.withValues(alpha: 0.8) : brandColor;
             }
           } else if (hasReservation) {
-            bgColor = Colors.orange.shade50;
+            bgColor = isDark ? Colors.orange.shade900.withOpacity(0.3) : Colors.orange.shade50;
             borderColor = Colors.orange.shade400;
-            textColor = Colors.orange.shade800;
+            textColor = isDark ? Colors.orange.shade300 : Colors.orange.shade800;
           } else {
             bgColor = cardBg;
             borderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
@@ -3190,7 +3166,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         left: 3,
                         child: hasUnpaidServed
                             ? _BlinkingDot(
-                                color: Colors.amber.shade600,
+                                color: Colors.blue.shade600,
                                 size: 8,
                               )
                             : Container(
@@ -3428,7 +3404,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       stream: _orderService.getTableSessionOrdersStream(session.id),
                       builder: (context, snapshot) {
                         final allOrders = snapshot.data ?? [];
-                        // Keep unpaid served/delivered orders visible, filter out paid+completed and cancelled
+                        // Keep unpaid served/delivered/completed orders visible, filter out paid+completed and cancelled
                         final orders = allOrders.where((o) {
                           if (o.status == OrderStatus.cancelled) return false;
                           if (o.status == OrderStatus.delivered || o.status == OrderStatus.served) {
@@ -3618,7 +3594,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           ),
                                         ),
                                       ),
-                                    // Payment collection buttons for served/delivered unpaid orders
+                                    // Payment collection buttons for served/delivered/completed unpaid orders
                                     if ((order.status == OrderStatus.served || order.status == OrderStatus.delivered) && !isPaid)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 10),

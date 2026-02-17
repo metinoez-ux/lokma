@@ -243,8 +243,33 @@ async function createCommissionRecord(orderId, orderData) {
         const orderType = orderData.orderType || orderData.deliveryMethod || "click_collect";
         let courierType = "click_collect";
         if (orderType === "delivery") {
-            // Check if business has own courier or uses LOKMA courier
-            courierType = orderData.assignedCourierId ? "lokma_courier" : (businessData.hasOwnCourier ? "own_courier" : "lokma_courier");
+            const courierId = orderData.courierId || orderData.assignedCourierId;
+            if (courierId) {
+                // Look up the courier's driverType from their admin record
+                try {
+                    const courierDoc = await db.collection("admins").doc(courierId).get();
+                    const courierData = courierDoc.exists ? courierDoc.data() : null;
+                    if (courierData?.driverType === "lokma") {
+                        courierType = "lokma_courier";
+                    }
+                    else if (courierData?.driverType === "business") {
+                        courierType = "own_courier";
+                    }
+                    else {
+                        // Fallback: check if courier belongs to the same business
+                        courierType = (courierData?.businessId === businessId) ? "own_courier" : "lokma_courier";
+                    }
+                }
+                catch (courierLookupErr) {
+                    console.warn(`[Commission] Could not look up courier ${courierId}, using fallback`);
+                    courierType = businessData.hasOwnCourier ? "own_courier" : "lokma_courier";
+                }
+            }
+            else {
+                // No courier assigned yet — use business preference
+                courierType = businessData.hasOwnCourier ? "own_courier" : "lokma_courier";
+            }
+            console.log(`[Commission] Resolved courierType=${courierType} for order ${orderId} (courierId=${courierId || "none"})`);
         }
         // Get commission rate based on courier type
         let commissionRate = 5; // Default
@@ -416,28 +441,42 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                 body = `${orderNumber} - Kuryenin alması bekleniyor. Toplam: ${totalAmount.toFixed(2)}€`;
             }
             else {
-                // Pickup order: customer should come pick it up
-                title = `✅ Siparişiniz Hazır!${orderTag}`;
-                body = `${orderNumber} - Alabilirsiniz! Toplam: ${totalAmount.toFixed(2)}€`;
+                // Check if dine-in
+                const isDineInReady = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
+                if (isDineInReady && after.tableNumber != null) {
+                    title = `✅ Siparişiniz Hazır!${orderTag}`;
+                    body = `${orderNumber} - Masa ${after.tableNumber}: Siparişiniz hazır, masanıza servis edilecek!`;
+                }
+                else {
+                    // Pickup order: customer should come pick it up
+                    title = `✅ Siparişiniz Hazır!${orderTag}`;
+                    body = `${orderNumber} - Alabilirsiniz! Toplam: ${totalAmount.toFixed(2)}€`;
+                }
             }
             // If delivery order, also notify staff about pending delivery
             if (isDeliveryOrder) {
                 const butcherId = after.butcherId || after.businessId;
                 const deliveryAddress = after.deliveryAddress || "";
-                // Get all driver FCM tokens who are assigned to this business
+                // Fetch business doc for lokmaDriverEnabled + deliveryPreference
+                let lokmaDriverEnabled = true; // Default: LOKMA drivers receive notifications
+                let deliveryPreference = "hybrid"; // Default: notify both own staff and LOKMA
+                try {
+                    const bizDoc = await db.collection("businesses").doc(butcherId).get();
+                    if (bizDoc.exists) {
+                        const bizData = bizDoc.data();
+                        lokmaDriverEnabled = bizData.lokmaDriverEnabled !== false; // opt-out model
+                        deliveryPreference = bizData.deliveryPreference || "hybrid";
+                    }
+                }
+                catch (bizErr) {
+                    console.warn(`[Driver Gate] Could not fetch business ${butcherId} for driver preferences`);
+                }
+                // Determine which driver groups to notify based on preference
+                const notifyOwnStaff = deliveryPreference !== "lokma_only";
+                const notifyLokmaDrivers = lokmaDriverEnabled && deliveryPreference !== "own_only";
+                console.log(`[Driver Gate] Business ${butcherId}: lokmaDriverEnabled=${lokmaDriverEnabled}, deliveryPreference=${deliveryPreference}, notifyOwn=${notifyOwnStaff}, notifyLokma=${notifyLokmaDrivers}`);
                 // SHIFT GATING: Only notify staff who are on an active shift
                 try {
-                    // Query 1: Drivers assigned via assignedBusinesses array + on shift
-                    const driversSnapshot = await db.collection("admins")
-                        .where("isDriver", "==", true)
-                        .where("assignedBusinesses", "array-contains", butcherId)
-                        .where("isOnShift", "==", true)
-                        .get();
-                    // Query 2: Staff with direct businessId match + on shift (legacy support)
-                    const staffSnapshot = await db.collection("admins")
-                        .where("businessId", "==", butcherId)
-                        .where("isOnShift", "==", true)
-                        .get();
                     const staffTokens = [];
                     const processedIds = new Set();
                     let skippedPaused = 0;
@@ -457,8 +496,23 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                             staffTokens.push(...data.fcmTokens);
                         }
                     };
-                    driversSnapshot.docs.forEach(collectTokens);
-                    staffSnapshot.docs.forEach(collectTokens);
+                    // Query 1: Own staff with direct businessId match + on shift
+                    if (notifyOwnStaff) {
+                        const staffSnapshot = await db.collection("admins")
+                            .where("businessId", "==", butcherId)
+                            .where("isOnShift", "==", true)
+                            .get();
+                        staffSnapshot.docs.forEach(doc => collectTokens(doc));
+                    }
+                    // Query 2: LOKMA/external drivers assigned via assignedBusinesses array + on shift
+                    if (notifyLokmaDrivers) {
+                        const driversSnapshot = await db.collection("admins")
+                            .where("isDriver", "==", true)
+                            .where("assignedBusinesses", "array-contains", butcherId)
+                            .where("isOnShift", "==", true)
+                            .get();
+                        driversSnapshot.docs.forEach(doc => collectTokens(doc));
+                    }
                     if (skippedPaused > 0) {
                         console.log(`[Shift Gate] Skipped ${skippedPaused} paused staff for business ${butcherId}`);
                     }
@@ -486,7 +540,90 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                     console.error("Error notifying drivers:", staffErr);
                 }
             }
+            // If dine-in (table) order, notify assigned waiters
+            const isDineIn = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
+            console.log(`[Waiter Debug] isDineIn=${isDineIn}, orderType=${after.orderType}, tableNumber=${after.tableNumber}`);
+            if (isDineIn && after.tableNumber != null) {
+                const butcherId = after.butcherId || after.businessId;
+                const tableNum = after.tableNumber;
+                console.log(`[Waiter Debug] Looking for on-shift staff at businessId=${butcherId} for table ${tableNum}`);
+                try {
+                    const waiterTokens = [];
+                    const processedWaiterIds = new Set();
+                    // Query on-shift staff at this business with assignedTables containing this table
+                    const waiterSnapshot = await db.collection("admins")
+                        .where("businessId", "==", butcherId)
+                        .where("isOnShift", "==", true)
+                        .get();
+                    console.log(`[Waiter Debug] Found ${waiterSnapshot.docs.length} on-shift staff for business ${butcherId}`);
+                    waiterSnapshot.docs.forEach(doc => {
+                        if (processedWaiterIds.has(doc.id))
+                            return;
+                        const data = doc.data();
+                        // Skip if on break
+                        if (data.shiftStatus === "paused")
+                            return;
+                        // Check if this staff has the table assigned
+                        const assignedTables = data.assignedTables;
+                        if (assignedTables && Array.isArray(assignedTables) && assignedTables.length > 0) {
+                            const tableNumInt = typeof tableNum === "number" ? tableNum : parseInt(tableNum, 10);
+                            if (!assignedTables.includes(tableNumInt))
+                                return;
+                        }
+                        // If no assignedTables field, treat as responsible for ALL tables
+                        processedWaiterIds.add(doc.id);
+                        if (data.fcmToken)
+                            waiterTokens.push(data.fcmToken);
+                        if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                            waiterTokens.push(...data.fcmTokens);
+                        }
+                    });
+                    if (waiterTokens.length > 0) {
+                        const waiterMessage = {
+                            notification: {
+                                title: `🍽️ Masa ${tableNum} Siparişi Hazır!`,
+                                body: `${orderNumber} - Masaya servis edilmeyi bekliyor`,
+                            },
+                            data: {
+                                type: "table_order_ready",
+                                orderId: event.params.orderId,
+                                businessId: butcherId,
+                                tableNumber: String(tableNum),
+                            },
+                            tokens: waiterTokens,
+                        };
+                        const response = await messaging.sendEachForMulticast(waiterMessage);
+                        console.log(`[Waiter Gate] Sent table-ready notification to ${response.successCount}/${waiterTokens.length} assigned waiters for table ${tableNum}`);
+                    }
+                    else {
+                        console.log(`[Waiter Gate] No assigned waiters found for table ${tableNum} at business ${butcherId}`);
+                    }
+                }
+                catch (waiterErr) {
+                    console.error("Error notifying waiters:", waiterErr);
+                }
+            }
             break;
+        case "served": {
+            // Dine-in order served at the table
+            const isDineInServed = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
+            const servedByName = after.servedByName || "Garson";
+            if (isDineInServed && after.tableNumber != null) {
+                title = `🍽️ Afiyet Olsun!${orderTag}`;
+                body = `${orderNumber} - Siparişiniz masanıza servis edildi. Afiyet olsun! 😊`;
+            }
+            else {
+                title = `🍽️ Siparişiniz Servis Edildi${orderTag}`;
+                body = `${orderNumber} - ${servedByName} tarafından servis edildi. Afiyet olsun!`;
+            }
+            // Schedule feedback request for dine-in served orders
+            const servedFeedbackSendAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+            await db.collection("meat_orders").doc(event.params.orderId).update({
+                feedbackSendAt: admin.firestore.Timestamp.fromDate(servedFeedbackSendAt),
+                feedbackSent: false,
+            });
+            break;
+        }
         case "onTheWay":
             // Courier has claimed and started delivery
             const courierName = after.courierName || "Kurye";
