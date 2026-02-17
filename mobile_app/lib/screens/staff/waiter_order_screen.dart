@@ -466,7 +466,13 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                             ),
                                             onPressed: () async {
                                               try {
-                                                await _orderService.markAsServed(order.id);
+                                                final user = FirebaseAuth.instance.currentUser;
+                                                if (user == null) return;
+                                                await _orderService.markAsServed(
+                                                  orderId: order.id,
+                                                  waiterId: user.uid,
+                                                  waiterName: user.displayName ?? 'Garson',
+                                                );
                                                 if (mounted) {
                                                   HapticFeedback.mediumImpact();
                                                   ScaffoldMessenger.of(context).showSnackBar(

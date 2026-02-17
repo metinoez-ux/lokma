@@ -1718,11 +1718,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
                       if (_isDriver) const SizedBox(height: 12),
 
-                      // ─── Table Service Card (if business has tables) ───
-                      if (_hasTables && _businessId != null)
-                        _buildTableServiceCard(businessId: _businessId!),
 
-                      if (_hasTables && _businessId != null) const SizedBox(height: 12),
 
                       // ─── Reservations Card ───
                       if (_hasReservation)
@@ -1777,16 +1773,91 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       if (_businessId != null) ...[
                         const SizedBox(height: 8),
                         Padding(
-                          padding: const EdgeInsets.only(left: 4, bottom: 8),
-                          child: Text(
-                            'Masa Durumu',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[600],
-                            ),
+                          padding: const EdgeInsets.only(left: 4, bottom: 4),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Masa Durumu',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const Spacer(),
+                              // Waiter order screen shortcut
+                              if (_hasTables)
+                                GestureDetector(
+                                  onTap: () => context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}'),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.restaurant, size: 14, color: Colors.green.shade700),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Sipariş Al',
+                                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.green.shade700),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
+                        // Live order status chips
+                        if (_hasTables && _businessId != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4, bottom: 6),
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('meat_orders')
+                                  .where('butcherId', isEqualTo: _businessId)
+                                  .where('status', whereIn: ['pending', 'preparing', 'ready', 'served'])
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                final docs = snapshot.data?.docs ?? [];
+                                final tableOrders = docs.where((doc) {
+                                  final data = doc.data() as Map<String, dynamic>;
+                                  final method = data['deliveryMethod']?.toString() ?? data['orderType']?.toString() ?? '';
+                                  return method != 'delivery';
+                                }).toList();
+
+                                int pending = 0, preparing = 0, ready = 0, served = 0;
+                                for (final doc in tableOrders) {
+                                  final data = doc.data() as Map<String, dynamic>;
+                                  final status = data['status']?.toString() ?? '';
+                                  switch (status) {
+                                    case 'pending': pending++; break;
+                                    case 'preparing': preparing++; break;
+                                    case 'ready': ready++; break;
+                                    case 'served': served++; break;
+                                  }
+                                }
+
+                                final total = pending + preparing + ready + served;
+                                if (total == 0) return const SizedBox.shrink();
+
+                                return Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: [
+                                    _statusChip('⏳ $pending', Colors.amber, pending > 0),
+                                    _statusChip('🔥 $preparing', Colors.orange, preparing > 0),
+                                    _statusChip('✅ $ready', Colors.green, ready > 0),
+                                    _statusChip('🍽️ $served', Colors.teal, served > 0),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
                         // Legend row
                         Padding(
                           padding: const EdgeInsets.only(left: 4, bottom: 12),
@@ -3518,7 +3589,13 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                             ),
                                             onPressed: () async {
                                               try {
-                                                await _orderService.markAsServed(order.id);
+                                                final user = FirebaseAuth.instance.currentUser;
+                                                if (user == null) return;
+                                                await _orderService.markAsServed(
+                                                  orderId: order.id,
+                                                  waiterId: user.uid,
+                                                  waiterName: _staffName.isNotEmpty ? _staffName : 'Garson',
+                                                );
                                                 if (mounted) {
                                                   HapticFeedback.mediumImpact();
                                                   ScaffoldMessenger.of(context).showSnackBar(

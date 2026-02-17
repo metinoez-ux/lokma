@@ -348,28 +348,6 @@ class OrderService {
     });
   }
 
-  /// Mark a dine-in order as served (waiter delivered to table)
-  /// Only valid for dine-in orders with status 'ready'
-  Future<bool> markAsServed(String orderId) async {
-    final doc = await _db.collection(_collection).doc(orderId).get();
-    if (!doc.exists) return false;
-
-    final data = doc.data() as Map<String, dynamic>;
-    final orderType = data['orderType']?.toString() ?? '';
-    final status = data['status']?.toString() ?? '';
-
-    // Only dine-in orders can be marked as served
-    if (orderType != OrderType.dineIn.name) return false;
-    // Only ready orders can be served
-    if (status != OrderStatus.ready.name) return false;
-
-    await _db.collection(_collection).doc(orderId).update({
-      'status': OrderStatus.served.name,
-      'servedAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-    return true;
-  }
 
   /// Get user's orders stream (from meat_orders - canonical collection)
   Stream<List<LokmaOrder>> getUserOrdersStream(String userId) {
