@@ -73,6 +73,20 @@
                     "order": "ASCENDING"
                 }
             ]
+        },
+        {
+            "collectionGroup": "meat_orders",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "tableSessionId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "ASCENDING"
+                }
+            ]
         }
     ],
     "fieldOverrides": []
