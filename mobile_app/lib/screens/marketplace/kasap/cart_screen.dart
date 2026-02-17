@@ -20,6 +20,7 @@ import 'package:lokma_app/services/fcm_service.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:lokma_app/services/order_service.dart';
 import 'package:lokma_app/services/table_group_service.dart';
+import 'package:lokma_app/services/table_session_service.dart';
 import 'package:lokma_app/providers/table_group_provider.dart';
 import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
 import 'package:lokma_app/screens/orders/rating_screen.dart';
@@ -368,6 +369,31 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         }
       }
 
+      // For dine-in orders, find or create a table session so the order appears in staff hub
+      String? tableSessionId;
+      if (_isDineIn && cart.butcherId != null) {
+        final tableNumStr = _scannedTableNumber ?? _tableNumberController.text.trim();
+        final tableNum = int.tryParse(tableNumStr);
+        if (tableNum != null && tableNum > 0) {
+          try {
+            final sessionService = TableSessionService();
+            var session = await sessionService.getActiveSession(cart.butcherId!, tableNum);
+            if (session == null) {
+              // Create a customer-initiated session
+              session = await sessionService.createSession(
+                businessId: cart.butcherId!,
+                tableNumber: tableNum,
+                waiterId: userId,
+                waiterName: 'Müşteri ($userDisplayName)',
+              );
+            }
+            tableSessionId = session.id;
+          } catch (e) {
+            debugPrint('Error finding/creating table session: $e');
+          }
+        }
+      }
+
       final orderData = {
         'userId': userId,
         'userDisplayName': userDisplayName,
@@ -406,11 +432,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         'pickupTime': (_isPickUp || _isDineIn) ? Timestamp.fromDate(pickupDateTime) : null,
         'deliveryAddress': (!_isPickUp && !_isDineIn) ? userAddress : null,
         'paymentMethod': _paymentMethod,
-        'paymentStatus': _paymentMethod == 'payLater' ? 'payLater' : 'pending',
+        'paymentStatus': _paymentMethod == 'payLater' ? 'payLater' : 'paid',
         'status': 'pending',
         if (_orderNote.trim().isNotEmpty) 'orderNote': _orderNote.trim(),
         if (_isDineIn && (_scannedTableNumber ?? _tableNumberController.text.trim()).isNotEmpty)
           'tableNumber': _scannedTableNumber ?? _tableNumberController.text.trim(),
+        if (tableSessionId != null) 'tableSessionId': tableSessionId,
         // Sponsored product conversion tracking
         if (_sponsoredItemIds.isNotEmpty) 'sponsoredItemIds': _sponsoredItemIds.toList(),
         if (_sponsoredItemIds.isNotEmpty) 'hasSponsoredItems': true,

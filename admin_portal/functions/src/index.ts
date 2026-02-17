@@ -565,18 +565,25 @@ export const onOrderStatusChange = onDocumentUpdated(
                         const waiterTokens: string[] = [];
                         const processedWaiterIds = new Set<string>();
 
-                        // Query on-shift staff at this business with assignedTables containing this table
+                        // Query active staff at this business (include those who never started shift system)
                         const waiterSnapshot = await db.collection("admins")
                             .where("businessId", "==", butcherId)
-                            .where("isOnShift", "==", true)
+                            .where("isActive", "!=", false)
                             .get();
-                        console.log(`[Waiter Debug] Found ${waiterSnapshot.docs.length} on-shift staff for business ${butcherId}`);
+                        console.log(`[Waiter Debug] Found ${waiterSnapshot.docs.length} active staff for business ${butcherId}`);
 
                         waiterSnapshot.docs.forEach(doc => {
                             if (processedWaiterIds.has(doc.id)) return;
                             const data = doc.data();
 
-                            // Skip if on break
+                            // Skip if explicitly off-shift (isOnShift === false means shift ended)
+                            // Allow if isOnShift is true OR undefined (never used shift system)
+                            if (data.isOnShift === false) {
+                                console.log(`[Waiter Debug] Skipping ${doc.id} - explicitly off-shift`);
+                                return;
+                            }
+
+                            // Skip if on break (paused shift)
                             if (data.shiftStatus === "paused") return;
 
                             // Check if this staff has the table assigned

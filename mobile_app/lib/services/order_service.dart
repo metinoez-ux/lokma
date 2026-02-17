@@ -80,6 +80,9 @@ class LokmaOrder {
   final DateTime? deliveredAt;
   final Map<String, dynamic>? deliveryProof; // {type, gps, photoUrl, completedAt}
   final List<Map<String, dynamic>> unavailableItems; // [{positionNumber, productName, quantity}]
+  final String? servedByName;
+  final String? tableSessionId;
+  final dynamic tableNumber; // Can be int or String from Firestore
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -111,6 +114,9 @@ class LokmaOrder {
     this.deliveredAt,
     this.deliveryProof,
     this.unavailableItems = const [],
+    this.servedByName,
+    this.tableSessionId,
+    this.tableNumber,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -168,6 +174,9 @@ class LokmaOrder {
       unavailableItems: (data['unavailableItems'] as List<dynamic>?)
           ?.map((e) => Map<String, dynamic>.from(e as Map))
           .toList() ?? [],
+      servedByName: data['servedByName'],
+      tableSessionId: data['tableSessionId'],
+      tableNumber: data['tableNumber'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
@@ -331,6 +340,39 @@ class OrderService {
             .toList())
         .handleError((e) {
           print('Error fetching table session orders: $e');
+          return <LokmaOrder>[];
+        });
+  }
+
+  /// Get ALL orders for a specific table number + business (fallback for missing tableSessionId)
+  /// This catches orders placed from cart_screen that don't have tableSessionId
+  Stream<List<LokmaOrder>> getTableOrdersStream({
+    required String businessId,
+    required int tableNumber,
+    String? sessionId,
+  }) {
+    // Query by tableNumber + butcherId to catch ALL dine-in orders for this table
+    return _db
+        .collection(_collection)
+        .where('butcherId', isEqualTo: businessId)
+        .where('deliveryMethod', isEqualTo: 'dineIn')
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snapshot) {
+          final allDocs = snapshot.docs
+              .map((doc) => LokmaOrder.fromFirestore(doc))
+              .toList();
+          // Client-side filter: match table number (handle int/string type)
+          return allDocs.where((order) {
+            // Match by tableSessionId OR by tableNumber
+            if (sessionId != null && order.tableSessionId == sessionId) return true;
+            // Match by table number (handle int/string mismatch)
+            final orderTableStr = order.tableNumber?.toString() ?? '';
+            return orderTableStr == tableNumber.toString();
+          }).toList();
+        })
+        .handleError((e) {
+          print('Error fetching table orders: $e');
           return <LokmaOrder>[];
         });
   }

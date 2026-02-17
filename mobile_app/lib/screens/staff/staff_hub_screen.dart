@@ -2910,6 +2910,139 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                       ],
                                     ),
                                   ],
+                                  // Payment buttons for served/delivered unpaid orders
+                                  if ((status == 'served' || status == 'delivered') && data['paymentStatus'] != 'paid') ...[
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: FilledButton.icon(
+                                            icon: const Icon(Icons.money, size: 16),
+                                            label: const Text('💵 Nakit', style: TextStyle(fontWeight: FontWeight.w700)),
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: Colors.green.shade700,
+                                              padding: const EdgeInsets.symmetric(vertical: 10),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            ),
+                                            onPressed: () async {
+                                              try {
+                                                await _orderService.updatePaymentStatus(
+                                                  orderId: orders[index].id,
+                                                  paymentStatus: 'paid',
+                                                  paymentMethod: 'cash',
+                                                );
+                                                if (mounted) {
+                                                  HapticFeedback.mediumImpact();
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: const Text('✅ Nakit ödeme alındı!'),
+                                                      backgroundColor: Colors.green.shade700,
+                                                      behavior: SnackBarBehavior.floating,
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                    ),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                  );
+                                                }
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: FilledButton.icon(
+                                            icon: const Icon(Icons.credit_card, size: 16),
+                                            label: const Text('💳 Kart', style: TextStyle(fontWeight: FontWeight.w700)),
+                                            style: FilledButton.styleFrom(
+                                              backgroundColor: Colors.blue.shade700,
+                                              padding: const EdgeInsets.symmetric(vertical: 10),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            ),
+                                            onPressed: () async {
+                                              try {
+                                                await _orderService.updatePaymentStatus(
+                                                  orderId: orders[index].id,
+                                                  paymentStatus: 'paid',
+                                                  paymentMethod: 'card',
+                                                );
+                                                if (mounted) {
+                                                  HapticFeedback.mediumImpact();
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: const Text('✅ Kart ödeme alındı!'),
+                                                      backgroundColor: Colors.blue.shade700,
+                                                      behavior: SnackBarBehavior.floating,
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                    ),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                  );
+                                                }
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                  // Green paid chip with timestamp for paid orders
+                                  if (data['paymentStatus'] == 'paid') ...[
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            data['paymentMethod'] == 'card' ? Icons.credit_card : Icons.payments,
+                                            size: 15,
+                                            color: Colors.green,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              '✅ Ödendi${data['paymentMethod'] == 'card' ? ' (Kart)' : data['paymentMethod'] == 'cash' ? ' (Nakit)' : ''}',
+                                              style: const TextStyle(
+                                                color: Colors.green,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ),
+                                          if (data['updatedAt'] != null)
+                                            Text(
+                                              (() {
+                                                final ts = data['updatedAt'];
+                                                DateTime? dt;
+                                                if (ts is Timestamp) {
+                                                  dt = ts.toDate().toLocal();
+                                                }
+                                                if (dt != null) {
+                                                  return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                                                }
+                                                return '';
+                                              })(),
+                                              style: TextStyle(
+                                                color: Colors.green.withValues(alpha: 0.7),
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             );
@@ -3024,7 +3157,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     // If there's a session, wrap in StreamBuilder for live order data
     if (session != null) {
       return StreamBuilder<List<LokmaOrder>>(
-        stream: _orderService.getTableSessionOrdersStream(session.id),
+        stream: _orderService.getTableOrdersStream(
+          businessId: session.businessId,
+          tableNumber: session.tableNumber,
+          sessionId: session.id,
+        ),
         builder: (context, orderSnap) {
           final allOrders = orderSnap.data ?? [];
           // Keep orders "active" unless cancelled or fully paid+completed
@@ -3056,7 +3193,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               });
             }
           }
-          final allPaid = allOrders.isNotEmpty && allOrders.every((o) => o.paymentStatus == 'paid');
+          final allPaid = activeOrders.isNotEmpty && activeOrders.every((o) => o.paymentStatus == 'paid');
 
           // Detect unpaid served/delivered/completed orders (table served but bill open)
           final hasUnpaidServed = activeOrders.any((o) =>
@@ -3233,107 +3370,192 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       );
     }
 
-    // No session — check if there are direct orders from admin/customer
-    final hasDirectOrders = orderCount > 0;
+    // No session — use StreamBuilder to get live order data for blue dot + payment status
+    if (_businessId == null) {
+      // Fallback: no business context
+      return _buildEmptyTableTile(tableNum, cardBg, isDark, hasReservation, brandColor);
+    }
 
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('meat_orders')
+          .where('butcherId', isEqualTo: _businessId)
+          .where('status', whereIn: ['pending', 'preparing', 'ready', 'accepted', 'served', 'delivered'])
+          .snapshots(),
+      builder: (context, snapshot) {
+        // Filter orders for this specific table
+        final allDocs = snapshot.data?.docs ?? [];
+        final tableOrders = allDocs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final raw = data['tableNumber'];
+          final orderTable = raw is int ? raw : int.tryParse(raw?.toString() ?? '');
+          return orderTable == tableNum;
+        }).toList();
+
+        final hasDirectOrders = tableOrders.isNotEmpty;
+
+        // Parse statuses for blue dot logic
+        final hasUnpaidServed = tableOrders.any((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final status = data['status']?.toString() ?? '';
+          final paymentStatus = data['paymentStatus']?.toString() ?? '';
+          return (status == 'served' || status == 'delivered') && paymentStatus != 'paid';
+        });
+
+        final allPaid = tableOrders.isNotEmpty && tableOrders.every((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return data['paymentStatus']?.toString() == 'paid';
+        });
+
+        Color bgColor;
+        Color borderColor;
+        Color textColor;
+
+        if (hasDirectOrders) {
+          if (allPaid) {
+            bgColor = isDark ? Colors.green.shade900.withOpacity(0.3) : Colors.green.shade50;
+            borderColor = Colors.green.shade400;
+            textColor = isDark ? Colors.green.shade300 : Colors.green.shade800;
+          } else if (hasUnpaidServed) {
+            bgColor = isDark ? Colors.blue.shade900.withOpacity(0.35) : Colors.blue.shade50;
+            borderColor = Colors.blue.shade400;
+            textColor = isDark ? Colors.blue.shade300 : Colors.blue.shade800;
+          } else {
+            bgColor = brandColor.withValues(alpha: 0.1);
+            borderColor = brandColor;
+            textColor = brandColor;
+          }
+        } else if (hasReservation) {
+          bgColor = isDark ? Colors.orange.shade900.withOpacity(0.3) : Colors.orange.shade50;
+          borderColor = Colors.orange.shade400;
+          textColor = isDark ? Colors.orange.shade300 : Colors.orange.shade800;
+        } else {
+          bgColor = cardBg;
+          borderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
+          textColor = Colors.grey.shade500;
+        }
+
+        return Material(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(12),
+          elevation: hasDirectOrders ? 2 : 0,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              if (hasDirectOrders) {
+                _showTableOrdersSheet(tableNum);
+              } else {
+                _handleEmptyTableTap(tableNum);
+              }
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: borderColor,
+                  width: hasDirectOrders ? 1.5 : 1,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  if (hasReservation && !hasDirectOrders)
+                    Positioned(
+                      top: 2,
+                      right: 2,
+                      child: Container(
+                        width: 14, height: 14,
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Center(
+                          child: Text('R', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
+                        ),
+                      ),
+                    ),
+                  // Blue dot for served/unpaid, green for all paid, red for active
+                  if (hasDirectOrders)
+                    Positioned(
+                      top: 3,
+                      left: 3,
+                      child: Container(
+                        width: 8, height: 8,
+                        decoration: BoxDecoration(
+                          color: allPaid
+                              ? Colors.green
+                              : hasUnpaidServed
+                                  ? Colors.blue.shade600
+                                  : Colors.red.shade400,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '$tableNum',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: textColor,
+                          ),
+                        ),
+                        if (hasDirectOrders)
+                          Text(
+                            '${tableOrders.length} sip.',
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w600,
+                              color: textColor,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyTableTile(int tableNum, Color cardBg, bool isDark, bool hasReservation, Color brandColor) {
     Color bgColor;
     Color borderColor;
     Color textColor;
-
-    if (hasDirectOrders) {
-      // Table has orders but no session — show as active
-      bgColor = brandColor.withValues(alpha: 0.1);
-      borderColor = brandColor;
-      textColor = brandColor;
-    } else if (hasReservation) {
-      bgColor = Colors.orange.shade50;
+    if (hasReservation) {
+      bgColor = isDark ? Colors.orange.shade900.withOpacity(0.3) : Colors.orange.shade50;
       borderColor = Colors.orange.shade400;
-      textColor = Colors.orange.shade800;
+      textColor = isDark ? Colors.orange.shade300 : Colors.orange.shade800;
     } else {
       bgColor = cardBg;
       borderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
       textColor = Colors.grey.shade500;
     }
-
     return Material(
       color: bgColor,
       borderRadius: BorderRadius.circular(12),
-      elevation: hasDirectOrders ? 2 : 0,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           HapticFeedback.lightImpact();
-          if (hasDirectOrders) {
-            // Table has active orders — show them directly
-            _showTableOrdersSheet(tableNum);
-          } else {
-            // Empty table — show confirmation on staff hub, then navigate to menu
-            _handleEmptyTableTap(tableNum);
-          }
+          _handleEmptyTableTap(tableNum);
         },
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: borderColor,
-              width: hasDirectOrders ? 1.5 : 1,
-            ),
+            border: Border.all(color: borderColor),
           ),
-          child: Stack(
-            children: [
-              if (hasReservation && !hasDirectOrders)
-                Positioned(
-                  top: 2,
-                  right: 2,
-                  child: Container(
-                    width: 14, height: 14,
-                    decoration: BoxDecoration(
-                      color: Colors.orange,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: const Center(
-                      child: Text('R', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
-                    ),
-                  ),
-                ),
-              // Order count badge for direct orders (top-left dot)
-              if (hasDirectOrders)
-                Positioned(
-                  top: 3,
-                  left: 3,
-                  child: Container(
-                    width: 8, height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.red.shade400,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '$tableNum',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: textColor,
-                      ),
-                    ),
-                    if (hasDirectOrders)
-                      Text(
-                        '$orderCount sip.',
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.w600,
-                          color: brandColor,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
+          child: Center(
+            child: Text(
+              '$tableNum',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textColor),
+            ),
           ),
         ),
       ),
@@ -3401,15 +3623,18 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                   // Orders stream
                   Expanded(
                     child: StreamBuilder<List<LokmaOrder>>(
-                      stream: _orderService.getTableSessionOrdersStream(session.id),
+                      stream: _orderService.getTableOrdersStream(
+                        businessId: session.businessId,
+                        tableNumber: session.tableNumber,
+                        sessionId: session.id,
+                      ),
                       builder: (context, snapshot) {
                         final allOrders = snapshot.data ?? [];
                         // Keep unpaid served/delivered/completed orders visible, filter out paid+completed and cancelled
                         final orders = allOrders.where((o) {
                           if (o.status == OrderStatus.cancelled) return false;
-                          if (o.status == OrderStatus.delivered || o.status == OrderStatus.served) {
-                            return o.paymentStatus != 'paid';
-                          }
+                          // Only hide delivered+paid orders (fully done)
+                          if (o.status == OrderStatus.delivered && o.paymentStatus == 'paid') return false;
                           return true;
                         }).toList();
                         // Sort newest first
@@ -3482,6 +3707,147 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
+
+                            // Bulk payment section - Pay All
+                            if (!allPaid) ...[
+                              Builder(builder: (context) {
+                                final unpaidOrders = orders.where((o) => 
+                                  o.paymentStatus != 'paid' && 
+                                  (o.status == OrderStatus.served || o.status == OrderStatus.delivered || o.status == OrderStatus.ready)
+                                ).toList();
+                                final unpaidTotal = unpaidOrders.fold<double>(0, (sum, o) => sum + o.totalAmount);
+                                
+                                if (unpaidOrders.isEmpty) return const SizedBox.shrink();
+                                
+                                return Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [Colors.amber.shade50, Colors.orange.shade50],
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(color: Colors.amber.shade200),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.receipt, size: 18, color: Colors.amber.shade800),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Tüm Hesabı Öde',
+                                            style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w800,
+                                              color: Colors.amber.shade900,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Text(
+                                            '€${unpaidTotal.toStringAsFixed(2)}',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.amber.shade900,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Text(
+                                        '${unpaidOrders.length} ödenmemiş sipariş',
+                                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: FilledButton.icon(
+                                              icon: const Icon(Icons.payments, size: 18),
+                                              label: const Text('💵 Nakit', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                                              style: FilledButton.styleFrom(
+                                                backgroundColor: Colors.green.shade700,
+                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              ),
+                                              onPressed: () async {
+                                                try {
+                                                  for (final o in unpaidOrders) {
+                                                    await _orderService.updatePaymentStatus(
+                                                      orderId: o.id,
+                                                      paymentStatus: 'paid',
+                                                      paymentMethod: 'cash',
+                                                    );
+                                                  }
+                                                  if (mounted) {
+                                                    HapticFeedback.heavyImpact();
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text('✅ ${unpaidOrders.length} sipariş nakit olarak ödendi!'),
+                                                        backgroundColor: Colors.green.shade700,
+                                                        behavior: SnackBarBehavior.floating,
+                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                      ),
+                                                    );
+                                                  }
+                                                } catch (e) {
+                                                  if (mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                    );
+                                                  }
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: FilledButton.icon(
+                                              icon: const Icon(Icons.credit_card, size: 18),
+                                              label: const Text('💳 Kart', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                                              style: FilledButton.styleFrom(
+                                                backgroundColor: Colors.blue.shade700,
+                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              ),
+                                              onPressed: () async {
+                                                try {
+                                                  for (final o in unpaidOrders) {
+                                                    await _orderService.updatePaymentStatus(
+                                                      orderId: o.id,
+                                                      paymentStatus: 'paid',
+                                                      paymentMethod: 'card',
+                                                    );
+                                                  }
+                                                  if (mounted) {
+                                                    HapticFeedback.heavyImpact();
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text('✅ ${unpaidOrders.length} sipariş kart ile ödendi!'),
+                                                        backgroundColor: Colors.blue.shade700,
+                                                        behavior: SnackBarBehavior.floating,
+                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                      ),
+                                                    );
+                                                  }
+                                                } catch (e) {
+                                                  if (mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                    );
+                                                  }
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                              const SizedBox(height: 12),
+                            ],
 
                             // Individual orders
                             ...orders.map((order) {
@@ -3557,7 +3923,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           width: double.infinity,
                                           child: FilledButton.icon(
                                             icon: const Icon(Icons.restaurant, size: 16),
-                                            label: const Text('Servis Edildi', style: TextStyle(fontWeight: FontWeight.w700)),
+                                            label: const Text('🍽️ Servis Et', style: TextStyle(fontWeight: FontWeight.w700)),
                                             style: FilledButton.styleFrom(
                                               backgroundColor: Colors.teal.shade600,
                                               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -3676,6 +4042,65 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                               ),
                                             ),
                                           ],
+                                        ),
+                                      ),
+                                    // Served by info
+                                    if ((order.status == OrderStatus.served || order.status == OrderStatus.delivered) && order.servedByName != null && order.servedByName!.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.person, size: 14, color: Colors.amber[700]),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${order.servedByName} tarafından servis edildi',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.amber[700],
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    // Green paid chip with timestamp
+                                    if (isPaid)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 6),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                order.paymentMethod == 'card' ? Icons.credit_card : Icons.payments,
+                                                size: 15,
+                                                color: Colors.green,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(
+                                                  '✅ Ödendi${order.paymentMethod == 'card' ? ' (Kart)' : order.paymentMethod == 'cash' ? ' (Nakit)' : ''}',
+                                                  style: const TextStyle(
+                                                    color: Colors.green,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ),
+                                              Text(
+                                                '${order.updatedAt.toLocal().hour.toString().padLeft(2, '0')}:${order.updatedAt.toLocal().minute.toString().padLeft(2, '0')}',
+                                                style: TextStyle(
+                                                  color: Colors.green.withValues(alpha: 0.7),
+                                                  fontSize: 11,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                   ],
