@@ -41,6 +41,7 @@ interface StaffOrder {
     id: string;
     orderNumber?: string;
     status: string;
+    courierId?: string;
     courierName?: string;
     courierPhone?: string;
     tableNumber?: string;
@@ -316,6 +317,7 @@ export default function StaffDashboardPage() {
                     id: doc.id,
                     orderNumber: d.orderNumber || doc.id.slice(0, 6).toUpperCase(),
                     status: d.status || 'pending',
+                    courierId: d.courierId,
                     courierName: d.courierName,
                     courierPhone: d.courierPhone,
                     tableNumber: d.tableNumber || d.tableNo,
@@ -349,7 +351,12 @@ export default function StaffDashboardPage() {
             const staffPhone = (s.phone || s.phoneNumber || '').replace(/\s/g, '');
 
             // Find orders this staff member is courier for
+            // Primary: match by courierId (reliable UID match)
+            // Fallback: match by courierName or phone (for legacy orders)
             const deliveryOrders = orders.filter(o => {
+                // UID-based match (most reliable)
+                if (o.courierId && o.courierId === s.id) return true;
+                // Name/phone fallback for older orders without courierId
                 if (!o.courierName) return false;
                 const cn = o.courierName.toLowerCase().trim();
                 const cp = (o.courierPhone || '').replace(/\s/g, '');
