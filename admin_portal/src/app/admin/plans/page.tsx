@@ -308,7 +308,7 @@ export default function PlansPage() {
                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${plan.features?.onlinePayment ? 'bg-amber-900/40 text-amber-400 border border-amber-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
                                                 {plan.features?.onlinePayment ? '✓' : '·'} Ödeme
                                             </span>
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.dineInQR ? 'bg-orange-900/40 text-orange-400 border border-orange-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.dineInQR ? 'bg-amber-900/40 text-amber-400 border border-amber-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
                                                 {(plan.features as any)?.dineInQR ? '✓' : '·'} QR Sipariş
                                             </span>
                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.waiterOrder ? 'bg-teal-900/40 text-teal-400 border border-teal-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
@@ -597,7 +597,7 @@ export default function PlansPage() {
 
                                                     {/* Sipariş Başı Ücret */}
                                                     <div className="col-span-2">
-                                                        <label className="block text-xs font-medium text-orange-400 mb-2">💵 Sipariş Başı Ücret</label>
+                                                        <label className="block text-xs font-medium text-amber-400 mb-2">💵 Sipariş Başı Ücret</label>
                                                         <div className="flex gap-2">
                                                             <div className="flex bg-gray-900 rounded-lg border border-gray-700 overflow-hidden">
                                                                 {(['none', 'percentage', 'fixed'] as const).map(type => (
@@ -605,7 +605,7 @@ export default function PlansPage() {
                                                                         key={type}
                                                                         type="button"
                                                                         onClick={() => setFormData({ ...formData, perOrderFeeType: type } as any)}
-                                                                        className={`px-3 py-2 text-xs font-medium transition-colors ${(formData as any).perOrderFeeType === type ? 'bg-orange-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
+                                                                        className={`px-3 py-2 text-xs font-medium transition-colors ${(formData as any).perOrderFeeType === type ? 'bg-amber-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
                                                                     >
                                                                         {type === 'none' ? 'Yok' : type === 'percentage' ? '%' : '€'}
                                                                     </button>
@@ -722,7 +722,7 @@ export default function PlansPage() {
                                                         { key: 'campaigns', label: 'Kampanya Yönetimi', color: 'text-purple-400' },
                                                         { key: 'marketing', label: 'Marketing (Banner/Vitrin)', color: 'text-purple-400' },
                                                         { key: 'liveCourierTracking', label: 'Canlı Kurye Takibi', color: 'text-purple-400' },
-                                                        { key: 'dineInQR', label: '🪑 Masada Sipariş (QR Kod)', color: 'text-orange-400' },
+                                                        { key: 'dineInQR', label: '🪑 Masada Sipariş (QR Kod)', color: 'text-amber-400' },
                                                         { key: 'waiterOrder', label: '👨‍🍳 Garson Sipariş', color: 'text-teal-400' },
                                                         { key: 'staffShiftTracking', label: '⏱️ Vardiya Takibi & Export', color: 'text-cyan-400' },
                                                         { key: 'sponsoredProducts', label: '⭐ Öne Çıkan Ürünler', color: 'text-yellow-400', hasSubFields: true },

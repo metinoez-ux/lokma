@@ -12,7 +12,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 const orderStatuses = {
     pending: { label: 'Beklemede', color: 'yellow', icon: '⏳' },
     accepted: { label: 'Onaylandı', color: 'blue', icon: '✅' },
-    preparing: { label: 'Hazırlanıyor', color: 'orange', icon: '👨‍🍳' },
+    preparing: { label: 'Hazırlanıyor', color: 'amber', icon: '👨‍🍳' },
     ready: { label: 'Hazır', color: 'green', icon: '📦' },
     served: { label: 'Servis Edildi', color: 'teal', icon: '🍽️' },
     onTheWay: { label: 'Yolda', color: 'indigo', icon: '🛵' },
@@ -26,7 +26,7 @@ type OrderStatus = keyof typeof orderStatuses;
 const orderTypes = {
     pickup: { label: 'Gel Al', icon: '🏃', color: 'green' },
     delivery: { label: 'Kurye', icon: '🛵', color: 'blue' },
-    dine_in: { label: 'Yerinde', icon: '🍽️', color: 'orange' },
+    dine_in: { label: 'Yerinde', icon: '🍽️', color: 'amber' },
 } as const;
 
 type OrderType = keyof typeof orderTypes;
@@ -162,7 +162,7 @@ export default function OrdersPage() {
         }
 
         if (status === 'accepted') {
-            return { label: '👨‍🍳 Hazırlamaya Başla', action: 'preparing' as OrderStatus, style: 'bg-orange-600 hover:bg-orange-700', hasUnavailable: false };
+            return { label: '👨‍🍳 Hazırlamaya Başla', action: 'preparing' as OrderStatus, style: 'bg-amber-600 hover:bg-amber-700', hasUnavailable: false };
         }
 
         if (status === 'preparing') {
@@ -736,9 +736,9 @@ export default function OrdersPage() {
                             <p className="text-xl font-bold text-yellow-400">{stats.pending}</p>
                             <p className="text-[10px] text-yellow-300">Bekleyen</p>
                         </div>
-                        <div className="bg-orange-600/20 border border-orange-500/30 rounded-xl px-3 py-1.5 text-center">
-                            <p className="text-xl font-bold text-orange-400">{stats.preparing}</p>
-                            <p className="text-[10px] text-orange-300">Hazırlanan</p>
+                        <div className="bg-amber-600/20 border border-amber-500/30 rounded-xl px-3 py-1.5 text-center">
+                            <p className="text-xl font-bold text-amber-400">{stats.preparing}</p>
+                            <p className="text-[10px] text-amber-300">Hazırlanan</p>
                         </div>
                         <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-3 py-1.5 text-center">
                             <p className="text-xl font-bold text-green-400">{formatCurrency(stats.revenue)}</p>
@@ -779,9 +779,9 @@ export default function OrdersPage() {
                         <div className="text-gray-500 text-xl">→</div>
 
                         {/* Hazırlanıyor */}
-                        <div className="flex-1 min-w-[100px] bg-orange-600/20 border border-orange-600/30 rounded-lg p-4 text-center relative">
-                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-orange-500 rounded-full border-2 border-gray-800"></div>
-                            <p className="text-orange-400 text-3xl font-bold">
+                        <div className="flex-1 min-w-[100px] bg-amber-600/20 border border-amber-600/30 rounded-lg p-4 text-center relative">
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-500 rounded-full border-2 border-gray-800"></div>
+                            <p className="text-amber-400 text-3xl font-bold">
                                 {stats.preparing}
                             </p>
                             <p className="text-gray-400 text-sm">👨‍🍳 Hazırlanıyor</p>
@@ -822,7 +822,7 @@ export default function OrdersPage() {
                     </div>
 
                     {/* Timeline line */}
-                    <div className="relative mt-2 h-1 bg-gradient-to-r from-yellow-500 via-orange-500 via-green-500 via-indigo-500 to-emerald-500 rounded-full opacity-50"></div>
+                    <div className="relative mt-2 h-1 bg-gradient-to-r from-yellow-500 via-amber-500 via-green-500 via-indigo-500 to-emerald-500 rounded-full opacity-50"></div>
                 </div>
             </div>
 
@@ -858,8 +858,8 @@ export default function OrdersPage() {
 
                         {/* Preparing Column */}
                         <div className="bg-gray-800 rounded-xl p-4">
-                            <h3 className="text-orange-400 font-medium mb-4 flex items-center gap-2">
-                                <span className="w-3 h-3 bg-orange-400 rounded-full"></span>
+                            <h3 className="text-amber-400 font-medium mb-4 flex items-center gap-2">
+                                <span className="w-3 h-3 bg-amber-400 rounded-full"></span>
                                 Hazırlanıyor ({preparingOrders.length})
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
@@ -969,8 +969,8 @@ export default function OrdersPage() {
 
                             {/* Dine-in Info */}
                             {selectedOrder.type === 'dine_in' && (
-                                <div className="bg-orange-600/10 border border-orange-500/30 rounded-xl p-4 space-y-3">
-                                    <h4 className="text-orange-400 font-medium text-sm flex items-center gap-2">🍽️ Yerinde Sipariş Detayı</h4>
+                                <div className="bg-amber-600/10 border border-amber-500/30 rounded-xl p-4 space-y-3">
+                                    <h4 className="text-amber-400 font-medium text-sm flex items-center gap-2">🍽️ Yerinde Sipariş Detayı</h4>
                                     {selectedOrder.tableNumber && (
                                         <div className="flex items-center justify-between">
                                             <span className="text-gray-400">Masa</span>
@@ -1056,7 +1056,7 @@ export default function OrdersPage() {
                                                     >
                                                         {isChecked && <span className="text-xs">✓</span>}
                                                     </button>
-                                                    <span className="bg-orange-500 text-white text-xs font-bold rounded px-1.5 py-0.5 flex-shrink-0">#{posNum}</span>
+                                                    <span className="bg-amber-500 text-white text-xs font-bold rounded px-1.5 py-0.5 flex-shrink-0">#{posNum}</span>
                                                     <span className={`flex-1 ${isChecked ? 'text-green-300 line-through opacity-70' : 'text-gray-300'}`}>
                                                         {item.quantity}x {item.productName || item.name}
                                                     </span>
@@ -1080,7 +1080,7 @@ export default function OrdersPage() {
                                                 {/* Show item note */}
                                                 {item.itemNote && (
                                                     <div className="pl-14 mt-0.5">
-                                                        <span className="text-xs text-orange-300">📝 {item.itemNote}</span>
+                                                        <span className="text-xs text-amber-300">📝 {item.itemNote}</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -1406,7 +1406,7 @@ function OrderCard({
             {order.type === 'dine_in' && (
                 <div className="mb-1 space-y-0.5">
                     <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded bg-orange-600/30 text-orange-300 text-xs font-medium">
+                        <span className="px-2 py-0.5 rounded bg-amber-600/30 text-amber-300 text-xs font-medium">
                             🍽️ Masa {order.tableNumber ? `#${order.tableNumber}` : ''}
                         </span>
                         {order.paymentStatus === 'paid' && (

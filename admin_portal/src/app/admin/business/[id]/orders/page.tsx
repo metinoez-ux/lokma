@@ -590,7 +590,7 @@ export default function BusinessOrdersPage() {
                                                             {order.fulfillmentType === 'pickup' ? (
                                                                 <span className="text-blue-400">🏪 Gel Al</span>
                                                             ) : (
-                                                                <span className="text-orange-400">🛵 Kurye</span>
+                                                                <span className="text-amber-400">🛵 Kurye</span>
                                                             )}
                                                         </div>
                                                         <div className="text-xs text-gray-400">{formatDate(order.scheduledDateTime)}</div>

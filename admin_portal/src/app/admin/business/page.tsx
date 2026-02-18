@@ -1319,7 +1319,7 @@ export default function BusinessesPage() {
                                                                     <span title="Gel Al" className="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs">🏃</span>
                                                                 )}
                                                                 {business.services?.dineIn && (
-                                                                    <span title="Yerinde" className="px-2 py-1 bg-orange-600/20 text-orange-400 rounded text-xs">🍽️</span>
+                                                                    <span title="Yerinde" className="px-2 py-1 bg-amber-600/20 text-amber-400 rounded text-xs">🍽️</span>
                                                                 )}
                                                                 {business.services?.reservation && (
                                                                     <span title="Rezervasyon" className="px-2 py-1 bg-purple-600/20 text-purple-400 rounded text-xs">📅</span>
@@ -1772,8 +1772,8 @@ export default function BusinessesPage() {
                                                 type="button"
                                                 onClick={() => setFormData({ ...formData, brandLabel: 'akdeniz_toros' })}
                                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${formData.brandLabel === 'akdeniz_toros'
-                                                    ? 'bg-orange-600 text-white ring-2 ring-orange-400 shadow-lg shadow-orange-500/30'
-                                                    : 'bg-gray-800 text-gray-400 hover:bg-orange-900/50'
+                                                    ? 'bg-amber-600 text-white ring-2 ring-amber-400 shadow-lg shadow-amber-500/30'
+                                                    : 'bg-gray-800 text-gray-400 hover:bg-amber-900/50'
                                                     }`}
                                             >
                                                 🏔️ AKDENİZ TOROS <span className="text-xs opacity-70">(Türkiye)</span>

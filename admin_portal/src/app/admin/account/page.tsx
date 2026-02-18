@@ -175,7 +175,7 @@ export default function HesabimPage() {
     if (adminLoading || loading) {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
             </div>
         );
     }
@@ -212,12 +212,12 @@ export default function HesabimPage() {
                 {/* Account Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     {/* Balance Card */}
-                    <div className="bg-gradient-to-br from-orange-600/30 to-orange-800/20 border border-orange-500/30 rounded-2xl p-6">
+                    <div className="bg-gradient-to-br from-amber-600/30 to-amber-800/20 border border-amber-500/30 rounded-2xl p-6">
                         <div className="flex items-center gap-3 mb-3">
                             <span className="text-3xl">💰</span>
                             <div>
                                 <p className="text-gray-400 text-xs uppercase tracking-wider">Açık Bakiye</p>
-                                <p className={`text-3xl font-bold ${(businessData?.accountBalance || 0) > 0 ? 'text-orange-400' : 'text-green-400'}`}>
+                                <p className={`text-3xl font-bold ${(businessData?.accountBalance || 0) > 0 ? 'text-amber-400' : 'text-green-400'}`}>
                                     €{(businessData?.accountBalance || 0).toFixed(2)}
                                 </p>
                             </div>
@@ -291,8 +291,8 @@ export default function HesabimPage() {
                             <p className="text-2xl font-bold text-white">€{stats.totalOrderAmount.toFixed(0)}</p>
                             <p className="text-gray-400 text-xs">Toplam Ciro</p>
                         </div>
-                        <div className="bg-orange-600/20 border border-orange-600/30 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-orange-400">€{stats.totalCommission.toFixed(2)}</p>
+                        <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
+                            <p className="text-2xl font-bold text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
                             <p className="text-gray-400 text-xs">Provizyon</p>
                         </div>
                         <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
@@ -371,7 +371,7 @@ export default function HesabimPage() {
                                                 <td className="px-3 py-2 text-right text-white">€{r.orderTotal.toFixed(2)}</td>
                                                 <td className="px-3 py-2 text-right text-gray-400">%{r.commissionRate}</td>
                                                 <td className="px-3 py-2 text-right">
-                                                    <span className="text-orange-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
+                                                    <span className="text-amber-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
                                                 </td>
                                                 <td className="px-3 py-2 text-right">
                                                     <span className="text-gray-300 text-xs">
@@ -404,7 +404,7 @@ export default function HesabimPage() {
                                     </span>
                                     <div className="flex gap-6">
                                         <span className="text-white text-sm">Ciro: <strong>€{stats.totalOrderAmount.toFixed(2)}</strong></span>
-                                        <span className="text-orange-400 text-sm">Provizyon: <strong>€{stats.totalCommission.toFixed(2)}</strong></span>
+                                        <span className="text-amber-400 text-sm">Provizyon: <strong>€{stats.totalCommission.toFixed(2)}</strong></span>
                                     </div>
                                 </div>
                             )}

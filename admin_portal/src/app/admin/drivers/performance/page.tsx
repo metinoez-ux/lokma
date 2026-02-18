@@ -193,7 +193,7 @@ export default function DriverPerformancePage() {
                             type="date"
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
-                            className="bg-gray-700 border border-gray-600 text-white rounded px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500"
+                            className="bg-gray-700 border border-gray-600 text-white rounded px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500"
                         />
                     </div>
                     <div>
@@ -206,7 +206,7 @@ export default function DriverPerformancePage() {
                                     key={mode}
                                     onClick={() => setViewMode(mode)}
                                     className={`px-4 py-2 text-sm font-medium ${viewMode === mode
-                                        ? 'bg-orange-500 text-white'
+                                        ? 'bg-amber-500 text-white'
                                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                 >
@@ -302,7 +302,7 @@ export default function DriverPerformancePage() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-center">
-                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-500/20 text-orange-400 font-bold">
+                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 font-bold">
                                                 {driver.deliveryCount}
                                             </span>
                                         </td>

@@ -26,7 +26,7 @@ const statusColors: Record<string, string> = {
     paid: 'bg-green-600',
     failed: 'bg-red-600',
     cancelled: 'bg-gray-500',
-    overdue: 'bg-orange-600',
+    overdue: 'bg-amber-600',
     storno: 'bg-purple-600',
 };
 
@@ -468,7 +468,7 @@ export default function InvoicesPage() {
                                         <td className="px-4 py-3 text-right">
                                             <span className="text-white font-bold">€{invoice.grandTotal.toFixed(2)}</span>
                                             {invoice.surchargeAmount && invoice.surchargeAmount > 0 && (
-                                                <span className="text-orange-400 text-xs ml-1">(+{invoice.surchargeRate}%)</span>
+                                                <span className="text-amber-400 text-xs ml-1">(+{invoice.surchargeRate}%)</span>
                                             )}
                                         </td>
                                         <td className="px-4 py-3 text-center">

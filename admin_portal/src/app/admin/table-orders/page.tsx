@@ -246,7 +246,7 @@ export default function TableOrdersPage() {
     if (adminLoading) {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
             </div>
         );
     }
@@ -289,9 +289,9 @@ export default function TableOrdersPage() {
                             <p className="text-2xl font-bold text-yellow-400">{stats.paying}</p>
                             <p className="text-xs text-yellow-300">Ödeme</p>
                         </div>
-                        <div className="bg-orange-600/20 border border-orange-500/30 rounded-xl px-4 py-2 text-center">
-                            <p className="text-lg font-bold text-orange-400">{formatCurrency(stats.totalRevenue)}</p>
-                            <p className="text-xs text-orange-300">Toplam</p>
+                        <div className="bg-amber-600/20 border border-amber-500/30 rounded-xl px-4 py-2 text-center">
+                            <p className="text-lg font-bold text-amber-400">{formatCurrency(stats.totalRevenue)}</p>
+                            <p className="text-xs text-amber-300">Toplam</p>
                         </div>
                     </div>
                 </div>
@@ -422,7 +422,7 @@ export default function TableOrdersPage() {
             <div className="max-w-7xl mx-auto">
                 {loading ? (
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
                         <p className="text-gray-400 mt-4">Masa oturumları yükleniyor...</p>
                     </div>
                 ) : sessions.length === 0 ? (
@@ -480,7 +480,7 @@ export default function TableOrdersPage() {
                                                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${p.paymentStatus === 'paid'
                                                         ? 'bg-green-600/20 text-green-400'
                                                         : 'bg-gray-700 text-gray-300'
-                                                        } ${p.isHost ? 'ring-1 ring-orange-400/50' : ''}`}
+                                                        } ${p.isHost ? 'ring-1 ring-amber-400/50' : ''}`}
                                                 >
                                                     {p.isHost && '👑'} {p.name}
                                                     {p.paymentStatus === 'paid' && ' ✅'}
@@ -524,8 +524,8 @@ export default function TableOrdersPage() {
                                         )}
                                         {remaining > 0 && session.grandTotal > 0 && (
                                             <div className="text-right">
-                                                <span className="text-orange-400 text-xs">Kalan</span>
-                                                <p className="text-orange-400 font-bold">{formatCurrency(remaining)}</p>
+                                                <span className="text-amber-400 text-xs">Kalan</span>
+                                                <p className="text-amber-400 font-bold">{formatCurrency(remaining)}</p>
                                             </div>
                                         )}
                                     </div>
@@ -592,8 +592,8 @@ export default function TableOrdersPage() {
                                         <p className="text-green-400/70 text-xs">Ödenen</p>
                                     </div>
                                     <div>
-                                        <p className="text-2xl font-bold text-orange-400">{formatCurrency(selectedSession.grandTotal - selectedSession.paidTotal)}</p>
-                                        <p className="text-orange-400/70 text-xs">Kalan</p>
+                                        <p className="text-2xl font-bold text-amber-400">{formatCurrency(selectedSession.grandTotal - selectedSession.paidTotal)}</p>
+                                        <p className="text-amber-400/70 text-xs">Kalan</p>
                                     </div>
                                 </div>
                                 {/* Progress bar */}
@@ -626,7 +626,7 @@ export default function TableOrdersPage() {
                                                     <div key={idx} className="grid grid-cols-12 gap-2 px-4 py-2 items-center">
                                                         <div className="col-span-6 text-white text-sm truncate">{item.productName}</div>
                                                         <div className="col-span-2 text-center">
-                                                            <span className="bg-orange-600/20 text-orange-400 px-2 py-0.5 rounded text-xs font-bold">
+                                                            <span className="bg-amber-600/20 text-amber-400 px-2 py-0.5 rounded text-xs font-bold">
                                                                 ×{item.quantity}
                                                             </span>
                                                         </div>
@@ -653,7 +653,7 @@ export default function TableOrdersPage() {
                                                         {p.isHost && '👑 '}{p.name}
                                                     </span>
                                                     {p.isHost && (
-                                                        <span className="text-orange-400 text-xs bg-orange-600/20 px-2 py-0.5 rounded">Host</span>
+                                                        <span className="text-amber-400 text-xs bg-amber-600/20 px-2 py-0.5 rounded">Host</span>
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-2">

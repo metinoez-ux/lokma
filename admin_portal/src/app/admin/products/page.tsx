@@ -49,7 +49,7 @@ const BUSINESS_TYPE_OPTIONS = getBusinessTypesList().map(bt => ({
 const PRODUCT_TYPE_OPTIONS = [
     { value: 'dana', label: '🐄 Dana', color: 'bg-red-600' },
     { value: 'kuzu', label: '🐏 Kuzu', color: 'bg-green-600' },
-    { value: 'tavuk', label: '🐔 Tavuk', color: 'bg-orange-600' },
+    { value: 'tavuk', label: '🐔 Tavuk', color: 'bg-amber-600' },
     { value: 'icecek', label: '🥤 İçecek', color: 'bg-blue-600' },
     { value: 'tatli', label: '🍰 Tatlı', color: 'bg-pink-600' },
     { value: 'sebze', label: '🥬 Sebze/Meyve', color: 'bg-green-600' },
@@ -839,7 +839,7 @@ function GlobalProductsPageContent() {
     const categoryColors: Record<string, string> = {
         dana: "bg-red-900/40 text-red-200 border-red-700",
         kuzu: "bg-green-900/40 text-green-200 border-green-700",
-        tavuk: "bg-orange-900/40 text-orange-200 border-orange-700",
+        tavuk: "bg-amber-900/40 text-amber-200 border-amber-700",
         hazir: "bg-purple-900/40 text-purple-200 border-purple-700",
         diger: "bg-gray-700 text-gray-200 border-gray-600"
     };
@@ -2239,7 +2239,7 @@ function GlobalProductsPageContent() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setFormData(prev => ({ ...prev, _tedarikOpen: !(prev as any)._tedarikOpen } as any))}
-                                                    className="flex items-center justify-between w-full text-sm font-medium text-orange-400 mb-1 hover:text-orange-300 transition-colors"
+                                                    className="flex items-center justify-between w-full text-sm font-medium text-amber-400 mb-1 hover:text-amber-300 transition-colors"
                                                 >
                                                     <span>🚚 Tedarik & İzlenebilirlik</span>
                                                     <span className="text-xs text-gray-500">{(formData as any)._tedarikOpen ? '▲ Kapat' : '▼ Aç'}</span>

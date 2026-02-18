@@ -34,7 +34,7 @@ const ROLE_LABELS: Record<string, string> = {
 const ROLE_COLORS: Record<string, string> = {
     super_admin: 'bg-purple-100 text-purple-800',
     butcher_admin: 'bg-red-100 text-red-800',
-    restaurant_admin: 'bg-orange-100 text-orange-800',
+    restaurant_admin: 'bg-amber-100 text-amber-800',
     kermes_admin: 'bg-green-100 text-green-800',
 };
 
@@ -254,9 +254,9 @@ export default function AdminManagementPage() {
                     <div className="text-2xl font-bold text-red-400">{stats.butcher}</div>
                     <div className="text-sm text-red-300">🥩 Kasap</div>
                 </div>
-                <div className="bg-orange-900/30 rounded-lg p-4 border-l-4 border-orange-500">
-                    <div className="text-2xl font-bold text-orange-400">{stats.restaurant}</div>
-                    <div className="text-sm text-orange-300">🍽️ Restoran</div>
+                <div className="bg-amber-900/30 rounded-lg p-4 border-l-4 border-amber-500">
+                    <div className="text-2xl font-bold text-amber-400">{stats.restaurant}</div>
+                    <div className="text-sm text-amber-300">🍽️ Restoran</div>
                 </div>
                 <div className="bg-green-900/30 rounded-lg p-4 border-l-4 border-green-500">
                     <div className="text-2xl font-bold text-green-400">{stats.kermes}</div>

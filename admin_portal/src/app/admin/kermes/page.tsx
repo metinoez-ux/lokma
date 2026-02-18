@@ -524,7 +524,7 @@ export default function KermesListPage() {
                                             </Link>
                                             <button
                                                 onClick={(ev) => handleArchive(event.id, ev)}
-                                                className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-orange-600 hover:text-white transition text-sm"
+                                                className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-amber-600 hover:text-white transition text-sm"
                                             >
                                                 📦
                                             </button>

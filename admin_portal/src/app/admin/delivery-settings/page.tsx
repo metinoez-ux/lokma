@@ -535,7 +535,7 @@ export default function DeliverySettingsPage() {
                                 checked={formData.preOrderEnabled}
                                 onChange={(e) => setFormData({ ...formData, preOrderEnabled: e.target.checked })}
                                 disabled={!isEditing}
-                                className="w-5 h-5 accent-orange-500"
+                                className="w-5 h-5 accent-amber-500"
                             />
                             <div>
                                 <span className="text-white">📅 Ön Sipariş Kabul Et</span>
@@ -639,7 +639,7 @@ export default function DeliverySettingsPage() {
                             </div>
                             <div className="text-center p-3 bg-gray-800 rounded-lg border border-gray-700">
                                 <p className="text-xs text-gray-400 mb-1">🟠 Kendi Kurye</p>
-                                <p className="text-lg font-bold text-orange-400">%{commissionRates.ownCourier}</p>
+                                <p className="text-lg font-bold text-amber-400">%{commissionRates.ownCourier}</p>
                             </div>
                             <div className="text-center p-3 bg-gray-800 rounded-lg border border-gray-700">
                                 <p className="text-xs text-gray-400 mb-1">🔵 LOKMA Kurye</p>

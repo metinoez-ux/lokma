@@ -177,12 +177,12 @@ export default function AsiaExpressImportPage() {
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-2xl p-6 mb-6 shadow-xl">
+                <div className="bg-gradient-to-r from-amber-600 to-red-600 rounded-2xl p-6 mb-6 shadow-xl">
                     <div className="flex items-center gap-4">
                         <span className="text-4xl">🌏</span>
                         <div>
                             <h1 className="text-3xl font-bold text-white">ASIA EXPRESS FOOD Import</h1>
-                            <p className="text-orange-100">Asya ürünleri Master Kataloğa aktarılıyor</p>
+                            <p className="text-amber-100">Asya ürünleri Master Kataloğa aktarılıyor</p>
                         </div>
                     </div>
                 </div>
@@ -202,7 +202,7 @@ export default function AsiaExpressImportPage() {
                         <div className="text-sm text-gray-300">Scraped</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-orange-400">{stats.imported}</div>
+                        <div className="text-3xl font-bold text-amber-400">{stats.imported}</div>
                         <div className="text-sm text-gray-300">İmported</div>
                     </div>
                 </div>
@@ -230,12 +230,12 @@ export default function AsiaExpressImportPage() {
                                     className="w-4 h-4"
                                 />
                                 <span className="text-white text-sm">{cat.name}</span>
-                                <span className="text-orange-400 text-xs ml-auto">({cat.count})</span>
+                                <span className="text-amber-400 text-xs ml-auto">({cat.count})</span>
                             </label>
                         ))}
                     </div>
                     <div className="mt-4 text-center text-gray-300">
-                        Seçili: <span className="text-orange-400 font-bold">{getTotalSelected()}</span> ürün
+                        Seçili: <span className="text-amber-400 font-bold">{getTotalSelected()}</span> ürün
                     </div>
                 </div>
 
@@ -248,8 +248,8 @@ export default function AsiaExpressImportPage() {
                                 <p>Asia Express Food sitesi login gerektirdiğinden, ürünleri manuel olarak scrape etmeniz gerekiyor:</p>
 
                                 <div className="bg-slate-900 p-4 rounded-lg">
-                                    <p className="text-orange-400 font-bold mb-2">1. Browser DevTools'u açın (F12)</p>
-                                    <p className="text-orange-400 font-bold mb-2">2. Console'a bu kodu yapıştırın:</p>
+                                    <p className="text-amber-400 font-bold mb-2">1. Browser DevTools'u açın (F12)</p>
+                                    <p className="text-amber-400 font-bold mb-2">2. Console'a bu kodu yapıştırın:</p>
                                     <pre className="bg-black p-4 rounded text-green-400 text-xs overflow-x-auto">
                                         {`// Asia Express Food Scraper
 const products = [];
@@ -278,7 +278,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                             </div>
                             <button
                                 onClick={() => setScrapingInstructions(false)}
-                                className="mt-6 w-full py-3 bg-orange-600 text-white rounded-lg font-bold"
+                                className="mt-6 w-full py-3 bg-amber-600 text-white rounded-lg font-bold"
                             >
                                 Anladım
                             </button>
@@ -310,7 +310,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                             disabled={isImporting || scrapedProducts.length === 0}
                             className={`w-full py-3 rounded-lg font-bold ${isImporting || scrapedProducts.length === 0
                                     ? 'bg-gray-600 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700'
+                                    : 'bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-700 hover:to-red-700'
                                 } text-white`}
                         >
                             {isImporting ? '⏳ İmport ediliyor...' : `🚀 ${scrapedProducts.length} Ürünü İmport Et`}
@@ -327,7 +327,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                         </div>
                         <div className="w-full bg-gray-700 rounded-full h-4">
                             <div
-                                className="bg-gradient-to-r from-orange-500 to-red-500 h-4 rounded-full transition-all"
+                                className="bg-gradient-to-r from-amber-500 to-red-500 h-4 rounded-full transition-all"
                                 style={{ width: `${progress}%` }}
                             ></div>
                         </div>

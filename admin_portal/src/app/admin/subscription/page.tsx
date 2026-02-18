@@ -123,7 +123,7 @@ export default function SubscriptionPage() {
                         <p className="text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">ÖDEME YÖNTEMİ</p>
                         <div className="flex items-center gap-4 mb-8 bg-gray-900 p-4 rounded-xl border border-gray-700">
                             <div className="bg-white p-2 rounded w-12 h-8 flex items-center justify-center">
-                                <div className="w-8 h-8 rounded-full bg-orange-500 translate-x-2 opacity-80"></div>
+                                <div className="w-8 h-8 rounded-full bg-amber-500 translate-x-2 opacity-80"></div>
                                 <div className="w-8 h-8 rounded-full bg-red-500 -translate-x-2 opacity-80"></div>
                             </div>
                             <div>

@@ -754,7 +754,7 @@ export default function KermesDetailPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         {kermes.sponsor === 'tuna' && <span className="px-2 py-1 bg-blue-600/30 text-blue-400 rounded text-xs">🐟 TUNA</span>}
-                        {kermes.sponsor === 'akdeniz_toros' && <span className="px-2 py-1 bg-orange-600/30 text-orange-400 rounded text-xs">🏔️ TOROS</span>}
+                        {kermes.sponsor === 'akdeniz_toros' && <span className="px-2 py-1 bg-amber-600/30 text-amber-400 rounded text-xs">🏔️ TOROS</span>}
                         <button onClick={toggleActiveStatus}
                             className={`px-3 py-1 rounded-lg text-sm font-medium ${kermes.isActive ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
                             {kermes.isActive ? '✅ Aktif' : '⏸️ Kapalı'}
@@ -1115,7 +1115,7 @@ export default function KermesDetailPage() {
                                                 <span className="text-white font-medium">Eve Teslimat (Kurye)</span>
                                                 <label className="relative inline-flex items-center cursor-pointer">
                                                     <input type="checkbox" checked={editForm.hasDelivery} onChange={(e) => setEditForm({ ...editForm, hasDelivery: e.target.checked })} className="sr-only peer" />
-                                                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                                                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
                                                 </label>
                                             </div>
                                             {editForm.hasDelivery && (
@@ -1294,7 +1294,7 @@ export default function KermesDetailPage() {
                                             <h4 className="text-gray-500 text-sm font-medium mb-2">🚚 Lojistik & Ulaşım</h4>
                                             <div className="space-y-3">
                                                 {kermes.hasDelivery && (
-                                                    <div className="flex items-center gap-2 text-sm text-orange-300 bg-gray-800 p-2 rounded border border-gray-600">
+                                                    <div className="flex items-center gap-2 text-sm text-amber-300 bg-gray-800 p-2 rounded border border-gray-600">
                                                         <span>🛵 Eve Teslimat Var</span>
                                                         <span className="text-xs text-gray-400">({kermes.deliveryFee}€, Min Sipariş: {kermes.minOrderAmount}€)</span>
                                                     </div>
@@ -1985,7 +1985,7 @@ export default function KermesDetailPage() {
                                         <label className="text-gray-400 text-xs block mb-1">Maliyet Fiyatı (€)</label>
                                         <input type="number" step="0.10" min="0" value={editProduct.costPrice || ''}
                                             onChange={(e) => setEditProduct({ ...editProduct, costPrice: parseFloat(e.target.value) || 0 })}
-                                            className="w-full px-3 py-2 bg-gray-700 text-orange-400 text-lg font-medium rounded-lg border border-gray-600" placeholder="0.00" />
+                                            className="w-full px-3 py-2 bg-gray-700 text-amber-400 text-lg font-medium rounded-lg border border-gray-600" placeholder="0.00" />
                                         {editProduct.costPrice > 0 && editProduct.price > 0 && (
                                             <p className="text-xs text-gray-500 mt-1">
                                                 Kar: {(editProduct.price - editProduct.costPrice).toFixed(2)}€ ({((editProduct.price - editProduct.costPrice) / editProduct.costPrice * 100).toFixed(0)}%)
@@ -2047,14 +2047,14 @@ export default function KermesDetailPage() {
                             </div>
 
                             {/* Alerjenler */}
-                            <div className="bg-orange-900/20 rounded-xl p-4 border border-orange-800/30">
-                                <label className="text-orange-400 text-sm font-medium block mb-2">⚠️ Alerjenler</label>
+                            <div className="bg-amber-900/20 rounded-xl p-4 border border-amber-800/30">
+                                <label className="text-amber-400 text-sm font-medium block mb-2">⚠️ Alerjenler</label>
                                 <div className="flex flex-wrap gap-2 mb-2">
                                     {editProduct.allergens.map((allergen, idx) => (
-                                        <span key={idx} className="px-3 py-1 bg-orange-600/30 text-orange-300 rounded-full text-xs flex items-center gap-1">
+                                        <span key={idx} className="px-3 py-1 bg-amber-600/30 text-amber-300 rounded-full text-xs flex items-center gap-1">
                                             {allergen}
                                             <button onClick={() => setEditProduct({ ...editProduct, allergens: editProduct.allergens.filter((_, i) => i !== idx) })}
-                                                className="w-4 h-4 rounded-full bg-orange-700 hover:bg-orange-600 flex items-center justify-center">×</button>
+                                                className="w-4 h-4 rounded-full bg-amber-700 hover:bg-amber-600 flex items-center justify-center">×</button>
                                         </span>
                                     ))}
                                 </div>

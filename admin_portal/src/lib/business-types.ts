@@ -51,7 +51,7 @@ export const BUSINESS_TYPES: Record<string, BusinessTypeConfig> = {
         value: 'restoran',
         label: 'Restoran',
         icon: '🍽️',
-        color: 'orange',
+        color: 'amber',
         description: 'Yemek & Rezervasyon',
         hasModule: true,
         moduleRoute: '/admin/business?type=restoran',

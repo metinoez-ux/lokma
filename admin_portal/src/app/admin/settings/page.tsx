@@ -307,16 +307,16 @@ export default function SettingsPage() {
                             {/* Teslimat */}
                             <Link
                                 href="/admin/delivery-settings"
-                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-orange-600 hover:bg-orange-950/20 transition-all group"
+                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-amber-600 hover:bg-amber-950/20 transition-all group"
                             >
-                                <div className="w-12 h-12 rounded-xl bg-orange-900/50 flex items-center justify-center text-2xl group-hover:bg-orange-800/50 transition">
+                                <div className="w-12 h-12 rounded-xl bg-amber-900/50 flex items-center justify-center text-2xl group-hover:bg-amber-800/50 transition">
                                     🚚
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-orange-300 transition">Teslimat</h3>
+                                    <h3 className="font-bold text-white group-hover:text-amber-300 transition">Teslimat</h3>
                                     <p className="text-xs text-gray-500">Kurye, teslimat ücreti ve sipariş saatleri</p>
                                 </div>
-                                <span className="ml-auto text-gray-600 group-hover:text-orange-400 transition text-xl">→</span>
+                                <span className="ml-auto text-gray-600 group-hover:text-amber-400 transition text-xl">→</span>
                             </Link>
 
                             {/* Abonelik & Plan */}
@@ -357,16 +357,16 @@ export default function SettingsPage() {
                                 </Link>
                                 <Link
                                     href="/admin/account"
-                                    className="flex items-center gap-4 p-4 bg-gray-800 rounded-xl border border-gray-700 hover:border-orange-600 hover:bg-orange-950/20 transition-all group"
+                                    className="flex items-center gap-4 p-4 bg-gray-800 rounded-xl border border-gray-700 hover:border-amber-600 hover:bg-amber-950/20 transition-all group"
                                 >
-                                    <div className="w-10 h-10 rounded-lg bg-orange-900/50 flex items-center justify-center text-xl group-hover:bg-orange-800/50 transition">
+                                    <div className="w-10 h-10 rounded-lg bg-amber-900/50 flex items-center justify-center text-xl group-hover:bg-amber-800/50 transition">
                                         💰
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-white group-hover:text-orange-300 transition text-sm">Ödeme Bilgileri</h4>
+                                        <h4 className="font-semibold text-white group-hover:text-amber-300 transition text-sm">Ödeme Bilgileri</h4>
                                         <p className="text-xs text-gray-500">Komisyon, bakiye ve ödeme detayları</p>
                                     </div>
-                                    <span className="ml-auto text-gray-600 group-hover:text-orange-400 transition">→</span>
+                                    <span className="ml-auto text-gray-600 group-hover:text-amber-400 transition">→</span>
                                 </Link>
                             </div>
                         </div>
@@ -649,7 +649,7 @@ export default function SettingsPage() {
                                         min="0"
                                         value={feePerConversion}
                                         onChange={e => setFeePerConversion(parseFloat(e.target.value) || 0)}
-                                        className="w-32 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-orange-500 outline-none font-mono text-lg text-center"
+                                        className="w-32 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-amber-500 outline-none font-mono text-lg text-center"
                                         disabled={!sponsoredEnabled}
                                     />
                                     <span className="text-gray-400 text-sm">€ / sipariş</span>
@@ -669,7 +669,7 @@ export default function SettingsPage() {
                                         max="20"
                                         value={maxProductsPerBusiness}
                                         onChange={e => setMaxProductsPerBusiness(parseInt(e.target.value) || 5)}
-                                        className="w-24 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-orange-500 outline-none font-mono text-lg text-center"
+                                        className="w-24 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-amber-500 outline-none font-mono text-lg text-center"
                                         disabled={!sponsoredEnabled}
                                     />
                                     <span className="text-gray-400 text-sm">ürün</span>
@@ -681,9 +681,9 @@ export default function SettingsPage() {
 
                             {/* Preview */}
                             {sponsoredEnabled && (
-                                <div className="p-4 bg-orange-950/30 border border-orange-800/40 rounded-xl">
-                                    <p className="text-orange-300 text-sm font-medium">📊 Önizleme</p>
-                                    <p className="text-orange-200/70 text-xs mt-1">
+                                <div className="p-4 bg-amber-950/30 border border-amber-800/40 rounded-xl">
+                                    <p className="text-amber-300 text-sm font-medium">📊 Önizleme</p>
+                                    <p className="text-amber-200/70 text-xs mt-1">
                                         Her işletme max <strong>{maxProductsPerBusiness}</strong> ürün seçebilir.
                                         Sponsored ürün üzerinden sipariş geldiğinde <strong>{feePerConversion.toFixed(2)} €</strong> ücret kesilir.
                                     </p>
@@ -694,7 +694,7 @@ export default function SettingsPage() {
                         <button
                             onClick={handleSaveSponsored}
                             disabled={sponsoredLoading || !sponsoredEnabled}
-                            className="w-full mt-6 bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-orange-900/20 disabled:opacity-50"
+                            className="w-full mt-6 bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-amber-900/20 disabled:opacity-50"
                         >
                             {sponsoredLoading ? 'Kaydediliyor...' : sponsoredSuccess ? '✅ Kaydedildi!' : 'Sponsored Ayarlarını Kaydet'}
                         </button>

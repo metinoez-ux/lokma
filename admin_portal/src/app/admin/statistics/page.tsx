@@ -635,7 +635,7 @@ export default function StatisticsPage() {
                             )}
                         </div>
                         <div className="bg-gray-800 rounded-xl p-4 text-center">
-                            <p className="text-3xl font-bold text-orange-400">{analytics.peakHour}:00</p>
+                            <p className="text-3xl font-bold text-amber-400">{analytics.peakHour}:00</p>
                             <p className="text-xs text-gray-400 mt-1">En Yoğun Saat</p>
                         </div>
                     </div>
@@ -655,7 +655,7 @@ export default function StatisticsPage() {
                             {filteredOrders.length > 0 ? (
                                 <div className="flex flex-wrap gap-2 mt-1">
                                     <span className="text-blue-400 font-bold text-sm">🚚 {Math.round((analytics.typeBreakdown.delivery / filteredOrders.length) * 100)}% Kurye</span>
-                                    <span className="text-orange-400 font-bold text-sm">🪑 {Math.round((analytics.typeBreakdown.dineIn / filteredOrders.length) * 100)}% Masa</span>
+                                    <span className="text-amber-400 font-bold text-sm">🪑 {Math.round((analytics.typeBreakdown.dineIn / filteredOrders.length) * 100)}% Masa</span>
                                     <span className="text-green-400 font-bold text-sm">🛍️ {Math.round((analytics.typeBreakdown.pickup / filteredOrders.length) * 100)}% Gel Al</span>
                                 </div>
                             ) : (
@@ -951,9 +951,9 @@ export default function StatisticsPage() {
                                 <div className="text-3xl font-bold text-purple-400">{perfStats.avgDeliveryTime}<span className="text-lg">dk</span></div>
                                 <div className="text-sm text-purple-300">Ort. Teslim</div>
                             </div>
-                            <div className="bg-orange-600/20 rounded-lg p-4 border-l-4 border-orange-500">
-                                <div className="text-3xl font-bold text-orange-400">{pauseStats.pauseCount}</div>
-                                <div className="text-sm text-orange-300">Kurye Durdurma</div>
+                            <div className="bg-amber-600/20 rounded-lg p-4 border-l-4 border-amber-500">
+                                <div className="text-3xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
+                                <div className="text-sm text-amber-300">Kurye Durdurma</div>
                             </div>
                         </div>
 
@@ -961,7 +961,7 @@ export default function StatisticsPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <div className="bg-gray-900 rounded-lg p-4">
                                 <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏸️</span><span className="text-gray-400">Durdurma Sayısı</span></div>
-                                <div className="text-2xl font-bold text-orange-400">{pauseStats.pauseCount}</div>
+                                <div className="text-2xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
                             </div>
                             <div className="bg-gray-900 rounded-lg p-4">
                                 <div className="flex items-center gap-2 mb-2"><span className="text-xl">▶️</span><span className="text-gray-400">Devam Ettirme</span></div>
@@ -992,11 +992,11 @@ export default function StatisticsPage() {
                                             <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400">Henüz kurye açma/kapama kaydı yok</td></tr>
                                         ) : (
                                             pauseLogs.slice(0, 20).map(log => (
-                                                <tr key={log.id} className={log.action === 'paused' ? 'bg-orange-900/20' : 'bg-green-900/20'}>
+                                                <tr key={log.id} className={log.action === 'paused' ? 'bg-amber-900/20' : 'bg-green-900/20'}>
                                                     <td className="px-4 py-3 text-sm text-gray-300">{formatPerfDate(log.timestamp)}</td>
                                                     <td className="px-4 py-3">
                                                         {log.action === 'paused'
-                                                            ? <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-orange-600 text-white text-xs font-medium">⏸️ Durduruldu</span>
+                                                            ? <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-600 text-white text-xs font-medium">⏸️ Durduruldu</span>
                                                             : <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-600 text-white text-xs font-medium">▶️ Devam Etti</span>}
                                                     </td>
                                                     <td className="px-4 py-3 text-sm text-gray-300">{log.adminName || log.adminEmail}</td>

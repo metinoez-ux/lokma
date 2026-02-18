@@ -8,7 +8,7 @@ const INITIAL_SECTORS = [
         id: 'restoran',
         label: 'Restoran',
         icon: '🍽️',
-        color: 'orange',
+        color: 'amber',
         description: 'Yemek & Rezervasyon',
         category: 'yemek',
         isActive: true,

@@ -67,7 +67,7 @@ function getRoleLabel(role: string): string {
 }
 
 function getRoleBadgeClass(role: string): string {
-    if (role.includes('admin')) return 'bg-orange-500/20 text-orange-300 border-orange-500/30';
+    if (role.includes('admin')) return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
     if (role.includes('staff')) return 'bg-green-500/20 text-green-300 border-green-500/30';
     if (role.includes('waiter')) return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
     if (role === 'driver') return 'bg-blue-500/20 text-blue-300 border-blue-500/30';

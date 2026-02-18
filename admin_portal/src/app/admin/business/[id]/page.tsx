@@ -82,7 +82,7 @@ const businessTypeLabels: Record<string, { label: string; emoji: string; color: 
   // === MERKEZI TİPLER (business-types.ts ile uyumlu) ===
   kasap: { label: "Kasap", emoji: "🥩", color: "bg-red-600" },
   market: { label: "Market", emoji: "🛒", color: "bg-green-600" },
-  restoran: { label: "Restoran", emoji: "🍽️", color: "bg-orange-600" },
+  restoran: { label: "Restoran", emoji: "🍽️", color: "bg-amber-600" },
   pastane: { label: "Pastane & Tatlıcı", emoji: "🎂", color: "bg-pink-600" },
   cicekci: { label: "Çiçekçi", emoji: "🌸", color: "bg-purple-600" },
   cigkofte: { label: "Çiğ Köfteci", emoji: "🥙", color: "bg-emerald-600" },
@@ -1860,7 +1860,7 @@ export default function BusinessDetailPage() {
                         return activeDeliveries.slice(0, 5).map((order, idx) => (
                           <div
                             key={order.id}
-                            className="flex items-center justify-between bg-orange-600/20 border border-orange-600/30 rounded-lg px-3 py-2"
+                            className="flex items-center justify-between bg-amber-600/20 border border-amber-600/30 rounded-lg px-3 py-2"
                           >
                             <div className="flex items-center gap-2">
                               <span className="text-xl">🏍️</span>
@@ -1868,13 +1868,13 @@ export default function BusinessDetailPage() {
                                 <span className="text-white text-sm">
                                   {(order as any).driverName || (order as any).claimedByName || `Kurye ${idx + 1}`}
                                 </span>
-                                <p className="text-orange-400 text-xs">
+                                <p className="text-amber-400 text-xs">
                                   #{order.orderNumber || order.id.slice(0, 6)} → {order.customerName || 'Müşteri'}
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <span className={`text-xs px-2 py-0.5 rounded ${order.status === 'onTheWay' ? 'bg-orange-600/50 text-orange-300' : 'bg-green-600/50 text-green-300'}`}>
+                              <span className={`text-xs px-2 py-0.5 rounded ${order.status === 'onTheWay' ? 'bg-amber-600/50 text-amber-300' : 'bg-green-600/50 text-green-300'}`}>
                                 {order.status === 'onTheWay' ? '🛵 Yolda' : '📦 Hazır'}
                               </span>
                             </div>
@@ -2420,7 +2420,7 @@ export default function BusinessDetailPage() {
                         }
                       }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition ${formData.temporaryDeliveryPaused
-                        ? "bg-orange-600 hover:bg-orange-500 text-white"
+                        ? "bg-amber-600 hover:bg-amber-500 text-white"
                         : "bg-blue-600 hover:bg-blue-500 text-white"
                         }`}
                     >
@@ -3209,7 +3209,7 @@ export default function BusinessDetailPage() {
                                     </td>
                                     <td className="py-2.5">
                                       <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${isPaused
-                                        ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+                                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                                         : 'bg-green-500/20 text-green-300 border border-green-500/30'
                                         }`}>
                                         {isPaused ? '⏸ Mola' : '✅ Aktif'}
@@ -3409,7 +3409,7 @@ export default function BusinessDetailPage() {
                                           },
                                         });
                                       }}
-                                      className="text-xs px-2 py-1 rounded bg-orange-600/20 text-orange-400 hover:bg-orange-600 hover:text-white"
+                                      className="text-xs px-2 py-1 rounded bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white"
                                     >
                                       🔓 Yetkiyi Kaldır
                                     </button>
@@ -3732,7 +3732,7 @@ export default function BusinessDetailPage() {
                                 })
                               }
                               disabled={!isEditing}
-                              className="w-5 h-5 accent-orange-500"
+                              className="w-5 h-5 accent-amber-500"
                             />
                             <div>
                               <span className="text-white">📅 Ön Sipariş Kabul Et</span>
@@ -3780,7 +3780,7 @@ export default function BusinessDetailPage() {
                               })
                             }
                             disabled={!isEditing}
-                            className="w-5 h-5 accent-orange-500"
+                            className="w-5 h-5 accent-amber-500"
                           />
                           <div>
                             <span className="text-white">Masa Rezervasyonu Aktif</span>
@@ -3850,7 +3850,7 @@ export default function BusinessDetailPage() {
                           <label className="text-gray-400 text-sm block mb-2">Ödeme Zamanlaması</label>
                           <div className="flex gap-3">
                             <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payFirst'
-                              ? 'bg-orange-600/20 border-orange-500 text-orange-300'
+                              ? 'bg-amber-600/20 border-amber-500 text-amber-300'
                               : 'bg-gray-700 border-gray-600 text-gray-300'
                               } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                               <input
@@ -3860,7 +3860,7 @@ export default function BusinessDetailPage() {
                                 checked={formData.dineInPaymentMode === 'payFirst'}
                                 onChange={(e) => setFormData({ ...formData, dineInPaymentMode: e.target.value })}
                                 disabled={!isEditing}
-                                className="accent-orange-500"
+                                className="accent-amber-500"
                               />
                               <div>
                                 <span className="font-medium">🍔 Hemen Öde</span>
@@ -3868,7 +3868,7 @@ export default function BusinessDetailPage() {
                               </div>
                             </label>
                             <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payLater'
-                              ? 'bg-orange-600/20 border-orange-500 text-orange-300'
+                              ? 'bg-amber-600/20 border-amber-500 text-amber-300'
                               : 'bg-gray-700 border-gray-600 text-gray-300'
                               } ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                               <input
@@ -3878,7 +3878,7 @@ export default function BusinessDetailPage() {
                                 checked={formData.dineInPaymentMode === 'payLater'}
                                 onChange={(e) => setFormData({ ...formData, dineInPaymentMode: e.target.value })}
                                 disabled={!isEditing}
-                                className="accent-orange-500"
+                                className="accent-amber-500"
                               />
                               <div>
                                 <span className="font-medium">🍽️ Çıkışta Öde</span>
@@ -3895,7 +3895,7 @@ export default function BusinessDetailPage() {
                             checked={formData.hasTableService}
                             onChange={(e) => setFormData({ ...formData, hasTableService: e.target.checked })}
                             disabled={!isEditing}
-                            className="w-5 h-5 accent-orange-500"
+                            className="w-5 h-5 accent-amber-500"
                           />
                           <div>
                             <span className="text-white">Garson Servisi Aktif</span>
@@ -4168,7 +4168,7 @@ export default function BusinessDetailPage() {
               {/* ── Header Stats Row ── */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
-                  <p className="text-2xl font-bold text-orange-400">{formData.maxReservationTables || 0}</p>
+                  <p className="text-2xl font-bold text-amber-400">{formData.maxReservationTables || 0}</p>
                   <p className="text-xs text-gray-400 mt-1">Toplam Masa</p>
                 </div>
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
@@ -4206,7 +4206,7 @@ export default function BusinessDetailPage() {
                       }
                       min="0"
                       max="200"
-                      className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none text-lg font-medium"
+                      className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none text-lg font-medium"
                       placeholder="ör: 20"
                     />
                   </div>
@@ -4222,7 +4222,7 @@ export default function BusinessDetailPage() {
                         })
                       }
                       min="0"
-                      className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-orange-500 focus:outline-none text-lg font-medium"
+                      className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none text-lg font-medium"
                       placeholder="ör: 80"
                     />
                   </div>
@@ -4240,7 +4240,7 @@ export default function BusinessDetailPage() {
                         setFormData({ ...formData, tables: newTables });
                         showToast(`${count} masa oluşturuldu (1-${count})`, 'success');
                       }}
-                      className="w-full px-4 py-2.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm font-medium transition"
+                      className="w-full px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium transition"
                     >
                       🔄 1&apos;den {formData.maxReservationTables || 'N'}&apos;e Oluştur
                     </button>
@@ -4338,7 +4338,7 @@ export default function BusinessDetailPage() {
                           <div key={sec || '__nosection'} className="mb-4">
                             {sec && (
                               <div className="flex items-center gap-2 mb-2">
-                                <span className="text-orange-400 text-sm font-bold">📍 {sec}</span>
+                                <span className="text-amber-400 text-sm font-bold">📍 {sec}</span>
                                 <span className="text-gray-500 text-xs">({tablesInSection.length} masa)</span>
                               </div>
                             )}
@@ -4352,7 +4352,7 @@ export default function BusinessDetailPage() {
                               {tablesInSection.map((table: any) => (
                                 <div
                                   key={table._idx}
-                                  className="bg-gray-800 rounded-lg border border-gray-700 p-3 flex flex-col gap-2 hover:border-orange-500/50 transition"
+                                  className="bg-gray-800 rounded-lg border border-gray-700 p-3 flex flex-col gap-2 hover:border-amber-500/50 transition"
                                 >
                                   {/* Table label */}
                                   <div className="flex items-center gap-1">
@@ -4365,7 +4365,7 @@ export default function BusinessDetailPage() {
                                         updated[table._idx] = { ...updated[table._idx], label: e.target.value };
                                         setFormData({ ...formData, tables: updated });
                                       }}
-                                      className="w-full bg-gray-700 text-white text-center px-2 py-1 rounded border border-gray-600 focus:border-orange-500 focus:outline-none text-sm font-bold"
+                                      className="w-full bg-gray-700 text-white text-center px-2 py-1 rounded border border-gray-600 focus:border-amber-500 focus:outline-none text-sm font-bold"
                                       placeholder="#"
                                     />
                                   </div>
@@ -4378,7 +4378,7 @@ export default function BusinessDetailPage() {
                                         updated[table._idx] = { ...updated[table._idx], section: e.target.value };
                                         setFormData({ ...formData, tables: updated });
                                       }}
-                                      className="w-full bg-gray-700 text-gray-300 px-2 py-1 rounded border border-gray-600 focus:border-orange-500 focus:outline-none text-xs"
+                                      className="w-full bg-gray-700 text-gray-300 px-2 py-1 rounded border border-gray-600 focus:border-amber-500 focus:outline-none text-xs"
                                     >
                                       <option value="">—</option>
                                       {formData.tableSections.map((s: string) => (
@@ -4441,7 +4441,7 @@ export default function BusinessDetailPage() {
                           document.body.removeChild(link);
                         }
                       }}
-                      className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
+                      className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
                     >
                       📥 Tümünü İndir
                     </button>
@@ -4465,7 +4465,7 @@ export default function BusinessDetailPage() {
                             link.click();
                             document.body.removeChild(link);
                           }}
-                          className="bg-gray-800 rounded-lg border border-gray-700 p-2 flex flex-col items-center gap-1 hover:border-orange-500 hover:bg-gray-700/50 transition cursor-pointer group"
+                          className="bg-gray-800 rounded-lg border border-gray-700 p-2 flex flex-col items-center gap-1 hover:border-amber-500 hover:bg-gray-700/50 transition cursor-pointer group"
                           title={`Masa ${table.label} QR kodunu indir`}
                         >
                           <div className="w-full aspect-square bg-white rounded flex items-center justify-center overflow-hidden">
@@ -4476,7 +4476,7 @@ export default function BusinessDetailPage() {
                               loading="lazy"
                             />
                           </div>
-                          <span className="text-xs font-bold text-gray-300 group-hover:text-orange-400 transition">
+                          <span className="text-xs font-bold text-gray-300 group-hover:text-amber-400 transition">
                             M{table.label}
                             {table.section && <span className="text-gray-500 font-normal ml-0.5 text-[10px]">· {table.section}</span>}
                           </span>

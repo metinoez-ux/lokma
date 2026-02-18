@@ -289,8 +289,8 @@ export default function CommissionsPage() {
                         <p className="text-2xl font-bold text-white">€{stats.totalOrderAmount.toFixed(0)}</p>
                         <p className="text-gray-400 text-xs">Ciro</p>
                     </div>
-                    <div className="bg-orange-600/20 border border-orange-600/30 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-orange-400">€{stats.totalCommission.toFixed(2)}</p>
+                    <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
                         <p className="text-gray-400 text-xs">Toplam Provizyon</p>
                     </div>
                     <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
@@ -401,12 +401,12 @@ export default function CommissionsPage() {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className="text-gray-400 text-sm">{bs.planName}</span>
-                                                <span className="text-orange-400 text-xs ml-1">%{bs.commissionRate}</span>
+                                                <span className="text-amber-400 text-xs ml-1">%{bs.commissionRate}</span>
                                             </td>
                                             <td className="px-4 py-3 text-right text-white">{bs.totalOrders}</td>
                                             <td className="px-4 py-3 text-right text-white">€{bs.totalOrderAmount.toFixed(2)}</td>
                                             <td className="px-4 py-3 text-right">
-                                                <span className="text-orange-400 font-bold">€{bs.totalCommission.toFixed(2)}</span>
+                                                <span className="text-amber-400 font-bold">€{bs.totalCommission.toFixed(2)}</span>
                                             </td>
                                             <td className="px-4 py-3 text-right text-blue-400">€{bs.cardCommission.toFixed(2)}</td>
                                             <td className="px-4 py-3 text-right text-purple-400">€{bs.cashCommission.toFixed(2)}</td>
@@ -428,7 +428,7 @@ export default function CommissionsPage() {
                                         <td className="px-4 py-3 text-white font-bold" colSpan={2}>TOPLAM</td>
                                         <td className="px-4 py-3 text-right text-white font-bold">{stats.totalOrders}</td>
                                         <td className="px-4 py-3 text-right text-white font-bold">€{stats.totalOrderAmount.toFixed(2)}</td>
-                                        <td className="px-4 py-3 text-right text-orange-400 font-bold">€{stats.totalCommission.toFixed(2)}</td>
+                                        <td className="px-4 py-3 text-right text-amber-400 font-bold">€{stats.totalCommission.toFixed(2)}</td>
                                         <td className="px-4 py-3 text-right text-blue-400 font-bold">€{stats.cardCommission.toFixed(2)}</td>
                                         <td className="px-4 py-3 text-right text-purple-400 font-bold">€{stats.cashCommission.toFixed(2)}</td>
                                         <td className="px-4 py-3 text-right text-yellow-400 font-bold">€{stats.pendingAmount.toFixed(2)}</td>
@@ -478,7 +478,7 @@ export default function CommissionsPage() {
                                             <td className="px-3 py-2 text-right text-gray-400">%{r.commissionRate}</td>
                                             <td className="px-3 py-2 text-right">
                                                 <div className="flex flex-col items-end">
-                                                    <span className="text-orange-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
+                                                    <span className="text-amber-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
                                                     {r.perOrderFee > 0 && (
                                                         <span className="text-[10px] text-yellow-400/70">+€{r.perOrderFee.toFixed(2)} ücret</span>
                                                     )}
@@ -516,7 +516,7 @@ export default function CommissionsPage() {
                         <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-700" onClick={(e) => e.stopPropagation()}>
                             {orderLoading ? (
                                 <div className="p-12 text-center">
-                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500 mx-auto mb-4"></div>
                                     <p className="text-gray-400">Sipariş detayları yükleniyor...</p>
                                 </div>
                             ) : selectedOrder?.notFound ? (
@@ -528,7 +528,7 @@ export default function CommissionsPage() {
                                     <p className="text-gray-400">Sipariş detayı bulunamadı. Sadece provizyon bilgileri mevcut.</p>
                                     {selectedOrder.commission && (
                                         <div className="mt-4 bg-gray-900/50 rounded-lg p-4">
-                                            <p className="text-gray-300 text-sm">💰 Provizyon: <span className="text-orange-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span></p>
+                                            <p className="text-gray-300 text-sm">💰 Provizyon: <span className="text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span></p>
                                             <p className="text-gray-300 text-sm">📦 Tutar: €{selectedOrder.commission.orderTotal.toFixed(2)}</p>
                                         </div>
                                     )}
@@ -601,13 +601,13 @@ export default function CommissionsPage() {
                                                             <p className="text-white text-sm font-medium">{item.productName || item.name}</p>
                                                             <p className="text-gray-400 text-xs">{item.quantity}x · €{(item.unitPrice || item.price || 0).toFixed(2)}/{item.unit || 'adet'}</p>
                                                         </div>
-                                                        <p className="text-orange-400 font-bold text-sm">€{(item.totalPrice || (item.quantity * (item.unitPrice || item.price || 0))).toFixed(2)}</p>
+                                                        <p className="text-amber-400 font-bold text-sm">€{(item.totalPrice || (item.quantity * (item.unitPrice || item.price || 0))).toFixed(2)}</p>
                                                     </div>
                                                 ))}
                                             </div>
                                             <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
                                                 <span className="text-white font-bold">Toplam</span>
-                                                <span className="text-orange-400 font-bold text-lg">€{(selectedOrder.totalAmount || 0).toFixed(2)}</span>
+                                                <span className="text-amber-400 font-bold text-lg">€{(selectedOrder.totalAmount || 0).toFixed(2)}</span>
                                             </div>
                                         </div>
                                     )}
@@ -673,7 +673,7 @@ export default function CommissionsPage() {
                                             {selectedOrder.createdAt && selectedOrder.deliveredAt && (
                                                 <div className="flex justify-between pt-2 border-t border-gray-700/50">
                                                     <span className="text-gray-400 text-sm">⏱️ Toplam Süre</span>
-                                                    <span className="text-orange-400 text-sm font-medium">
+                                                    <span className="text-amber-400 text-sm font-medium">
                                                         {Math.round((selectedOrder.deliveredAt.getTime() - selectedOrder.createdAt.getTime()) / 60000)} dk
                                                     </span>
                                                 </div>
@@ -683,8 +683,8 @@ export default function CommissionsPage() {
 
                                     {/* Commission & Payment */}
                                     {selectedOrder.commission && (
-                                        <div className="bg-orange-900/20 border border-orange-600/30 rounded-xl p-4 mb-4">
-                                            <h4 className="text-orange-400 text-xs font-medium mb-3 uppercase tracking-wider">💰 Provizyon Detayı</h4>
+                                        <div className="bg-amber-900/20 border border-amber-600/30 rounded-xl p-4 mb-4">
+                                            <h4 className="text-amber-400 text-xs font-medium mb-3 uppercase tracking-wider">💰 Provizyon Detayı</h4>
                                             <div className="space-y-2">
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-300 text-sm">Sipariş Tutarı</span>
@@ -696,7 +696,7 @@ export default function CommissionsPage() {
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="text-gray-300 text-sm">Provizyon</span>
-                                                    <span className="text-orange-400 text-sm font-bold">€{selectedOrder.commission.commissionAmount.toFixed(2)}</span>
+                                                    <span className="text-amber-400 text-sm font-bold">€{selectedOrder.commission.commissionAmount.toFixed(2)}</span>
                                                 </div>
                                                 {selectedOrder.commission.perOrderFee > 0 && (
                                                     <div className="flex justify-between">
@@ -704,7 +704,7 @@ export default function CommissionsPage() {
                                                         <span className="text-white text-sm">€{selectedOrder.commission.perOrderFee.toFixed(2)}</span>
                                                     </div>
                                                 )}
-                                                <div className="flex justify-between pt-2 border-t border-orange-700/30">
+                                                <div className="flex justify-between pt-2 border-t border-amber-700/30">
                                                     <span className="text-gray-300 text-sm">Net Provizyon</span>
                                                     <span className="text-white text-sm">€{selectedOrder.commission.netCommission.toFixed(2)}</span>
                                                 </div>
@@ -712,9 +712,9 @@ export default function CommissionsPage() {
                                                     <span className="text-gray-300 text-sm">KDV (%{selectedOrder.commission.vatRate})</span>
                                                     <span className="text-white text-sm">€{selectedOrder.commission.vatAmount.toFixed(2)}</span>
                                                 </div>
-                                                <div className="flex justify-between pt-2 border-t border-orange-700/30">
+                                                <div className="flex justify-between pt-2 border-t border-amber-700/30">
                                                     <span className="text-white text-sm font-bold">Toplam Provizyon</span>
-                                                    <span className="text-orange-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span>
+                                                    <span className="text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center mt-2">
                                                     <span className="text-gray-300 text-sm">Ödeme</span>

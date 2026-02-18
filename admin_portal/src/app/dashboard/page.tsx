@@ -132,10 +132,10 @@ export default function DashboardPage() {
                     {/* Super Admin Only - Push Notifications */}
                     {admin?.adminType === 'super' && (
                         <Link href="/dashboard/notifications"
-                            className="bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-xl p-6 shadow-md hover:shadow-lg transition">
+                            className="bg-gradient-to-br from-amber-500 to-red-500 text-white rounded-xl p-6 shadow-md hover:shadow-lg transition">
                             <div className="text-3xl mb-2">📢</div>
                             <h3 className="font-bold text-lg">Push Bildirim</h3>
-                            <p className="text-orange-100 text-sm">Tüm kullanıcılara bildirim gönder</p>
+                            <p className="text-amber-100 text-sm">Tüm kullanıcılara bildirim gönder</p>
                         </Link>
                     )}
                 </div>

@@ -198,7 +198,7 @@ export default function DriverManagementPage() {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
             </div>
         );
     }
@@ -234,9 +234,9 @@ export default function DriverManagementPage() {
                         <div className="text-2xl font-bold text-blue-400">{stats.availableStaff}</div>
                         <div className="text-sm text-blue-300">👤 Atanabilir Personel</div>
                     </div>
-                    <div className="bg-orange-900/30 rounded-lg p-4 border-l-4 border-orange-500">
-                        <div className="text-2xl font-bold text-orange-400">{stats.totalAssignments}</div>
-                        <div className="text-sm text-orange-300">🏪 Toplam Atama</div>
+                    <div className="bg-amber-900/30 rounded-lg p-4 border-l-4 border-amber-500">
+                        <div className="text-2xl font-bold text-amber-400">{stats.totalAssignments}</div>
+                        <div className="text-sm text-amber-300">🏪 Toplam Atama</div>
                     </div>
                 </div>
 
@@ -248,7 +248,7 @@ export default function DriverManagementPage() {
                             placeholder="🔍 Ara..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-64 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-orange-500"
+                            className="w-64 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-500"
                         />
                         <select
                             value={filterMode}
@@ -261,7 +261,7 @@ export default function DriverManagementPage() {
                     </div>
                     <button
                         onClick={() => openAssignModal()}
-                        className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2"
+                        className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 flex items-center gap-2"
                     >
                         ➕ Personeli Sürücü Yap
                     </button>
@@ -300,7 +300,7 @@ export default function DriverManagementPage() {
                                                     </span>
                                                     <span className={`px-2 py-0.5 text-xs rounded-full ${person.driverType === 'lokma'
                                                             ? 'bg-blue-900/50 text-blue-300'
-                                                            : 'bg-orange-900/50 text-orange-300'
+                                                            : 'bg-amber-900/50 text-amber-300'
                                                         }`}>
                                                         {person.driverType === 'lokma' ? '🔵 LOKMA' : '🟠 İşletme'}
                                                     </span>
@@ -319,7 +319,7 @@ export default function DriverManagementPage() {
                                                 person.assignedBusinessNames?.map((name, idx) => (
                                                     <span
                                                         key={idx}
-                                                        className="px-2 py-0.5 bg-orange-900/40 text-orange-300 text-xs rounded-full"
+                                                        className="px-2 py-0.5 bg-amber-900/40 text-amber-300 text-xs rounded-full"
                                                     >
                                                         🏪 {name}
                                                     </span>
@@ -420,7 +420,7 @@ export default function DriverManagementPage() {
                                                         </div>
                                                         {/* Business Name */}
                                                         {staff.businessName && (
-                                                            <div className="text-sm text-orange-400 mt-1">
+                                                            <div className="text-sm text-amber-400 mt-1">
                                                                 🏪 {staff.businessName}
                                                             </div>
                                                         )}
@@ -460,7 +460,7 @@ export default function DriverManagementPage() {
                                                 type="button"
                                                 onClick={() => setSelectedDriverType('business')}
                                                 className={`p-3 rounded-lg border-2 text-left transition-all ${selectedDriverType === 'business'
-                                                        ? 'border-orange-500 bg-orange-900/30'
+                                                        ? 'border-amber-500 bg-amber-900/30'
                                                         : 'border-gray-600 bg-gray-700 hover:border-gray-500'
                                                     }`}
                                             >
@@ -493,12 +493,12 @@ export default function DriverManagementPage() {
                                                     return (
                                                         <span
                                                             key={id}
-                                                            className="inline-flex items-center gap-1 px-3 py-1 bg-orange-900/50 text-orange-300 text-sm rounded-full"
+                                                            className="inline-flex items-center gap-1 px-3 py-1 bg-amber-900/50 text-amber-300 text-sm rounded-full"
                                                         >
                                                             🏪 {biz?.name || id}
                                                             <button
                                                                 onClick={() => toggleBusiness(id)}
-                                                                className="ml-1 hover:text-orange-100"
+                                                                className="ml-1 hover:text-amber-100"
                                                             >
                                                                 ✕
                                                             </button>
@@ -519,7 +519,7 @@ export default function DriverManagementPage() {
                                             placeholder="🔍 İşletme adı yazın..."
                                             value={businessSearchQuery}
                                             onChange={(e) => setBusinessSearchQuery(e.target.value)}
-                                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-orange-500 mb-2"
+                                            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-amber-500 mb-2"
                                         />
                                         <div className="max-h-48 overflow-y-auto bg-gray-700 rounded-lg">
                                             {filteredBusinesses.length === 0 ? (
@@ -531,14 +531,14 @@ export default function DriverManagementPage() {
                                                     <button
                                                         key={business.id}
                                                         onClick={() => toggleBusiness(business.id)}
-                                                        className={`w-full text-left px-4 py-2 hover:bg-gray-600 flex items-center justify-between ${selectedBusinessIds.includes(business.id) ? 'bg-orange-900/30' : ''
+                                                        className={`w-full text-left px-4 py-2 hover:bg-gray-600 flex items-center justify-between ${selectedBusinessIds.includes(business.id) ? 'bg-amber-900/30' : ''
                                                             }`}
                                                     >
                                                         <div>
                                                             <div className="text-sm font-medium">{business.name}</div>
                                                             {(business.plz || business.city) && (
                                                                 <div className="text-xs text-gray-400">
-                                                                    {business.plz && <span className="text-orange-400">{business.plz}</span>}
+                                                                    {business.plz && <span className="text-amber-400">{business.plz}</span>}
                                                                     {business.plz && business.city && ' • '}
                                                                     {business.city}
                                                                 </div>
@@ -574,7 +574,7 @@ export default function DriverManagementPage() {
                                     <button
                                         onClick={handleSaveDriver}
                                         disabled={selectedBusinessIds.length === 0}
-                                        className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                                        className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
                                     >
                                         ✓ Kaydet
                                     </button>

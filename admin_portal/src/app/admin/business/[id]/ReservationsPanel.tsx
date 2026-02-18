@@ -317,7 +317,7 @@ export default function ReservationsPanel({
                         <button
                             key={s}
                             onClick={() => setFilter(s)}
-                            className={`px-3 py-1 text-xs rounded-md transition ${filter === s ? "bg-orange-600 text-white" : "text-gray-400 hover:text-white"
+                            className={`px-3 py-1 text-xs rounded-md transition ${filter === s ? "bg-amber-600 text-white" : "text-gray-400 hover:text-white"
                                 }`}
                         >
                             {s === "pending"
@@ -337,7 +337,7 @@ export default function ReservationsPanel({
             {/* Content */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
                 </div>
             ) : filtered.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">

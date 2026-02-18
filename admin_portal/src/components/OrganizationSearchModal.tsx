@@ -39,7 +39,7 @@ const TYPE_COLORS: Record<Organization['type'], string> = {
     vikz: 'bg-blue-600',
     ditib: 'bg-green-600',
     diyanet: 'bg-purple-600',
-    igmg: 'bg-orange-600',
+    igmg: 'bg-amber-600',
     bagimsiz: 'bg-gray-600',
     other: 'bg-slate-600',
 };

@@ -2205,7 +2205,7 @@ export default function SuperAdminDashboard() {
                                                                 // 🟠 BUSINESS ADMIN - Orange (or 🟣 Purple if Primary Admin)
                                                                 <span className={`px-2 py-0.5 text-white rounded-full text-xs font-medium ${(user.adminProfile as any)?.isPrimaryAdmin
                                                                     ? 'bg-purple-600'
-                                                                    : 'bg-orange-500'
+                                                                    : 'bg-amber-500'
                                                                     }`}>
                                                                     {(user.adminProfile as any)?.isPrimaryAdmin && '👑 '}
                                                                     {(getRoleLabel(user.adminType as string) || user.adminType || 'Admin').toUpperCase()}
@@ -2507,7 +2507,7 @@ export default function SuperAdminDashboard() {
                                                         {getRoleIcon(a.adminType)} {getRoleLabel(a.adminType) || a.adminType}
                                                     </span>
                                                 ) : (
-                                                    <span className="px-2 py-1 rounded text-xs bg-orange-500 text-white">
+                                                    <span className="px-2 py-1 rounded text-xs bg-amber-500 text-white">
                                                         {getRoleIcon(a.adminType)} {getRoleLabel(a.adminType) || a.adminType}
                                                     </span>
                                                 )}
@@ -2592,7 +2592,7 @@ export default function SuperAdminDashboard() {
                                                                 {/* Yetkiyi Kaldır (soft delete - removes admin role) */}
                                                                 <button
                                                                     onClick={() => handleRemoveAdmin(a.id, a.displayName)}
-                                                                    className="text-orange-400 hover:text-orange-300 text-sm"
+                                                                    className="text-amber-400 hover:text-amber-300 text-sm"
                                                                 >
                                                                     🚫 Yetkiyi Kaldır
                                                                 </button>
@@ -4969,7 +4969,7 @@ export default function SuperAdminDashboard() {
                                             });
                                         }}
                                         className={`px-4 py-3 rounded-lg font-medium transition ${editingUserProfile.isAdmin
-                                            ? 'bg-orange-600 text-white hover:bg-orange-500'
+                                            ? 'bg-amber-600 text-white hover:bg-amber-500'
                                             : 'bg-red-600 text-white hover:bg-red-500'
                                             }`}
                                     >

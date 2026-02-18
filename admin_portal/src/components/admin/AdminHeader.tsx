@@ -245,7 +245,7 @@ export default function AdminHeader() {
                                 </Link>
                                 <Link
                                     href="/admin/dashboard?filter=subadmins"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-orange-600/80 hover:bg-orange-500 border border-orange-400/50"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-amber-600/80 hover:bg-amber-500 border border-amber-400/50"
                                     title="Sub Adminler (Personel)"
                                 >
                                     👷 <span className="font-bold">{totalSubAdmins}</span>
@@ -542,7 +542,7 @@ export default function AdminHeader() {
                                                 >
                                                     <span className="text-gray-500 text-xs w-6">{index + 1}</span>
                                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${admin.adminType === 'super' ? 'bg-purple-600' :
-                                                        admin.adminType?.includes('_staff') ? 'bg-orange-600' : 'bg-green-600'
+                                                        admin.adminType?.includes('_staff') ? 'bg-amber-600' : 'bg-green-600'
                                                         }`}>
                                                         {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
                                                     </div>
@@ -551,7 +551,7 @@ export default function AdminHeader() {
                                                         <p className="text-gray-400 text-sm">{admin.email || admin.phoneNumber || '-'}</p>
                                                     </div>
                                                     <span className={`px-2 py-1 rounded text-xs font-medium ${admin.adminType === 'super' ? 'bg-purple-600/30 text-purple-300' :
-                                                        admin.adminType?.includes('_staff') ? 'bg-orange-600/30 text-orange-300' : 'bg-green-600/30 text-green-300'
+                                                        admin.adminType?.includes('_staff') ? 'bg-amber-600/30 text-amber-300' : 'bg-green-600/30 text-green-300'
                                                         }`}>
                                                         {adminTypeLabels[admin.adminType as AdminType] || admin.adminType}
                                                     </span>

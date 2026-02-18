@@ -20,12 +20,12 @@ export default function ElLezzetleriPage() {
                 <div className="max-w-[1000px] mx-auto">
                     {/* Hero Section */}
                     <div className="text-center mb-16">
-                        <div className="inline-flex items-center gap-2 bg-orange-500/20 text-orange-400 px-4 py-2 rounded-full text-sm font-medium mb-6">
+                        <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full text-sm font-medium mb-6">
                             <span className="material-symbols-outlined text-[18px]">restaurant</span>
                             Yöresel Tatlar
                         </div>
                         <h1 className="text-4xl md:text-6xl font-black mb-6">
-                            <span className="text-orange-400">El Lezzetleri</span>
+                            <span className="text-amber-400">El Lezzetleri</span>
                         </h1>
                         <p className="text-xl text-white/60 max-w-2xl mx-auto leading-relaxed">
                             Annelerimizin, ninelerimizin elinden çıkan yöresel tatlar.
@@ -34,8 +34,8 @@ export default function ElLezzetleriPage() {
                     </div>
 
                     {/* What is El Lezzetleri */}
-                    <div className="bg-gradient-to-br from-orange-500/10 to-transparent border border-orange-500/20 rounded-2xl p-8 mb-12">
-                        <h2 className="text-2xl font-bold mb-4 text-orange-400">El Lezzetleri Nedir?</h2>
+                    <div className="bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 rounded-2xl p-8 mb-12">
+                        <h2 className="text-2xl font-bold mb-4 text-amber-400">El Lezzetleri Nedir?</h2>
                         <p className="text-white/70 mb-6 leading-relaxed">
                             Her yörenin kendine has bir lezzeti var. Karadeniz'in hamsi tuzlaması, Hatay'ın künefesi,
                             Gaziantep'in baklavası, Ege'nin tulum peyniri... Bu tatları evlerinde özenle hazırlayan
@@ -134,7 +134,7 @@ export default function ElLezzetleriPage() {
                                 <div key={item.city} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all cursor-pointer">
                                     <div className="flex items-center gap-3 mb-3">
                                         <div className="text-2xl">{item.icon}</div>
-                                        <h3 className="font-bold text-orange-400">{item.city}</h3>
+                                        <h3 className="font-bold text-amber-400">{item.city}</h3>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {item.products.map((product) => (
@@ -203,7 +203,7 @@ export default function ElLezzetleriPage() {
                     </div>
 
                     {/* CTA for Producers */}
-                    <div className="bg-gradient-to-r from-orange-600 to-orange-500 rounded-2xl p-8 md:p-12 text-center">
+                    <div className="bg-gradient-to-r from-amber-600 to-amber-500 rounded-2xl p-8 md:p-12 text-center">
                         <h2 className="text-2xl md:text-3xl font-bold mb-4">Ev yapımı lezzetler mi üretiyorsunuz?</h2>
                         <p className="text-white/90 mb-6 max-w-xl mx-auto">
                             Annenizin, anneannenizin tariflerini binlerce kişiye ulaştırın.
@@ -211,7 +211,7 @@ export default function ElLezzetleriPage() {
                         </p>
                         <Link
                             href="/partner/apply"
-                            className="inline-block bg-white text-orange-600 px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition-all"
+                            className="inline-block bg-white text-amber-600 px-8 py-4 rounded-xl font-bold hover:bg-gray-100 transition-all"
                         >
                             Üretici Başvurusu Yap
                         </Link>

@@ -45,7 +45,7 @@ export const ORGANIZATION_TYPES: { value: OrganizationType; label: string; icon:
     { value: 'ditib', label: 'DİTİB', icon: '🏛️', color: 'blue' },
     { value: 'diyanet', label: 'Diyanet', icon: '☪️', color: 'teal' },
     { value: 'igmg', label: 'IGMG', icon: '🕋', color: 'purple' },
-    { value: 'bagimsiz', label: 'Bağımsız Dernek', icon: '🏠', color: 'orange' },
+    { value: 'bagimsiz', label: 'Bağımsız Dernek', icon: '🏠', color: 'amber' },
     { value: 'other', label: 'Diğer', icon: '📍', color: 'gray' },
 ];
 

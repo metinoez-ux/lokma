@@ -330,7 +330,7 @@ export default function UnifiedAnalyticsPage() {
                     </div>
                     <button
                         onClick={() => setLastUpdate(new Date())}
-                        className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-medium"
+                        className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium"
                     >
                         🔄 Yenile
                     </button>
@@ -353,7 +353,7 @@ export default function UnifiedAnalyticsPage() {
                                     key={item.value}
                                     onClick={() => setDateFilter(item.value as DateFilter)}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${dateFilter === item.value
-                                        ? 'bg-orange-600 text-white'
+                                        ? 'bg-amber-600 text-white'
                                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                 >
@@ -390,8 +390,8 @@ export default function UnifiedAnalyticsPage() {
                         <p className="text-2xl font-bold text-purple-400">{businessStats?.total || 0}</p>
                         <p className="text-xs text-gray-400">İşletme</p>
                     </div>
-                    <div className="bg-gradient-to-br from-orange-900/50 to-orange-800/30 rounded-xl p-3 border border-orange-700/50">
-                        <p className="text-2xl font-bold text-orange-400">{stats.total}</p>
+                    <div className="bg-gradient-to-br from-amber-900/50 to-amber-800/30 rounded-xl p-3 border border-amber-700/50">
+                        <p className="text-2xl font-bold text-amber-400">{stats.total}</p>
                         <p className="text-xs text-gray-400">Sipariş</p>
                     </div>
                     <div className="bg-gradient-to-br from-emerald-900/50 to-emerald-800/30 rounded-xl p-3 border border-emerald-700/50">
@@ -422,8 +422,8 @@ export default function UnifiedAnalyticsPage() {
                         <p className="text-blue-400 text-xs font-medium mb-1">😴 En Durgun Gün</p>
                         <p className="text-white text-lg font-bold">{analytics.slowestDay}</p>
                     </div>
-                    <div className="bg-gradient-to-br from-orange-900/30 to-orange-800/20 border border-orange-700/30 rounded-xl p-3">
-                        <p className="text-orange-400 text-xs font-medium mb-1">⏰ En Yoğun Saat</p>
+                    <div className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 border border-amber-700/30 rounded-xl p-3">
+                        <p className="text-amber-400 text-xs font-medium mb-1">⏰ En Yoğun Saat</p>
                         <p className="text-white text-lg font-bold">{analytics.peakHour}:00</p>
                     </div>
                     <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/30 rounded-xl p-3">
@@ -502,7 +502,7 @@ export default function UnifiedAnalyticsPage() {
                             <div className="flex justify-between"><span className="text-gray-400">Müşteriler</span><span className="text-blue-400 font-bold">{userStats?.customers}</span></div>
                             <div className="border-t border-gray-700 pt-2">
                                 <div className="flex justify-between"><span className="text-gray-400">👑 Super Admin</span><span className="text-red-400 font-bold">{userStats?.superAdmins}</span></div>
-                                <div className="flex justify-between"><span className="text-gray-400">🏪 İşletme Sahibi</span><span className="text-orange-400 font-bold">{userStats?.owners}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-400">🏪 İşletme Sahibi</span><span className="text-amber-400 font-bold">{userStats?.owners}</span></div>
                                 <div className="flex justify-between"><span className="text-gray-400">👤 Personel</span><span className="text-purple-400 font-bold">{userStats?.staff}</span></div>
                             </div>
                         </div>

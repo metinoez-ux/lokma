@@ -62,7 +62,7 @@ export const FEATURE_CONFIG: Record<KermesFeature, {
         icon: '🍦',
         label: 'Argelato Ice Cream',
         labelTr: 'Argelato Dondurma',
-        color: 'bg-orange-500',
+        color: 'bg-amber-500',
     },
 };
 

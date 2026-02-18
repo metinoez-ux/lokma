@@ -430,7 +430,7 @@ export default function AccountPage() {
                                         </div>
                                     )}
                                     {livePlan.perOrderFeeType && livePlan.perOrderFeeType !== 'none' && livePlan.perOrderFeeAmount > 0 && (
-                                        <div className="flex items-center gap-2 text-sm text-orange-400">
+                                        <div className="flex items-center gap-2 text-sm text-amber-400">
                                             💵 Sipariş başı: {livePlan.perOrderFeeType === 'percentage' ? `%${livePlan.perOrderFeeAmount}` : `€${livePlan.perOrderFeeAmount}`}
                                         </div>
                                     )}
