@@ -144,7 +144,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                 ),
                 style: FilledButton.styleFrom(
-                  backgroundColor: _accent,
+                  backgroundColor: const Color(0xFFFF8000), // LOKMA brand orange
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
