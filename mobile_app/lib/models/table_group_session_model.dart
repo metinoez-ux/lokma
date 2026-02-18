@@ -161,6 +161,7 @@ class TableGroupSession {
   final GroupSessionStatus status;
   final String hostUserId;
   final String hostName;
+  final String? groupPin; // 4-digit PIN for joining
   final List<TableGroupParticipant> participants;
   final double grandTotal;
   final double paidTotal;
@@ -177,6 +178,7 @@ class TableGroupSession {
     required this.status,
     required this.hostUserId,
     required this.hostName,
+    this.groupPin,
     this.participants = const [],
     this.grandTotal = 0,
     this.paidTotal = 0,
@@ -236,6 +238,7 @@ class TableGroupSession {
       'status': status.name,
       'hostUserId': hostUserId,
       'hostName': hostName,
+      if (groupPin != null) 'groupPin': groupPin,
       'participants': participants.map((p) => p.toMap()).toList(),
       'grandTotal': grandTotal,
       'paidTotal': paidTotal,
@@ -259,6 +262,7 @@ class TableGroupSession {
       ),
       hostUserId: data['hostUserId'] ?? '',
       hostName: data['hostName'] ?? '',
+      groupPin: data['groupPin'],
       participants: (data['participants'] as List<dynamic>?)
               ?.map((e) => TableGroupParticipant.fromMap(Map<String, dynamic>.from(e as Map)))
               .toList() ??
@@ -274,6 +278,7 @@ class TableGroupSession {
 
   TableGroupSession copyWith({
     GroupSessionStatus? status,
+    String? groupPin,
     List<TableGroupParticipant>? participants,
     double? grandTotal,
     double? paidTotal,
@@ -289,6 +294,7 @@ class TableGroupSession {
       status: status ?? this.status,
       hostUserId: hostUserId,
       hostName: hostName,
+      groupPin: groupPin ?? this.groupPin,
       participants: participants ?? this.participants,
       grandTotal: grandTotal ?? this.grandTotal,
       paidTotal: paidTotal ?? this.paidTotal,

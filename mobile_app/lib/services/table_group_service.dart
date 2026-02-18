@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
@@ -21,6 +22,9 @@ class TableGroupService {
   }) async {
     final participantId = const Uuid().v4();
     
+    // Generate 4-digit PIN (1000-9999)
+    final pin = (1000 + Random.secure().nextInt(9000)).toString();
+    
     final participant = TableGroupParticipant(
       participantId: participantId,
       userId: hostUserId,
@@ -37,12 +41,13 @@ class TableGroupService {
       status: GroupSessionStatus.active,
       hostUserId: hostUserId,
       hostName: hostName,
+      groupPin: pin,
       participants: [participant],
       createdAt: DateTime.now(),
     );
 
     await docRef.set(session.toMap());
-    debugPrint('📋 Created group session ${docRef.id} for table $tableNumber at $businessName');
+    debugPrint('📋 Created group session ${docRef.id} for table $tableNumber at $businessName (PIN: $pin)');
     
     return session.copyWith();
   }
@@ -61,11 +66,12 @@ class TableGroupService {
     return TableGroupSession.fromFirestore(query.docs.first);
   }
 
-  /// Join an existing group session
+  /// Join an existing group session (requires PIN)
   Future<String> joinSession({
     required String sessionId,
     required String userId,
     required String userName,
+    required String pin,
   }) async {
     final participantId = const Uuid().v4();
     
@@ -84,6 +90,11 @@ class TableGroupService {
       if (!snapshot.exists) throw Exception('Session not found');
       
       final session = TableGroupSession.fromFirestore(snapshot);
+      
+      // Validate PIN
+      if (session.groupPin != null && session.groupPin != pin) {
+        throw Exception('WRONG_PIN');
+      }
       
       // Check if user already joined
       final alreadyJoined = session.participants.any((p) => p.userId == userId);

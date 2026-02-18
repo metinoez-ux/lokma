@@ -105,7 +105,7 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
   }
 
   /// Join an existing session (auto-resolves current user)
-  Future<bool> joinSession(String sessionId) async {
+  Future<bool> joinSession(String sessionId, {required String pin}) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('Giriş yapmanız gerekli');
     
@@ -119,6 +119,7 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
         sessionId: sessionId,
         userId: userId,
         userName: userName,
+        pin: pin,
       );
 
       // Fetch current session data

@@ -3095,6 +3095,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final participantCount = (activeSession as dynamic).participantCount ?? 1;
+    final pinController = TextEditingController();
+    String? pinError;
 
     showModalBottomSheet(
       context: context,
@@ -3104,77 +3106,165 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       ),
       backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).padding.bottom),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Icon(Icons.groups, size: 48, color: lokmaPink),
-            const SizedBox(height: 12),
-            Text(
-              'Masa $tableNum — Aktif Grup Siparişi',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Bu masada $participantCount kişilik aktif bir grup siparişi var.\nKatılmak ister misiniz?',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 24),
-
-            // Join group button
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  _joinAndNavigateGroupFromMasa(activeSession.id, tableNum, businessId, businessName);
-                },
-                icon: const Icon(Icons.group_add),
-                label: const Text('Gruba Katıl', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                style: FilledButton.styleFrom(
-                  backgroundColor: lokmaPink,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).padding.bottom + MediaQuery.of(ctx).viewInsets.bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // Solo dine-in option
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  setState(() {
-                    _scannedTableNumber = tableNum;
-                    _scannedBusinessId = businessId;
-                    _scannedBusinessName = businessName;
-                  });
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.grey[600],
-                  side: BorderSide(color: Colors.grey[300]!),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                child: const Text('Hayır, tek başıma sipariş vereyim'),
+              const SizedBox(height: 20),
+              Icon(Icons.groups, size: 48, color: lokmaPink),
+              const SizedBox(height: 12),
+              Text(
+                'Masa $tableNum — Aktif Grup Siparişi',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
-            ),
-            const SizedBox(height: 16),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                'Bu masada $participantCount kişilik aktif bir grup siparişi var.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 20),
+
+              // PIN entry
+              Text(
+                'Grup PIN Kodu',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: 200,
+                child: TextField(
+                  controller: pinController,
+                  autofocus: true,
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  maxLength: 4,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 12,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    hintText: '• • • •',
+                    hintStyle: TextStyle(color: Colors.grey[400], letterSpacing: 12),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: pinError != null ? Colors.red : Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: pinError != null ? Colors.red : lokmaPink, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey[50],
+                  ),
+                  onChanged: (_) {
+                    if (pinError != null) {
+                      setSheetState(() => pinError = null);
+                    }
+                  },
+                ),
+              ),
+              if (pinError != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  pinError!,
+                  style: const TextStyle(color: Colors.red, fontSize: 13, fontWeight: FontWeight.w500),
+                ),
+              ],
+              const SizedBox(height: 20),
+
+              // Join group button
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () async {
+                    final pin = pinController.text.trim();
+                    if (pin.length != 4) {
+                      setSheetState(() => pinError = '4 haneli PIN kodu giriniz');
+                      return;
+                    }
+                    try {
+                      final groupNotifier = ref.read(tableGroupProvider.notifier);
+                      final success = await groupNotifier.joinSession(activeSession.id, pin: pin);
+                      if (success && mounted) {
+                        Navigator.pop(ctx);
+                        setState(() {
+                          _scannedTableNumber = tableNum;
+                          _scannedBusinessId = businessId;
+                          _scannedBusinessName = businessName;
+                        });
+                        Navigator.of(context, rootNavigator: true).push(
+                          MaterialPageRoute(
+                            builder: (_) => GroupTableOrderScreen(
+                              businessId: businessId,
+                              businessName: businessName,
+                              tableNumber: tableNum,
+                            ),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (e.toString().contains('WRONG_PIN')) {
+                        setSheetState(() => pinError = 'Yanlış PIN kodu');
+                      } else {
+                        setSheetState(() => pinError = 'Hata: $e');
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.group_add),
+                  label: const Text('Gruba Katıl', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: lokmaPink,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Solo dine-in option
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _scannedTableNumber = tableNum;
+                      _scannedBusinessId = businessId;
+                      _scannedBusinessName = businessName;
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.grey[600],
+                    side: BorderSide(color: Colors.grey[300]!),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                  child: Text('Tek Kişi Sipariş', style: TextStyle(fontSize: 16, color: Colors.grey[600])),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
@@ -3290,42 +3380,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     );
   }
 
-  /// Navigate to group order screen after joining
-  Future<void> _joinAndNavigateGroupFromMasa(
-    String sessionId,
-    String tableNum,
-    String businessId,
-    String businessName,
-  ) async {
-    try {
-      final groupNotifier = ref.read(tableGroupProvider.notifier);
-      await groupNotifier.joinSession(sessionId);
-
-      if (mounted) {
-        setState(() {
-          _scannedTableNumber = tableNum;
-          _scannedBusinessId = businessId;
-          _scannedBusinessName = businessName;
-        });
-        Navigator.of(context, rootNavigator: true).push(
-          MaterialPageRoute(
-            builder: (_) => GroupTableOrderScreen(
-              businessId: businessId,
-              businessName: businessName,
-              tableNumber: tableNum,
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gruba katılırken hata: $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
-
   /// Create new group session and navigate
   Future<void> _createAndNavigateGroupFromMasa(
     String tableNum,
@@ -3334,18 +3388,111 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   ) async {
     try {
       final groupNotifier = ref.read(tableGroupProvider.notifier);
-      await groupNotifier.createSession(
+      final session = await groupNotifier.createSession(
         businessId: businessId,
         businessName: businessName,
         tableNumber: tableNum,
       );
 
+      if (session == null || !mounted) return;
+
+      setState(() {
+        _scannedTableNumber = tableNum;
+        _scannedBusinessId = businessId;
+        _scannedBusinessName = businessName;
+      });
+
+      // Show PIN to host before navigating
+      final pin = session.groupPin ?? '----';
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+
+      await showModalBottomSheet(
+        context: context,
+        useRootNavigator: true,
+        isDismissible: false,
+        enableDrag: false,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        builder: (ctx) => Padding(
+          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).padding.bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: lokmaPink.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.lock_outline, size: 40, color: lokmaPink),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Grup PIN Kodu',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Large PIN display
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: lokmaPink.withValues(alpha: 0.3), width: 2),
+                ),
+                child: Text(
+                  pin.split('').join(' '),
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 8,
+                    color: lokmaPink,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Bu kodu masadaki diğer kişilerle paylaşın.\nGruba katılmak için bu PIN gerekli.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.grey[600], height: 1.5),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.pop(ctx),
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('Tamam, Anladım', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: lokmaPink,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      );
+
+      // Navigate to group order screen after PIN is acknowledged
       if (mounted) {
-        setState(() {
-          _scannedTableNumber = tableNum;
-          _scannedBusinessId = businessId;
-          _scannedBusinessName = businessName;
-        });
         Navigator.of(context, rootNavigator: true).push(
           MaterialPageRoute(
             builder: (_) => GroupTableOrderScreen(
