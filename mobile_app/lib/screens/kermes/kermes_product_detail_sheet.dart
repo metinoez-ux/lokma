@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lokma_app/models/kermes_model.dart';
 
-const Color lokmaPink = Color(0xFFBF1E2E);
-const Color darkBg = Color(0xFF121212);
-const Color cardBg = Color(0xFF1E1E1E);
+const Color lokmaPink = Color(0xFFFB335B);
+Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
+Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
 
 /// Kermes ürün detay bottom sheet'ini göster
 void showKermesProductDetailSheet(
@@ -56,14 +56,18 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (context, scrollController) => Container(
-        decoration: const BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: _cardBg(isDark),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           children: [
@@ -73,7 +77,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[600],
+                color: isDark ? Colors.grey[600] : Colors.grey[400],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -92,8 +96,8 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                   // Ürün Adı + 2. İsim
                   Text(
                     item.name,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: textColor,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -103,7 +107,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                     Text(
                       item.secondaryName!,
                       style: TextStyle(
-                        color: Colors.grey[400],
+                        color: subtleTextColor,
                         fontSize: 16,
                         fontStyle: FontStyle.italic,
                       ),
@@ -125,12 +129,12 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                   // Açıklama
                   if (item.description != null || item.detailedDescription != null) ...[
                     const SizedBox(height: 16),
-                    const Divider(color: Colors.grey),
+                    Divider(color: isDark ? Colors.grey : Colors.grey[300]),
                     const SizedBox(height: 12),
                     Text(
                       item.detailedDescription ?? item.description!,
                       style: TextStyle(
-                        color: Colors.grey[300],
+                        color: isDark ? Colors.grey[300] : Colors.grey[700],
                         fontSize: 15,
                         height: 1.5,
                       ),
@@ -178,12 +182,12 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                       children: item.ingredients.map((ingredient) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.grey[800],
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           ingredient,
-                          style: TextStyle(color: Colors.grey[300], fontSize: 13),
+                          style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[700], fontSize: 13),
                         ),
                       )).toList(),
                     ),
@@ -199,7 +203,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: darkBg,
+                color: _darkBg(isDark),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.3),
@@ -230,8 +234,8 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                             ),
                             Text(
                               cartQuantity.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: textColor,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
                               ),
@@ -416,8 +420,8 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
         fontSize: 16,
         fontWeight: FontWeight.bold,
       ),

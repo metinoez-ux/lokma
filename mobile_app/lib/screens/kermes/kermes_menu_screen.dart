@@ -17,9 +17,10 @@ import 'package:lokma_app/services/guest_profile_service.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
 
-const Color lokmaPink = Color(0xFFBF1E2E);
-const Color darkBg = Color(0xFF121212);
-const Color cardBg = Color(0xFF1E1E1E);
+const Color lokmaPink = Color(0xFFFB335B);
+
+Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
+Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
 
 class KermesMenuScreen extends ConsumerStatefulWidget {
   final KermesEvent event;
@@ -248,9 +249,9 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(dialogContext).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
             SizedBox(width: 12),
@@ -258,7 +259,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               child: Text(
                 'Farklı Kermes Siparişi',
                 style: TextStyle(
-                  color: Colors.black87,
+                  color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white : Colors.black87,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -272,12 +273,12 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
           children: [
             Text(
               'Sepetinizde "$currentKermesName" kermesinden ürünler var.',
-              style: const TextStyle(color: Colors.black87, fontSize: 15),
-            ),
+               style: TextStyle(color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white70 : Colors.black87, fontSize: 15),
+             ),
             const SizedBox(height: 12),
             Text(
               '${widget.event.city} kermesinden ürün eklemek için mevcut sepetiniz temizlenecek.',
-              style: const TextStyle(color: Colors.black54, fontSize: 14),
+               style: TextStyle(color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white54 : Colors.black54, fontSize: 14),
             ),
           ],
         ),
@@ -333,9 +334,11 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
   }
 
   // Kategori başlıkları + item'lar birleşik liste
-  List<Widget> _buildMenuListItems() {
+  List<Widget> _buildMenuListItems(bool isDark) {
     final items = <Widget>[];
     final grouped = _groupedMenu;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleTextColor = isDark ? Colors.grey[500]! : Colors.grey[600]!;
     
     for (final category in _categoriesWithoutAll) {
       if (!grouped.containsKey(category)) continue;
@@ -360,11 +363,11 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               const SizedBox(width: 10),
               Text(
                 category.toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
+                style: TextStyle(
+                 color: textColor,
+                 fontSize: 16,
+                 fontWeight: FontWeight.w900,
+                 letterSpacing: 1.2,
                 ),
               ),
               const SizedBox(width: 8),
@@ -391,7 +394,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
       // Bu kategorideki item'lar
       for (final item in categoryItems) {
         final cartQuantity = _getCartQuantity(item);
-        items.add(_buildMenuItem(item, cartQuantity));
+        items.add(_buildMenuItem(item, cartQuantity, isDark: isDark));
       }
     }
     
@@ -405,23 +408,28 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
   Widget build(BuildContext context) {
     // Cart state'i watch et - değiştiğinde widget rebuild olur
     final cartState = ref.watch(kermesCartProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = _darkBg(isDark);
+    final cardColor = _cardBg(isDark);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
     
     return Scaffold(
-      backgroundColor: darkBg,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: darkBg,
+        backgroundColor: bgColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          icon: Icon(Icons.arrow_back_ios, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'MENÜ',
               style: TextStyle(
-                color: Colors.white,
+                color: textColor,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
@@ -430,7 +438,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
             Text(
               widget.event.city,
               style: TextStyle(
-                color: Colors.grey[500],
+                color: subtleTextColor,
                 fontSize: 12,
                 fontWeight: FontWeight.normal,
               ),
@@ -442,7 +450,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
           Stack(
             children: [
               IconButton(
-                icon: const Icon(Icons.shopping_bag_outlined, color: Colors.white),
+                icon: Icon(Icons.shopping_bag_outlined, color: textColor),
                 onPressed: _totalItems > 0 ? () => context.go('/cart') : null,
               ),
               if (_totalItems > 0)
@@ -504,7 +512,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                               colors: [lokmaPink, Color(0xFFFB335B)],
                             )
                           : null,
-                      color: isSelected ? null : cardBg,
+                       color: isSelected ? null : cardColor,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isSelected ? lokmaPink : Colors.grey[800]!,
@@ -515,7 +523,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                       child: Text(
                         category,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.grey[400],
+                          color: isSelected ? Colors.white : subtleTextColor,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                           fontSize: 14,
                         ),
@@ -534,18 +542,18 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.restaurant_menu, size: 64, color: Colors.grey[700]),
+                         Icon(Icons.restaurant_menu, size: 64, color: isDark ? Colors.grey[700] : Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
                           'Menüde ürün bulunmuyor',
-                          style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                           style: TextStyle(color: subtleTextColor, fontSize: 16),
                         ),
                       ],
                     ),
                   )
                 : Builder(
                     builder: (context) {
-                      final menuListItems = _buildMenuListItems();
+                       final menuListItems = _buildMenuListItems(isDark);
                       return ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(16),
@@ -641,9 +649,12 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     );
   }
 
-  Widget _buildMenuItem(KermesMenuItem item, int cartQuantity) {
+  Widget _buildMenuItem(KermesMenuItem item, int cartQuantity, {bool isDark = true}) {
     final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
     final isSoldOut = !item.isAvailable;  // Tükendi durumu
+    final cardColor = _cardBg(isDark);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleTextColor = isDark ? Colors.grey[500]! : Colors.grey[600]!;
     
     return GestureDetector(
       onTap: isSoldOut
@@ -663,7 +674,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: isSoldOut ? cardBg.withOpacity(0.6) : cardBg,
+             color: isSoldOut ? cardColor.withOpacity(0.6) : cardColor,
             borderRadius: BorderRadius.circular(16),
             border: isSoldOut
                 ? Border.all(color: Colors.red.withOpacity(0.3), width: 1)
@@ -739,12 +750,12 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            item.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                             item.name,
+                             style: TextStyle(
+                               color: textColor,
+                               fontWeight: FontWeight.bold,
+                               fontSize: 16,
+                             ),
                           ),
                         ),
                         // Detay var göstergesi
@@ -760,8 +771,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                       const SizedBox(height: 4),
                       Text(
                         item.description!,
-                        style: TextStyle(
-                          color: Colors.grey[500],
+                         style: TextStyle(
+                           color: subtleTextColor,
                           fontSize: 13,
                         ),
                         maxLines: 2,
@@ -1023,13 +1034,15 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Colors.white,
+      builder: (dialogContext) {
+        final isDarkDialog = Theme.of(dialogContext).brightness == Brightness.dark;
+        return AlertDialog(
+        backgroundColor: isDarkDialog ? const Color(0xFF1E1E1E) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           dialogTitle,
-          style: const TextStyle(
-            color: Colors.black87,
+          style: TextStyle(
+            color: isDarkDialog ? Colors.white : Colors.black87,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -1043,15 +1056,15 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 controller: nameController,
                 decoration: InputDecoration(
                   labelText: 'Adınız',
-                  labelStyle: const TextStyle(color: Colors.black54),
-                  prefixIcon: const Icon(Icons.person_outline, color: Colors.grey),
+                  labelStyle: TextStyle(color: isDarkDialog ? Colors.white54 : Colors.black54),
+                  prefixIcon: Icon(Icons.person_outline, color: isDarkDialog ? Colors.grey[400] : Colors.grey),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade50,
+                  fillColor: isDarkDialog ? Colors.grey[900] : Colors.grey.shade50,
                 ),
-                style: const TextStyle(color: Colors.black87),
+                style: TextStyle(color: isDarkDialog ? Colors.white : Colors.black87),
               ),
               const SizedBox(height: 16),
               
@@ -1061,15 +1074,15 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   labelText: 'Telefon',
-                  labelStyle: const TextStyle(color: Colors.black54),
-                  prefixIcon: const Icon(Icons.phone_outlined, color: Colors.grey),
+                  labelStyle: TextStyle(color: isDarkDialog ? Colors.white54 : Colors.black54),
+                  prefixIcon: Icon(Icons.phone_outlined, color: isDarkDialog ? Colors.grey[400] : Colors.grey),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade50,
+                  fillColor: isDarkDialog ? Colors.grey[900] : Colors.grey.shade50,
                 ),
-                style: const TextStyle(color: Colors.black87),
+                style: TextStyle(color: isDarkDialog ? Colors.white : Colors.black87),
               ),
               
               // Masa Numarası (Masada için)
@@ -1080,15 +1093,15 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: 'Masa Numarası',
-                    labelStyle: const TextStyle(color: Colors.black54),
-                    prefixIcon: const Icon(Icons.table_restaurant_outlined, color: Colors.grey),
+                    labelStyle: TextStyle(color: isDarkDialog ? Colors.white54 : Colors.black54),
+                    prefixIcon: Icon(Icons.table_restaurant_outlined, color: isDarkDialog ? Colors.grey[400] : Colors.grey),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: Colors.grey.shade50,
+                    fillColor: isDarkDialog ? Colors.grey[900] : Colors.grey.shade50,
                   ),
-                  style: const TextStyle(color: Colors.black87),
+                  style: TextStyle(color: isDarkDialog ? Colors.white : Colors.black87),
                 ),
               ],
               
@@ -1109,7 +1122,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                       const Expanded(
                         child: Text(
                           'Kurye teslimatı için adres seçimi yakında eklenecek.',
-                          style: TextStyle(color: Colors.black54, fontSize: 13),
+                          style: TextStyle(color: isDarkDialog ? Colors.white54 : Colors.black54, fontSize: 13),
                         ),
                       ),
                     ],
@@ -1288,8 +1301,13 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
     
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: cardBg,
+      builder: (dialogContext) {
+        final isDarkDialog = Theme.of(dialogContext).brightness == Brightness.dark;
+        final dialogCardBg = isDarkDialog ? const Color(0xFF1E1E1E) : Colors.white;
+        final dialogTextColor = isDarkDialog ? Colors.white : Colors.black87;
+        final dialogSubtleColor = isDarkDialog ? Colors.white70 : Colors.black54;
+        return AlertDialog(
+        backgroundColor: dialogCardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
@@ -1297,7 +1315,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
             SizedBox(width: 12),
             Text(
               'Sipariş Alındı!',
-              style: TextStyle(color: Colors.white, fontSize: 20),
+              style: TextStyle(color: dialogTextColor, fontSize: 20),
             ),
           ],
         ),
@@ -1307,7 +1325,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
           children: [
             Text(
               'Siparişiniz ${order.kermesName} Kermesi\'ne iletildi.',
-              style: const TextStyle(color: Colors.white70, fontSize: 15),
+              style: TextStyle(color: dialogSubtleColor, fontSize: 15),
             ),
             const SizedBox(height: 8),
             // Teslimat ve Ödeme bilgisi
@@ -1343,7 +1361,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
             // Sipariş ID
             Text(
               'Sipariş No: ${order.id}',
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+               style: TextStyle(color: isDarkDialog ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 12),
             ),
             const SizedBox(height: 12),
             Container(
@@ -1356,10 +1374,10 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Toplam:',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
+                   Text(
+                     'Toplam:',
+                     style: TextStyle(color: dialogTextColor, fontSize: 16, fontWeight: FontWeight.w600),
+                   ),
                   Text(
                     '${order.totalAmount.toStringAsFixed(2)} €',
                     style: const TextStyle(

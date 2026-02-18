@@ -423,9 +423,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   
   // ============== FILTER SHEET ==============
   void _showFilterSheet() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -440,15 +441,15 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: isDark ? Colors.grey[600] : Colors.grey[300],
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Sıralama',
-              style: TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             
@@ -502,10 +503,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: isSelected ? primaryRose.withOpacity(0.1) : Colors.grey[50],
+          color: isSelected ? primaryRose.withOpacity(0.1) : (Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[50]),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? primaryRose : Colors.grey[200]!,
+            color: isSelected ? primaryRose : (Theme.of(context).brightness == Brightness.dark ? Colors.grey[700]! : Colors.grey[200]!),
             width: 2,
           ),
         ),
@@ -517,7 +518,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               child: Text(
                 title,
                 style: TextStyle(
-                  color: isSelected ? primaryRose : Colors.grey[800],
+                  color: isSelected ? primaryRose : (Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey[800]),
                   fontSize: 16,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),

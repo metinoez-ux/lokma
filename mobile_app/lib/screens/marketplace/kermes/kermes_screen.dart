@@ -5,21 +5,26 @@ class KermesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: const Row(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        title: Row(
           children: [
-            Text('🎪 ', style: TextStyle(fontSize: 24)),
-            Text('Kermes', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const Text('🎪 ', style: TextStyle(fontSize: 24)),
+            Text('Kermes', style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold,
+            )),
           ],
         ),
       ),
-      body: const Center(
+      body: Center(
         child: Text(
           'Kermes etkinlikleri\nStantlar & ön sipariş',
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
           textAlign: TextAlign.center,
         ),
       ),

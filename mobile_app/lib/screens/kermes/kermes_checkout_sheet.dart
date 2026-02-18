@@ -39,9 +39,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   bool _isSubmitting = false;
   
   // Renkler
-  static const Color lokmaPink = Color(0xFFBF1E2E);
-  static const Color darkBg = Color(0xFF121212);
-  static const Color cardBg = Color(0xFF1E1E1E);
+  static const Color lokmaPink = Color(0xFFFB335B);
+  Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
+  Color _cardBg(bool isDark) => isDark ? const Color(0xFF1E1E1E) : Colors.white;
   
   @override
   void dispose() {
@@ -218,11 +218,17 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = _darkBg(isDark);
+    final cardColor = _cardBg(isDark);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    
     return Container(
       height: MediaQuery.of(context).size.height * 0.92,
-      decoration: const BoxDecoration(
-        color: darkBg,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
@@ -232,7 +238,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[600],
+              color: isDark ? Colors.grey[600] : Colors.grey[400],
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -257,6 +263,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   
   Widget _buildHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       child: Column(
@@ -273,7 +281,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: cardBg,
+                      color: _cardBg(isDark),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -292,8 +300,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   children: [
                     Text(
                       _stepTitles[_currentStep],
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: textColor,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -301,7 +309,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     Text(
                       'Adım ${_currentStep + 1} / 5',
                       style: TextStyle(
-                        color: Colors.grey[500],
+                        color: isDark ? Colors.grey[400]! : Colors.grey[600]!,
                         fontSize: 13,
                       ),
                     ),
@@ -315,12 +323,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: cardBg,
+                    color: _cardBg(isDark),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.close,
-                    color: Colors.white,
+                    color: textColor,
                     size: 20,
                   ),
                 ),
@@ -334,7 +342,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: cardBg.withOpacity(0.5),
+              color: _cardBg(isDark).withOpacity(0.5),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -345,7 +353,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   child: Text(
                     widget.event.city,
                     style: TextStyle(
-                      color: Colors.grey[300],
+                      color: isDark ? Colors.grey[300] : Colors.grey[700],
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -362,6 +370,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   }
   
   Widget _buildProgressBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -375,7 +384,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               decoration: BoxDecoration(
                 color: isCompleted || isCurrent 
                     ? lokmaPink 
-                    : Colors.grey[800],
+                    : isDark ? Colors.grey[800] : Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -404,6 +413,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   /// Step 0: Sepet özeti
   Widget _buildCartStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
     return Consumer(
       builder: (context, ref, child) {
         final cartState = ref.watch(kermesCartProvider);
@@ -413,11 +425,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.shopping_bag_outlined, size: 64, color: Colors.grey[700]),
+                Icon(Icons.shopping_bag_outlined, size: 64, color: isDark ? Colors.grey[700] : Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
                   'Sepetiniz boş',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                  style: TextStyle(color: subtleTextColor, fontSize: 16),
                 ),
               ],
             ),
@@ -466,12 +478,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       children: [
                         Text(
                           '${cartState.totalItems} ürün',
-                          style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                          style: TextStyle(color: subtleTextColor, fontSize: 14),
                         ),
                         Text(
                           '${cartState.totalAmount.toStringAsFixed(2)} €',
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: isDark ? Colors.white70 : Colors.black54,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
@@ -512,7 +524,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       child: Container(
                         height: 1,
-                        color: Colors.white.withOpacity(0.2),
+                        color: isDark ? Colors.white.withOpacity(0.2) : Colors.black.withOpacity(0.1),
                       ),
                     ),
                     
@@ -520,10 +532,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'Toplam Tutar',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: isDark ? Colors.white : Colors.black87,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -552,7 +564,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: cardBg,
+                color: _cardBg(isDark),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
@@ -563,8 +575,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       children: [
                         Text(
                           item.name,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: textColor,
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
@@ -572,7 +584,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         const SizedBox(height: 4),
                         Text(
                           '${item.price.toStringAsFixed(2)} € x $quantity = ${subtotal.toStringAsFixed(2)} €',
-                          style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                          style: TextStyle(color: subtleTextColor, fontSize: 13),
                         ),
                       ],
                     ),
@@ -643,6 +655,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   /// Step 1: Sipariş Türü
   Widget _buildOrderTypeStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -689,10 +702,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 children: [
                   Icon(Icons.info_outline, color: Colors.green[400], size: 20),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Ailecek sipariş özelliği yakında kullanıma sunulacak!',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                      style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 13),
                     ),
                   ),
                 ],
@@ -814,6 +827,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   /// Kermes aktif değilse gösterilecek mesaj
   Widget _buildKermesNotActiveMessage() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final event = widget.event;
     final isFuture = _isKermesFuture;
     
@@ -856,8 +870,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             isFuture 
                 ? 'Kermes Henüz Başlamadı'
                 : 'Kermes Sona Erdi',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
@@ -870,7 +884,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: cardBg,
+              color: _cardBg(isDark),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isFuture ? Colors.orange.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
@@ -886,8 +900,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     Expanded(
                       child: Text(
                         event.city,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1010,6 +1024,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   
   /// Step 4: Ödeme Yöntemi
   Widget _buildPaymentStep() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final cartState = ref.watch(kermesCartProvider);
     
     // Pfand hesaplama
@@ -1048,10 +1063,10 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('${cartState.totalItems} ürün', style: TextStyle(color: Colors.grey[400])),
+                    Text('${cartState.totalItems} ürün', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600])),
                     Text(
                       '${cartState.totalAmount.toStringAsFixed(2)} €',
-                      style: const TextStyle(color: Colors.white70, fontSize: 16),
+                      style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16),
                     ),
                   ],
                 ),
@@ -1083,7 +1098,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Toplam', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                    Text('Toplam', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600)),
                     Text(
                       '${grandTotal.toStringAsFixed(2)} €',
                       style: const TextStyle(
@@ -1104,7 +1119,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     const SizedBox(width: 8),
                     Text(
                       _getDeliveryLabel(),
-                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                      style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 14),
                     ),
                   ],
                 ),
@@ -1113,9 +1128,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           ),
           
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Ödeme Yöntemi',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 16),
           
@@ -1158,13 +1173,14 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     bool isDisabled = false,
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: isDisabled ? null : onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? lokmaPink.withOpacity(0.15) : cardBg,
+          color: isSelected ? lokmaPink.withOpacity(0.15) : _cardBg(isDark),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? lokmaPink : Colors.transparent,
@@ -1195,7 +1211,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           child: Text(
                             title,
                             style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white70,
+                              color: isSelected ? (isDark ? Colors.white : Colors.black87) : (isDark ? Colors.white70 : Colors.black54),
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -1211,8 +1227,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                             ),
                             child: Text(
                               badge,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black87,
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1224,7 +1240,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                      style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 13),
                     ),
                   ],
                 ),
@@ -1244,7 +1260,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[700]!, width: 2),
+                    border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[400]!, width: 2),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -1262,19 +1278,20 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     String? hint,
     TextInputType? keyboardType,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white, fontSize: 16),
+      style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 16),
       onChanged: (_) => setState(() {}), // Rebuild for validation
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        labelStyle: const TextStyle(color: Colors.white70),
-        hintStyle: TextStyle(color: Colors.grey[600]),
-        prefixIcon: Icon(icon, color: Colors.grey[500]),
+        labelStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+        hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400]),
+        prefixIcon: Icon(icon, color: isDark ? Colors.grey[500] : Colors.grey[600]),
         filled: true,
-        fillColor: cardBg,
+        fillColor: _cardBg(isDark),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -1289,6 +1306,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   }
   
   Widget _buildFooter() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final cartState = ref.watch(kermesCartProvider);
     final isLastStep = _currentStep == 4;
     
@@ -1300,8 +1318,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
         bottom: MediaQuery.of(context).padding.bottom + 8,
       ),
       decoration: BoxDecoration(
-        color: cardBg,
-        border: Border(top: BorderSide(color: Colors.grey[800]!)),
+        color: _cardBg(isDark),
+        border: Border(top: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey[300]!)),
       ),
       child: Row(
         children: [
@@ -1313,12 +1331,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               children: [
                 Text(
                   '${cartState.totalItems} ürün',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                  style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 11),
                 ),
                 Text(
                   '${cartState.totalAmount.toStringAsFixed(2)} €',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1337,7 +1355,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 onPressed: _canProceed && !_isSubmitting ? _nextStep : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: lokmaPink,
-                  disabledBackgroundColor: Colors.grey[700],
+                  disabledBackgroundColor: isDark ? Colors.grey[700] : Colors.grey[400],
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
