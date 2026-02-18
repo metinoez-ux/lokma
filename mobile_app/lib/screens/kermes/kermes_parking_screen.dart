@@ -330,6 +330,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     bool isDefault = false,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -641,6 +642,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
   
   /// Collapsible park kartı
   Widget _buildCollapsibleParkCard(KermesParkingInfo info, int index, bool isExpanded) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final address = '${info.street}, ${info.postalCode} ${info.city}';
     
     return AnimatedContainer(
@@ -739,6 +741,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
   
   /// Genişletilmiş kart içeriği
   Widget _buildExpandedContent(KermesParkingInfo info, int index, String address) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
@@ -1022,7 +1025,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
         child: StatefulBuilder(
         builder: (context, setModalState) => Container(
           height: MediaQuery.of(context).size.height * 0.9,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: _surfaceDark(isDark),
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),

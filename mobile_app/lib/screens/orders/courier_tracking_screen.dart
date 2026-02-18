@@ -251,6 +251,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
   }
 
   Widget _buildTrackingView(LokmaOrder order) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // Default center if no location yet (Istanbul)
     LatLng courierPosition = const LatLng(41.0082, 28.9784);
     bool hasLocation = false;

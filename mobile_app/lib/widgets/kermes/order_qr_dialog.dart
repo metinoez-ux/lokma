@@ -39,7 +39,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
 
   static const Color darkBg = Color(0xFF121212);
   static const Color cardBg = Color(0xFF1E1E1E);
-  static const Color lokmaPink = Color(0xFFBF1E2E);
+  static const Color lokmaPink = Color(0xFFFB335B);
 
   @override
   void initState() {

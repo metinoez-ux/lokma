@@ -1119,7 +1119,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                     children: [
                       Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Kurye teslimatı için adres seçimi yakında eklenecek.',
                           style: TextStyle(color: isDarkDialog ? Colors.white54 : Colors.black54, fontSize: 13),
@@ -1158,7 +1158,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
             child: Text(submitButtonText),
           ),
         ],
-      ),
+      );
+      },
     );
   }
 
@@ -1309,7 +1310,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
         return AlertDialog(
         backgroundColor: dialogCardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
             Icon(Icons.check_circle, color: Colors.green, size: 28),
             SizedBox(width: 12),
@@ -1400,7 +1401,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
             ),
           ),
         ],
-      ),
+      );
+      },
     );
   }
 
