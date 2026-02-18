@@ -324,7 +324,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               subtitle: kuryeEnabled
                                   ? 'Teslimat siparişlerini alın'
                                   : 'Kurye olarak çalışmıyorum',
-                              color: Colors.orange,
+                              color: Colors.amber,
                               isEnabled: kuryeEnabled,
                               onChanged: (val) => setSheetState(() => kuryeEnabled = val),
                             ),
@@ -748,18 +748,18 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.amber.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_amber, color: Colors.orange, size: 20),
+                    const Icon(Icons.warning_amber, color: Colors.amber, size: 20),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Sahipsiz masalar: ${orphans.join(", ")}',
-                        style: const TextStyle(fontSize: 13, color: Colors.orange),
+                        style: const TextStyle(fontSize: 13, color: Colors.amber),
                       ),
                     ),
                   ],
@@ -1518,12 +1518,12 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               margin: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
                 color: _shiftService.shiftStatus == 'paused'
-                    ? Colors.orange.withOpacity(0.15)
+                    ? Colors.amber.withOpacity(0.15)
                     : const Color(0xFF4CAF50).withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: _shiftService.shiftStatus == 'paused'
-                      ? Colors.orange.withOpacity(0.4)
+                      ? Colors.amber.withOpacity(0.4)
                       : const Color(0xFF4CAF50).withOpacity(0.4),
                 ),
               ),
@@ -1536,7 +1536,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         : Icons.timer,
                     size: 16,
                     color: _shiftService.shiftStatus == 'paused'
-                        ? Colors.orange
+                        ? Colors.amber
                         : const Color(0xFF4CAF50),
                   ),
                   const SizedBox(width: 4),
@@ -1547,7 +1547,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       fontWeight: FontWeight.bold,
                       fontFeatures: const [FontFeature.tabularFigures()],
                       color: _shiftService.shiftStatus == 'paused'
-                          ? Colors.orange
+                          ? Colors.amber
                           : const Color(0xFF4CAF50),
                     ),
                   ),
@@ -1566,7 +1566,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             else
               IconButton(
                 onPressed: _handlePauseShift,
-                icon: const Icon(Icons.pause, color: Colors.orange),
+                icon: const Icon(Icons.pause, color: Colors.amber),
                 tooltip: 'Mola',
                 visualDensity: VisualDensity.compact,
               ),
@@ -1602,7 +1602,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                           const days = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
                           final dateStr = '${now.day} ${months[now.month - 1]} ${now.year}, ${days[now.weekday - 1]}';
                           final isPaused = _shiftService.shiftStatus == 'paused';
-                          final accentColor = isPaused ? Colors.orange : const Color(0xFF4CAF50);
+                          final accentColor = isPaused ? Colors.amber : const Color(0xFF4CAF50);
 
                           return Container(
                             width: double.infinity,
@@ -1638,12 +1638,12 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: Colors.orange.withOpacity(0.15),
+                                          color: Colors.amber.withOpacity(0.15),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: const Text(
                                           'Mola',
-                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.orange),
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.amber),
                                         ),
                                       ),
                                   ],
@@ -1825,7 +1825,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                   runSpacing: 4,
                                   children: [
                                     _statusChip('⏳ $pending', Colors.amber, pending > 0),
-                                    _statusChip('🔥 $preparing', Colors.orange, preparing > 0),
+                                    _statusChip('🔥 $preparing', Colors.amber, preparing > 0),
                                     _statusChip('✅ $ready', Colors.green, ready > 0),
                                     _statusChip('🍽️ $served', Colors.teal, served > 0),
                                   ],
@@ -1843,7 +1843,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               _tableLegend(const Color(0xFFFB335B), 'Siparişli'),
                               _tableLegend(Colors.blue, 'Servis Edildi'),
                               _tableLegend(Colors.green, 'Ödendi'),
-                              _tableLegend(Colors.orange, 'Rezerveli'),
+                              _tableLegend(Colors.amber, 'Rezerveli'),
                               _tableLegend(Colors.grey.shade400, 'Boş'),
                             ],
                           ),
@@ -1983,7 +1983,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         runSpacing: 4,
                         children: [
                           _statusChip('⏳ $pending', Colors.amber, pending > 0),
-                          _statusChip('🔥 $preparing', Colors.orange, preparing > 0),
+                          _statusChip('🔥 $preparing', Colors.amber, preparing > 0),
                           _statusChip('✅ $ready', Colors.green, ready > 0),
                           _statusChip('🚗 $onTheWay', Colors.blue, onTheWay > 0),
                         ],
@@ -2102,7 +2102,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         runSpacing: 4,
                         children: [
                           _statusChip('⏳ $pending', Colors.amber, pending > 0),
-                          _statusChip('🔥 $preparing', Colors.orange, preparing > 0),
+                          _statusChip('🔥 $preparing', Colors.amber, preparing > 0),
                           _statusChip('✅ $ready', Colors.green, ready > 0),
                           _statusChip('🍽️ $serving', Colors.cyan, serving > 0),
                         ],
@@ -2492,7 +2492,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               Text(
                                 section,
                                 style: TextStyle(
-                                  color: isDark ? Colors.orange.shade200 : Colors.orange.shade800,
+                                  color: isDark ? Colors.amber.shade200 : Colors.amber.shade800,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
@@ -2759,7 +2759,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             String statusText;
                             switch (status) {
                               case 'pending':
-                                statusColor = Colors.orange;
+                                statusColor = Colors.amber;
                                 statusText = 'Bekleyen';
                                 break;
                               case 'accepted':
@@ -3222,9 +3222,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               textColor = isDark ? brandColor.withValues(alpha: 0.8) : brandColor;
             }
           } else if (hasReservation) {
-            bgColor = isDark ? Colors.orange.shade900.withOpacity(0.3) : Colors.orange.shade50;
-            borderColor = Colors.orange.shade400;
-            textColor = isDark ? Colors.orange.shade300 : Colors.orange.shade800;
+            bgColor = isDark ? Colors.amber.shade900.withOpacity(0.3) : Colors.amber.shade50;
+            borderColor = Colors.amber.shade400;
+            textColor = isDark ? Colors.amber.shade300 : Colors.amber.shade800;
           } else {
             bgColor = cardBg;
             borderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
@@ -3278,7 +3278,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             badgeColor = Colors.green;
                           } else if (hasPreparing) {
                             emoji = '🔥';
-                            badgeColor = Colors.orange;
+                            badgeColor = Colors.amber;
                           } else {
                             emoji = '🍽️';
                             badgeColor = Colors.teal;
@@ -3312,7 +3312,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                   color: allActivePaid
                                       ? Colors.green
                                       : somePaid
-                                          ? Colors.orange
+                                          ? Colors.amber
                                           : Colors.red.shade400,
                                   shape: BoxShape.circle,
                                 ),
@@ -3327,7 +3327,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         child: Container(
                           width: 14, height: 14,
                           decoration: BoxDecoration(
-                            color: Colors.orange,
+                            color: Colors.amber,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Center(
@@ -3426,9 +3426,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             textColor = brandColor;
           }
         } else if (hasReservation) {
-          bgColor = isDark ? Colors.orange.shade900.withOpacity(0.3) : Colors.orange.shade50;
-          borderColor = Colors.orange.shade400;
-          textColor = isDark ? Colors.orange.shade300 : Colors.orange.shade800;
+          bgColor = isDark ? Colors.amber.shade900.withOpacity(0.3) : Colors.amber.shade50;
+          borderColor = Colors.amber.shade400;
+          textColor = isDark ? Colors.amber.shade300 : Colors.amber.shade800;
         } else {
           bgColor = cardBg;
           borderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
@@ -3466,7 +3466,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       child: Container(
                         width: 14, height: 14,
                         decoration: BoxDecoration(
-                          color: Colors.orange,
+                          color: Colors.amber,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Center(
@@ -3529,9 +3529,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     Color borderColor;
     Color textColor;
     if (hasReservation) {
-      bgColor = isDark ? Colors.orange.shade900.withOpacity(0.3) : Colors.orange.shade50;
-      borderColor = Colors.orange.shade400;
-      textColor = isDark ? Colors.orange.shade300 : Colors.orange.shade800;
+      bgColor = isDark ? Colors.amber.shade900.withOpacity(0.3) : Colors.amber.shade50;
+      borderColor = Colors.amber.shade400;
+      textColor = isDark ? Colors.amber.shade300 : Colors.amber.shade800;
     } else {
       bgColor = cardBg;
       borderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
@@ -3609,7 +3609,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [Colors.amber.shade700, Colors.orange.shade700],
+                            colors: [Colors.amber.shade700, Colors.amber.shade700],
                           ),
                         ),
                         child: Row(
@@ -4089,7 +4089,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                 return Container(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
-                                      colors: [Colors.amber.shade700, Colors.orange.shade700],
+                                      colors: [Colors.amber.shade700, Colors.amber.shade700],
                                     ),
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
@@ -4163,7 +4163,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               final isPaid = order.paymentStatus == 'paid';
                               final statusConfig = <OrderStatus, Map<String, dynamic>>{
                                 OrderStatus.pending: {'label': '⏳ Beklemede', 'color': Colors.yellow.shade700, 'bg': Colors.yellow.shade50},
-                                OrderStatus.preparing: {'label': '👨‍🍳 Hazırlanıyor', 'color': Colors.orange.shade700, 'bg': Colors.orange.shade50},
+                                OrderStatus.preparing: {'label': '👨‍🍳 Hazırlanıyor', 'color': Colors.amber.shade700, 'bg': Colors.amber.shade50},
                                 OrderStatus.ready: {'label': '📦 Hazır', 'color': Colors.green.shade700, 'bg': Colors.green.shade50},
                                 OrderStatus.served: {'label': '🍽️ Servis Edildi', 'color': Colors.teal.shade700, 'bg': Colors.teal.shade50},
                                 OrderStatus.delivered: {'label': '🍽️ Servis Edildi', 'color': Colors.teal.shade700, 'bg': Colors.teal.shade50},

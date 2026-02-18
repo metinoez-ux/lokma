@@ -410,7 +410,7 @@ class MyReservationsScreen extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Rezervasyon iptal edildi'),
-                    backgroundColor: Colors.orange,
+                    backgroundColor: Colors.amber,
                   ),
                 );
               }
@@ -452,9 +452,9 @@ class MyReservationsScreen extends StatelessWidget {
       default:
         return _StatusInfo(
           label: 'Onay Bekleniyor',
-          color: Colors.orange[800]!,
-          bgColor: Colors.orange[50]!,
-          borderColor: Colors.orange,
+          color: Colors.amber[800]!,
+          bgColor: Colors.amber[50]!,
+          borderColor: Colors.amber,
           icon: Icons.schedule,
         );
     }
@@ -637,7 +637,7 @@ END:VCALENDAR''';
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Takvim dosyası açılamadı'),
-            backgroundColor: Colors.orange,
+            backgroundColor: Colors.amber,
           ),
         );
       }

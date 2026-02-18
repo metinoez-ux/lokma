@@ -260,7 +260,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return Colors.orange;
+        return Colors.amber;
       case OrderStatus.accepted:
         return Colors.blue;
       case OrderStatus.preparing:
@@ -433,7 +433,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               // Business name
               Row(
                 children: [
-                  Icon(Icons.store, size: 18, color: Colors.orange[700]),
+                  Icon(Icons.store, size: 18, color: Colors.amber[700]),
                   const SizedBox(width: 8),
                   Text(
                     order.butcherName,
@@ -548,7 +548,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                           padding: const EdgeInsets.only(left: 40, top: 2),
                           child: Text(
                             '📝 ${item.itemNote}',
-                            style: TextStyle(fontSize: 12, color: Colors.orange[400]),
+                            style: TextStyle(fontSize: 12, color: Colors.amber[400]),
                           ),
                         ),
                     ],
@@ -655,7 +655,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
       case OrderType.pickup:
         icon = Icons.storefront;
         label = 'Gel Al';
-        color = const Color(0xFFFF9800); // Orange
+        color = const Color(0xFFFFC107); // Orange
       case OrderType.dineIn:
         icon = Icons.restaurant;
         label = 'Masa';

@@ -253,7 +253,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 28),
             SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -796,17 +796,17 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.2),
+                              color: Colors.amber.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.warning_amber, size: 12, color: Colors.orange[300]),
+                                Icon(Icons.warning_amber, size: 12, color: Colors.amber[300]),
                                 const SizedBox(width: 2),
                                 Text(
                                   '${item.allergens.length}',
-                                  style: TextStyle(color: Colors.orange[300], fontSize: 11),
+                                  style: TextStyle(color: Colors.amber[300], fontSize: 11),
                                 ),
                               ],
                             ),
@@ -1111,13 +1111,13 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
+                    color: Colors.amber.shade50,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orange.shade200),
+                    border: Border.all(color: Colors.amber.shade200),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
+                      Icon(Icons.info_outline, color: Colors.amber.shade700, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(

@@ -156,7 +156,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
       badgeIcon = Icons.storefront;
     } else if (daysLeft == 0) {
       statusText = 'BUGÜN BAŞLIYOR';
-      badgeGradient = [Colors.orange, Colors.deepOrange];
+      badgeGradient = [Colors.amber, Colors.amber];
       badgeIcon = Icons.today;
     } else if (daysLeft > 0) {
       statusText = '$daysLeft gün kaldı';
@@ -696,7 +696,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
         children: [
           Row(
             children: [
-              Icon(Icons.wb_sunny, color: Colors.orange[400], size: 18),
+              Icon(Icons.wb_sunny, color: Colors.amber[400], size: 18),
               const SizedBox(width: 8),
               Text(
                 'Hava Durumu',

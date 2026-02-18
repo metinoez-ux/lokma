@@ -558,7 +558,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.amber.withOpacity(0.15), Colors.orange.withOpacity(0.08)],
+                    colors: [Colors.amber.withOpacity(0.15), Colors.amber.withOpacity(0.08)],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.amber.withOpacity(0.3)),
@@ -1457,7 +1457,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       onPressed: isUploading ? null : () async {
                         if (streetController.text.isEmpty || cityController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Adres bilgilerini doldurun'), backgroundColor: Colors.orange),
+                            const SnackBar(content: Text('Adres bilgilerini doldurun'), backgroundColor: Colors.amber),
                           );
                           return;
                         }
@@ -1805,7 +1805,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         onPressed: isUploading ? null : () async {
                           if (streetController.text.isEmpty || cityController.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Adres bilgilerini doldurun'), backgroundColor: Colors.orange),
+                              const SnackBar(content: Text('Adres bilgilerini doldurun'), backgroundColor: Colors.amber),
                             );
                             return;
                           }
@@ -1925,7 +1925,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Park alanı silindi'),
-              backgroundColor: Colors.orange,
+              backgroundColor: Colors.amber,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),

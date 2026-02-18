@@ -313,7 +313,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 28),
             SizedBox(width: 12),
             Text(
               'Sipariş İptali',
@@ -434,10 +434,10 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.2),
+                color: Colors.amber.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check, color: Colors.orange, size: 50),
+              child: const Icon(Icons.check, color: Colors.amber, size: 50),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -484,7 +484,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                   Navigator.of(context).popUntil((route) => route.isFirst || route.settings.name == '/kermes');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: Colors.amber,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -695,10 +695,10 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                         decoration: BoxDecoration(
                           color: _isPaid 
                               ? Colors.green.withValues(alpha: 0.15)
-                              : Colors.orange.withValues(alpha: 0.15),
+                              : Colors.amber.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: _isPaid ? Colors.green : Colors.orange,
+                            color: _isPaid ? Colors.green : Colors.amber,
                             width: 1.5,
                           ),
                         ),
@@ -707,14 +707,14 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                           children: [
                             Icon(
                               _isPaid ? Icons.check_circle : Icons.schedule,
-                              color: _isPaid ? Colors.green : Colors.orange,
+                              color: _isPaid ? Colors.green : Colors.amber,
                               size: 22,
                             ),
                             const SizedBox(width: 10),
                             Text(
                               _isPaid ? 'ÖDEME YAPILDI' : 'ÖDEME BEKLENİYOR',
                               style: TextStyle(
-                                color: _isPaid ? Colors.green : Colors.orange,
+                                color: _isPaid ? Colors.green : Colors.amber,
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.5,

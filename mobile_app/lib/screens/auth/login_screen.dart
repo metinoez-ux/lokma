@@ -102,7 +102,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           break;
         case 2:
           text = 'Zayıf';
-          color = Colors.orange;
+          color = Colors.amber;
           break;
         case 3:
           text = 'Orta';
@@ -1150,7 +1150,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen e-posta adresinizi girin'), backgroundColor: Colors.orange),
+        const SnackBar(content: Text('Lütfen e-posta adresinizi girin'), backgroundColor: Colors.amber),
       );
       return;
     }

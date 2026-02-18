@@ -733,7 +733,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           // Gel Al
           _buildOptionCard(
             icon: Icons.shopping_bag_outlined,
-            iconColor: Colors.orange,
+            iconColor: Colors.amber,
             title: 'Gel Al',
             subtitle: 'Tezgahtan kendiniz alın',
             isSelected: _deliveryType == DeliveryType.gelAl,
@@ -849,7 +849,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isFuture 
-                    ? [Colors.orange.withOpacity(0.2), Colors.amber.withOpacity(0.1)]
+                    ? [Colors.amber.withOpacity(0.2), Colors.amber.withOpacity(0.1)]
                     : [Colors.grey.withOpacity(0.2), Colors.grey.withOpacity(0.1)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -859,7 +859,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             child: Icon(
               isFuture ? Icons.schedule : Icons.event_busy,
               size: 48,
-              color: isFuture ? Colors.orange : Colors.grey[500],
+              color: isFuture ? Colors.amber : Colors.grey[500],
             ),
           ),
           
@@ -887,7 +887,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
               color: _cardBg(isDark),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isFuture ? Colors.orange.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
+                color: isFuture ? Colors.amber.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
               ),
             ),
             child: Column(
@@ -917,13 +917,13 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 // Tarih aralığı
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, color: isFuture ? Colors.orange : Colors.grey[500], size: 18),
+                    Icon(Icons.calendar_today, color: isFuture ? Colors.amber : Colors.grey[500], size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         '${formatDate(event.startDate)} - ${formatDate(event.endDate)}',
                         style: TextStyle(
-                          color: isFuture ? Colors.orange[300] : Colors.grey[400],
+                          color: isFuture ? Colors.amber[300] : Colors.grey[400],
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
                         ),
@@ -960,7 +960,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: isFuture 
-                    ? [Colors.orange.withOpacity(0.1), Colors.transparent]
+                    ? [Colors.amber.withOpacity(0.1), Colors.transparent]
                     : [Colors.grey.withOpacity(0.1), Colors.transparent],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -1152,7 +1152,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             title: 'Kart ile Ödeme',
             subtitle: 'Şimdi ödeyin',
             badge: 'YAKIN',
-            badgeColor: Colors.orange,
+            badgeColor: Colors.amber,
             isSelected: _paymentMethod == PaymentMethodType.card,
             isDisabled: true, // Geçici olarak kapalı
             onTap: null,

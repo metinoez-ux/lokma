@@ -152,18 +152,18 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                       children: item.allergens.map((allergen) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.2),
+                          color: Colors.amber.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                          border: Border.all(color: Colors.amber.withOpacity(0.5)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(_getAllergenIcon(allergen), size: 16, color: Colors.orange),
+                            Icon(_getAllergenIcon(allergen), size: 16, color: Colors.amber),
                             const SizedBox(width: 6),
                             Text(
                               allergen,
-                              style: const TextStyle(color: Colors.orange, fontSize: 13),
+                              style: const TextStyle(color: Colors.amber, fontSize: 13),
                             ),
                           ],
                         ),

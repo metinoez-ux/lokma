@@ -469,7 +469,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
     final statusColor = isReady 
         ? Colors.green 
         : isPreparing 
-            ? Colors.orange 
+            ? Colors.amber 
             : Colors.grey;
     final statusText = isReady 
         ? '✅ HAZIR' 
@@ -1099,11 +1099,11 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
                             color: isPreparing 
-                              ? Colors.orange.withValues(alpha: isDark ? 0.3 : 0.1) 
+                              ? Colors.amber.withValues(alpha: isDark ? 0.3 : 0.1) 
                               : Colors.grey.withValues(alpha: isDark ? 0.3 : 0.1),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: isPreparing ? Colors.orange : Colors.grey,
+                              color: isPreparing ? Colors.amber : Colors.grey,
                               width: 1.5,
                             ),
                           ),
@@ -1111,7 +1111,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                             children: [
                               Icon(
                                 isPreparing ? Icons.restaurant : Icons.hourglass_empty,
-                                color: isPreparing ? Colors.orange : Colors.grey,
+                                color: isPreparing ? Colors.amber : Colors.grey,
                                 size: 24,
                               ),
                               const SizedBox(width: 10),
@@ -1137,7 +1137,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                           padding: const EdgeInsets.all(12),
                           child: Row(
                             children: [
-                              const Icon(Icons.receipt_long, color: Colors.orange, size: 24),
+                              const Icon(Icons.receipt_long, color: Colors.amber, size: 24),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Column(
@@ -1260,7 +1260,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           child: Row(
                             children: [
-                              Icon(isPaid ? Icons.credit_card : Icons.payments, color: isPaid ? Colors.green : Colors.orange, size: 24),
+                              Icon(isPaid ? Icons.credit_card : Icons.payments, color: isPaid ? Colors.green : Colors.amber, size: 24),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Column(
@@ -1268,7 +1268,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                   children: [
                                     Text(
                                       isPaid ? '✅ ÖDENDİ' : '💵 KAPIDA ÖDEME',
-                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isPaid ? Colors.green : Colors.orange),
+                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isPaid ? Colors.green : Colors.amber),
                                     ),
                                     Text(
                                       isPaid ? 'Online ödeme yapıldı' : 'Müşteriden tahsil edilecek',
@@ -1279,7 +1279,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                               ),
                               Text(
                                 '${order.totalAmount.toStringAsFixed(2)}€',
-                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isPaid ? Colors.green : Colors.orange),
+                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isPaid ? Colors.green : Colors.amber),
                               ),
                             ],
                           ),
@@ -1326,7 +1326,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                             padding: const EdgeInsets.only(bottom: 4),
                             child: Row(
                               children: [
-                                Text('${item.quantity}x', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.orange)),
+                                Text('${item.quantity}x', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber)),
                                 const SizedBox(width: 8),
                                 Expanded(child: Text(item.name, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface))),
                                 Text('${(item.price * item.quantity).toStringAsFixed(2)}€', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
@@ -1462,7 +1462,7 @@ class _DeliveryTypeSheet extends StatelessWidget {
           _buildOption(
             context,
             icon: Icons.door_front_door,
-            color: Colors.orange,
+            color: Colors.amber,
             title: 'Kapıya Bıraktım',
             subtitle: '⚠️ Fotoğraf çekmeniz gerekecek',
             value: 'left_at_door',
@@ -1529,7 +1529,7 @@ class _DeliveryTypeSheet extends StatelessWidget {
                       subtitle,
                       style: TextStyle(
                         fontSize: 12,
-                        color: requiresPhoto ? Colors.orange : Colors.grey[600],
+                        color: requiresPhoto ? Colors.amber : Colors.grey[600],
                       ),
                     ),
                   ],

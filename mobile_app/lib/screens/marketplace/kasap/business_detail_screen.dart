@@ -299,7 +299,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
-                const Icon(Icons.schedule, color: Colors.orange, size: 28),
+                const Icon(Icons.schedule, color: Colors.amber, size: 28),
                 const SizedBox(width: 12),
                 Text(
                   'İşletme Şu An Kapalı',
@@ -829,7 +829,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                        children: [
                          _buildBrandIconElement(Icons.verified, 'Helal Kesim', Colors.green),
                          _buildBrandIconElement(Icons.bolt, 'Şoksuz', Colors.amber),
-                         _buildBrandIconElement(Icons.clean_hands, 'Kuru Yolum', Colors.orange),
+                         _buildBrandIconElement(Icons.clean_hands, 'Kuru Yolum', Colors.amber),
                        ],
                      ),
                      const SizedBox(height: 32),
@@ -857,9 +857,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                          children: [
                            Row(
                              children: [
-                               Icon(Icons.info_outline, color: Colors.orange[800], size: 20),
+                               Icon(Icons.info_outline, color: Colors.amber[800], size: 20),
                                const SizedBox(width: 8),
-                               Text('Kuru Yolum Nedir?', style: TextStyle(color: Colors.orange[800], fontWeight: FontWeight.bold)),
+                               Text('Kuru Yolum Nedir?', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold)),
                              ],
                            ),
                            const SizedBox(height: 8),
@@ -2076,7 +2076,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: product.allowBackorder 
-                        ? (product.expectedRestockDate != null ? Colors.blue[800] : Colors.orange[800])
+                        ? (product.expectedRestockDate != null ? Colors.blue[800] : Colors.amber[800])
                         : const Color(0xFFFB335B), // Red Pill if truly out
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
@@ -3117,7 +3117,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.restaurant, color: Colors.orange, size: 28),
+            Icon(Icons.restaurant, color: Colors.amber, size: 28),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -3136,13 +3136,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.amber.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                border: Border.all(color: Colors.amber.withOpacity(0.3)),
               ),
               child: Column(
                 children: [
-                  Icon(Icons.location_on, color: Colors.orange, size: 32),
+                  Icon(Icons.location_on, color: Colors.amber, size: 32),
                   const SizedBox(height: 8),
                   Text(
                     data?['companyName'] ?? data?['name'] ?? 'İşletme',
@@ -3198,7 +3198,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             icon: const Icon(Icons.check, size: 18),
             label: const Text('Onaylıyorum'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+              backgroundColor: Colors.amber,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),

@@ -321,16 +321,16 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
         actions: [
           if (_viewState == _CustomerViewState.tableActive && _linkedSession == null)
             TextButton.icon(
-              icon: Icon(Icons.lock_outline, size: 18, color: Colors.orange.shade700),
-              label: Text('PIN', style: TextStyle(color: Colors.orange.shade700)),
+              icon: Icon(Icons.lock_outline, size: 18, color: Colors.amber.shade700),
+              label: Text('PIN', style: TextStyle(color: Colors.amber.shade700)),
               onPressed: () => setState(() => _showPinEntry = !_showPinEntry),
             ),
         ],
         bottom: _viewState == _CustomerViewState.tableActive
             ? TabBar(
                 controller: _tabController,
-                labelColor: Colors.orange.shade700,
-                indicatorColor: Colors.orange.shade700,
+                labelColor: Colors.amber.shade700,
+                indicatorColor: Colors.amber.shade700,
                 tabs: const [
                   Tab(icon: Icon(Icons.restaurant_menu), text: 'Menü'),
                   Tab(icon: Icon(Icons.receipt_long), text: 'Siparişlerim'),
@@ -367,7 +367,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
               height: 100,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.orange.shade300, Colors.orange.shade700],
+                  colors: [Colors.amber.shade300, Colors.amber.shade700],
                 ),
                 borderRadius: BorderRadius.circular(28),
               ),
@@ -433,7 +433,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.orange.shade700, width: 2),
+                        borderSide: BorderSide(color: Colors.amber.shade700, width: 2),
                       ),
                     ),
                   ),
@@ -445,7 +445,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                       icon: const Icon(Icons.restaurant_menu),
                       label: const Text('Menüyü Aç', style: TextStyle(fontSize: 16)),
                       style: FilledButton.styleFrom(
-                        backgroundColor: Colors.orange.shade700,
+                        backgroundColor: Colors.amber.shade700,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -473,9 +473,9 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
+              color: Colors.amber.shade50,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.orange.shade200),
+              border: Border.all(color: Colors.amber.shade200),
             ),
             child: Row(
               children: [
@@ -499,7 +499,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                 const SizedBox(width: 8),
                 FilledButton(
                   onPressed: _isJoining ? null : _linkWithPin,
-                  style: FilledButton.styleFrom(backgroundColor: Colors.orange.shade700),
+                  style: FilledButton.styleFrom(backgroundColor: Colors.amber.shade700),
                   child: _isJoining
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Text('Bağlan'),
@@ -592,7 +592,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
               return ChoiceChip(
                 label: Text(cat),
                 selected: isSelected,
-                selectedColor: Colors.orange.shade100,
+                selectedColor: Colors.amber.shade100,
                 onSelected: (_) => setState(() => _selectedCategory = cat),
               );
             },
@@ -612,7 +612,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.orange));
+          return const Center(child: CircularProgressIndicator(color: Colors.amber));
         }
 
         List<ButcherProduct> products = [];
@@ -679,7 +679,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
         color: cardBg,
         borderRadius: BorderRadius.circular(14),
         border: inCart
-            ? Border.all(color: Colors.orange.shade300, width: 1.5)
+            ? Border.all(color: Colors.amber.shade300, width: 1.5)
             : Border.all(color: Colors.grey.withOpacity(0.1)),
       ),
       child: Row(
@@ -721,7 +721,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Colors.orange.shade700,
+                    color: Colors.amber.shade700,
                   ),
                 ),
               ],
@@ -752,7 +752,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Ekle'),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.orange.shade700,
+                backgroundColor: Colors.amber.shade700,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 minimumSize: Size.zero,
                 textStyle: const TextStyle(fontSize: 13),
@@ -778,7 +778,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.orange));
+          return const Center(child: CircularProgressIndicator(color: Colors.amber));
         }
 
         final allOrders = snapshot.data?.docs ?? [];
@@ -834,7 +834,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.orange.shade400, Colors.orange.shade700],
+                  colors: [Colors.amber.shade400, Colors.amber.shade700],
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -947,7 +947,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
-                              color: Colors.orange.shade700,
+                              color: Colors.amber.shade700,
                             ),
                           ),
                         ),
@@ -983,7 +983,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
         label = 'Onaylandı';
         emoji = '✅';
       case 'preparing':
-        color = Colors.orange;
+        color = Colors.amber;
         label = 'Hazırlanıyor';
         emoji = '👨‍🍳';
       case 'ready':
@@ -1024,14 +1024,14 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
 
   Widget _circleButton(IconData icon, VoidCallback onTap) {
     return Material(
-      color: Colors.orange.shade50,
+      color: Colors.amber.shade50,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(6),
-          child: Icon(icon, size: 18, color: Colors.orange.shade700),
+          child: Icon(icon, size: 18, color: Colors.amber.shade700),
         ),
       ),
     );
@@ -1051,7 +1051,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
         child: FilledButton(
           onPressed: _isSubmitting ? null : _submitOrder,
           style: FilledButton.styleFrom(
-            backgroundColor: Colors.orange.shade700,
+            backgroundColor: Colors.amber.shade700,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),

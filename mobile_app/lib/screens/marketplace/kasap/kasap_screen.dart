@@ -9,7 +9,7 @@ import 'package:lokma_app/providers/cart_provider.dart';
 const Map<String, Map<String, dynamic>> BUSINESS_SECTORS = {
   'kasap': {'label': 'Kasap', 'icon': '🥩', 'color': 0xFFFB335B},
   'market': {'label': 'Market', 'icon': '🛒', 'color': 0xFF4CAF50},
-  'restoran': {'label': 'Restoran ve Fastfood', 'icon': '🍽️', 'color': 0xFFFF9800},
+  'restoran': {'label': 'Restoran ve Fastfood', 'icon': '🍽️', 'color': 0xFFFFC107},
   'pastane': {'label': 'Pastane & Tatlıcı', 'icon': '🎂', 'color': 0xFFFB335B},
   'cicekci': {'label': 'Çiçekçi', 'icon': '🌸', 'color': 0xFF9C27B0},
   'cigkofte': {'label': 'Çiğ Köfteci', 'icon': '🥙', 'color': 0xFF00BCD4},
@@ -24,7 +24,7 @@ const Map<String, Map<String, dynamic>> BUSINESS_SECTORS = {
   'petshop': {'label': 'Pet Shop', 'icon': '🐾', 'color': 0xFF009688},
   'tursu': {'label': 'Turşu & Yufka', 'icon': '🥒', 'color': 0xFF4CAF50},
   'balik': {'label': 'Balık', 'icon': '🐟', 'color': 0xFF2196F3},
-  'kuruyemis': {'label': 'Kuru Yemiş', 'icon': '🥜', 'color': 0xFFFF9800},
+  'kuruyemis': {'label': 'Kuru Yemiş', 'icon': '🥜', 'color': 0xFFFFC107},
   'ciftci': {'label': 'Çiftçi', 'icon': '🌾', 'color': 0xFF8BC34A},
 };
 
@@ -539,7 +539,7 @@ class _BusinessCard extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.shopping_cart_outlined,
-                                  color: Colors.orange.shade700,
+                                  color: Colors.amber.shade700,
                                   size: 24,
                                 ),
                                 Positioned(
@@ -548,7 +548,7 @@ class _BusinessCard extends StatelessWidget {
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: Colors.orange.shade700,
+                                      color: Colors.amber.shade700,
                                       shape: BoxShape.circle,
                                     ),
                                     constraints: const BoxConstraints(minWidth: 18, minHeight: 18),

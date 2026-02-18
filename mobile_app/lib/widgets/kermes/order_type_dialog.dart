@@ -34,13 +34,13 @@ class OrderTypeSelectionDialog extends ConsumerWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: Colors.amber.shade50,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.restaurant_menu,
                 size: 32,
-                color: Colors.orange.shade700,
+                color: Colors.amber.shade700,
               ),
             ),
             const SizedBox(height: 16),

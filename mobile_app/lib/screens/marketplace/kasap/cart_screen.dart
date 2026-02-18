@@ -1851,7 +1851,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Color _getStatusColor(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return Colors.orange;
+        return Colors.amber;
       case OrderStatus.accepted:
         return Colors.blue;
       case OrderStatus.preparing:
@@ -1957,7 +1957,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     
     switch (order.status) {
       case KermesOrderStatus.pending:
-        statusColor = Colors.orange;
+        statusColor = Colors.amber;
         statusIcon = Icons.schedule;
         break;
       case KermesOrderStatus.preparing:
@@ -2782,7 +2782,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(
             children: [
-              Icon(Icons.lightbulb_outline, color: Colors.orange, size: 20),
+              Icon(Icons.lightbulb_outline, color: Colors.amber, size: 20),
               SizedBox(width: 8),
               Text(
                 'Bir şey mi unuttun?',
@@ -2796,7 +2796,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.15),
+                  color: Colors.amber.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -2804,7 +2804,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: Colors.orange[700],
+                    color: Colors.amber[700],
                   ),
                 ),
               ),
@@ -3039,7 +3039,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Kurye için minimum sipariş tutarı: ${minOrder.toStringAsFixed(0)} €'),
-                backgroundColor: Colors.orange,
+                backgroundColor: Colors.amber,
               ),
             );
             return;
@@ -4141,7 +4141,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Sipariş vermek için giriş yapmalısınız'),
-          backgroundColor: Colors.orange,
+          backgroundColor: Colors.amber,
         ),
       );
       context.push('/login');
@@ -4270,14 +4270,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     color: Theme.of(context).colorScheme.surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: hasAddress ? Colors.grey.shade300 : Colors.orange.shade300,
+                                      color: hasAddress ? Colors.grey.shade300 : Colors.amber.shade300,
                                     ),
                                   ),
                                   child: Row(
                                     children: [
                                       Icon(
                                         hasAddress ? Icons.location_on : Icons.warning_amber_rounded,
-                                        color: hasAddress ? _accentColor : Colors.orange,
+                                        color: hasAddress ? _accentColor : Colors.amber,
                                         size: 22,
                                       ),
                                       const SizedBox(width: 12),
@@ -4285,7 +4285,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                         child: Text(
                                           hasAddress ? fullAddress : 'Adres bilgisi bulunamadı.\nProfil ayarlarından adres ekleyin.',
                                           style: TextStyle(
-                                            color: hasAddress ? Theme.of(context).colorScheme.onSurface : Colors.orange.shade700,
+                                            color: hasAddress ? Theme.of(context).colorScheme.onSurface : Colors.amber.shade700,
                                             fontSize: 14,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -4700,7 +4700,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: const Text('Lütfen masa numaranızı girin'),
-                              backgroundColor: Colors.orange,
+                              backgroundColor: Colors.amber,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),

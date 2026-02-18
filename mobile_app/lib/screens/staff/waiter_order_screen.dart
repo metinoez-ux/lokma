@@ -389,7 +389,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                               // Status badge config
                               final statusConfig = <OrderStatus, Map<String, dynamic>>{
                                 OrderStatus.pending: {'label': '⏳ Beklemede', 'color': Colors.yellow.shade700, 'bg': Colors.yellow.shade50},
-                                OrderStatus.preparing: {'label': '👨‍🍳 Hazırlanıyor', 'color': Colors.orange.shade700, 'bg': Colors.orange.shade50},
+                                OrderStatus.preparing: {'label': '👨‍🍳 Hazırlanıyor', 'color': Colors.amber.shade700, 'bg': Colors.amber.shade50},
                                 OrderStatus.ready: {'label': '📦 Hazır', 'color': Colors.green.shade700, 'bg': Colors.green.shade50},
                                 OrderStatus.served: {'label': '🍽️ Servis Edildi', 'color': Colors.teal.shade700, 'bg': Colors.teal.shade50},
                               };
@@ -846,7 +846,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
               const SizedBox(width: 12),
               _legendDot(Colors.green, 'Ödendi'),
               const SizedBox(width: 12),
-              _legendDot(Colors.orange, 'Rezerveli'),
+              _legendDot(Colors.amber, 'Rezerveli'),
               const SizedBox(width: 12),
               _legendDot(Colors.grey.shade300, 'Boş'),
             ],
@@ -966,10 +966,10 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
       textColor = brandColor;
       iconColor = brandColor;
     } else if (hasReservation) {
-      bgColor = Colors.orange.shade50;
-      borderColor = Colors.orange.shade400;
-      textColor = Colors.orange.shade800;
-      iconColor = Colors.orange.shade700;
+      bgColor = Colors.amber.shade50;
+      borderColor = Colors.amber.shade400;
+      textColor = Colors.amber.shade800;
+      iconColor = Colors.amber.shade700;
     } else {
       bgColor = cardBg;
       borderColor = Colors.grey.withOpacity(0.2);
@@ -1003,7 +1003,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                     width: 20,
                     height: 20,
                     decoration: BoxDecoration(
-                      color: Colors.orange,
+                      color: Colors.amber,
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: const Center(
@@ -1040,7 +1040,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                           color: allPaid
                               ? Colors.green
                               : somePaid
-                                  ? Colors.orange
+                                  ? Colors.amber
                                   : Colors.red.shade400,
                           borderRadius: BorderRadius.circular(6),
                         ),
@@ -1174,7 +1174,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                   return ChoiceChip(
                     label: Text(cat),
                     selected: isSelected,
-                    selectedColor: Colors.orange.shade100,
+                    selectedColor: Colors.amber.shade100,
                     onSelected: (_) => setState(() => _selectedCategory = cat),
                   );
                 },
@@ -1220,7 +1220,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         color: cardBg,
         borderRadius: BorderRadius.circular(14),
         border: inCart
-            ? Border.all(color: Colors.orange.shade300, width: 1.5)
+            ? Border.all(color: Colors.amber.shade300, width: 1.5)
             : Border.all(color: Colors.grey.withOpacity(0.1)),
       ),
       child: Row(
@@ -1262,7 +1262,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Colors.orange.shade700,
+                    color: Colors.amber.shade700,
                   ),
                 ),
               ],
@@ -1293,7 +1293,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Ekle'),
               style: FilledButton.styleFrom(
-                backgroundColor: Colors.orange.shade700,
+                backgroundColor: Colors.amber.shade700,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 minimumSize: Size.zero,
                 textStyle: const TextStyle(fontSize: 13),
@@ -1306,14 +1306,14 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
 
   Widget _circleButton(IconData icon, VoidCallback onTap) {
     return Material(
-      color: Colors.orange.shade50,
+      color: Colors.amber.shade50,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(6),
-          child: Icon(icon, size: 18, color: Colors.orange.shade700),
+          child: Icon(icon, size: 18, color: Colors.amber.shade700),
         ),
       ),
     );
@@ -1333,7 +1333,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         child: FilledButton(
           onPressed: _isLoading ? null : _submitOrder,
           style: FilledButton.styleFrom(
-            backgroundColor: Colors.orange.shade700,
+            backgroundColor: Colors.amber.shade700,
             padding: const EdgeInsets.symmetric(vertical: 16),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
@@ -1402,7 +1402,7 @@ class _TableBillView extends StatelessWidget {
         stream: orderService.getTableSessionOrdersStream(session.id),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.orange));
+            return const Center(child: CircularProgressIndicator(color: Colors.amber));
           }
 
           final orders = snapshot.data ?? [];
@@ -1431,15 +1431,15 @@ class _TableBillView extends StatelessWidget {
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: allPaid ? Colors.green.shade50 : Colors.orange.shade50,
+                  color: allPaid ? Colors.green.shade50 : Colors.amber.shade50,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: allPaid ? Colors.green.shade200 : Colors.orange.shade100),
+                  border: Border.all(color: allPaid ? Colors.green.shade200 : Colors.amber.shade100),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       allPaid ? Icons.check_circle : Icons.table_restaurant,
-                      color: allPaid ? Colors.green.shade700 : Colors.orange.shade700,
+                      color: allPaid ? Colors.green.shade700 : Colors.amber.shade700,
                       size: 32,
                     ),
                     const SizedBox(width: 12),
@@ -1449,13 +1449,13 @@ class _TableBillView extends StatelessWidget {
                         children: [
                           Text(
                             'Masa ${session.tableNumber} • ${session.waiterName}',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: allPaid ? Colors.green.shade900 : Colors.orange.shade900),
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: allPaid ? Colors.green.shade900 : Colors.amber.shade900),
                           ),
                           Text(
                             allPaid
                                 ? 'Tüm siparişler ödendi ✓'
                                 : 'PIN: ${session.pin} • ${orders.length} sipariş',
-                            style: TextStyle(fontSize: 12, color: allPaid ? Colors.green.shade600 : Colors.orange.shade600),
+                            style: TextStyle(fontSize: 12, color: allPaid ? Colors.green.shade600 : Colors.amber.shade600),
                           ),
                         ],
                       ),
@@ -1464,11 +1464,11 @@ class _TableBillView extends StatelessWidget {
                       children: [
                         Text(
                           '€${grandTotal.toStringAsFixed(2)}',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: allPaid ? Colors.green.shade800 : Colors.orange.shade800),
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: allPaid ? Colors.green.shade800 : Colors.amber.shade800),
                         ),
                         Text(
                           allPaid ? 'Ödendi' : 'Toplam',
-                          style: TextStyle(fontSize: 11, color: allPaid ? Colors.green.shade600 : Colors.orange.shade600),
+                          style: TextStyle(fontSize: 11, color: allPaid ? Colors.green.shade600 : Colors.amber.shade600),
                         ),
                       ],
                     ),
@@ -1561,7 +1561,7 @@ class _TableBillView extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: Colors.orange.shade700,
+                                color: Colors.amber.shade700,
                               ),
                             ),
                           ),
@@ -1608,8 +1608,8 @@ class _TableBillView extends StatelessWidget {
                           icon: const Icon(Icons.phone_android),
                           label: const Text('Müşteri Öder (Online)'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.orange.shade700,
-                            side: BorderSide(color: Colors.orange.shade300),
+                            foregroundColor: Colors.amber.shade700,
+                            side: BorderSide(color: Colors.amber.shade300),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
@@ -1617,7 +1617,7 @@ class _TableBillView extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: const Text('Müşteri kendi telefonundan ödeme yapacak'),
-                                backgroundColor: Colors.orange.shade700,
+                                backgroundColor: Colors.amber.shade700,
                               ),
                             );
                           },
@@ -1696,7 +1696,7 @@ class _TableBillView extends StatelessWidget {
         color = Colors.blue;
         label = 'Onaylandı';
       case OrderStatus.preparing:
-        color = Colors.orange;
+        color = Colors.amber;
         label = 'Hazırlanıyor';
       case OrderStatus.ready:
         color = Colors.green;

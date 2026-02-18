@@ -49,7 +49,7 @@ class _RatingScreenState extends State<RatingScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Siparişiniz henüz tamamlanmadı. Teslim edildikten sonra puan verebilirsiniz.'),
-        backgroundColor: Colors.orange,
+        backgroundColor: Colors.amber,
         duration: Duration(seconds: 3),
       ),
     );
@@ -210,7 +210,7 @@ class _RatingScreenState extends State<RatingScreen> {
                                 child: Icon(
                                   starIndex <= _businessRating ? Icons.star : Icons.star_border,
                                   size: 48,
-                                  color: Colors.orange,
+                                  color: Colors.amber,
                                 ),
                               ),
                             );
@@ -263,7 +263,7 @@ class _RatingScreenState extends State<RatingScreen> {
                               emoji: '😐',
                               label: 'İdare Eder',
                               isSelected: _experienceRating == 2,
-                              color: Colors.orange,
+                              color: Colors.amber,
                               onTap: () {
                                 if (_isOrderCompleted) {
                                   setState(() => _experienceRating = 2);

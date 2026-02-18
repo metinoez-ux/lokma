@@ -8,14 +8,19 @@ class KahveShopScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E1E1E),
-        title: const Row(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        title: Row(
           children: [
-            Text('☕ ', style: TextStyle(fontSize: 24)),
-            Text('Kahve Shop', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const Text('☕ ', style: TextStyle(fontSize: 24)),
+            Text('Kahve Shop', style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold,
+            )),
           ],
         ),
         actions: [
@@ -27,7 +32,10 @@ class KahveShopScreen extends ConsumerWidget {
               return Stack(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.shopping_cart, color: Colors.white, size: 22),
+                    icon: Icon(Icons.shopping_cart,
+                      color: isDark ? Colors.white : Colors.black87,
+                      size: 22,
+                    ),
                     onPressed: () => context.push('/cart'),
                   ),
                   if (itemCount > 0)
@@ -46,7 +54,7 @@ class KahveShopScreen extends ConsumerWidget {
                         ),
                         child: Text(
                           '$itemCount',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -61,10 +69,10 @@ class KahveShopScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: const Center(
+      body: Center(
         child: Text(
           'Monte Bueno & diğer markalar\nOnline Shop',
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: isDark ? Colors.grey : Colors.grey[600]),
           textAlign: TextAlign.center,
         ),
       ),

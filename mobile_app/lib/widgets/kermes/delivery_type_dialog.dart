@@ -124,11 +124,11 @@ class DeliveryTypeSelectionDialog extends StatelessWidget {
                   // Kurye Option
                   _DeliveryOptionCard(
                     icon: Icons.delivery_dining_outlined,
-                    iconColor: Colors.orange,
+                    iconColor: Colors.amber,
                     title: 'Kurye ile Teslimat',
                     subtitle: 'Adresinize getirelim',
                     badge: 'Ücretli',
-                    badgeColor: Colors.orange,
+                    badgeColor: Colors.amber,
                     requiresAuth: true,
                     onTap: () {
                       HapticFeedback.lightImpact();

@@ -356,7 +356,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: dialogBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        icon: const Icon(Icons.schedule_send, color: Colors.orange, size: 56),
+        icon: const Icon(Icons.schedule_send, color: Colors.amber, size: 56),
         title: Text('Rezervasyon Talebiniz Alındı!', style: TextStyle(color: textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -385,13 +385,13 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(isDark ? 0.15 : 0.1),
+                color: Colors.amber.withOpacity(isDark ? 0.15 : 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                border: Border.all(color: Colors.amber.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.orange, size: 18),
+                  const Icon(Icons.info_outline, color: Colors.amber, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -821,7 +821,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                   Text(
                                     '$remaining kaldı',
                                     style: TextStyle(
-                                      color: isSelected ? Colors.white70 : Colors.orange[700],
+                                      color: isSelected ? Colors.white70 : Colors.amber[700],
                                       fontSize: 9,
                                       fontWeight: FontWeight.w500,
                                     ),

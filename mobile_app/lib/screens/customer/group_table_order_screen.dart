@@ -876,7 +876,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               decoration: BoxDecoration(
                 color: participant.isPaid
                     ? Colors.green.withOpacity(0.15)
-                    : Colors.orange.withOpacity(0.15),
+                    : Colors.amber.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -884,7 +884,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: participant.isPaid ? Colors.green.shade700 : Colors.orange.shade700,
+                  color: participant.isPaid ? Colors.green.shade700 : Colors.amber.shade700,
                 ),
               ),
             ),

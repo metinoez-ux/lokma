@@ -91,7 +91,7 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('WhatsApp açılamadı. Link panoya kopyalandı.'),
-            backgroundColor: Colors.orange,
+            backgroundColor: Colors.amber,
           ),
         );
       }
@@ -177,7 +177,7 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
+              color: Colors.amber.shade50,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -186,14 +186,14 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
                 Icon(
                   Icons.timer,
                   size: 16,
-                  color: Colors.orange.shade700,
+                  color: Colors.amber.shade700,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${widget.expirationMinutes} dakika süreniz var',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.orange.shade700,
+                    color: Colors.amber.shade700,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

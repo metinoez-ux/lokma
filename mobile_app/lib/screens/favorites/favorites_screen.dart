@@ -193,7 +193,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     switch (status) {
       case 'pending':
         statusText = 'Beklemede';
-        statusColor = Colors.orange;
+        statusColor = Colors.amber;
         break;
       case 'accepted':
       case 'confirmed':

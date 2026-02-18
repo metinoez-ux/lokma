@@ -1471,7 +1471,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.orange.shade700,
+                        color: Colors.amber.shade700,
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,

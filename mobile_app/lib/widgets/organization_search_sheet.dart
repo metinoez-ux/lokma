@@ -107,7 +107,7 @@ class _OrganizationSearchSheetState extends State<OrganizationSearchSheet> {
       case 'diyanet':
         return Colors.purple;
       case 'igmg':
-        return Colors.orange;
+        return Colors.amber;
       case 'bagimsiz':
         return Colors.grey;
       default:

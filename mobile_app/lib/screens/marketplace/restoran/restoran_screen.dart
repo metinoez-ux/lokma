@@ -1411,7 +1411,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            const Icon(Icons.schedule, color: Colors.orange, size: 28),
+            const Icon(Icons.schedule, color: Colors.amber, size: 28),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -1429,17 +1429,17 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.amber.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.access_time, color: Colors.orange, size: 18),
+                    const Icon(Icons.access_time, color: Colors.amber, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         reason,
-                        style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.orange),
+                        style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.amber),
                       ),
                     ),
                   ],
@@ -2648,7 +2648,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Rezervasyon yapılabilecek işletme bulunamadı'),
-            backgroundColor: Colors.orange[700],
+            backgroundColor: Colors.amber[700],
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),

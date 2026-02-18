@@ -166,7 +166,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 28),
             SizedBox(width: 12),
             Text('Dikkat!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ],

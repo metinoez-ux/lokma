@@ -77,7 +77,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
               child: const Text('Molayı Bitir ve Üstlen', style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -117,7 +117,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
             child: const Text('Üstlen', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -289,7 +289,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.warning_amber_rounded, size: 80, color: Colors.orange),
+                      Icon(Icons.warning_amber_rounded, size: 80, color: Colors.amber),
                       SizedBox(height: 16),
                       Text(
                         'Sürücü yetkisi bulunamadı',
@@ -439,17 +439,17 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.08),
+                color: Colors.amber.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                border: Border.all(color: Colors.amber.withOpacity(0.2)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.list_alt, color: Colors.orange, size: 20),
+                  const Icon(Icons.list_alt, color: Colors.amber, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     '${orders.length} aktif sipariş',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber),
                   ),
                   const Spacer(),
                   ..._buildStatusSummaryChips(statusGroups),
@@ -468,7 +468,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     final chips = <Widget>[];
     final statusConfig = {
       'pending': ('⏳', Colors.grey),
-      'preparing': ('🔥', Colors.orange),
+      'preparing': ('🔥', Colors.amber),
       'ready': ('✅', Colors.green),
       'accepted': ('🚗', Colors.blue),
       'onTheWay': ('🚗', Colors.blue),
@@ -547,7 +547,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.amber.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -555,7 +555,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: Colors.amber,
                   ),
                 ),
               ),
@@ -621,7 +621,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       case 'pending':
         return ('⏳', Colors.amber, 'Bekliyor');
       case 'preparing':
-        return ('🔥', Colors.orange, 'Hazırlanıyor');
+        return ('🔥', Colors.amber, 'Hazırlanıyor');
       case 'ready':
         return ('✅', Colors.purple, 'Hazır');
       case 'accepted':
@@ -683,14 +683,14 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           ),
           child: snapshot.connectionState == ConnectionState.waiting
             ? const ListTile(
-                leading: Icon(Icons.history, color: Colors.orange),
+                leading: Icon(Icons.history, color: Colors.amber),
                 title: Text('Yükleniyor...'),
               )
             : ExpansionTile(
             backgroundColor: bgColor,
             collapsedBackgroundColor: bgColor,
             initiallyExpanded: true,
-            leading: const Icon(Icons.history, color: Colors.orange),
+            leading: const Icon(Icons.history, color: Colors.amber),
             title: Text(
               'Bugün: ${completedOrders.length} teslimat',
               style: const TextStyle(
@@ -828,7 +828,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
+                        color: Colors.amber.shade100,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -836,7 +836,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: Colors.orange.shade800,
+                          color: Colors.amber.shade800,
                         ),
                       ),
                     ),
@@ -914,7 +914,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       statusText = 'Hazır';
       statusIcon = Icons.check_circle;
     } else if (isPreparing) {
-      statusColor = Colors.orange;
+      statusColor = Colors.amber;
       statusText = 'Hazırlanıyor';
       statusIcon = Icons.restaurant;
     } else {
@@ -986,7 +986,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: isClaimedByMe ? Colors.blue : Colors.orange,
+                      color: isClaimedByMe ? Colors.blue : Colors.amber,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -1352,12 +1352,12 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.orange.shade100,
+                color: Colors.amber.shade100,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 Icons.store,
-                color: Colors.orange.shade700,
+                color: Colors.amber.shade700,
                 size: 22,
               ),
             ),
@@ -1391,7 +1391,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
                       if ((biz['pending'] as int) > 0)
                         _buildCountBadge(biz['pending'] as int, Colors.amber, '⏳'),
                       if ((biz['preparing'] as int) > 0)
-                        _buildCountBadge(biz['preparing'] as int, Colors.orange, '🍳'),
+                        _buildCountBadge(biz['preparing'] as int, Colors.amber, '🍳'),
                       if ((biz['ready'] as int) > 0)
                         _buildCountBadge(biz['ready'] as int, Colors.green, '✅'),
                       if ((biz['total'] as int) == 0)
@@ -1428,7 +1428,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.orange,
+                  color: Colors.amber,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

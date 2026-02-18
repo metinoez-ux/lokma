@@ -217,7 +217,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
       case OrderStatus.ready:
         statusMessage = 'Siparişiniz hazır, kurye bekleniyor...';
         statusIcon = Icons.access_time;
-        statusColor = Colors.orange;
+        statusColor = Colors.amber;
         break;
       case OrderStatus.preparing:
         statusMessage = 'Siparişiniz hazırlanıyor...';
@@ -392,19 +392,19 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: Colors.orange.shade50,
+                              color: Colors.amber.shade50,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.timer_outlined, size: 13, color: Colors.orange.shade700),
+                                Icon(Icons.timer_outlined, size: 13, color: Colors.amber.shade700),
                                 const SizedBox(width: 4),
                                 Text(
                                   '~$etaMinutes dk',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.orange.shade700,
+                                    color: Colors.amber.shade700,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),

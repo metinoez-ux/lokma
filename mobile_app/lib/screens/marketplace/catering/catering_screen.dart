@@ -14,7 +14,6 @@ class CateringScreen extends ConsumerStatefulWidget {
 
 class _CateringScreenState extends ConsumerState<CateringScreen> {
   // Theme colors
-  static const darkBg = Color(0xFF0A0E14);
   static const accent = Color(0xFFFB335B); // Pink/celebration accent
 
   List<DocumentSnapshot> _businesses = [];
@@ -61,13 +60,20 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF0A0E14) : Colors.grey[50]!;
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final subtextColor = isDark ? Colors.white.withOpacity(0.7) : Colors.black54;
+    final surfaceColor = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final borderColor = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
+
     return Scaffold(
-      backgroundColor: darkBg,
+      backgroundColor: bgColor,
       body: CustomScrollView(
         slivers: [
           // Header
           SliverAppBar(
-            backgroundColor: darkBg,
+            backgroundColor: bgColor,
             expandedHeight: 200,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
@@ -78,7 +84,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                     end: Alignment.bottomCenter,
                     colors: [
                       accent.withOpacity(0.3),
-                      darkBg,
+                      bgColor,
                     ],
                   ),
                 ),
@@ -88,10 +94,10 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                     const SizedBox(height: 60),
                     const Text('🎉', style: TextStyle(fontSize: 56)),
                     const SizedBox(height: 12),
-                    const Text(
+                    Text(
                       'Catering Hizmetleri',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: textColor,
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
                       ),
@@ -100,7 +106,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                     Text(
                       'Düğün • Nişan • Sünnet • Toplantı',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: subtextColor,
                         fontSize: 14,
                       ),
                     ),
@@ -109,7 +115,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
               ),
             ),
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: Icon(Icons.arrow_back, color: textColor),
               onPressed: () => context.pop(),
             ),
           ),
@@ -124,7 +130,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                   gradient: LinearGradient(
                     colors: [
                       Colors.amber.withOpacity(0.2),
-                      Colors.orange.withOpacity(0.2),
+                      Colors.amber.withOpacity(0.2),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -138,17 +144,17 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Fiyatları Görmek İçin Giriş Yapın',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: textColor,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
                             'Catering fiyatları üyelere özeldir',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
+                              color: subtextColor,
                               fontSize: 12,
                             ),
                           ),
@@ -176,11 +182,11 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  _buildInfoChip('📞', 'Telefonla Sipariş'),
+                  _buildInfoChip('📞', 'Telefonla Sipariş', surfaceColor, borderColor, subtextColor),
                   const SizedBox(width: 8),
-                  _buildInfoChip('📋', 'Menü Planlama'),
+                  _buildInfoChip('📋', 'Menü Planlama', surfaceColor, borderColor, subtextColor),
                   const SizedBox(width: 8),
-                  _buildInfoChip('🚚', 'Etkinlik Teslimatı'),
+                  _buildInfoChip('🚚', 'Etkinlik Teslimatı', surfaceColor, borderColor, subtextColor),
                 ],
               ),
             ),
@@ -203,10 +209,10 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                           children: [
                             const Text('🍽️', style: TextStyle(fontSize: 56)),
                             const SizedBox(height: 16),
-                            const Text(
+                            Text(
                               'Yakında Catering İşletmeleri',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: textColor,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -214,7 +220,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                             const SizedBox(height: 8),
                             Text(
                               'Catering hizmeti veren işletmeler henüz eklenmedi',
-                              style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                              style: TextStyle(color: isDark ? Colors.white.withOpacity(0.5) : Colors.black45),
                             ),
                           ],
                         ),
@@ -229,7 +235,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                             final data = doc.data() as Map<String, dynamic>;
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
-                              child: _buildCateringCard(doc.id, data),
+                              child: _buildCateringCard(doc.id, data, textColor, subtextColor),
                             );
                           },
                           childCount: _businesses.length,
@@ -241,14 +247,14 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
     );
   }
 
-  Widget _buildInfoChip(String emoji, String label) {
+  Widget _buildInfoChip(String emoji, String label, Color surface, Color border, Color subtext) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: border),
         ),
         child: Column(
           children: [
@@ -257,7 +263,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
             Text(
               label,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+                color: subtext,
                 fontSize: 10,
               ),
               textAlign: TextAlign.center,
@@ -268,7 +274,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
     );
   }
 
-  Widget _buildCateringCard(String id, Map<String, dynamic> data) {
+  Widget _buildCateringCard(String id, Map<String, dynamic> data, Color textColor, Color subtextColor) {
     final companyName = data['companyName'] ?? 'İşletme';
     final city = data['address']?['city'] ?? '';
     final phone = data['contact']?['phone'] ?? '';
@@ -322,8 +328,8 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                 children: [
                   Text(
                     companyName,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: textColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -332,7 +338,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                     Text(
                       '📍 $city',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: subtextColor,
                         fontSize: 12,
                       ),
                     ),
@@ -373,14 +379,16 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
   }
 
   Widget _buildContactSheet(String name, String phone, Map<String, dynamic> data) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
     final email = data['contact']?['email'] ?? '';
     final website = data['contact']?['website'] ?? '';
 
     return Container(
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1A1F26),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1F26) : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -389,15 +397,15 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.3),
+              color: isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.2),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 24),
           Text(
             name,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: textColor,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -405,7 +413,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
           const SizedBox(height: 8),
           Text(
             '🎉 Catering Hizmeti',
-            style: TextStyle(color: Colors.white.withOpacity(0.6)),
+            style: TextStyle(color: isDark ? Colors.white.withOpacity(0.6) : Colors.black54),
           ),
           const SizedBox(height: 24),
           if (phone.isNotEmpty)
@@ -449,7 +457,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-                  Text(value, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
+                  Text(value, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.7) : Colors.black54, fontSize: 12)),
                 ],
               ),
             ),

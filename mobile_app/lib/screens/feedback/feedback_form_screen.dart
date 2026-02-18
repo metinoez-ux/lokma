@@ -97,7 +97,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Geri bildirim için giriş yapmalısınız.'), backgroundColor: Colors.orange),
+        const SnackBar(content: Text('Geri bildirim için giriş yapmalısınız.'), backgroundColor: Colors.amber),
       );
       return;
     }
@@ -107,7 +107,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
         _appUsabilityRating == 0 && _deliverySpeedRating == 0 && _overallExperienceRating == 0 &&
         _foodFreshnessRating == 0 && _courierProfessionalismRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen en az bir kategoriyi puanlayın.'), backgroundColor: Colors.orange),
+        const SnackBar(content: Text('Lütfen en az bir kategoriyi puanlayın.'), backgroundColor: Colors.amber),
       );
       return;
     }
@@ -341,7 +341,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           child: Row(
             children: [
-              const Icon(Icons.delivery_dining, color: Colors.orange, size: 20),
+              const Icon(Icons.delivery_dining, color: Colors.amber, size: 20),
               const SizedBox(width: 8),
               const Text(
                 'Kurye Değerlendirmesi',
