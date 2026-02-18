@@ -70,8 +70,11 @@ export default function DriverPerformancePage() {
         return { start, end };
     }, [selectedDate, viewMode]);
 
+    const [error, setError] = useState<string | null>(null);
+
     // Fetch completed deliveries
     useEffect(() => {
+        setError(null);
         const q = query(
             collection(db, 'meat_orders'),
             where('status', '==', 'delivered'),
@@ -98,6 +101,10 @@ export default function DriverPerformancePage() {
                 }
             });
             setDeliveries(records);
+            setLoading(false);
+        }, (err) => {
+            console.error('Error fetching deliveries:', err);
+            setError('Teslimat verileri yüklenemedi. Lütfen sayfayı yenileyin.');
             setLoading(false);
         });
 
@@ -211,6 +218,14 @@ export default function DriverPerformancePage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Error Banner */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center gap-3">
+                        <span className="text-red-500 text-xl">⚠️</span>
+                        <p className="text-red-700 text-sm font-medium">{error}</p>
+                    </div>
+                )}
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

@@ -3562,6 +3562,373 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     );
   }
 
+  /// Consolidated payment receipt sheet - shows all unpaid orders with items
+  void _showConsolidatedPaymentSheet(
+    BuildContext parentContext,
+    List<LokmaOrder> unpaidOrders,
+    double grandTotal,
+    int tableNumber,
+  ) {
+    showModalBottomSheet(
+      context: parentContext,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        final bgColor = isDark ? const Color(0xFF1A1A1A) : Colors.white;
+        final cardBg = isDark ? const Color(0xFF252525) : const Color(0xFFF7F7F7);
+        final textColor = isDark ? Colors.white : Colors.black87;
+        final subtleText = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+        bool isProcessing = false;
+
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.85,
+              maxChildSize: 0.95,
+              minChildSize: 0.5,
+              builder: (_, scrollController) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  ),
+                  child: Column(
+                    children: [
+                      // Handle bar
+                      Container(
+                        margin: const EdgeInsets.only(top: 12, bottom: 8),
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[400],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      // Header
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.amber.shade700, Colors.orange.shade700],
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.receipt_long, size: 28, color: Colors.white),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Masa $tableNumber — Toptan Hesap',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${unpaidOrders.length} açık sipariş',
+                                    style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.85)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '€${grandTotal.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Orders list
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(16),
+                          itemCount: unpaidOrders.length,
+                          itemBuilder: (ctx, index) {
+                            final order = unpaidOrders[index];
+                            final displayId = order.orderNumber ?? order.id.substring(0, 6).toUpperCase();
+                            final time = '${order.createdAt.hour.toString().padLeft(2, '0')}:${order.createdAt.minute.toString().padLeft(2, '0')}';
+
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: cardBg,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: isDark ? Colors.grey[700]! : Colors.grey[200]!,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Order header
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.shade700,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '#$displayId',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      // Status badge
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: order.status == OrderStatus.served
+                                              ? Colors.teal.withOpacity(0.2)
+                                              : order.status == OrderStatus.delivered
+                                                  ? Colors.blue.withOpacity(0.2)
+                                                  : Colors.green.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Text(
+                                          order.status == OrderStatus.served ? 'Servis Edildi'
+                                            : order.status == OrderStatus.delivered ? 'Teslim Edildi'
+                                            : 'Hazır',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w700,
+                                            color: order.status == OrderStatus.served
+                                                ? Colors.teal
+                                                : order.status == OrderStatus.delivered
+                                                    ? Colors.blue
+                                                    : Colors.green,
+                                          ),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Text(time, style: TextStyle(fontSize: 12, color: subtleText)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  // Items
+                                  ...order.items.map((item) => Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 2),
+                                    child: Row(
+                                      children: [
+                                        Text(
+                                          '${item.quantity is double && item.quantity == item.quantity.roundToDouble() ? item.quantity.toInt() : item.quantity}x',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                            color: Colors.amber.shade700,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            item.name,
+                                            style: TextStyle(fontSize: 13, color: textColor),
+                                          ),
+                                        ),
+                                        Text(
+                                          '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: textColor,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                                  const Divider(height: 16),
+                                  // Subtotal
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Text('Ara Toplam: ', style: TextStyle(fontSize: 12, color: subtleText)),
+                                      Text(
+                                        '€${order.totalAmount.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                          color: textColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                      // Bottom total + payment buttons
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[50],
+                          border: Border(
+                            top: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            // Grand total row
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 14),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    'GENEL TOPLAM',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
+                                      color: subtleText,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    '€${grandTotal.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.amber.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Payment buttons
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    icon: const Icon(Icons.payments, size: 20),
+                                    label: Text(
+                                      isProcessing ? 'İşleniyor...' : '💵 Nakit Öde',
+                                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                                    ),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Colors.green.shade700,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                    onPressed: isProcessing ? null : () async {
+                                      setModalState(() => isProcessing = true);
+                                      try {
+                                        for (final o in unpaidOrders) {
+                                          await _orderService.updatePaymentStatus(
+                                            orderId: o.id,
+                                            paymentStatus: 'paid',
+                                            paymentMethod: 'cash',
+                                          );
+                                        }
+                                        if (mounted) {
+                                          HapticFeedback.heavyImpact();
+                                          Navigator.of(ctx).pop();
+                                          ScaffoldMessenger.of(parentContext).showSnackBar(
+                                            SnackBar(
+                                              content: Text('✅ ${unpaidOrders.length} sipariş nakit olarak toptan ödendi! (€${grandTotal.toStringAsFixed(2)})'),
+                                              backgroundColor: Colors.green.shade700,
+                                              behavior: SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        setModalState(() => isProcessing = false);
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(parentContext).showSnackBar(
+                                            SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                          );
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    icon: const Icon(Icons.credit_card, size: 20),
+                                    label: Text(
+                                      isProcessing ? 'İşleniyor...' : '💳 Kart Öde',
+                                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                                    ),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Colors.blue.shade700,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                    ),
+                                    onPressed: isProcessing ? null : () async {
+                                      setModalState(() => isProcessing = true);
+                                      try {
+                                        for (final o in unpaidOrders) {
+                                          await _orderService.updatePaymentStatus(
+                                            orderId: o.id,
+                                            paymentStatus: 'paid',
+                                            paymentMethod: 'card',
+                                          );
+                                        }
+                                        if (mounted) {
+                                          HapticFeedback.heavyImpact();
+                                          Navigator.of(ctx).pop();
+                                          ScaffoldMessenger.of(parentContext).showSnackBar(
+                                            SnackBar(
+                                              content: Text('✅ ${unpaidOrders.length} sipariş kart ile toptan ödendi! (€${grandTotal.toStringAsFixed(2)})'),
+                                              backgroundColor: Colors.blue.shade700,
+                                              behavior: SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        setModalState(() => isProcessing = false);
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(parentContext).showSnackBar(
+                                            SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                          );
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showTableOverview(TableSession session, int tableNumber) {
     const brandColor = Color(0xFFFB335B);
     showModalBottomSheet(
@@ -3708,7 +4075,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             ),
                             const SizedBox(height: 12),
 
-                            // Bulk payment section - Pay All
+                            // Bulk payment section - consolidated receipt
                             if (!allPaid) ...[
                               Builder(builder: (context) {
                                 final unpaidOrders = orders.where((o) => 
@@ -3720,129 +4087,71 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                 if (unpaidOrders.isEmpty) return const SizedBox.shrink();
                                 
                                 return Container(
-                                  padding: const EdgeInsets.all(14),
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
-                                      colors: [Colors.amber.shade50, Colors.orange.shade50],
+                                      colors: [Colors.amber.shade700, Colors.orange.shade700],
                                     ),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(color: Colors.amber.shade200),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Icon(Icons.receipt, size: 18, color: Colors.amber.shade800),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Tüm Hesabı Öde',
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w800,
-                                              color: Colors.amber.shade900,
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          Text(
-                                            '€${unpaidTotal.toStringAsFixed(2)}',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w900,
-                                              color: Colors.amber.shade900,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Text(
-                                        '${unpaidOrders.length} ödenmemiş sipariş',
-                                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: FilledButton.icon(
-                                              icon: const Icon(Icons.payments, size: 18),
-                                              label: const Text('💵 Nakit', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                                              style: FilledButton.styleFrom(
-                                                backgroundColor: Colors.green.shade700,
-                                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                              ),
-                                              onPressed: () async {
-                                                try {
-                                                  for (final o in unpaidOrders) {
-                                                    await _orderService.updatePaymentStatus(
-                                                      orderId: o.id,
-                                                      paymentStatus: 'paid',
-                                                      paymentMethod: 'cash',
-                                                    );
-                                                  }
-                                                  if (mounted) {
-                                                    HapticFeedback.heavyImpact();
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text('✅ ${unpaidOrders.length} sipariş nakit olarak ödendi!'),
-                                                        backgroundColor: Colors.green.shade700,
-                                                        behavior: SnackBarBehavior.floating,
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                      ),
-                                                    );
-                                                  }
-                                                } catch (e) {
-                                                  if (mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
-                                                    );
-                                                  }
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: FilledButton.icon(
-                                              icon: const Icon(Icons.credit_card, size: 18),
-                                              label: const Text('💳 Kart', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                                              style: FilledButton.styleFrom(
-                                                backgroundColor: Colors.blue.shade700,
-                                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                              ),
-                                              onPressed: () async {
-                                                try {
-                                                  for (final o in unpaidOrders) {
-                                                    await _orderService.updatePaymentStatus(
-                                                      orderId: o.id,
-                                                      paymentStatus: 'paid',
-                                                      paymentMethod: 'card',
-                                                    );
-                                                  }
-                                                  if (mounted) {
-                                                    HapticFeedback.heavyImpact();
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text('✅ ${unpaidOrders.length} sipariş kart ile ödendi!'),
-                                                        backgroundColor: Colors.blue.shade700,
-                                                        behavior: SnackBarBehavior.floating,
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                      ),
-                                                    );
-                                                  }
-                                                } catch (e) {
-                                                  if (mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
-                                                    );
-                                                  }
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(color: Colors.amber.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
                                     ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(16),
+                                      onTap: () => _showConsolidatedPaymentSheet(
+                                        context,
+                                        unpaidOrders,
+                                        unpaidTotal,
+                                        session.tableNumber,
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.receipt_long, size: 24, color: Colors.white),
+                                            const SizedBox(width: 10),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text(
+                                                    '🧾 Toptan Hesap Öde',
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight: FontWeight.w900,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    '${unpaidOrders.length} açık sipariş',
+                                                    style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.8)),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.2),
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              child: Text(
+                                                '€${unpaidTotal.toStringAsFixed(2)}',
+                                                style: const TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w900,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white70),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 );
                               }),

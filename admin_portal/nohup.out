@@ -250,3 +250,265 @@ i  hosting[lokma]: releasing new version...
 
 Project Console: https://console.firebase.google.com/project/aylar-a45af/overview
 Hosting URL: https://lokma.web.app
+No Firebase app associated with site lokma, injecting project default config.
+  You can link a Web app to a Hosting site here https://console.firebase.google.com/project/aylar-a45af/settings/general/web
+
+   Thank you for trying our early preview of Next.js support on Firebase Hosting.
+   During the preview, support is best-effort and breaking changes can be expected. Proceed with caution.
+   The integration is known to work with Next.js version 12 - 15.0. You may encounter errors.
+
+   Documentation: https://firebase.google.com/docs/hosting/frameworks/nextjs
+   File a bug: https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   Submit a feature request: https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/metinoz/.gemini/antigravity/scratch/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/metinoz/.gemini/antigravity/scratch/LOKMA_2026/admin_portal/package-lock.json
+
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · serverActions
+
+
+   Creating an optimized production build ...
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+ ✓ Compiled successfully in 18.0s
+
+   Running TypeScript ...
+
+   Collecting page data using 9 workers ...
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+   Generating static pages using 9 workers (0/105) ...
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+
+   Generating static pages using 9 workers (26/105) 
+
+   Generating static pages using 9 workers (52/105) 
+
+   Generating static pages using 9 workers (78/105) 
+
+ ✓ Generating static pages using 9 workers (105/105) in 1957.7ms
+
+   Finalizing page optimization ...
+
+
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /[locale]
+├ ○ /about
+├ ○ /account
+├ ○ /admin
+├ ○ /admin/account
+├ ○ /admin/activity-logs
+├ ○ /admin/admins
+├ ○ /admin/ai-menu
+├ ○ /admin/analytics
+├ ○ /admin/business
+├ ƒ /admin/business/[id]
+├ ƒ /admin/business/[id]/categories
+├ ƒ /admin/business/[id]/orders
+├ ƒ /admin/business/[id]/performance
+├ ƒ /admin/business/[id]/products
+├ ○ /admin/butchers
+├ ƒ /admin/butchers/[id]
+├ ƒ /admin/butchers/[id]/orders
+├ ƒ /admin/butchers/[id]/products
+├ ○ /admin/categories
+├ ○ /admin/commissions
+├ ○ /admin/dashboard
+├ ○ /admin/delivery-settings
+├ ○ /admin/drivers
+├ ○ /admin/drivers/performance
+├ ○ /admin/erp/products
+├ ○ /admin/funeral/members
+├ ○ /admin/image-generator
+├ ○ /admin/imports/asia-express
+├ ○ /admin/imports/dovgan
+├ ○ /admin/imports/ean-enrichment
+├ ○ /admin/imports/foodpaket
+├ ○ /admin/invitations
+├ ○ /admin/invoices
+├ ○ /admin/kermes
+├ ƒ /admin/kermes/[id]
+├ ƒ /admin/kermes/[id]/products
+├ ○ /admin/kermes/new
+├ ○ /admin/orders
+├ ○ /admin/orders/create
+├ ○ /admin/orders/suppliers
+├ ○ /admin/plans
+├ ○ /admin/products
+├ ○ /admin/reservations
+├ ○ /admin/sectors
+├ ○ /admin/settings
+├ ○ /admin/settings/kermes-categories
+├ ○ /admin/settings/kermes-features
+├ ○ /admin/settings/kermes-menus
+├ ○ /admin/settings/kermes-stock-images
+├ ○ /admin/shop
+├ ○ /admin/shop/orders
+├ ○ /admin/shop/products
+├ ○ /admin/staff
+├ ○ /admin/staff-dashboard
+├ ○ /admin/staff-shifts
+├ ○ /admin/statistics
+├ ○ /admin/subscription
+├ ○ /admin/table-orders
+├ ƒ /api/admin/consolidate-businesses
+├ ƒ /api/admin/create-user
+├ ƒ /api/admin/delete-user
+├ ƒ /api/admin/env-check
+├ ƒ /api/admin/google-place
+├ ƒ /api/admin/kermes
+├ ƒ /api/admin/kermes/cleanup
+├ ƒ /api/admin/organizations
+├ ƒ /api/admin/rename-collections
+├ ƒ /api/admin/sectors
+├ ƒ /api/admin/send-invitation
+├ ƒ /api/admin/subscription/manage
+├ ƒ /api/admin/update-coordinates
+├ ƒ /api/ai-menu/parse
+├ ƒ /api/create-payment-intent
+├ ƒ /api/directions
+├ ƒ /api/email/send
+├ ƒ /api/import-asia-express
+├ ƒ /api/metrics
+├ ƒ /api/notifications/send
+├ ƒ /api/orders/notify
+├ ƒ /api/orders/partial-refund
+├ ƒ /api/places
+├ ƒ /api/proxy
+├ ƒ /api/refund-payment
+├ ƒ /api/save-products
+├ ƒ /api/save-products-chunked
+├ ƒ /api/seed-businesses
+├ ƒ /api/sms/send
+├ ƒ /api/staff/invite
+├ ƒ /api/stripe-connect
+├ ƒ /api/test
+├ ƒ /api/webhooks/stripe
+├ ƒ /api/whatsapp/send
+├ ○ /careers
+├ ○ /categories
+├ ○ /ciftciden
+├ ○ /contact
+├ ○ /cookies
+├ ○ /dashboard
+├ ○ /dashboard/notifications
+├ ƒ /dinein/[businessId]/table/[tableNum]
+├ ○ /el-lezzetleri
+├ ○ /feedback
+├ ○ /how-it-works
+├ ○ /kvkk
+├ ○ /login
+├ ○ /partner
+├ ○ /partner/apply
+├ ○ /press
+├ ○ /pricing
+├ ○ /profile
+├ ○ /profile/edit
+├ ○ /register
+└ ○ /support
+
+
+ƒ Proxy (Middleware)
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+Building a Cloud Function to run this application. This is needed due to:
+ • middleware
+ • non-static component /[locale]/page
+ • non-static component /admin/business/[id]/categories/page
+ • non-static component /admin/business/[id]/orders/page
+ • non-static component /admin/business/[id]/page
+ • and 42 other reasons, use --debug to see more
+
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'firebase-frameworks@0.11.8',
+npm warn EBADENGINE   required: { node: '^16.0.0 || ^18.0.0 || ^20.0.0 || ^22.0.0' },
+npm warn EBADENGINE   current: { node: 'v24.10.0', npm: '11.6.0' }
+npm warn EBADENGINE }
+
+up to date in 8s
+
+84 packages are looking for funding
+  run `npm fund` for details
+i  hosting: The following function(s) are pinned to site lokma and will be deployed as well: ssrlokma
+
+=== Deploying to 'aylar-a45af'...
+
+i  deploying functions, hosting
+i  functions: preparing codebase firebase-frameworks-lokma for deployment
+i  functions: ensuring required API cloudfunctions.googleapis.com is enabled...
+i  functions: ensuring required API cloudbuild.googleapis.com is enabled...
+i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled...
+⚠  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory.
+⚠  functions: Please note that there will be breaking changes when you upgrade.
+i  functions: Loading and analyzing source code for codebase firebase-frameworks-lokma to determine what to deploy
+Serving at port 8886
+
+i  extensions: ensuring required API firebaseextensions.googleapis.com is enabled...
+i  functions: Loaded environment variables from .env.
+i  functions: preparing .firebase/lokma/functions directory for uploading...
+i  functions: packaged /Users/metinoz/.gemini/antigravity/scratch/LOKMA_2026/admin_portal/.firebase/lokma/functions (50.7 MB) for uploading
+i  functions: ensuring required API run.googleapis.com is enabled...
+i  functions: ensuring required API eventarc.googleapis.com is enabled...
+i  functions: ensuring required API pubsub.googleapis.com is enabled...
+i  functions: ensuring required API storage.googleapis.com is enabled...
+i  functions: generating the service identity for pubsub.googleapis.com...
+i  functions: generating the service identity for eventarc.googleapis.com...
+✔  functions: .firebase/lokma/functions source uploaded successfully
+i  hosting[lokma]: beginning deploy...
+i  hosting[lokma]: found 223 files in .firebase/lokma/hosting
+✔  hosting[lokma]: file upload complete
+i  functions: updating Node.js 24 (2nd Gen) function firebase-frameworks-lokma:ssrlokma(europe-west1)...
+✔  functions[firebase-frameworks-lokma:ssrlokma(europe-west1)] Successful update operation.
+Function URL (firebase-frameworks-lokma:ssrlokma(europe-west1)): https://ssrlokma-lsp6loxj7q-ew.a.run.app
+i  hosting[lokma]: finalizing version...
+✔  hosting[lokma]: version finalized
+i  hosting[lokma]: releasing new version...
+✔  hosting[lokma]: release complete
+
+✔  Deploy complete!
+
+Project Console: https://console.firebase.google.com/project/aylar-a45af/overview
+Hosting URL: https://lokma.web.app

@@ -5,6 +5,34 @@
             "queryScope": "COLLECTION",
             "fields": [
                 {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "deliveredAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "meat_orders",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "meat_orders",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
                     "fieldPath": "butcherId",
                     "order": "ASCENDING"
                 },
