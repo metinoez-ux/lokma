@@ -121,8 +121,11 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
     }
   }
 
+  static const Color _brandColor = Color(0xFFFB335B);
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -154,7 +157,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
             ),
           ],
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: _brandColor,
         foregroundColor: Colors.white,
         actions: [
           if (_order?.courierPhone != null)
@@ -285,7 +288,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.1),
@@ -299,8 +302,8 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
               // Courier avatar
               CircleAvatar(
                 radius: 28,
-                backgroundColor: Colors.orange.shade100,
-                child: const Icon(Icons.person, color: Colors.orange, size: 32),
+                backgroundColor: _brandColor.withValues(alpha: 0.15),
+                child: const Icon(Icons.person, color: _brandColor, size: 32),
               ),
               const SizedBox(width: 16),
               
@@ -436,12 +439,12 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.grey[100],
+            color: isDark ? Colors.grey[850] : Colors.grey[100],
             child: Text(
               'Son güncelleme: ${_formatTime(order.lastLocationUpdate!)}',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
           ),
@@ -471,7 +474,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                             height: 44,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.orange,
+                                color: _brandColor,
                                 shape: BoxShape.circle,
                                 border: Border.all(color: Colors.white, width: 2),
                                 boxShadow: [
@@ -572,15 +575,15 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
         ),
 
         // Collapsible order details panel
-        _buildCollapsibleOrderPanel(order),
+        _buildCollapsibleOrderPanel(order, isDark),
       ],
     );
   }
 
-  Widget _buildCollapsibleOrderPanel(LokmaOrder order) {
+  Widget _buildCollapsibleOrderPanel(LokmaOrder order, bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -595,13 +598,13 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
           // Legend row (always visible, compact)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            color: Colors.grey[50],
+            color: isDark ? Colors.grey[850] : Colors.grey[50],
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildLegendItem(Colors.red.shade600, Icons.motorcycle, 'Kurye'),
-                _buildLegendItem(Colors.orange, Icons.storefront, 'İşletme'),
-                _buildLegendItem(Colors.blue.shade700, Icons.home, 'Teslimat'),
+                _buildLegendItem(Colors.red.shade600, Icons.motorcycle, 'Kurye', isDark),
+                _buildLegendItem(_brandColor, Icons.storefront, 'İşletme', isDark),
+                _buildLegendItem(Colors.blue.shade700, Icons.home, 'Teslimat', isDark),
               ],
             ),
           ),
@@ -612,7 +615,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  const Icon(Icons.receipt_long, color: Colors.orange, size: 20),
+                  const Icon(Icons.receipt_long, color: _brandColor, size: 20),
                   const SizedBox(width: 10),
                   Text(
                     '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
@@ -651,7 +654,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                 shrinkWrap: true,
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 itemCount: order.items.length,
-                separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[200]),
+                separatorBuilder: (_, __) => Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey[200]),
                 itemBuilder: (context, index) {
                   final item = order.items[index];
                   return Padding(
@@ -662,16 +665,16 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: Colors.orange.shade50,
+                            color: _brandColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Center(
                             child: Text(
                               '${item.quantity}x',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.orange.shade700,
+                                color: _brandColor,
                               ),
                             ),
                           ),
@@ -689,7 +692,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
+                            color: isDark ? Colors.grey[300] : Colors.grey[700],
                           ),
                         ),
                       ],
@@ -708,7 +711,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
     );
   }
 
-  Widget _buildLegendItem(Color color, IconData icon, String label) {
+  Widget _buildLegendItem(Color color, IconData icon, String label, bool isDark) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -722,7 +725,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
           child: Icon(icon, color: Colors.white, size: 12),
         ),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500)),
+        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: isDark ? Colors.grey[300] : Colors.grey[800])),
       ],
     );
   }

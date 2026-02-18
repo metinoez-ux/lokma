@@ -154,7 +154,7 @@ class FCMService {
         break;
       case 'new_delivery':
         emoji = '🚚';
-        accentColor = const Color(0xFFFF9800); // Orange
+        accentColor = const Color(0xFFFB335B); // LOKMA Brand
         break;
       case 'order_ready':
         emoji = '✅';

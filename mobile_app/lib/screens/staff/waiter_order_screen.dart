@@ -137,7 +137,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.table_restaurant, color: Colors.orange.shade700),
+            Icon(Icons.table_restaurant, color: const Color(0xFFFB335B)),
             const SizedBox(width: 8),
             Text('Masa $tableNumber'),
           ],
@@ -153,7 +153,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.orange.shade700),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
             child: const Text('Evet, Başlat'),
           ),
         ],
@@ -577,7 +577,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.lock_outline, color: Colors.orange.shade700),
+            Icon(Icons.lock_outline, color: const Color(0xFFFB335B)),
             const SizedBox(width: 8),
             const Text('Masa PIN Kodu'),
           ],
@@ -593,9 +593,9 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: const Color(0xFFFB335B).withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.orange.shade200),
+                border: Border.all(color: const Color(0xFFFB335B).withValues(alpha: 0.3)),
               ),
               child: Text(
                 pin,
@@ -603,7 +603,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                   fontSize: 36,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 12,
-                  color: Colors.orange.shade800,
+                  color: const Color(0xFFFB335B),
                 ),
               ),
             ),
@@ -628,7 +628,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx),
             style: FilledButton.styleFrom(
-              backgroundColor: Colors.orange.shade700,
+              backgroundColor: const Color(0xFFFB335B),
             ),
             child: const Text('Tamam'),
           ),
@@ -781,7 +781,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.orange))
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFFFB335B)))
           : _businessId == null
               ? _buildNoBusinessView()
               : _currentStep == _WaiterStep.selectTable

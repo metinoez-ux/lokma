@@ -98,7 +98,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
               child: const Text('Molayı Bitir ve Üstlen', style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -137,7 +137,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
             child: const Text('Üstlen', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -191,7 +191,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bekleyen Teslimatlar'),
-        backgroundColor: Colors.orange,
+        backgroundColor: const Color(0xFFFB335B),
         foregroundColor: Colors.white,
       ),
       body: _isLoading
@@ -287,7 +287,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
           child: ExpansionTile(
             backgroundColor: Colors.grey[100],
             collapsedBackgroundColor: Colors.grey[100],
-            leading: const Icon(Icons.history, color: Colors.orange),
+            leading: const Icon(Icons.history, color: Color(0xFFFB335B)),
             title: Row(
               children: [
                 Text(
@@ -495,14 +495,14 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: const Color(0xFFFB335B).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange,
+                      color: const Color(0xFFFB335B),
                     ),
                   ),
                 ),
@@ -701,18 +701,18 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.15),
+                  color: const Color(0xFFFB335B).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange, width: 2),
+                  border: Border.all(color: const Color(0xFFFB335B), width: 2),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.payments, color: Colors.orange, size: 32),
+                    const Icon(Icons.payments, color: Color(0xFFFB335B), size: 32),
                     const SizedBox(width: 12),
                     Text(
                       '$amount€',
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.orange),
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFB335B)),
                     ),
                   ],
                 ),
@@ -725,7 +725,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('İptal')),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
               child: const Text('✓ Evet, Tahsil Ettim', style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -828,7 +828,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
             child: const Text('Evet, Yola Çıkıyorum', 
                               style: TextStyle(color: Colors.white)),
           ),
@@ -843,7 +843,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('🚗 Yoldasınız! İyi teslimatlar.'),
-            backgroundColor: Colors.orange,
+            backgroundColor: const Color(0xFFFB335B),
           ),
         );
       }
@@ -1370,7 +1370,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
+                              backgroundColor: const Color(0xFFFB335B),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                             ),
                           )
