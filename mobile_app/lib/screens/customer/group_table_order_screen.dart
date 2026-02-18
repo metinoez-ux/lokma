@@ -6,6 +6,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/table_group_session_model.dart';
 import '../../models/butcher_product.dart';
 import '../../providers/table_group_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../data/product_catalog_data.dart';
 
 /// Grup Masa Sipariş Ekranı
@@ -34,6 +35,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   String _selectedCategory = 'Tümü';
   String _menuSearchQuery = '';
   bool _isSubmitting = false;
+  bool _hasShownClosedPrompt = false;
 
   // LOKMA brand accent
   static const Color _accent = Color(0xFFFB335B);
@@ -72,6 +74,105 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     }
   }
 
+  /// Show account creation prompt for anonymous/guest users after successful payment
+  void _showAccountCreationPrompt() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Success icon
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 40),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Ödeme Tamamlandı! 🎉',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Hesap oluşturarak sipariş geçmişinizi kaydedin ve bir sonraki siparişinizde kolayca erişin!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  // Navigate to profile/auth screen
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                },
+                icon: const Icon(Icons.person_add_rounded),
+                label: const Text(
+                  'Hesap Oluştur',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _accent,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  Navigator.of(context).pop();
+                },
+                child: Text(
+                  'Geç',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -101,6 +202,36 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         );
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // Handle closed session — show success + account creation prompt for guests
+    if (session != null && session.status == GroupSessionStatus.closed && !_hasShownClosedPrompt) {
+      _hasShownClosedPrompt = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final authState = ref.read(authProvider);
+        final isAnonymous = authState.user?.isAnonymous ?? true;
+        
+        if (isAnonymous) {
+          _showAccountCreationPrompt();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(child: Text('Ödeme tamamlandı! Sipariş geçmişinize kaydedildi.')),
+                ],
+              ),
+              backgroundColor: Colors.green.shade600,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      });
     }
 
     return Scaffold(

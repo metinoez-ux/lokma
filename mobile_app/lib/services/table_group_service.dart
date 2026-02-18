@@ -363,4 +363,21 @@ class TableGroupService {
             .map((doc) => TableGroupSession.fromFirestore(doc))
             .toList());
   }
+
+  /// Get closed group sessions where user was a participant (order history)
+  Stream<List<TableGroupSession>> getUserGroupHistory(String userId) {
+    // Firestore can't query inside arrays of maps directly,
+    // so we fetch all closed sessions and filter client-side.
+    // For scale, we'd add a 'participantUserIds' array field.
+    return _db
+        .collection(_collection)
+        .where('status', isEqualTo: 'closed')
+        .orderBy('closedAt', descending: true)
+        .limit(50)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => TableGroupSession.fromFirestore(doc))
+            .where((session) => session.participants.any((p) => p.userId == userId))
+            .toList());
+  }
 }

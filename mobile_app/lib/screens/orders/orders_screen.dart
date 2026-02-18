@@ -6,9 +6,12 @@ import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../models/butcher_product.dart';
 import '../../models/product_option.dart';
+import '../../models/table_group_session_model.dart';
 import '../../services/order_service.dart';
+import '../../services/table_group_service.dart';
 import 'rating_screen.dart';
 import 'courier_tracking_screen.dart';
+import 'group_order_history_card.dart';
 
 
 class OrdersScreen extends ConsumerStatefulWidget {
@@ -204,6 +207,46 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 ),
               ),
             ],
+            // Group order history — collapsed section
+            const SizedBox(height: 8),
+            StreamBuilder<List<TableGroupSession>>(
+              stream: TableGroupService.instance.getUserGroupHistory(userId),
+              builder: (context, groupSnapshot) {
+                if (!groupSnapshot.hasData || groupSnapshot.data!.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                final groupSessions = groupSnapshot.data!;
+                return Theme(
+                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    initiallyExpanded: false,
+                    tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+                    title: Row(
+                      children: [
+                        Icon(Icons.groups_rounded, size: 20, color: subtitleColor),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Geçmiş Grup Siparişlerim (${groupSessions.length})',
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    children: [
+                      for (final session in groupSessions)
+                        GroupOrderHistoryCard(
+                          session: session,
+                          userId: userId,
+                          isDark: isDark,
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ],
         );
       },
