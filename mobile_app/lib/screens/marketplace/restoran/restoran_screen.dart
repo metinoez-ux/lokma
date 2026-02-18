@@ -2793,6 +2793,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
@@ -3097,6 +3098,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -3188,6 +3190,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
