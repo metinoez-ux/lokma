@@ -171,43 +171,43 @@ export default function DriverPerformancePage() {
         });
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-gray-900 p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">
+                    <h1 className="text-2xl font-bold text-white">
                         Sürücü Performans Raporu
                     </h1>
-                    <p className="text-gray-500 mt-1">
+                    <p className="text-gray-400 mt-1">
                         Teslimat sayısı, km, nakit ve kart tahsilatları
                     </p>
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-center">
+                <div className="bg-gray-800 rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-center border border-gray-700">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-300 mb-1">
                             Tarih
                         </label>
                         <input
                             type="date"
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
-                            className="border rounded px-3 py-2 text-sm"
+                            className="bg-gray-700 border border-gray-600 text-white rounded px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-300 mb-1">
                             Görünüm
                         </label>
-                        <div className="flex rounded-lg overflow-hidden border">
+                        <div className="flex rounded-lg overflow-hidden border border-gray-600">
                             {(['daily', 'weekly', 'monthly'] as const).map((mode) => (
                                 <button
                                     key={mode}
                                     onClick={() => setViewMode(mode)}
                                     className={`px-4 py-2 text-sm font-medium ${viewMode === mode
                                         ? 'bg-orange-500 text-white'
-                                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                 >
                                     {mode === 'daily' && 'Günlük'}
@@ -221,34 +221,34 @@ export default function DriverPerformancePage() {
 
                 {/* Error Banner */}
                 {error && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center gap-3">
-                        <span className="text-red-500 text-xl">⚠️</span>
-                        <p className="text-red-700 text-sm font-medium">{error}</p>
+                    <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-4 mb-6 flex items-center gap-3">
+                        <span className="text-red-400 text-xl">⚠️</span>
+                        <p className="text-red-300 text-sm font-medium">{error}</p>
                     </div>
                 )}
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <div className="text-sm text-gray-500">Toplam Teslimat</div>
-                        <div className="text-2xl font-bold text-gray-900">
+                    <div className="bg-gray-800 rounded-lg shadow p-4 border border-gray-700">
+                        <div className="text-sm text-gray-400">Toplam Teslimat</div>
+                        <div className="text-2xl font-bold text-white">
                             {totals.deliveries}
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <div className="text-sm text-gray-500">Toplam KM</div>
+                    <div className="bg-gray-800 rounded-lg shadow p-4 border border-gray-700">
+                        <div className="text-sm text-gray-400">Toplam KM</div>
                         <div className="text-2xl font-bold text-blue-600">
                             🛣️ {totals.km.toFixed(1)} km
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <div className="text-sm text-gray-500">Nakit Tahsilat</div>
+                    <div className="bg-gray-800 rounded-lg shadow p-4 border border-gray-700">
+                        <div className="text-sm text-gray-400">Nakit Tahsilat</div>
                         <div className="text-2xl font-bold text-green-600">
                             💰 {totals.cash.toFixed(2)}€
                         </div>
                     </div>
-                    <div className="bg-white rounded-lg shadow p-4">
-                        <div className="text-sm text-gray-500">Kart Tahsilat</div>
+                    <div className="bg-gray-800 rounded-lg shadow p-4 border border-gray-700">
+                        <div className="text-sm text-gray-400">Kart Tahsilat</div>
                         <div className="text-2xl font-bold text-purple-600">
                             💳 {totals.card.toFixed(2)}€
                         </div>
@@ -256,53 +256,53 @@ export default function DriverPerformancePage() {
                 </div>
 
                 {/* Driver Stats Table */}
-                <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="bg-gray-800 rounded-lg shadow overflow-hidden border border-gray-700">
                     <table className="min-w-full">
-                        <thead className="bg-gray-50 border-b">
+                        <thead className="bg-gray-700/50 border-b border-gray-600">
                             <tr>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">
                                     Sürücü
                                 </th>
-                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
+                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">
                                     Teslimat
                                 </th>
-                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">
+                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">
                                     KM
                                 </th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">
                                     Nakit
                                 </th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">
                                     Kart
                                 </th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">
+                                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase">
                                     Son Teslimat
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-700">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
                                         Yükleniyor...
                                     </td>
                                 </tr>
                             ) : driverStats.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
                                         Bu dönemde teslimat bulunamadı
                                     </td>
                                 </tr>
                             ) : (
                                 driverStats.map((driver) => (
-                                    <tr key={driver.courierId} className="hover:bg-gray-50">
+                                    <tr key={driver.courierId} className="hover:bg-gray-700/50">
                                         <td className="px-4 py-3">
-                                            <div className="font-medium text-gray-900">
+                                            <div className="font-medium text-white">
                                                 {driver.courierName}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-center">
-                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 text-orange-700 font-bold">
+                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-500/20 text-orange-400 font-bold">
                                                 {driver.deliveryCount}
                                             </span>
                                         </td>
@@ -319,7 +319,7 @@ export default function DriverPerformancePage() {
                                                 ? `${driver.cardTotal.toFixed(2)}€`
                                                 : '-'}
                                         </td>
-                                        <td className="px-4 py-3 text-right text-gray-500 text-sm">
+                                        <td className="px-4 py-3 text-right text-gray-400 text-sm">
                                             {driver.lastDeliveryAt
                                                 ? formatDate(driver.lastDeliveryAt)
                                                 : '-'}
