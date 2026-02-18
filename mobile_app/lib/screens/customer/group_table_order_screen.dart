@@ -14,12 +14,14 @@ class GroupTableOrderScreen extends ConsumerStatefulWidget {
   final String businessId;
   final String businessName;
   final String tableNumber;
+  final String? sessionId; // Optional — used for auto-resume
 
   const GroupTableOrderScreen({
     super.key,
     required this.businessId,
     required this.businessName,
     required this.tableNumber,
+    this.sessionId,
   });
 
   @override
@@ -40,6 +42,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _autoResumeIfNeeded();
   }
 
   @override
@@ -48,12 +51,57 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     super.dispose();
   }
 
+  /// Auto-resume session when screen opens with a sessionId but provider has no participant set
+  Future<void> _autoResumeIfNeeded() async {
+    final sessionId = widget.sessionId;
+    if (sessionId == null) return;
+
+    final groupState = ref.read(tableGroupProvider);
+    if (groupState.myParticipantId != null) return; // already set
+
+    debugPrint('🔄 Auto-resuming session $sessionId...');
+    final notifier = ref.read(tableGroupProvider.notifier);
+    final success = await notifier.resumeSession(sessionId);
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Oturum yenilenemedi. Lütfen tekrar katılın.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
     final groupState = ref.watch(tableGroupProvider);
     final session = groupState.session;
+
+    // Handle cancelled/null session — pop screen with message
+    if (session != null && session.status == GroupSessionStatus.cancelled) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(tableGroupProvider.notifier).clearSession();
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.cancel, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text('Grup siparişi iptal edildi'),
+              ],
+            ),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -105,6 +153,39 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         backgroundColor: scaffoldBg,
         surfaceTintColor: scaffoldBg,
         centerTitle: true,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'cancel') _showCancelGroupDialog();
+              if (value == 'leave') _showLeaveGroupDialog();
+            },
+            itemBuilder: (context) => [
+              if (groupState.isHost)
+                const PopupMenuItem(
+                  value: 'cancel',
+                  child: Row(
+                    children: [
+                      Icon(Icons.cancel, color: Colors.red, size: 20),
+                      SizedBox(width: 8),
+                      Text('Grubu İptal Et', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                )
+              else
+                const PopupMenuItem(
+                  value: 'leave',
+                  child: Row(
+                    children: [
+                      Icon(Icons.exit_to_app, color: Colors.orange, size: 20),
+                      SizedBox(width: 8),
+                      Text('Gruptan Ayrıl', style: TextStyle(color: Colors.orange)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: _accent,
@@ -996,6 +1077,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+
+
             // Pay my share
             if (!(groupState.myParticipant?.isPaid ?? true))
               SizedBox(
@@ -1183,6 +1266,92 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           ],
         );
       },
+    );
+  }
+  // ─── CANCEL / LEAVE ────────────────────────────────────────────
+  void _showCancelGroupDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Grubu İptal Et'),
+        content: const Text(
+          'Grup siparişini iptal etmek istediğinize emin misiniz?\n\nTüm katılımcılar gruptan çıkarılacak.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await ref.read(tableGroupProvider.notifier).cancelSession();
+              if (mounted) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.white, size: 20),
+                        SizedBox(width: 8),
+                        Text('Grup siparişi iptal edildi'),
+                      ],
+                    ),
+                    backgroundColor: Colors.red.shade600,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                );
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('İptal Et'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLeaveGroupDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Gruptan Ayrıl'),
+        content: const Text(
+          'Grup siparişinden ayrılmak istediğinize emin misiniz?\n\nEklediğiniz ürünler kaldırılacak.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await ref.read(tableGroupProvider.notifier).leaveSession();
+              if (mounted) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.exit_to_app, color: Colors.white, size: 20),
+                        SizedBox(width: 8),
+                        Text('Gruptan ayrıldınız'),
+                      ],
+                    ),
+                    backgroundColor: Colors.orange.shade600,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                );
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('Ayrıl'),
+          ),
+        ],
+      ),
     );
   }
 

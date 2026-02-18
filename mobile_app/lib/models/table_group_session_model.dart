@@ -2,10 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Grup oturum durumu
 enum GroupSessionStatus {
-  active,    // Katılımcılar ürün ekliyor
-  ordering,  // Sipariş gönderildi, mutfakta
-  paying,    // Ödeme aşamasında
-  closed,    // Oturum kapandı
+  active,     // Katılımcılar ürün ekliyor
+  ordering,   // Sipariş gönderildi, mutfakta
+  paying,     // Ödeme aşamasında
+  closed,     // Oturum kapandı
+  cancelled,  // Host tarafından iptal edildi
 }
 
 /// Grup masasındaki bir ürün

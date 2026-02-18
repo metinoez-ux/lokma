@@ -104,6 +104,47 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     return _service.findActiveSession(businessId, tableNumber);
   }
 
+  /// Resume an existing session — restores myParticipantId from Firebase Auth
+  /// This is critical when the app is reopened and provider state is fresh.
+  Future<bool> resumeSession(String sessionId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('table_group_sessions')
+          .doc(sessionId)
+          .get();
+
+      if (!doc.exists) return false;
+      final session = TableGroupSession.fromFirestore(doc);
+
+      // Find participant matching current user
+      final myParticipant = session.participants.cast<TableGroupParticipant?>().firstWhere(
+        (p) => p?.userId == user.uid,
+        orElse: () => null,
+      );
+
+      if (myParticipant == null) {
+        debugPrint('⚠️ Current user ${user.uid} not found in session $sessionId');
+        return false;
+      }
+
+      state = state.copyWith(
+        session: session,
+        myParticipantId: myParticipant.participantId,
+        isLoading: false,
+      );
+
+      _startListening(sessionId);
+      debugPrint('✅ Resumed session $sessionId as ${myParticipant.name} (${myParticipant.participantId})');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Failed to resume session: $e');
+      return false;
+    }
+  }
+
   /// Join an existing session (auto-resolves current user)
   Future<bool> joinSession(String sessionId, {required String pin}) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -278,6 +319,26 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
         debugPrint('❌ Session stream error: $e');
       },
     );
+  }
+
+  /// Cancel session (host only)
+  Future<void> cancelSession() async {
+    final currentSession = state.session;
+    if (currentSession == null) return;
+    await _service.cancelSession(currentSession.id);
+    clearSession();
+  }
+
+  /// Leave session (participant)
+  Future<void> leaveSession() async {
+    final currentSession = state.session;
+    final participantId = state.myParticipantId;
+    if (currentSession == null || participantId == null) return;
+    await _service.leaveSession(
+      sessionId: currentSession.id,
+      participantId: participantId,
+    );
+    clearSession();
   }
 
   /// Clear session and stop listening

@@ -3217,6 +3217,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               businessId: businessId,
                               businessName: businessName,
                               tableNumber: tableNum,
+                              sessionId: activeSession.id,
                             ),
                           ),
                         );
@@ -3499,6 +3500,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               businessId: businessId,
               businessName: businessName,
               tableNumber: tableNum,
+              sessionId: ref.read(tableGroupProvider).session?.id,
             ),
           ),
         );

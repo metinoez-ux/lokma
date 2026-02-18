@@ -3337,6 +3337,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final participantCount = (activeSession as dynamic).participantCount ?? 1;
+    final pinController = TextEditingController();
     
     showModalBottomSheet(
       context: context,
@@ -3346,7 +3347,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       isScrollControlled: true,
       builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.only(
+          left: 24, right: 24, top: 24, bottom: 24 + MediaQuery.of(ctx).viewInsets.bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -3370,22 +3373,53 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             ),
             const SizedBox(height: 8),
             Text(
-              'Bu masada $participantCount kişilik aktif bir grup siparişi var.\nKatılmak ister misiniz?',
+              'Bu masada $participantCount kişilik aktif bir grup siparişi var.\nKatılmak için PIN kodunu girin.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            // PIN input
+            TextField(
+              controller: pinController,
+              keyboardType: TextInputType.number,
+              maxLength: 4,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: 12),
+              decoration: InputDecoration(
+                hintText: '• • • •',
+                counterText: '',
+                filled: true,
+                fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: _accentColor, width: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             
             // Join group button
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: () {
+                  final pin = pinController.text.trim();
+                  if (pin.length != 4) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('4 haneli PIN girin'), backgroundColor: Colors.orange),
+                    );
+                    return;
+                  }
                   Navigator.pop(ctx);
-                  _joinAndNavigateGroup(activeSession.id, tableNum, businessId, businessName);
+                  _joinAndNavigateGroup(activeSession.id, tableNum, businessId, businessName, pin);
                 },
                 icon: const Icon(Icons.group_add),
                 label: const Text(
@@ -3546,10 +3580,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     String tableNum,
     String businessId,
     String businessName,
+    String pin,
   ) async {
     try {
       final groupNotifier = ref.read(tableGroupProvider.notifier);
-      await groupNotifier.joinSession(sessionId);
+      await groupNotifier.joinSession(sessionId, pin: pin);
       
       if (mounted) {
         Navigator.push(
@@ -3559,6 +3594,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               businessId: businessId,
               businessName: businessName,
               tableNumber: tableNum,
+              sessionId: sessionId,
             ),
           ),
         );
@@ -3594,6 +3630,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               businessId: businessId,
               businessName: businessName,
               tableNumber: tableNum,
+              sessionId: ref.read(tableGroupProvider).session?.id,
             ),
           ),
         );

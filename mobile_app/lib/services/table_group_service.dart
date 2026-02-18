@@ -73,8 +73,30 @@ class TableGroupService {
     required String userName,
     required String pin,
   }) async {
-    final participantId = const Uuid().v4();
+    final docRef = _db.collection(_collection).doc(sessionId);
     
+    // First check if user already exists in session
+    final currentDoc = await docRef.get();
+    if (!currentDoc.exists) throw Exception('Session not found');
+    final currentSession = TableGroupSession.fromFirestore(currentDoc);
+    
+    // Validate PIN
+    if (currentSession.groupPin != null && currentSession.groupPin != pin) {
+      throw Exception('WRONG_PIN');
+    }
+    
+    // If already joined, return existing participantId
+    final existingParticipant = currentSession.participants.cast<TableGroupParticipant?>().firstWhere(
+      (p) => p?.userId == userId,
+      orElse: () => null,
+    );
+    if (existingParticipant != null) {
+      debugPrint('⚠️ User $userId already in session $sessionId, returning existing participantId');
+      return existingParticipant.participantId;
+    }
+    
+    // Create new participant
+    final participantId = const Uuid().v4();
     final participant = TableGroupParticipant(
       participantId: participantId,
       userId: userId,
@@ -82,8 +104,6 @@ class TableGroupService {
       isHost: false,
     );
 
-    final docRef = _db.collection(_collection).doc(sessionId);
-    
     // Use transaction to safely add participant
     await _db.runTransaction((tx) async {
       final snapshot = await tx.get(docRef);
@@ -91,17 +111,9 @@ class TableGroupService {
       
       final session = TableGroupSession.fromFirestore(snapshot);
       
-      // Validate PIN
-      if (session.groupPin != null && session.groupPin != pin) {
-        throw Exception('WRONG_PIN');
-      }
-      
-      // Check if user already joined
+      // Double-check in transaction
       final alreadyJoined = session.participants.any((p) => p.userId == userId);
-      if (alreadyJoined) {
-        debugPrint('⚠️ User $userId already in session $sessionId');
-        return;
-      }
+      if (alreadyJoined) return;
 
       final updatedParticipants = [...session.participants, participant];
       tx.update(docRef, {
@@ -286,12 +298,50 @@ class TableGroupService {
     });
   }
 
-  /// Close a session manually
-  Future<void> closeSession(String sessionId) async {
+  /// Cancel a session (host only) — marks as cancelled
+  Future<void> cancelSession(String sessionId) async {
     await _db.collection(_collection).doc(sessionId).update({
-      'status': 'closed',
-      'closedAt': FieldValue.serverTimestamp(),
+      'status': 'cancelled',
+      'cancelledAt': FieldValue.serverTimestamp(),
     });
+    debugPrint('❌ Session $sessionId cancelled by host');
+  }
+
+  /// Leave a session — removes participant from the array
+  Future<void> leaveSession({
+    required String sessionId,
+    required String participantId,
+  }) async {
+    final docRef = _db.collection(_collection).doc(sessionId);
+
+    await _db.runTransaction((tx) async {
+      final snapshot = await tx.get(docRef);
+      if (!snapshot.exists) return;
+
+      final session = TableGroupSession.fromFirestore(snapshot);
+      final updatedParticipants = session.participants
+          .where((p) => p.participantId != participantId)
+          .toList();
+
+      if (updatedParticipants.isEmpty) {
+        // Last person left → close session
+        tx.update(docRef, {
+          'participants': [],
+          'grandTotal': 0,
+          'status': 'closed',
+          'closedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        // Recalculate grand total
+        final grandTotal = updatedParticipants.fold(0.0, (sum, p) => sum + p.subtotal);
+        tx.update(docRef, {
+          'participants': updatedParticipants.map((p) => p.toMap()).toList(),
+          'grandTotal': grandTotal,
+        });
+      }
+    });
+
+    debugPrint('👋 Participant $participantId left session $sessionId');
   }
 
   /// Get real-time session stream
