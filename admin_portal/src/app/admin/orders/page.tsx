@@ -71,6 +71,8 @@ interface Order {
     tableNumber?: number;
     waiterName?: string;
     tableSessionId?: string;
+    isGroupOrder?: boolean;
+    groupParticipantCount?: number;
     paymentStatus?: string;
     paymentMethod?: string;
     stripePaymentIntentId?: string;
@@ -281,6 +283,8 @@ export default function OrdersPage() {
                     tableNumber: d.tableNumber,
                     waiterName: d.waiterName,
                     tableSessionId: d.tableSessionId,
+                    isGroupOrder: !!d.isGroupOrder,
+                    groupParticipantCount: d.groupParticipantCount || 0,
                     paymentStatus: d.paymentStatus || 'unpaid',
                     paymentMethod: d.paymentMethod,
                     stripePaymentIntentId: d.stripePaymentIntentId,
@@ -550,7 +554,28 @@ export default function OrdersPage() {
     const handleDeleteOrderConfirm = async () => {
         if (!confirmDeleteOrderId) return;
         try {
+            // Find the order data before deleting to check for group session
+            const orderToDelete = orders.find(o => o.id === confirmDeleteOrderId);
+
+            // Delete the order
             await deleteDoc(doc(db, 'meat_orders', confirmDeleteOrderId));
+
+            // If this was a group order with a session, clean up the session too
+            if (orderToDelete?.tableSessionId) {
+                try {
+                    const sessionRef = doc(db, 'table_group_sessions', orderToDelete.tableSessionId);
+                    await updateDoc(sessionRef, {
+                        status: 'cancelled',
+                        closedAt: Timestamp.now(),
+                        cancelledBy: 'Admin Panel',
+                        cancelReason: 'Sipariş admin panelden silindi',
+                    });
+                } catch (sessionError) {
+                    console.warn('Could not clean up group session:', sessionError);
+                    // Non-critical — order is already deleted
+                }
+            }
+
             showToast('Sipariş silindi', 'success');
             setSelectedOrder(null);
             setConfirmDeleteOrderId(null);
@@ -1405,10 +1430,15 @@ function OrderCard({
             {/* Dine-in table badge + source */}
             {order.type === 'dine_in' && (
                 <div className="mb-1 space-y-0.5">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <span className="px-2 py-0.5 rounded bg-amber-600/30 text-amber-300 text-xs font-medium">
                             🍽️ Masa {order.tableNumber ? `#${order.tableNumber}` : ''}
                         </span>
+                        {order.isGroupOrder && (
+                            <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
+                                👥 Grup{order.groupParticipantCount ? ` (${order.groupParticipantCount} kişi)` : ''}
+                            </span>
+                        )}
                         {order.paymentStatus === 'paid' && (
                             <span className="px-1.5 py-0.5 rounded bg-green-600/30 text-green-400 text-xs">✓</span>
                         )}

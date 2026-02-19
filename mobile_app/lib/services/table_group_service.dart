@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import '../models/table_group_session_model.dart';
@@ -104,6 +105,9 @@ class TableGroupService {
       isHost: false,
     );
 
+    // Track the actual participantId (may differ if already joined in race window)
+    String actualParticipantId = participantId;
+
     // Use transaction to safely add participant
     await _db.runTransaction((tx) async {
       final snapshot = await tx.get(docRef);
@@ -111,9 +115,16 @@ class TableGroupService {
       
       final session = TableGroupSession.fromFirestore(snapshot);
       
-      // Double-check in transaction
-      final alreadyJoined = session.participants.any((p) => p.userId == userId);
-      if (alreadyJoined) return;
+      // Double-check in transaction — if already joined, use existing ID
+      final existingInTx = session.participants.cast<TableGroupParticipant?>().firstWhere(
+        (p) => p?.userId == userId,
+        orElse: () => null,
+      );
+      if (existingInTx != null) {
+        actualParticipantId = existingInTx.participantId;
+        debugPrint('⚠️ User $userId already in session (race), using existing ID: $actualParticipantId');
+        return;
+      }
 
       final updatedParticipants = [...session.participants, participant];
       tx.update(docRef, {
@@ -121,8 +132,8 @@ class TableGroupService {
       });
     });
 
-    debugPrint('👤 User $userName joined session $sessionId');
-    return participantId;
+    debugPrint('👤 User $userName joined session $sessionId (participantId: $actualParticipantId)');
+    return actualParticipantId;
   }
 
   /// Update a participant's items in the session (real-time sync)
@@ -141,7 +152,8 @@ class TableGroupService {
       final updatedParticipants = session.participants.map((p) {
         if (p.participantId == participantId) {
           final subtotal = items.fold(0.0, (sum, item) => sum + item.totalPrice);
-          return p.copyWith(items: items, subtotal: subtotal);
+          // Reset readiness when cart changes — prevents stale ready state
+          return p.copyWith(items: items, subtotal: subtotal, isReady: false);
         }
         return p;
       }).toList();
@@ -154,6 +166,64 @@ class TableGroupService {
         'grandTotal': grandTotal,
       });
     });
+  }
+
+  /// Mark a participant as ready/not ready
+  Future<void> markReady({
+    required String sessionId,
+    required String participantId,
+    required bool ready,
+  }) async {
+    final docRef = _db.collection(_collection).doc(sessionId);
+    
+    await _db.runTransaction((tx) async {
+      final snapshot = await tx.get(docRef);
+      if (!snapshot.exists) throw Exception('Session not found');
+      
+      final session = TableGroupSession.fromFirestore(snapshot);
+      final updatedParticipants = session.participants.map((p) {
+        if (p.participantId == participantId) {
+          return p.copyWith(isReady: ready);
+        }
+        return p;
+      }).toList();
+
+      tx.update(docRef, {
+        'participants': updatedParticipants.map((p) => p.toMap()).toList(),
+      });
+    });
+    debugPrint('${ready ? "✅" : "⏳"} Participant $participantId marked ${ready ? "ready" : "not ready"}');
+  }
+
+  /// Host submits group order to kitchen — changes status to 'ordering'
+  Future<void> submitToKitchen({
+    required String sessionId,
+    required String userId,
+  }) async {
+    final docRef = _db.collection(_collection).doc(sessionId);
+    
+    await _db.runTransaction((tx) async {
+      final snapshot = await tx.get(docRef);
+      if (!snapshot.exists) throw Exception('Session not found');
+      
+      final session = TableGroupSession.fromFirestore(snapshot);
+      
+      // Verify caller is the host
+      if (session.hostUserId != userId) {
+        throw Exception('ONLY_HOST_CAN_SUBMIT');
+      }
+      
+      // Verify all participants are ready
+      if (!session.allReady) {
+        throw Exception('NOT_ALL_READY');
+      }
+      
+      tx.update(docRef, {
+        'status': 'ordering',
+        'orderedAt': FieldValue.serverTimestamp(),
+      });
+    });
+    debugPrint('🍳 Session $sessionId submitted to kitchen');
   }
 
   /// Submit group order — creates individual meat_orders for each participant
@@ -300,11 +370,16 @@ class TableGroupService {
 
   /// Cancel a session (host only) — marks as cancelled
   Future<void> cancelSession(String sessionId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final cancellerName = user?.displayName ?? user?.email?.split('@').first ?? 'Host';
     await _db.collection(_collection).doc(sessionId).update({
       'status': 'cancelled',
       'cancelledAt': FieldValue.serverTimestamp(),
+      'cancelledBy': cancellerName,
+      'cancelReason': 'Host tarafından iptal edildi',
+      'closedAt': FieldValue.serverTimestamp(),
     });
-    debugPrint('❌ Session $sessionId cancelled by host');
+    debugPrint('❌ Session $sessionId cancelled by $cancellerName');
   }
 
   /// Leave a session — removes participant from the array

@@ -146,12 +146,12 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
   }
 
   /// Join an existing session (auto-resolves current user)
-  Future<bool> joinSession(String sessionId, {required String pin}) async {
+  Future<bool> joinSession(String sessionId, {required String pin, String? displayName}) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('Giriş yapmanız gerekli');
     
     final userId = user.uid;
-    final userName = user.displayName ?? user.email?.split('@').first ?? 'Misafir';
+    final userName = displayName?.isNotEmpty == true ? displayName! : (user.displayName ?? user.email?.split('@').first ?? 'Misafir');
     
     state = state.copyWith(isLoading: true, error: null);
 
@@ -190,11 +190,18 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
   Future<void> addItem(TableGroupItem item) async {
     final currentSession = state.session;
     final participantId = state.myParticipantId;
-    if (currentSession == null || participantId == null) return;
+    if (currentSession == null || participantId == null) {
+      debugPrint('❌ addItem failed: session=${currentSession != null}, participantId=$participantId');
+      return;
+    }
 
     // Find my current items
     final myParticipant = state.myParticipant;
-    if (myParticipant == null) return;
+    if (myParticipant == null) {
+      debugPrint('❌ addItem failed: myParticipant null (participantId=$participantId, '
+          'participants=${currentSession.participants.map((p) => p.participantId).toList()})');
+      return;
+    }
 
     // Check if item already in cart → increase quantity
     final existingIndex = myParticipant.items.indexWhere(
@@ -271,6 +278,39 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     );
   }
 
+  /// Toggle my readiness state
+  Future<void> toggleReady() async {
+    final currentSession = state.session;
+    final participantId = state.myParticipantId;
+    if (currentSession == null || participantId == null) return;
+
+    final myParticipant = state.myParticipant;
+    if (myParticipant == null) return;
+
+    await _service.markReady(
+      sessionId: currentSession.id,
+      participantId: participantId,
+      ready: !myParticipant.isReady,
+    );
+  }
+
+  /// Host submits group order to kitchen
+  Future<bool> submitToKitchen() async {
+    final currentSession = state.session;
+    if (currentSession == null) return false;
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return false;
+
+    try {
+      await _service.submitToKitchen(sessionId: currentSession.id, userId: uid);
+      return true;
+    } catch (e) {
+      debugPrint('❌ submitToKitchen failed: $e');
+      return false;
+    }
+  }
+
   /// Submit all orders to kitchen
   Future<List<String>> submitOrder() async {
     if (state.session == null) return [];
@@ -339,6 +379,21 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
       participantId: participantId,
     );
     clearSession();
+  }
+
+  /// Kick a participant (host only) — removes them from the session
+  Future<void> kickParticipant(String participantId) async {
+    final currentSession = state.session;
+    if (currentSession == null) return;
+    if (!state.isHost) {
+      debugPrint('❌ Only host can kick participants');
+      return;
+    }
+    await _service.leaveSession(
+      sessionId: currentSession.id,
+      participantId: participantId,
+    );
+    debugPrint('👢 Host kicked participant $participantId');
   }
 
   /// Clear session and stop listening

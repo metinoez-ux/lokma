@@ -38,7 +38,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   bool _hasShownClosedPrompt = false;
 
   // LOKMA brand accent
-  static const Color _accent = Color(0xFFFB335B);
+  static const Color _accent = Color(0xFFFF8000);
 
   @override
   void initState() {
@@ -362,8 +362,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           ),
 
           // Bottom action bar (inline, no system navbar)
-          if (_buildBottomBar(groupState, isDark) != null)
-            _buildBottomBar(groupState, isDark)!,
+          if (_buildBottomBar(groupState, isDark) case final bottomBar?)
+            bottomBar,
         ],
       ),
     );
@@ -879,6 +879,10 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // Readiness progress bar
+        if (session.isActive) _buildReadinessBar(session, isDark),
+        if (session.isActive) const SizedBox(height: 16),
+
         // Aggregated items summary
         _buildAggregatedItems(session, isDark),
 
@@ -973,6 +977,80 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     );
   }
 
+  /// Readiness progress bar for Masa tab
+  Widget _buildReadinessBar(TableGroupSession session, bool isDark) {
+    final total = session.participantCount;
+    final ready = session.readyCount;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: session.allReady
+              ? [Colors.green.withOpacity(0.15), Colors.green.withOpacity(0.05)]
+              : [Colors.amber.withOpacity(0.12), Colors.amber.withOpacity(0.04)],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: session.allReady
+              ? Colors.green.withOpacity(0.4)
+              : Colors.amber.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                session.allReady ? 'Herkes hazır! 🎉' : 'Masa Sipariş Durumu',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  color: session.allReady ? Colors.green.shade700 : (isDark ? Colors.white : Colors.black87),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: session.allReady
+                      ? Colors.green.withOpacity(0.2)
+                      : Colors.amber.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '$ready/$total hazır',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: session.allReady ? Colors.green.shade700 : Colors.amber.shade700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Segmented bar
+          Row(
+            children: List.generate(total, (i) {
+              final isReady = i < ready;
+              return Expanded(
+                child: Container(
+                  height: 6,
+                  margin: EdgeInsets.only(right: i < total - 1 ? 3 : 0),
+                  decoration: BoxDecoration(
+                    color: isReady ? Colors.green : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAggregatedItems(TableGroupSession session, bool isDark) {
     final aggregated = session.aggregatedItems;
     if (aggregated.isEmpty) {
@@ -1048,6 +1126,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     TableGroupState groupState,
   ) {
     final isMe = participant.participantId == groupState.myParticipantId;
+    final canKick = groupState.isHost && !participant.isHost && !isMe;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -1082,24 +1161,73 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 ),
               ),
             ),
-            // Payment badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: participant.isPaid
-                    ? Colors.green.withOpacity(0.15)
-                    : Colors.amber.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                participant.isPaid ? '✅ Ödendi' : '⏳ Bekliyor',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: participant.isPaid ? Colors.green.shade700 : Colors.amber.shade700,
+            // Ready + Payment badges
+            if (participant.isReady)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                margin: const EdgeInsets.only(right: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '✅ Hazır',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade700,
+                  ),
                 ),
               ),
-            ),
+            if (!participant.isReady && !participant.isPaid)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                margin: const EdgeInsets.only(right: 4),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '⏳ Seçiyor',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.amber.shade700,
+                  ),
+                ),
+              ),
+            if (participant.isPaid)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '💳 Ödendi',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+              ),
+            // Host kick button
+            if (canKick) ...[
+              const SizedBox(width: 4),
+              InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => _showKickParticipantDialog(participant),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(Icons.person_remove, size: 16, color: Colors.red),
+                ),
+              ),
+            ],
           ],
         ),
         subtitle: Text(
@@ -1138,6 +1266,9 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     if (session.status == GroupSessionStatus.active) {
       if (!hasItems) return null;
 
+      final myParticipant = groupState.myParticipant;
+      final amIReady = myParticipant?.isReady ?? false;
+
       return Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         decoration: BoxDecoration(
@@ -1147,13 +1278,27 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Summary
+            // Readiness summary row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${session.participantCount} kişi · ${session.totalItemCount} ürün',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+                Row(
+                  children: [
+                    Icon(
+                      session.allReady ? Icons.check_circle : Icons.hourglass_top,
+                      size: 16,
+                      color: session.allReady ? Colors.green : Colors.amber.shade700,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${session.readyCount}/${session.participantCount} hazır',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: session.allReady ? Colors.green.shade700 : Colors.amber.shade700,
+                      ),
+                    ),
+                  ],
                 ),
                 Text(
                   '€${session.grandTotal.toStringAsFixed(2)}',
@@ -1163,33 +1308,139 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             ),
             const SizedBox(height: 10),
 
-            // Action button
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _isSubmitting
-                    ? null
-                    : () => isHost ? _submitGroupOrder() : _showReadyToggle(),
-                icon: _isSubmitting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : Icon(isHost ? Icons.send : Icons.check_circle_outline),
-                label: Text(
-                  isHost
-                      ? 'Siparişi Mutfağa Gönder'
-                      : 'Siparişim Tamam (${myItems.length} ürün)',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _accent,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
+            // Ready toggle button (everyone)
+            if (!amIReady)
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _isSubmitting ? null : () => _showReadyToggle(),
+              icon: const Icon(Icons.check_circle_outline),
+              label: Text(
+                'Siparişim Hazır (${myItems.length} ürün)',
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: _accent,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
+          ),
+
+            // Undo ready button + info for non-host
+            if (amIReady && !isHost) ...[
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isSubmitting ? null : () => _showReadyToggle(),
+                  icon: const Icon(Icons.undo),
+                  label: const Text(
+                    'Siparişimi Değiştir',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    side: BorderSide(color: isDark ? Colors.grey.shade600 : Colors.grey.shade400),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey.shade800.withValues(alpha: 0.7) : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        session.allReady
+                            ? '${session.hostName} siparişi mutfağa yolluyor...'
+                            : 'Siparişi mutfağa sadece grup admini (${session.hostName}) yollayabilir.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Host: submit to kitchen (only when all ready)
+            if (isHost && session.allReady) ...[
+              if (amIReady) const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _isSubmitting ? null : () async {
+                    setState(() => _isSubmitting = true);
+                    final groupNotifier = ref.read(tableGroupProvider.notifier);
+                    final ok = await groupNotifier.submitToKitchen();
+                    if (!ok) {
+                      if (mounted) {
+                        setState(() => _isSubmitting = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Tüm katılımcılar henüz hazır değil'),
+                            backgroundColor: Colors.red.shade700,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                      }
+                      return;
+                    }
+                    if (mounted) setState(() => _isSubmitting = false);
+                    await _submitGroupOrder();
+                  },
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.restaurant),
+                  label: const Text(
+                    '🍳 Siparişi Mutfağa Yolla',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
+            ],
+
+            // Host: undo ready
+            if (isHost && amIReady && !session.allReady)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _isSubmitting ? null : () => _showReadyToggle(),
+                  icon: const Icon(Icons.undo),
+                  label: const Text(
+                    'Siparişimi Değiştir',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                    side: BorderSide(color: isDark ? Colors.grey.shade600 : Colors.grey.shade400),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ),
           ],
         ),
       );
@@ -1295,16 +1546,27 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     }
   }
 
-  void _showReadyToggle() {
+  Future<void> _showReadyToggle() async {
     HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Siparişiniz hazır olarak işaretlendi ✓'),
-        backgroundColor: Colors.green.shade700,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
+    final groupNotifier = ref.read(tableGroupProvider.notifier);
+    final wasReady = ref.read(tableGroupProvider).myParticipant?.isReady ?? false;
+
+    await groupNotifier.toggleReady();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            wasReady
+                ? 'Siparişiniz tekrar düzenleniyor ⏳'
+                : 'Siparişiniz hazır olarak işaretlendi ✅',
+          ),
+          backgroundColor: wasReady ? Colors.amber.shade700 : Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
   }
 
   void _showPaymentOptions(BuildContext context, TableGroupState groupState) {
@@ -1486,6 +1748,50 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     );
   }
 
+  void _showKickParticipantDialog(TableGroupParticipant participant) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Katılımcıyı Çıkar'),
+        content: Text(
+          '"${participant.name}" adlı katılımcıyı gruptan çıkarmak istiyor musunuz?\n\nEklediği ürünler kaldırılacak.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await ref.read(tableGroupProvider.notifier).kickParticipant(
+                participant.participantId,
+              );
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const Icon(Icons.person_remove, color: Colors.white, size: 20),
+                        const SizedBox(width: 8),
+                        Text('${participant.name} gruptan çıkarıldı'),
+                      ],
+                    ),
+                    backgroundColor: Colors.red.shade600,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                );
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Çıkar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── HELPERS ───────────────────────────────────────────────────
   Widget _circleButton(IconData icon, VoidCallback onTap) {
     return InkWell(
@@ -1520,9 +1826,10 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   }
 
   Widget _productPlaceholder() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      color: Colors.grey[200],
-      child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+      color: isDark ? Colors.grey[800] : Colors.grey[200],
+      child: Icon(Icons.restaurant, color: isDark ? Colors.grey[600] : Colors.grey[400], size: 24),
     );
   }
 }

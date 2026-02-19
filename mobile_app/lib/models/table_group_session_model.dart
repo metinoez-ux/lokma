@@ -80,6 +80,7 @@ class TableGroupParticipant {
   final String userId;        // Firebase UID
   final String name;
   final bool isHost;
+  final bool isReady;         // Siparişim hazır
   final List<TableGroupItem> items;
   final double subtotal;
   final String paymentStatus; // 'pending' | 'paid'
@@ -91,6 +92,7 @@ class TableGroupParticipant {
     required this.userId,
     required this.name,
     required this.isHost,
+    this.isReady = false,
     this.items = const [],
     this.subtotal = 0,
     this.paymentStatus = 'pending',
@@ -107,6 +109,7 @@ class TableGroupParticipant {
       'userId': userId,
       'name': name,
       'isHost': isHost,
+      'isReady': isReady,
       'items': items.map((item) => item.toMap()).toList(),
       'subtotal': subtotal,
       'paymentStatus': paymentStatus,
@@ -121,6 +124,7 @@ class TableGroupParticipant {
       userId: map['userId'] ?? '',
       name: map['name'] ?? '',
       isHost: map['isHost'] ?? false,
+      isReady: map['isReady'] ?? false,
       items: (map['items'] as List<dynamic>?)
               ?.map((e) => TableGroupItem.fromMap(Map<String, dynamic>.from(e as Map)))
               .toList() ??
@@ -135,6 +139,7 @@ class TableGroupParticipant {
   TableGroupParticipant copyWith({
     List<TableGroupItem>? items,
     double? subtotal,
+    bool? isReady,
     String? paymentStatus,
     String? paymentMethod,
     DateTime? paidAt,
@@ -144,6 +149,7 @@ class TableGroupParticipant {
       userId: userId,
       name: name,
       isHost: isHost,
+      isReady: isReady ?? this.isReady,
       items: items ?? this.items,
       subtotal: subtotal ?? this.subtotal,
       paymentStatus: paymentStatus ?? this.paymentStatus,
@@ -200,6 +206,15 @@ class TableGroupSession {
 
   /// Katılımcı sayısı
   int get participantCount => participants.length;
+
+  /// Hazır olan katılımcı sayısı
+  int get readyCount => participants.where((p) => p.isReady).length;
+
+  /// Tüm katılımcılar hazır mı?
+  bool get allReady => participants.isNotEmpty && participants.every((p) => p.isReady);
+
+  /// Host mutfağa yollayabilir mi?
+  bool get canSubmitToKitchen => allReady && status == GroupSessionStatus.active;
 
   /// Toplam ürün sayısı (tüm katılımcılar)
   int get totalItemCount => participants.fold(0, (sum, p) => sum + p.totalItemCount);

@@ -494,6 +494,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 🍽️ Masa mode: dedicated landing page (no restaurant listing)
+    if (_deliveryMode == 'masa') {
+      return _buildMasaLandingPage();
+    }
+
     return Container(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(
@@ -539,9 +544,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                   children: [
                                     // Delivery mode tabs
                                     _buildDeliveryModeTabs(),
-                                    
-                                    // 🆕 QR Scan banner for Masa mode
-                                    if (_deliveryMode == 'masa') _buildMasaQrBanner(),
                                     
                                     // Arama çubuğu (teslimat/gel al altında)
                                     _buildSearchBar(),
@@ -2450,6 +2452,366 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   }
 
   // =====================================================
+  // 🍽️ MASA LANDING PAGE — Dedicated Dine-in Entry
+  // =====================================================
+
+  /// Premium landing page for Masa mode — no restaurant listing
+  Widget _buildMasaLandingPage() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+    final cardColor = isDark ? Colors.white.withOpacity(0.06) : Colors.white;
+    final borderColor = isDark ? Colors.grey[800]! : Colors.grey[200]!;
+
+    // If table already scanned → show verified state
+    if (_scannedTableNumber != null) {
+      return Container(
+        color: bgColor,
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              _buildCompactLocationHeader(),
+              _buildDeliveryModeTabs(),
+              const SizedBox(height: 8),
+              _buildMasaQrBanner(),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      color: bgColor,
+      child: SafeArea(
+        bottom: false,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // 1) Location header + mode tabs
+              _buildCompactLocationHeader(),
+              _buildDeliveryModeTabs(),
+
+              const SizedBox(height: 32),
+
+              // 2) Hero Illustration
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      lokmaPink.withOpacity(0.15),
+                      lokmaPink.withOpacity(0.05),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.restaurant,
+                  size: 44,
+                  color: lokmaPink.withOpacity(0.7),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 3) Title
+              Text(
+                'Masanızdan Sipariş Verin',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 48),
+                child: Text(
+                  'QR kodu okutarak hızlıca sipariş verebilir veya masa rezervasyonu yapabilirsiniz',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // ============================
+              // 4) HERO QR SCAN BUTTON
+              // ============================
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: GestureDetector(
+                  onTap: _showMasaQrScanSheet,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 28),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFFFB335B),
+                          Color(0xFFE91E63),
+                          Color(0xFFD81B60),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: lokmaPink.withOpacity(0.35),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                          spreadRadius: 0,
+                        ),
+                        BoxShadow(
+                          color: lokmaPink.withOpacity(0.15),
+                          blurRadius: 48,
+                          offset: const Offset(0, 16),
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        // QR icon in a circle
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.qr_code_scanner,
+                            size: 34,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Text(
+                          'QR ile Sipariş Ver',
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Masanızdaki QR kodu okutun',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ============================
+              // 5) RESERVATION BUTTON
+              // ============================
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: GestureDetector(
+                  onTap: _showReservationBusinessPicker,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: borderColor),
+                      boxShadow: isDark
+                          ? []
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF9800).withOpacity(isDark ? 0.15 : 0.1),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            Icons.calendar_month_rounded,
+                            size: 26,
+                            color: isDark ? const Color(0xFFFFB74D) : const Color(0xFFF57C00),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Masa Rezervasyonu',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Önceden masa ayırtın',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 16,
+                          color: textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 36),
+
+              // ============================
+              // 6) HOW IT WORKS — Compact Steps
+              // ============================
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  children: [
+                    Text(
+                      'Nasıl Çalışır?',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: textSecondary,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildMasaStep(
+                      icon: Icons.qr_code_2,
+                      step: '1',
+                      title: 'QR Kodu Okutun',
+                      subtitle: 'Masanızdaki QR kodu tarayın',
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildMasaStep(
+                      icon: Icons.menu_book,
+                      step: '2',
+                      title: 'Menüden Seçin',
+                      subtitle: 'Yemeklerinizi ekleyin',
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildMasaStep(
+                      icon: Icons.check_circle_outline,
+                      step: '3',
+                      title: 'Siparişi Onaylayın',
+                      subtitle: 'Masanıza servis edilsin',
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 120), // Bottom navigation padding
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Helper: step row for "How it works" section
+  Widget _buildMasaStep({
+    required IconData icon,
+    required String step,
+    required String title,
+    required String subtitle,
+    required bool isDark,
+  }) {
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
+
+    return Row(
+      children: [
+        // Step number badge
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: lokmaPink.withOpacity(isDark ? 0.15 : 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Text(
+              step,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: lokmaPink,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Icon
+        Icon(icon, size: 20, color: lokmaPink.withOpacity(0.7)),
+        const SizedBox(width: 10),
+        // Text
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimary,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 12, color: textSecondary),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // =====================================================
   // 🔳 MASA QR SCANNER — In-App QR Code Scanning
   // =====================================================
 
@@ -3096,6 +3458,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final participantCount = (activeSession as dynamic).participantCount ?? 1;
     final pinController = TextEditingController();
+    final nameController = TextEditingController();
+    final user = FirebaseAuth.instance.currentUser;
+    final isAnonymous = user?.isAnonymous ?? true;
     String? pinError;
 
     showModalBottomSheet(
@@ -3134,6 +3499,50 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               const SizedBox(height: 20),
+
+              // Name input for anonymous users
+              if (isAnonymous) ...[
+                Text(
+                  'İsminiz',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: nameController,
+                  textCapitalization: TextCapitalization.words,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Örn: Ahmet',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: Colors.grey[300]!),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide(color: lokmaPink, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey[50],
+                    prefixIcon: Icon(Icons.person_outline, color: Colors.grey[400]),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Hesap oluşturmak zorunlu değil — sadece gruba isminizle katılın.',
+                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // PIN entry
               Text(
@@ -3203,7 +3612,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     }
                     try {
                       final groupNotifier = ref.read(tableGroupProvider.notifier);
-                      final success = await groupNotifier.joinSession(activeSession.id, pin: pin);
+                      final success = await groupNotifier.joinSession(
+                        activeSession.id,
+                        pin: pin,
+                        displayName: isAnonymous ? nameController.text.trim() : null,
+                      );
                       if (success && mounted) {
                         Navigator.pop(ctx);
                         setState(() {
@@ -3224,7 +3637,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       }
                     } catch (e) {
                       if (e.toString().contains('WRONG_PIN')) {
-                        setSheetState(() => pinError = 'Yanlış PIN kodu');
+                        setSheetState(() => pinError = 'Bu doğru PIN kodu değil. Grup siparişini başlatan kişiye sorun.');
                       } else {
                         setSheetState(() => pinError = 'Hata: $e');
                       }
@@ -3416,8 +3829,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        builder: (ctx) => Padding(
-          padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + MediaQuery.of(context).padding.bottom),
+        builder: (ctx) => SafeArea(
+          child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -3489,7 +3903,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               const SizedBox(height: 8),
             ],
           ),
-        ),
+        )),
       );
 
       // Navigate to group order screen after PIN is acknowledged

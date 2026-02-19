@@ -9,6 +9,7 @@ const sessionStatuses = {
     active: { label: 'Aktif', icon: '🟢', badge: 'bg-green-600/20 text-green-400 border-green-500/30', cardBorder: 'border-green-500/40 hover:border-green-400', headerBg: 'bg-green-600/10' },
     ordering: { label: 'Sipariş', icon: '🔵', badge: 'bg-blue-600/20 text-blue-400 border-blue-500/30', cardBorder: 'border-blue-500/40 hover:border-blue-400', headerBg: 'bg-blue-600/10' },
     paying: { label: 'Ödeme', icon: '🟡', badge: 'bg-yellow-600/20 text-yellow-400 border-yellow-500/30', cardBorder: 'border-yellow-500/40 hover:border-yellow-400', headerBg: 'bg-yellow-600/10' },
+    cancelled: { label: 'İptal', icon: '🔴', badge: 'bg-red-600/20 text-red-400 border-red-500/30', cardBorder: 'border-red-500/40 hover:border-red-400', headerBg: 'bg-red-600/10' },
     closed: { label: 'Kapandı', icon: '⚫', badge: 'bg-gray-600/20 text-gray-400 border-gray-600/30', cardBorder: 'border-gray-600/40 hover:border-gray-500', headerBg: 'bg-gray-700/30' },
 } as const;
 
@@ -51,6 +52,9 @@ interface TableGroupSession {
     paidByUserId?: string;
     createdAt: Timestamp;
     closedAt?: Timestamp;
+    cancelledAt?: Timestamp;
+    cancelledBy?: string;
+    cancelReason?: string;
 }
 
 export default function TableOrdersPage() {
@@ -65,6 +69,8 @@ export default function TableOrdersPage() {
     const businessSearchRef = useRef<HTMLDivElement>(null);
     const [selectedSession, setSelectedSession] = useState<TableGroupSession | null>(null);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    const [cancelConfirm, setCancelConfirm] = useState<{ session: TableGroupSession; reason: string } | null>(null);
+    const [cancelLoading, setCancelLoading] = useState(false);
 
     // Filter businesses based on search
     const filteredBusinesses = Object.entries(businesses).filter(([, name]) =>
@@ -171,6 +177,9 @@ export default function TableOrdersPage() {
                     paidByUserId: raw.paidByUserId,
                     createdAt: raw.createdAt || Timestamp.now(),
                     closedAt: raw.closedAt,
+                    cancelledAt: raw.cancelledAt,
+                    cancelledBy: raw.cancelledBy,
+                    cancelReason: raw.cancelReason,
                 } as TableGroupSession;
             });
             setSessions(data);
@@ -198,12 +207,37 @@ export default function TableOrdersPage() {
         }
     };
 
+    // Cancel a session (admin action — for abandoned/stuck sessions)
+    const handleCancelSession = async () => {
+        if (!cancelConfirm) return;
+        setCancelLoading(true);
+        try {
+            const adminName = admin?.displayName || admin?.email || 'Admin';
+            await updateDoc(doc(db, 'table_group_sessions', cancelConfirm.session.id), {
+                status: 'cancelled',
+                cancelledAt: Timestamp.now(),
+                cancelledBy: adminName,
+                cancelReason: cancelConfirm.reason.trim() || 'Admin tarafından iptal edildi',
+                closedAt: Timestamp.now(),
+            });
+            setSelectedSession(null);
+            setCancelConfirm(null);
+            showToast(`Masa ${cancelConfirm.session.tableNumber} oturumu iptal edildi ✅`, 'success');
+        } catch (error) {
+            console.error('Error cancelling session:', error);
+            showToast('Oturum iptal edilirken hata oluştu', 'error');
+        } finally {
+            setCancelLoading(false);
+        }
+    };
+
     // Stats
     const stats = {
         total: sessions.length,
         active: sessions.filter(s => s.status === 'active').length,
         ordering: sessions.filter(s => s.status === 'ordering').length,
         paying: sessions.filter(s => s.status === 'paying').length,
+        cancelled: sessions.filter(s => s.status === 'cancelled').length,
         totalRevenue: sessions.reduce((sum, s) => sum + s.grandTotal, 0),
         paidRevenue: sessions.reduce((sum, s) => sum + s.paidTotal, 0),
     };
@@ -689,14 +723,41 @@ export default function TableOrdersPage() {
                                 </div>
                             </div>
 
+                            {/* Cancellation Info */}
+                            {selectedSession.status === 'cancelled' && (
+                                <div className="bg-red-600/10 border border-red-500/30 rounded-xl p-4">
+                                    <h3 className="text-red-400 font-bold text-sm mb-2">🔴 İptal Bilgisi</h3>
+                                    <div className="space-y-1 text-sm">
+                                        <p className="text-gray-300">
+                                            <span className="text-gray-500">İptal Eden:</span>{' '}
+                                            {selectedSession.cancelledBy || '-'}
+                                        </p>
+                                        <p className="text-gray-300">
+                                            <span className="text-gray-500">Sebep:</span>{' '}
+                                            {selectedSession.cancelReason || '-'}
+                                        </p>
+                                        <p className="text-gray-300">
+                                            <span className="text-gray-500">Tarih:</span>{' '}
+                                            {formatDate(selectedSession.cancelledAt)}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Actions */}
-                            {selectedSession.status !== 'closed' && (
-                                <div className="border-t border-gray-700 pt-4">
+                            {selectedSession.status !== 'closed' && selectedSession.status !== 'cancelled' && (
+                                <div className="border-t border-gray-700 pt-4 space-y-3">
                                     <button
-                                        onClick={() => handleCloseSession(selectedSession)}
+                                        onClick={() => setCancelConfirm({ session: selectedSession, reason: '' })}
                                         className="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition flex items-center justify-center gap-2"
                                     >
-                                        ⚫ Oturumu Kapat
+                                        🔴 Oturumu İptal Et
+                                    </button>
+                                    <button
+                                        onClick={() => handleCloseSession(selectedSession)}
+                                        className="w-full py-2 bg-gray-600 hover:bg-gray-500 text-gray-200 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2"
+                                    >
+                                        ⚫ Normal Kapatma
                                     </button>
                                 </div>
                             )}
@@ -706,6 +767,64 @@ export default function TableOrdersPage() {
                                     Kapatılma: {formatDate(selectedSession.closedAt)}
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel Confirmation Modal */}
+            {cancelConfirm && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[60]" onClick={() => !cancelLoading && setCancelConfirm(null)}>
+                    <div className="bg-gray-800 rounded-2xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+                        <div className="text-center mb-6">
+                            <span className="text-4xl">⚠️</span>
+                            <h3 className="text-xl font-bold text-white mt-3">
+                                Oturumu İptal Et
+                            </h3>
+                            <p className="text-gray-400 text-sm mt-2">
+                                Masa {cancelConfirm.session.tableNumber} — {cancelConfirm.session.businessName || ''}
+                            </p>
+                            <p className="text-gray-500 text-xs mt-1">
+                                {cancelConfirm.session.participants.length} katılımcı · {formatCurrency(cancelConfirm.session.grandTotal)} toplam
+                            </p>
+                        </div>
+
+                        <div className="mb-6">
+                            <label className="text-gray-400 text-sm font-medium block mb-2">
+                                İptal Sebebi (opsiyonel)
+                            </label>
+                            <textarea
+                                value={cancelConfirm.reason}
+                                onChange={(e) => setCancelConfirm({ ...cancelConfirm, reason: e.target.value })}
+                                placeholder="Örn: Host restoranı terk etti, sipariş yarıda kaldı..."
+                                className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none resize-none"
+                                rows={3}
+                                disabled={cancelLoading}
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setCancelConfirm(null)}
+                                disabled={cancelLoading}
+                                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition disabled:opacity-50"
+                            >
+                                Vazgeç
+                            </button>
+                            <button
+                                onClick={handleCancelSession}
+                                disabled={cancelLoading}
+                                className="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {cancelLoading ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                        İptal Ediliyor...
+                                    </>
+                                ) : (
+                                    '🔴 İptal Et'
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>
