@@ -124,6 +124,12 @@ service cloud.firestore {
       allow write: if true;  // Anonymous participation allowed
     }
     
+    // Group table ordering sessions (Dine-in)
+    match /table_group_sessions/{sessionId} {
+      allow read: if true;  // Anyone can read an active session if they have table/PIN
+      allow write: if true; // Anonymous participation allowed
+    }
+    
     // Guest profiles - anonim siparişler için kullanıcı profilleri
     match /guest_profiles/{profileId} {
       allow read: if true;
