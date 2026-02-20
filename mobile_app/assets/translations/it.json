@@ -1,0 +1,9 @@
+{
+    "profile": {
+        "settings_title": "Impostazioni",
+        "language": "Lingua"
+    },
+    "cart": {
+        "checkout_button": "Paga"
+    }
+}

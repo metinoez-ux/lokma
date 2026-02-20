@@ -5,10 +5,13 @@ class ButcherProduct {
   final String id;
   final String sku;
   final String masterId;
-  final String name;
-  final String description;
+  final String name; // Fallback or TR value
+  final dynamic nameData; // Raw localization map
+  final String description; // Fallback or TR value
+  final dynamic descriptionData; // Raw localization map
   final double price;
   final String category;
+  final dynamic categoryData; // Raw localization map
   final String unitType; // 'kg' or 'ad'
   final String? imageUrl;
   final List<String> tags;
@@ -26,8 +29,11 @@ class ButcherProduct {
     required this.sku,
     required this.masterId,
     required this.name,
+    this.nameData,
     required this.description,
+    this.descriptionData,
     required this.category,
+    this.categoryData,
     required this.price,
     required this.unitType,
     this.imageUrl,
@@ -62,9 +68,12 @@ class ButcherProduct {
       id: id,
       sku: data['masterProductSku'] ?? id,
       masterId: data['masterId'] ?? '',
-      name: getVal<String>('name') ?? '',
-      description: getVal<String>('description') ?? '',
-      category: getVal<String>('category') ?? 'Diğer',
+      name: _extractString(getVal<dynamic>('name')),
+      nameData: getVal<dynamic>('name'),
+      description: _extractString(getVal<dynamic>('description')),
+      descriptionData: getVal<dynamic>('description'),
+      category: _extractString(getVal<dynamic>('category'), fallback: 'Diğer'),
+      categoryData: getVal<dynamic>('category'),
       price: (data['price'] ?? 0).toDouble(), // Price always from Butcher
       unitType: getVal<String>('unit') ?? 'adet', // Default to 'adet' not 'kg'
       imageUrl: imgUrl,
@@ -81,5 +90,15 @@ class ButcherProduct {
           ?.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>))
           .toList() ?? [],
     );
+  }
+
+  static String _extractString(dynamic data, {String fallback = ''}) {
+    if (data == null) return fallback;
+    if (data is String) return data;
+    if (data is Map) {
+      if (data.containsKey('tr') && data['tr'] != null) return data['tr'].toString();
+      if (data.values.isNotEmpty) return data.values.first.toString();
+    }
+    return fallback;
   }
 }

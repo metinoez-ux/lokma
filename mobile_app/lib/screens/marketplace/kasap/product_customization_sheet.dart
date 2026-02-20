@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/butcher_product.dart';
 import '../../../models/product_option.dart';
 import '../../../providers/cart_provider.dart';
+import '../../../utils/i18n_utils.dart';
 
 /// Lieferando-style product customization bottom sheet.
 ///
@@ -149,11 +150,13 @@ class _ProductCustomizationSheetState
     note: noteText,
   );
   Navigator.pop(context);
+  
+  final localizedName = I18nUtils.getLocalizedText(context, widget.product.nameData);
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(widget.existingItem != null 
-        ? '${widget.product.name} güncellendi' 
-        : '${widget.product.name} sepete eklendi'),
+        ? '$localizedName güncellendi' 
+        : '$localizedName sepete eklendi'),
       duration: const Duration(seconds: 2),
       behavior: SnackBarBehavior.floating,
       backgroundColor: const Color(0xFFFF8000),
@@ -369,7 +372,7 @@ class _ProductCustomizationSheetState
 
         // Name
         Text(
-          product.name,
+          I18nUtils.getLocalizedText(context, product.nameData),
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -392,7 +395,7 @@ class _ProductCustomizationSheetState
         if (product.description.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
-            product.description,
+            I18nUtils.getLocalizedText(context, product.descriptionData),
             style: TextStyle(
               fontSize: 13,
               color: textSecondary,
@@ -609,7 +612,7 @@ class _ProductCustomizationSheetState
             ),
             const SizedBox(height: 4),
             Text(
-              product.name,
+              I18nUtils.getLocalizedText(context, product.nameData),
               style: TextStyle(
                 fontSize: 14,
                 color: textSecondary,
@@ -618,7 +621,7 @@ class _ProductCustomizationSheetState
             const SizedBox(height: 16),
             if (product.description.isNotEmpty)
               Text(
-                product.description,
+                I18nUtils.getLocalizedText(context, product.descriptionData),
                 style: TextStyle(
                   fontSize: 14,
                   color: textPrimary,

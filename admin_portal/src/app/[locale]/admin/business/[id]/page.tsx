@@ -27,6 +27,8 @@ import {
   uploadBytesResumable,
 } from "firebase/storage";
 import { MASTER_PRODUCTS, MasterProduct } from "@/lib/master_products";
+import { getLocalizedText } from "@/lib/utils";
+import MultiLanguageInput from '@/components/ui/MultiLanguageInput';
 import { BUSINESS_TYPES } from "@/lib/business-types";
 import { auth, db, storage } from "@/lib/firebase";
 import { Admin, ButcherPartner } from "@/types";
@@ -246,11 +248,11 @@ export default function BusinessDetailPage() {
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
   // 🆕 Inline Category Management
-  const [inlineCategories, setInlineCategories] = useState<{ id: string; name: string; icon: string; order: number; isActive: boolean; productCount?: number }[]>([]);
+  const [inlineCategories, setInlineCategories] = useState<{ id: string; name: any; icon: string; order: number; isActive: boolean; productCount?: number }[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<{ id: string; name: string; icon: string; order: number; isActive: boolean } | null>(null);
-  const [categoryForm, setCategoryForm] = useState({ name: '', icon: '📦', isActive: true });
+  const [editingCategory, setEditingCategory] = useState<{ id: string; name: any; icon: string; order: number; isActive: boolean } | null>(null);
+  const [categoryForm, setCategoryForm] = useState<{ name: any, icon: string, isActive: boolean }>({ name: { tr: '' }, icon: '📦', isActive: true });
   const [savingCategory, setSavingCategory] = useState(false);
   const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
   const CATEGORY_ICONS = ['🥩', '🐑', '🐄', '🐔', '🥓', '📦', '🍖', '🌿', '🧈', '🥚', '🍕', '🍔', '🥗', '🍰', '🥤', '🧀', '🍗', '🌶️', '🫒', '🥖'];
@@ -302,7 +304,7 @@ export default function BusinessDetailPage() {
   // 🆕 Firestore'dan yüklenen master ürünler (allowedBusinessTypes ile filtrelenecek)
   const [firestoreMasterProducts, setFirestoreMasterProducts] = useState<MasterProduct[]>([]);
   const [customProductForm, setCustomProductForm] = useState({
-    name: "",
+    name: { tr: "" } as any,
     price: "",
     unit: "kg",
     imageFile: null as File | null,
@@ -823,7 +825,7 @@ export default function BusinessDetailPage() {
       await loadInlineCategories();
       setShowCategoryModal(false);
       setEditingCategory(null);
-      setCategoryForm({ name: '', icon: '📦', isActive: true });
+      setCategoryForm({ name: { tr: '' }, icon: '📦', isActive: true });
     } catch (error) {
       console.error('Error saving category:', error);
     }
@@ -962,7 +964,7 @@ export default function BusinessDetailPage() {
       showToast("Ürün eklendi!", "success");
       setProductModalOpen(false);
       setSelectedMasterId('');
-      setCustomProductForm({ name: '', price: '', unit: 'kg', imageFile: null });
+      setCustomProductForm({ name: { tr: '' }, price: '', unit: 'kg', imageFile: null });
       loadProducts();
     } catch (error) {
       console.error("Error adding product:", error);
@@ -2216,14 +2218,14 @@ export default function BusinessDetailPage() {
                           {/* 🆕 Firestore'dan filtrelenmiş ürünler, fallback hardcoded */}
                           {(firestoreMasterProducts.length > 0 ? firestoreMasterProducts : MASTER_PRODUCTS).map(mp => (
                             <option key={mp.id} value={mp.id}>
-                              {mp.name} ({mp.category})
+                              {getLocalizedText(mp.name)} ({mp.category})
                             </option>
                           ))}
                         </select>
                       </div>
                       {selectedMasterId && (
                         <div className="bg-blue-900/20 text-blue-300 p-3 rounded-lg text-sm">
-                          <p>{(firestoreMasterProducts.length > 0 ? firestoreMasterProducts : MASTER_PRODUCTS).find(p => p.id === selectedMasterId)?.description}</p>
+                          <p>{getLocalizedText((firestoreMasterProducts.length > 0 ? firestoreMasterProducts : MASTER_PRODUCTS).find(p => p.id === selectedMasterId)?.description)}</p>
                         </div>
                       )}
                       <div>
@@ -2240,13 +2242,11 @@ export default function BusinessDetailPage() {
                   ) : (
                     <div className="space-y-4">
                       <div>
-                        <label className="text-gray-400 text-sm block mb-1">Ürün Adı</label>
-                        <input
-                          type="text"
+                        <MultiLanguageInput
+                          label="Ürün Adı"
                           value={customProductForm.name}
-                          onChange={(e) => setCustomProductForm({ ...customProductForm, name: e.target.value })}
+                          onChange={(val) => setCustomProductForm({ ...customProductForm, name: val })}
                           placeholder="Örn: Özel Marine Köfte"
-                          className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -2850,7 +2850,7 @@ export default function BusinessDetailPage() {
                           <button
                             onClick={() => {
                               setEditingCategory(null);
-                              setCategoryForm({ name: '', icon: '📦', isActive: true });
+                              setCategoryForm({ name: { tr: '' }, icon: '📦', isActive: true });
                               setShowCategoryModal(true);
                             }}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition"
@@ -2875,7 +2875,7 @@ export default function BusinessDetailPage() {
                             <button
                               onClick={() => {
                                 setEditingCategory(null);
-                                setCategoryForm({ name: '', icon: '📦', isActive: true });
+                                setCategoryForm({ name: { tr: '' }, icon: '📦', isActive: true });
                                 setShowCategoryModal(true);
                               }}
                               className="mt-4 px-5 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition text-sm"
@@ -2970,13 +2970,11 @@ export default function BusinessDetailPage() {
 
                               {/* Name */}
                               <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-2 block">Kategori Adı</label>
-                                <input
-                                  type="text"
+                                <MultiLanguageInput
+                                  label="Kategori Adı"
                                   value={categoryForm.name}
-                                  onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                                  onChange={(val) => setCategoryForm({ ...categoryForm, name: val })}
                                   placeholder="Örn: Kebaplar, İçecekler, Tatlılar..."
-                                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500"
                                 />
                               </div>
 
@@ -3122,7 +3120,7 @@ export default function BusinessDetailPage() {
                                           <div className="flex-1 min-w-0">
                                             <p className="text-white text-sm font-medium truncate">{product.name}</p>
                                             <p className="text-gray-500 text-xs truncate">
-                                              {product.description || product.unit || ''}
+                                              {getLocalizedText(product.description) || product.unit || ''}
                                             </p>
                                           </div>
                                           {/* Price */}

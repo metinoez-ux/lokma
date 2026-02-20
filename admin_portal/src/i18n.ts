@@ -1,13 +1,13 @@
 // i18n configuration for MiraPortal Admin
 // Supports: TR, DE, EN, AR, FR, IT, ES, NL
 
-export const locales = ['tr', 'de', 'en', 'ar', 'fr', 'it', 'es', 'nl'] as const;
+export const locales = ['tr', 'de', 'en', 'fr', 'it', 'es'] as const;
 export type Locale = (typeof locales)[number];
 
 export const defaultLocale: Locale = 'tr';
 
-// RTL languages
-export const rtlLocales: Locale[] = ['ar'];
+// RTL languages (none currently active, keeping structure for future if needed)
+export const rtlLocales: Locale[] = [];
 
 export function isRTL(locale: Locale): boolean {
     return rtlLocales.includes(locale);
@@ -17,22 +17,18 @@ export const localeNames: Record<Locale, string> = {
     tr: 'Türkçe',
     de: 'Deutsch',
     en: 'English',
-    ar: 'العربية',
     fr: 'Français',
     it: 'Italiano',
     es: 'Español',
-    nl: 'Nederlands',
 };
 
 export const localeFlags: Record<Locale, string> = {
     tr: '🇹🇷',
     de: '🇩🇪',
     en: '🇬🇧',
-    ar: '🇸🇦',
     fr: '🇫🇷',
     it: '🇮🇹',
     es: '🇪🇸',
-    nl: '🇳🇱',
 };
 
 // Message loading utility

@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { auth, db } from '@/lib/firebase';
 import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { AdminType } from '@/types';
 import { getRoleLabel } from '@/lib/business-types';
-import Link from 'next/link';
+import { LanguageSwitcher } from '../LanguageSwitcher';
 
 const adminTypeLabels: Record<AdminType, string> = {
     super: '👑 Super Admin',
@@ -42,6 +43,7 @@ interface PendingInvitation {
 }
 
 export default function AdminHeader() {
+    const t = useTranslations('AdminNav');
     const { admin } = useAdmin();
     const router = useRouter();
     const pathname = usePathname();
@@ -267,66 +269,70 @@ export default function AdminHeader() {
                             </div>
 
                             {/* Right Side - Super Admin Profile Dropdown */}
-                            <div className="relative group">
-                                <button className="flex items-center gap-2 hover:bg-white/10 rounded-lg px-3 py-1.5 transition">
-                                    <span className="text-indigo-200 text-sm font-medium hidden md:block">👑 Super Admin</span>
-                                    {/* Profile Picture */}
-                                    <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-400/50 flex items-center justify-center bg-indigo-700/50">
-                                        {(admin as any).photoURL ? (
-                                            <img
-                                                src={(admin as any).photoURL}
-                                                alt={admin.displayName || 'Profil'}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <span className="text-white font-bold text-sm">
-                                                {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <span className="text-indigo-300 text-xs">▼</span>
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                <div className="absolute right-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[180px]">
-                                    <div className="px-4 py-3 border-b border-gray-700">
-                                        <p className="text-white text-sm font-medium truncate">
-                                            {admin.displayName || 'Super Admin'}
-                                        </p>
-                                        <p className="text-gray-400 text-xs truncate">
-                                            {admin.email || (admin as any).phoneNumber || ''}
-                                        </p>
-                                        <p className="text-violet-400 text-xs mt-1">👑 Super Admin</p>
-                                    </div>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition text-sm"
-                                    >
-                                        🚪 Çıkış Yap
+                            <div className="flex items-center gap-4">
+                                <LanguageSwitcher />
+                                <div className="relative group">
+                                    <button className="flex items-center gap-2 hover:bg-white/10 rounded-lg px-3 py-1.5 transition">
+                                        <span className="text-indigo-200 text-sm font-medium hidden md:block">👑 Super Admin</span>
+                                        {/* Profile Picture */}
+                                        <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-400/50 flex items-center justify-center bg-indigo-700/50">
+                                            {(admin as any).photoURL ? (
+                                                <img
+                                                    src={(admin as any).photoURL}
+                                                    alt={admin.displayName || 'Profil'}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-white font-bold text-sm">
+                                                    {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <span className="text-indigo-300 text-xs">▼</span>
                                     </button>
+
+                                    {/* Dropdown Menu */}
+                                    <div className="absolute right-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[180px]">
+                                        <div className="px-4 py-3 border-b border-gray-700">
+                                            <p className="text-white text-sm font-medium truncate">
+                                                {admin.displayName || 'Super Admin'}
+                                            </p>
+                                            <p className="text-gray-400 text-xs truncate">
+                                                {admin.email || (admin as any).phoneNumber || ''}
+                                            </p>
+                                            <p className="text-violet-400 text-xs mt-1">👑 Super Admin</p>
+                                        </div>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition text-sm"
+                                        >
+                                            🚪 {t('logout')}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-2 mt-2">
                             {/* Navigation Chips - Consistent styling with active underline */}
                             {[
-                                { href: '/admin/business', icon: '🏪', label: 'İşletmeler' },
-                                { href: '/admin/orders', icon: '📦', label: 'Siparişler' },
-                                { href: '/admin/products', icon: '📋', label: 'Master Katalog' },
-                                { href: '/admin/invoices', icon: '📄', label: 'Faturalar' },
-                                { href: '/admin/commissions', icon: '💰', label: 'Provizyonlar' },
-                                { href: '/admin/plans', icon: '📅', label: 'Planlar' },
-                                { href: '/admin/activity-logs', icon: '📝', label: 'Log' },
-                                { href: '/admin/dashboard', icon: '👥', label: 'Kullanıcı Yönetimi' },
-                                { href: '/admin/analytics', icon: '📊', label: 'Analitik' },
-                                { href: '/admin/sectors', icon: '🏭', label: 'Sektör Yönetimi' },
-                                { href: '/admin/kermes', icon: '🎪', label: 'Kermes' },
-                                { href: '/admin/drivers', icon: '🚗', label: 'Sürücüler' },
-                                { href: '/admin/reservations', icon: '🍽️', label: 'Rezervasyonlar' },
-                                { href: '/admin/staff-shifts', icon: '⏱️', label: 'Vardiyalar' },
-                                { href: '/admin/image-generator', icon: '🎨', label: 'Görsel Üret' },
-                                { href: '/admin/ai-menu', icon: '🤖', label: 'AI Menü' },
-                                { href: '/admin/settings', icon: '⚙️', label: 'Ayarlar' },
+                                { href: '/admin/business', icon: '🏪', label: t('businesses') },
+                                { href: '/admin/orders', icon: '📦', label: t('orders') },
+                                { href: '/admin/products', icon: '📋', label: t('masterCatalog') },
+                                { href: '/admin/invoices', icon: '📄', label: t('invoices') },
+                                { href: '/admin/commissions', icon: '💰', label: t('commissions') },
+                                { href: '/admin/plans', icon: '📅', label: t('plans') },
+                                { href: '/admin/activity-logs', icon: '📝', label: t('activityLogs') },
+                                { href: '/admin/dashboard', icon: '👥', label: t('userManagement') },
+                                { href: '/admin/analytics', icon: '📊', label: t('analytics') },
+                                { href: '/admin/sectors', icon: '🏭', label: t('sectors') },
+                                { href: '/admin/kermes', icon: '🎪', label: t('kermes') },
+                                { href: '/admin/drivers', icon: '🚗', label: t('drivers') },
+                                { href: '/admin/reservations', icon: '🍽️', label: t('reservations') },
+                                { href: '/admin/staff-shifts', icon: '⏱️', label: t('shifts') },
+                                { href: '/admin/image-generator', icon: '🎨', label: t('imageGen') },
+                                { href: '/admin/ai-menu', icon: '🤖', label: t('aiMenu') },
+                                { href: '/admin/ui-translations', icon: '🌍', label: 'Arayüz Çevirileri' },
+                                { href: '/admin/settings', icon: '⚙️', label: t('settings') },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);
                                 return (
@@ -394,14 +400,14 @@ export default function AdminHeader() {
                             {/* Navigation Chips — uniform muted style, no icons */}
                             <div className="flex flex-wrap items-center gap-1.5 flex-1">
                                 {[
-                                    { href: '/admin/orders', label: 'Siparişler' },
-                                    { href: '/admin/statistics', label: 'Dashboard' },
-                                    { href: '/admin/reservations', label: 'Rezervasyonlar' },
-                                    { href: '/admin/dashboard?view=customers', label: 'Müşteriler' },
-                                    { href: '/admin/orders/suppliers', label: 'Toptancı' },
-                                    { href: '/admin/products', label: 'Ürünler & Kategoriler' },
-                                    { href: '/admin/staff-dashboard', label: 'Personel' },
-                                    { href: '/admin/settings', label: 'Ayarlar' },
+                                    { href: '/admin/orders', label: t('orders') },
+                                    { href: '/admin/statistics', label: t('dashboard') },
+                                    { href: '/admin/reservations', label: t('reservations') },
+                                    { href: '/admin/dashboard?view=customers', label: t('customers') },
+                                    { href: '/admin/orders/suppliers', label: t('suppliers') },
+                                    { href: '/admin/products', label: t('productsCategories') },
+                                    { href: '/admin/staff-dashboard', label: t('staff') },
+                                    { href: '/admin/settings', label: t('settings') },
                                 ].map(({ href, label }) => (
                                     <Link
                                         key={href}
@@ -417,7 +423,8 @@ export default function AdminHeader() {
                             </div>
 
                             {/* Profile & Role */}
-                            <div className="flex items-center shrink-0">
+                            <div className="flex items-center shrink-0 gap-4">
+                                <LanguageSwitcher />
                                 <div className="relative group">
                                     <button className="flex items-center gap-1.5 hover:bg-white/5 rounded-lg px-2 py-1 transition">
                                         <div className="w-7 h-7 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10">

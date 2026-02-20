@@ -15,6 +15,7 @@ import '../../providers/driver_provider.dart';
 import '../../services/staff_role_service.dart';
 import '../staff/staff_delivery_screen.dart';
 import '../driver/driver_delivery_screen.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -36,7 +37,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _changeProfilePhoto() async {
     HapticFeedback.mediumImpact();
-    
+
     // Show bottom sheet to choose between camera and gallery
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -61,7 +62,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 20),
               Text(
                 'Profil Fotoğrafı',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               ListTile(
@@ -71,10 +75,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: Theme.of(context).primaryColor.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.camera_alt, color: Theme.of(context).primaryColor),
+                  child: Icon(Icons.camera_alt,
+                      color: Theme.of(context).primaryColor),
                 ),
-                title: Text('Kamera', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-                subtitle: Text('Yeni fotoğraf çek', style: TextStyle(color: Colors.grey)),
+                title: Text('Kamera',
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface)),
+                subtitle: Text('Yeni fotoğraf çek',
+                    style: TextStyle(color: Colors.grey)),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
               ListTile(
@@ -84,10 +92,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: Theme.of(context).primaryColor.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.photo_library, color: Theme.of(context).primaryColor),
+                  child: Icon(Icons.photo_library,
+                      color: Theme.of(context).primaryColor),
                 ),
-                title: Text('Galeri', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-                subtitle: Text('Galeriden seç', style: TextStyle(color: Colors.grey)),
+                title: Text('Galeri',
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface)),
+                subtitle:
+                    Text('Galeriden seç', style: TextStyle(color: Colors.grey)),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
             ],
@@ -163,7 +175,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
-        title: Text('Hesabım', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold)),
+        title: Text('Hesabım',
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: user == null ? _buildLoginPrompt() : _buildProfile(user),
@@ -224,7 +239,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            
+
             // Single prominent login button
             GestureDetector(
               onTap: () {
@@ -257,9 +272,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Guest option
             TextButton(
               onPressed: () async {
@@ -269,7 +284,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 } catch (e) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Giriş hatası: $e'), backgroundColor: Colors.red),
+                      SnackBar(
+                          content: Text('Giriş hatası: $e'),
+                          backgroundColor: Colors.red),
                     );
                   }
                 }
@@ -279,9 +296,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 'Misafir olarak devam et',
                 style: TextStyle(
                   color: Colors.grey[700],
-                fontSize: 14,
-                decoration: TextDecoration.underline,
-              ),
+                  fontSize: 14,
+                  decoration: TextDecoration.underline,
+                ),
               ),
             ),
           ],
@@ -290,7 +307,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildLoginButton(String label, VoidCallback onTap, {bool isApple = false}) {
+  Widget _buildLoginButton(String label, VoidCallback onTap,
+      {bool isApple = false}) {
     final cardBg = Theme.of(context).cardColor;
     return GestureDetector(
       onTap: () {
@@ -322,10 +340,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget _buildProfile(User user) {
     final accent = Theme.of(context).primaryColor;
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
       builder: (context, snapshot) {
         final userData = snapshot.data?.data() as Map<String, dynamic>?;
-        
+
         // Construct display name
         String displayName = 'Kullanıcı';
         String firstName = '';
@@ -336,7 +357,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             displayName = '$firstName $lastName'.trim();
           }
         }
-        if (displayName == 'Kullanıcı' && user.displayName != null && user.displayName!.isNotEmpty) {
+        if (displayName == 'Kullanıcı' &&
+            user.displayName != null &&
+            user.displayName!.isNotEmpty) {
           displayName = user.displayName!;
           firstName = displayName.split(' ').first;
         }
@@ -350,7 +373,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               // === YEMEKSEPETI-STYLE HEADER ===
               Container(
-                color: Theme.of(context).scaffoldBackgroundColor, // Pure background color
+                color: Theme.of(context)
+                    .scaffoldBackgroundColor, // Pure background color
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -378,18 +402,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).brightness == Brightness.dark 
-                                  ? const Color(0xFF2C2C2E) 
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? const Color(0xFF2C2C2E)
                                   : Colors.white.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.notifications_outlined, color: const Color(0xFFFB335B), size: 22),
+                            child: Icon(Icons.notifications_outlined,
+                                color: const Color(0xFFFB335B), size: 22),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // === QUICK ACCESS CHIPS ===
                     // Check if user is staff
                     FutureBuilder<bool>(
@@ -397,28 +423,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       builder: (context, staffSnapshot) {
                         final isStaff = staffSnapshot.data == true;
                         final staffService = StaffRoleService();
-                        
+
                         return Column(
                           children: [
                             // First row: Standard chips
                             Row(
                               children: [
-                                _buildQuickAccessChip(Icons.receipt_long_outlined, 'Siparişlerim', () => context.push('/orders')),
+                                _buildQuickAccessChip(
+                                    Icons.receipt_long_outlined,
+                                    'Siparişlerim',
+                                    () => context.push('/orders')),
                                 const SizedBox(width: 12),
-                                _buildQuickAccessChip(Icons.favorite_outline, 'Favoriler', () => context.push('/favorites')),
+                                _buildQuickAccessChip(
+                                    Icons.favorite_outline,
+                                    'Favoriler',
+                                    () => context.push('/favorites')),
                                 const SizedBox(width: 12),
-                                _buildQuickAccessChip(Icons.location_on_outlined, 'Adreslerim', () => context.push('/my-info')),
+                                _buildQuickAccessChip(
+                                    Icons.location_on_outlined,
+                                    'Adreslerim',
+                                    () => context.push('/my-info')),
                               ],
                             ),
                             const SizedBox(height: 12),
                             // Second row: Reservations and Notifications
                             Row(
                               children: [
-                                _buildQuickAccessChip(Icons.table_restaurant, 'Masa\nRezervasyonum', () => context.push('/my-reservations')),
+                                _buildQuickAccessChip(
+                                    Icons.table_restaurant,
+                                    'Masa\nRezervasyonum',
+                                    () => context.push('/my-reservations')),
                                 const SizedBox(width: 12),
-                                _buildQuickAccessChip(Icons.notifications_active_outlined, 'Bildirim\nAyarları', () => context.push('/notification-settings')),
+                                _buildQuickAccessChip(
+                                    Icons.notifications_active_outlined,
+                                    'Bildirim\nAyarları',
+                                    () =>
+                                        context.push('/notification-settings')),
                                 const SizedBox(width: 12),
-                                const Expanded(child: SizedBox()), // Placeholder for grid alignment
+                                const Expanded(
+                                    child:
+                                        SizedBox()), // Placeholder for grid alignment
                               ],
                             ),
                             // Teslimat Paneli removed - consolidated into Teslimatlarım
@@ -431,16 +475,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       builder: (context, ref, _) {
                         final driverState = ref.watch(driverProvider);
                         final isDriver = driverState.isDriver;
-                        
+
                         // Show unified Staff Hub button if driver OR reservation staff
                         return FutureBuilder<bool>(
                           future: _checkStaffReservationAccess(),
                           builder: (context, snapshot) {
                             final hasReservation = snapshot.data == true;
-                            
+
                             // If neither driver nor reservation staff, hide
-                            if (!isDriver && !hasReservation) return const SizedBox.shrink();
-                            
+                            if (!isDriver && !hasReservation)
+                              return const SizedBox.shrink();
+
                             return Column(
                               children: [
                                 const SizedBox(height: 12),
@@ -451,31 +496,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   },
                                   child: Container(
                                     width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14, horizontal: 16),
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
-                                          const Color(0xFFFB335B).withOpacity(0.08),
-                                          const Color(0xFFFB335B).withOpacity(0.03),
+                                          const Color(0xFFFB335B)
+                                              .withOpacity(0.08),
+                                          const Color(0xFFFB335B)
+                                              .withOpacity(0.03),
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: const Color(0xFFFB335B), width: 1.5),
+                                      border: Border.all(
+                                          color: const Color(0xFFFB335B),
+                                          width: 1.5),
                                     ),
                                     child: Row(
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFFB335B).withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(10),
+                                            color: const Color(0xFFFB335B)
+                                                .withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(10),
                                           ),
-                                          child: const Icon(Icons.badge, color: Color(0xFFFB335B), size: 22),
+                                          child: const Icon(Icons.badge,
+                                              color: Color(0xFFFB335B),
+                                              size: 22),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               const Text(
                                                 'Personel Girişi',
@@ -488,7 +543,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                               Text(
                                                 [
                                                   if (isDriver) 'Teslimat',
-                                                  if (hasReservation) 'Rezervasyon',
+                                                  if (hasReservation)
+                                                    'Rezervasyon',
                                                 ].join(' • '),
                                                 style: TextStyle(
                                                   color: Colors.grey[500],
@@ -498,7 +554,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                             ],
                                           ),
                                         ),
-                                        Icon(Icons.arrow_forward_ios, size: 16, color: const Color(0xFFFB335B).withOpacity(0.5)),
+                                        Icon(Icons.arrow_forward_ios,
+                                            size: 16,
+                                            color: const Color(0xFFFB335B)
+                                                .withOpacity(0.5)),
                                       ],
                                     ),
                                   ),
@@ -522,13 +581,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               // === DAHA FAZLA SECTION ===
               _buildSectionTitle('Daha Fazla'),
-              _buildSectionItem(Icons.help_outline, 'Yardım Merkezi', () => context.push('/help')),
-              _buildSectionItem(Icons.article_outlined, 'Kullanım Koşulları ve Veri Politikası', () {
+              _buildSectionItem(Icons.help_outline, 'Yardım Merkezi',
+                  () => context.push('/help')),
+              _buildSectionItem(Icons.article_outlined,
+                  'Kullanım Koşulları ve Veri Politikası', () {
                 context.push('/help');
               }),
-              _buildSectionItem(Icons.rate_review_outlined, 'Geri Bildirim', () {
+              _buildSectionItem(Icons.rate_review_outlined, 'Geri Bildirim',
+                  () {
                 context.push('/help');
               }),
+
+              const SizedBox(height: 24),
+
+              // === DİL / LANGUAGE SECTION ===
+              _buildSectionTitle('Uygulama Dili / Language'),
+              _buildLanguageSelector(context),
 
               const SizedBox(height: 24),
 
@@ -556,9 +624,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         child: Row(
                           children: [
-                            Icon(Icons.logout, color: Colors.grey[600], size: 22),
+                            Icon(Icons.logout,
+                                color: Colors.grey[600], size: 22),
                             const SizedBox(width: 16),
-                            Text('Çıkış Yap', style: TextStyle(color: Colors.grey[800], fontSize: 15)),
+                            Text('Çıkış Yap',
+                                style: TextStyle(
+                                    color: Colors.grey[800], fontSize: 15)),
                           ],
                         ),
                       ),
@@ -574,9 +645,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         child: Row(
                           children: [
-                            Icon(Icons.delete_outline, color: Colors.red[400], size: 22),
+                            Icon(Icons.delete_outline,
+                                color: Colors.red[400], size: 22),
                             const SizedBox(width: 16),
-                            Text('Hesabı Sil', style: TextStyle(color: Colors.grey[800], fontSize: 15)),
+                            Text('Hesabı Sil',
+                                style: TextStyle(
+                                    color: Colors.grey[800], fontSize: 15)),
                           ],
                         ),
                       ),
@@ -607,7 +681,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   // === Quick Access Chip (Yemeksepeti-style) ===
-  Widget _buildQuickAccessChip(IconData icon, String label, VoidCallback onTap) {
+  Widget _buildQuickAccessChip(
+      IconData icon, String label, VoidCallback onTap) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Expanded(
       child: GestureDetector(
@@ -620,10 +695,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: isDark ? null : Border.all(
-              color: Colors.grey.shade300,
-              width: 1,
-            ),
+            border: isDark
+                ? null
+                : Border.all(
+                    color: Colors.grey.shade300,
+                    width: 1,
+                  ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -655,56 +732,60 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   /// Check if current user is staff for a business with reservation support
-Future<bool> _checkStaffReservationAccess() async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return false;
-  try {
-    final adminDoc = await FirebaseFirestore.instance
-        .collection('admins')
-        .doc(user.uid)
-        .get();
-    if (!adminDoc.exists) return false;
-    final data = adminDoc.data()!;
-
-    // Check direct businessId / butcherId
-    final bizId = data['businessId'] ?? data['butcherId'];
-    if (bizId != null) {
-      final bizDoc = await FirebaseFirestore.instance
-          .collection('businesses')
-          .doc(bizId)
+  Future<bool> _checkStaffReservationAccess() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    try {
+      final adminDoc = await FirebaseFirestore.instance
+          .collection('admins')
+          .doc(user.uid)
           .get();
-      if (bizDoc.data()?['hasReservation'] == true) return true;
-    }
+      if (!adminDoc.exists) return false;
+      final data = adminDoc.data()!;
 
-    // Also check all assignedBusinesses
-    final assigned = data['assignedBusinesses'] as List<dynamic>?;
-    if (assigned != null) {
-      for (final id in assigned) {
+      // Check direct businessId / butcherId
+      final bizId = data['businessId'] ?? data['butcherId'];
+      if (bizId != null) {
         final bizDoc = await FirebaseFirestore.instance
             .collection('businesses')
-            .doc(id.toString())
+            .doc(bizId)
             .get();
         if (bizDoc.data()?['hasReservation'] == true) return true;
       }
-    }
 
-    return false;
-  } catch (e) {
-    return false;
+      // Also check all assignedBusinesses
+      final assigned = data['assignedBusinesses'] as List<dynamic>?;
+      if (assigned != null) {
+        for (final id in assigned) {
+          final bizDoc = await FirebaseFirestore.instance
+              .collection('businesses')
+              .doc(id.toString())
+              .get();
+          if (bizDoc.data()?['hasReservation'] == true) return true;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      return false;
+    }
   }
-}
 
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
       child: Text(
         title,
-        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
+        style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 18,
+            fontWeight: FontWeight.bold),
       ),
     );
   }
 
-  Widget _buildSectionItem(IconData icon, String title, VoidCallback onTap, {Widget? trailing, bool showDivider = true}) {
+  Widget _buildSectionItem(IconData icon, String title, VoidCallback onTap,
+      {Widget? trailing, bool showDivider = true}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
@@ -715,20 +796,29 @@ Future<bool> _checkStaffReservationAccess() async {
         margin: const EdgeInsets.symmetric(horizontal: 20),
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          border: showDivider ? Border(
-            bottom: BorderSide(
-              color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-              width: 1,
-            ),
-          ) : null,
+          border: showDivider
+              ? Border(
+                  bottom: BorderSide(
+                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                    width: 1,
+                  ),
+                )
+              : null,
         ),
         child: Row(
           children: [
-            Icon(icon, color: isDark ? Colors.grey.shade500 : Colors.grey.shade600, size: 22),
+            Icon(icon,
+                color: isDark ? Colors.grey.shade500 : Colors.grey.shade600,
+                size: 22),
             const SizedBox(width: 16),
-            Expanded(child: Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15))),
+            Expanded(
+                child: Text(title,
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 15))),
             if (trailing != null) ...[trailing, const SizedBox(width: 8)],
-            Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey[400], size: 16),
+            Icon(Icons.arrow_forward_ios_rounded,
+                color: Colors.grey[400], size: 16),
           ],
         ),
       ),
@@ -741,7 +831,7 @@ Future<bool> _checkStaffReservationAccess() async {
         final currentTheme = ref.watch(themePreferenceProvider);
         final primaryColor = Theme.of(context).primaryColor;
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        
+
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -755,7 +845,8 @@ Future<bool> _checkStaffReservationAccess() async {
           ),
           child: Row(
             children: [
-              Icon(Icons.brightness_6_outlined, color: Colors.grey[400], size: 20),
+              Icon(Icons.brightness_6_outlined,
+                  color: Colors.grey[400], size: 20),
               const SizedBox(width: 12),
               // Pill-shaped 3-way toggle
               Expanded(
@@ -768,9 +859,12 @@ Future<bool> _checkStaffReservationAccess() async {
                   ),
                   child: Row(
                     children: [
-                      _buildPillSegment('Oto', ThemePreference.system, currentTheme, primaryColor, isDark, ref),
-                      _buildPillSegment('Gün', ThemePreference.light, currentTheme, primaryColor, isDark, ref),
-                      _buildPillSegment('Gece', ThemePreference.dark, currentTheme, primaryColor, isDark, ref),
+                      _buildPillSegment('Oto', ThemePreference.system,
+                          currentTheme, primaryColor, isDark, ref),
+                      _buildPillSegment('Gün', ThemePreference.light,
+                          currentTheme, primaryColor, isDark, ref),
+                      _buildPillSegment('Gece', ThemePreference.dark,
+                          currentTheme, primaryColor, isDark, ref),
                     ],
                   ),
                 ),
@@ -781,10 +875,16 @@ Future<bool> _checkStaffReservationAccess() async {
       },
     );
   }
-  
-  Widget _buildPillSegment(String label, ThemePreference preference, ThemePreference currentTheme, Color primaryColor, bool isDark, WidgetRef ref) {
+
+  Widget _buildPillSegment(
+      String label,
+      ThemePreference preference,
+      ThemePreference currentTheme,
+      Color primaryColor,
+      bool isDark,
+      WidgetRef ref) {
     final isSelected = preference == currentTheme;
-    
+
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -801,7 +901,9 @@ Future<bool> _checkStaffReservationAccess() async {
             child: Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : (isDark ? Colors.grey[500] : Colors.grey[600]),
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? Colors.grey[500] : Colors.grey[600]),
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -812,15 +914,16 @@ Future<bool> _checkStaffReservationAccess() async {
     );
   }
 
-  Widget _buildThemeOption(String label, ThemePreference preference, ThemePreference currentTheme) {
+  Widget _buildThemeOption(
+      String label, ThemePreference preference, ThemePreference currentTheme) {
     final isSelected = preference == currentTheme;
     final primaryColor = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Clear visual distinction: selected=filled, unselected=outline only
     final borderColor = isDark ? Colors.grey[500]! : Colors.grey[400]!;
     final textColor = isDark ? Colors.grey[300]! : Colors.grey[700]!;
-    
+
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -854,59 +957,85 @@ Future<bool> _checkStaffReservationAccess() async {
     );
   }
 
-  void _showLanguagePicker() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-              ),
-              const SizedBox(height: 20),
-              Text('Dil Seçimi', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              _buildLanguageOption('🇹🇷', 'Türkçe', true),
-              _buildLanguageOption('🇩🇪', 'Deutsch', false),
-              _buildLanguageOption('🇬🇧', 'English', false),
-              const SizedBox(height: 12),
-            ],
+  Widget _buildLanguageSelector(BuildContext context) {
+    final currentLocale = context.locale.languageCode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+            width: 1,
           ),
         ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.language_outlined, color: Colors.grey[400], size: 20),
+          const SizedBox(width: 12),
+          // Pill-shaped 3-way toggle
+          Expanded(
+            child: Container(
+              height: 28,
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[300],
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  _buildLangSegment('TR', 'tr', currentLocale,
+                      Theme.of(context).primaryColor, isDark, context),
+                  _buildLangSegment('EN', 'en', currentLocale,
+                      Theme.of(context).primaryColor, isDark, context),
+                  _buildLangSegment('DE', 'de', currentLocale,
+                      Theme.of(context).primaryColor, isDark, context),
+                  _buildLangSegment('IT', 'it', currentLocale,
+                      Theme.of(context).primaryColor, isDark, context),
+                  _buildLangSegment('FR', 'fr', currentLocale,
+                      Theme.of(context).primaryColor, isDark, context),
+                  _buildLangSegment('ES', 'es', currentLocale,
+                      Theme.of(context).primaryColor, isDark, context),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildLanguageOption(String flag, String label, bool isSelected) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$label seçildi'), backgroundColor: Colors.green),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isSelected ? accent.withOpacity(0.2) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? accent : Colors.grey.withOpacity(0.3)),
-        ),
-        child: Row(
-          children: [
-            Text(flag, style: const TextStyle(fontSize: 22)),
-            const SizedBox(width: 12),
-            Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15)),
-            const Spacer(),
-            if (isSelected) Icon(Icons.check_circle, color: accent, size: 22),
-          ],
+  Widget _buildLangSegment(String label, String langCode, String currentCode,
+      Color primaryColor, bool isDark, BuildContext context) {
+    final isSelected = langCode == currentCode;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () async {
+          HapticFeedback.mediumImpact();
+          await context.setLocale(Locale(langCode));
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          decoration: BoxDecoration(
+            color: isSelected ? primaryColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? Colors.grey[500] : Colors.grey[600]),
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -918,7 +1047,8 @@ Future<bool> _checkStaffReservationAccess() async {
       builder: (ctx) => AlertDialog(
         backgroundColor: cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Hesabı Sil', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        title: Text('Hesabı Sil',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: Text(
           'Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm verileriniz silinecektir.',
           style: TextStyle(color: Colors.grey[700]),
@@ -936,13 +1066,16 @@ Future<bool> _checkStaffReservationAccess() async {
                 setState(() {});
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Hesabınız silindi.'), backgroundColor: Colors.red),
+                    const SnackBar(
+                        content: Text('Hesabınız silindi.'),
+                        backgroundColor: Colors.red),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                    SnackBar(
+                        content: Text('Hata: $e'), backgroundColor: Colors.red),
                   );
                 }
               }
@@ -971,8 +1104,13 @@ Future<bool> _checkStaffReservationAccess() async {
           children: [
             Icon(icon, color: accent, size: 22),
             const SizedBox(width: 16),
-            Expanded(child: Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15))),
-            Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey[400], size: 16),
+            Expanded(
+                child: Text(title,
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 15))),
+            Icon(Icons.arrow_forward_ios_rounded,
+                color: Colors.grey[400], size: 16),
           ],
         ),
       ),
@@ -992,7 +1130,7 @@ Future<bool> _checkStaffReservationAccess() async {
 
   Future<void> _signInWithGoogle() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
@@ -1000,7 +1138,8 @@ Future<bool> _checkStaffReservationAccess() async {
         return; // User canceled
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -1008,7 +1147,7 @@ Future<bool> _checkStaffReservationAccess() async {
 
       await _auth.signInWithCredential(credential);
       setState(() => _isLoading = false);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

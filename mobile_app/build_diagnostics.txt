@@ -1,0 +1,61 @@
+Warning: Building for device with codesigning disabled. You will have to manually codesign before deploying to device.
+Building shop.lokma.app for device (ios)...
+Running Xcode build...                                          
+Xcode build done.                                           28,3s
+Failed to build iOS app
+Error output from Xcode build:
+↳
+    ** BUILD FAILED **
+
+
+Xcode's output:
+↳
+    Writing result bundle at path:
+    	/var/folders/3m/_vsz9j7512jdbkyjyt7bqj9m0000gn/T/flutter_tools.lTBJUr/flutter_ios_build_temp_dirwQcoKo/temporary_xcresult_bundle
+
+    Failed to parse TARGET_DEVICE_OS_VERSION: 
+    lib/screens/marketplace/kasap/cart_screen.dart:2:8: Error: Error when reading 'lib/screens/utils/i18n_utils.dart': No such file or directory
+    import '../../utils/i18n_utils.dart';
+           ^
+    lib/screens/marketplace/kasap/cart_screen.dart:2497:25: Error: The getter 'I18nUtils' isn't defined for the type '_CartScreenState'.
+     - '_CartScreenState' is from 'package:lokma_app/screens/marketplace/kasap/cart_screen.dart' ('lib/screens/marketplace/kasap/cart_screen.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'I18nUtils'.
+        final productName = I18nUtils.getLocalizedText(context, item.product.nameData);
+                            ^^^^^^^^^
+    lib/screens/marketplace/kasap/cart_screen.dart:4638:43: Error: The getter 'I18nUtils' isn't defined for the type '_CartScreenState'.
+     - '_CartScreenState' is from 'package:lokma_app/screens/marketplace/kasap/cart_screen.dart' ('lib/screens/marketplace/kasap/cart_screen.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'I18nUtils'.
+                                              I18nUtils.getLocalizedText(context, item.product.nameData),
+                                              ^^^^^^^^^
+    lib/screens/marketplace/kasap/cart_screen.dart:5024:25: Error: The getter 'I18nUtils' isn't defined for the type '_CartScreenState'.
+     - '_CartScreenState' is from 'package:lokma_app/screens/marketplace/kasap/cart_screen.dart' ('lib/screens/marketplace/kasap/cart_screen.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'I18nUtils'.
+        final productName = I18nUtils.getLocalizedText(context, item.product.nameData).isNotEmpty ? I18nUtils.getLocalizedText(context, item.product.nameData) : 'Ürün';
+                            ^^^^^^^^^
+    lib/screens/marketplace/kasap/cart_screen.dart:5024:97: Error: The getter 'I18nUtils' isn't defined for the type '_CartScreenState'.
+     - '_CartScreenState' is from 'package:lokma_app/screens/marketplace/kasap/cart_screen.dart' ('lib/screens/marketplace/kasap/cart_screen.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'I18nUtils'.
+        final productName = I18nUtils.getLocalizedText(context, item.product.nameData).isNotEmpty ? I18nUtils.getLocalizedText(context, item.product.nameData) : 'Ürün';
+                                                                                          ^^^^^^^^^
+    Target kernel_snapshot_program failed: Exception
+    Failed to package /Users/metinoz/.gemini/antigravity/scratch/LOKMA_2026/mobile_app.
+    Command PhaseScriptExecution failed with a nonzero exit code
+    warning: Stale file '/Users/metinoz/.gemini/antigravity/scratch/LOKMA_2026/mobile_app/build/ios/Debug-iphoneos/Runner.app/_CodeSignature' is located outside of the allowed root paths.
+
+    warning: Stale file '/Users/metinoz/.gemini/antigravity/scratch/LOKMA_2026/mobile_app/build/ios/Debug-iphoneos/Runner.app/embedded.mobileprovision' is located outside of the allowed root paths.
+
+    note: Removed stale file '/Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-dizclajdzluanjfbgavtzoaglkhy/Build/Intermediates.noindex/Runner.build/Debug-iphoneos/Runner.build/DerivedSources/Entitlements.plist'
+
+    note: Removed stale file '/Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-dizclajdzluanjfbgavtzoaglkhy/Build/Intermediates.noindex/Runner.build/Debug-iphoneos/Runner.build/Runner.app.xcent'
+
+    note: Removed stale file '/Users/metinoz/Library/Developer/Xcode/DerivedData/Runner-dizclajdzluanjfbgavtzoaglkhy/Build/Intermediates.noindex/Runner.build/Debug-iphoneos/Runner.build/Runner.app.xcent.der'
+
+    warning: no rule to process file '/Users/metinoz/.pub-cache/hosted/pub.dev/geocoding_ios-3.1.0/ios/geocoding_ios/Sources/geocoding_ios/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'geocoding_ios' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'abseil' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'BoringSSL-GRPC' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'gRPC-Core' from project 'Pods')
+    warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'gRPC-C++' from project 'Pods')
+    note: Run script build phase 'Run Script' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+    note: Run script build phase 'Thin Binary' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+
+Encountered error while building for device.

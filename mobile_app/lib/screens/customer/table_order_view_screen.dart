@@ -1,3 +1,5 @@
+import 'dart:async';
+import '../../utils/i18n_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -710,7 +712,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  product.name,
+                  I18nUtils.getLocalizedText(context, product.nameData),
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

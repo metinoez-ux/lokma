@@ -16,9 +16,10 @@ import {
     orderBy
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { auth, db, storage } from "@/lib/firebase";
 import { useAdmin } from '@/components/providers/AdminProvider';
-import { normalizeTurkish } from "@/lib/utils";
+import { normalizeTurkish, getLocalizedText } from "@/lib/utils";
+import MultiLanguageInput from '@/components/ui/MultiLanguageInput';
 import { MASTER_PRODUCTS, MasterProduct } from "@/lib/master_products";
 import { getBusinessTypesList, BusinessTypeConfig } from "@/lib/business-types";
 import Link from 'next/link';
@@ -130,11 +131,11 @@ function GlobalProductsPageContent() {
     const [editingProduct, setEditingProduct] = useState<ExtendedProduct | null>(null);
     const [formData, setFormData] = useState<Partial<ExtendedProduct>>({
         id: "",
-        name: "",
+        name: { tr: "" },
         category: "dana",
         categories: [],
         defaultUnit: "kg",
-        description: "",
+        description: { tr: "" },
         brand: "",
         images: [],
         isActive: true
@@ -181,8 +182,8 @@ function GlobalProductsPageContent() {
 
     // 🆕 INLINE CATEGORY MANAGEMENT
     const [showCategoryModal, setShowCategoryModal] = useState(false);
-    const [editingCategoryItem, setEditingCategoryItem] = useState<{ id: string; name: string; icon: string; order: number; isActive: boolean } | null>(null);
-    const [categoryFormData, setCategoryFormData] = useState({ name: '', icon: '📦', isActive: true });
+    const [editingCategoryItem, setEditingCategoryItem] = useState<{ id: string; name: any; icon: string; order: number; isActive: boolean } | null>(null);
+    const [categoryFormData, setCategoryFormData] = useState<{ name: any, icon: string, isActive: boolean }>({ name: { tr: '' }, icon: '📦', isActive: true });
     const [savingCategory, setSavingCategory] = useState(false);
     const CATEGORY_ICONS = ['🥩', '🐑', '🐄', '🐔', '🥓', '📦', '🍖', '🌿', '🧈', '🥚', '🍕', '🌯', '🥗', '🍰', '🥤', '🍔', '🌭', '🥙'];
     const [showAllMasterProducts, setShowAllMasterProducts] = useState(false);
@@ -214,8 +215,10 @@ function GlobalProductsPageContent() {
             const fetchedProducts = snapshot.docs.map(doc => doc.data() as MasterProduct);
             // Sort client-side
             fetchedProducts.sort((a, b) => {
+                const nameA = getLocalizedText(a.name);
+                const nameB = getLocalizedText(b.name);
                 if (a.category !== b.category) return a.category.localeCompare(b.category);
-                return a.name.localeCompare(b.name);
+                return nameA.localeCompare(nameB);
             });
             setProducts(fetchedProducts);
         } catch (error) {
@@ -256,10 +259,12 @@ function GlobalProductsPageContent() {
             }));
             // Sort by category then name
             prods.sort((a: any, b: any) => {
+                const nameA = getLocalizedText(a.name);
+                const nameB = getLocalizedText(b.name);
                 const catA = a.category || '';
                 const catB = b.category || '';
                 if (catA !== catB) return catA.localeCompare(catB);
-                return (a.name || '').localeCompare(b.name || '');
+                return nameA.localeCompare(nameB);
             });
             setBusinessProducts(prods);
             console.log('✅ Business products loaded:', prods.length);
@@ -337,7 +342,8 @@ function GlobalProductsPageContent() {
 
     // 🆕 Category CRUD handlers
     const handleCategorySave = async () => {
-        if (!contextBusinessId || !categoryFormData.name.trim()) return;
+        const catNameStr = getLocalizedText(categoryFormData.name);
+        if (!contextBusinessId || !catNameStr.trim()) return;
         setSavingCategory(true);
         try {
             const categoriesRef = collection(db, `businesses/${contextBusinessId}/categories`);
@@ -369,9 +375,10 @@ function GlobalProductsPageContent() {
         setSavingCategory(false);
     };
 
-    const handleCategoryDelete = async (cat: { id: string; name: string }) => {
+    const handleCategoryDelete = async (cat: { id: string; name: any }) => {
         if (!contextBusinessId) return;
-        if (!window.confirm(`"${cat.name}" kategorisini silmek istediğinize emin misiniz?`)) return;
+        const catNameStr = getLocalizedText(cat.name);
+        if (!window.confirm(`"${catNameStr}" kategorisini silmek istediğinize emin misiniz?`)) return;
         try {
             await deleteDoc(doc(db, `businesses/${contextBusinessId}/categories`, cat.id));
             await reloadBusinessCategories();
@@ -397,7 +404,7 @@ function GlobalProductsPageContent() {
         }
     };
 
-    const openCategoryEdit = (cat: { id: string; name: string; icon: string; order: number; isActive: boolean }) => {
+    const openCategoryEdit = (cat: { id: string; name: any; icon: string; order: number; isActive: boolean }) => {
         setEditingCategoryItem(cat);
         setCategoryFormData({ name: cat.name, icon: cat.icon, isActive: cat.isActive });
         setShowCategoryModal(true);
@@ -405,7 +412,7 @@ function GlobalProductsPageContent() {
 
     const openCategoryAdd = () => {
         setEditingCategoryItem(null);
-        setCategoryFormData({ name: '', icon: '📦', isActive: true });
+        setCategoryFormData({ name: { tr: '' }, icon: '📦', isActive: true });
         setShowCategoryModal(true);
     };
 
@@ -449,9 +456,10 @@ function GlobalProductsPageContent() {
     // Save (Add/Edit)
     const handleSave = async () => {
         // Validation - Only truly essential fields
+        const nameStr = getLocalizedText(formData.name);
         const errors: ValidationErrors = {};
         if (!formData.id?.trim()) errors.id = 'SKU (ID) zorunludur';
-        if (!formData.name?.trim()) errors.name = 'Ürün adı zorunludur';
+        if (!nameStr.trim()) errors.name = 'Ürün adı zorunludur';
 
         if (Object.keys(errors).length > 0) {
             setValidationErrors(errors);
@@ -465,14 +473,14 @@ function GlobalProductsPageContent() {
 
             const productData = {
                 id: productId,
-                name: formData.name!.trim(),
+                name: formData.name, // Localized map OR string
                 category: formData.category,
                 categories: (formData as any).categories || [],
                 // 🆕 Hangi işletme türleri satabilir
                 allowedBusinessTypes: (formData as any).allowedBusinessTypes || [],
                 defaultUnit: formData.defaultUnit || 'adet',
                 unit: formData.defaultUnit || 'adet', // 🆕 Mobile app reads 'unit' field
-                description: formData.description || "",
+                description: formData.description || { tr: "" },
                 // Brand & Labels
                 brand: (formData as any).brand || null,
                 brandLabels: (formData as any).brandLabels || [], // TUNA, Akdeniz Toros
@@ -520,7 +528,7 @@ function GlobalProductsPageContent() {
 
             setShowModal(false);
             setEditingProduct(null);
-            setFormData({ id: "", name: "", category: "dana", defaultUnit: "kg", description: "" });
+            setFormData({ id: "", name: { tr: "" }, category: "dana", defaultUnit: "kg", description: { tr: "" } });
             fetchProducts();
             // Also refresh business products if in business context
             if (isBusinessContext) {
@@ -539,7 +547,7 @@ function GlobalProductsPageContent() {
             isOpen: true,
             title: 'Ürün Sil',
             message: 'Bu ürünü silmek istediğinize emin misiniz? (Bu işlem kasapların mevcut listesini etkilemeyebilir ama yeni eklemelerde görünmez)',
-            itemName: product?.name,
+            itemName: getLocalizedText(product?.name),
             variant: 'danger',
             confirmText: 'Evet, Sil',
             loadingText: 'Siliniyor...',
@@ -847,10 +855,12 @@ function GlobalProductsPageContent() {
     // Filter products with Turkish normalization
     const normalizedQuery = normalizeTurkish(searchQuery);
     const filteredProducts = products.filter(p => {
-        const matchesSearch = !searchQuery ||
-            normalizeTurkish(p.name).includes(normalizedQuery) ||
-            normalizeTurkish(p.description || '').includes(normalizedQuery) ||
-            normalizeTurkish(p.id).includes(normalizedQuery);
+        const nameStr = getLocalizedText(p.name);
+        const descStr = getLocalizedText(p.description);
+        const matchesSearch = normalizedQuery === '' ||
+            normalizeTurkish(nameStr).includes(normalizedQuery) ||
+            normalizeTurkish(p.id).includes(normalizedQuery) ||
+            (descStr && normalizeTurkish(descStr).includes(normalizedQuery));
         const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
         // Yeni filtre: Toptan Kaynak
         const matchesWholesaler = wholesalerFilter === 'all' ||
@@ -1091,7 +1101,7 @@ function GlobalProductsPageContent() {
                                                         : 'bg-gray-700 border-gray-600 hover:border-pink-400'
                                                         }`}
                                                 >
-                                                    <p className="text-white text-sm font-medium line-clamp-2">{product.name}</p>
+                                                    <p className="text-white text-sm font-medium line-clamp-2">{getLocalizedText(product.name)}</p>
                                                     <p className="text-gray-400 text-xs mt-1">
                                                         {product.defaultUnit === 'adet' ? '🔢' : '⚖️'} {product.defaultUnit}
                                                     </p>
@@ -1123,7 +1133,7 @@ function GlobalProductsPageContent() {
                                                     key={product.id}
                                                     className="px-3 py-1.5 bg-pink-800/50 text-pink-200 rounded-lg text-sm flex items-center gap-2"
                                                 >
-                                                    {product.name}
+                                                    {getLocalizedText(product.name)}
                                                     <button
                                                         onClick={() => setKermesMenuProducts(prev => prev.filter(p => p.id !== product.id))}
                                                         className="text-pink-400 hover:text-white"
@@ -1143,7 +1153,7 @@ function GlobalProductsPageContent() {
                                                         organizationName: selectedOrganization.shortName || selectedOrganization.name,
                                                         products: kermesMenuProducts.map(p => ({
                                                             id: p.id,
-                                                            name: p.name,
+                                                            name: getLocalizedText(p.name),
                                                             category: p.category,
                                                             defaultUnit: p.defaultUnit,
                                                         })),
@@ -1196,8 +1206,8 @@ function GlobalProductsPageContent() {
                                     <button
                                         onClick={() => setBusinessViewMode('categories')}
                                         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${businessViewMode === 'categories'
-                                                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/40'
-                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
+                                            ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/40'
+                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
                                             }`}
                                     >
                                         🗂️ Kategoriler ({businessCategories.length})
@@ -1205,8 +1215,8 @@ function GlobalProductsPageContent() {
                                     <button
                                         onClick={() => setBusinessViewMode('products')}
                                         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${businessViewMode === 'products'
-                                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/40'
-                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
+                                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/40'
+                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
                                             }`}
                                     >
                                         🏷️ Ürünler ({businessProducts.length})
@@ -1249,14 +1259,14 @@ function GlobalProductsPageContent() {
                                                 {businessCategories.map((cat, index) => {
                                                     const productCount = businessProducts.filter((p: any) => {
                                                         const cats = p.categories || [p.category];
-                                                        return cats.some((c: string) => c?.toLowerCase() === cat.name.toLowerCase());
+                                                        return cats.some((c: string) => c?.toLowerCase() === getLocalizedText(cat.name).toLowerCase());
                                                     }).length;
                                                     return (
                                                         <div
                                                             key={cat.id}
                                                             className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${cat.isActive
-                                                                    ? 'bg-gray-700/50 border-gray-600 hover:border-gray-500'
-                                                                    : 'bg-gray-800/50 border-red-900/40 opacity-60'
+                                                                ? 'bg-gray-700/50 border-gray-600 hover:border-gray-500'
+                                                                : 'bg-gray-800/50 border-red-900/40 opacity-60'
                                                                 }`}
                                                         >
                                                             {/* Up/Down Arrows */}
@@ -1281,7 +1291,7 @@ function GlobalProductsPageContent() {
 
                                                             {/* Name + Meta */}
                                                             <div className="flex-1 min-w-0">
-                                                                <h3 className="text-white font-bold text-base">{cat.name}</h3>
+                                                                <h3 className="text-white font-bold text-base">{getLocalizedText(cat.name)}</h3>
                                                                 <p className="text-gray-500 text-xs">
                                                                     {productCount} ürün • {cat.isActive ? '✅ Aktif' : '🔴 Pasif'}
                                                                 </p>
@@ -1319,8 +1329,8 @@ function GlobalProductsPageContent() {
                                                 <button
                                                     onClick={() => setActiveCategoryTab('all')}
                                                     className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategoryTab === 'all'
-                                                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                        ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                                                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
                                                         }`}
                                                 >
                                                     📋 Tümü
@@ -1330,18 +1340,18 @@ function GlobalProductsPageContent() {
                                                 {activeBusinessCategories.map(cat => {
                                                     const count = businessProducts.filter((p: any) => {
                                                         const cats = p.categories || [p.category];
-                                                        return cats.some((c: string) => c?.toLowerCase() === cat.name.toLowerCase());
+                                                        return cats.some((c: string) => c?.toLowerCase() === getLocalizedText(cat.name).toLowerCase());
                                                     }).length;
                                                     return (
                                                         <button
                                                             key={cat.id}
                                                             onClick={() => setActiveCategoryTab(cat.id)}
                                                             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategoryTab === cat.id
-                                                                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
-                                                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
                                                                 }`}
                                                         >
-                                                            {cat.icon} {cat.name}
+                                                            {cat.icon} {getLocalizedText(cat.name)}
                                                             {count > 0 && (
                                                                 <span className={`px-1.5 py-0.5 rounded-full text-xs ${activeCategoryTab === cat.id ? 'bg-emerald-500/50' : 'bg-gray-600'
                                                                     }`}>{count}</span>
@@ -1352,8 +1362,8 @@ function GlobalProductsPageContent() {
                                                 <button
                                                     onClick={() => setActiveCategoryTab('uncategorized')}
                                                     className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeCategoryTab === 'uncategorized'
-                                                            ? 'bg-gray-600 text-white shadow-lg'
-                                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                        ? 'bg-gray-600 text-white shadow-lg'
+                                                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
                                                         }`}
                                                 >
                                                     ❓ Kategorisiz
@@ -1362,7 +1372,7 @@ function GlobalProductsPageContent() {
                                                         {businessProducts.filter((p: any) => {
                                                             const cats = p.categories || [p.category];
                                                             return !cats.some((c: string) =>
-                                                                activeBusinessCategories.some(bc => bc.name.toLowerCase() === c?.toLowerCase())
+                                                                activeBusinessCategories.some(bc => getLocalizedText(bc.name).toLowerCase() === c?.toLowerCase())
                                                             );
                                                         }).length}
                                                     </span>
@@ -1400,12 +1410,12 @@ function GlobalProductsPageContent() {
                                                                 const cats = product.categories || [product.category];
                                                                 if (activeCategoryTab === 'uncategorized') {
                                                                     return !cats.some((c: string) =>
-                                                                        activeBusinessCategories.some(bc => bc.name.toLowerCase() === c?.toLowerCase())
+                                                                        activeBusinessCategories.some(bc => getLocalizedText(bc.name).toLowerCase() === c?.toLowerCase())
                                                                     );
                                                                 }
                                                                 const selectedCat = activeBusinessCategories.find(bc => bc.id === activeCategoryTab);
                                                                 if (!selectedCat) return true;
-                                                                return cats.some((c: string) => c?.toLowerCase() === selectedCat.name.toLowerCase());
+                                                                return cats.some((c: string) => c?.toLowerCase() === getLocalizedText(selectedCat.name).toLowerCase());
                                                             })
                                                             .map((product: any) => (
                                                                 <tr key={product.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
@@ -1434,7 +1444,7 @@ function GlobalProductsPageContent() {
                                                                         {product.id?.substring(0, 15)}...
                                                                     </td>
                                                                     <td className="py-3 pr-4">
-                                                                        <span className="text-white font-medium">{product.name}</span>
+                                                                        <span className="text-white font-medium">{getLocalizedText(product.name)}</span>
                                                                     </td>
                                                                     <td className="py-3 pr-2">
                                                                         <div className="flex flex-wrap gap-1">
@@ -1466,7 +1476,8 @@ function GlobalProductsPageContent() {
                                                                             </button>
                                                                             <button
                                                                                 onClick={async () => {
-                                                                                    if (!window.confirm(`"${product.name}" ürününü silmek istediğinize emin misiniz?`)) return;
+                                                                                    const prodNameStr = getLocalizedText(product.name);
+                                                                                    if (!window.confirm(`"${prodNameStr}" ürününü silmek istediğinize emin misiniz?`)) return;
                                                                                     try {
                                                                                         await deleteDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id));
                                                                                         setBusinessProducts(prev => prev.filter(p => p.id !== product.id));
@@ -1510,8 +1521,8 @@ function GlobalProductsPageContent() {
                                                     key={icon}
                                                     onClick={() => setCategoryFormData({ ...categoryFormData, icon })}
                                                     className={`w-10 h-10 text-2xl rounded-lg transition ${categoryFormData.icon === icon
-                                                            ? 'bg-violet-600 ring-2 ring-violet-400'
-                                                            : 'bg-gray-700 hover:bg-gray-600'
+                                                        ? 'bg-violet-600 ring-2 ring-violet-400'
+                                                        : 'bg-gray-700 hover:bg-gray-600'
                                                         }`}
                                                 >{icon}</button>
                                             ))}
@@ -1520,13 +1531,11 @@ function GlobalProductsPageContent() {
 
                                     {/* Name Input */}
                                     <div className="mb-4">
-                                        <label className="text-gray-400 text-sm mb-2 block">Kategori Adı</label>
-                                        <input
-                                            type="text"
+                                        <MultiLanguageInput
+                                            label="Kategori Adı"
                                             value={categoryFormData.name}
-                                            onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
-                                            placeholder="Örn: Kebab, Pizza, İçecekler..."
-                                            className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-violet-500 focus:outline-none"
+                                            onChange={(val) => setCategoryFormData({ ...categoryFormData, name: val })}
+                                            required
                                         />
                                     </div>
 
@@ -1551,7 +1560,7 @@ function GlobalProductsPageContent() {
                                         >İptal</button>
                                         <button
                                             onClick={handleCategorySave}
-                                            disabled={savingCategory || !categoryFormData.name.trim()}
+                                            disabled={savingCategory || !getLocalizedText(categoryFormData.name).trim()}
                                             className="flex-1 px-4 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-500 transition disabled:opacity-50"
                                         >
                                             {savingCategory ? '⏳ Kaydediliyor...' : '💾 Kaydet'}
@@ -1624,6 +1633,7 @@ function GlobalProductsPageContent() {
                                                 {BRAND_LABELS.map(brand => (
                                                     <option key={brand.value} value={brand.value}>{brand.icon} {brand.label}</option>
                                                 ))}
+                                                <option value="remove">❌ Marka Kaldır</option>
                                             </select>
                                             {/* Aktif Filtreleri Sıfırla */}
                                             {(wholesalerFilter !== 'all' || countryFilter !== 'all' || brandFilter !== 'all') && (
@@ -1794,7 +1804,7 @@ function GlobalProductsPageContent() {
                                                                 )}
                                                             </td>
                                                             <td className="px-4 py-4 font-mono text-sm text-gray-400">{product.id}</td>
-                                                            <td className="px-4 py-4 font-bold text-white">{product.name}</td>
+                                                            <td className="px-4 py-4 font-bold text-white">{getLocalizedText(product.name)}</td>
                                                             <td className="px-4 py-4">
                                                                 {(() => {
                                                                     const source = (product as any).sourcePlatform;
@@ -2011,16 +2021,16 @@ function GlobalProductsPageContent() {
                                                 <div className="space-y-3">
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div>
-                                                            <label className="block text-sm text-gray-400 mb-1">
-                                                                Ürün Adı <span className="text-red-500">*</span>
-                                                            </label>
-                                                            <input
-                                                                type="text"
-                                                                value={formData.name}
-                                                                onChange={e => { const v = e.target.value; setFormData(prev => ({ ...prev, name: v })); setValidationErrors(prev => { const next = { ...prev }; delete next.name; return next; }); }}
-                                                                className={`w-full bg-gray-900 border rounded-lg px-4 py-2 ${validationErrors.name ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-600'}`}
+                                                            <MultiLanguageInput
+                                                                label="Ürün Adı"
+                                                                value={formData.name || { tr: '' }}
+                                                                onChange={(val) => {
+                                                                    setFormData(prev => ({ ...prev, name: val }));
+                                                                    setValidationErrors(prev => { const next = { ...prev }; delete next.name; return next; });
+                                                                }}
+                                                                error={validationErrors.name}
+                                                                required
                                                             />
-                                                            {validationErrors.name && <p className="text-red-400 text-xs mt-1">{validationErrors.name}</p>}
                                                         </div>
                                                         <div>
                                                             <label className="block text-sm text-gray-400 mb-1">Üretici Markası</label>
@@ -2163,12 +2173,11 @@ function GlobalProductsPageContent() {
                                                             )}
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm text-gray-400 mb-1">Açıklama</label>
-                                                        <textarea
-                                                            rows={2}
-                                                            value={formData.description}
-                                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
+                                                        <MultiLanguageInput
+                                                            label="Açıklama"
+                                                            value={formData.description || { tr: "" }}
+                                                            onChange={val => setFormData({ ...formData, description: val })}
+                                                            isTextArea={true}
                                                         />
                                                     </div>
                                                 </div>

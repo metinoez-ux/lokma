@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from '@/i18n/routing';
 import { locales, localeNames, localeFlags, Locale } from '@/i18n';
 import { useState, useRef, useEffect } from 'react';
 
@@ -23,13 +23,7 @@ export function LanguageSwitcher() {
     }, []);
 
     const handleChange = (newLocale: Locale) => {
-        // Remove current locale from pathname if present
-        const segments = pathname.split('/');
-        if (locales.includes(segments[1] as Locale)) {
-            segments.splice(1, 1);
-        }
-        const newPath = newLocale === 'tr' ? segments.join('/') || '/' : `/${newLocale}${segments.join('/')}`;
-        router.push(newPath);
+        router.replace(pathname, { locale: newLocale });
         setIsOpen(false);
     };
 

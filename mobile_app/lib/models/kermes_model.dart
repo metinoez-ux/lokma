@@ -133,11 +133,14 @@ class KermesEvent {
 }
 
 class KermesMenuItem {
-  final String name;
+  final String name; // Fallback or TR value
+  final dynamic nameData; // Raw localization map
   final String? secondaryName;  // 2. isim (örn: Almanca/Türkçe alternatif)
   final double price;
-  final String? description;
+  final String? description; // Fallback or TR value
+  final dynamic descriptionData; // Raw localization map
   final String? detailedDescription;  // Detaylı tarif
+  final dynamic detailedDescriptionData; // Raw localization map
   final String? imageUrl;  // Legacy single image (backward compatibility)
   final List<String> imageUrls;  // Multiple images (up to 3)
   final String? category;  // Kategori: 'Yemekler', 'İçecekler', vb.
@@ -148,10 +151,13 @@ class KermesMenuItem {
 
   KermesMenuItem({
     required this.name,
+    this.nameData,
     this.secondaryName,
     required this.price,
     this.description,
+    this.descriptionData,
     this.detailedDescription,
+    this.detailedDescriptionData,
     this.imageUrl,
     this.imageUrls = const [],
     this.category,
@@ -175,6 +181,37 @@ class KermesMenuItem {
     allergens.isNotEmpty || 
     ingredients.isNotEmpty ||
     imageUrls.length > 1;
+
+  // Helper factory if you ever create these from JSON
+  factory KermesMenuItem.fromJson(Map<String, dynamic> json) {
+    return KermesMenuItem(
+      name: _extractString(json['name']) ?? '',
+      nameData: json['name'],
+      secondaryName: json['secondaryName'] as String?,
+      price: (json['price'] ?? 0.0).toDouble(),
+      description: _extractString(json['description'], isNullable: true),
+      descriptionData: json['description'],
+      detailedDescription: _extractString(json['detailedDescription'], isNullable: true),
+      detailedDescriptionData: json['detailedDescription'],
+      imageUrl: json['imageUrl'] as String?,
+      imageUrls: (json['imageUrls'] as List<dynamic>?)?.cast<String>() ?? [],
+      category: json['category'] as String?,
+      allergens: (json['allergens'] as List<dynamic>?)?.cast<String>() ?? [],
+      ingredients: (json['ingredients'] as List<dynamic>?)?.cast<String>() ?? [],
+      hasPfand: json['hasPfand'] ?? false,
+      isAvailable: json['isAvailable'] ?? true,
+    );
+  }
+
+  static String? _extractString(dynamic data, {bool isNullable = false}) {
+    if (data == null) return isNullable ? null : '';
+    if (data is String) return data;
+    if (data is Map) {
+      if (data.containsKey('tr') && data['tr'] != null) return data['tr'].toString();
+      if (data.values.isNotEmpty) return data.values.first.toString();
+    }
+    return isNullable ? null : '';
+  }
 }
 
 class KermesParkingInfo {

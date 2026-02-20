@@ -23,3 +23,13 @@ export function normalizeTurkish(text: string): string {
         .replace(/û/g, 'u')
         .replace(/ê/g, 'e');
 }
+
+/**
+ * Gets a localized string from a translations map (or falls back appropriately).
+ */
+export function getLocalizedText(textObj: any, locale: string = 'tr'): string {
+    if (!textObj) return '';
+    if (typeof textObj === 'string') return textObj; // legacy string support
+
+    return textObj[locale] || textObj['tr'] || textObj['en'] || Object.values(textObj)[0] || '';
+}

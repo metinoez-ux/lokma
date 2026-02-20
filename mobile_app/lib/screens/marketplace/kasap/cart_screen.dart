@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../utils/i18n_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -2493,7 +2494,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   
   /// 🥩 Lieferando-style Kasap cart item
   Widget _buildLieferandoCartItem(CartItem item, int positionNumber) {
-    final productName = item.product.name;
+    final productName = I18nUtils.getLocalizedText(context, item.product.nameData);
     final quantity = item.quantity;
     final totalPrice = item.totalPrice;
     final unitType = item.product.unitType?.toLowerCase() ?? 'adet';
@@ -4634,7 +4635,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
-                                          item.product.name,
+                                          I18nUtils.getLocalizedText(context, item.product.nameData),
                                           style: TextStyle(
                                             color: Theme.of(context).colorScheme.onSurface,
                                             fontSize: 14,
@@ -5020,7 +5021,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
   // 🎨 LIEFERANDO-STYLE: Minimalist cart item
   Widget _buildCartItem(CartItem item) {
-    final productName = item.product.name.isNotEmpty ? item.product.name : 'Ürün';
+    final productName = I18nUtils.getLocalizedText(context, item.product.nameData).isNotEmpty ? I18nUtils.getLocalizedText(context, item.product.nameData) : 'Ürün';
     final unitType = item.product.unitType.isNotEmpty ? item.product.unitType : 'adet';
     final quantity = item.quantity;
     final totalPrice = item.totalPrice;

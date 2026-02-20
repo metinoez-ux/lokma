@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase/config.dart';
@@ -12,6 +13,7 @@ import 'services/fcm_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'providers/theme_provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'utils/firestore_asset_loader.dart';
 
 String? _initError;
 
@@ -19,6 +21,7 @@ void main() async {
   // Wrap everything in a zone to catch all errors
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    await EasyLocalization.ensureInitialized();
     
     // Set up Flutter error handler
     FlutterError.onError = (details) {
@@ -55,7 +58,25 @@ void main() async {
       debugPrint('Firebase init error: $e\n$stack');
     }
 
-    runApp(ProviderScope(child: LokmaApp(initError: _initError)));
+    runApp(
+      ProviderScope(
+        child: EasyLocalization(
+          supportedLocales: const [
+          Locale('tr'), 
+          Locale('en'), 
+          Locale('de'),
+          Locale('it'),
+          Locale('fr'),
+          Locale('es'),
+        ],
+          path: 'assets/translations',
+          assetLoader: const FirestoreAssetLoader(), // Live translations
+          fallbackLocale: const Locale('tr'),
+          startLocale: const Locale('tr'),
+          child: LokmaApp(initError: _initError),
+        ),
+      ),
+    );
   }, (error, stack) {
     debugPrint('Uncaught error: $error');
     debugPrint('Stack: $stack');
@@ -110,6 +131,9 @@ class LokmaApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'LOKMA',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       themeMode: themeMode, // Dynamic theme based on user preference
       theme: ThemeData(
         useMaterial3: true,

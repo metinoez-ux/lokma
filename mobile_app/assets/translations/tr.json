@@ -1,0 +1,16 @@
+{
+    "app_name": "LOKMA",
+    "common": {
+        "ok": "Tamam",
+        "cancel": "İptal",
+        "save": "Kaydet",
+        "loading": "Yükleniyor...",
+        "error": "Bir hata oluştu"
+    },
+    "cart": {
+        "checkout_button": "Siparişi Tamamla"
+    },
+    "profile": {
+        "language": "Uygulama Dili"
+    }
+}

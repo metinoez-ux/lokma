@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import 'package:lokma_app/services/google_places_service.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/data/product_catalog_data.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
+import 'package:lokma_app/utils/i18n_utils.dart';
 import 'cart_screen.dart';
 import 'product_customization_sheet.dart';
 import 'reservation_booking_screen.dart';
@@ -2105,7 +2107,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 children: [
                   // Title
                   Text(
-                    product.name,
+                    I18nUtils.getLocalizedText(context, product.nameData),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -2118,7 +2120,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   // Description
                   const SizedBox(height: 4),
                   Text(
-                    product.description,
+                    I18nUtils.getLocalizedText(context, product.descriptionData),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: Colors.grey[400], fontSize: 11, height: 1.2),

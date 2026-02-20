@@ -1,0 +1,16 @@
+{
+    "app_name": "LOKMA",
+    "common": {
+        "ok": "OK",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "loading": "Wird geladen...",
+        "error": "Ein Fehler ist aufgetreten"
+    },
+    "cart": {
+        "checkout_button": "Zur Kasse"
+    },
+    "profile": {
+        "language": "App-Sprache"
+    }
+}

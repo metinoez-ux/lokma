@@ -1,9 +1,9 @@
 export interface MasterProduct {
     id: string; // SKU Matching Mobile App
-    name: string;
+    name: Record<string, string> | string;
     category: 'dana' | 'kuzu' | 'tavuk' | 'hazir' | 'diger' | string;
     defaultUnit: 'kg' | 'ad' | string;
-    description: string;
+    description: Record<string, string> | string;
     allowedBusinessTypes?: string[];  // 🆕 Hangi işletme türleri satabilir
 }
 
