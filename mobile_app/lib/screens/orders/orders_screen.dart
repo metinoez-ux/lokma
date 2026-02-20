@@ -899,24 +899,6 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               letterSpacing: 0.3,
             ),
           ),
-          if (widget.order.tableSessionId != null) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: lokmaOrange.withValues(alpha: isDark ? 0.2 : 0.1),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: lokmaOrange.withValues(alpha: 0.4), width: 0.5),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.groups, size: 11, color: lokmaOrange),
-                  const SizedBox(width: 2),
-                  const Text('Grup', style: TextStyle(color: lokmaOrange, fontSize: 9, fontWeight: FontWeight.bold)),
-                ]
-              )
-            )
-          ]
         ],
       ),
     );
