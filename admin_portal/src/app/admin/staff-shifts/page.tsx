@@ -19,6 +19,7 @@ interface ShiftRecord {
     pauseMinutes: number;
     assignedTables: number[];
     isDeliveryDriver: boolean;
+    isOtherRole?: boolean;
 }
 
 export default function StaffShiftsPage() {
@@ -74,6 +75,7 @@ export default function StaffShiftsPage() {
                     pauseMinutes: d.pauseMinutes || 0,
                     assignedTables: d.assignedTables || [],
                     isDeliveryDriver: d.isDeliveryDriver || false,
+                    isOtherRole: d.isOtherRole || false,
                 };
             });
 
@@ -131,7 +133,7 @@ export default function StaffShiftsPage() {
                 String(s.pauseMinutes),
                 String(s.totalMinutes - s.pauseMinutes),
                 s.assignedTables.join(', ') || '-',
-                s.isDeliveryDriver ? 'Evet' : 'Hayır',
+                s.isDeliveryDriver ? 'Kurye' : (s.isOtherRole ? 'Diğer' : 'Servis'),
                 s.status,
             ]);
 
@@ -194,6 +196,7 @@ export default function StaffShiftsPage() {
         .badge-active { background: #d1fae5; color: #065f46; }
         .badge-ended { background: #e5e7eb; color: #374151; }
         .badge-driver { background: #dbeafe; color: #1e40af; }
+        .badge-other { background: #f3e8ff; color: #9333ea; }
         @media print { body { padding: 15px; } }
     </style>
 </head>
@@ -229,7 +232,7 @@ export default function StaffShiftsPage() {
                 <td>${formatMinutes(s.pauseMinutes)}</td>
                 <td>${formatMinutes(s.totalMinutes - s.pauseMinutes)}</td>
                 <td>${s.assignedTables.length > 0 ? s.assignedTables.join(', ') : '-'}</td>
-                <td>${s.isDeliveryDriver ? '<span class="badge badge-driver">Kurye</span>' : '-'}</td>
+                <td>${s.isDeliveryDriver ? '<span class="badge badge-driver">Kurye</span>' : (s.isOtherRole ? '<span class="badge badge-other">Diğer</span>' : '-')}</td>
                 <td><span class="badge ${s.status === 'active' ? 'badge-active' : 'badge-ended'}">${s.status === 'active' ? 'Aktif' : 'Tamamlandı'}</span></td>
             </tr>`).join('')}
         </tbody>
@@ -424,6 +427,8 @@ export default function StaffShiftsPage() {
                                             <td className="px-3 py-2.5 text-center">
                                                 {s.isDeliveryDriver ? (
                                                     <span className="bg-blue-900/40 text-blue-400 border border-blue-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">🛵 Kurye</span>
+                                                ) : s.isOtherRole ? (
+                                                    <span className="bg-purple-900/40 text-purple-400 border border-purple-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">💼 Diğer</span>
                                                 ) : (
                                                     <span className="bg-gray-700/40 text-gray-400 border border-gray-600/40 px-2 py-0.5 rounded-full text-[10px] font-medium">🍽 Servis</span>
                                                 )}

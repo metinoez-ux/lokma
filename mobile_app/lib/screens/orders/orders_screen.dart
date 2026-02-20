@@ -342,6 +342,13 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     }
   }
 
+  String _getStatusTextCustom(LokmaOrder order) {
+    if ((order.orderType == OrderType.dineIn || order.tableSessionId != null) && order.status == OrderStatus.delivered) {
+      return 'Servis Edildi';
+    }
+    return _getStatusText(order.status);
+  }
+
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
@@ -508,107 +515,226 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                     ],
                   ),
                 ),
-              // Items
-              ...order.items.asMap().entries.map((entry) {
-                final idx = entry.key;
-                final item = entry.value;
-                final posNum = item.positionNumber ?? (idx + 1);
-                // Check if this item is in the unavailable list
-                final isUnavailable = order.unavailableItems.any(
-                  (u) => (u['positionNumber'] as int?) == posNum,
-                );
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+              // Items and Totals
+              Builder(
+                builder: (context) {
+                  final authState = ref.read(authProvider);
+                  final currentUserId = authState.user?.uid;
+                  final isGroupOrder = order.tableSessionId != null;
+
+                  Widget buildItemRow(OrderItem item, int idx) {
+                    final posNum = item.positionNumber ?? (idx + 1);
+                    final isUnavailable = order.unavailableItems.any(
+                      (u) => (u['positionNumber'] as int?) == posNum,
+                    );
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Position badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                            margin: const EdgeInsets.only(right: 8, top: 1),
-                            decoration: BoxDecoration(
-                              color: isUnavailable ? Colors.red[400] : const Color(0xFFFF8000),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              '#$posNum',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                margin: const EdgeInsets.only(right: 8, top: 1),
+                                decoration: BoxDecoration(
+                                  color: isUnavailable ? Colors.red[400] : const Color(0xFFFF8000),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '#$posNum',
+                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                ),
                               ),
-                            ),
+                              SizedBox(
+                                width: 26,
+                                child: Text(
+                                  '${item.quantity.toStringAsFixed(item.quantity == item.quantity.roundToDouble() ? 0 : 1)}x',
+                                  style: TextStyle(
+                                    color: isUnavailable ? Colors.red[300] : Colors.grey[600],
+                                    fontSize: 13,
+                                    decoration: isUnavailable ? TextDecoration.lineThrough : null,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: isUnavailable ? Colors.red[300] : null,
+                                    decoration: isUnavailable ? TextDecoration.lineThrough : null,
+                                  ),
+                                ),
+                              ),
+                              if (isUnavailable)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  margin: const EdgeInsets.only(left: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red[50],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.red[200]!),
+                                  ),
+                                  child: Text(
+                                    '❌ Mevcut Değil',
+                                    style: TextStyle(fontSize: 10, color: Colors.red[700], fontWeight: FontWeight.w600),
+                                  ),
+                                )
+                              else
+                                Text(
+                                  '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                                ),
+                            ],
                           ),
-                          // Quantity
-                          SizedBox(
-                            width: 26,
-                            child: Text(
-                              '${item.quantity.toStringAsFixed(item.quantity == item.quantity.roundToDouble() ? 0 : 1)}x',
-                              style: TextStyle(
-                                color: isUnavailable ? Colors.red[300] : Colors.grey[600],
-                                fontSize: 13,
-                                decoration: isUnavailable ? TextDecoration.lineThrough : null,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              item.name,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: isUnavailable ? Colors.red[300] : null,
-                                decoration: isUnavailable ? TextDecoration.lineThrough : null,
-                              ),
-                            ),
-                          ),
-                          if (isUnavailable)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              margin: const EdgeInsets.only(left: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.red[50],
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.red[200]!),
-                              ),
+                          if (item.itemNote != null && item.itemNote!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 40, top: 2),
                               child: Text(
-                                '❌ Mevcut Değil',
-                                style: TextStyle(fontSize: 10, color: Colors.red[700], fontWeight: FontWeight.w600),
+                                '📝 ${item.itemNote}',
+                                style: TextStyle(fontSize: 12, color: Colors.amber[400]),
                               ),
-                            )
-                          else
-                            Text(
-                              '€${(item.price * item.quantity).toStringAsFixed(2)}',
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                             ),
                         ],
                       ),
-                      // Item note
-                      if (item.itemNote != null && item.itemNote!.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 40, top: 2),
-                          child: Text(
-                            '📝 ${item.itemNote}',
-                            style: TextStyle(fontSize: 12, color: Colors.amber[400]),
-                          ),
+                    );
+                  }
+
+                  if (!isGroupOrder) {
+                    // Standard single-user order rendering
+                    return Column(
+                      children: [
+                        ...order.items.asMap().entries.map((entry) => buildItemRow(entry.value, entry.key)),
+                        const Divider(height: 32),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Toplam', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            Text(
+                              '€${order.totalAmount.toStringAsFixed(2)}',
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
-                    ],
-                  ),
-                );
-              }),
-              const Divider(height: 16),
-              // Total
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Toplam', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  Text(
-                    '€${order.totalAmount.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ],
+                      ],
+                    );
+                  }
+
+                  // Group Order rendering logic
+                  // Group items by participantId
+                  final myItems = <OrderItem>[];
+                  final otherItemsByParticipant = <String, List<OrderItem>>{};
+                  final participantNames = <String, String>{}; // Maps ID -> Name
+
+                  double myTotal = 0.0;
+
+                  for (var item in order.items) {
+                    final pId = item.participantId;
+                    final pName = item.participantName ?? 'Bilinmeyen Kullanıcı';
+                    
+                    if (pId == currentUserId || (pId == null && item.participantName == null)) {
+                      // If it's the current user, or legacy fallback (no names/id)
+                      myItems.add(item);
+                      myTotal += (item.price * item.quantity);
+                    } else if (pId != null) {
+                      otherItemsByParticipant.putIfAbsent(pId, () => []).add(item);
+                      participantNames[pId] = pName;
+                    }
+                  }
+
+                  final widgets = <Widget>[];
+
+                  // 1. My Items Section
+                  if (myItems.isNotEmpty) {
+                    widgets.add(
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 8, top: 4),
+                        child: Row(
+                          children: [
+                            Icon(Icons.person, size: 16, color: Color(0xFFFF8000)),
+                            SizedBox(width: 6),
+                            Text('Benim Siparişim', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFFF8000))),
+                          ],
+                        ),
+                      )
+                    );
+                    for (int i = 0; i < myItems.length; i++) {
+                      widgets.add(buildItemRow(myItems[i], order.items.indexOf(myItems[i])));
+                    }
+                  }
+
+                  // 2. Other Participants Section
+                  if (otherItemsByParticipant.isNotEmpty) {
+                    otherItemsByParticipant.forEach((pId, items) {
+                      final pName = participantNames[pId] ?? 'Bilinmeyen Kullanıcı';
+                      widgets.add(const SizedBox(height: 8));
+                      widgets.add(
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8, top: 4),
+                          child: Row(
+                            children: [
+                              Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
+                              const SizedBox(width: 6),
+                              Text('$pName\'nin Siparişi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey[700])),
+                            ],
+                          ),
+                        )
+                      );
+                      double participantTotal = 0;
+                      for (var item in items) {
+                        participantTotal += (item.price * item.quantity);
+                        widgets.add(buildItemRow(item, order.items.indexOf(item)));
+                      }
+                      widgets.add(
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4, bottom: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text('Alt Toplam: €${participantTotal.toStringAsFixed(2)}', style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
+                            ],
+                          ),
+                        )
+                      );
+                    });
+                  }
+
+                  widgets.add(const Divider(height: 32));
+
+                  // 3. Totals Section
+                  widgets.add(
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Toplam (Benim Payım)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal)),
+                        Text(
+                          '€${myTotal.toStringAsFixed(2)}', 
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
+                        ),
+                      ],
+                    )
+                  );
+                  widgets.add(const SizedBox(height: 4));
+                  widgets.add(
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Grup Toplamı (Tüm Masa)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFF8000))),
+                        Text(
+                          '€${(myTotal < order.totalAmount ? order.totalAmount : myTotal).toStringAsFixed(2)}', // Fallback for total
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFF8000)),
+                        ),
+                      ],
+                    )
+                  );
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: widgets,
+                  );
+                },
               ),
               const SizedBox(height: 12),
               // Delivery address
@@ -645,37 +771,75 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   ],
                 ),
               ],
-              // Payment method
-              if (order.paymentMethod != null) ...[
-                const SizedBox(height: 8),
-                Row(
+              // Payment mapping and status inside a structured table view
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[900] : Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                ),
+                child: Column(
                   children: [
-                    Icon(Icons.payment, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 6),
-                    Text(
-                      order.paymentMethod == 'cash' ? 'Nakit Ödeme' : order.paymentMethod == 'card' ? 'Kart ile Ödeme' : 'Online Ödeme',
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    if (order.paymentMethod != null) ...[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.payment, size: 16, color: Colors.grey[600]),
+                              const SizedBox(width: 8),
+                              Text(
+                                order.paymentMethod == 'cash' ? 'Nakit Ödeme' : order.paymentMethod == 'card' ? 'Kart ile Ödeme' : 'Online Ödeme',
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '${order.createdAt.day.toString().padLeft(2, '0')}.${order.createdAt.month.toString().padLeft(2, '0')}.${(order.createdAt.year % 100).toString().padLeft(2, '0')} ${order.createdAt.hour.toString().padLeft(2, '0')}:${order.createdAt.minute.toString().padLeft(2, '0')}',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(height: 1, color: isDark ? Colors.grey[800] : Colors.grey[300]),
+                      ),
+                    ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              order.status == OrderStatus.delivered || order.status == OrderStatus.served ? Icons.check_circle_outline : Icons.info_outline,
+                              size: 16,
+                              color: _getStatusColor(order.status),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              _getStatusTextCustom(order),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: _getStatusColor(order.status),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Builder(
+                          builder: (context) {
+                            final statusDate = order.deliveredAt ?? order.updatedAt;
+                            return Text(
+                              '${statusDate.day.toString().padLeft(2, '0')}.${statusDate.month.toString().padLeft(2, '0')}.${(statusDate.year % 100).toString().padLeft(2, '0')} ${statusDate.hour.toString().padLeft(2, '0')}:${statusDate.minute.toString().padLeft(2, '0')}',
+                              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
-              // Status
-              const SizedBox(height: 12),
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(order.status).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    _getStatusText(order.status),
-                    style: TextStyle(
-                      color: _getStatusColor(order.status),
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ),
               ),
             ],
@@ -685,32 +849,41 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     );
   }
 
-  Widget _buildOrderModeTag(OrderType type, bool isDark) {
+  Widget _buildOrderModeTag(OrderType type, bool isDark, {String? tableSessionId}) {
     final IconData icon;
     final String label;
     final Color color;
 
-    switch (type) {
-      case OrderType.delivery:
-        icon = Icons.delivery_dining;
-        label = 'Kurye';
-        color = const Color(0xFF2196F3); // Blue
-      case OrderType.pickup:
-        icon = Icons.storefront;
-        label = 'Gel Al';
-        color = const Color(0xFFFFC107); // Orange
-      case OrderType.dineIn:
-        icon = Icons.restaurant;
-        label = 'Masa';
-        color = const Color(0xFF9C27B0); // Purple
+    if (tableSessionId != null) {
+      icon = Icons.groups;
+      label = 'Grup Siparişi';
+      color = const Color(0xFFE91E63); // Pink for groups
+    } else {
+      switch (type) {
+        case OrderType.delivery:
+          icon = Icons.delivery_dining;
+          label = 'Kurye';
+          color = const Color(0xFF2196F3); // Blue
+          break;
+        case OrderType.pickup:
+          icon = Icons.storefront;
+          label = 'Gel Al';
+          color = const Color(0xFFFFC107); // Orange
+          break;
+        case OrderType.dineIn:
+          icon = Icons.restaurant;
+          label = 'Masa';
+          color = const Color(0xFF9C27B0); // Purple
+          break;
+      }
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(isDark ? 0.2 : 0.1),
+        color: color.withValues(alpha: isDark ? 0.2 : 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.4), width: 0.5),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 0.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -726,6 +899,24 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               letterSpacing: 0.3,
             ),
           ),
+          if (widget.order.tableSessionId != null) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: lokmaOrange.withValues(alpha: isDark ? 0.2 : 0.1),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: lokmaOrange.withValues(alpha: 0.4), width: 0.5),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.groups, size: 11, color: lokmaOrange),
+                  const SizedBox(width: 2),
+                  const Text('Grup', style: TextStyle(color: lokmaOrange, fontSize: 9, fontWeight: FontWeight.bold)),
+                ]
+              )
+            )
+          ]
         ],
       ),
     );
@@ -846,8 +1037,8 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         style: TextStyle(color: subtitleColor, fontSize: 13),
                       ),
                       const SizedBox(height: 6),
-                      // Order mode tag (Kurye / Gel Al / Masa)
-                      _buildOrderModeTag(order.orderType, isDark),
+                      // Order mode tag (Kurye / Gel Al / Masa / Grup Siparişi)
+                      _buildOrderModeTag(order.orderType, isDark, tableSessionId: order.tableSessionId),
                       const SizedBox(height: 6),
                       // "Siparişi Görüntüle" link
                       GestureDetector(

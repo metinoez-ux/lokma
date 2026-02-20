@@ -42,6 +42,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   // Live counters
   int _pendingReservations = 0;
   int _activeTableSessions = 0;
+  int _pastShiftMinutes = 0;
 
   // Services for table dashboard
   final _sessionService = TableSessionService();
@@ -71,6 +72,9 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   Future<void> _restoreShift() async {
     await _shiftService.restoreShiftState();
     if (_shiftService.isOnShift && _shiftService.shiftStartedAt != null) {
+      if (_businessId != null) {
+        _pastShiftMinutes = await _shiftService.getPastTodayActiveMinutes(businessId: _businessId!);
+      }
       _startTimerFromExisting();
     }
     if (mounted) setState(() {});
@@ -110,7 +114,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         businessId: _businessId!,
         staffName: _staffName,
         tables: [],
+        isOtherRole: true,
       );
+      if (_businessId != null) {
+        _pastShiftMinutes = await _shiftService.getPastTodayActiveMinutes(businessId: _businessId!);
+      }
       if (shiftId != null) _startTimerFresh();
       if (mounted) setState(() => _shiftLoading = false);
       return;
@@ -126,7 +134,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         businessId: _businessId!,
         staffName: _staffName,
         tables: selectedTables,
+        isOtherRole: false,
       );
+      if (_businessId != null) {
+        _pastShiftMinutes = await _shiftService.getPastTodayActiveMinutes(businessId: _businessId!);
+      }
       if (shiftId != null) _startTimerFresh();
       if (mounted) setState(() => _shiftLoading = false);
       return;
@@ -143,7 +155,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       staffName: _staffName,
       tables: result['tables'] as List<int>,
       isDeliveryDriver: result['isDeliveryDriver'] as bool,
+      isOtherRole: result['isDiger'] as bool,
     );
+    if (_businessId != null) {
+      _pastShiftMinutes = await _shiftService.getPastTodayActiveMinutes(businessId: _businessId!);
+    }
     if (shiftId != null) _startTimerFresh();
     if (mounted) setState(() => _shiftLoading = false);
   }
@@ -355,7 +371,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     child: SizedBox(
                       width: double.infinity,
                       height: 52,
-                      child: FilledButton(
+                      child: FilledButton.icon(
                         onPressed: canStart
                             ? () => Navigator.pop(ctx, {
                                 'tables': masaEnabled ? (selectedTables.toList()..sort()) : <int>[],
@@ -364,10 +380,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               })
                             : null,
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFFB335B),
+                          backgroundColor: Colors.green,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        child: Text(
+                        icon: const Icon(Icons.play_arrow),
+                        label: Text(
                           _buildStartButtonLabel(masaEnabled, kuryeEnabled, digerEnabled, selectedTables.length),
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                         ),
@@ -632,17 +649,18 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     child: SizedBox(
                       width: double.infinity,
                       height: 52,
-                      child: FilledButton(
+                      child: FilledButton.icon(
                         onPressed: selected.isEmpty
                             ? null
                             : () => Navigator.pop(ctx, selected.toList()..sort()),
                         style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFFB335B),
+                          backgroundColor: Colors.green,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: Text(
+                        icon: const Icon(Icons.play_arrow),
+                        label: Text(
                           selected.isEmpty
                               ? 'Masa seçin'
                               : 'Vardiyayı Başlat (${selected.length} masa)',
@@ -1648,6 +1666,50 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                       ),
                                   ],
                                 ),
+                                const SizedBox(height: 8),
+                                // Roles + Total Time row
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    // Roles
+                                    Expanded(
+                                      child: Wrap(
+                                        spacing: 6,
+                                        runSpacing: 4,
+                                        children: [
+                                          if (_shiftService.isDeliveryDriver)
+                                            _buildRoleBadge('Kurye', Icons.local_shipping, accentColor),
+                                          if (_shiftService.currentTables.isNotEmpty)
+                                            _buildRoleBadge('Masa', Icons.table_restaurant, accentColor),
+                                          if (_shiftService.isOtherRole)
+                                            _buildRoleBadge('Diğer Görevler', Icons.work_outline, accentColor),
+                                          if (!_shiftService.isDeliveryDriver && _shiftService.currentTables.isEmpty && !_shiftService.isOtherRole)
+                                            _buildRoleBadge('Personel', Icons.person, accentColor),
+                                        ],
+                                      ),
+                                    ),
+                                    // Total Time
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          'Bugün Toplam',
+                                          style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w600),
+                                        ),
+                                        Text(
+                                          _formatElapsed(Duration(minutes: _pastShiftMinutes) + _shiftElapsed),
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: accentColor,
+                                            fontFeatures: const [FontFeature.tabularFigures()],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                                 // Tables + Reservations row
                                 if (_shiftService.currentTables.isNotEmpty || (_hasReservation && _businessId != null)) ...[
                                   const SizedBox(height: 6),
@@ -1856,6 +1918,28 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     ],
                   ),
                 ),
+    );
+  }
+
+  Widget _buildRoleBadge(String label, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+          ),
+        ],
+      ),
     );
   }
 

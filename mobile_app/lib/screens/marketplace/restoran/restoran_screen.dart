@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
@@ -102,6 +103,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   bool _filterDiscounts = false;      // İndirimli ürünler
   bool _filterCash = false;           // Nakit ödeme kabul
   bool _filterFreeDelivery = false;   // Ücretsiz teslimat
+  
+  // 🆕 Active Session UI
+  String? _activeSessionId;
   bool _filterMealCards = false;      // Yemek kartı kabul
   bool _filterHighRating = false;     // 4+ yıldız
   bool _filterOpenNow = false;        // Şimdi açık
@@ -113,6 +117,19 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     super.initState();
     // Location now comes from cached userLocationProvider - no API call here!
     _loadSectorsAndBusinesses();
+    _checkActiveSession();
+  }
+
+  Future<void> _checkActiveSession() async {
+    // Need a short delay to ensure provider is ready if it's called too early
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
+    final sessionId = await ref.read(tableGroupProvider.notifier).checkCachedSession();
+    if (mounted && sessionId != null) {
+      setState(() {
+        _activeSessionId = sessionId;
+      });
+    }
   }
   
   Future<void> _loadSectorsAndBusinesses() async {
@@ -187,8 +204,56 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     });
   }
   
+  Timer? _masaIdleTimer;
+  
+  void _setScannedTable(String? tableNum, String? bId, String? bName) {
+    setState(() {
+      _scannedTableNumber = tableNum;
+      _scannedBusinessId = bId;
+      _scannedBusinessName = bName;
+    });
+
+    _masaIdleTimer?.cancel();
+
+    if (tableNum != null) {
+      _masaIdleTimer = Timer(const Duration(minutes: 15), () {
+        if (!mounted) return;
+        
+        setState(() {
+          _scannedTableNumber = null;
+          _scannedBusinessId = null;
+          _scannedBusinessName = null;
+        });
+        
+        ref.read(cartProvider.notifier).clearCart();
+
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                SizedBox(width: 8),
+                Text('Zaman Aşımı Uyarısı'),
+              ],
+            ),
+            content: const Text(
+                '15 dakikadır siparişinizi tamamlamadınız. Masanın başka müşterilere açılabilmesi için masa numaranız sıfırlanmıştır.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Tamam'),
+              ),
+            ],
+          ),
+        );
+      });
+    }
+  }
+
   @override
   void dispose() {
+    _masaIdleTimer?.cancel();
     _businessesSubscription?.cancel();
     super.dispose();
   }
@@ -2493,12 +2558,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               _buildCompactLocationHeader(),
               _buildDeliveryModeTabs(),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
 
-              // 2) Hero Illustration
+              // Restoring the Hero Illustration (Compact version)
               Container(
-                width: 90,
-                height: 90,
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -2512,14 +2577,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 ),
                 child: Icon(
                   Icons.restaurant,
-                  size: 44,
+                  size: 32,
                   color: lokmaPink.withOpacity(0.7),
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              // 3) Title
+              // 2) Title & Subtitle
               Text(
                 'Masanızdan Sipariş Verin',
                 style: TextStyle(
@@ -2543,7 +2608,113 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24), // Reduced spacing
+
+              // ============================
+              // 4A) ACTIVE SESSION BUTTON
+              // ============================
+              if (_activeSessionId != null) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: GestureDetector(
+                    onTap: () async {
+                      // Attempt to resume the session first to get valid data
+                      final notifier = ref.read(tableGroupProvider.notifier);
+                      final success = await notifier.resumeSession(_activeSessionId!);
+                      if (success && mounted) {
+                        final session = ref.read(tableGroupProvider).session;
+                        if (session != null) {
+                           Navigator.of(context, rootNavigator: true).push(
+                             MaterialPageRoute(
+                               builder: (_) => GroupTableOrderScreen(
+                                 businessId: session.businessId,
+                                 businessName: session.businessName,
+                                 tableNumber: session.tableNumber,
+                                 sessionId: session.id,
+                               ),
+                             ),
+                           );
+                        }
+                      } else if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Sipariş oturumu bulunamadı veya süresi dolmuş.'))
+                        );
+                        setState(() { _activeSessionId = null; });
+                        notifier.clearSession();
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.teal.shade500,
+                            Colors.teal.shade600,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.teal.withValues(alpha: 0.2),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.history,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Aktif Siparişinize Dönün',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                    letterSpacing: -0.2,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Önceki masanıza hemen geçin',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // ============================
               // 4) HERO QR SCAN BUTTON
@@ -3159,6 +3330,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
+        bool isScanned = false;
+        
         return Container(
           height: MediaQuery.of(context).size.height * 0.75,
           decoration: BoxDecoration(
@@ -3229,11 +3402,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     borderRadius: BorderRadius.circular(18),
                     child: MobileScanner(
                       onDetect: (capture) {
+                        if (isScanned) return;
                         final barcodes = capture.barcodes;
                         if (barcodes.isEmpty) return;
 
                         final rawValue = barcodes.first.rawValue ?? '';
                         if (rawValue.isEmpty) return;
+
+                        isScanned = true;
 
                         // Extract table number + businessId from QR data
                         // Format: https://lokma.web.app/dinein/{businessId}/table/{num}
@@ -3395,11 +3571,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
     if (businessId == null || businessId.isEmpty) {
       // No business found — just set table number
-      setState(() {
-        _scannedTableNumber = tableNum;
-        _scannedBusinessId = null;
-        _scannedBusinessName = null;
-      });
+      _setScannedTable(tableNum, null, null);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -3429,21 +3601,45 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       if (!mounted) return;
 
       if (activeSession != null) {
-        // Active session found — show join dialog
-        _showMasaJoinGroupDialog(activeSession, tableNum, businessId, businessName ?? 'İşletme');
+        final user = FirebaseAuth.instance.currentUser;
+        bool isAlreadyInGroup = false;
+        
+        if (user != null) {
+          isAlreadyInGroup = activeSession.hostUserId == user.uid || 
+              activeSession.participants.any((p) => p.userId == user.uid);
+        }
+
+        if (isAlreadyInGroup) {
+          // Bypass dialog, directly enter the group session
+          _setScannedTable(tableNum, businessId, businessName);
+          Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(
+              builder: (_) => GroupTableOrderScreen(
+                businessId: businessId ?? '',
+                businessName: businessName ?? 'İşletme',
+                tableNumber: tableNum,
+                sessionId: activeSession.id,
+              ),
+            ),
+          );
+        } else {
+          // Active session found — show join dialog
+          _showMasaJoinGroupDialog(activeSession, tableNum, businessId, businessName ?? 'İşletme');
+        }
       } else {
         // No active session — show create or solo option
+        // Clear any old, stale session cache completely
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('table_group_session_id');
+        ref.read(tableGroupProvider.notifier).clearSession();
+        
         _showMasaCreateGroupDialog(tableNum, businessId, businessName ?? 'İşletme');
       }
     } catch (e) {
       debugPrint('Error checking group session: $e');
       // Fallback: just set table number
       if (mounted) {
-        setState(() {
-          _scannedTableNumber = tableNum;
-          _scannedBusinessId = businessId;
-          _scannedBusinessName = businessName;
-        });
+        _setScannedTable(tableNum, businessId, businessName);
       }
     }
   }
@@ -3619,11 +3815,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       );
                       if (success && mounted) {
                         Navigator.pop(ctx);
-                        setState(() {
-                          _scannedTableNumber = tableNum;
-                          _scannedBusinessId = businessId;
-                          _scannedBusinessName = businessName;
-                        });
+                        _setScannedTable(tableNum, businessId, businessName);
                         Navigator.of(context, rootNavigator: true).push(
                           MaterialPageRoute(
                             builder: (_) => GroupTableOrderScreen(
@@ -3637,7 +3829,16 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       }
                     } catch (e) {
                       if (e.toString().contains('WRONG_PIN')) {
-                        setSheetState(() => pinError = 'Bu doğru PIN kodu değil. Grup siparişini başlatan kişiye sorun.');
+                        setSheetState(() => pinError = 'Yanlış PIN kodu girdiniz.');
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Yanlış PIN kodu girdiniz. Lütfen grup siparişini başlatan kişiye kodu sorun.'),
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
                       } else {
                         setSheetState(() => pinError = 'Hata: $e');
                       }
@@ -3661,11 +3862,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 child: OutlinedButton(
                   onPressed: () {
                     Navigator.pop(ctx);
-                    setState(() {
-                      _scannedTableNumber = tableNum;
-                      _scannedBusinessId = businessId;
-                      _scannedBusinessName = businessName;
-                    });
+                    _setScannedTable(tableNum, businessId, businessName);
+                    if (businessId != null && businessId.isNotEmpty) {
+                      context.push('/kasap/$businessId?mode=masa&table=$tableNum');
+                    }
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.grey[600],
@@ -3677,6 +3877,64 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 ),
               ),
               const SizedBox(height: 16),
+              
+              // Reset Session Option
+              TextButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (confirmCtx) => AlertDialog(
+                      title: const Text('Oturumu Kapat'),
+                      content: const Text(
+                        'Şifreye ulaşamıyor musunuz? Masadaki mevcut sipariş oturumunu kapatıp baştan başlayabilirsiniz. Bu işlem mevcut gruptakilerin siparişe devam etmesini engeller. Devam etmek istiyor musunuz?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(confirmCtx),
+                          child: const Text('Vazgeç', style: TextStyle(color: Colors.grey)),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            Navigator.pop(confirmCtx); // close confirm dialog
+                            Navigator.pop(ctx); // close join bottom sheet
+                            
+                            // Cancel current session
+                            try {
+                              await TableGroupService.instance.cancelSession(activeSession.id);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Önceki oturum kapatıldı. Şimdi yeni bir başlangıç yapabilirsiniz.'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                                // Show create dialog directly after cleanup
+                                _showMasaCreateGroupDialog(tableNum, businessId, businessName);
+                              }
+                            } catch (e) {
+                              debugPrint('Hata cancelling session: $e');
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Hata: $e'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text('Evet, Oturumu Kapat', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: const Text(
+                  'Şifreyi Öğrenemiyorum / Oturumu Sıfırla',
+                  style: TextStyle(color: Colors.red, fontSize: 13, decoration: TextDecoration.underline),
+                ),
+              ),
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -3752,28 +4010,28 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
+                  onPressed: () {
                   Navigator.pop(ctx);
-                  setState(() {
-                    _scannedTableNumber = tableNum;
-                    _scannedBusinessId = businessId;
-                    _scannedBusinessName = businessName;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Row(
-                        children: [
-                          const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                          const SizedBox(width: 8),
-                          Text('Masa $tableNum doğrulandı ✓'),
-                        ],
+                  _setScannedTable(tableNum, businessId, businessName);
+                  if (businessId != null && businessId.isNotEmpty) {
+                    context.push('/kasap/$businessId?mode=masa&table=$tableNum');
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                            const SizedBox(width: 8),
+                            Text('Masa $tableNum doğrulandı ✓'),
+                          ],
+                        ),
+                        backgroundColor: Colors.green,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        duration: const Duration(seconds: 2),
                       ),
-                      backgroundColor: Colors.green,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
+                    );
+                  }
                 },
                 icon: Icon(Icons.person, color: Colors.grey[600]),
                 label: Text(
@@ -3810,11 +4068,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
       if (session == null || !mounted) return;
 
-      setState(() {
-        _scannedTableNumber = tableNum;
-        _scannedBusinessId = businessId;
-        _scannedBusinessName = businessName;
-      });
+      _setScannedTable(tableNum, businessId, businessName);
 
       // Show PIN to host before navigating
       final pin = session.groupPin ?? '----';

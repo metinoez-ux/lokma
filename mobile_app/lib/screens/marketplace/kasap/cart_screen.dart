@@ -3096,6 +3096,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
+        bool isScanned = false;
+
         return Container(
           height: MediaQuery.of(context).size.height * 0.75,
           decoration: BoxDecoration(
@@ -3166,11 +3168,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     borderRadius: BorderRadius.circular(18),
                     child: MobileScanner(
                       onDetect: (capture) {
+                        if (isScanned) return;
                         final barcodes = capture.barcodes;
                         if (barcodes.isEmpty) return;
                         
                         final rawValue = barcodes.first.rawValue ?? '';
                         if (rawValue.isEmpty) return;
+
+                        isScanned = true;
                         
                         // Extract table number from QR data
                         // Priority 1: URL format - https://lokma.web.app/dinein/{id}/table/{num}

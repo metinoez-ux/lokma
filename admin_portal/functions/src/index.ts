@@ -413,9 +413,19 @@ export const onOrderStatusChange = onDocumentUpdated(
         // Only process if status changed
         if (before.status === after.status) return;
 
-        // Support both field names for customer FCM token (mobile uses 'fcmToken')
-        const customerFcmToken = after.customerFcmToken || after.fcmToken;
-        const hasCustomerToken = !!customerFcmToken;
+        // Gather all possible FCM tokens for the customer(s)
+        const tokenSet = new Set<string>();
+        if (after.fcmToken) tokenSet.add(after.fcmToken);
+        if (after.customerFcmToken) tokenSet.add(after.customerFcmToken);
+        if (after.fcmTokens && Array.isArray(after.fcmTokens)) {
+            after.fcmTokens.forEach((t: any) => {
+                if (typeof t === "string" && t) tokenSet.add(t);
+            });
+        }
+
+        const customerTokens = Array.from(tokenSet);
+        const hasCustomerToken = customerTokens.length > 0;
+
         if (!hasCustomerToken) {
             console.log("No customer FCM token found, will skip customer notification but continue for driver notifications");
         }
@@ -433,6 +443,10 @@ export const onOrderStatusChange = onDocumentUpdated(
         let body = "";
 
         switch (newStatus) {
+            case "accepted":
+                title = `✅ Siparişiniz Onaylandı${orderTag}`;
+                body = `${orderNumber} - ${businessName} siparişinizi onayladı`;
+                break;
             case "preparing":
                 title = `👨‍🍳 Siparişiniz Hazırlanıyor${orderTag}`;
                 body = `${orderNumber} - ${businessName} siparişinizi hazırlıyor`;
@@ -702,24 +716,96 @@ export const onOrderStatusChange = onDocumentUpdated(
                 return; // Don't send notification for other statuses
         }
 
-        // Only send customer notification if we have a token
-        if (hasCustomerToken && title && body) {
+        // Only send customer notification if we have a token or valid users
+        if ((hasCustomerToken || after.userId) && title && body) {
             try {
-                await messaging.send({
+                const messagePayload = {
                     notification: { title, body },
                     data: {
                         type: "order_status",
                         orderId: event.params.orderId,
                         status: newStatus,
                     },
-                    token: customerFcmToken,
-                });
-                console.log(`Sent ${newStatus} notification to customer`);
+                };
+
+                // Save to Firestore History
+                const userIds = new Set<string>();
+                if (after.userId) userIds.add(after.userId);
+
+                if (after.isGroupOrder && after.groupSessionId) {
+                    const sessionSnap = await db.collection("table_group_sessions").doc(after.groupSessionId).get();
+                    if (sessionSnap.exists) {
+                        const sessionData = sessionSnap.data();
+                        let sessionChanged = false;
+
+                        if (sessionData && Array.isArray(sessionData.participants)) {
+                            sessionData.participants.forEach((p: any) => {
+                                if (p.userId) userIds.add(p.userId);
+
+                                // FIX 12: Sync order status back to session items for real-time UI updates
+                                if (Array.isArray(p.items)) {
+                                    p.items.forEach((item: any) => {
+                                        if (item.orderId === event.params.orderId && item.orderStatus !== newStatus) {
+                                            item.orderStatus = newStatus;
+                                            sessionChanged = true;
+                                        }
+                                    });
+                                }
+                            });
+
+                            // Write back the updated participant array if statuses changed
+                            if (sessionChanged) {
+                                await db.collection("table_group_sessions").doc(after.groupSessionId).update({
+                                    participants: sessionData.participants,
+                                });
+                                console.log(`[Status Sync] Updated orderStatus to ${newStatus} in session ${after.groupSessionId}`);
+                            }
+                        }
+                    }
+                }
+
+                if (userIds.size > 0) {
+                    const batch = db.batch();
+                    const notificationData = {
+                        title,
+                        body,
+                        type: "order_status",
+                        orderId: event.params.orderId,
+                        status: newStatus,
+                        rawOrderNumber,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                        read: false,
+                    };
+
+                    userIds.forEach(uid => {
+                        const ref = db.collection("users").doc(uid).collection("notifications").doc();
+                        batch.set(ref, notificationData);
+                    });
+                    await batch.commit();
+                    console.log(`Saved notification history for ${userIds.size} users`);
+                }
+
+                // Send FCM via Messaging
+                if (hasCustomerToken) {
+                    if (customerTokens.length === 1) {
+                        await messaging.send({
+                            ...messagePayload,
+                            token: customerTokens[0],
+                        });
+                        console.log(`Sent ${newStatus} notification to customer (single device)`);
+                    } else {
+                        const response = await messaging.sendEachForMulticast({
+                            ...messagePayload,
+                            tokens: customerTokens,
+                        });
+                        console.log(`Sent ${newStatus} notification to ${response.successCount}/${customerTokens.length} customer devices`);
+                    }
+                }
             } catch (error) {
-                console.error("Error sending notification to customer:", error);
+                console.error("Error saving/sending notification to customer(s):", error);
             }
-        } else if (!hasCustomerToken) {
-            console.log(`Skipped customer notification for ${newStatus} - no FCM token`);
+        } else if (!hasCustomerToken && !after.userId) {
+            console.log(`Skipped customer notification for ${newStatus} - no FCM token(s) or userId`);
         }
     }
 );

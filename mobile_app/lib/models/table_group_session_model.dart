@@ -19,6 +19,9 @@ class TableGroupItem {
   final String? imageUrl;
   final String? itemNote;
   final List<Map<String, dynamic>> selectedOptions;
+  final bool isSubmitted;
+  final String? orderId;
+  final String? orderStatus;
 
   TableGroupItem({
     required this.productId,
@@ -29,6 +32,9 @@ class TableGroupItem {
     this.imageUrl,
     this.itemNote,
     this.selectedOptions = const [],
+    this.isSubmitted = false,
+    this.orderId,
+    this.orderStatus,
   });
 
   Map<String, dynamic> toMap() {
@@ -41,6 +47,9 @@ class TableGroupItem {
       'imageUrl': imageUrl,
       'itemNote': itemNote,
       if (selectedOptions.isNotEmpty) 'selectedOptions': selectedOptions,
+      'isSubmitted': isSubmitted,
+      'orderId': orderId,
+      'orderStatus': orderStatus ?? (isSubmitted ? 'pending' : null),
     };
   }
 
@@ -57,10 +66,20 @@ class TableGroupItem {
               ?.map((e) => Map<String, dynamic>.from(e as Map))
               .toList() ??
           [],
+      isSubmitted: map['isSubmitted'] ?? false,
+      orderId: map['orderId'],
+      orderStatus: map['orderStatus'],
     );
   }
 
-  TableGroupItem copyWith({int? quantity, double? totalPrice, String? itemNote}) {
+  TableGroupItem copyWith({
+    int? quantity,
+    double? totalPrice,
+    String? itemNote,
+    bool? isSubmitted,
+    String? orderId,
+    String? orderStatus,
+  }) {
     return TableGroupItem(
       productId: productId,
       productName: productName,
@@ -70,6 +89,9 @@ class TableGroupItem {
       imageUrl: imageUrl,
       itemNote: itemNote ?? this.itemNote,
       selectedOptions: selectedOptions,
+      isSubmitted: isSubmitted ?? this.isSubmitted,
+      orderId: orderId ?? this.orderId,
+      orderStatus: orderStatus ?? this.orderStatus,
     );
   }
 }
@@ -86,6 +108,7 @@ class TableGroupParticipant {
   final String paymentStatus; // 'pending' | 'paid'
   final String? paymentMethod; // 'cash' | 'card'
   final DateTime? paidAt;
+  final String? fcmToken;     // Katılımcının Push (FCM) Token bilgisi
 
   TableGroupParticipant({
     required this.participantId,
@@ -98,10 +121,12 @@ class TableGroupParticipant {
     this.paymentStatus = 'pending',
     this.paymentMethod,
     this.paidAt,
+    this.fcmToken,
   });
 
   bool get isPaid => paymentStatus == 'paid';
   int get totalItemCount => items.fold(0, (sum, item) => sum + item.quantity);
+  bool get hasUnsubmittedItems => items.any((i) => !i.isSubmitted);
 
   Map<String, dynamic> toMap() {
     return {
@@ -115,6 +140,7 @@ class TableGroupParticipant {
       'paymentStatus': paymentStatus,
       'paymentMethod': paymentMethod,
       'paidAt': paidAt != null ? Timestamp.fromDate(paidAt!) : null,
+      'fcmToken': fcmToken,
     };
   }
 
@@ -133,6 +159,7 @@ class TableGroupParticipant {
       paymentStatus: map['paymentStatus'] ?? 'pending',
       paymentMethod: map['paymentMethod'],
       paidAt: (map['paidAt'] as Timestamp?)?.toDate(),
+      fcmToken: map['fcmToken'],
     );
   }
 
@@ -143,6 +170,7 @@ class TableGroupParticipant {
     String? paymentStatus,
     String? paymentMethod,
     DateTime? paidAt,
+    String? fcmToken,
   }) {
     return TableGroupParticipant(
       participantId: participantId,
@@ -155,6 +183,7 @@ class TableGroupParticipant {
       paymentStatus: paymentStatus ?? this.paymentStatus,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       paidAt: paidAt ?? this.paidAt,
+      fcmToken: fcmToken ?? this.fcmToken,
     );
   }
 }
@@ -176,6 +205,9 @@ class TableGroupSession {
   final String? paidByUserId;
   final DateTime createdAt;
   final DateTime? closedAt;
+  final String? cancelReason;
+  final String? cancelledBy;
+  final String? activePendingOrderId; // ID of the currently 'pending' consolidated order
 
   TableGroupSession({
     required this.id,
@@ -193,6 +225,9 @@ class TableGroupSession {
     this.paidByUserId,
     required this.createdAt,
     this.closedAt,
+    this.cancelReason,
+    this.cancelledBy,
+    this.activePendingOrderId,
   });
 
   /// Kalan hesap tutarı
@@ -210,11 +245,29 @@ class TableGroupSession {
   /// Hazır olan katılımcı sayısı
   int get readyCount => participants.where((p) => p.isReady).length;
 
-  /// Tüm katılımcılar hazır mı?
-  bool get allReady => participants.isNotEmpty && participants.every((p) => p.isReady);
+  /// Henüz mutfağa gönderilmemiş (bekleyen) ürünleri olan katılımcısı var mı?
+  bool get hasUnsubmittedItems => participants.any((p) => p.hasUnsubmittedItems);
+
+  /// Sadece yeni/bekleyen ürünü olan katılımcılar arasında hazır olanların sayısı
+  int get readyPendingParticipantCount {
+    final pendingParticipants = participants.where((p) => p.hasUnsubmittedItems).toList();
+    return pendingParticipants.where((p) => p.isReady).length;
+  }
+
+  /// Yeni/bekleyen ürünü olan tüm katılımcı sayısı
+  int get pendingParticipantCount {
+    return participants.where((p) => p.hasUnsubmittedItems).length;
+  }
+
+  /// Yeni/bekleyen ürünü olan TÜM katılımcılar hazır mı?
+  bool get allReady {
+    final pendingParticipants = participants.where((p) => p.hasUnsubmittedItems).toList();
+    if (pendingParticipants.isEmpty) return false;
+    return pendingParticipants.every((p) => p.isReady);
+  }
 
   /// Host mutfağa yollayabilir mi?
-  bool get canSubmitToKitchen => allReady && status == GroupSessionStatus.active;
+  bool get canSubmitToKitchen => hasUnsubmittedItems && allReady && status == GroupSessionStatus.active;
 
   /// Toplam ürün sayısı (tüm katılımcılar)
   int get totalItemCount => participants.fold(0, (sum, p) => sum + p.totalItemCount);
@@ -262,6 +315,9 @@ class TableGroupSession {
       'paidByUserId': paidByUserId,
       'createdAt': Timestamp.fromDate(createdAt),
       'closedAt': closedAt != null ? Timestamp.fromDate(closedAt!) : null,
+      'cancelReason': cancelReason,
+      'cancelledBy': cancelledBy,
+      'activePendingOrderId': activePendingOrderId,
     };
   }
 
@@ -289,6 +345,9 @@ class TableGroupSession {
       paidByUserId: data['paidByUserId'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       closedAt: (data['closedAt'] as Timestamp?)?.toDate(),
+      cancelReason: data['cancelReason'],
+      cancelledBy: data['cancelledBy'],
+      activePendingOrderId: data['activePendingOrderId'],
     );
   }
 
@@ -301,6 +360,9 @@ class TableGroupSession {
     String? paymentType,
     String? paidByUserId,
     DateTime? closedAt,
+    String? cancelReason,
+    String? cancelledBy,
+    String? activePendingOrderId,
   }) {
     return TableGroupSession(
       id: id,
@@ -318,6 +380,9 @@ class TableGroupSession {
       paidByUserId: paidByUserId ?? this.paidByUserId,
       createdAt: createdAt,
       closedAt: closedAt ?? this.closedAt,
+      cancelReason: cancelReason ?? this.cancelReason,
+      cancelledBy: cancelledBy ?? this.cancelledBy,
+      activePendingOrderId: activePendingOrderId ?? this.activePendingOrderId,
     );
   }
 }

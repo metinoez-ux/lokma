@@ -1,7 +1,10 @@
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/table_group_session_model.dart';
 import '../../models/butcher_product.dart';
@@ -36,19 +39,65 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   String _menuSearchQuery = '';
   bool _isSubmitting = false;
   bool _hasShownClosedPrompt = false;
+  Timer? _idleTimer;
 
-  // LOKMA brand accent
-  static const Color _accent = Color(0xFFFF8000);
+  // LOKMA brand accent (Rose-500)
+  static const Color _accent = Color(0xFFFB335B);
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _autoResumeIfNeeded();
+    _startIdleTimer();
+  }
+
+  void _startIdleTimer() {
+    _idleTimer?.cancel();
+    _idleTimer = Timer(const Duration(minutes: 15), _showIdleWarningDialogIfNeeded);
+  }
+
+  void _showIdleWarningDialogIfNeeded() {
+    if (!mounted) return;
+    
+    final groupState = ref.read(tableGroupProvider);
+    final session = groupState.session;
+    final participantId = groupState.myParticipantId;
+    
+    if (session == null || participantId == null) return;
+    
+    final me = session.participants.cast<TableGroupParticipant?>().firstWhere(
+      (p) => p?.participantId == participantId, 
+      orElse: () => null
+    );
+    
+    // Check if user has submitted any items
+    if (me != null && !me.items.any((i) => i.isSubmitted)) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Zaman Aşımı Uyarısı'),
+            ],
+          ),
+          content: const Text('15 dakikadır hiçbir ürün sipariş etmediniz. Masanın yeni müşterilere açılabilmesi için lütfen siparişinizi tamamlayınız veya masayı boşaltınız.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Tamam'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
   void dispose() {
+    _idleTimer?.cancel();
     _tabController.dispose();
     super.dispose();
   }
@@ -76,6 +125,12 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
 
   /// Show account creation prompt for anonymous/guest users after successful payment
   void _showAccountCreationPrompt() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && !user.isAnonymous) {
+      // User is already logged in, no need to show the prompt
+      return;
+    }
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
@@ -144,7 +199,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                 ),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF8000), // LOKMA brand orange
+                  backgroundColor: _accent, // LOKMA brand rose
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
@@ -185,23 +240,83 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ref.read(tableGroupProvider.notifier).clearSession();
-        Navigator.of(context).pop();
+        context.go('/restoran');
+        final String title = 'Siparişiniz işletme tarafından iptal edildi';
+        final String? reason = session.cancelReason;
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Row(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.cancel, color: Colors.white, size: 20),
-                SizedBox(width: 8),
-                Text('Grup siparişi iptal edildi'),
+                Row(
+                  children: [
+                    const Icon(Icons.cancel, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+                if (reason != null && reason.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 28.0),
+                    child: Text(
+                      'Sebep: $reason',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
               ],
             ),
-            backgroundColor: Colors.red.shade600,
+            backgroundColor: Colors.red.shade700,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            duration: const Duration(seconds: 6),
           ),
         );
       });
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // Check if the current user was kicked/removed by the host
+    final currentUserRef = ref.watch(authProvider).user;
+    if (session != null && currentUserRef != null && session.hostUserId != currentUserRef.uid) {
+      final isStillInSession = session.participants.any((p) => p.userId == currentUserRef.uid);
+      if (!isStillInSession) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ref.read(tableGroupProvider.notifier).clearSession();
+          context.go('/restoran');
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.person_remove, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Grup yöneticisi tarafından oturumdan çıkarıldınız.',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.orange.shade800,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        });
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
     }
 
     // Handle closed session — show success + account creation prompt for guests
@@ -285,6 +400,35 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         surfaceTintColor: scaffoldBg,
         centerTitle: true,
         actions: [
+          if (session != null && session.groupPin != null)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.pin, size: 14, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600),
+                      const SizedBox(width: 4),
+                      Text(
+                        session.groupPin!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
             onSelected: (value) {
@@ -576,7 +720,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     final groupState = ref.watch(tableGroupProvider);
     final myItems = groupState.myParticipant?.items ?? [];
     final existingItem = myItems.cast<TableGroupItem?>().firstWhere(
-      (i) => i?.productId == product.id,
+      (i) => i?.productId == product.id && !(i?.isSubmitted ?? false),
       orElse: () => null,
     );
     final inCart = existingItem != null;
@@ -644,11 +788,12 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               children: [
                 _circleButton(Icons.remove, () {
                   HapticFeedback.lightImpact();
-                  final newQty = cartQty - (product.unitType == 'kg' ? product.stepQuantity.toInt() : 1);
+                  final step = product.unitType == 'kg' ? product.stepQuantity : 1.0;
+                  final newQty = cartQty - step;
                   if (newQty <= 0) {
                     groupNotifier.removeItem(product.id);
                   } else {
-                    groupNotifier.updateItemQuantity(product.id, newQty);
+                    groupNotifier.updateItemQuantity(product.id, newQty.toInt() > 0 ? newQty.round() : 1);
                   }
                 }),
                 Padding(
@@ -662,8 +807,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 ),
                 _circleButton(Icons.add, () {
                   HapticFeedback.lightImpact();
-                  final increment = product.unitType == 'kg' ? product.stepQuantity.toInt() : 1;
-                  groupNotifier.updateItemQuantity(product.id, cartQty + increment);
+                  final step = product.unitType == 'kg' ? product.stepQuantity : 1.0;
+                  groupNotifier.updateItemQuantity(product.id, (cartQty + step).round());
                 }),
               ],
             )
@@ -834,34 +979,95 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           // Total + controls
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 '€${item.totalPrice.toStringAsFixed(2)}',
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
               ),
               const SizedBox(height: 4),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _miniCircleButton(Icons.remove, () {
-                    HapticFeedback.lightImpact();
-                    if (item.quantity <= 1) {
-                      groupNotifier.removeItem(item.productId);
-                    } else {
-                      groupNotifier.updateItemQuantity(item.productId, item.quantity - 1);
+              if (item.isSubmitted) ...[
+                Builder(
+                  builder: (context) {
+                    String statusText = '🍽️ Siparişte';
+                    Color statusColor = Colors.grey.shade700;
+                    Color statusBgColor = Colors.grey.withOpacity(0.1);
+
+                    switch (item.orderStatus) {
+                      case 'pending':
+                        statusText = '⏳ Bekliyor';
+                        statusColor = Colors.orange.shade800;
+                        statusBgColor = Colors.orange.withOpacity(0.1);
+                        break;
+                      case 'accepted':
+                        statusText = '✅ Onaylandı';
+                        statusColor = Colors.blue.shade700;
+                        statusBgColor = Colors.blue.withOpacity(0.1);
+                        break;
+                      case 'preparing':
+                        statusText = '👨‍🍳 Hazırlanıyor';
+                        statusColor = Colors.blue.shade700;
+                        statusBgColor = Colors.blue.withOpacity(0.1);
+                        break;
+                      case 'ready':
+                        statusText = '✅ Hazır';
+                        statusColor = Colors.green.shade700;
+                        statusBgColor = Colors.green.withOpacity(0.1);
+                        break;
+                      case 'delivered':
+                      case 'completed':
+                        statusText = '✓ Teslim Edildi';
+                        statusColor = Colors.teal.shade700;
+                        statusBgColor = Colors.teal.withOpacity(0.1);
+                        break;
+                      case 'cancelled':
+                        statusText = '❌ İptal';
+                        statusColor = Colors.red.shade700;
+                        statusBgColor = Colors.red.withOpacity(0.1);
+                        break;
                     }
-                  }),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Text('${item.quantity}',
-                        style: const TextStyle(fontWeight: FontWeight.w700)),
-                  ),
-                  _miniCircleButton(Icons.add, () {
-                    HapticFeedback.lightImpact();
-                    groupNotifier.updateItemQuantity(item.productId, item.quantity + 1);
-                  }),
-                ],
-              ),
+
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: statusBgColor,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: statusColor,
+                        ),
+                      ),
+                    );
+                  }
+                ),
+              ]
+              else
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _miniCircleButton(Icons.remove, () {
+                      HapticFeedback.lightImpact();
+                      if (item.quantity <= 1) {
+                        groupNotifier.removeItem(item.productId);
+                      } else {
+                        groupNotifier.updateItemQuantity(item.productId, item.quantity - 1);
+                      }
+                    }),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Text('${item.quantity}',
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                    _miniCircleButton(Icons.add, () {
+                      HapticFeedback.lightImpact();
+                      groupNotifier.updateItemQuantity(item.productId, item.quantity + 1);
+                    }),
+                  ],
+                ),
             ],
           ),
         ],
@@ -879,9 +1085,13 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Readiness progress bar
-        if (session.isActive) _buildReadinessBar(session, isDark),
-        if (session.isActive) const SizedBox(height: 16),
+        // Readiness progress bar — only show when there are pending (unsubmitted) items
+        if (session.isActive &&
+            session.participants.any((p) => p.items.any((i) => !i.isSubmitted)))
+          _buildReadinessBar(session, isDark),
+        if (session.isActive &&
+            session.participants.any((p) => p.items.any((i) => !i.isSubmitted)))
+          const SizedBox(height: 16),
 
         // Aggregated items summary
         _buildAggregatedItems(session, isDark),
@@ -1138,27 +1348,59 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        leading: CircleAvatar(
-          radius: 18,
-          backgroundColor: participant.isHost ? _accent : Colors.grey.shade300,
-          child: Text(
-            participant.name.isNotEmpty ? participant.name[0].toUpperCase() : '?',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              color: participant.isHost ? Colors.white : Colors.black87,
+        leading: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: participant.isHost ? _accent : Colors.grey.shade300,
+              child: Text(
+                participant.name.isNotEmpty ? participant.name[0].toUpperCase() : '?',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: participant.isHost ? Colors.white : Colors.black87,
+                ),
+              ),
             ),
-          ),
+            if (participant.isHost)
+              Positioned(
+                top: -4,
+                right: -4,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: const Text('👑', style: TextStyle(fontSize: 12)),
+                ),
+              ),
+          ],
         ),
         title: Row(
           children: [
             Expanded(
-              child: Text(
-                isMe ? '${participant.name} (Ben)' : participant.name,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: isMe ? _accent : null,
-                ),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      isMe ? '${participant.name} (Ben)' : participant.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: isMe ? _accent : null,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
             // Ready + Payment badges
@@ -1171,7 +1413,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '✅ Hazır',
+                  '✅ Seçimi Tamam',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1235,10 +1477,39 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           style: TextStyle(fontSize: 12, color: Colors.grey[500]),
         ),
         children: participant.items.map((item) {
+          String itemStatusIcon = '';
+          Color itemStatusColor = Colors.transparent;
+          
+          if (item.isSubmitted) {
+            switch (item.orderStatus) {
+              case 'pending': itemStatusIcon = '⏳'; itemStatusColor = Colors.orange.shade800; break;
+              case 'accepted': itemStatusIcon = '✅'; itemStatusColor = Colors.blue.shade700; break;
+              case 'preparing': itemStatusIcon = '👨‍🍳'; itemStatusColor = Colors.blue.shade700; break;
+              case 'ready': itemStatusIcon = '✅'; itemStatusColor = Colors.green.shade700; break;
+              case 'delivered':
+              case 'completed': itemStatusIcon = '✓'; itemStatusColor = Colors.teal.shade700; break;
+              case 'cancelled': itemStatusIcon = '❌'; itemStatusColor = Colors.red.shade700; break;
+            }
+          }
+
           return Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: Row(
               children: [
+                if (itemStatusIcon.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: itemStatusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      itemStatusIcon,
+                      style: TextStyle(fontSize: 10, color: itemStatusColor),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
                 Text('${item.quantity}×',
                     style: TextStyle(fontSize: 12, color: _accent, fontWeight: FontWeight.w700)),
                 const SizedBox(width: 8),
@@ -1262,8 +1533,13 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     final myItems = groupState.myParticipant?.items ?? [];
     final hasItems = session.totalItemCount > 0;
 
-    // Different actions per session state
-    if (session.status == GroupSessionStatus.active) {
+    // Check if there are unsubmitted items in the session
+    final hasUnsubmittedItems = session.participants.any(
+      (p) => p.items.any((item) => !item.isSubmitted)
+    );
+
+    // If there are unsubmitted items, we show the ordering/ready flow
+    if (hasUnsubmittedItems) {
       if (!hasItems) return null;
 
       final myParticipant = groupState.myParticipant;
@@ -1291,7 +1567,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${session.readyCount}/${session.participantCount} hazır',
+                      '${session.readyCount}/${session.participantCount} seçimi tamam',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -1316,7 +1592,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               onPressed: _isSubmitting ? null : () => _showReadyToggle(),
               icon: const Icon(Icons.check_circle_outline),
               label: Text(
-                'Siparişim Hazır (${myItems.length} ürün)',
+                'Seçimimi Tamamla (${myItems.where((i) => !i.isSubmitted).length} yeni ürün)',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
               style: FilledButton.styleFrom(
@@ -1332,7 +1608,10 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: _isSubmitting ? null : () => _showReadyToggle(),
+                  onPressed: _isSubmitting ? null : () {
+                    final groupNotifier = ref.read(tableGroupProvider.notifier);
+                    groupNotifier.toggleReady();
+                  },
                   icon: const Icon(Icons.undo),
                   label: const Text(
                     'Siparişimi Değiştir',
@@ -1383,24 +1662,28 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 child: FilledButton.icon(
                   onPressed: _isSubmitting ? null : () async {
                     setState(() => _isSubmitting = true);
-                    final groupNotifier = ref.read(tableGroupProvider.notifier);
-                    final ok = await groupNotifier.submitToKitchen();
-                    if (!ok) {
-                      if (mounted) {
-                        setState(() => _isSubmitting = false);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Tüm katılımcılar henüz hazır değil'),
-                            backgroundColor: Colors.red.shade700,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        );
+                    try {
+                      final groupNotifier = ref.read(tableGroupProvider.notifier);
+                      final ok = await groupNotifier.submitToKitchen();
+                      if (!ok) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Tüm katılımcılar henüz hazır değil'),
+                              backgroundColor: Colors.red.shade700,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          );
+                        }
+                        return;
                       }
-                      return;
+                      // submitToKitchen succeeded → now create the order
+                      // _isSubmitting stays true through the entire flow
+                      await _submitGroupOrder();
+                    } finally {
+                      if (mounted) setState(() => _isSubmitting = false);
                     }
-                    if (mounted) setState(() => _isSubmitting = false);
-                    await _submitGroupOrder();
                   },
                   icon: _isSubmitting
                       ? const SizedBox(
@@ -1410,7 +1693,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         )
                       : const Icon(Icons.restaurant),
                   label: const Text(
-                    '🍳 Siparişi Mutfağa Yolla',
+                    '🍳 Yeni Ürünleri Mutfağa Yolla',
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                   style: FilledButton.styleFrom(
@@ -1446,9 +1729,20 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       );
     }
 
-    // Ordering/paying state — show payment options
-    if (session.status == GroupSessionStatus.ordering || session.status == GroupSessionStatus.paying) {
-      if (session.allPaid) return null;
+    // If there are no unsubmitted items, show payment options (assuming there are ordered items)
+    if (hasItems) {
+      if (session.allPaid && session.remainingBalance <= 0) return null;
+
+      // Check if there are any submitted items that are not fully delivered/completed
+      // Users shouldn't be able to pay if their food is still pending/preparing
+      final bool hasIncompleteItems = session.participants.any(
+        (p) => p.items.any((item) => 
+          item.isSubmitted && 
+          item.orderStatus != 'completed' && 
+          item.orderStatus != 'delivered' && 
+          item.orderStatus != 'cancelled'
+        )
+      );
 
       return Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
@@ -1460,20 +1754,25 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
 
-
             // Pay my share
             if (!(groupState.myParticipant?.isPaid ?? true))
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () => _showPaymentOptions(context, groupState),
+                  onPressed: hasIncompleteItems ? null : () => _showPaymentOptions(context, groupState),
                   icon: const Icon(Icons.payment),
                   label: Text(
-                    'Hesabımı Öde (€${groupState.myParticipant!.subtotal.toStringAsFixed(2)})',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    hasIncompleteItems
+                        ? 'Siparişiniz Bekleniyor'
+                        : 'Sadece Hesabımı Öde (€${groupState.myParticipant!.subtotal.toStringAsFixed(2)})',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: hasIncompleteItems ? Colors.white70 : Colors.white,
+                    ),
                   ),
                   style: FilledButton.styleFrom(
-                    backgroundColor: _accent,
+                    backgroundColor: hasIncompleteItems ? Colors.grey.shade400 : _accent,
+                    disabledBackgroundColor: Colors.grey.shade400,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
@@ -1486,15 +1785,20 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () => _showPayAllConfirmation(context, session),
+                  onPressed: hasIncompleteItems ? null : () => _showPayAllConfirmation(context, session),
                   icon: const Icon(Icons.groups),
                   label: Text(
-                    'Kalan Hepsini Öde (€${session.remainingBalance.toStringAsFixed(2)})',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    hasIncompleteItems
+                        ? 'Grupla Ödeme Bekleniyor'
+                        : 'Masa Hesabını Öde (€${session.remainingBalance.toStringAsFixed(2)})',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: hasIncompleteItems ? Colors.grey.shade600 : null,
+                    ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: _accent,
-                    side: BorderSide(color: _accent),
+                    foregroundColor: hasIncompleteItems ? Colors.grey.shade500 : _accent,
+                    side: BorderSide(color: hasIncompleteItems ? Colors.grey.shade400 : _accent),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
@@ -1511,8 +1815,6 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
 
   // ─── ACTIONS ───────────────────────────────────────────────────
   Future<void> _submitGroupOrder() async {
-    setState(() => _isSubmitting = true);
-
     try {
       final groupNotifier = ref.read(tableGroupProvider.notifier);
       final orderIds = await groupNotifier.submitOrder();
@@ -1541,8 +1843,6 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -1573,47 +1873,154 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     final groupNotifier = ref.read(tableGroupProvider.notifier);
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Ödeme Yöntemi',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              // Drag Handle
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              // Icon & Title
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _accent.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.person, size: 32, color: _accent),
               ),
               const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.money),
-                title: const Text('Nakit'),
-                subtitle: Text('€${groupState.myParticipant!.subtotal.toStringAsFixed(2)}'),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                tileColor: Colors.grey.withOpacity(0.05),
+              const Text(
+                'Hesabımı Öde',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Kendi hesabınız olan €${groupState.myParticipant!.subtotal.toStringAsFixed(2)} tutarını ödemek için lütfen bir yöntem seçin.',
+                style: TextStyle(
+                  fontSize: 15, 
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              
+              // Payment Option: Cash
+              InkWell(
                 onTap: () {
                   Navigator.pop(ctx);
                   groupNotifier.markMyPayment('cash');
                   HapticFeedback.heavyImpact();
                 },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.payments_rounded, color: Colors.green, size: 24),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          'Nakit Öde',
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, color: Colors.grey.shade500),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: const Icon(Icons.credit_card),
-                title: const Text('Kart'),
-                subtitle: Text('€${groupState.myParticipant!.subtotal.toStringAsFixed(2)}'),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                tileColor: Colors.grey.withOpacity(0.05),
+              const SizedBox(height: 12),
+              
+              // Payment Option: Card
+              InkWell(
                 onTap: () {
                   Navigator.pop(ctx);
                   groupNotifier.markMyPayment('card');
                   HapticFeedback.heavyImpact();
                 },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _accent.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.credit_card_rounded, color: _accent, size: 24),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          'Kart ile Öde',
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, color: Colors.grey.shade500),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 24),
+              // Cancel Button
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: Text(
+                  'İptal',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade500),
+                ),
+              ),
+              SizedBox(height: MediaQuery.of(context).padding.bottom),
             ],
           ),
         );
@@ -1623,40 +2030,160 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
 
   void _showPayAllConfirmation(BuildContext context, TableGroupSession session) {
     final groupNotifier = ref.read(tableGroupProvider.notifier);
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Tüm Hesabı Öde'),
-          content: Text(
-            'Kalan €${session.remainingBalance.toStringAsFixed(2)} tutarı '
-            '(${session.unpaidCount} kişi) ödemek istediğinize emin misiniz?',
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('İptal'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                groupNotifier.payForAll('cash');
-                HapticFeedback.heavyImpact();
-              },
-              style: FilledButton.styleFrom(backgroundColor: _accent),
-              child: const Text('Nakit Öde'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                groupNotifier.payForAll('card');
-                HapticFeedback.heavyImpact();
-              },
-              style: FilledButton.styleFrom(backgroundColor: _accent),
-              child: const Text('Kart Öde'),
-            ),
-          ],
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag Handle
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              // Icon & Title
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _accent.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.groups, size: 32, color: _accent),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Masa Hesabını Öde',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Kalan €${session.remainingBalance.toStringAsFixed(2)} tutarı (${session.unpaidCount} kişi) ödemek üzeresiniz. Lütfen ödeme yöntemini seçin.',
+                style: TextStyle(
+                  fontSize: 15, 
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              
+              // Payment Option: Cash
+              InkWell(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  groupNotifier.payForAll('cash');
+                  HapticFeedback.heavyImpact();
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.payments_rounded, color: Colors.green, size: 24),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          'Nakit Öde',
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, color: Colors.grey.shade500),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // Payment Option: Card
+              InkWell(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  groupNotifier.payForAll('card');
+                  HapticFeedback.heavyImpact();
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _accent.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.credit_card_rounded, color: _accent, size: 24),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          'Kart ile Öde',
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, color: Colors.grey.shade500),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              // Cancel Button
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                child: Text(
+                  'İptal',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade500),
+                ),
+              ),
+              // Extra safety padding for bottom area
+              SizedBox(height: MediaQuery.of(context).padding.bottom),
+            ],
+          ),
         );
       },
     );

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/table_group_session_model.dart';
 import '../services/table_group_service.dart';
 
@@ -60,6 +61,36 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     return const TableGroupState();
   }
 
+  /// Check if there's a cached session ID for persistent access
+  Future<String?> checkCachedSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedId = prefs.getString('table_group_session_id');
+    if (cachedId == null) return null;
+    
+    try {
+      final doc = await FirebaseFirestore.instance.collection('table_groups').doc(cachedId).get();
+      if (!doc.exists) {
+        await prefs.remove('table_group_session_id');
+        return null;
+      }
+      
+      final data = doc.data();
+      if (data == null) return null;
+      
+      final status = data['status'] as String?;
+      if (status != 'active' && status != 'ordering') {
+        // Session is closed, cancelled, or paid
+        await prefs.remove('table_group_session_id');
+        return null;
+      }
+      
+      return cachedId;
+    } catch (e) {
+      debugPrint('Error validating cached session ID: $e');
+      return null;
+    }
+  }
+
   /// Create a new group session (auto-resolves current user)
   Future<TableGroupSession?> createSession({
     required String businessId,
@@ -92,6 +123,11 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
 
       // Start listening for real-time updates
       _startListening(session.id);
+      
+      // Cache session ID for quick access
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('table_group_session_id', session.id);
+      
       return session;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -126,8 +162,17 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
       );
 
       if (myParticipant == null) {
-        debugPrint('⚠️ Current user ${user.uid} not found in session $sessionId');
+        debugPrint('⚠️ Current user ${user.uid} not found in session $sessionId. Clearing cache.');
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('table_group_session_id');
         return false;
+      }
+      
+      if (session.status != GroupSessionStatus.active && session.status != GroupSessionStatus.ordering) {
+         debugPrint('⚠️ Session $sessionId is not active (status: ${session.status}). Clearing cache.');
+         final prefs = await SharedPreferences.getInstance();
+         await prefs.remove('table_group_session_id');
+         return false;
       }
 
       state = state.copyWith(
@@ -179,6 +224,11 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
       );
 
       _startListening(sessionId);
+      
+      // Cache session ID for quick access
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('table_group_session_id', sessionId);
+      
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -203,9 +253,9 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
       return;
     }
 
-    // Check if item already in cart → increase quantity
+    // Check if item already in cart AND is unsubmitted → increase quantity
     final existingIndex = myParticipant.items.indexWhere(
-      (i) => i.productId == item.productId,
+      (i) => i.productId == item.productId && !i.isSubmitted,
     );
 
     List<TableGroupItem> updatedItems;
@@ -228,7 +278,7 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     );
   }
 
-  /// Remove an item from my cart
+  /// Remove an item from my cart (only unsubmitted items can be removed)
   Future<void> removeItem(String productId) async {
     final currentSession = state.session;
     final participantId = state.myParticipantId;
@@ -238,7 +288,7 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     if (myParticipant == null) return;
 
     final updatedItems = myParticipant.items
-        .where((i) => i.productId != productId)
+        .where((i) => !(i.productId == productId && !i.isSubmitted)) // Keep if it's not the product OR if it's already submitted
         .toList();
 
     await _service.updateParticipantItems(
@@ -248,7 +298,7 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     );
   }
 
-  /// Update item quantity
+  /// Update item quantity (only unsubmitted items)
   Future<void> updateItemQuantity(String productId, int newQuantity) async {
     final currentSession = state.session;
     final participantId = state.myParticipantId;
@@ -262,7 +312,7 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     }
 
     final updatedItems = myParticipant.items.map((item) {
-      if (item.productId == productId) {
+      if (item.productId == productId && !item.isSubmitted) {
         return item.copyWith(
           quantity: newQuantity,
           totalPrice: newQuantity * item.unitPrice,
@@ -397,10 +447,18 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
   }
 
   /// Clear session and stop listening
-  void clearSession() {
+  void clearSession() async {
     _sessionSub?.cancel();
     _sessionSub = null;
     state = const TableGroupState();
+    
+    // Clear cached session ID
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('table_group_session_id');
+    } catch (e) {
+      debugPrint('Error clearing cached session ID: $e');
+    }
   }
 }
 

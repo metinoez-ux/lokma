@@ -374,7 +374,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         // Notification bell icon
                         GestureDetector(
-                          onTap: () => context.push('/notification-settings'),
+                          onTap: () => context.push('/notification-history'),
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
@@ -411,12 +411,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            // Second row: Reservations
+                            // Second row: Reservations and Notifications
                             Row(
                               children: [
                                 _buildQuickAccessChip(Icons.table_restaurant, 'Masa\nRezervasyonum', () => context.push('/my-reservations')),
                                 const SizedBox(width: 12),
-                                const Expanded(child: SizedBox()), // Placeholder for grid alignment
+                                _buildQuickAccessChip(Icons.notifications_active_outlined, 'Bildirim\nAyarları', () => context.push('/notification-settings')),
                                 const SizedBox(width: 12),
                                 const Expanded(child: SizedBox()), // Placeholder for grid alignment
                               ],

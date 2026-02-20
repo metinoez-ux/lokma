@@ -119,6 +119,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
     final cartItemCount = cartState.items.length + kermesCartState.items.length;
     final selectedIndex = _getSelectedIndex(context);
     
+    final currentPath = GoRouterState.of(context).uri.path;
+    final isCartPage = currentPath == '/cart';
+    
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Status Bar: dark mode → white icons, light mode → dark icons
@@ -133,7 +136,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
         children: [
           widget.child,
           // Floating active delivery button
-          if (_activeOrdersStream != null)
+          if (_activeOrdersStream != null && !isCartPage)
             StreamBuilder<List<LokmaOrder>>(
               stream: _activeOrdersStream,
               builder: (context, snapshot) {
@@ -147,15 +150,17 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
             ),
         ],
       ),
-      bottomNavigationBar: GlassBottomBar(
-        currentIndex: selectedIndex,
-        cartItemCount: cartItemCount,
-        onTap: (index) {
-          HapticFeedback.lightImpact();
-          context.go(MainScaffold._items[index].path);
-        },
-        items: MainScaffold._items,
-      ),
+      bottomNavigationBar: isCartPage 
+        ? null 
+        : GlassBottomBar(
+            currentIndex: selectedIndex,
+            cartItemCount: cartItemCount,
+            onTap: (index) {
+              HapticFeedback.lightImpact();
+              context.go(MainScaffold._items[index].path);
+            },
+            items: MainScaffold._items,
+          ),
     );
   }
 

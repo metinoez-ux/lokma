@@ -15,6 +15,7 @@ import '../screens/profile/payment_methods_screen.dart';
 import '../screens/profile/help_screen.dart';
 import '../screens/favorites/favorites_screen.dart';
 import '../screens/settings/notification_settings_screen.dart';
+import '../screens/profile/notification_history_screen.dart';
 import '../screens/feedback/feedback_form_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/search/smart_search_screen.dart';
@@ -172,6 +173,10 @@ class AppRouter {
       GoRoute(
         path: '/notification-settings',
         builder: (context, state) => const NotificationSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/notification-history',
+        builder: (context, state) => const NotificationHistoryScreen(),
       ),
       GoRoute(
         path: '/feedback',

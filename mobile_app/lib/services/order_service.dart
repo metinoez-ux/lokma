@@ -175,7 +175,7 @@ class LokmaOrder {
           ?.map((e) => Map<String, dynamic>.from(e as Map))
           .toList() ?? [],
       servedByName: data['servedByName'],
-      tableSessionId: data['tableSessionId'],
+      tableSessionId: data['tableSessionId'] ?? data['groupSessionId'],
       tableNumber: data['tableNumber'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -193,6 +193,8 @@ class OrderItem {
   final String? itemNote;
   final String? imageUrl;
   final List<Map<String, dynamic>> selectedOptions;
+  final String? participantName;
+  final String? participantId;
 
   OrderItem({
     required this.sku,
@@ -204,6 +206,8 @@ class OrderItem {
     this.itemNote,
     this.imageUrl,
     this.selectedOptions = const [],
+    this.participantName,
+    this.participantId,
   });
 
   Map<String, dynamic> toMap() => {
@@ -214,6 +218,8 @@ class OrderItem {
     'unit': unit,
     if (positionNumber != null) 'positionNumber': positionNumber,
     if (itemNote != null) 'itemNote': itemNote,
+    if (participantName != null) 'participantName': participantName,
+    if (participantId != null) 'participantId': participantId,
   };
 
   factory OrderItem.fromMap(Map<String, dynamic> map) => OrderItem(
@@ -228,6 +234,8 @@ class OrderItem {
     selectedOptions: (map['selectedOptions'] as List<dynamic>?)
         ?.map((e) => Map<String, dynamic>.from(e as Map))
         .toList() ?? [],
+    participantName: map['participantName'] as String?,
+    participantId: map['participantId'] as String?,
   );
 
   factory OrderItem.fromCartItem(CartItem cartItem) => OrderItem(

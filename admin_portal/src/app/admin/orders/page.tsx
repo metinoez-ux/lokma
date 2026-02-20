@@ -70,7 +70,7 @@ interface Order {
     // Dine-in fields
     tableNumber?: number;
     waiterName?: string;
-    tableSessionId?: string;
+    groupSessionId?: string;
     isGroupOrder?: boolean;
     groupParticipantCount?: number;
     paymentStatus?: string;
@@ -282,7 +282,7 @@ export default function OrdersPage() {
                     // Dine-in fields
                     tableNumber: d.tableNumber,
                     waiterName: d.waiterName,
-                    tableSessionId: d.tableSessionId,
+                    groupSessionId: d.groupSessionId,
                     isGroupOrder: !!d.isGroupOrder,
                     groupParticipantCount: d.groupParticipantCount || 0,
                     paymentStatus: d.paymentStatus || 'unpaid',
@@ -391,8 +391,25 @@ export default function OrdersPage() {
             // Send push notification to customer for cancellation
             if (newStatus === 'cancelled') {
                 try {
-                    // Find the order to get customer info
+                    // Find the order to get customer info and session info
                     const order = orders.find(o => o.id === orderId);
+
+                    // Check if the order is part of a table group session
+                    if (order?.groupSessionId) {
+                        try {
+                            const sessionRef = doc(db, 'table_group_sessions', order.groupSessionId);
+                            await updateDoc(sessionRef, {
+                                status: 'cancelled',
+                                closedAt: Timestamp.now(),
+                                cancelledBy: auth.currentUser?.uid || 'Admin',
+                                cancelReason: cancellationReason || 'Sipariş admin panelden iptal edildi',
+                            });
+                        } catch (sessionError) {
+                            console.warn('Could not clean up group session:', sessionError);
+                            // Non-critical, but should be noted
+                        }
+                    }
+
                     if (order?.customerId) {
                         // Fetch customer FCM token
                         const { getDoc } = await import('firebase/firestore');
@@ -414,7 +431,7 @@ export default function OrdersPage() {
                         }
                     }
                 } catch (notifyError) {
-                    console.error('Error sending cancellation notification:', notifyError);
+                    console.error('Error sending cancellation notification or updating session:', notifyError);
                     // Don't fail the status update if notification fails
                 }
             }
@@ -560,10 +577,10 @@ export default function OrdersPage() {
             // Delete the order
             await deleteDoc(doc(db, 'meat_orders', confirmDeleteOrderId));
 
-            // If this was a group order with a session, clean up the session too
-            if (orderToDelete?.tableSessionId) {
+            // Check if this was a group order session
+            if (orderToDelete?.groupSessionId) {
                 try {
-                    const sessionRef = doc(db, 'table_group_sessions', orderToDelete.tableSessionId);
+                    const sessionRef = doc(db, 'table_group_sessions', orderToDelete.groupSessionId);
                     await updateDoc(sessionRef, {
                         status: 'cancelled',
                         closedAt: Timestamp.now(),
@@ -1065,52 +1082,115 @@ export default function OrdersPage() {
                                         </span>
                                     )}
                                 </div>
-                                <div className="space-y-1">
-                                    {selectedOrder.items?.map((item: any, idx: number) => {
-                                        const isChecked = checkedItems[selectedOrder.id]?.[idx] || false;
-                                        const posNum = item.positionNumber || (idx + 1);
-                                        return (
-                                            <div key={idx} className={`rounded-lg px-2 py-1.5 transition-all ${isChecked ? 'bg-green-600/10' : 'hover:bg-gray-700/50'}`}>
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <button
-                                                        onClick={() => toggleItemChecked(selectedOrder.id, idx)}
-                                                        className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${isChecked
-                                                            ? 'bg-green-500 border-green-500 text-white'
-                                                            : 'border-gray-500 hover:border-green-400'
-                                                            }`}
-                                                    >
-                                                        {isChecked && <span className="text-xs">✓</span>}
-                                                    </button>
-                                                    <span className="bg-amber-500 text-white text-xs font-bold rounded px-1.5 py-0.5 flex-shrink-0">#{posNum}</span>
-                                                    <span className={`flex-1 ${isChecked ? 'text-green-300 line-through opacity-70' : 'text-gray-300'}`}>
-                                                        {item.quantity}x {item.productName || item.name}
-                                                    </span>
-                                                    <span className={`${isChecked ? 'text-green-400 opacity-70' : 'text-white'}`}>
-                                                        {formatCurrency(item.totalPrice ?? ((item.unitPrice || item.price || 0) * (item.quantity || 1)))}
-                                                    </span>
+                                {/* Group Order Kitchen Summary */}
+                                {selectedOrder.isGroupOrder && selectedOrder.items?.length > 0 && (
+                                    <div className="mb-4">
+                                        <h5 className="text-amber-400 font-medium text-sm mb-2">👨‍🍳 Mutfak Özeti</h5>
+                                        <div className="bg-gray-800 rounded-lg p-3 space-y-1 text-sm text-gray-200">
+                                            {Object.values(
+                                                selectedOrder.items.reduce((acc: any, item: any) => {
+                                                    const opts = (item.selectedOptions || []).map((o: any) => o.optionName || o.name).join(', ');
+                                                    const key = `${item.productId}-${opts}`;
+                                                    if (!acc[key]) {
+                                                        acc[key] = { name: item.productName || item.name, quantity: 0, opts: item.selectedOptions };
+                                                    }
+                                                    acc[key].quantity += (item.quantity || 1);
+                                                    return acc;
+                                                }, {})
+                                            ).map((aggr: any, idx: number) => (
+                                                <div key={idx}>
+                                                    <span className="font-bold text-white">{aggr.quantity}x</span> {aggr.name}
+                                                    {aggr.opts && aggr.opts.length > 0 && (
+                                                        <span className="text-gray-400 ml-2 text-xs">({aggr.opts.map((o: any) => o.optionName || o.name).join(', ')})</span>
+                                                    )}
                                                 </div>
-                                                {/* Show selected options */}
-                                                {item.selectedOptions && item.selectedOptions.length > 0 && (
-                                                    <div className="pl-14 space-y-0.5 mt-0.5">
-                                                        {item.selectedOptions.map((opt: any, optIdx: number) => (
-                                                            <div key={optIdx} className="flex justify-between text-xs">
-                                                                <span className={`${isChecked ? 'text-green-300/50 line-through' : 'text-purple-300'}`}>↳ {opt.optionName || opt.name}</span>
-                                                                {(opt.priceModifier || opt.price) ? (
-                                                                    <span className={`${isChecked ? 'text-green-400/50' : 'text-purple-400'}`}>+{formatCurrency(opt.priceModifier || opt.price)}</span>
-                                                                ) : null}
-                                                            </div>
-                                                        ))}
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selectedOrder.isGroupOrder && (
+                                    <h5 className="text-teal-400 font-medium text-sm mt-4 mb-2">🍽️ Kişi Bazlı Dağılım</h5>
+                                )}
+
+                                <div className="space-y-4">
+                                    {/* Render items (grouped by participant if group order, otherwise flat) */}
+                                    {(() => {
+                                        const renderItem = (item: any, originalIdx: number) => {
+                                            const isChecked = checkedItems[selectedOrder.id]?.[originalIdx] || false;
+                                            const posNum = item.positionNumber || (originalIdx + 1);
+                                            return (
+                                                <div key={originalIdx} className={`rounded-lg px-2 py-1.5 transition-all mb-1 ${isChecked ? 'bg-green-600/10' : 'hover:bg-gray-700/50'}`}>
+                                                    <div className="flex items-center gap-2 text-sm">
+                                                        <button
+                                                            onClick={() => toggleItemChecked(selectedOrder.id, originalIdx)}
+                                                            className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${isChecked
+                                                                ? 'bg-green-500 border-green-500 text-white'
+                                                                : 'border-gray-500 hover:border-green-400'
+                                                                }`}
+                                                        >
+                                                            {isChecked && <span className="text-xs">✓</span>}
+                                                        </button>
+                                                        <span className="bg-amber-500 text-white text-xs font-bold rounded px-1.5 py-0.5 flex-shrink-0">#{posNum}</span>
+                                                        <span className={`flex-1 ${isChecked ? 'text-green-300 line-through opacity-70' : 'text-gray-300'}`}>
+                                                            {item.quantity}x {item.productName || item.name}
+                                                        </span>
+                                                        <span className={`${isChecked ? 'text-green-400 opacity-70' : 'text-white'}`}>
+                                                            {formatCurrency(item.totalPrice ?? ((item.unitPrice || item.price || 0) * (item.quantity || 1)))}
+                                                        </span>
                                                     </div>
-                                                )}
-                                                {/* Show item note */}
-                                                {item.itemNote && (
-                                                    <div className="pl-14 mt-0.5">
-                                                        <span className="text-xs text-amber-300">📝 {item.itemNote}</span>
+                                                    {/* Show selected options */}
+                                                    {item.selectedOptions && item.selectedOptions.length > 0 && (
+                                                        <div className="pl-14 space-y-0.5 mt-0.5">
+                                                            {item.selectedOptions.map((opt: any, optIdx: number) => (
+                                                                <div key={optIdx} className="flex justify-between text-xs">
+                                                                    <span className={`${isChecked ? 'text-green-300/50 line-through' : 'text-purple-300'}`}>↳ {opt.optionName || opt.name}</span>
+                                                                    {(opt.priceModifier || opt.price) ? (
+                                                                        <span className={`${isChecked ? 'text-green-400/50' : 'text-purple-400'}`}>+{formatCurrency(opt.priceModifier || opt.price)}</span>
+                                                                    ) : null}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                    {/* Show item note */}
+                                                    {item.itemNote && (
+                                                        <div className="pl-14 mt-0.5">
+                                                            <span className="text-xs text-amber-300">📝 {item.itemNote}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        };
+
+                                        if (selectedOrder.isGroupOrder) {
+                                            // Group by participantName
+                                            const groupedByParticipant: Record<string, { item: any, index: number }[]> = {};
+                                            selectedOrder.items?.forEach((item: any, idx: number) => {
+                                                const pName = item.participantName || 'Misafir';
+                                                if (!groupedByParticipant[pName]) groupedByParticipant[pName] = [];
+                                                groupedByParticipant[pName].push({ item, index: idx });
+                                            });
+
+                                            return Object.entries(groupedByParticipant).map(([pName, items]) => (
+                                                <div key={pName} className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-2">
+                                                    <div className="flex items-center gap-2 mb-2 px-2 py-1 bg-gray-700/50 rounded-lg">
+                                                        <span className="text-purple-400 text-xs">👤</span>
+                                                        <span className="text-white text-sm font-medium">{pName}</span>
                                                     </div>
-                                                )}
+                                                    <div className="space-y-1">
+                                                        {items.map(info => renderItem(info.item, info.index))}
+                                                    </div>
+                                                </div>
+                                            ));
+                                        }
+
+                                        // Regular order
+                                        return (
+                                            <div className="space-y-1">
+                                                {selectedOrder.items?.map((item: any, idx: number) => renderItem(item, idx))}
                                             </div>
                                         );
-                                    })}
+                                    })()}
                                 </div>
                                 {/* Step-by-step status transition button */}
                                 {(() => {

@@ -24,12 +24,16 @@ class ShiftService {
   DateTime? _shiftStartedAt;
   String _shiftStatus = 'off'; // "active" | "paused" | "off"
   List<int> _currentTables = [];
+  bool _isDeliveryDriver = false;
+  bool _isOtherRole = false;
 
   String? get currentShiftId => _currentShiftId;
   String? get currentBusinessId => _currentBusinessId;
   DateTime? get shiftStartedAt => _shiftStartedAt;
   String get shiftStatus => _shiftStatus;
   List<int> get currentTables => _currentTables;
+  bool get isDeliveryDriver => _isDeliveryDriver;
+  bool get isOtherRole => _isOtherRole;
   bool get isOnShift => _shiftStatus == 'active' || _shiftStatus == 'paused';
 
   // ── Stream for UI ──
@@ -75,6 +79,8 @@ class ShiftService {
             _currentTables = List<int>.from(
               (shiftData['assignedTables'] as List<dynamic>?) ?? [],
             );
+            _isDeliveryDriver = shiftData['isDeliveryDriver'] == true;
+            _isOtherRole = shiftData['isOtherRole'] == true;
             _setupShiftStream();
             if (_shiftStatus == 'active') {
               _scheduleRandomGpsChecks();
@@ -98,6 +104,7 @@ class ShiftService {
     required String staffName,
     required List<int> tables,
     bool isDeliveryDriver = false,
+    bool isOtherRole = false,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return null;
@@ -133,6 +140,7 @@ class ShiftService {
         'startLocation': locationData,
         'assignedTables': tables,
         'isDeliveryDriver': isDeliveryDriver,
+        'isOtherRole': isOtherRole,
         'pauseLog': [],
         'totalMinutes': 0,
         'pauseMinutes': 0,
@@ -150,6 +158,7 @@ class ShiftService {
         'shiftStartedAt': now,
         'shiftAssignedTables': tables,
         'shiftIsDeliveryDriver': isDeliveryDriver,
+        'shiftIsOtherRole': isOtherRole,
       });
 
       // Update local state
@@ -158,6 +167,8 @@ class ShiftService {
       _shiftStatus = 'active';
       _shiftStartedAt = DateTime.now();
       _currentTables = tables;
+      _isDeliveryDriver = isDeliveryDriver;
+      _isOtherRole = isOtherRole;
       _setupShiftStream();
       _scheduleRandomGpsChecks();
 
@@ -347,6 +358,8 @@ class ShiftService {
       _shiftStartedAt = null;
       _shiftStatus = 'off';
       _currentTables = [];
+      _isDeliveryDriver = false;
+      _isOtherRole = false;
       _shiftStream = null;
       _cancelGpsCheckTimers();
 
@@ -446,6 +459,7 @@ class ShiftService {
       'shiftStatus': 'off',
       'shiftStartedAt': null,
       'shiftAssignedTables': [],
+      'shiftIsOtherRole': false,
     });
   }
 
@@ -500,6 +514,33 @@ class ShiftService {
     });
 
     return results;
+  }
+
+  /// Get total minutes of completed shifts for today
+  Future<int> getPastTodayActiveMinutes({required String businessId}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return 0;
+
+    try {
+      final dateStr = _todayString();
+      final snap = await _db
+          .collection('businesses')
+          .doc(businessId)
+          .collection('shifts')
+          .where('staffId', isEqualTo: user.uid)
+          .where('date', isEqualTo: dateStr)
+          .where('status', isEqualTo: 'ended')
+          .get();
+
+      int totalMinutes = 0;
+      for (final doc in snap.docs) {
+        totalMinutes += (doc.data()['totalMinutes'] as num? ?? 0).toInt();
+      }
+      return totalMinutes;
+    } catch (e) {
+      debugPrint('[Shift] Error getting past today minutes: $e');
+      return 0;
+    }
   }
 
   String _todayString() {

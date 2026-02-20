@@ -323,7 +323,6 @@ export default function AdminHeader() {
                                 { href: '/admin/kermes', icon: '🎪', label: 'Kermes' },
                                 { href: '/admin/drivers', icon: '🚗', label: 'Sürücüler' },
                                 { href: '/admin/reservations', icon: '🍽️', label: 'Rezervasyonlar' },
-                                { href: '/admin/table-orders', icon: '🪑', label: 'Masa Grupları' },
                                 { href: '/admin/staff-shifts', icon: '⏱️', label: 'Vardiyalar' },
                                 { href: '/admin/image-generator', icon: '🎨', label: 'Görsel Üret' },
                                 { href: '/admin/ai-menu', icon: '🤖', label: 'AI Menü' },
