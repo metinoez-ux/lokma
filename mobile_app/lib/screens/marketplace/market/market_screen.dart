@@ -801,9 +801,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
 
     return ThreeDimensionalPillTabBar(
       selectedIndex: selectedIndex,
-      tabs: const [
-        TabItem(title: 'Kurye', icon: Icons.delivery_dining),
-        TabItem(title: 'Gel Al', icon: Icons.shopping_bag_outlined),
+      tabs: [
+        TabItem(title: tr('delivery_modes.delivery'), icon: Icons.delivery_dining),
+        TabItem(title: tr('delivery_modes.pickup'), icon: Icons.shopping_bag_outlined),
       ],
       onTabSelected: (index) {
         String newMode = index == 1 ? 'gelal' : 'teslimat';
@@ -1156,7 +1156,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                '${markets.length} işletme hizmetinizde',
+                tr('discovery.businesses_at_service', namedArgs: {'count': markets.length.toString()}),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 15,
@@ -1194,7 +1194,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Text(
-            '${markets.length} işletme hizmetinizde',
+            tr('discovery.businesses_at_service', namedArgs: {'count': markets.length.toString()}),
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurface,
               fontSize: 15,

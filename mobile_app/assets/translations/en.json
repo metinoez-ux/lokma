@@ -136,5 +136,23 @@
         "track_courier": "Track Courier",
         "rate_order": "Rate Order",
         "reorder": "Order Again"
+    },
+    "delivery_modes": {
+        "delivery": "Delivery",
+        "pickup": "Pickup",
+        "dine_in": "Dine-in"
+    },
+    "discovery": {
+        "businesses_at_service": "{count} businesses at your service"
+    },
+    "business_status": {
+        "open": "Open",
+        "closed": "Closed"
+    },
+    "business_details": {
+        "all": "All",
+        "all_products": "All Products",
+        "products_count": "{count} Products",
+        "no_products_in_category": "No products found in this category."
     }
 }

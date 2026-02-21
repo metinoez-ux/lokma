@@ -136,5 +136,23 @@
         "track_courier": "Kuryeyi Takip Et",
         "rate_order": "Puan Ver",
         "reorder": "Tekrar Sipariş Ver"
+    },
+    "delivery_modes": {
+        "delivery": "Kurye",
+        "pickup": "Gel Al",
+        "dine_in": "Masa"
+    },
+    "discovery": {
+        "businesses_at_service": "{count} işletme hizmetinizde"
+    },
+    "business_status": {
+        "open": "Açık",
+        "closed": "Kapalı"
+    },
+    "business_details": {
+        "all": "Tümü",
+        "all_products": "Tüm Ürünler",
+        "products_count": "{count} Ürün",
+        "no_products_in_category": "Bu kategoride ürün bulunamadı."
     }
 }

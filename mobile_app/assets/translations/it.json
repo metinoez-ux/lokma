@@ -129,5 +129,23 @@
         "track_courier": "Traccia corriere",
         "rate_order": "Valuta",
         "reorder": "Riordina"
+    },
+    "delivery_modes": {
+        "delivery": "Consegna",
+        "pickup": "Asporto",
+        "dine_in": "Al tavolo"
+    },
+    "discovery": {
+        "businesses_at_service": "{count} ristoranti al tuo servizio"
+    },
+    "business_status": {
+        "open": "Aperto",
+        "closed": "Chiuso"
+    },
+    "business_details": {
+        "all": "Tutto",
+        "all_products": "Tutti i prodotti",
+        "products_count": "{count} Prodotti",
+        "no_products_in_category": "Nessun prodotto trovato in questa categoria."
     }
 }

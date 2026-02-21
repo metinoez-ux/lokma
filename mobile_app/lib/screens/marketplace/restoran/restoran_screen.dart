@@ -851,10 +851,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
     return ThreeDimensionalPillTabBar(
       selectedIndex: selectedIndex,
-      tabs: const [
-        TabItem(title: 'Kurye', icon: Icons.delivery_dining),
-        TabItem(title: 'Gel Al', icon: Icons.shopping_bag_outlined),
-        TabItem(title: 'Masa', icon: Icons.restaurant),
+      tabs: [
+        TabItem(title: tr('delivery_modes.delivery'), icon: Icons.delivery_dining),
+        TabItem(title: tr('delivery_modes.pickup'), icon: Icons.shopping_bag_outlined),
+        TabItem(title: tr('delivery_modes.dine_in'), icon: Icons.restaurant),
       ],
       onTabSelected: (index) {
         String newMode = 'teslimat';
@@ -1332,7 +1332,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
-                '${restaurants.length} işletme hizmetinizde',
+                tr('discovery.businesses_at_service', namedArgs: {'count': restaurants.length.toString()}),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 15,
@@ -1373,7 +1373,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Text(
-            '${restaurants.length} işletme hizmetinizde',
+            tr('discovery.businesses_at_service', namedArgs: {'count': restaurants.length.toString()}),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 15,

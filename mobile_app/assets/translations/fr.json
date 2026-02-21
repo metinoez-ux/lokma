@@ -129,5 +129,23 @@
         "track_courier": "Suivre le livreur",
         "rate_order": "Noter",
         "reorder": "Commander à nouveau"
+    },
+    "delivery_modes": {
+        "delivery": "Livraison",
+        "pickup": "À emporter",
+        "dine_in": "Sur place"
+    },
+    "discovery": {
+        "businesses_at_service": "{count} restaurants à votre service"
+    },
+    "business_status": {
+        "open": "Ouvert",
+        "closed": "Fermé"
+    },
+    "business_details": {
+        "all": "Tout",
+        "all_products": "Tous les produits",
+        "products_count": "{count} Produits",
+        "no_products_in_category": "Aucun produit trouvé dans cette catégorie."
     }
 }

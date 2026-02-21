@@ -136,5 +136,23 @@
         "track_courier": "Kurier verfolgen",
         "rate_order": "Bewerten",
         "reorder": "Erneut bestellen"
+    },
+    "delivery_modes": {
+        "delivery": "Lieferung",
+        "pickup": "Abholung",
+        "dine_in": "Vor Ort"
+    },
+    "discovery": {
+        "businesses_at_service": "{count} Restaurants zu Ihren Diensten"
+    },
+    "business_status": {
+        "open": "Geöffnet",
+        "closed": "Geschlossen"
+    },
+    "business_details": {
+        "all": "Alle",
+        "all_products": "Alle Produkte",
+        "products_count": "{count} Produkte",
+        "no_products_in_category": "Keine Produkte in dieser Kategorie gefunden."
     }
 }

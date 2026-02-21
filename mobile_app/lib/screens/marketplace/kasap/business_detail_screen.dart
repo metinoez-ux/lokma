@@ -1574,13 +1574,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     : ThreeDimensionalPillTabBar(
                         selectedIndex: _deliveryModeIndex,
                         tabs: [
-                          const TabItem(title: 'Kurye', icon: Icons.delivery_dining),
-                          const TabItem(title: 'Gel Al', icon: Icons.shopping_bag_outlined),
+                          TabItem(title: tr('delivery_modes.delivery'), icon: Icons.delivery_dining),
+                          TabItem(title: tr('delivery_modes.pickup'), icon: Icons.shopping_bag_outlined),
                           // Show Masa tab if business supports dine-in or reservations
                           if ((data?['hasReservation'] as bool? ?? false) ||
                               (_planFeatures['dineInQR'] == true) ||
                               (_planFeatures['waiterOrder'] == true))
-                            const TabItem(title: 'Masa', icon: Icons.restaurant),
+                            TabItem(title: tr('delivery_modes.dine_in'), icon: Icons.restaurant),
                         ],
                         onTabSelected: (index) {
                           setState(() => _deliveryModeIndex = index);
@@ -1801,7 +1801,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  ),
                                  const SizedBox(width: 4),
                                  Text(
-                                   isOpen ? 'Açık' : 'Kapalı',
+                                   isOpen ? tr('business_status.open') : tr('business_status.closed'),
                                    style: TextStyle(
                                      color: isOpen ? Colors.green : Colors.red,
                                      fontSize: 13,
@@ -1876,7 +1876,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Text(
-                                                catName,
+                                                catName == 'Tümü' ? tr('business_details.all') : catName,
                                                 style: TextStyle(
                                                   color: isSelected 
                                                     ? (isDark ? Colors.black : Colors.white) 
@@ -1947,7 +1947,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                        Text(
-                         _selectedCategory == 'Tümü' ? 'Tüm Ürünler' : _selectedCategory, 
+                         _selectedCategory == 'Tümü' ? tr('business_details.all_products') : _selectedCategory, 
                          style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
                        ),
                        Container(
@@ -1957,7 +1957,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            borderRadius: BorderRadius.circular(12),
                          ),
                          child: Text(
-                           '${filteredProducts.length} Ürün', 
+                           tr('business_details.products_count', namedArgs: {'count': filteredProducts.length.toString()}), 
                            style: TextStyle(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w500),
                          ),
                        )
@@ -1975,7 +1975,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         padding: const EdgeInsets.all(40.0),
                         child: Center(
                             child: Text(
-                              'Bu kategoride ürün bulunamadı.', 
+                              tr('business_details.no_products_in_category'), 
                               style: TextStyle(color: textSecondary),
                             )),
                       ),

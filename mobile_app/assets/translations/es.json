@@ -129,5 +129,23 @@
         "track_courier": "Rastrear repartidor",
         "rate_order": "Opinar",
         "reorder": "Volver a pedir"
+    },
+    "delivery_modes": {
+        "delivery": "A domicilio",
+        "pickup": "Para llevar",
+        "dine_in": "En el local"
+    },
+    "discovery": {
+        "businesses_at_service": "{count} restaurantes a su servicio"
+    },
+    "business_status": {
+        "open": "Abierto",
+        "closed": "Cerrado"
+    },
+    "business_details": {
+        "all": "Todo",
+        "all_products": "Todos los productos",
+        "products_count": "{count} Productos",
+        "no_products_in_category": "No se encontraron productos en esta categoría."
     }
 }
