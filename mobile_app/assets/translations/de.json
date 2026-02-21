@@ -381,7 +381,23 @@
     "gi_t": "GİT"
   },
   "home": {
-    "courier_on_the_way": "Kurier ist unterwegs"
+    "courier_on_the_way": "Kurier ist unterwegs",
+    "order_from_table": "Bestellen Sie an Ihrem Tisch",
+    "order_qr_desc": "Sie können schnell per QR-Code bestellen oder einen Tisch reservieren",
+    "return_active_order": "Zur aktiven Bestellung zurückkehren",
+    "return_active_desc": "Wechseln Sie schnell zu Ihren vorherigen Tisch",
+    "order_with_qr": "Mit QR-Code bestellen",
+    "scan_qr_table": "Scannen Sie den QR-Code an Ihrem Tisch",
+    "table_reservation": "Tischreservierung",
+    "book_table_advance": "Buchen Sie im Voraus einen Tisch",
+    "how_it_works": "Wie es funktioniert?",
+    "scan_qr_code": "QR-Code scannen",
+    "scan_qr_table_alt": "Scannen Sie den QR-Code an Ihrem Tisch",
+    "choose_from_menu": "Aus der Speisekarte wählen",
+    "add_your_meals": "Fügen Sie Ihre Mahlzeiten hinzu",
+    "confirm_order": "Bestellung bestätigen",
+    "served_to_table": "Es wird an Ihrem Tisch serviert",
+    "session_expired": "Bestellsitzung nicht gefunden oder abgelaufen."
   },
   "kermes": {
     "add_menu_item": "Menüpunkt hinzufügen",

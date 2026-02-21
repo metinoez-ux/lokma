@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase';
 import { normalizeTurkish } from '@/lib/utils';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useTranslations } from 'next-intl';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { BUSINESS_TYPES, getBusinessType, getBusinessTypeIcon, getBusinessTypeLabel } from '@/lib/business-types';
 import { useSectors } from '@/hooks/useSectors';
@@ -119,6 +120,7 @@ interface Business {
 }
 
 export default function BusinessesPage() {
+    const t = useTranslations('AdminBusiness');
     const { admin, loading: adminLoading } = useAdmin();
     const { getActiveSectors, getBusinessTypesList: getDynamicTypesList, loading: sectorsLoading } = useSectors();
     // Only show ACTIVE sectors in the UI, EXCLUDE kermes since it's now a separate module
@@ -276,7 +278,7 @@ export default function BusinessesPage() {
             setBusinesses(data);
         } catch (error) {
             console.error('Error loading businesses:', error);
-            showToast('İşletmeler yüklenirken hata oluştu', 'error');
+            showToast(t('isletmelerYuklenirkenHataOlustu'), 'error');
         } finally {
             setLoading(false);
         }
@@ -538,11 +540,11 @@ export default function BusinessesPage() {
             if (data.candidates && data.candidates.length > 0) {
                 setSearchResults(data.candidates);
             } else {
-                showToast('Sonuç bulunamadı. Tam isim veya adres deneyin.', 'error');
+                showToast(t('sonucBulunamadiTamIsimVeyaAdres'), 'error');
             }
         } catch (error) {
             console.error('Search error:', error);
-            showToast('Arama sırasında hata oluştu.', 'error');
+            showToast(t('aramaSirasindaHataOlustu'), 'error');
         } finally {
             setIsSearching(false);
         }
@@ -580,11 +582,11 @@ export default function BusinessesPage() {
 
             // Schedule parsing disabled - handled via direct textarea editing
 
-            showToast('✅ Bilgiler Google\'dan çekildi! Kontrol edip eksikleri tamamlayın.', 'success');
+            showToast(t('bilgilerGoogledanCekildiKontrolEdipEksikleri'), 'success');
             setActiveTab('manual');
         } catch (error: any) {
             console.error('Import error:', error);
-            showToast('İçe aktarma başarısız: ' + error.message, 'error');
+            showToast(t('iceAktarmaBasarisiz') + error.message, 'error');
         } finally {
             setIsImporting(false);
         }
@@ -593,7 +595,7 @@ export default function BusinessesPage() {
     // Refresh opening hours from Google
     const handleGoogleRefreshHours = async () => {
         if (!formData.googlePlaceId) {
-            showToast('Google Place ID bulunamadı', 'error');
+            showToast(t('googlePlaceIdBulunamadi'), 'error');
             return;
         }
 
@@ -607,13 +609,13 @@ export default function BusinessesPage() {
             if (data.openingHours && typeof data.openingHours === 'string') {
                 setFormData(prev => ({ ...prev, openingHours: data.openingHours }));
                 // Schedule parsing disabled - direct textarea editing used
-                showToast('✅ Çalışma saatleri Google\'dan güncellendi!', 'success');
+                showToast(t('calismaSaatleriGoogledanGuncellendi'), 'success');
             } else {
-                showToast('Google\'da çalışma saati bilgisi bulunamadı', 'error');
+                showToast(t('googledaCalismaSaatiBilgisiBulunamadi'), 'error');
             }
         } catch (error: any) {
             console.error('Refresh hours error:', error);
-            showToast('Güncelleme başarısız: ' + error.message, 'error');
+            showToast(t('guncellemeBasarisiz') + error.message, 'error');
         } finally {
             setIsRefreshingHours(false);
         }
@@ -622,7 +624,7 @@ export default function BusinessesPage() {
     // Save business
     const handleSave = async () => {
         if (!formData.companyName || !formData.city) {
-            showToast('İşletme adı ve şehir zorunludur', 'error');
+            showToast(t('isletmeAdiVeSehirZorunludur'), 'error');
             return;
         }
 
@@ -684,7 +686,7 @@ export default function BusinessesPage() {
             if (editingBusiness) {
                 // Update existing
                 await updateDoc(doc(db, 'businesses', editingBusiness.id), businessData);
-                showToast('İşletme güncellendi', 'success');
+                showToast(t('isletmeGuncellendi'), 'success');
             } else {
                 // Get unique business number (atomic, never reused)
                 const customerId = await getNextBusinessNumber();
@@ -696,7 +698,7 @@ export default function BusinessesPage() {
                     createdAt: new Date(),
                     createdBy: admin?.id,
                 });
-                showToast(`İşletme oluşturuldu (No: ${customerId})`, 'success');
+                showToast(`${t('isletmeOlusturulduNo')} ${customerId})`, 'success');
             }
 
             setShowAddModal(false);
@@ -705,7 +707,7 @@ export default function BusinessesPage() {
             loadBusinesses();
         } catch (error) {
             console.error('Error saving business:', error);
-            showToast('İşletme kaydedilirken hata oluştu', 'error');
+            showToast(t('isletmeKaydedilirkenHataOlustu'), 'error');
         } finally {
             setSaving(false);
         }
@@ -737,17 +739,17 @@ export default function BusinessesPage() {
                 // Can only archive
                 const details = [
                     hasInvoices ? `• ${invoicesSnap.size} fatura` : '',
-                    hasOrders ? `• ${ordersSnap.size} sipariş` : '',
+                    hasOrders ? `• ${ordersSnap.size} ${t('siparis')}` : '',
                     hasSubscription ? `• Aktif abonelik: ${business.subscription?.planName}` : '',
                 ].filter(Boolean).join('\n');
 
                 setConfirmState({
                     isOpen: true,
-                    title: 'İşletmeyi Arşivle',
-                    message: `Bu işletmenin geçmişi var:\n${details}\n\nBu işletme silinemez, sadece arşive alınabilir. Arşive almak istiyor musunuz?`,
+                    title: t('isletmeyiArsivle'),
+                    message: `${t('buIsletmeninGecmisiVarn')}${details}${t('nnbuIsletmeSilinemezSadeceArsiveAlinabilir')}`,
                     itemName: business.companyName,
                     variant: 'warning',
-                    confirmText: 'Evet, Arşivle',
+                    confirmText: t('evetArsivle'),
                     onConfirm: async () => {
                         setConfirmState(prev => ({ ...prev, isOpen: false }));
                         try {
@@ -757,11 +759,11 @@ export default function BusinessesPage() {
                                 archivedAt: new Date(),
                                 updatedAt: new Date(),
                             });
-                            showToast('İşletme arşive alındı', 'success');
+                            showToast(t('isletmeArsiveAlindi'), 'success');
                             loadBusinesses();
                         } catch (error) {
                             console.error('Error archiving business:', error);
-                            showToast('İşlem sırasında hata oluştu', 'error');
+                            showToast(t('islemSirasindaHataOlustu'), 'error');
                         }
                     },
                 });
@@ -769,27 +771,27 @@ export default function BusinessesPage() {
                 // No history - can delete completely
                 setConfirmState({
                     isOpen: true,
-                    title: 'İşletmeyi Kalıcı Sil',
-                    message: 'Bu işletmenin hiç faturası veya siparişi yok, güvenle silinebilir.',
+                    title: t('isletmeyiKaliciSil'),
+                    message: t('buIsletmeninHicFaturasiVeyaSiparisi'),
                     itemName: business.companyName,
                     variant: 'danger',
-                    confirmText: 'Evet, Kalıcı Sil',
+                    confirmText: t('evetKaliciSil'),
                     onConfirm: async () => {
                         setConfirmState(prev => ({ ...prev, isOpen: false }));
                         try {
                             await deleteDoc(doc(db, 'businesses', business.id));
-                            showToast('İşletme tamamen silindi', 'success');
+                            showToast(t('isletmeTamamenSilindi'), 'success');
                             loadBusinesses();
                         } catch (error) {
                             console.error('Error deleting business:', error);
-                            showToast('İşlem sırasında hata oluştu', 'error');
+                            showToast(t('islemSirasindaHataOlustu'), 'error');
                         }
                     },
                 });
             }
         } catch (error) {
             console.error('Error deleting/archiving business:', error);
-            showToast('İşlem sırasında hata oluştu', 'error');
+            showToast(t('islemSirasindaHataOlustu'), 'error');
         }
     };
 
@@ -800,16 +802,16 @@ export default function BusinessesPage() {
                 isActive: !business.isActive,
                 updatedAt: new Date(),
             });
-            showToast(business.isActive ? 'İşletme deaktif edildi' : 'İşletme aktif edildi', 'success');
+            showToast(business.isActive ? t('isletmeDeaktifEdildi') : t('isletmeAktifEdildi'), 'success');
             loadBusinesses();
         } catch (error) {
             console.error('Error toggling status:', error);
-            showToast('Durum güncellenirken hata oluştu', 'error');
+            showToast(t('durumGuncellenirkenHataOlustu'), 'error');
         }
     };
 
     const getTypeInfo = (type: string) => {
-        return businessTypes.find(t => t.value === type) || { icon: '🏪', label: 'İşletme', color: 'gray' };
+        return businessTypes.find(t => t.value === type) || { icon: '🏪', label: t('isletme'), color: 'gray' };
     };
 
     if (adminLoading) {
@@ -845,12 +847,12 @@ export default function BusinessesPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            {isKermesMode ? '🎪 Kermes Yönetimi' : '🏪 İşletme Yönetimi'}
+                            {isKermesMode ? t('kermesYonetimi') : t('isletmeYonetimi')}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
                             {isKermesMode
-                                ? `Aktif kermesleri yönetin • ${filteredKermesEvents.length} kermes`
-                                : `Tüm kayıtlı işletmeleri yönetin • ${filteredBusinesses.length} işletme`}
+                                ? `${t('aktifKermesleriYonetin')} ${filteredKermesEvents.length} kermes`
+                                : `${t('tumKayitliIsletmeleriYonetin')} ${filteredBusinesses.length} ${t('isletme1')}`}
                         </p>
                     </div>
                     {isKermesMode ? (
@@ -867,7 +869,7 @@ export default function BusinessesPage() {
                             className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium hover:from-blue-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
                         >
                             <span>➕</span>
-                            Yeni İşletme Ekle
+                            {t('yeniIsletmeEkle')}
                         </Link>
                     )}
                 </div>
@@ -876,7 +878,7 @@ export default function BusinessesPage() {
             {/* Sector Modules */}
             <div className="max-w-7xl mx-auto mb-6">
                 <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-                    🍖 Sektör Modülleri
+                    {t('sektorModulleri')}
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
                     {businessTypes.map(type => {
@@ -901,7 +903,7 @@ export default function BusinessesPage() {
                                 <span className="text-3xl">{type.icon}</span>
                                 <span className="text-white text-sm font-medium">{type.label}</span>
                                 <span className="text-gray-400 text-xs">
-                                    {type.value === 'kermes' ? `${count} kermes` : `${count} işletme`}
+                                    {type.value === 'kermes' ? `${count} kermes` : `${count} ${t('isletme1')}`}
                                 </span>
                             </button>
                         );
@@ -919,7 +921,7 @@ export default function BusinessesPage() {
                                 }`}
                         >
                             <span>🕐</span>
-                            Son Kullanılanlar
+                            {t('sonKullanilanlar')}
                             <span className="bg-amber-600/40 text-amber-200 text-xs px-2 py-0.5 rounded-full">{recentBusinesses.length}</span>
                             <span className={`transition-transform ${showRecent ? 'rotate-180' : ''}`}>▾</span>
                         </button>
@@ -962,7 +964,7 @@ export default function BusinessesPage() {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => { setSearchQuery(e.target.value); setOrgPage(1); }}
-                                placeholder="İşletme adı, şehir veya posta kodu ile ara..."
+                                placeholder={t('isletmeAdiSehirVeyaPostaKodu')}
                                 className="w-full px-4 py-3 pl-12 bg-gray-700 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                             />
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
@@ -974,7 +976,7 @@ export default function BusinessesPage() {
                             onChange={(e) => setTypeFilter(e.target.value)}
                             className="px-4 py-3 bg-gray-700 text-white rounded-xl border border-gray-600"
                         >
-                            <option value="all">Tüm Türler</option>
+                            <option value="all">{t('tumTurler')}</option>
                             {businessTypes.map(type => (
                                 <option key={type.value} value={type.value}>
                                     {type.icon} {type.label}
@@ -988,10 +990,10 @@ export default function BusinessesPage() {
                             onChange={(e) => setBrandFilter(e.target.value as 'all' | 'tuna' | 'akdeniz_toros' | 'none')}
                             className="px-4 py-3 bg-gray-700 text-white rounded-xl border border-gray-600"
                         >
-                            <option value="all">Tüm Markalar</option>
+                            <option value="all">{t('tumMarkalar')}</option>
                             <option value="tuna">🔴 TUNA</option>
                             <option value="akdeniz_toros">🏔️ Akdeniz Toros</option>
-                            <option value="none">⚪ Markasız</option>
+                            <option value="none">{t('markasiz')}</option>
                         </select>
 
                         {/* Status Filter */}
@@ -1000,10 +1002,10 @@ export default function BusinessesPage() {
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="px-4 py-3 bg-gray-700 text-white rounded-xl border border-gray-600"
                         >
-                            <option value="all">Tüm Durumlar</option>
+                            <option value="all">{t('tumDurumlar')}</option>
                             <option value="active">✅ Aktif</option>
                             <option value="inactive">🔴 Pasif</option>
-                            <option value="archived">📦 Arşiv</option>
+                            <option value="archived">{t('arsiv')}</option>
                         </select>
                     </div>
                 </div>
@@ -1017,20 +1019,20 @@ export default function BusinessesPage() {
                         loadingKermesEvents ? (
                             <div className="p-12 text-center">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
-                                <p className="text-gray-400 mt-4">Kermesler yükleniyor...</p>
+                                <p className="text-gray-400 mt-4">{t('kermeslerYukleniyor')}</p>
                             </div>
                         ) : filteredKermesEvents.length === 0 ? (
                             <div className="p-12 text-center">
                                 <p className="text-4xl mb-4">🎪</p>
-                                <p className="text-gray-400">Henüz kermes oluşturulmamış</p>
+                                <p className="text-gray-400">{t('henuzKermesOlusturulmamis')}</p>
                                 <p className="text-gray-500 text-sm mt-2">
-                                    &quot;Yeni Kermes Ekle&quot; butonuna tıklayarak ilk kermesinizi oluşturun.
+                                    {t('yeniKermesEkleButonunaTiklayarakIlk')}
                                 </p>
                                 <button
                                     onClick={() => setShowOrgSearchModal(true)}
                                     className="mt-4 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-medium hover:from-pink-500 hover:to-purple-500 transition"
                                 >
-                                    🎪 İlk Kermesi Oluştur
+                                    {t('ilkKermesiOlustur')}
                                 </button>
                             </div>
                         ) : (
@@ -1041,9 +1043,9 @@ export default function BusinessesPage() {
                                             <th className="px-4 py-3">🎪 Kermes</th>
                                             <th className="px-4 py-3">📅 Tarih</th>
                                             <th className="px-4 py-3">📍 Konum</th>
-                                            <th className="px-4 py-3">🍽️ Menü</th>
+                                            <th className="px-4 py-3">{t('menu')}</th>
                                             <th className="px-4 py-3">📊 Durum</th>
-                                            <th className="px-4 py-3 text-center">İşlemler</th>
+                                            <th className="px-4 py-3 text-center">{t('islemler')}</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-700">
@@ -1067,7 +1069,7 @@ export default function BusinessesPage() {
                                                                     🎪
                                                                 </div>
                                                                 <div>
-                                                                    <p className="text-white font-medium">{event.title || 'İsimsiz Kermes'}</p>
+                                                                    <p className="text-white font-medium">{event.title || t('isimsizKermes')}</p>
                                                                     {event.organizationName && (
                                                                         <p className="text-gray-400 text-xs">🕌 {event.organizationName}</p>
                                                                     )}
@@ -1088,7 +1090,7 @@ export default function BusinessesPage() {
                                                         </td>
                                                         <td className="px-4 py-4">
                                                             <span className="px-2 py-1 bg-purple-900/30 text-purple-300 rounded text-sm">
-                                                                {event.items?.length || 0} öğe
+                                                                {event.items?.length || 0} {t('oge')}
                                                             </span>
                                                         </td>
                                                         <td className="px-4 py-4">
@@ -1106,7 +1108,7 @@ export default function BusinessesPage() {
                                                                     className="px-3 py-1.5 bg-pink-600 text-white rounded-lg hover:bg-pink-500 transition text-sm"
                                                                     onClick={(e) => e.stopPropagation()}
                                                                 >
-                                                                    ✏️ Düzenle
+                                                                    {t('duzenle')}
                                                                 </Link>
                                                                 {event.isArchived ? (
                                                                     <>
@@ -1115,11 +1117,11 @@ export default function BusinessesPage() {
                                                                                 e.stopPropagation();
                                                                                 setConfirmState({
                                                                                     isOpen: true,
-                                                                                    title: 'Kermesi Arşivden Çıkar',
-                                                                                    message: 'Bu kermesi arşivden çıkarmak istiyor musunuz?',
+                                                                                    title: t('kermesiArsivdenCikar'),
+                                                                                    message: t('buKermesiArsivdenCikarmakIstiyorMusunuz'),
                                                                                     itemName: event.title,
                                                                                     variant: 'warning',
-                                                                                    confirmText: 'Evet, Çıkar',
+                                                                                    confirmText: t('evetCikar'),
                                                                                     onConfirm: async () => {
                                                                                         setConfirmState(prev => ({ ...prev, isOpen: false }));
                                                                                         try {
@@ -1133,18 +1135,18 @@ export default function BusinessesPage() {
                                                                             }}
                                                                             className="px-3 py-1.5 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/40 transition text-sm"
                                                                         >
-                                                                            📤 Çıkar
+                                                                            {t('cikar')}
                                                                         </button>
                                                                         <button
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
                                                                                 setConfirmState({
                                                                                     isOpen: true,
-                                                                                    title: 'Kermesi Kalıcı Sil',
-                                                                                    message: 'DİKKAT: Bu kermesi kalıcı olarak silmek istiyor musunuz? Bu işlem geri alınamaz!',
+                                                                                    title: t('kermesiKaliciSil'),
+                                                                                    message: t('dikkatBuKermesiKaliciOlarakSilmek'),
                                                                                     itemName: event.title,
                                                                                     variant: 'danger',
-                                                                                    confirmText: 'Evet, Kalıcı Sil',
+                                                                                    confirmText: t('evetKaliciSil'),
                                                                                     onConfirm: async () => {
                                                                                         setConfirmState(prev => ({ ...prev, isOpen: false }));
                                                                                         try {
@@ -1167,11 +1169,11 @@ export default function BusinessesPage() {
                                                                             e.stopPropagation();
                                                                             setConfirmState({
                                                                                 isOpen: true,
-                                                                                title: 'Kermesi Arşivle',
-                                                                                message: 'Bu kermesi arşivlemek istiyor musunuz?',
+                                                                                title: t('kermesiArsivle'),
+                                                                                message: t('buKermesiArsivlemekIstiyorMusunuz'),
                                                                                 itemName: event.title,
                                                                                 variant: 'warning',
-                                                                                confirmText: 'Evet, Arşivle',
+                                                                                confirmText: t('evetArsivle'),
                                                                                 onConfirm: async () => {
                                                                                     setConfirmState(prev => ({ ...prev, isOpen: false }));
                                                                                     try {
@@ -1185,7 +1187,7 @@ export default function BusinessesPage() {
                                                                         }}
                                                                         className="px-3 py-1.5 bg-yellow-600/20 text-yellow-400 rounded-lg hover:bg-yellow-600/40 transition text-sm"
                                                                     >
-                                                                        📥 Arşivle
+                                                                        {t('arsivle')}
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -1208,7 +1210,7 @@ export default function BusinessesPage() {
                                                 disabled={orgPage === 1}
                                                 className="px-3 py-1.5 bg-pink-600/20 text-pink-300 rounded-lg hover:bg-pink-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                ← Önceki
+                                                {t('onceki')}
                                             </button>
                                             <span className="px-3 py-1.5 text-white">
                                                 {orgPage} / {Math.ceil(filteredKermesEvents.length / ORGS_PER_PAGE)}
@@ -1230,12 +1232,12 @@ export default function BusinessesPage() {
                         loading ? (
                             <div className="p-12 text-center">
                                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                                <p className="text-gray-400 mt-4">İşletmeler yükleniyor...</p>
+                                <p className="text-gray-400 mt-4">{t('isletmelerYukleniyor')}</p>
                             </div>
                         ) : filteredBusinesses.length === 0 ? (
                             <div className="p-12 text-center">
                                 <p className="text-4xl mb-4">🏪</p>
-                                <p className="text-gray-400">İşletme bulunamadı</p>
+                                <p className="text-gray-400">{t('isletmeBulunamadi')}</p>
                             </div>
                         ) : (
                             <>
@@ -1244,14 +1246,14 @@ export default function BusinessesPage() {
                                         <thead className="bg-gray-700/50 text-gray-400 text-sm">
                                             <tr>
                                                 <th className="px-4 py-3 w-20">ID</th>
-                                                <th className="px-4 py-3">İşletme</th>
+                                                <th className="px-4 py-3">{t('isletme')}</th>
                                                 <th className="px-4 py-3">Marka</th>
-                                                <th className="px-4 py-3">Tür</th>
+                                                <th className="px-4 py-3">{t('tur')}</th>
                                                 <th className="px-4 py-3">Konum</th>
                                                 <th className="px-4 py-3">Puan</th>
                                                 <th className="px-4 py-3">Hizmetler</th>
                                                 <th className="px-4 py-3">Durum</th>
-                                                <th className="px-4 py-3 text-center">İşlemler</th>
+                                                <th className="px-4 py-3 text-center">{t('islemler')}</th>
 
                                             </tr>
                                         </thead>
@@ -1346,9 +1348,9 @@ export default function BusinessesPage() {
                                                                     : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
                                                                     }`}
                                                                 disabled={(business as any).isArchived}
-                                                                title={(business as any).isArchived ? 'Arşivde' : 'Sil / Arşivle'}
+                                                                title={(business as any).isArchived ? t('arsivde') : t('silArsivle')}
                                                             >
-                                                                {(business as any).isArchived ? '📦 Arşivde' : '🗑️ Sil'}
+                                                                {(business as any).isArchived ? t('arsivde1') : '🗑️ Sil'}
                                                             </button>
                                                         </td>
 
@@ -1362,7 +1364,7 @@ export default function BusinessesPage() {
                                 {totalPages > 1 && (
                                     <div className="flex items-center justify-between mt-4 px-4">
                                         <p className="text-sm text-gray-400">
-                                            Toplam {filteredBusinesses.length} işletmeden {(currentPage - 1) * BUSINESSES_PER_PAGE + 1}-{Math.min(currentPage * BUSINESSES_PER_PAGE, filteredBusinesses.length)} gösteriliyor
+                                            Toplam {filteredBusinesses.length} {t('isletmeden')} {(currentPage - 1) * BUSINESSES_PER_PAGE + 1}-{Math.min(currentPage * BUSINESSES_PER_PAGE, filteredBusinesses.length)} {t('gosteriliyor')}
                                         </p>
                                         <div className="flex gap-2">
                                             <button
@@ -1418,7 +1420,7 @@ export default function BusinessesPage() {
                     <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-gray-700">
                             <h2 className="text-xl font-bold text-white mb-4">
-                                {editingBusiness ? '✏️ İşletme Düzenle' : '➕ Yeni İşletme Ekle'}
+                                {editingBusiness ? t('isletmeDuzenle') : t('yeniIsletmeEkle1')}
                             </h2>
 
                             {/* Tab Navigation - show for all (new and existing) */}
@@ -1430,7 +1432,7 @@ export default function BusinessesPage() {
                                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                 >
-                                    ✍️ Manuel Giriş
+                                    {t('manuelGiris')}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('google')}
@@ -1439,7 +1441,7 @@ export default function BusinessesPage() {
                                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                 >
-                                    🌍 {editingBusiness ? 'Google Güncelle' : "Google'dan Çek"}
+                                    🌍 {editingBusiness ? t('googleGuncelle') : t('googledanCek')}
                                 </button>
                             </div>
                         </div>
@@ -1448,9 +1450,9 @@ export default function BusinessesPage() {
                             {/* Google Import Tab */}
                             {activeTab === 'google' && (
                                 <div className="bg-gray-700/50 rounded-xl p-4 border border-gray-600">
-                                    <h3 className="text-white font-medium mb-3">🌍 Google Maps'ten İşletme Ara</h3>
+                                    <h3 className="text-white font-medium mb-3">{t('googleMapstenIsletmeAra')}</h3>
                                     <p className="text-gray-400 text-sm mb-4">
-                                        İşletme adı veya adresini girin. Google'dan telefon, adres, puan ve çalışma saatleri otomatik çekilecek.
+                                        {t('isletmeAdiVeyaAdresiniGirinGoogledan')}
                                     </p>
 
                                     <div className="flex gap-2">
@@ -1459,7 +1461,7 @@ export default function BusinessesPage() {
                                             value={searchQuery2}
                                             onChange={(e) => setSearchQuery2(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && handleGoogleSearch()}
-                                            placeholder="örn: Tuna Metzgerei Köln veya Vogelsanger Str. 292 Köln"
+                                            placeholder={t('ornTunaMetzgereiKolnVeyaVogelsanger')}
                                             className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-500"
                                         />
                                         <button
@@ -1474,7 +1476,7 @@ export default function BusinessesPage() {
                                     {/* Search Results */}
                                     {searchResults.length > 0 && (
                                         <div className="mt-4 space-y-2">
-                                            <p className="text-sm text-gray-400">{searchResults.length} sonuç bulundu:</p>
+                                            <p className="text-sm text-gray-400">{searchResults.length} {t('sonucBulundu')}</p>
                                             {searchResults.map((result: any, idx: number) => (
                                                 <div
                                                     key={idx}
@@ -1485,7 +1487,7 @@ export default function BusinessesPage() {
                                                         <p className="text-gray-400 text-sm">{result.formatted_address}</p>
                                                         {result.rating && (
                                                             <p className="text-yellow-400 text-sm mt-1">
-                                                                ⭐ {result.rating} ({result.user_ratings_total || 0} değerlendirme)
+                                                                ⭐ {result.rating} ({result.user_ratings_total || 0} {t('degerlendirme')}
                                                             </p>
                                                         )}
                                                     </div>
@@ -1494,7 +1496,7 @@ export default function BusinessesPage() {
                                                         disabled={isImporting}
                                                         className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm disabled:opacity-50"
                                                     >
-                                                        {isImporting ? '⏳' : '✓'} Seç
+                                                        {isImporting ? '⏳' : '✓'} {t('sec')}
                                                     </button>
                                                 </div>
                                             ))}
@@ -1508,17 +1510,17 @@ export default function BusinessesPage() {
                                 <h3 className="text-white font-medium mb-3">📋 Temel Bilgiler</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">İşletme Adı *</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{t('isletmeAdi')}</label>
                                         <input
                                             type="text"
                                             value={formData.companyName}
                                             onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                                             className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                                            placeholder="örn: Tuna Et"
+                                            placeholder={t('ornTunaEt')}
                                         />
                                     </div>
                                     <div className="col-span-2">
-                                        <label className="block text-gray-400 text-sm mb-1">İşletme Türü</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{t('isletmeTuru')}</label>
                                         <div className="grid grid-cols-3 gap-2">
                                             {businessTypes.map(type => (
                                                 <button
@@ -1543,13 +1545,13 @@ export default function BusinessesPage() {
                                                 <span className="text-green-400 text-sm font-medium">🌍 Google Verisi Aktif</span>
                                                 {formData.rating > 0 && (
                                                     <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm font-medium">
-                                                        ⭐ {formData.rating} ({formData.reviewCount} değerlendirme)
+                                                        ⭐ {formData.rating} ({formData.reviewCount} {t('degerlendirme')}
                                                     </span>
                                                 )}
                                             </div>
                                             <p className="text-gray-400 text-xs">Place ID: {formData.googlePlaceId}</p>
                                             {formData.openingHours && (
-                                                <p className="text-gray-400 text-xs mt-1">Çalışma Saatleri: {formData.openingHours.substring(0, 50)}...</p>
+                                                <p className="text-gray-400 text-xs mt-1">{t('calismaSaatleri')} {formData.openingHours.substring(0, 50)}...</p>
                                             )}
                                         </div>
                                     )}
@@ -1570,7 +1572,7 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">Şehir *</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{t('sehir')}</label>
                                         <input
                                             type="text"
                                             value={formData.city}
@@ -1588,16 +1590,16 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">Ülke</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{t('ulke')}</label>
                                         <select
                                             value={formData.country}
                                             onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                                             className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
                                         >
                                             <option value="DE">🇩🇪 Almanya</option>
-                                            <option value="TR">🇹🇷 Türkiye</option>
+                                            <option value="TR">{t('turkiye')}</option>
                                             <option value="NL">🇳🇱 Hollanda</option>
-                                            <option value="BE">🇧🇪 Belçika</option>
+                                            <option value="BE">{t('belcika')}</option>
                                             <option value="FR">🇫🇷 Fransa</option>
                                             <option value="AT">🇦🇹 Avusturya</option>
                                         </select>
@@ -1607,7 +1609,7 @@ export default function BusinessesPage() {
 
                             {/* Contact */}
                             <div>
-                                <h3 className="text-white font-medium mb-3">📞 İletişim</h3>
+                                <h3 className="text-white font-medium mb-3">{t('iletisim')}</h3>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
                                         <label className="block text-gray-400 text-sm mb-1">Telefon</label>
@@ -1645,10 +1647,10 @@ export default function BusinessesPage() {
                                 <h3 className="text-white font-medium mb-3">🛎️ Hizmetler</h3>
                                 <div className="flex flex-wrap gap-3">
                                     {[
-                                        { key: 'delivery', label: '🛵 Teslimat', desc: 'Kurye ile gönderim' },
-                                        { key: 'pickup', label: '🏃 Gel Al', desc: 'Müşteri alır' },
+                                        { key: 'delivery', label: '🛵 Teslimat', desc: t('kuryeIleGonderim') },
+                                        { key: 'pickup', label: '🏃 Gel Al', desc: t('musteriAlir') },
                                         { key: 'dineIn', label: '🍽️ Yerinde', desc: 'Masa servisi' },
-                                        { key: 'reservation', label: '📅 Rezervasyon', desc: 'Masa ayırtma' },
+                                        { key: 'reservation', label: '📅 Rezervasyon', desc: t('masaAyirtma') },
                                     ].map(service => (
                                         <button
                                             key={service.key}
@@ -1672,10 +1674,10 @@ export default function BusinessesPage() {
                             {(formData.reservation || formData.dineIn) && (
                                 <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
                                     <h3 className="text-white font-medium mb-3">🪑 Masa & Kapasite</h3>
-                                    <p className="text-gray-400 text-sm mb-3">Restoran/Kafe için oturma kapasitesi. 0 = Fastfood/Take-away</p>
+                                    <p className="text-gray-400 text-sm mb-3">{t('restorankafeIcinOturmaKapasitesi0Fastfoodtakeaway')}</p>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">Masa Sayısı</label>
+                                            <label className="block text-gray-400 text-sm mb-1">{t('masaSayisi')}</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -1703,7 +1705,7 @@ export default function BusinessesPage() {
                             {/* Opening Hours - Editable */}
                             <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-white font-medium">🕒 Çalışma Saatleri</h3>
+                                    <h3 className="text-white font-medium">{t('calismaSaatleri1')}</h3>
                                     {formData.googlePlaceId && (
                                         <button
                                             onClick={handleGoogleRefreshHours}
@@ -1711,7 +1713,7 @@ export default function BusinessesPage() {
                                             type="button"
                                             className="px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm font-medium flex items-center gap-2 transition disabled:opacity-50"
                                         >
-                                            {isRefreshingHours ? '🔄 Yükleniyor...' : '🌍 Google\'dan Tazele'}
+                                            {isRefreshingHours ? t('yukleniyor') : '🌍 Google\'dan Tazele'}
                                         </button>
                                     )}
                                 </div>
@@ -1728,7 +1730,7 @@ export default function BusinessesPage() {
                                     rows={7}
                                 />
                                 <p className="text-gray-500 text-xs mt-2">
-                                    Her satıra bir gün yazın. Örnek: Monday: 09:00 – 18:00
+                                    {t('herSatiraBirGunYazinOrnek')}
                                 </p>
                             </div>
 
@@ -1746,7 +1748,7 @@ export default function BusinessesPage() {
                                             🏷️ Marka Etiketi
                                             <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">SUPER ADMIN</span>
                                         </h4>
-                                        <p className="text-gray-400 text-xs mb-3">Bu etiket sadece Super Admin tarafından verilebilir. Etiketli işletmeler öne çıkar.</p>
+                                        <p className="text-gray-400 text-xs mb-3">{t('buEtiketSadeceSuperAdminTarafindan')}</p>
                                         <div className="flex gap-2">
                                             <button
                                                 type="button"
@@ -1776,7 +1778,7 @@ export default function BusinessesPage() {
                                                     : 'bg-gray-800 text-gray-400 hover:bg-amber-900/50'
                                                     }`}
                                             >
-                                                🏔️ AKDENİZ TOROS <span className="text-xs opacity-70">(Türkiye)</span>
+                                                {t('akdenizToros')} <span className="text-xs opacity-70">{t('turkiye1')}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -1792,7 +1794,7 @@ export default function BusinessesPage() {
                                                 type="text"
                                                 value={formData.bankAccountHolder}
                                                 onChange={(e) => setFormData({ ...formData, bankAccountHolder: e.target.value })}
-                                                placeholder="Hesap sahibi adı"
+                                                placeholder={t('hesapSahibiAdi')}
                                                 className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                                             />
                                         </div>
@@ -1802,7 +1804,7 @@ export default function BusinessesPage() {
                                                 type="text"
                                                 value={formData.bankName}
                                                 onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
-                                                placeholder="Banka adı"
+                                                placeholder={t('bankaAdi')}
                                                 className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white placeholder-gray-500 border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                                             />
                                         </div>
@@ -1856,11 +1858,11 @@ export default function BusinessesPage() {
                                                 <option value="active">✓ Aktif</option>
                                                 <option value="trial">🎁 Deneme</option>
                                                 <option value="paused">⏸ Durduruldu</option>
-                                                <option value="cancelled">✗ İptal</option>
+                                                <option value="cancelled">{t('iptal')}</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-gray-500 text-xs mb-1">Aylık Ücret (€)</label>
+                                            <label className="block text-gray-500 text-xs mb-1">{t('aylikUcret')}</label>
                                             <input
                                                 type="number"
                                                 step="0.01"
@@ -1871,7 +1873,7 @@ export default function BusinessesPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-gray-500 text-xs mb-1">Komisyon Oranı (%)</label>
+                                            <label className="block text-gray-500 text-xs mb-1">{t('komisyonOrani')}</label>
                                             <input
                                                 type="number"
                                                 step="0.1"
@@ -1888,15 +1890,15 @@ export default function BusinessesPage() {
                                 {/* Order Stats - Only show when editing */}
                                 {editingBusiness && (
                                     <div className="bg-gray-800/50 rounded-lg p-3">
-                                        <h4 className="text-gray-400 text-sm font-medium mb-2">📊 Sipariş İstatistikleri</h4>
+                                        <h4 className="text-gray-400 text-sm font-medium mb-2">{t('siparisIstatistikleri')}</h4>
                                         <div className="grid grid-cols-4 gap-3">
                                             <div className="text-center">
                                                 <p className="text-2xl font-bold text-white">{editingBusiness.orderStats?.totalOrders || editingBusiness.orderCount || 0}</p>
-                                                <p className="text-gray-500 text-xs">Toplam Sipariş</p>
+                                                <p className="text-gray-500 text-xs">{t('toplamSiparis')}</p>
                                             </div>
                                             <div className="text-center">
                                                 <p className="text-2xl font-bold text-blue-400">{editingBusiness.orderStats?.dailyAverage?.toFixed(1) || '0.0'}</p>
-                                                <p className="text-gray-500 text-xs">Günlük Ortalama</p>
+                                                <p className="text-gray-500 text-xs">{t('gunlukOrtalama')}</p>
                                             </div>
                                             <div className="text-center">
                                                 <p className="text-2xl font-bold text-green-400">€{editingBusiness.orderStats?.totalRevenue?.toFixed(0) || '0'}</p>
@@ -1906,7 +1908,7 @@ export default function BusinessesPage() {
                                                 <p className="text-sm text-gray-300">
                                                     {editingBusiness.orderStats?.lastOrderDate?.toDate?.()?.toLocaleDateString('de-DE') || '-'}
                                                 </p>
-                                                <p className="text-gray-500 text-xs">Son Sipariş</p>
+                                                <p className="text-gray-500 text-xs">{t('sonSiparis')}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1922,7 +1924,7 @@ export default function BusinessesPage() {
                                                 <p className="text-sm text-gray-300">
                                                     {editingBusiness.billing?.lastPaymentDate?.toDate?.()?.toLocaleDateString('de-DE') || '-'}
                                                 </p>
-                                                <p className="text-gray-500 text-xs">Son Ödeme</p>
+                                                <p className="text-gray-500 text-xs">{t('sonOdeme')}</p>
                                             </div>
                                             <div className="text-center">
                                                 <p className="text-xl font-bold text-white">€{editingBusiness.billing?.lastPaymentAmount?.toFixed(2) || '0.00'}</p>
@@ -1932,16 +1934,16 @@ export default function BusinessesPage() {
                                                 <p className={`text-xl font-bold ${(editingBusiness.billing?.openBalance || 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>
                                                     €{editingBusiness.billing?.openBalance?.toFixed(2) || '0.00'}
                                                 </p>
-                                                <p className="text-gray-500 text-xs">Açık Bakiye</p>
+                                                <p className="text-gray-500 text-xs">{t('acikBakiye')}</p>
                                             </div>
                                             <div className="text-center">
                                                 <p className="text-xl font-bold text-gray-300">{editingBusiness.billing?.invoiceCount || 0}</p>
-                                                <p className="text-gray-500 text-xs">Fatura Sayısı</p>
+                                                <p className="text-gray-500 text-xs">{t('faturaSayisi')}</p>
                                             </div>
                                         </div>
                                         {(editingBusiness.billing?.openBalance || 0) > 0 && (
                                             <div className="mt-3 p-2 bg-red-900/30 rounded-lg border border-red-500/30">
-                                                <p className="text-red-400 text-sm text-center">⚠️ Açık fatura mevcut!</p>
+                                                <p className="text-red-400 text-sm text-center">{t('acikFaturaMevcut')}</p>
                                             </div>
                                         )}
                                     </div>
@@ -1958,7 +1960,7 @@ export default function BusinessesPage() {
                                     className="w-5 h-5"
                                 />
                                 <label htmlFor="isActive" className="text-white">
-                                    ✅ İşletme Aktif (LOKMA'da görünsün)
+                                    {t('isletmeAktifLokmadaGorunsun')}
                                 </label>
                             </div>
                         </div>
@@ -1974,14 +1976,14 @@ export default function BusinessesPage() {
                                 className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600"
                                 disabled={saving}
                             >
-                                İptal
+                                {t('iptal1')}
                             </button>
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
                                 className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium hover:from-blue-500 hover:to-purple-500 disabled:opacity-50"
                             >
-                                {saving ? 'Kaydediliyor...' : (editingBusiness ? '✓ Güncelle' : '✓ Oluştur')}
+                                {saving ? 'Kaydediliyor...' : (editingBusiness ? t('guncelle') : t('olustur'))}
                             </button>
                         </div>
                     </div>
@@ -1994,7 +1996,7 @@ export default function BusinessesPage() {
                     <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold text-white">
-                                ⭐ {reviewModal.business.companyName} - Google Puanları
+                                ⭐ {reviewModal.business.companyName} {t('googlePuanlari')}
                             </h3>
                             <button onClick={() => setReviewModal({ open: false, business: null })} className="text-gray-400 hover:text-white text-2xl">&times;</button>
                         </div>
@@ -2003,7 +2005,7 @@ export default function BusinessesPage() {
                             <div className="text-4xl font-bold text-yellow-400 mb-1">
                                 ⭐ {reviewModal.business.rating}
                             </div>
-                            <p className="text-gray-400">{reviewModal.business.reviewCount || 0} değerlendirme</p>
+                            <p className="text-gray-400">{reviewModal.business.reviewCount || 0} {t('degerlendirme1')}</p>
                         </div>
 
                         {(reviewModal.business as any).reviews && (reviewModal.business as any).reviews.length > 0 ? (
@@ -2022,7 +2024,7 @@ export default function BusinessesPage() {
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-gray-400 text-center py-4">Henüz yorum bulunmuyor.</p>
+                            <p className="text-gray-400 text-center py-4">{t('henuzYorumBulunmuyor')}</p>
                         )}
 
                         {reviewModal.business.googlePlaceId && (
@@ -2032,7 +2034,7 @@ export default function BusinessesPage() {
                                 rel="noopener noreferrer"
                                 className="block mt-4 text-center bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg"
                             >
-                                🌐 Google&apos;da Tüm Yorumları Gör
+                                {t('googledaTumYorumlariGor')}
                             </a>
                         )}
                     </div>
@@ -2047,8 +2049,8 @@ export default function BusinessesPage() {
                         <div className="bg-gradient-to-r from-pink-600 to-purple-600 px-6 py-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-xl font-bold text-white">🕌 Organizasyon Seç</h2>
-                                    <p className="text-pink-200 text-sm">Kermes açmak istediğiniz organizasyonu seçin</p>
+                                    <h2 className="text-xl font-bold text-white">{t('organizasyonSec')}</h2>
+                                    <p className="text-pink-200 text-sm">{t('kermesAcmakIstediginizOrganizasyonuSecin')}</p>
                                 </div>
                                 <button
                                     onClick={() => { setShowOrgSearchModal(false); setOrgSearchQuery(''); }}
@@ -2065,7 +2067,7 @@ export default function BusinessesPage() {
                                 type="text"
                                 value={orgSearchQuery}
                                 onChange={(e) => setOrgSearchQuery(e.target.value)}
-                                placeholder="Organizasyon adı, şehir veya posta kodu ara..."
+                                placeholder={t('organizasyonAdiSehirVeyaPostaKodu')}
                                 className="w-full px-4 py-3 bg-gray-700 text-white rounded-xl border border-gray-600 focus:border-pink-500 focus:ring-2 focus:ring-pink-500"
                                 autoFocus
                             />
@@ -2076,12 +2078,12 @@ export default function BusinessesPage() {
                             {loadingOrganizations ? (
                                 <div className="p-8 text-center">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto"></div>
-                                    <p className="text-gray-400 mt-3">Organizasyonlar yükleniyor...</p>
+                                    <p className="text-gray-400 mt-3">{t('organizasyonlarYukleniyor')}</p>
                                 </div>
                             ) : filteredOrgsForModal.length === 0 ? (
                                 <div className="p-8 text-center">
                                     <p className="text-4xl mb-3">🔍</p>
-                                    <p className="text-gray-400">Aramayla eşleşen organizasyon bulunamadı</p>
+                                    <p className="text-gray-400">{t('aramaylaEslesenOrganizasyonBulunamadi')}</p>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-gray-700">
@@ -2108,7 +2110,7 @@ export default function BusinessesPage() {
                                     ))}
                                     {filteredOrgsForModal.length > 20 && (
                                         <div className="p-4 text-center text-gray-500 text-sm">
-                                            +{filteredOrgsForModal.length - 20} daha... Aramayı daraltin
+                                            +{filteredOrgsForModal.length - 20} {t('dahaAramayiDaraltin')}
                                         </div>
                                     )}
                                 </div>
@@ -2121,7 +2123,7 @@ export default function BusinessesPage() {
                                 onClick={() => { setShowOrgSearchModal(false); setOrgSearchQuery(''); }}
                                 className="w-full py-3 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition"
                             >
-                                İptal
+                                {t('iptal1')}
                             </button>
                         </div>
                     </div>

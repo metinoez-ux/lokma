@@ -33,6 +33,7 @@ import { BUSINESS_TYPES } from "@/lib/business-types";
 import { auth, db, storage } from "@/lib/firebase";
 import { Admin, ButcherPartner } from "@/types";
 import { useAdmin } from "@/components/providers/AdminProvider";
+import { useTranslations } from "next-intl";
 import { useSectors } from "@/hooks/useSectors";
 import { subscriptionService } from "@/services/subscriptionService";
 
@@ -62,69 +63,7 @@ interface MeatOrder {
   createdAt?: { toDate: () => Date };
 }
 
-// Turkish status labels for order display
-const orderStatusLabels: Record<string, { label: string; color: string }> = {
-  pending: { label: "Beklemede", color: "bg-yellow-600" },
-  accepted: { label: "Onaylandı", color: "bg-blue-600" },
-  preparing: { label: "Hazırlanıyor", color: "bg-blue-600" },
-  ready: { label: "Hazır", color: "bg-green-600" },
-  onTheWay: { label: "Yolda", color: "bg-indigo-600" },
-  delivered: { label: "Teslim Edildi", color: "bg-gray-600" },
-  completed: { label: "Tamamlandı", color: "bg-gray-600" },
-  cancelled: { label: "İptal", color: "bg-red-600" },
-};
 
-// Fallback plan labels for badge display (dynamic plans override these)
-const defaultPlanLabels: Record<string, { label: string; color: string }> = {
-  none: { label: "Yok", color: "bg-gray-800" },
-};
-
-// 🆕 Dynamic business type labels for UI - synced with /lib/business-types.ts
-const businessTypeLabels: Record<string, { label: string; emoji: string; color: string }> = {
-  // === MERKEZI TİPLER (business-types.ts ile uyumlu) ===
-  kasap: { label: "Kasap", emoji: "🥩", color: "bg-red-600" },
-  market: { label: "Market", emoji: "🛒", color: "bg-green-600" },
-  restoran: { label: "Restoran", emoji: "🍽️", color: "bg-amber-600" },
-  pastane: { label: "Pastane & Tatlıcı", emoji: "🎂", color: "bg-pink-600" },
-  cicekci: { label: "Çiçekçi", emoji: "🌸", color: "bg-purple-600" },
-  cigkofte: { label: "Çiğ Köfteci", emoji: "🥙", color: "bg-emerald-600" },
-  cafe: { label: "Kafe", emoji: "☕", color: "bg-amber-600" },
-  catering: { label: "Catering", emoji: "🎉", color: "bg-indigo-600" },
-  firin: { label: "Fırın", emoji: "🥖", color: "bg-amber-700" },
-  // === ESKİ KEY'LER (geriye uyumluluk için) ===
-  cigkofteci: { label: "Çiğ Köfteci", emoji: "🥙", color: "bg-lime-600" },
-  kafe: { label: "Kafe", emoji: "☕", color: "bg-amber-600" },
-  kafeterya: { label: "Kafeterya", emoji: "☕", color: "bg-yellow-700" },
-  baklava: { label: "Baklava", emoji: "🍯", color: "bg-amber-600" },
-  doner: { label: "Döner", emoji: "🌯", color: "bg-yellow-600" },
-  berber: { label: "Berber", emoji: "✂️", color: "bg-gray-600" },
-};
-
-// Helper to get business type display info (supports single type or array)
-function getBusinessTypeLabel(type?: string | string[]) {
-  const defaultLabel = { label: "İşletme", emoji: "🏪", color: "bg-gray-600" };
-
-  if (!type) return defaultLabel;
-
-  // Handle array of types (multi-type business)
-  if (Array.isArray(type)) {
-    if (type.length === 0) return defaultLabel;
-    if (type.length === 1) {
-      return businessTypeLabels[type[0].toLowerCase()] || defaultLabel;
-    }
-    // Multiple types: combine labels
-    const labels = type.map(t => businessTypeLabels[t.toLowerCase()]?.label || t).join(" & ");
-    const firstType = businessTypeLabels[type[0].toLowerCase()];
-    return {
-      label: labels,
-      emoji: firstType?.emoji || "🏪",
-      color: firstType?.color || "bg-gray-600"
-    };
-  }
-
-  // Single type (legacy)
-  return businessTypeLabels[type.toLowerCase()] || defaultLabel;
-}
 
 // Add global declaration for Google Maps
 declare global {
@@ -133,92 +72,145 @@ declare global {
   }
 }
 
-function parseTime(timeStr: string) {
-  if (!timeStr) return null;
 
-  // Normalize time string (remove AM/PM spaces to simplify)
-  const normalized = timeStr.toUpperCase().replace(/\./g, ":");
 
-  let hours = 0;
-  let minutes = 0;
+export default function BusinessDetailsPage() {
+  const t = useTranslations('AdminBusiness');
 
-  // Handle AM/PM
-  const isPM = normalized.includes("PM");
-  const isAM = normalized.includes("AM");
-
-  // Extract numbers
-  const timeParts = normalized.match(/(\d+):?(\d+)?/);
-  if (timeParts) {
-    hours = parseInt(timeParts[1]);
-    minutes = timeParts[2] ? parseInt(timeParts[2]) : 0;
-
-    if (isPM && hours < 12) hours += 12;
-    if (isAM && hours === 12) hours = 0;
+  function parseTime(timeStr: string) {
+    if (!timeStr) return null;
+    const normalized = timeStr.toUpperCase().replace(/\./g, ":");
+    let hours = 0;
+    let minutes = 0;
+    const isPM = normalized.includes("PM");
+    const isAM = normalized.includes("AM");
+    const timeParts = normalized.match(/(\d+):?(\d+)?/);
+    if (timeParts) {
+      hours = parseInt(timeParts[1]);
+      minutes = timeParts[2] ? parseInt(timeParts[2]) : 0;
+      if (isPM && hours < 12) hours += 12;
+      if (isAM && hours === 12) hours = 0;
+    }
+    const d = new Date();
+    d.setHours(hours, minutes, 0, 0);
+    return d;
   }
 
-  const d = new Date();
-  d.setHours(hours, minutes, 0, 0);
-  return d;
-}
-
-
-// Helper to convert formatted time string (AM/PM) to 24h format (HH:MM)
-function formatTo24h(timeStr: string): string {
-  const dateObj = parseTime(timeStr);
-  if (!dateObj) return timeStr; // Fallback if parse fails
-  const h = dateObj.getHours().toString().padStart(2, '0');
-  const m = dateObj.getMinutes().toString().padStart(2, '0');
-  return `${h}:${m}`;
-}
-
-function checkShopStatus(openingHours: string | string[]) {
-  try {
-    const hoursStr = Array.isArray(openingHours) ? openingHours.join("\n") : openingHours;
-    if (!hoursStr) return { isOpen: false, text: "Kapalı", isClosed: true };
-
-    const now = new Date();
-    const dayNames = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-    const currentDay = dayNames[now.getDay()];
-
-    const todayLine = hoursStr.split("\n").find(l =>
-      l.startsWith(currentDay + ":") || l.startsWith(currentDay + " ")
-    );
-
-    if (!todayLine) return { isOpen: false, text: "Kapalı", isClosed: true };
-
-    // Check for explicit "Kapalı" or "Closed"
-    const lowerLine = todayLine.toLowerCase();
-    if (lowerLine.includes("kapalı") || lowerLine.includes("closed")) {
-      return { isOpen: false, text: "Bugün Kapalı", isClosed: true };
-    }
-
-    // Parse range "07:30 - 20:00" or "7:30 AM - 8:00 PM"
-    const timePart = todayLine.split(": ").slice(1).join(": ").trim(); // Get everything after first colon
-    if (!timePart) return { isOpen: false, text: "Saat Bilgisi Yok", isClosed: false };
-
-    // Standardize split by "-" or "–" (en dash)
-    const ranges = timePart.includes("–") ? timePart.split("–") : timePart.includes("-") ? timePart.split("-") : [];
-
-    if (ranges.length < 2) return { isOpen: false, text: "Saat Formatı Hatalı", isClosed: false };
-
-    const start = parseTime(ranges[0]);
-    const end = parseTime(ranges[1]);
-
-    if (!start || !end) return { isOpen: false, text: "Saat Parse Hatası" };
-
-    if (now >= start && now <= end) {
-      return { isOpen: true, text: "Şu An Açık" };
-    } else {
-      return { isOpen: false, text: "Şu An Kapalı" };
-    }
-
-  } catch (e) {
-    console.error("Status checking error", e);
-    return { isOpen: false, text: "Hata" };
+  function formatTo24h(timeStr: string): string {
+    const dateObj = parseTime(timeStr);
+    if (!dateObj) return timeStr;
+    const h = dateObj.getHours().toString().padStart(2, '0');
+    const m = dateObj.getMinutes().toString().padStart(2, '0');
+    return `${h}:${m}`;
   }
-}
 
-export default function BusinessDetailPage() {
+  function checkShopStatus(openingHours: string | string[]) {
+    try {
+      const hoursStr = Array.isArray(openingHours) ? openingHours.join("\n") : openingHours;
+      if (!hoursStr) return { isOpen: false, text: t('kapali'), isClosed: true };
+
+      const now = new Date();
+      const dayNames = ["Pazar", "Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi"];
+      const currentDay = dayNames[now.getDay()];
+
+      const todayLine = hoursStr.split("\n").find((l: string) =>
+        l.startsWith(currentDay + ":") || l.startsWith(currentDay + " ")
+      );
+
+      if (!todayLine) return { isOpen: false, text: t('kapali'), isClosed: true };
+
+      const lowerLine = todayLine.toLowerCase();
+      if (lowerLine.includes(t('kapali1')) || lowerLine.includes("closed")) {
+        return { isOpen: false, text: t('bugunKapali'), isClosed: true };
+      }
+
+      const timePart = todayLine.split(": ").slice(1).join(": ").trim();
+      if (!timePart) return { isOpen: false, text: "Saat Bilgisi Yok", isClosed: false };
+
+      const ranges = timePart.includes("–") ? timePart.split("–") : timePart.includes("-") ? timePart.split("-") : [];
+
+      if (ranges.length < 2) return { isOpen: false, text: t('saatFormatiHatali'), isClosed: false };
+
+      const start = parseTime(ranges[0]);
+      const end = parseTime(ranges[1]);
+
+      if (!start || !end) return { isOpen: false, text: t('saatParseHatasi') };
+
+      if (now >= start && now <= end) {
+        return { isOpen: true, text: t('suAnAcik') };
+      } else {
+        return { isOpen: false, text: t('suAnKapali') };
+      }
+    } catch (e) {
+      console.error("Status checking error", e);
+      return { isOpen: false, text: "Hata" };
+    }
+  }
+
+  // Turkish status labels for order display
+  const orderStatusLabels: Record<string, { label: string; color: string }> = {
+    pending: { label: "Beklemede", color: "bg-yellow-600" },
+    accepted: { label: t('onaylandi'), color: "bg-blue-600" },
+    preparing: { label: t('hazirlaniyor'), color: "bg-blue-600" },
+    ready: { label: t('hazir'), color: "bg-green-600" },
+    onTheWay: { label: "Yolda", color: "bg-indigo-600" },
+    delivered: { label: "Teslim Edildi", color: "bg-gray-600" },
+    completed: { label: t('tamamlandi'), color: "bg-gray-600" },
+    cancelled: { label: t('iptal1'), color: "bg-red-600" },
+  };
+
+  // Fallback plan labels for badge display (dynamic plans override these)
+  const defaultPlanLabels: Record<string, { label: string; color: string }> = {
+    none: { label: "Yok", color: "bg-gray-800" },
+  };
+
+  // 🆕 Dynamic business type labels for UI - synced with /lib/business-types.ts
+  const businessTypeLabels: Record<string, { label: string; emoji: string; color: string }> = {
+    // === MERKEZI TİPLER (business-types.ts ile uyumlu) ===
+    kasap: { label: "Kasap", emoji: "🥩", color: "bg-red-600" },
+    market: { label: "Market", emoji: "🛒", color: "bg-green-600" },
+    restoran: { label: "Restoran", emoji: "🍽️", color: "bg-amber-600" },
+    pastane: { label: t('pastaneTatlici'), emoji: "🎂", color: "bg-pink-600" },
+    cicekci: { label: t('cicekci'), emoji: "🌸", color: "bg-purple-600" },
+    cigkofte: { label: t('cigKofteci'), emoji: "🥙", color: "bg-emerald-600" },
+    cafe: { label: "Kafe", emoji: "☕", color: "bg-amber-600" },
+    catering: { label: "Catering", emoji: "🎉", color: "bg-indigo-600" },
+    firin: { label: t('firin'), emoji: "🥖", color: "bg-amber-700" },
+    // === ESKİ KEY'LER (geriye uyumluluk için) ===
+    cigkofteci: { label: t('cigKofteci'), emoji: "🥙", color: "bg-lime-600" },
+    kafe: { label: "Kafe", emoji: "☕", color: "bg-amber-600" },
+    kafeterya: { label: "Kafeterya", emoji: "☕", color: "bg-yellow-700" },
+    baklava: { label: "Baklava", emoji: "🍯", color: "bg-amber-600" },
+    doner: { label: t('doner'), emoji: "🌯", color: "bg-yellow-600" },
+    berber: { label: "Berber", emoji: "✂️", color: "bg-gray-600" },
+  };
+
+  // Helper to get business type display info (supports single type or array)
+  function getBusinessTypeLabel(type?: string | string[]) {
+    const defaultLabel = { label: t('isletme'), emoji: "🏪", color: "bg-gray-600" };
+
+    if (!type) return defaultLabel;
+
+    // Handle array of types (multi-type business)
+    if (Array.isArray(type)) {
+      if (type.length === 0) return defaultLabel;
+      if (type.length === 1) {
+        return businessTypeLabels[type[0].toLowerCase()] || defaultLabel;
+      }
+      // Multiple types: combine labels
+      const labels = type.map(t => businessTypeLabels[t.toLowerCase()]?.label || t).join(" & ");
+      const firstType = businessTypeLabels[type[0].toLowerCase()];
+      return {
+        label: labels,
+        emoji: firstType?.emoji || "🏪",
+        color: firstType?.color || "bg-gray-600"
+      };
+    }
+
+    // Single type (legacy)
+    return businessTypeLabels[type.toLowerCase()] || defaultLabel;
+  }
+
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -482,7 +474,7 @@ export default function BusinessDetailPage() {
           reviewCount: data.userRatingsTotal || prev.reviewCount,
           openingHours: Array.isArray(data.openingHours) ? data.openingHours.join('\n') : (data.openingHours || prev.openingHours),
         }));
-        showToast('✅ Google\'dan bilgiler çekildi!', 'success');
+        showToast(t('googledanBilgilerCekildi'), 'success');
       }
     } catch (error) {
       console.error('Fetch place details error:', error);
@@ -732,7 +724,7 @@ export default function BusinessDetailPage() {
       const staffSnap = await getDocs(staffQuery);
       const staffData = staffSnap.docs.map((doc) => ({
         id: doc.id,
-        displayName: doc.data().displayName || "İsimsiz",
+        displayName: doc.data().displayName || t('isimsiz'),
         email: doc.data().email,
         phoneNumber: doc.data().phoneNumber,
         adminType: doc.data().adminType || "Personel",
@@ -887,19 +879,19 @@ export default function BusinessDetailPage() {
     if (!businessId) return;
     setConfirmModal({
       show: true,
-      title: 'Ürün Sil',
-      message: 'Bu ürünü silmek istediğinize emin misiniz?',
+      title: t('urunSil'),
+      message: t('buUrunuSilmekIstediginizeEminMisiniz'),
       confirmText: 'Evet, Sil',
       confirmColor: 'bg-red-600 hover:bg-red-500',
       onConfirm: async () => {
         setConfirmModal(prev => ({ ...prev, show: false }));
         try {
           await deleteDoc(doc(db, `businesses/${businessId}/products`, productId));
-          showToast("Ürün silindi", "success");
+          showToast(t('urunSilindi'), "success");
           loadProducts();
         } catch (error) {
           console.error("Error deleting product:", error);
-          showToast("Ürün silinirken hata oluştu", "error");
+          showToast(t('urunSilinirkenHataOlustu'), "error");
         }
       },
     });
@@ -913,11 +905,11 @@ export default function BusinessDetailPage() {
         isActive: !currentStatus,
         updatedAt: new Date(),
       });
-      showToast(currentStatus ? "Ürün pasif yapıldı" : "Ürün aktif yapıldı", "success");
+      showToast(currentStatus ? t('urunPasifYapildi') : t('urunAktifYapildi'), "success");
       loadProducts();
     } catch (error) {
       console.error("Error toggling product:", error);
-      showToast("Ürün durumu değiştirilirken hata oluştu", "error");
+      showToast(t('urunDurumuDegistirilirkenHataOlustu'), "error");
     }
   };
 
@@ -961,14 +953,14 @@ export default function BusinessDetailPage() {
       }
 
       await addDoc(collection(db, `businesses/${businessId}/products`), productData);
-      showToast("Ürün eklendi!", "success");
+      showToast(t('urunEklendi'), "success");
       setProductModalOpen(false);
       setSelectedMasterId('');
       setCustomProductForm({ name: { tr: '' }, price: '', unit: 'kg', imageFile: null });
       loadProducts();
     } catch (error) {
       console.error("Error adding product:", error);
-      showToast("Ürün eklenirken hata oluştu", "error");
+      showToast(t('urunEklenirkenHataOlustu'), "error");
     } finally {
       setAddingProduct(false);
     }
@@ -1037,7 +1029,7 @@ export default function BusinessDetailPage() {
         const bd = business as any;
         const entry = {
           id: businessId,
-          name: bd.companyName || 'İsimsiz',
+          name: bd.companyName || t('isimsiz'),
           city: bd.address?.city || bd.city || '',
           type: bd.businessCategories?.[0] || bd.types?.[0] || bd.type || '',
           visitedAt: Date.now(),
@@ -1113,7 +1105,7 @@ export default function BusinessDetailPage() {
   // Fetch data (Photo + Opening Hours) from Google Places - SERVER SIDE
   const fetchGoogleData = async () => {
     if (!formData.googlePlaceId) {
-      alert("Hata: Google Place ID boş.");
+      alert(t('hataGooglePlaceIdBos'));
       return;
     }
 
@@ -1130,7 +1122,7 @@ export default function BusinessDetailPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Sunucu hatası");
+        throw new Error(data.error || t('sunucuHatasi'));
       }
 
       console.log("Server API Response:", data);
@@ -1144,8 +1136,8 @@ export default function BusinessDetailPage() {
 
         // --- STANDARDIZATION LOGIC (Mirroring Mobile App) ---
         const enToTr: Record<string, string> = {
-          'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
-          'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar'
+          'Monday': 'Pazartesi', 'Tuesday': t('sali'), 'Wednesday': t('carsamba'),
+          'Thursday': t('persembe'), 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar'
         };
 
         hoursList = hoursList.map((line: string) => {
@@ -1178,7 +1170,7 @@ export default function BusinessDetailPage() {
           cleanLine = cleanLine.replace(/–/g, '-').replace(/—/g, '-');
 
           // 4. Translate "Closed" -> "Kapalı"
-          cleanLine = cleanLine.replace(/Closed/gi, 'Kapalı');
+          cleanLine = cleanLine.replace(/Closed/gi, t('kapali'));
 
           return cleanLine;
         });
@@ -1206,7 +1198,7 @@ export default function BusinessDetailPage() {
 
       // 3. PHOTO (Async Fetch Blob)
       if (data.photoUrl) {
-        successMsg += "Fotoğraf";
+        successMsg += t('fotograf');
         try {
           // Try to fetch blob for upload
           const response = await fetch(data.photoUrl);
@@ -1241,7 +1233,7 @@ export default function BusinessDetailPage() {
       }
 
       if (successMsg) {
-        showToast(`Başarılı: ${successMsg}`, "success");
+        showToast(`${t('basarili')} ${successMsg}`, "success");
       } else {
         showToast("Veri bulundu ama eksik (Foto/Saat yok).", "error");
       }
@@ -1270,7 +1262,7 @@ export default function BusinessDetailPage() {
           const placeIdSnapshot = await getDocs(placeIdQuery);
           if (!placeIdSnapshot.empty) {
             const existingBusiness = placeIdSnapshot.docs[0].data();
-            showToast(`⚠️ Bu işletme zaten sistemde var: "${existingBusiness.companyName}"`, 'error');
+            showToast(`${t('buIsletmeZatenSistemdeVar')}${existingBusiness.companyName}"`, 'error');
             return;
           }
         }
@@ -1286,7 +1278,7 @@ export default function BusinessDetailPage() {
           const addressSnapshot = await getDocs(addressQuery);
           if (!addressSnapshot.empty) {
             const existingBusiness = addressSnapshot.docs[0].data();
-            showToast(`⚠️ Bu adres zaten sistemde kayıtlı: "${existingBusiness.companyName}"`, 'error');
+            showToast(`${t('buAdresZatenSistemdeKayitli')}${existingBusiness.companyName}"`, 'error');
             return;
           }
         }
@@ -1331,7 +1323,7 @@ export default function BusinessDetailPage() {
               console.log("Upload is " + progress + "% done");
               if (progress % 20 < 5) {
                 // Show toast sparingly
-                showToast(`Yükleniyor: %${Math.round(progress)}`, "success");
+                showToast(`${t('yukleniyor1')}${Math.round(progress)}`, "success");
               }
             },
             (error) => {
@@ -1490,7 +1482,7 @@ export default function BusinessDetailPage() {
         updatedData.isActive = true;
 
         const newDocRef = await addDoc(collection(db, "businesses"), updatedData);
-        showToast(`İşletme oluşturuldu (No: ${newNumber})`, "success");
+        showToast(`${t('isletmeOlusturulduNo')} ${newNumber})`, "success");
         router.push(`/admin/business/${newDocRef.id}?tab=settings`);
       } else {
         await updateDoc(doc(db, "businesses", business!.id), updatedData);
@@ -1502,7 +1494,7 @@ export default function BusinessDetailPage() {
 
         setIsEditing(false);
         setImageFile(null); // Reset file
-        showToast("Değişiklikler başarıyla kaydedildi!", "success");
+        showToast(t('degisikliklerBasariylaKaydedildi'), "success");
       }
     } catch (error: any) {
       console.error("Save error:", error);
@@ -1517,7 +1509,7 @@ export default function BusinessDetailPage() {
         errorMessage.includes("permission")
       ) {
         alert(
-          `Depolama Hatası: ${errorMessage}\n\nLütfen Firebase Konsolundan "Storage" bölümünün etkinleştirildiğinden ve kuralların doğru olduğundan emin olun.`,
+          `${t('depolamaHatasi')} ${errorMessage}${t('nnlutfenFirebaseKonsolundanStorageBolumununEtkinlestirildiginden')}`,
         );
       }
       setUploading(false);
@@ -1533,8 +1525,8 @@ export default function BusinessDetailPage() {
 
     setConfirmModal({
       show: true,
-      title: newStatus ? "✅ Hesabı Aktif Et" : "🔴 Hesabı Deaktif Et",
-      message: `Bu kasabı ${action} yapmak istediğinize emin misiniz?`,
+      title: newStatus ? t('hesabiAktifEt') : t('hesabiDeaktifEt'),
+      message: `${t('buKasabi')} ${action} ${t('yapmakIstediginizeEminMisiniz')}`,
       confirmText: newStatus ? "Aktif Et" : "Deaktif Et",
       confirmColor: newStatus
         ? "bg-green-600 hover:bg-green-500"
@@ -1547,10 +1539,10 @@ export default function BusinessDetailPage() {
             updatedAt: new Date(),
           });
           setBusiness({ ...business, isActive: newStatus });
-          showToast(`Kasap ${action} yapıldı.`, "success");
+          showToast(`Kasap ${action} ${t('yapildi')}`, "success");
         } catch (error) {
           console.error("Toggle error:", error);
-          showToast("Hata oluştu!", "error");
+          showToast(t('hataOlustu'), "error");
         }
         setSaving(false);
         setConfirmModal({ ...confirmModal, show: false });
@@ -1561,11 +1553,11 @@ export default function BusinessDetailPage() {
   // Invite staff via WhatsApp
   const handleInviteStaff = async () => {
     if (!invitePhone || invitePhone.length < 10) {
-      showToast("Geçerli bir telefon numarası girin", "error");
+      showToast(t('gecerliBirTelefonNumarasiGirin'), "error");
       return;
     }
     if (!inviteFirstName.trim()) {
-      showToast("İsim gerekli", "error");
+      showToast(t('isimGerekli'), "error");
       return;
     }
     setStaffLoading(true);
@@ -1611,7 +1603,7 @@ export default function BusinessDetailPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Kullanıcı oluşturulamadı');
+        throw new Error(data.error || t('kullaniciOlusturulamadi'));
       }
 
       setInviteResult({
@@ -1620,7 +1612,7 @@ export default function BusinessDetailPage() {
         notifications: data.notifications,
       });
 
-      showToast(`${inviteFirstName} başarıyla eklendi!`, "success");
+      showToast(`${inviteFirstName} ${t('basariylaEklendi')}`, "success");
       setInvitePhone("");
       setInviteFirstName("");
       setInviteLastName("");
@@ -1628,7 +1620,7 @@ export default function BusinessDetailPage() {
       loadStaff();
     } catch (error: any) {
       console.error("Invite error:", error);
-      const msg = error?.message || 'Davet gönderilemedi';
+      const msg = error?.message || t('davetGonderilemedi');
       showToast(msg, "error");
     }
     setStaffLoading(false);
@@ -1647,12 +1639,12 @@ export default function BusinessDetailPage() {
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white">
         <p className="text-4xl mb-4">🔍</p>
-        <p>İşletme bulunamadı</p>
+        <p>{t('isletmeBulunamadi')}</p>
         <Link
           href="/admin/business"
           className="text-blue-400 hover:underline mt-4"
         >
-          ← İşletme Listesi
+          {t('isletmeListesi')}
         </Link>
       </div>
     );
@@ -1689,7 +1681,7 @@ export default function BusinessDetailPage() {
               </Link>
               <div>
                 <h1 className="text-lg font-bold text-white">
-                  {businessId === 'new' ? '🆕 Yeni İşletme Ekle' : (business?.companyName || 'İşletme Detayı')}
+                  {businessId === 'new' ? t('yeniIsletmeEkle2') : (business?.companyName || t('isletmeDetayi'))}
                 </h1>
                 {business && (
                   <p className="text-gray-400 text-sm">
@@ -1733,14 +1725,14 @@ export default function BusinessDetailPage() {
               onClick={() => { setActiveTab("orders"); setShowSettingsDropdown(false); }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "orders" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
             >
-              📦 Siparişler ({orders.length})
+              {t('siparisler')}{orders.length})
             </button>
             {formData.hasReservation && (
               <button
                 onClick={() => { setActiveTab("reservations"); setShowSettingsDropdown(false); }}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "reservations" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
               >
-                🍽️ Masa Rezervasyonları
+                {t('masaRezervasyonlari')}
               </button>
             )}
 
@@ -1759,13 +1751,13 @@ export default function BusinessDetailPage() {
               {showSettingsDropdown && (
                 <div className="absolute top-full left-0 mt-1 w-56 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50 overflow-hidden">
                   {[
-                    { key: "isletme", icon: "🏢", label: "İşletme", action: "tab" },
-                    { key: "menu", icon: "📋", label: "Menü & Ürünler", action: "tab" },
+                    { key: "isletme", icon: "🏢", label: t('isletme'), action: "tab" },
+                    { key: "menu", icon: "📋", label: t('menuUrunler'), action: "tab" },
                     { key: "personel", icon: "👷", label: "Personel", action: "tab" },
                     { key: "masa", icon: "🪑", label: "Masa", action: "tab" },
-                    { key: "abonelik", icon: "💳", label: "Abonelik Planı", action: "tab" },
+                    { key: "abonelik", icon: "💳", label: t('abonelikPlani'), action: "tab" },
                     { key: "teslimat", icon: "🚚", label: "Teslimat", action: "tab" },
-                    { key: "odeme", icon: "🏦", label: "Ödeme Bilgileri", action: "tab" },
+                    { key: "odeme", icon: "🏦", label: t('odemeBilgileri'), action: "tab" },
                   ].map((item) => {
                     return (
                       <button
@@ -1814,13 +1806,13 @@ export default function BusinessDetailPage() {
                 {/* Mağaza Çalışanları */}
                 <div className="bg-gray-700/50 rounded-lg p-4">
                   <h4 className="text-gray-300 text-sm font-medium mb-3 flex items-center gap-2">
-                    🏪 Mağaza Çalışanları
+                    {t('magazaCalisanlari')}
                   </h4>
                   <div className="space-y-2">
                     {staffList.filter((s) => s.isActive !== false).length ===
                       0 ? (
                       <p className="text-gray-500 text-sm">
-                        Henüz aktif personel yok
+                        {t('henuzAktifPersonelYok')}
                       </p>
                     ) : (
                       staffList
@@ -1850,7 +1842,7 @@ export default function BusinessDetailPage() {
                 {/* Aktif Kuryeler */}
                 <div className="bg-gray-700/50 rounded-lg p-4">
                   <h4 className="text-gray-300 text-sm font-medium mb-3 flex items-center gap-2">
-                    🏍️ Kuryeler (Dağıtımda)
+                    {t('kuryelerDagitimda')}
                   </h4>
                   <div className="space-y-2">
                     {/* Gerçek kurye bilgileri - onTheWay veya claimedBy olan siparişler */}
@@ -1871,13 +1863,13 @@ export default function BusinessDetailPage() {
                                   {(order as any).driverName || (order as any).claimedByName || `Kurye ${idx + 1}`}
                                 </span>
                                 <p className="text-amber-400 text-xs">
-                                  #{order.orderNumber || order.id.slice(0, 6)} → {order.customerName || 'Müşteri'}
+                                  #{order.orderNumber || order.id.slice(0, 6)} → {order.customerName || t('musteri')}
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
                               <span className={`text-xs px-2 py-0.5 rounded ${order.status === 'onTheWay' ? 'bg-amber-600/50 text-amber-300' : 'bg-green-600/50 text-green-300'}`}>
-                                {order.status === 'onTheWay' ? '🛵 Yolda' : '📦 Hazır'}
+                                {order.status === 'onTheWay' ? '🛵 Yolda' : t('hazir1')}
                               </span>
                             </div>
                           </div>
@@ -1886,10 +1878,10 @@ export default function BusinessDetailPage() {
                       return (
                         <div className="text-center py-4">
                           <p className="text-gray-500 text-sm">
-                            🏍️ Şu an dağıtımda kurye yok
+                            {t('suAnDagitimdaKuryeYok')}
                           </p>
                           <p className="text-gray-600 text-xs mt-1">
-                            Teslimat başladığında burada görünecek
+                            {t('teslimatBasladigindaBuradaGorunecek')}
                           </p>
                         </div>
                       );
@@ -1903,10 +1895,10 @@ export default function BusinessDetailPage() {
             <div className="bg-gray-800 rounded-xl p-4">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-white font-bold">
-                  📊 Sipariş Durumları (Anlık)
+                  {t('siparisDurumlariAnlik')}
                 </h3>
                 <span className="text-gray-400 text-sm">
-                  Şu anki siparişler
+                  {t('suAnkiSiparisler')}
                 </span>
               </div>
 
@@ -1934,7 +1926,7 @@ export default function BusinessDetailPage() {
                   <p className="text-blue-400 text-3xl font-bold">
                     {orders.filter((o) => o.status === "preparing").length}
                   </p>
-                  <p className="text-gray-400 text-sm">👨‍🍳 Hazırlanıyor</p>
+                  <p className="text-gray-400 text-sm">{t('hazirlaniyor1')}</p>
                 </div>
 
                 <div className="text-gray-500 text-xl">→</div>
@@ -1949,7 +1941,7 @@ export default function BusinessDetailPage() {
                       ).length
                     }
                   </p>
-                  <p className="text-gray-400 text-sm">🚚 Hazır/Yolda</p>
+                  <p className="text-gray-400 text-sm">{t('haziryolda')}</p>
                 </div>
 
                 <div className="text-gray-500 text-xl">→</div>
@@ -1970,7 +1962,7 @@ export default function BusinessDetailPage() {
 
             {/* Revenue Summary */}
             <div className="bg-gray-800 rounded-xl p-4">
-              <h3 className="text-white font-bold mb-4">💰 Gelir Özeti</h3>
+              <h3 className="text-white font-bold mb-4">{t('gelirOzeti')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <p className="text-green-400 text-2xl font-bold">
@@ -1985,7 +1977,7 @@ export default function BusinessDetailPage() {
                   <p className="text-blue-400 text-2xl font-bold">
                     {orders.length}
                   </p>
-                  <p className="text-gray-400 text-sm">Toplam Sipariş</p>
+                  <p className="text-gray-400 text-sm">{t('toplamSiparis')}</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <p className="text-purple-400 text-2xl font-bold">
@@ -1999,7 +1991,7 @@ export default function BusinessDetailPage() {
                       ).toFixed(2)
                       : "0"}
                   </p>
-                  <p className="text-gray-400 text-sm">Ortalama Sipariş</p>
+                  <p className="text-gray-400 text-sm">{t('ortalamaSiparis')}</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <p className="text-yellow-400 text-2xl font-bold">
@@ -2015,27 +2007,27 @@ export default function BusinessDetailPage() {
               {/* Contact Info */}
               <div className="bg-gray-800 rounded-xl p-4">
                 <h3 className="text-white font-bold mb-4">
-                  📞 İletişim Bilgileri
+                  {t('iletisimBilgileri')}
                 </h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-gray-400 text-sm">Yetkili Kişi</p>
+                      <p className="text-gray-400 text-sm">{t('yetkiliKisi')}</p>
                       <p className="text-white font-medium">
                         {business?.contactPerson?.name
                           ? `${business?.contactPerson?.name} ${business?.contactPerson?.surname || ""}`
-                          : "Belirtilmemiş"}
+                          : t('belirtilmemis')}
                       </p>
                       <p className="text-xs text-gray-500">
                         {business?.contactPerson?.role}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-400 text-sm">İletişim</p>
+                      <p className="text-gray-400 text-sm">{t('iletisim1')}</p>
                       <p className="text-white">
                         {business?.contactPerson?.phone ||
                           business?.shopPhone ||
-                          "Belirtilmemiş"}
+                          t('belirtilmemis')}
                       </p>
                       <p className="text-xs text-blue-400 truncate">
                         {business?.contactPerson?.email ||
@@ -2046,7 +2038,7 @@ export default function BusinessDetailPage() {
                   </div>
                   <div className="border-t border-gray-700 pt-3">
                     <div className="flex justify-between items-center mb-2">
-                      <p className="text-gray-400 text-sm">Çalışma Saatleri</p>
+                      <p className="text-gray-400 text-sm">{t('calismaSaatleri2')}</p>
                       {(() => {
                         const status = checkShopStatus(business?.openingHours || "");
                         return (
@@ -2114,7 +2106,7 @@ export default function BusinessDetailPage() {
               {/* Subscription & Membership Status */}
               <div className="bg-gray-800 rounded-xl p-4">
                 <h3 className="text-white font-bold mb-4">
-                  💳 Üyelik & Abonelik
+                  {t('uyelikAbonelik')}
                 </h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -2131,7 +2123,7 @@ export default function BusinessDetailPage() {
                       <p className="text-xs text-gray-500 mt-1">
                         {(business?.monthlyFee ?? 0) > 0
                           ? `€${business?.monthlyFee}/ay`
-                          : "Ücretsiz"}
+                          : t('ucretsiz')}
                       </p>
                     </div>
                     <div>
@@ -2139,23 +2131,23 @@ export default function BusinessDetailPage() {
                       <span
                         className={`inline-block mt-1 px-2 py-1 rounded text-xs ${business?.isActive ? "bg-green-600/20 text-green-400" : "bg-red-600/20 text-red-400"}`}
                       >
-                        {business?.isActive ? "Aktif Müşteri" : "Pasif Müşteri"}
+                        {business?.isActive ? t('aktifMusteri') : t('pasifMusteri')}
                       </span>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 border-t border-gray-700 pt-3">
                     <div>
-                      <p className="text-gray-400 text-sm">Müşteri Tarihi</p>
+                      <p className="text-gray-400 text-sm">{t('musteriTarihi')}</p>
                       <p className="text-white">
                         {(business as any).createdAt?.toDate
                           ? (business as any).createdAt
                             .toDate()
                             .toLocaleDateString("tr-TR")
-                          : "Belirtilmemiş"}
+                          : t('belirtilmemis')}
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-400 text-sm">Plan Başlangıç</p>
+                      <p className="text-gray-400 text-sm">{t('planBaslangic')}</p>
                       <p className="text-white">
                         {(business?.subscriptionStartDate as any)?.toDate
                           ? (business?.subscriptionStartDate as any)
@@ -2165,7 +2157,7 @@ export default function BusinessDetailPage() {
                             ? new Date(
                               business?.subscriptionStartDate,
                             ).toLocaleDateString("tr-TR")
-                            : "Belirtilmemiş"}
+                            : t('belirtilmemis')}
                       </p>
                     </div>
                   </div>
@@ -2182,7 +2174,7 @@ export default function BusinessDetailPage() {
             <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
               <div className="bg-gray-800 rounded-xl w-full max-w-lg overflow-hidden border border-gray-700">
                 <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                  <h3 className="text-white font-bold">Ürün Ekle</h3>
+                  <h3 className="text-white font-bold">{t('urunEkle')}</h3>
                   <button onClick={() => setProductModalOpen(false)} className="text-gray-400 hover:text-white">✕</button>
                 </div>
 
@@ -2192,13 +2184,13 @@ export default function BusinessDetailPage() {
                     onClick={() => setProductMode('standard')}
                     className={`flex-1 py-3 text-sm font-medium ${productMode === 'standard' ? "bg-gray-700 text-white" : "text-gray-400 hover:bg-gray-750"}`}
                   >
-                    🚀 Hızlı Seç (Standart)
+                    {t('hizliSecStandart')}
                   </button>
                   <button
                     onClick={() => setProductMode('custom')}
                     className={`flex-1 py-3 text-sm font-medium ${productMode === 'custom' ? "bg-gray-700 text-white" : "text-gray-400 hover:bg-gray-750"}`}
                   >
-                    ✨ Özel Ürün (Talep)
+                    {t('ozelUrunTalep')}
                   </button>
                 </div>
 
@@ -2206,7 +2198,7 @@ export default function BusinessDetailPage() {
                   {productMode === 'standard' ? (
                     <div className="space-y-4">
                       <div>
-                        <label className="text-gray-400 text-sm block mb-1">Ürün Seçin</label>
+                        <label className="text-gray-400 text-sm block mb-1">{t('urunSecin')}</label>
                         <select
                           value={selectedMasterId}
                           onChange={(e) => {
@@ -2214,7 +2206,7 @@ export default function BusinessDetailPage() {
                           }}
                           className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg"
                         >
-                          <option value="">Seçiniz...</option>
+                          <option value="">{t('seciniz')}</option>
                           {/* 🆕 Firestore'dan filtrelenmiş ürünler, fallback hardcoded */}
                           {(firestoreMasterProducts.length > 0 ? firestoreMasterProducts : MASTER_PRODUCTS).map(mp => (
                             <option key={mp.id} value={mp.id}>
@@ -2229,7 +2221,7 @@ export default function BusinessDetailPage() {
                         </div>
                       )}
                       <div>
-                        <label className="text-gray-400 text-sm block mb-1">Satış Fiyatı (€)</label>
+                        <label className="text-gray-400 text-sm block mb-1">{t('satisFiyati')}</label>
                         <input
                           type="number"
                           value={customProductForm.price}
@@ -2243,10 +2235,10 @@ export default function BusinessDetailPage() {
                     <div className="space-y-4">
                       <div>
                         <MultiLanguageInput
-                          label="Ürün Adı"
+                          label={t('urunAdi')}
                           value={customProductForm.name}
                           onChange={(val) => setCustomProductForm({ ...customProductForm, name: val })}
-                          placeholder="Örn: Özel Marine Köfte"
+                          placeholder={t('ornOzelMarineKofte')}
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -2274,7 +2266,7 @@ export default function BusinessDetailPage() {
                         </div>
                       </div>
                       <div>
-                        <label className="text-gray-400 text-sm block mb-1">Fotoğraf</label>
+                        <label className="text-gray-400 text-sm block mb-1">{t('fotograf')}</label>
                         <input
                           type="file"
                           accept="image/*"
@@ -2287,7 +2279,7 @@ export default function BusinessDetailPage() {
                         />
                       </div>
                       <div className="bg-yellow-900/20 text-yellow-500 p-3 rounded-lg text-xs">
-                        ⚠️ Özel ürünler admin onayından sonra yayına girer.
+                        {t('ozelUrunlerAdminOnayindanSonraYayina')}
                       </div>
                     </div>
                   )}
@@ -2298,7 +2290,7 @@ export default function BusinessDetailPage() {
                     onClick={() => setProductModalOpen(false)}
                     className="px-4 py-2 text-gray-400 hover:text-white"
                   >
-                    İptal
+                    {t('iptal1')}
                   </button>
                   <button
                     onClick={handleAddProduct}
@@ -2318,25 +2310,25 @@ export default function BusinessDetailPage() {
           activeTab === "orders" && (
             <div className="bg-gray-800 rounded-xl overflow-hidden">
               <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-                <h3 className="text-white font-bold">Son Siparişler</h3>
+                <h3 className="text-white font-bold">{t('sonSiparisler')}</h3>
                 <Link
                   href={`/admin/butchers/${business?.id}/orders`}
                   className="text-blue-400 hover:underline text-sm"
                 >
-                  Tümünü Gör →
+                  {t('tumunuGor')}
                 </Link>
               </div>
               {orders.length === 0 ? (
                 <div className="text-center py-12 text-gray-400">
                   <p className="text-4xl mb-4">📦</p>
-                  <p>Henüz sipariş yok</p>
+                  <p>{t('henuzSiparisYok')}</p>
                 </div>
               ) : (
                 <table className="w-full text-left">
                   <thead className="bg-gray-750 text-gray-400 text-sm">
                     <tr>
-                      <th className="px-4 py-3">Sipariş No</th>
-                      <th className="px-4 py-3">Müşteri</th>
+                      <th className="px-4 py-3">{t('siparisNo')}</th>
+                      <th className="px-4 py-3">{t('musteri')}</th>
                       <th className="px-4 py-3">Tutar</th>
                       <th className="px-4 py-3">Durum</th>
                       <th className="px-4 py-3">Tarih</th>
@@ -2388,13 +2380,13 @@ export default function BusinessDetailPage() {
               {/* Settings Sub-Tab Header */}
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-white font-bold text-xl">
-                  {settingsSubTab === "isletme" && "🏢 İşletme Ayarları"}
-                  {settingsSubTab === "menu" && "📋 Menü & Ürünler"}
-                  {settingsSubTab === "personel" && "👷 Personel Yönetimi"}
-                  {settingsSubTab === "masa" && "🪑 Masa Ayarları"}
-                  {settingsSubTab === "abonelik" && "💳 Abonelik Planı"}
-                  {settingsSubTab === "teslimat" && "🚚 Teslimat Ayarları"}
-                  {settingsSubTab === "odeme" && "🏦 Ödeme Bilgileri"}
+                  {settingsSubTab === "isletme" && t('isletmeAyarlari')}
+                  {settingsSubTab === "menu" && t('menuUrunler1')}
+                  {settingsSubTab === "personel" && t('personelYonetimi')}
+                  {settingsSubTab === "masa" && t('masaAyarlari')}
+                  {settingsSubTab === "abonelik" && t('abonelikPlani1')}
+                  {settingsSubTab === "teslimat" && t('teslimatAyarlari')}
+                  {settingsSubTab === "odeme" && t('odemeBilgileri1')}
                 </h3>
                 <div className="flex items-center gap-3">
                   {/* Kurye Aktif/Deaktif Toggle - only in Teslimat sub-tab */}
@@ -2416,7 +2408,7 @@ export default function BusinessDetailPage() {
                           setFormData({ ...formData, temporaryDeliveryPaused: newValue });
                           showToast(newValue ? "🚫 Kurye hizmeti durduruldu" : "✅ Kurye hizmeti aktif", "success");
                         } catch (e) {
-                          showToast("Hata oluştu", "error");
+                          showToast(t('hataOlustu1'), "error");
                         }
                       }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition ${formData.temporaryDeliveryPaused
@@ -2441,7 +2433,7 @@ export default function BusinessDetailPage() {
                       onClick={() => setIsEditing(true)}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
                     >
-                      ✏️ Düzenle
+                      {t('duzenle')}
                     </button>
                   ) : (
                     <div className="flex gap-2">
@@ -2449,7 +2441,7 @@ export default function BusinessDetailPage() {
                         onClick={() => setIsEditing(false)}
                         className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500"
                       >
-                        İptal
+                        {t('iptal1')}
                       </button>
                       <button
                         onClick={handleSave}
@@ -2469,11 +2461,11 @@ export default function BusinessDetailPage() {
                   {/* Internal Tab Bar for İşletme */}
                   <div className="flex gap-2 border-b border-gray-700 pb-3 mb-6 flex-wrap">
                     {[
-                      { id: "bilgiler" as const, label: "🏢 İşletme Bilgileri" },
+                      { id: "bilgiler" as const, label: t('isletmeBilgileri') },
                       { id: "fatura" as const, label: "🧾 Fatura Adresi" },
                       { id: "zertifikalar" as const, label: "🏷️ Zertifikalar" },
-                      { id: "gorseller" as const, label: "🖼️ Görseller" },
-                      { id: "saatler" as const, label: "🕐 Açılış Saatleri" },
+                      { id: "gorseller" as const, label: t('gorseller') },
+                      { id: "saatler" as const, label: t('acilisSaatleri') },
                     ].map((tab) => (
                       <button
                         key={tab.id}
@@ -2493,18 +2485,18 @@ export default function BusinessDetailPage() {
                     <div className="space-y-6">
                       {/* Şirket Adı */}
                       <div>
-                        <label className="text-gray-400 text-sm">Şirket Adı</label>
+                        <label className="text-gray-400 text-sm">{t('sirketAdi')}</label>
                         <input type="text" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                       </div>
                       {/* Mutfak Türü */}
                       <div>
-                        <label className="text-gray-400 text-sm">Mutfak Türü / Alt Başlık</label>
-                        <input type="text" value={formData.cuisineType} onChange={(e) => setFormData({ ...formData, cuisineType: e.target.value })} disabled={!isEditing} placeholder="Örn: Kebap, Döner, Türkisch" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
-                        <p className="text-xs text-gray-500 mt-1">📝 Kartlarda işletme adı altında gösterilir</p>
+                        <label className="text-gray-400 text-sm">{t('mutfakTuruAltBaslik')}</label>
+                        <input type="text" value={formData.cuisineType} onChange={(e) => setFormData({ ...formData, cuisineType: e.target.value })} disabled={!isEditing} placeholder={t('ornKebapDonerTurkisch')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                        <p className="text-xs text-gray-500 mt-1">{t('kartlardaIsletmeAdiAltindaGosterilir')}</p>
                       </div>
                       {/* İşletme Türleri */}
                       <div>
-                        <label className="text-gray-400 text-sm block mb-2">İşletme Türleri</label>
+                        <label className="text-gray-400 text-sm block mb-2">{t('isletmeTurleri')}</label>
                         <div className="flex flex-wrap gap-2">
                           {dynamicSectorTypes.map((sector) => {
                             const isSelected = formData.types?.includes(sector.id);
@@ -2515,19 +2507,19 @@ export default function BusinessDetailPage() {
                             );
                           })}
                         </div>
-                        {formData.types?.length > 0 && (<p className="text-xs text-green-400 mt-2">{formData.types.length} modül aktif • Her modül ayrı ücretlendirilir</p>)}
+                        {formData.types?.length > 0 && (<p className="text-xs text-green-400 mt-2">{formData.types.length} {t('modulAktifHerModulAyriUcretlendirilir')}</p>)}
                       </div>
                       {/* Müşteri No */}
                       <div>
-                        <label className="text-gray-400 text-sm">Müşteri No</label>
+                        <label className="text-gray-400 text-sm">{t('musteriNo')}</label>
                         <input type="text" value={formData.customerId} readOnly disabled={true} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 opacity-50 cursor-not-allowed" />
-                        <p className="text-xs text-gray-500 mt-1">🔒 Müşteri No değiştirilemez</p>
+                        <p className="text-xs text-gray-500 mt-1">{t('musteriNoDegistirilemez')}</p>
                       </div>
                       {/* Vergi UID */}
                       <div>
                         <label className="text-gray-400 text-sm">🇪🇺 Vergi UID Nummer (VAT)</label>
                         <input type="text" value={formData.vatNumber || ''} onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })} disabled={!isEditing} placeholder="DE123456789" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
-                        <p className="text-xs text-gray-500 mt-1">Avrupa Birliği vergi numarası (örn: DE123456789)</p>
+                        <p className="text-xs text-gray-500 mt-1">{t('avrupaBirligiVergiNumarasiOrnDe123456789')}</p>
                       </div>
                       {/* Adres */}
                       <div className="space-y-4 pt-4 border-t border-gray-700">
@@ -2542,14 +2534,14 @@ export default function BusinessDetailPage() {
                             <input type="text" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">Şehir</label>
+                            <label className="text-gray-400 text-sm">{t('sehir1')}</label>
                             <input type="text" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                         </div>
                       </div>
                       {/* İletişim */}
                       <div className="space-y-4 pt-4 border-t border-gray-700">
-                        <h4 className="text-white font-medium pb-2">📞 İletişim</h4>
+                        <h4 className="text-white font-medium pb-2">{t('iletisim')}</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="text-gray-400 text-sm">Telefon</label>
@@ -2593,24 +2585,24 @@ export default function BusinessDetailPage() {
                       </div>
                       {/* İrtibat Kişisi */}
                       <div className="space-y-4 pt-4 border-t border-gray-700">
-                        <h4 className="text-blue-400 font-medium text-sm">👤 LOKMA Yetkili İrtibat Kişisi</h4>
+                        <h4 className="text-blue-400 font-medium text-sm">{t('lokmaYetkiliIrtibatKisisi')}</h4>
                         <div className="grid grid-cols-2 gap-4">
-                          <div><label className="text-gray-400 text-xs block mb-1">Adı</label><input type="text" value={formData.contactName} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
-                          <div><label className="text-gray-400 text-xs block mb-1">Soyadı</label><input type="text" value={formData.contactSurname} onChange={(e) => setFormData({ ...formData, contactSurname: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                          <div><label className="text-gray-400 text-xs block mb-1">{t('adi')}</label><input type="text" value={formData.contactName} onChange={(e) => setFormData({ ...formData, contactName: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                          <div><label className="text-gray-400 text-xs block mb-1">{t('soyadi')}</label><input type="text" value={formData.contactSurname} onChange={(e) => setFormData({ ...formData, contactSurname: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                          <div><label className="text-gray-400 text-xs block mb-1">Kişisel Tel</label><input type="tel" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
-                          <div><label className="text-gray-400 text-xs block mb-1">Kişisel Email</label><input type="email" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                          <div><label className="text-gray-400 text-xs block mb-1">{t('kisiselTel')}</label><input type="tel" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                          <div><label className="text-gray-400 text-xs block mb-1">{t('kisiselEmail')}</label><input type="email" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
                         </div>
                       </div>
                       {/* Google Place */}
                       <div className="space-y-4 pt-4 border-t border-gray-700">
                         <h4 className="text-white font-medium pb-2">🗺️ Google Place</h4>
                         <div className="relative">
-                          <label className="text-gray-400 text-sm">Google Place ID (Değerlendirmeler için)</label>
+                          <label className="text-gray-400 text-sm">{t('googlePlaceIdDegerlendirmelerIcin')}</label>
                           {isEditing && (
                             <div className="flex gap-2 mt-1 mb-2">
-                              <input type="text" value={googleSearchQuery} onChange={(e) => setGoogleSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleGooglePlacesSearch()} placeholder="İşletme adı veya adresi ara..." className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500" />
+                              <input type="text" value={googleSearchQuery} onChange={(e) => setGoogleSearchQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleGooglePlacesSearch()} placeholder={t('isletmeAdiVeyaAdresiAra')} className="flex-1 bg-gray-700 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-blue-500" />
                               <button type="button" onClick={() => handleGooglePlacesSearch()} disabled={googleSearchLoading || googleSearchQuery.length < 3} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                                 {googleSearchLoading ? (<span className="animate-spin">⏳</span>) : (<span>🔍</span>)} Ara
                               </button>
@@ -2622,13 +2614,13 @@ export default function BusinessDetailPage() {
                                 <button key={place.place_id || index} type="button" onClick={() => handleSelectGooglePlace(place)} className="w-full text-left px-4 py-3 hover:bg-gray-700 border-b border-gray-700 last:border-0 transition">
                                   <p className="text-white font-medium">{place.name}</p>
                                   <p className="text-gray-400 text-sm">{place.formatted_address}</p>
-                                  {place.rating && (<p className="text-yellow-400 text-xs mt-1">⭐ {place.rating} ({place.user_ratings_total || 0} değerlendirme)</p>)}
+                                  {place.rating && (<p className="text-yellow-400 text-xs mt-1">⭐ {place.rating} ({place.user_ratings_total || 0} {t('degerlendirme')}</p>)}
                                 </button>
                               ))}
                               <button type="button" onClick={() => { setShowGoogleDropdown(false); setGoogleSearchResults([]); }} className="w-full px-4 py-2 bg-gray-700 text-gray-400 hover:text-white text-sm">✕ Kapat</button>
                             </div>
                           )}
-                          <input type="text" value={formData.googlePlaceId} onChange={(e) => setFormData({ ...formData, googlePlaceId: e.target.value })} disabled={!isEditing} placeholder="ChIJ... (yukarıdan arayarak seçin)" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono text-sm" />
+                          <input type="text" value={formData.googlePlaceId} onChange={(e) => setFormData({ ...formData, googlePlaceId: e.target.value })} disabled={!isEditing} placeholder={t('chijYukaridanArayarakSecin')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono text-sm" />
                           {formData.googlePlaceId && (<p className="text-xs text-green-400 mt-1">✅ Google Place ID set</p>)}
                         </div>
                       </div>
@@ -2641,14 +2633,14 @@ export default function BusinessDetailPage() {
                       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
                         <label className="flex items-center gap-3 cursor-pointer mb-4">
                           <input type="checkbox" checked={formData.hasDifferentBillingAddress || false} onChange={(e) => setFormData({ ...formData, hasDifferentBillingAddress: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-red-500" />
-                          <span className="text-white font-medium">Fatura farklı bir kişi/firma üzerine kesilsin</span>
+                          <span className="text-white font-medium">{t('faturaFarkliBirKisifirmaUzerineKesilsin')}</span>
                         </label>
-                        <p className="text-xs text-gray-500 mb-4">Genelde işletme ismi ile fatura ismi değişik oluyor. Bu seçenek aktifse, fatura aşağıdaki bilgilere göre kesilir.</p>
+                        <p className="text-xs text-gray-500 mb-4">{t('geneldeIsletmeIsmiIleFaturaIsmi')}</p>
                         {formData.hasDifferentBillingAddress && (
                           <div className="space-y-4 pt-4 border-t border-gray-700">
                             <div>
-                              <label className="text-gray-400 text-sm">Fatura Firma / Kişi Adı</label>
-                              <input type="text" value={formData.billingName || ''} onChange={(e) => setFormData({ ...formData, billingName: e.target.value })} disabled={!isEditing} placeholder="Örn: ABC GmbH" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                              <label className="text-gray-400 text-sm">{t('faturaFirmaKisiAdi')}</label>
+                              <input type="text" value={formData.billingName || ''} onChange={(e) => setFormData({ ...formData, billingName: e.target.value })} disabled={!isEditing} placeholder={t('ornAbcGmbh')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                             </div>
                             <div>
                               <label className="text-gray-400 text-sm">Fatura Adresi</label>
@@ -2660,7 +2652,7 @@ export default function BusinessDetailPage() {
                                 <input type="text" value={formData.billingPostalCode || ''} onChange={(e) => setFormData({ ...formData, billingPostalCode: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                               <div>
-                                <label className="text-gray-400 text-sm">Şehir</label>
+                                <label className="text-gray-400 text-sm">{t('sehir1')}</label>
                                 <input type="text" value={formData.billingCity || ''} onChange={(e) => setFormData({ ...formData, billingCity: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                               </div>
                             </div>
@@ -2682,31 +2674,31 @@ export default function BusinessDetailPage() {
                           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
                             <label className="text-gray-400 text-sm">🏷️ LOKMA Label <span className="text-xs text-purple-400">(Super Admin)</span></label>
                             <select value={formData.brand || ''} onChange={(e) => { const val = e.target.value as "tuna" | "akdeniz_toros" | ""; setFormData({ ...formData, brand: val as any, brandLabelActive: val !== "" }); }} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50">
-                              <option value="">- Seçilmedi -</option>
+                              <option value="">{t('secilmedi')}</option>
                               <option value="tuna">🔴 TUNA</option>
                               <option value="akdeniz_toros">⚫ Akdeniz Toros</option>
                             </select>
-                            <p className="text-xs text-gray-500 mt-1">🔒 Bu ayar sadece Super Admin tarafından değiştirilebilir</p>
+                            <p className="text-xs text-gray-500 mt-1">{t('buAyarSadeceSuperAdminTarafindan')}</p>
                           </div>
                           <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                            <label className="text-gray-400 text-sm">🛒 Satılan Ürün Markaları <span className="text-xs text-blue-400">(Filtreleme için)</span></label>
-                            <p className="text-xs text-gray-500 mb-3 mt-1">Bu işletme hangi markaların ürünlerini satıyor?</p>
+                            <label className="text-gray-400 text-sm">{t('satilanUrunMarkalari')} <span className="text-xs text-blue-400">{t('filtrelemeIcin')}</span></label>
+                            <p className="text-xs text-gray-500 mb-3 mt-1">{t('buIsletmeHangiMarkalarinUrunleriniSatiyor')}</p>
                             <div className="flex flex-wrap gap-3">
                               <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTunaProducts ? 'bg-red-600/30 border-2 border-red-500 text-red-300' : 'bg-gray-700 border border-gray-600 text-gray-400 hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                 <input type="checkbox" checked={formData.sellsTunaProducts} onChange={(e) => setFormData({ ...formData, sellsTunaProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4 accent-red-500" />
-                                <span className="text-lg">🔴</span><span className="font-medium">TUNA Ürünleri</span>
+                                <span className="text-lg">🔴</span><span className="font-medium">{t('tunaUrunleri')}</span>
                               </label>
                               <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all ${formData.sellsTorosProducts ? 'bg-green-600/30 border-2 border-green-500 text-green-300' : 'bg-gray-700 border border-gray-600 text-gray-400 hover:bg-gray-600'} ${!isEditing ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                 <input type="checkbox" checked={formData.sellsTorosProducts} onChange={(e) => setFormData({ ...formData, sellsTorosProducts: e.target.checked })} disabled={!isEditing} className="w-4 h-4 accent-green-500" />
-                                <span className="text-lg">🟢</span><span className="font-medium">Akdeniz Toros Ürünleri</span>
+                                <span className="text-lg">🟢</span><span className="font-medium">{t('akdenizTorosUrunleri')}</span>
                               </label>
                             </div>
-                            {(formData.sellsTunaProducts || formData.sellsTorosProducts) && (<p className="text-xs text-green-400 mt-2">✓ Seçilen markalar mobil uygulamada filtreleme için kullanılacak</p>)}
+                            {(formData.sellsTunaProducts || formData.sellsTorosProducts) && (<p className="text-xs text-green-400 mt-2">{t('secilenMarkalarMobilUygulamadaFiltrelemeIcin')}</p>)}
                           </div>
                         </>
                       ) : (
                         <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 text-center">
-                          <p className="text-gray-400">🔒 Zertifika ayarları sadece Super Admin tarafından görüntülenebilir.</p>
+                          <p className="text-gray-400">{t('zertifikaAyarlariSadeceSuperAdminTarafindan')}</p>
                         </div>
                       )}
                     </div>
@@ -2717,7 +2709,7 @@ export default function BusinessDetailPage() {
                     <div className="space-y-6">
                       {/* İşletme Kart Görseli */}
                       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                        <h4 className="text-white font-medium mb-4">🖼️ İşletme Kart Görseli</h4>
+                        <h4 className="text-white font-medium mb-4">{t('isletmeKartGorseli')}</h4>
                         <div className="flex items-start gap-4">
                           <div className="w-32 h-32 bg-gray-700 rounded-lg overflow-hidden flex items-center justify-center border border-gray-600 shrink-0">
                             {formData.imageUrl ? (<img src={formData.imageUrl} alt="Business" className="w-full h-full object-cover" />) : (<span className="text-4xl">{getBusinessTypeLabel((business as any)?.types || (business as any)?.type).emoji}</span>)}
@@ -2736,20 +2728,20 @@ export default function BusinessDetailPage() {
                       </div>
                       {/* İşletme Logosu */}
                       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                        <h4 className="text-white font-medium mb-4">🏪 İşletme Logosu (Kare)</h4>
+                        <h4 className="text-white font-medium mb-4">{t('isletmeLogosuKare')}</h4>
                         <div className="flex items-center gap-4">
                           {formData.logoUrl ? (<img src={formData.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover border border-gray-600" />) : (<div className="w-20 h-20 rounded-lg bg-gray-700 border border-dashed border-gray-500 flex items-center justify-center text-gray-500 text-3xl">🏪</div>)}
                           {isEditing && (
                             <div className="flex flex-col gap-2">
                               <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer text-sm">
-                                📤 Logo Yükle
-                                <input type="file" accept="image/*" className="hidden" onChange={async (e) => { if (e.target.files && e.target.files[0]) { const file = e.target.files[0]; const logoRef = ref(storage, `business_logos/${businessId}/logo_${Date.now()}.jpg`); const uploadTask = uploadBytesResumable(logoRef, file); uploadTask.on('state_changed', () => { }, (error) => { console.error('Logo upload error:', error); showToast('Logo yüklenirken hata oluştu', 'error'); }, async () => { const url = await getDownloadURL(uploadTask.snapshot.ref); setFormData({ ...formData, logoUrl: url }); showToast('✅ Logo yüklendi!', 'success'); }); } }} />
+                                {t('logoYukle')}
+                                <input type="file" accept="image/*" className="hidden" onChange={async (e) => { if (e.target.files && e.target.files[0]) { const file = e.target.files[0]; const logoRef = ref(storage, `business_logos/${businessId}/logo_${Date.now()}.jpg`); const uploadTask = uploadBytesResumable(logoRef, file); uploadTask.on('state_changed', () => { }, (error) => { console.error('Logo upload error:', error); showToast(t('logoYuklenirkenHataOlustu'), 'error'); }, async () => { const url = await getDownloadURL(uploadTask.snapshot.ref); setFormData({ ...formData, logoUrl: url }); showToast(t('logoYuklendi'), 'success'); }); } }} />
                               </label>
-                              {formData.logoUrl && (<button type="button" onClick={() => setFormData({ ...formData, logoUrl: '' })} className="text-red-400 text-xs hover:text-red-300">🗑️ Logoyu Kaldır</button>)}
+                              {formData.logoUrl && (<button type="button" onClick={() => setFormData({ ...formData, logoUrl: '' })} className="text-red-400 text-xs hover:text-red-300">{t('logoyuKaldir')}</button>)}
                             </div>
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">📐 Önerilen boyut: 64x64 piksel (kare)</p>
+                        <p className="text-xs text-gray-500 mt-2">{t('onerilenBoyut64x64PikselKare')}</p>
                       </div>
                     </div>
                   )}
@@ -2758,23 +2750,23 @@ export default function BusinessDetailPage() {
                   {isletmeInternalTab === "saatler" && (
                     <div className="space-y-6">
                       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-                        <h4 className="text-white font-medium mb-4">🕐 Çalışma Saatleri</h4>
+                        <h4 className="text-white font-medium mb-4">{t('calismaSaatleri3')}</h4>
                         {isEditing ? (
                           <div className="space-y-2">
                             {[
-                              { tr: "Pazartesi", en: "Monday" }, { tr: "Salı", en: "Tuesday" }, { tr: "Çarşamba", en: "Wednesday" }, { tr: "Perşembe", en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" },
+                              { tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" },
                             ].map((dayObj) => {
                               const currentLine = formData.openingHours?.split("\n").find((l) => { return l.startsWith(dayObj.tr + ":") || l.startsWith(dayObj.tr + " ") || l.startsWith(dayObj.en + ":") || l.startsWith(dayObj.en + " "); }) || "";
-                              const isClosed = currentLine.toLowerCase().includes("kapalı") || currentLine.toLowerCase().includes("closed");
+                              const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed");
                               let startTime = ""; let endTime = "";
                               if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
                               const updateHours = (newStart: string, newEnd: string, newClosed: boolean) => {
-                                const newLines = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"].map((d) => {
-                                  const dObj = [{ tr: "Pazartesi", en: "Monday" }, { tr: "Salı", en: "Tuesday" }, { tr: "Çarşamba", en: "Wednesday" }, { tr: "Perşembe", en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" }].find((o) => o.tr === d);
+                                const newLines = ["Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi", "Pazar"].map((d) => {
+                                  const dObj = [{ tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" }].find((o) => o.tr === d);
                                   const existingLine = formData.openingHours?.split("\n").find((l) => { const dayTR = dObj!.tr; const dayEN = dObj!.en; return l.startsWith(dayTR + ":") || l.startsWith(dayTR + " ") || l.startsWith(dayEN + ":") || l.startsWith(dayEN + " "); }) || "";
-                                  if (d === dayObj.tr) { if (newClosed) return `${d}: Kapalı`; return `${d}: ${newStart} - ${newEnd}`; }
+                                  if (d === dayObj.tr) { if (newClosed) return `${d}${t('kapali2')}`; return `${d}: ${newStart} - ${newEnd}`; }
                                   if (existingLine.startsWith(dObj!.en)) { const content = existingLine.split(": ").slice(1).join(": "); return `${d}: ${content}`; }
-                                  return existingLine || `${d}: Kapalı`;
+                                  return existingLine || `${d}${t('kapali2')}`;
                                 });
                                 setFormData({ ...formData, openingHours: newLines.join("\n") });
                               };
@@ -2787,7 +2779,7 @@ export default function BusinessDetailPage() {
                                   <label className="flex items-center cursor-pointer ml-auto">
                                     <input type="checkbox" checked={isClosed} onChange={(e) => updateHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
                                     <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
-                                    <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? "Kapalı" : "Açık"}</span>
+                                    <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
                                   </label>
                                 </div>
                               );
@@ -2798,7 +2790,7 @@ export default function BusinessDetailPage() {
                             {formData.openingHours.split("\n").map((line, i) => (
                               <li key={i} className="text-xs text-gray-300 flex justify-between border-b border-gray-700/50 pb-1 last:border-0">
                                 <span className="font-medium text-gray-400 w-24">{line.split(": ")[0]}</span>
-                                <span className="font-mono">{(() => { const parts = line.split(": "); const content = parts.length > 1 ? parts.slice(1).join(": ").trim() : ""; if (content.toLowerCase().includes("kapalı") || content.toLowerCase().includes("closed")) return "Kapalı"; if (!content || content === "-" || content === "–") return "-"; return content; })()}</span>
+                                <span className="font-mono">{(() => { const parts = line.split(": "); const content = parts.length > 1 ? parts.slice(1).join(": ").trim() : ""; if (content.toLowerCase().includes(t('kapali1')) || content.toLowerCase().includes("closed")) return t('kapali'); if (!content || content === "-" || content === "–") return "-"; return content; })()}</span>
                               </li>
                             ))}
                           </ul>
@@ -2831,7 +2823,7 @@ export default function BusinessDetailPage() {
                           : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                           }`}
                       >
-                        📦 Ürünler ({inlineProducts.length})
+                        {t('urunler')}{inlineProducts.length})
                       </button>
                     </div>
 
@@ -2870,8 +2862,8 @@ export default function BusinessDetailPage() {
                         {!loadingCategories && inlineCategories.length === 0 && (
                           <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
                             <span className="text-4xl">🗂️</span>
-                            <h4 className="text-white font-medium mt-3">Henüz kategori eklenmemiş</h4>
-                            <p className="text-gray-400 text-sm mt-1">Ürünlerinizi düzenlemek için kategori ekleyin.</p>
+                            <h4 className="text-white font-medium mt-3">{t('henuzKategoriEklenmemis')}</h4>
+                            <p className="text-gray-400 text-sm mt-1">{t('urunleriniziDuzenlemekIcinKategoriEkleyin')}</p>
                             <button
                               onClick={() => {
                                 setEditingCategory(null);
@@ -2880,7 +2872,7 @@ export default function BusinessDetailPage() {
                               }}
                               className="mt-4 px-5 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition text-sm"
                             >
-                              + İlk Kategoriyi Ekle
+                              {t('ilkKategoriyiEkle')}
                             </button>
                           </div>
                         )}
@@ -2915,7 +2907,7 @@ export default function BusinessDetailPage() {
                                 <div className="flex-1 min-w-0">
                                   <h5 className="text-white font-bold text-sm">{cat.name}</h5>
                                   <p className="text-gray-500 text-xs">
-                                    {inlineProducts.filter((p: any) => p.category === cat.name || p.categoryId === cat.id).length} ürün • {cat.isActive ? '✅ Aktif' : '🔴 Pasif'}
+                                    {inlineProducts.filter((p: any) => p.category === cat.name || p.categoryId === cat.id).length} {t('urun')} {cat.isActive ? '✅ Aktif' : '🔴 Pasif'}
                                   </p>
                                 </div>
 
@@ -2928,7 +2920,7 @@ export default function BusinessDetailPage() {
                                       setShowCategoryModal(true);
                                     }}
                                     className="p-1.5 bg-yellow-600/80 hover:bg-yellow-500 rounded-lg transition text-white text-xs"
-                                    title="Düzenle"
+                                    title={t('duzenle1')}
                                   >✏️</button>
                                   <button
                                     onClick={() => setDeletingCategoryId(cat.id)}
@@ -2946,12 +2938,12 @@ export default function BusinessDetailPage() {
                           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                             <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md">
                               <h2 className="text-xl font-bold text-white mb-4">
-                                {editingCategory ? 'Kategori Düzenle' : 'Yeni Kategori'}
+                                {editingCategory ? t('kategoriDuzenle') : 'Yeni Kategori'}
                               </h2>
 
                               {/* Icon Selection */}
                               <div className="mb-4">
-                                <label className="text-gray-400 text-sm mb-2 block">İkon</label>
+                                <label className="text-gray-400 text-sm mb-2 block">{t('ikon')}</label>
                                 <div className="flex flex-wrap gap-2">
                                   {CATEGORY_ICONS.map(icon => (
                                     <button
@@ -2971,10 +2963,10 @@ export default function BusinessDetailPage() {
                               {/* Name */}
                               <div className="mb-4">
                                 <MultiLanguageInput
-                                  label="Kategori Adı"
+                                  label={t('kategoriAdi')}
                                   value={categoryForm.name}
                                   onChange={(val) => setCategoryForm({ ...categoryForm, name: val })}
-                                  placeholder="Örn: Kebaplar, İçecekler, Tatlılar..."
+                                  placeholder={t('ornKebaplarIceceklerTatlilar')}
                                 />
                               </div>
 
@@ -2987,7 +2979,7 @@ export default function BusinessDetailPage() {
                                     onChange={(e) => setCategoryForm({ ...categoryForm, isActive: e.target.checked })}
                                     className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-violet-500"
                                   />
-                                  <span className="text-gray-300">Aktif (uygulamada görünsün)</span>
+                                  <span className="text-gray-300">{t('aktifUygulamadaGorunsun')}</span>
                                 </label>
                               </div>
 
@@ -2996,7 +2988,7 @@ export default function BusinessDetailPage() {
                                 <button
                                   onClick={() => { setShowCategoryModal(false); setEditingCategory(null); }}
                                   className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
-                                >İptal</button>
+                                >{t('iptal1')}</button>
                                 <button
                                   onClick={handleSaveCategory}
                                   disabled={savingCategory || !categoryForm.name.trim()}
@@ -3016,13 +3008,13 @@ export default function BusinessDetailPage() {
                               <span className="text-4xl">⚠️</span>
                               <h3 className="text-lg font-bold text-white mt-3">Kategoriyi Sil</h3>
                               <p className="text-gray-400 text-sm mt-2">
-                                Bu kategoriyi kalıcı olarak silmek istediğinizden emin misiniz?
+                                {t('buKategoriyiKaliciOlarakSilmekIstediginizden')}
                               </p>
                               <div className="flex gap-3 mt-5">
                                 <button
                                   onClick={() => setDeletingCategoryId(null)}
                                   className="flex-1 px-4 py-2.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600"
-                                >İptal</button>
+                                >{t('iptal1')}</button>
                                 <button
                                   onClick={() => handleDeleteCategory(deletingCategoryId)}
                                   className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-500"
@@ -3042,15 +3034,15 @@ export default function BusinessDetailPage() {
                           <div className="flex items-center gap-2">
                             <span className="text-2xl">📦</span>
                             <div>
-                              <h4 className="text-white font-bold">Ürünler</h4>
-                              <p className="text-gray-400 text-xs">{inlineProducts.length} ürün</p>
+                              <h4 className="text-white font-bold">{t('urunler1')}</h4>
+                              <p className="text-gray-400 text-xs">{inlineProducts.length} {t('urun1')}</p>
                             </div>
                           </div>
                           <a
                             href={`/admin/products?businessId=${businessId}`}
                             className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-medium rounded-lg transition inline-flex items-center gap-1"
                           >
-                            + Ürün Ekle / Düzenle
+                            {t('urunEkleDuzenle')}
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                             </svg>
@@ -3068,13 +3060,13 @@ export default function BusinessDetailPage() {
                         {!loadingProducts && inlineProducts.length === 0 && (
                           <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
                             <span className="text-4xl">📦</span>
-                            <h4 className="text-white font-medium mt-3">Henüz ürün eklenmemiş</h4>
-                            <p className="text-gray-400 text-sm mt-1">İşletmeye ürün atamak için ürün yönetimine gidin.</p>
+                            <h4 className="text-white font-medium mt-3">{t('henuzUrunEklenmemis')}</h4>
+                            <p className="text-gray-400 text-sm mt-1">{t('isletmeyeUrunAtamakIcinUrunYonetimine')}</p>
                             <a
                               href={`/admin/products?businessId=${businessId}`}
                               className="mt-4 inline-block px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
                             >
-                              Ürün Yönetimine Git
+                              {t('urunYonetimineGit')}
                             </a>
                           </div>
                         )}
@@ -3098,7 +3090,7 @@ export default function BusinessDetailPage() {
                                     <div className="px-4 py-2.5 bg-gray-700/50 flex items-center gap-2 border-b border-gray-700">
                                       <span className="text-lg">{catInfo?.icon || '📦'}</span>
                                       <span className="text-white font-bold text-sm">{catName}</span>
-                                      <span className="text-gray-400 text-xs ml-auto">{prods.length} ürün</span>
+                                      <span className="text-gray-400 text-xs ml-auto">{prods.length} {t('urun1')}</span>
                                     </div>
                                     {/* Product rows */}
                                     <div className="divide-y divide-gray-700/50">
@@ -3168,8 +3160,8 @@ export default function BusinessDetailPage() {
                             <thead className="text-green-400/80 border-b border-green-700/50">
                               <tr>
                                 <th className="pb-2 pr-3">👤 Personel</th>
-                                <th className="pb-2 pr-3">🕐 Başlangıç</th>
-                                <th className="pb-2 pr-3">⏱️ Süre</th>
+                                <th className="pb-2 pr-3">{t('baslangic')}</th>
+                                <th className="pb-2 pr-3">{t('sure')}</th>
                                 <th className="pb-2 pr-3">📍 Konum</th>
                                 <th className="pb-2 pr-3">📋 Masalar</th>
                                 <th className="pb-2">Durum</th>
@@ -3191,7 +3183,7 @@ export default function BusinessDetailPage() {
                                 return (
                                   <tr key={shift.id} className="border-b border-green-800/30">
                                     <td className="py-2.5 pr-3 text-white font-medium">
-                                      {shift.displayName || shift.email || 'İsimsiz'}
+                                      {shift.displayName || shift.email || t('isimsiz')}
                                     </td>
                                     <td className="py-2.5 pr-3 text-gray-300">{startStr}</td>
                                     <td className="py-2.5 pr-3 text-gray-300 font-mono">{elapsedStr}</td>
@@ -3240,7 +3232,7 @@ export default function BusinessDetailPage() {
                           : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                           }`}
                       >
-                        📦 Arşivlenmiş ({staffList.filter(s => s.isActive === false).length})
+                        {t('arsivlenmis')}{staffList.filter(s => s.isActive === false).length})
                       </button>
                     </div>
 
@@ -3249,7 +3241,7 @@ export default function BusinessDetailPage() {
                       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
                       <input
                         type="text"
-                        placeholder="İsim, e-posta veya telefon ile ara..."
+                        placeholder={t('isimEpostaVeyaTelefonIleAra')}
                         value={staffSearchQuery}
                         onChange={(e) => setStaffSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -3272,16 +3264,16 @@ export default function BusinessDetailPage() {
                       {staffList.length === 0 ? (
                         <div className="text-center py-8 text-gray-400">
                           <p className="text-4xl mb-2">👥</p>
-                          <p>Henüz personel yok</p>
+                          <p>{t('henuzPersonelYok')}</p>
                         </div>
                       ) : (
                         <table className="w-full text-left">
                           <thead className="text-gray-400 border-b border-gray-700">
                             <tr>
-                              <th className="pb-3 py-2">Kullanıcı</th>
+                              <th className="pb-3 py-2">{t('kullanici')}</th>
                               <th className="pb-3 py-2">Rol</th>
                               <th className="pb-3 py-2">Durum</th>
-                              <th className="pb-3 py-2">İşlemler</th>
+                              <th className="pb-3 py-2">{t('islemler')}</th>
                             </tr>
                           </thead>
                           <tbody className="text-white">
@@ -3296,7 +3288,7 @@ export default function BusinessDetailPage() {
                                 <tr>
                                   <td colSpan={4} className="py-8 text-center text-gray-400">
                                     <p className="text-2xl mb-2">👥</p>
-                                    <p>{staffStatusFilter === 'archived' ? 'Arşivlenmiş personel bulunamadı' : 'Personel bulunamadı'}</p>
+                                    <p>{staffStatusFilter === 'archived' ? t('arsivlenmisPersonelBulunamadi') : t('personelBulunamadi')}</p>
                                   </td>
                                 </tr>
                               )}
@@ -3337,11 +3329,11 @@ export default function BusinessDetailPage() {
                                         const isActive = staff.isActive !== false;
                                         setConfirmModal({
                                           show: true,
-                                          title: isActive ? 'Personel Arşivle' : 'Personel Aktifleştir',
+                                          title: isActive ? t('personelArsivle') : t('personelAktiflestir'),
                                           message: isActive
-                                            ? `${staff.displayName} adlı personeli arşivlemek istediğinize emin misiniz?`
-                                            : `${staff.displayName} adlı personeli tekrar aktifleştirmek istediğinize emin misiniz?`,
-                                          confirmText: isActive ? 'Evet, Arşivle' : 'Evet, Aktifleştir',
+                                            ? `${staff.displayName} ${t('adliPersoneliArsivlemekIstediginizeEminMisiniz')}`
+                                            : `${staff.displayName} ${t('adliPersoneliTekrarAktiflestirmekIstediginizeEmin')}`,
+                                          confirmText: isActive ? t('evetArsivle') : t('evetAktiflestir'),
                                           confirmColor: isActive ? 'bg-amber-600 hover:bg-amber-500' : 'bg-green-600 hover:bg-green-500',
                                           onConfirm: async () => {
                                             setConfirmModal(prev => ({ ...prev, show: false }));
@@ -3352,21 +3344,21 @@ export default function BusinessDetailPage() {
                                                 await updateDoc(adminRef, {
                                                   isActive: false,
                                                   deactivatedAt: now,
-                                                  deactivationReason: 'İşletme panelinden arşivlendi',
+                                                  deactivationReason: t('isletmePanelindenArsivlendi'),
                                                 });
-                                                showToast(`${staff.displayName} arşivlendi`, 'success');
+                                                showToast(`${staff.displayName} ${t('arsivlendi')}`, 'success');
                                               } else {
                                                 await updateDoc(adminRef, {
                                                   isActive: true,
                                                   deactivatedAt: null,
                                                   deactivationReason: null,
                                                 });
-                                                showToast(`${staff.displayName} tekrar aktifleştirildi`, 'success');
+                                                showToast(`${staff.displayName} ${t('tekrarAktiflestirildi')}`, 'success');
                                               }
                                               loadStaff();
                                             } catch (error) {
                                               console.error('Archive error:', error);
-                                              showToast('İşlem başarısız', 'error');
+                                              showToast(t('islemBasarisiz'), 'error');
                                             }
                                           },
                                         });
@@ -3375,16 +3367,16 @@ export default function BusinessDetailPage() {
                                         ? 'bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white'
                                         : 'bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white'}`}
                                     >
-                                      {staff.isActive !== false ? '📦 Arşivle' : '✅ Aktifleştir'}
+                                      {staff.isActive !== false ? t('arsivle1') : t('aktiflestir')}
                                     </button>
                                     {/* Yetkiyi Kaldır */}
                                     <button
                                       onClick={() => {
                                         setConfirmModal({
                                           show: true,
-                                          title: 'Yetkiyi Kaldır',
-                                          message: `${staff.displayName} adlı personelin yetkisini kaldırmak istediğinize emin misiniz?`,
-                                          confirmText: 'Evet, Kaldır',
+                                          title: t('yetkiyiKaldir'),
+                                          message: `${staff.displayName} ${t('adliPersonelinYetkisiniKaldirmakIstediginizeEmin')}`,
+                                          confirmText: t('evetKaldir'),
                                           confirmColor: 'bg-red-600 hover:bg-red-500',
                                           onConfirm: async () => {
                                             setConfirmModal(prev => ({ ...prev, show: false }));
@@ -3396,20 +3388,20 @@ export default function BusinessDetailPage() {
                                                 butcherId: null,
                                                 butcherName: null,
                                                 deactivatedAt: new Date(),
-                                                deactivationReason: 'Yetki kaldırıldı',
+                                                deactivationReason: t('yetkiKaldirildi'),
                                               });
-                                              showToast(`${staff.displayName} yetkisi kaldırıldı`, 'success');
+                                              showToast(`${staff.displayName} ${t('yetkisiKaldirildi')}`, 'success');
                                               loadStaff();
                                             } catch (error) {
                                               console.error('Remove permission error:', error);
-                                              showToast('İşlem başarısız', 'error');
+                                              showToast(t('islemBasarisiz'), 'error');
                                             }
                                           },
                                         });
                                       }}
                                       className="text-xs px-2 py-1 rounded bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white"
                                     >
-                                      🔓 Yetkiyi Kaldır
+                                      {t('yetkiyiKaldir1')}
                                     </button>
                                   </div>
                                 </td>
@@ -3428,7 +3420,7 @@ export default function BusinessDetailPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <input
                           type="text"
-                          placeholder="İsim *"
+                          placeholder={t('isim')}
                           value={inviteFirstName}
                           onChange={(e) => setInviteFirstName(e.target.value)}
                           className="bg-gray-700 text-white px-3 py-2 rounded-lg"
@@ -3453,7 +3445,7 @@ export default function BusinessDetailPage() {
                         </select>
                         <input
                           type="tel"
-                          placeholder="Telefon numarası *"
+                          placeholder={t('telefonNumarasi')}
                           value={invitePhone}
                           onChange={(e) =>
                             setInvitePhone(e.target.value.replace(/\D/g, ""))
@@ -3463,7 +3455,7 @@ export default function BusinessDetailPage() {
                       </div>
                       <input
                         type="email"
-                        placeholder="E-posta (opsiyonel, bildirim için)"
+                        placeholder={t('epostaOpsiyonelBildirimIcin')}
                         value={inviteEmail}
                         onChange={(e) => setInviteEmail(e.target.value)}
                         className="w-full mt-3 bg-gray-700 text-white px-3 py-2 rounded-lg"
@@ -3476,7 +3468,7 @@ export default function BusinessDetailPage() {
                           className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1"
                         >
                           <option value="Personel">👤 Personel</option>
-                          <option value="Admin">👑 İşletme Admin</option>
+                          <option value="Admin">{t('isletmeAdmin')}</option>
                         </select>
                       </div>
                       <button
@@ -3485,16 +3477,16 @@ export default function BusinessDetailPage() {
                         className="w-full mt-3 bg-green-600 text-white py-3 rounded-lg hover:bg-green-500 disabled:opacity-50 font-medium"
                       >
                         {staffLoading
-                          ? "Hesap oluşturuluyor..."
-                          : "🚀 Hesap Oluştur & Davet Gönder"}
+                          ? t('hesapOlusturuluyor')
+                          : t('hesapOlusturDavetGonder')}
                       </button>
 
                       {/* Invite Result Feedback */}
                       {inviteResult && inviteResult.success && (
                         <div className="mt-4 p-4 bg-green-900/30 border border-green-700 rounded-lg space-y-3">
-                          <p className="text-green-300 font-medium">✅ Personel başarıyla eklendi!</p>
+                          <p className="text-green-300 font-medium">{t('personelBasariylaEklendi')}</p>
                           <div className="bg-gray-800 p-3 rounded text-sm">
-                            <p className="text-gray-400">Geçici Şifre:</p>
+                            <p className="text-gray-400">{t('geciciSifre')}</p>
                             <p className="text-white font-mono text-lg">{inviteResult.tempPassword}</p>
                           </div>
                           {inviteResult.notifications && (
@@ -3531,7 +3523,7 @@ export default function BusinessDetailPage() {
                       {/* Delivery Settings */}
                       <div className="space-y-4">
                         <h4 className="text-white font-medium border-b border-gray-700 pb-2">
-                          🚚 Teslimat Ayarları
+                          {t('teslimatAyarlari')}
                         </h4>
                         <div className="flex items-center gap-3">
                           <input
@@ -3546,13 +3538,13 @@ export default function BusinessDetailPage() {
                             disabled={!isEditing}
                             className="w-5 h-5"
                           />
-                          <span className="text-white">Kurye Desteği Var</span>
+                          <span className="text-white">{t('kuryeDestegiVar')}</span>
                         </div>
                         {formData.supportsDelivery && (
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <label className="text-gray-400 text-sm">
-                                Min. Sipariş (€)
+                                {t('minSiparis')}
                               </label>
                               <input
                                 type="number"
@@ -3569,7 +3561,7 @@ export default function BusinessDetailPage() {
                             </div>
                             <div>
                               <label className="text-gray-400 text-sm">
-                                Teslimat Ücreti (€)
+                                {t('teslimatUcreti')}
                               </label>
                               <input
                                 type="number"
@@ -3590,18 +3582,18 @@ export default function BusinessDetailPage() {
                         {/* 🆕 Gelişmiş Sipariş Saatleri (Lieferando benzeri) */}
                         <div className="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
                           <h5 className="text-white font-medium mb-3 flex items-center gap-2">
-                            ⏰ Gelişmiş Sipariş Saatleri
+                            {t('gelismisSiparisSaatleri')}
                             <span className="text-xs text-gray-500">(Opsiyonel)</span>
                           </h5>
                           <p className="text-xs text-gray-400 mb-3">
-                            İşletme açık olsa bile kurye/gel al hizmetinin başlama saatini belirleyebilirsiniz.
+                            {t('isletmeAcikOlsaBileKuryegelAl')}
                           </p>
 
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             {/* Kurye Başlangıç Saati */}
                             <div>
                               <label className="text-gray-400 text-sm flex items-center gap-1">
-                                🛵 Kurye Başlangıç
+                                {t('kuryeBaslangic')}
                               </label>
                               <input
                                 type="time"
@@ -3614,17 +3606,17 @@ export default function BusinessDetailPage() {
                                 }
                                 disabled={!isEditing}
                                 className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                                placeholder="ör: 14:00"
+                                placeholder={t('or1400')}
                               />
                               <p className="text-xs text-gray-500 mt-1">
-                                Boş = açılış saati
+                                {t('bosAcilisSaati')}
                               </p>
                             </div>
 
                             {/* Kurye Bitiş Saati */}
                             <div>
                               <label className="text-gray-400 text-sm flex items-center gap-1">
-                                🛵 Kurye Bitiş
+                                {t('kuryeBitis')}
                               </label>
                               <input
                                 type="time"
@@ -3637,17 +3629,17 @@ export default function BusinessDetailPage() {
                                 }
                                 disabled={!isEditing}
                                 className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                                placeholder="ör: 20:00"
+                                placeholder={t('or2000')}
                               />
                               <p className="text-xs text-gray-500 mt-1">
-                                Boş = kapanış saati
+                                {t('bosKapanisSaati')}
                               </p>
                             </div>
 
                             {/* Gel Al Başlangıç Saati */}
                             <div>
                               <label className="text-gray-400 text-sm flex items-center gap-1">
-                                🏃 Gel Al Başlangıç
+                                {t('gelAlBaslangic')}
                               </label>
                               <input
                                 type="time"
@@ -3660,17 +3652,17 @@ export default function BusinessDetailPage() {
                                 }
                                 disabled={!isEditing}
                                 className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                                placeholder="ör: 12:00"
+                                placeholder={t('or1200')}
                               />
                               <p className="text-xs text-gray-500 mt-1">
-                                Boş = açılış saati
+                                {t('bosAcilisSaati')}
                               </p>
                             </div>
 
                             {/* Gel Al Bitiş Saati */}
                             <div>
                               <label className="text-gray-400 text-sm flex items-center gap-1">
-                                🏃 Gel Al Bitiş
+                                {t('gelAlBitis')}
                               </label>
                               <input
                                 type="time"
@@ -3683,10 +3675,10 @@ export default function BusinessDetailPage() {
                                 }
                                 disabled={!isEditing}
                                 className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                                placeholder="ör: 21:00"
+                                placeholder={t('or2100')}
                               />
                               <p className="text-xs text-gray-500 mt-1">
-                                Boş = kapanış saati
+                                {t('bosKapanisSaati')}
                               </p>
                             </div>
                           </div>
@@ -3694,7 +3686,7 @@ export default function BusinessDetailPage() {
                           {/* Ücretsiz Teslimat Eşiği */}
                           <div className="mt-3">
                             <label className="text-gray-400 text-sm flex items-center gap-1">
-                              🎁 Ücretsiz Teslimat Eşiği (€)
+                              {t('ucretsizTeslimatEsigi')}
                             </label>
                             <div className="flex items-center gap-2 mt-1">
                               <input
@@ -3711,10 +3703,10 @@ export default function BusinessDetailPage() {
                                 min="0"
                                 step="0.01"
                               />
-                              <span className="text-gray-400 text-sm">€ üzeri siparişlerde teslimat ücretsiz</span>
+                              <span className="text-gray-400 text-sm">{t('uzeriSiparislerdeTeslimatUcretsiz')}</span>
                             </div>
                             <p className="text-xs text-gray-500 mt-1">
-                              0 = her zaman teslimat ücreti uygulanır
+                              {t('0HerZamanTeslimatUcretiUygulanir')}
                             </p>
                           </div>
 
@@ -3733,9 +3725,9 @@ export default function BusinessDetailPage() {
                               className="w-5 h-5 accent-amber-500"
                             />
                             <div>
-                              <span className="text-white">📅 Ön Sipariş Kabul Et</span>
+                              <span className="text-white">{t('onSiparisKabulEt')}</span>
                               <p className="text-xs text-gray-400">
-                                İşletme kapalıyken de ertesi gün için sipariş alabilir
+                                {t('isletmeKapaliykenDeErtesiGunIcin')}
                               </p>
                             </div>
                           </div>
@@ -3744,8 +3736,8 @@ export default function BusinessDetailPage() {
                           {(formData.deliveryStartTime || formData.pickupStartTime) && (
                             <div className="mt-2 p-2 bg-blue-900/30 rounded border border-blue-700">
                               <p className="text-xs text-blue-300">
-                                ℹ️ Mobil uygulamada işletme kartında &quot;Teslimat {formData.deliveryStartTime || "..."}&apos;ten sonra&quot; /
-                                &quot;Gel Al {formData.pickupStartTime || "..."}&apos;dan itibaren&quot; şeklinde badge gösterilecek.
+                                {t('mobilUygulamadaIsletmeKartindaTeslimat')} {formData.deliveryStartTime || "..."}&apos;ten sonra&quot; /
+                                &quot;Gel Al {formData.pickupStartTime || "..."}{t('danItibarenSeklindeBadgeGosterilecek')}
                               </p>
                             </div>
                           )}
@@ -3783,7 +3775,7 @@ export default function BusinessDetailPage() {
                           <div>
                             <span className="text-white">Masa Rezervasyonu Aktif</span>
                             <p className="text-xs text-gray-400">
-                              Müşteriler mobil uygulamadan masa rezervasyonu yapabilir
+                              {t('musterilerMobilUygulamadanMasaRezervasyonuYapabilir')}
                             </p>
                           </div>
                         </div>
@@ -3791,7 +3783,7 @@ export default function BusinessDetailPage() {
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <label className="text-gray-400 text-sm">
-                                Oturma Kapasitesi (Kişi)
+                                {t('oturmaKapasitesiKisi')}
                               </label>
                               <input
                                 type="number"
@@ -3805,10 +3797,10 @@ export default function BusinessDetailPage() {
                                 disabled={!isEditing}
                                 min="0"
                                 className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                                placeholder="ör: 50"
+                                placeholder={t('or50')}
                               />
                               <p className="text-xs text-gray-500 mt-1">
-                                Toplam oturma kapasitesi (kişi)
+                                {t('toplamOturmaKapasitesiKisi')}
                               </p>
                             </div>
                             <div>
@@ -3827,10 +3819,10 @@ export default function BusinessDetailPage() {
                                 disabled={!isEditing}
                                 min="0"
                                 className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                                placeholder="ör: 10"
+                                placeholder={t('or10')}
                               />
                               <p className="text-xs text-gray-500 mt-1">
-                                Aynı saat diliminde max rezervasyon
+                                {t('ayniSaatDilimindeMaxRezervasyon')}
                               </p>
                             </div>
                           </div>
@@ -3840,12 +3832,12 @@ export default function BusinessDetailPage() {
                       {/* 🍽️ Yerinde Sipariş Ayarları */}
                       <div className="space-y-4">
                         <h4 className="text-white font-medium border-b border-gray-700 pb-2">
-                          🍽️ Yerinde Sipariş Ayarları
+                          {t('yerindeSiparisAyarlari')}
                         </h4>
 
                         {/* Ödeme Zamanlaması */}
                         <div>
-                          <label className="text-gray-400 text-sm block mb-2">Ödeme Zamanlaması</label>
+                          <label className="text-gray-400 text-sm block mb-2">{t('odemeZamanlamasi')}</label>
                           <div className="flex gap-3">
                             <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payFirst'
                               ? 'bg-amber-600/20 border-amber-500 text-amber-300'
@@ -3861,8 +3853,8 @@ export default function BusinessDetailPage() {
                                 className="accent-amber-500"
                               />
                               <div>
-                                <span className="font-medium">🍔 Hemen Öde</span>
-                                <p className="text-xs text-gray-400">Fast food — sipariş öncesi ödeme zorunlu</p>
+                                <span className="font-medium">{t('hemenOde')}</span>
+                                <p className="text-xs text-gray-400">{t('fastFoodSiparisOncesiOdemeZorunlu')}</p>
                               </div>
                             </label>
                             <label className={`flex items-center gap-2 px-4 py-3 rounded-lg cursor-pointer border transition ${formData.dineInPaymentMode === 'payLater'
@@ -3879,7 +3871,7 @@ export default function BusinessDetailPage() {
                                 className="accent-amber-500"
                               />
                               <div>
-                                <span className="font-medium">🍽️ Çıkışta Öde</span>
+                                <span className="font-medium">{t('cikistaOde')}</span>
                                 <p className="text-xs text-gray-400">Restoran — masada hesap isteme</p>
                               </div>
                             </label>
@@ -3899,8 +3891,8 @@ export default function BusinessDetailPage() {
                             <span className="text-white">Garson Servisi Aktif</span>
                             <p className="text-xs text-gray-400">
                               {formData.hasTableService
-                                ? '✅ Sipariş hazır olunca müşteriye "Siparişiniz masanıza geliyor" bildirimi gider'
-                                : '📱 Sipariş hazır olunca müşteriye "Gelip alabilirsiniz" bildirimi gider (self-service)'}
+                                ? t('siparisHazirOluncaMusteriyeSiparisinizMasaniza')
+                                : t('siparisHazirOluncaMusteriyeGelipAlabilirsiniz')}
                             </p>
                           </div>
                         </div>
@@ -3942,7 +3934,7 @@ export default function BusinessDetailPage() {
                         </div>
                         <div>
                           <label className="text-gray-400 text-sm">
-                            Aylık Ücret (€)
+                            {t('aylikUcret')}
                           </label>
                           <input
                             type="number"
@@ -3988,12 +3980,12 @@ export default function BusinessDetailPage() {
                               })
                             }
                             disabled={!isEditing}
-                            placeholder="Örn: Ahmet Yılmaz"
+                            placeholder={t('ornAhmetYilmaz')}
                             className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
                           />
                         </div>
                         <div>
-                          <label className="text-gray-400 text-sm">Banka Adı</label>
+                          <label className="text-gray-400 text-sm">{t('bankaAdi1')}</label>
                           <input
                             type="text"
                             value={formData.bankName}
@@ -4001,7 +3993,7 @@ export default function BusinessDetailPage() {
                               setFormData({ ...formData, bankName: e.target.value })
                             }
                             disabled={!isEditing}
-                            placeholder="Örn: Sparkasse"
+                            placeholder={t('ornSparkasse')}
                             className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
                           />
                         </div>
@@ -4050,7 +4042,7 @@ export default function BusinessDetailPage() {
                             <div className="flex items-center gap-2">
                               <Star className="w-5 h-5 text-yellow-500" />
                               <h3 className="font-semibold text-gray-200">
-                                Google Yorumları
+                                {t('googleYorumlari')}
                               </h3>
                               <span className="text-xs text-gray-500 bg-gray-800 px-2 py-0.5 rounded-full border border-gray-700">
                                 {formData.rating?.toFixed(1)} ({formData.reviewCount})
@@ -4109,16 +4101,16 @@ export default function BusinessDetailPage() {
                         <div className="pt-6 border-t border-gray-700">
                           <div className="flex items-center gap-2 mb-4">
                             <History className="w-5 h-5 text-purple-400" />
-                            <h3 className="font-semibold text-gray-200">Abonelik Geçmişi</h3>
+                            <h3 className="font-semibold text-gray-200">{t('abonelikGecmisi')}</h3>
                           </div>
                           <div className="overflow-x-auto bg-gray-800/30 rounded-lg border border-gray-700/50">
                             <table className="w-full text-xs text-left text-gray-400">
                               <thead className="text-gray-500 bg-gray-900/50 uppercase">
                                 <tr>
                                   <th className="px-4 py-2">Plan</th>
-                                  <th className="px-4 py-2">Başlangıç</th>
-                                  <th className="px-4 py-2">Bitiş</th>
-                                  <th className="px-4 py-2">Değiştiren</th>
+                                  <th className="px-4 py-2">{t('baslangic1')}</th>
+                                  <th className="px-4 py-2">{t('bitis')}</th>
+                                  <th className="px-4 py-2">{t('degistiren')}</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-gray-800">
@@ -4175,18 +4167,18 @@ export default function BusinessDetailPage() {
                 </div>
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
                   <p className="text-2xl font-bold text-green-400">{planFeatures.dineInQR ? '✓' : '✕'}</p>
-                  <p className="text-xs text-gray-400 mt-1">QR Sipariş</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('qrSiparis')}</p>
                 </div>
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
                   <p className="text-2xl font-bold text-blue-400">{planFeatures.waiterOrder ? '✓' : '✕'}</p>
-                  <p className="text-xs text-gray-400 mt-1">Garson Sipariş</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('garsonSiparis')}</p>
                 </div>
               </div>
 
               {/* ── Table Management: Masa Yönetimi ── */}
               <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-                  🪑 Masa Yönetimi
+                  {t('masaYonetimi')}
                 </h2>
 
                 {/* Quick setup row */}
@@ -4205,11 +4197,11 @@ export default function BusinessDetailPage() {
                       min="0"
                       max="200"
                       className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none text-lg font-medium"
-                      placeholder="ör: 20"
+                      placeholder={t('or20')}
                     />
                   </div>
                   <div>
-                    <label className="text-gray-400 text-sm block mb-1">Oturma Kapasitesi (Kişi)</label>
+                    <label className="text-gray-400 text-sm block mb-1">{t('oturmaKapasitesiKisi')}</label>
                     <input
                       type="number"
                       value={formData.tableCapacity}
@@ -4221,7 +4213,7 @@ export default function BusinessDetailPage() {
                       }
                       min="0"
                       className="w-full bg-gray-700 text-white px-4 py-2.5 rounded-lg border border-gray-600 focus:border-amber-500 focus:outline-none text-lg font-medium"
-                      placeholder="ör: 80"
+                      placeholder={t('or80')}
                     />
                   </div>
                   <div className="flex items-end">
@@ -4236,11 +4228,11 @@ export default function BusinessDetailPage() {
                           sortOrder: i,
                         }));
                         setFormData({ ...formData, tables: newTables });
-                        showToast(`${count} masa oluşturuldu (1-${count})`, 'success');
+                        showToast(`${count} ${t('masaOlusturuldu1')}${count})`, 'success');
                       }}
                       className="w-full px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium transition"
                     >
-                      🔄 1&apos;den {formData.maxReservationTables || 'N'}&apos;e Oluştur
+                      🔄 1&apos;den {formData.maxReservationTables || 'N'}{t('eOlustur')}
                     </button>
                   </div>
                   <div className="flex items-end">
@@ -4264,25 +4256,25 @@ export default function BusinessDetailPage() {
                 {formData.tables.length > 0 && (
                   <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">
-                      <h3 className="text-sm font-semibold text-gray-300">📍 Bölümler</h3>
+                      <h3 className="text-sm font-semibold text-gray-300">{t('bolumler')}</h3>
                       <button
                         onClick={() => {
-                          const name = prompt('Yeni bölüm adı (ör: 1. Kat, Aile Bölümü, Bahçe):');
+                          const name = prompt(t('yeniBolumAdiOr1Kat'));
                           if (!name?.trim()) return;
                           if (formData.tableSections.includes(name.trim())) {
-                            showToast('Bu bölüm zaten mevcut', 'error');
+                            showToast(t('buBolumZatenMevcut'), 'error');
                             return;
                           }
                           setFormData({ ...formData, tableSections: [...formData.tableSections, name.trim()] });
                         }}
                         className="px-2 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-md transition"
                       >
-                        + Bölüm Ekle
+                        {t('bolumEkle')}
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {formData.tableSections.length === 0 && (
-                        <span className="text-xs text-gray-500 italic">Henüz bölüm yok — tüm masalar tek grupta gösterilir</span>
+                        <span className="text-xs text-gray-500 italic">{t('henuzBolumYokTumMasalarTek')}</span>
                       )}
                       {formData.tableSections.map((section: string, idx: number) => (
                         <div key={idx} className="flex items-center gap-1 bg-gray-700 rounded-lg px-3 py-1.5 text-sm">
@@ -4303,7 +4295,7 @@ export default function BusinessDetailPage() {
                               });
                             }}
                             className="ml-1 text-red-400 hover:text-red-300 transition text-xs"
-                            title="Bölümü sil"
+                            title={t('bolumuSil')}
                           >
                             ✕
                           </button>
@@ -4342,7 +4334,7 @@ export default function BusinessDetailPage() {
                             )}
                             {!sec && formData.tableSections.length > 0 && tablesInSection.length > 0 && (
                               <div className="flex items-center gap-2 mb-2">
-                                <span className="text-gray-400 text-sm font-bold">Bölüm Atanmamış</span>
+                                <span className="text-gray-400 text-sm font-bold">{t('bolumAtanmamis')}</span>
                                 <span className="text-gray-500 text-xs">({tablesInSection.length} masa)</span>
                               </div>
                             )}
@@ -4408,9 +4400,9 @@ export default function BusinessDetailPage() {
                 {formData.tables.length === 0 && (
                   <div className="bg-gray-800/50 rounded-xl p-8 border border-dashed border-gray-600 text-center">
                     <span className="text-4xl">🪑</span>
-                    <p className="text-white font-semibold mt-3">Henüz masa tanımlanmadı</p>
+                    <p className="text-white font-semibold mt-3">{t('henuzMasaTanimlanmadi')}</p>
                     <p className="text-gray-400 text-sm mt-1">
-                      Yukarıdan masa sayısını girerek otomatik oluşturun veya tek tek ekleyin
+                      {t('yukaridanMasaSayisiniGirerekOtomatikOlusturun')}
                     </p>
                   </div>
                 )}
@@ -4421,7 +4413,7 @@ export default function BusinessDetailPage() {
                 <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                      📱 Masa QR Kodları
+                      {t('masaQrKodlari')}
                       <span className="text-sm font-normal text-gray-400">
                         · {formData.tables.length} masa
                       </span>
@@ -4441,7 +4433,7 @@ export default function BusinessDetailPage() {
                       }}
                       className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
                     >
-                      📥 Tümünü İndir
+                      {t('tumunuIndir')}
                     </button>
                   </div>
 
@@ -4482,7 +4474,7 @@ export default function BusinessDetailPage() {
                       );
                     })}
                   </div>
-                  <p className="text-xs text-gray-500 mt-3">💡 QR koduna tıklayarak tek tek indirebilirsiniz</p>
+                  <p className="text-xs text-gray-500 mt-3">{t('qrKodunaTiklayarakTekTekIndirebilirsiniz')}</p>
                 </div>
               )}
 
@@ -4494,25 +4486,25 @@ export default function BusinessDetailPage() {
                       <span className="text-xl">👨‍🍳</span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-white font-semibold">Garson Sipariş Sistemi</h3>
-                      <p className="text-xs text-gray-400">Personel tablet/telefon ile masada sipariş alır</p>
+                      <h3 className="text-white font-semibold">{t('garsonSiparisSistemi')}</h3>
+                      <p className="text-xs text-gray-400">{t('personelTablettelefonIleMasadaSiparisAlir')}</p>
                     </div>
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white">
-                      ✓ AKTİF
+                      {t('aktif')}
                     </span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
                     <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                      <p className="text-teal-400 font-medium text-sm">1. Masa Seç</p>
-                      <p className="text-gray-400 text-xs mt-1">Garson masayı seçer</p>
+                      <p className="text-teal-400 font-medium text-sm">{t('1MasaSec')}</p>
+                      <p className="text-gray-400 text-xs mt-1">{t('garsonMasayiSecer')}</p>
                     </div>
                     <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                      <p className="text-teal-400 font-medium text-sm">2. Ürün Ekle</p>
-                      <p className="text-gray-400 text-xs mt-1">Menüden ürün ekler</p>
+                      <p className="text-teal-400 font-medium text-sm">{t('2UrunEkle')}</p>
+                      <p className="text-gray-400 text-xs mt-1">{t('menudenUrunEkler')}</p>
                     </div>
                     <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-                      <p className="text-teal-400 font-medium text-sm">3. Sipariş Gönder</p>
-                      <p className="text-gray-400 text-xs mt-1">Mutfağa iletilir</p>
+                      <p className="text-teal-400 font-medium text-sm">{t('3SiparisGonder')}</p>
+                      <p className="text-gray-400 text-xs mt-1">{t('mutfagaIletilir')}</p>
                     </div>
                   </div>
                 </div>
@@ -4521,8 +4513,7 @@ export default function BusinessDetailPage() {
               {/* ── Plan Info Footer ── */}
               <div className="p-4 bg-gray-800/50 rounded-xl border border-gray-700">
                 <p className="text-sm text-gray-400">
-                  💡 Bu özellikler işletmenin <strong className="text-white">{business?.subscriptionPlan || 'basic'}</strong> planı üzerinden yönetilmektedir.
-                  Değişiklik yapmak için <a href="/admin/plans" className="text-blue-400 hover:underline">Plan Yönetimi</a> sayfasını ziyaret edin.
+                  {t('buOzelliklerIsletmenin')} <strong className="text-white">{business?.subscriptionPlan || 'basic'}</strong> {t('planiUzerindenYonetilmektedirDegisiklikYapmakIcin')} <a href="/admin/plans" className="text-blue-400 hover:underline">{t('planYonetimi')}</a> {t('sayfasiniZiyaretEdin')}
                 </p>
               </div>
             </div>
@@ -4544,14 +4535,14 @@ export default function BusinessDetailPage() {
 
               {confirmModal.showRoleSelect && (
                 <div className="mb-4">
-                  <label className="text-gray-400 text-sm">Yeni Rol Seç</label>
+                  <label className="text-gray-400 text-sm">{t('yeniRolSec')}</label>
                   <select
                     value={selectedNewRole}
                     onChange={(e) => setSelectedNewRole(e.target.value)}
                     className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1"
                   >
-                    <option value="">-- Rol Seç --</option>
-                    <option value="İşletme Admin">İşletme Admin</option>
+                    <option value="">{t('rolSec')}</option>
+                    <option value={t('isletmeAdmin1')}>{t('isletmeAdmin1')}</option>
                     <option value="Personel">Personel</option>
                   </select>
                 </div>
@@ -4564,7 +4555,7 @@ export default function BusinessDetailPage() {
                   }
                   className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium"
                 >
-                  İptal
+                  {t('iptal1')}
                 </button>
                 <button
                   onClick={() => confirmModal.onConfirm(selectedNewRole)}

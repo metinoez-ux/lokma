@@ -68,7 +68,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         builder: (ctx) => AlertDialog(
           title: Text(tr('staff.break_continues')),
           content: Text(
-            tr('driver.teslimat_ustlenmek_icin_molani')
+            '${tr('driver.teslimat_ustlenmek_icin_molani')}\n'
             'Devam etmek istiyor musunuz?',
           ),
           actions: [
@@ -106,7 +106,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       builder: (ctx) => AlertDialog(
         title: Text(tr('driver.take_delivery')),
         content: Text(
-          tr('driver.bu_siparisi_ustlenmek_istedigi')
+          '${tr('driver.bu_siparisi_ustlenmek_istedigi')}\n'
           '🏪 ${order.butcherName}\n'
           '📍 ${order.deliveryAddress ?? "Adres yok"}\n'
           '💰 ${order.totalAmount.toStringAsFixed(2)}€',

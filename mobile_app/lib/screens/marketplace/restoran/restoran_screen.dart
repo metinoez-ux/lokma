@@ -2587,7 +2587,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
               // 2) Title & Subtitle
               Text(
-                'Masanızdan Sipariş Verin',
+                tr('home.order_from_table'),
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -2599,7 +2599,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 48),
                 child: Text(
-                  'QR kodu okutarak hızlıca sipariş verebilir veya masa rezervasyonu yapabilirsiniz',
+                  tr('home.order_qr_desc'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -2638,7 +2638,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         }
                       } else if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Sipariş oturumu bulunamadı veya süresi dolmuş.'))
+                          SnackBar(content: Text(tr('home.session_expired')))
                         );
                         setState(() { _activeSessionId = null; });
                         notifier.clearSession();
@@ -2685,7 +2685,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Aktif Siparişinize Dönün',
+                                  tr('home.return_active_order'),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
@@ -2695,7 +2695,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Önceki masanıza hemen geçin',
+                                  tr('home.return_active_desc'),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
@@ -2771,7 +2771,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         ),
                         SizedBox(height: 14),
                         Text(
-                          'QR ile Sipariş Ver',
+                          tr('home.order_with_qr'),
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w700,
@@ -2781,7 +2781,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Masanızdaki QR kodu okutun',
+                          tr('home.scan_qr_table'),
                           style: TextStyle(
                             fontSize: 13,
                             color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
@@ -2840,7 +2840,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Masa Rezervasyonu',
+                                tr('home.table_reservation'),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
@@ -2849,7 +2849,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Önceden masa ayırtın',
+                                tr('home.book_table_advance'),
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: textSecondary,
@@ -2879,7 +2879,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'Nasıl Çalışır?',
+                      tr('home.how_it_works'),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -2891,24 +2891,24 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     _buildMasaStep(
                       icon: Icons.qr_code_2,
                       step: '1',
-                      title: 'QR Kodu Okutun',
-                      subtitle: 'Masanızdaki QR kodu tarayın',
+                      title: tr('home.scan_qr_code'),
+                      subtitle: tr('home.scan_qr_table_alt'),
                       isDark: isDark,
                     ),
                     const SizedBox(height: 12),
                     _buildMasaStep(
                       icon: Icons.menu_book,
                       step: '2',
-                      title: 'Menüden Seçin',
-                      subtitle: 'Yemeklerinizi ekleyin',
+                      title: tr('home.choose_from_menu'),
+                      subtitle: tr('home.add_your_meals'),
                       isDark: isDark,
                     ),
                     const SizedBox(height: 12),
                     _buildMasaStep(
                       icon: Icons.check_circle_outline,
                       step: '3',
-                      title: 'Siparişi Onaylayın',
-                      subtitle: 'Masanıza servis edilsin',
+                      title: tr('home.confirm_order'),
+                      subtitle: tr('home.served_to_table'),
                       isDark: isDark,
                     ),
                   ],

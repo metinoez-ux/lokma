@@ -381,7 +381,23 @@
     "gi_t": "GİT"
   },
   "home": {
-    "courier_on_the_way": "Kurye Yolda"
+    "courier_on_the_way": "Kurye Yolda",
+    "order_from_table": "Masanızdan Sipariş Verin",
+    "order_qr_desc": "QR kodu okutarak hızlıca sipariş verebilir veya masa rezervasyonu yapabilirsiniz",
+    "return_active_order": "Aktif Siparişinize Dönün",
+    "return_active_desc": "Önceki masanıza hemen geçin",
+    "order_with_qr": "QR ile Sipariş Ver",
+    "scan_qr_table": "Masanızdaki QR kodu okutun",
+    "table_reservation": "Masa Rezervasyonu",
+    "book_table_advance": "Önceden masa ayırtın",
+    "how_it_works": "Nasıl Çalışır?",
+    "scan_qr_code": "QR Kodu Okutun",
+    "scan_qr_table_alt": "Masanızdaki QR kodu tarayın",
+    "choose_from_menu": "Menüden Seçin",
+    "add_your_meals": "Yemeklerinizi ekleyin",
+    "confirm_order": "Siparişi Onaylayın",
+    "served_to_table": "Masanıza servis edilsin",
+    "session_expired": "Sipariş oturumu bulunamadı veya süresi dolmuş."
   },
   "kermes": {
     "add_menu_item": "Menü Öğesi Ekle",

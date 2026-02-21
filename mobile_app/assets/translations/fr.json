@@ -379,7 +379,23 @@
     "gi_t": "GİT"
   },
   "home": {
-    "courier_on_the_way": "Coursier en route"
+    "courier_on_the_way": "Coursier en route",
+    "order_from_table": "Commandez de votre table",
+    "order_qr_desc": "Vous pouvez commander rapidement en scannant le code QR ou réserver une table",
+    "return_active_order": "Retourner à la commande active",
+    "return_active_desc": "Passez rapidement à votre table précédente",
+    "order_with_qr": "Commander avec QR",
+    "scan_qr_table": "Scannez le code QR sur votre table",
+    "table_reservation": "Réservation de table",
+    "book_table_advance": "Réservez une table à l'avance",
+    "how_it_works": "Comment ça marche ?",
+    "scan_qr_code": "Scanner le code QR",
+    "scan_qr_table_alt": "Scannez le code QR sur votre table",
+    "choose_from_menu": "Choisir dans le menu",
+    "add_your_meals": "Ajoutez vos repas",
+    "confirm_order": "Confirmer la commande",
+    "served_to_table": "Il sera servi à votre table",
+    "session_expired": "Session de commande non trouvée ou expirée."
   },
   "kermes": {
     "add_menu_item": "Ajouter un élément au menu",
