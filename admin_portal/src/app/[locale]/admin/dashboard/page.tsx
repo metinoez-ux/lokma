@@ -8,6 +8,7 @@ import { auth, db } from '@/lib/firebase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Admin, AdminType } from '@/types';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { getModuleBusinessTypes, SPECIAL_MODULES, getAllRoles, getBusinessType, getRoleLabel, getRoleIcon } from '@/lib/business-types';
 import { COUNTRY_CODES, getDialCode } from '@/lib/country-codes';
@@ -38,6 +39,7 @@ interface FirebaseUser {
 }
 
 export default function SuperAdminDashboard() {
+    const t = useTranslations('AdminDashboard');
     const { admin, loading: adminLoading } = useAdmin(); // Use admin from context
     // const [loading, setLoading] = useState(true); // Removed local loading
     const [activeTab, setActiveTab] = useState<'admins' | 'users'>('users');
@@ -342,7 +344,7 @@ export default function SuperAdminDashboard() {
                     setAdmins(adminsData);
                 } catch (error) {
                     console.error("Error loading admins:", error);
-                    showToast('Admin listesi yüklenirken hata oluştu', 'error');
+                    showToast(t('errorLoadingAdmins'), 'error');
                 }
             };
             loadAdmins();
@@ -1237,7 +1239,7 @@ export default function SuperAdminDashboard() {
             setHasMore(end < sorted.length);
         } catch (error) {
             console.error('Load all users error:', error);
-            showToast('Kullanıcılar yüklenirken hata oluştu', 'error');
+            showToast(t('errorLoadingUsers'), 'error');
         } finally {
             setAllUsersLoading(false);
         }
@@ -1284,7 +1286,7 @@ export default function SuperAdminDashboard() {
                 setUsers(prev => prev.filter(u => u.id !== userId));
                 showToast(`"${userName}" tüm sistemlerden silindi`, 'success');
             } else {
-                throw new Error(result.error || 'Silme hatası');
+                throw new Error(result.error || t('deleteError'));
             }
         } catch (error) {
             console.error('Delete user error:', error);
@@ -1681,7 +1683,7 @@ export default function SuperAdminDashboard() {
             const data = await response.json();
 
             if (!response.ok) {
-                setCreateError(data.error || 'Bir hata oluştu');
+                setCreateError(data.error || t('generalError'));
                 setCreating(false);
                 return;
             }
@@ -1758,7 +1760,7 @@ export default function SuperAdminDashboard() {
             const data = await response.json();
 
             if (!response.ok) {
-                setCreateError(data.error || 'Bir hata oluştu');
+                setCreateError(data.error || t('generalError'));
                 setCreating(false);
                 return;
             }
@@ -1822,6 +1824,7 @@ export default function SuperAdminDashboard() {
 
     // Remove loadPendingInvitations - Moved to AdminHeader
 
+    const tNav = useTranslations('AdminNav');
     const handleLogout = async () => {
         await auth.signOut();
         // Force hard refresh to ensure clean state
@@ -1940,7 +1943,7 @@ export default function SuperAdminDashboard() {
                                                 loadAllUsers(1);
                                             }
                                         }}
-                                        placeholder="İsim, soyisim, e-posta, telefon veya işletme adı ile ara..."
+                                        placeholder="{t('searchPlaceholder')}"
                                         className="w-full px-4 py-3 pl-12 bg-gray-700 text-white rounded-xl border border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                                     />
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl">🔍</span>
@@ -1984,7 +1987,7 @@ export default function SuperAdminDashboard() {
                                     >
                                         <option value="all">👥 Tümü</option>
                                         <option value="user">👤 Sadece Kullanıcılar</option>
-                                        <option value="admin">🎫 İşletme Adminleri</option>
+                                        <option value="admin">🎫 {t('businessAdmins')}</option>
                                         <option value="staff">👷 Personel</option>
                                         <option value="driver">🚗 Tüm Sürücüler</option>
                                         <option value="driver_lokma">🚚 LOKMA Filosu</option>
@@ -2019,7 +2022,7 @@ export default function SuperAdminDashboard() {
 
                             {!showAllUsers && (
                                 <p className="text-gray-400 text-sm mt-2">
-                                    İsim, soyisim, e-posta veya telefon ile kullanıcı arayın. Tüm listeyi görmek için "Tüm Kullanıcılar" butonunu kullanın.
+                                    İsim, soyisim, e-posta veya telefon ile kullanıcı arayın. Tüm listeyi görmek için "{t('allUsers')}" butonunu kullanın.
                                 </p>
                             )}
                         </div>
@@ -2266,7 +2269,7 @@ export default function SuperAdminDashboard() {
                                                             const isActive = (user as any).isActive !== false;
                                                             setConfirmState({
                                                                 isOpen: true,
-                                                                title: isActive ? 'Kullanıcıyı Arşivle' : 'Kullanıcıyı Aktifleştir',
+                                                                title: isActive ? t('archiveUser') : t('activateUser'),
                                                                 message: isActive
                                                                     ? `${user.displayName} adlı kullanıcıyı arşivlemek istediğinize emin misiniz?`
                                                                     : `${user.displayName} adlı kullanıcıyı tekrar aktifleştirmek istediğinize emin misiniz?`,
@@ -2320,17 +2323,17 @@ export default function SuperAdminDashboard() {
                         ) : (searchQuery && !searchLoading) || showAllUsers ? (
                             <div className="text-center py-12 text-gray-400">
                                 <p className="text-4xl mb-4">🔍</p>
-                                <p>Sonuç bulunamadı</p>
+                                <p>{t('noResultsFound')}</p>
                             </div>
                         ) : allUsersLoading ? (
                             <div className="text-center py-12 text-gray-400">
                                 <div className="animate-spin h-10 w-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                                <p>Kullanıcılar yükleniyor...</p>
+                                <p>{t('loadingUsers')}</p>
                             </div>
                         ) : (
                             <div className="text-center py-12 text-gray-400">
                                 <p className="text-4xl mb-4">👆</p>
-                                <p>Aramaya başlamak için yukarıya yazın veya "Tüm Kullanıcılar" butonunu kullanın</p>
+                                <p>Aramaya başlamak için yukarıya yazın veya "{t('allUsers')}" butonunu kullanın</p>
                             </div>
                         )}
                     </div>
@@ -2410,7 +2413,7 @@ export default function SuperAdminDashboard() {
                                         className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
                                     >
                                         <option value="all">👥 Tümü</option>
-                                        <option value="business">🎫 İşletme Adminleri</option>
+                                        <option value="business">🎫 {t('businessAdmins')}</option>
                                         <option value="staff">👷 Personel</option>
                                         {/* 🔒 SECURITY: Super Admin filter only visible to super admins */}
                                         {admin?.adminType === 'super' && (
@@ -2465,7 +2468,7 @@ export default function SuperAdminDashboard() {
                                             <tr>
                                                 <td colSpan={5} className="py-8 text-center text-gray-400">
                                                     <p className="text-2xl mb-2">👥</p>
-                                                    <p>{adminStatusFilter === 'archived' ? 'Arşivlenmiş admin bulunamadı' : 'Admin bulunamadı'}</p>
+                                                    <p>{adminStatusFilter === 'archived' ? 'Arşivlenmiş admin bulunamadı' : t('noAdminsFound')}</p>
                                                 </td>
                                             </tr>
                                         )}
@@ -2601,7 +2604,7 @@ export default function SuperAdminDashboard() {
                                                                     onClick={() => {
                                                                         setConfirmState({
                                                                             isOpen: true,
-                                                                            title: 'Admini Kalıcı Sil',
+                                                                            title: t('deleteAdminPerm'),
                                                                             message: 'DİKKAT: Bu admini kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz!',
                                                                             itemName: a.displayName,
                                                                             variant: 'danger',
@@ -2616,7 +2619,7 @@ export default function SuperAdminDashboard() {
                                                                                     await reloadAdmins();
                                                                                 } catch (error) {
                                                                                     console.error('Delete error:', error);
-                                                                                    showToast('Silme sırasında hata oluştu', 'error');
+                                                                                    showToast(t('deleteErrorDuring'), 'error');
                                                                                 }
                                                                             },
                                                                         });
@@ -2647,7 +2650,7 @@ export default function SuperAdminDashboard() {
                             <h3 className="text-xl font-bold text-white mb-4">Admin Rolü Ata</h3>
 
                             <div className="bg-gray-700 rounded-lg p-4 mb-6">
-                                <p className="text-white font-medium">{selectedUser.displayName || 'İsimsiz'}</p>
+                                <p className="text-white font-medium">{selectedUser.displayName || t('unnamed')}</p>
                                 <p className="text-gray-400 text-sm">{selectedUser.email}</p>
                             </div>
 
@@ -2937,7 +2940,7 @@ export default function SuperAdminDashboard() {
                                         <strong>Davetiye içeriği:</strong><br />
                                         &quot;{admin?.displayName || 'Admin'} sizi MIRA Admin olarak davet etti.
                                         {selectedButcherId && butcherList.find(b => b.id === selectedButcherId) && (
-                                            <> İşletme: {butcherList.find(b => b.id === selectedButcherId)?.name}</>
+                                            <> {t('businessLabel')}: {butcherList.find(b => b.id === selectedButcherId)?.name}</>
                                         )}
                                         &quot;
                                     </p>
@@ -3027,8 +3030,8 @@ export default function SuperAdminDashboard() {
                                     href={`https://wa.me/${invitationPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
                                         `🎉 MIRA Admin Davetiyesi\n\n` +
                                         `Sizin için bir admin hesabı oluşturuldu:\n` +
-                                        `📌 Rol: ${invitationRole}\n` +
-                                        (invitationBusiness ? `🏪 İşletme: ${invitationBusiness}\n` : '') +
+                                        `📌 {t('roleLabel')}: ${invitationRole}\n` +
+                                        (invitationBusiness ? `🏪 {t('businessLabel')}: ${invitationBusiness}\n` : '') +
                                         `\nProfilinizi tamamlamak için:\n${invitationLink}`
                                     )}`}
                                     target="_blank"
@@ -3055,8 +3058,8 @@ export default function SuperAdminDashboard() {
                                     href={`mailto:?subject=${encodeURIComponent('MIRA Admin Davetiyesi')}&body=${encodeURIComponent(
                                         `Merhaba,\n\n` +
                                         `Sizin için MIRA Admin Portal'da bir hesap oluşturuldu.\n\n` +
-                                        `📌 Rol: ${invitationRole}\n` +
-                                        (invitationBusiness ? `🏪 İşletme: ${invitationBusiness}\n` : '') +
+                                        `📌 {t('roleLabel')}: ${invitationRole}\n` +
+                                        (invitationBusiness ? `🏪 {t('businessLabel')}: ${invitationBusiness}\n` : '') +
                                         `\nProfilinizi tamamlamak için aşağıdaki linke tıklayın:\n${invitationLink}\n\n` +
                                         `Saygılarımızla,\nMIRA Ekibi`
                                     )}`}
@@ -3069,7 +3072,7 @@ export default function SuperAdminDashboard() {
                                 {/* Telegram */}
                                 <a
                                     href={`https://t.me/share/url?url=${encodeURIComponent(invitationLink)}&text=${encodeURIComponent(
-                                        `🎉 MIRA Admin Davetiyesi\nRol: ${invitationRole}${invitationBusiness ? `\nİşletme: ${invitationBusiness}` : ''}`
+                                        `🎉 MIRA Admin Davetiyesi\n{t('roleLabel')}: ${invitationRole}${invitationBusiness ? `\n{t('businessLabel')}: ${invitationBusiness}` : ''}`
                                     )}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -3084,7 +3087,7 @@ export default function SuperAdminDashboard() {
                                 onClick={() => setShowShareModal(false)}
                                 className="w-full mt-6 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium"
                             >
-                                Kapat
+                                {t('close')}
                             </button>
                         </div>
                     </div>
@@ -3361,7 +3364,7 @@ export default function SuperAdminDashboard() {
                                                     🏢 İşletme Seçimi
                                                 </label>
                                                 {loadingButchers ? (
-                                                    <div className="text-gray-400 text-sm py-2">Yükleniyor...</div>
+                                                    <div className="text-gray-400 text-sm py-2">{t('loading')}</div>
                                                 ) : (
                                                     <div className="space-y-2">
                                                         <input
@@ -3443,7 +3446,7 @@ export default function SuperAdminDashboard() {
                                         {admin?.adminType !== 'super' && (
                                             <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-3">
                                                 <p className="text-blue-300 text-sm">
-                                                    ℹ️ Personel kendi işletmenize ({admin?.butcherName || 'İşletme'}) atanacaktır.
+                                                    ℹ️ Personel kendi işletmenize ({admin?.butcherName || t('businessLabel')}) atanacaktır.
                                                 </p>
                                             </div>
                                         )}
@@ -3765,7 +3768,7 @@ export default function SuperAdminDashboard() {
                                     onClick={async () => {
                                         // Validation
                                         if (!newUserData.firstName || !newUserData.lastName || !newUserData.email || !newUserData.password) {
-                                            showToast('Lütfen zorunlu alanları doldurun', 'error');
+                                            showToast(t('pleaseFillRequired'), 'error');
                                             return;
                                         }
                                         if (newUserData.password.length < 6) {
@@ -4397,7 +4400,7 @@ export default function SuperAdminDashboard() {
                                                                     <div className="mt-2 max-h-60 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg">
                                                                         {loadingButchers ? (
                                                                             <div className="p-3 text-gray-400 text-center">
-                                                                                ⏳ Yükleniyor...
+                                                                                ⏳ {t('loading')}
                                                                             </div>
                                                                         ) : (
                                                                             (() => {
@@ -4756,8 +4759,8 @@ export default function SuperAdminDashboard() {
                                                                             type="button"
                                                                             onClick={() => toggleTable(num)}
                                                                             className={`w-full aspect-square flex items-center justify-center rounded text-xs font-medium transition-all ${selectedTables.includes(num)
-                                                                                    ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105'
-                                                                                    : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
+                                                                                ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 scale-105'
+                                                                                : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
                                                                                 }`}
                                                                         >
                                                                             {num}
@@ -4906,7 +4909,7 @@ export default function SuperAdminDashboard() {
                                             const isAdmin = editingUserProfile.isAdmin;
                                             setConfirmState({
                                                 isOpen: true,
-                                                title: isAdmin ? 'Kullanıcıyı Arşivle' : 'Kullanıcıyı Sil',
+                                                title: isAdmin ? t('archiveUser') : 'Kullanıcıyı Sil',
                                                 message: isAdmin
                                                     ? 'Bu kullanıcı admin yetkisine sahip. Arşivlemek istediğinizden emin misiniz?'
                                                     : 'Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!',
@@ -5174,8 +5177,8 @@ export default function SuperAdminDashboard() {
                                                                             
                                                                             <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
                                                                                 <p style="margin: 0; color: #374151;"><strong>👤 İsim:</strong> ${editingUserProfile.firstName} ${editingUserProfile.lastName}</p>
-                                                                                <p style="margin: 8px 0 0 0; color: #374151;"><strong>🎯 Rol:</strong> ${roleName}</p>
-                                                                                <p style="margin: 8px 0 0 0; color: #374151;"><strong>🏪 İşletme:</strong> ${businessInfo}</p>
+                                                                                <p style="margin: 8px 0 0 0; color: #374151;"><strong>🎯 {t('roleLabel')}:</strong> ${roleName}</p>
+                                                                                <p style="margin: 8px 0 0 0; color: #374151;"><strong>🏪 {t('businessLabel')}:</strong> ${businessInfo}</p>
                                                                                 <p style="margin: 8px 0 0 0; color: #374151;"><strong>📧 E-posta:</strong> ${editingUserProfile.email}</p>
                                                                             </div>
                                                                             
@@ -5408,7 +5411,7 @@ export default function SuperAdminDashboard() {
                                             {/* Sonuç Listesi */}
                                             <div className="max-h-48 overflow-y-auto bg-gray-700 rounded-lg border border-gray-600">
                                                 {loadingButchers ? (
-                                                    <div className="p-3 text-center text-gray-400">⏳ Yükleniyor...</div>
+                                                    <div className="p-3 text-center text-gray-400">⏳ {t('loading')}</div>
                                                 ) : (
                                                     (() => {
                                                         const searchLower = newRoleBusinessSearch.toLowerCase().trim();
@@ -5511,7 +5514,7 @@ export default function SuperAdminDashboard() {
                                             {/* Sonuç Listesi */}
                                             <div className="max-h-48 overflow-y-auto bg-gray-700 rounded-lg border border-gray-600">
                                                 {loadingOrganizations ? (
-                                                    <div className="p-3 text-center text-gray-400">⏳ Yükleniyor...</div>
+                                                    <div className="p-3 text-center text-gray-400">⏳ {t('loading')}</div>
                                                 ) : (
                                                     (() => {
                                                         const searchLower = newRoleOrgSearch.toLowerCase().trim();

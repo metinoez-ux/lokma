@@ -3,16 +3,30 @@ const fs = require('fs');
 const path = require('path');
 
 try {
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+    let serviceAccount;
+    // Attempt to load from .env.local if FIREBASE_SERVICE_ACCOUNT_KEY is missing
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY && fs.existsSync('.env.local')) {
+        const envFile = fs.readFileSync('.env.local', 'utf8');
+        const keyLine = envFile.split('\n').find(line => line.startsWith('FIREBASE_SERVICE_ACCOUNT_KEY='));
+        if (keyLine) {
+            const keyString = keyLine.replace('FIREBASE_SERVICE_ACCOUNT_KEY=', '').trim();
+            serviceAccount = JSON.parse(keyString);
+        }
+    } else if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+    }
+
+    if (serviceAccount) {
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
+        console.log("Firebase Admin initialized with service account.");
     } else {
         admin.initializeApp();
+        console.log("Firebase Admin initialized with default credentials.");
     }
 } catch (error) {
-    console.log("Firebase default init failed:", error);
+    console.log("Firebase init failed:", error);
     process.exit(1);
 }
 
@@ -40,9 +54,10 @@ async function seedAppTranslations() {
 
         const docRef = db.collection('translations').doc(lang);
 
-        // We update the 'App' field in the translation doc
-        batch.set(docRef, { App: appContent }, { merge: true });
-        console.log(`Prepared App payload for ${lang}`);
+        // We merge all top-level domains into the translation doc
+        // This makes `driver`, `kermes`, `auth` show up as standalone categories
+        batch.set(docRef, appContent, { merge: true });
+        console.log(`Prepared payload for ${lang} with ${Object.keys(appContent).length} root categories`);
     }
 
     try {

@@ -396,9 +396,17 @@ export default function TranslationsPage() {
                             onChange={(e) => setSelectedNamespace(e.target.value)}
                             className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
                         >
-                            {namespaces.map(ns => (
-                                <option key={ns} value={ns}>{ns === 'All' ? 'Tüm Alanlar (Namespaces)' : ns}</option>
-                            ))}
+                            <option value="All">Tüm Alanlar (Namespaces)</option>
+                            <optgroup label="Admin Panel (Web)">
+                                {namespaces.filter(ns => ['Navigation', 'AdminNav', 'Landing', 'AdminPortal', 'Global'].includes(ns) && ns !== 'All').map(ns => (
+                                    <option key={ns} value={ns}>{ns}</option>
+                                ))}
+                            </optgroup>
+                            <optgroup label="Mobil Uygulama (App)">
+                                {namespaces.filter(ns => !['Navigation', 'AdminNav', 'Landing', 'AdminPortal', 'Global', 'All'].includes(ns)).map(ns => (
+                                    <option key={ns} value={ns}>{ns}</option>
+                                ))}
+                            </optgroup>
                         </select>
                     </div>
                     <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2">

@@ -4,9 +4,22 @@ const admin = require('firebase-admin');
 
 // Initialize Firebase Admin
 try {
-    admin.initializeApp();
+    const envPath = path.resolve(__dirname, '../.env.local');
+    const envFile = fs.readFileSync(envPath, 'utf8');
+    const keyLine = envFile.split('\n').find(line => line.startsWith('FIREBASE_SERVICE_ACCOUNT_KEY='));
+
+    if (!keyLine) {
+        throw new Error("FIREBASE_SERVICE_ACCOUNT_KEY not found in .env.local");
+    }
+
+    const keyString = keyLine.replace('FIREBASE_SERVICE_ACCOUNT_KEY=', '').trim();
+    const serviceAccount = JSON.parse(keyString);
+
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
 } catch (error) {
-    console.log("Firebase default init failed, please ensure you are authenticated:", error);
+    console.error("Firebase default init failed, please ensure you are authenticated:", error.message);
     process.exit(1);
 }
 

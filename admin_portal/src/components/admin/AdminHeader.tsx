@@ -10,26 +10,7 @@ import { AdminType } from '@/types';
 import { getRoleLabel } from '@/lib/business-types';
 import { LanguageSwitcher } from '../LanguageSwitcher';
 
-const adminTypeLabels: Record<AdminType, string> = {
-    super: '👑 Super Admin',
-    kermes: '🎪 Kermes Admin',
-    kermes_staff: '🎪 Kermes Personel',
-    cenaze_fonu: '⚫ Cenaze Fonu',
-    restoran: '🍽️ Restoran Sahibi',
-    restoran_staff: '👨‍🍳 Restoran Personel',
-    mutfak: '👨‍🍳 Mutfak',
-    garson: '🧑‍💼 Garson',
-    teslimat: '🚗 Teslimat',
-    kasap: '🥩 Kasap Sahibi',
-    kasap_staff: '👷 Kasap Personel',
-    bakkal: '🏪 Bakkal',
-    market: '🛒 Market Sahibi',
-    market_staff: '🛒 Market Personel',
-    hali_yikama: '🧹 Halı Yıkama',
-    hali_surucu: '🛵 Halı Sürücü',
-    transfer_surucu: '✈️ Transfer Sürücü',
-    tur_rehberi: '🗺️ Tur Rehberi',
-};
+
 
 interface PendingInvitation {
     id: string;
@@ -45,6 +26,26 @@ interface PendingInvitation {
 export default function AdminHeader() {
     const t = useTranslations('AdminNav');
     const { admin } = useAdmin();
+    const adminTypeLabels: Record<string, string> = {
+        super: t('superAdmin'),
+        kermes: t('kermesAdmin'),
+        kermes_staff: t('kermesStaff'),
+        cenaze_fonu: t('cenazeFonu'),
+        restoran: t('restoranAdmin'),
+        restoran_staff: t('restoranStaff'),
+        mutfak: t('mutfak'),
+        garson: t('garson'),
+        teslimat: t('teslimat'),
+        kasap: t('kasapAdmin'),
+        kasap_staff: t('kasapStaff'),
+        bakkal: t('bakkal'),
+        market: t('marketAdmin'),
+        market_staff: t('marketStaff'),
+        hali_yikama: t('haliYikama'),
+        hali_surucu: t('haliSurucu'),
+        transfer_surucu: t('transferSurucu'),
+        tur_rehberi: t('turRehberi'),
+    };
     const router = useRouter();
     const pathname = usePathname();
     const [showPendingModal, setShowPendingModal] = useState(false);
@@ -106,7 +107,7 @@ export default function AdminHeader() {
                         const data = businessDoc.data();
                         setBusinessInfo({
                             id: businessDoc.id,
-                            companyName: data.companyName || data.brand || 'İşletme',
+                            companyName: data.companyName || data.brand || t('businessLabel'),
                             phone: data.phone || data.phoneNumber || '',
                             streetAddress: data.address?.street || data.streetAddress || '',
                             postalCode: data.address?.postalCode || data.postalCode || '',
@@ -234,35 +235,35 @@ export default function AdminHeader() {
                                 <Link
                                     href="/admin/dashboard?filter=users"
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-blue-600/80 hover:bg-blue-500 border border-blue-400/50"
-                                    title="Tüm Kullanıcılar"
+                                    title={t('allUsers')}
                                 >
                                     👥 <span className="font-bold">{totalUsers}</span>
                                 </Link>
                                 <Link
                                     href="/admin/dashboard?filter=admins"
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-green-600/80 hover:bg-green-500 border border-green-400/50"
-                                    title="İşletme Adminleri"
+                                    title={t('businessAdmins')}
                                 >
                                     🎫 <span className="font-bold">{totalAdmins}</span>
                                 </Link>
                                 <Link
                                     href="/admin/dashboard?filter=subadmins"
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-amber-600/80 hover:bg-amber-500 border border-amber-400/50"
-                                    title="Sub Adminler (Personel)"
+                                    title={t('subAdmins')}
                                 >
                                     👷 <span className="font-bold">{totalSubAdmins}</span>
                                 </Link>
                                 <Link
                                     href="/admin/dashboard?filter=superadmins"
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-purple-600/80 hover:bg-purple-500 border border-purple-400/50"
-                                    title="Super Adminler"
+                                    title={t('superAdmins')}
                                 >
                                     👑 <span className="font-bold">{totalSuperAdmins}</span>
                                 </Link>
                                 <Link
                                     href="/admin/business"
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-cyan-600/80 hover:bg-cyan-500 border border-cyan-400/50"
-                                    title={`${totalBusinesses} İşletme`}
+                                    title={`${totalBusinesses} ${t('businessLabel')}`}
                                 >
                                     🏪 <span className="font-bold">{totalBusinesses}</span>
                                 </Link>
@@ -279,7 +280,7 @@ export default function AdminHeader() {
                                             {(admin as any).photoURL ? (
                                                 <img
                                                     src={(admin as any).photoURL}
-                                                    alt={admin.displayName || 'Profil'}
+                                                    alt={admin.displayName || t('profile')}
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
@@ -431,7 +432,7 @@ export default function AdminHeader() {
                                             {(admin as any).photoURL ? (
                                                 <img
                                                     src={(admin as any).photoURL}
-                                                    alt={admin.displayName || 'Profil'}
+                                                    alt={admin.displayName || t('profile')}
                                                     className="w-full h-full object-cover"
                                                 />
                                             ) : (
@@ -463,13 +464,13 @@ export default function AdminHeader() {
                                             href="/account"
                                             className="w-full flex items-center gap-2 px-4 py-3 text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 transition text-sm border-b border-gray-700"
                                         >
-                                            Hesabım
+                                            {t('myAccount')}
                                         </Link>
                                         <button
                                             onClick={handleLogout}
                                             className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition text-sm"
                                         >
-                                            Çıkış Yap
+                                            {t('logout')}
                                         </button>
                                     </div>
                                 </div>
@@ -485,10 +486,10 @@ export default function AdminHeader() {
                     <div className="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[70vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-4 border-b border-gray-700">
                             <h3 className="text-white font-bold">
-                                {showStatsList === 'users' && `👥 Tüm Kullanıcılar (${usersList.length})`}
+                                {showStatsList === 'users' && `👥 {t('allUsers')} (${usersList.length})`}
                                 {showStatsList === 'admins' && `🎫 İşletme Adminleri (${adminsList.length})`}
                                 {showStatsList === 'subadmins' && `👷 Sub Adminler (${adminsList.length})`}
-                                {showStatsList === 'superadmins' && `👑 Super Adminler (${adminsList.length})`}
+                                {showStatsList === 'superadmins' && `👑 {t('superAdmins')} (${adminsList.length})`}
                             </h3>
                             <button
                                 onClick={() => setShowStatsList(null)}
@@ -502,13 +503,13 @@ export default function AdminHeader() {
                             {listsLoading ? (
                                 <div className="flex items-center justify-center py-12">
                                     <div className="animate-spin h-8 w-8 border-3 border-blue-500 border-t-transparent rounded-full"></div>
-                                    <span className="ml-3 text-gray-400">Yükleniyor...</span>
+                                    <span className="ml-3 text-gray-400">{t('loading')}</span>
                                 </div>
                             ) : (
                                 <div className="divide-y divide-gray-700">
                                     {showStatsList === 'users' ? (
                                         usersList.length === 0 ? (
-                                            <p className="text-gray-400 text-center py-8">Kullanıcı bulunamadı</p>
+                                            <p className="text-gray-400 text-center py-8">{t('noUsersFound')}</p>
                                         ) : (
                                             usersList.map((user, index) => (
                                                 <div
@@ -521,7 +522,7 @@ export default function AdminHeader() {
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-white font-medium">
-                                                            {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.displayName || 'İsimsiz'}
+                                                            {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.displayName || t('unnamed')}
                                                         </p>
                                                         <p className="text-gray-400 text-sm">{user.email || user.phoneNumber || '-'}</p>
                                                     </div>
@@ -539,7 +540,7 @@ export default function AdminHeader() {
                                         )
                                     ) : (
                                         adminsList.length === 0 ? (
-                                            <p className="text-gray-400 text-center py-8">Admin bulunamadı</p>
+                                            <p className="text-gray-400 text-center py-8">{t('noAdminsFound')}</p>
                                         ) : (
                                             adminsList.map((admin, index) => (
                                                 <div
@@ -553,7 +554,7 @@ export default function AdminHeader() {
                                                         {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-white font-medium">{admin.displayName || 'İsimsiz'}</p>
+                                                        <p className="text-white font-medium">{admin.displayName || t('unnamed')}</p>
                                                         <p className="text-gray-400 text-sm">{admin.email || admin.phoneNumber || '-'}</p>
                                                     </div>
                                                     <span className={`px-2 py-1 rounded text-xs font-medium ${admin.adminType === 'super' ? 'bg-purple-600/30 text-purple-300' :
@@ -578,7 +579,7 @@ export default function AdminHeader() {
                     <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                <span>⏳</span> Onay Bekleyen Davetiyeler
+                                <span>⏳</span> {t('pendingInvitations')}
                             </h3>
                             <button
                                 onClick={() => setShowPendingModal(false)}
@@ -591,7 +592,7 @@ export default function AdminHeader() {
                         {pendingInvitations.length === 0 ? (
                             <div className="text-center py-8">
                                 <span className="text-5xl">✅</span>
-                                <p className="text-gray-400 mt-4">Bekleyen davetiye yok</p>
+                                <p className="text-gray-400 mt-4">{t('noPendingInvitations')}</p>
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -613,29 +614,29 @@ export default function AdminHeader() {
                                                         ? 'bg-green-600/30 text-green-400'
                                                         : 'bg-yellow-600/30 text-yellow-400'
                                                         }`}>
-                                                        {invitation.status === 'registered' ? 'Kayıt Tamamlandı' : 'Link Bekleniyor'}
+                                                        {invitation.status === 'registered' ? t('registrationComplete') : t('waitingForLink')}
                                                     </span>
                                                 </div>
 
                                                 <div className="grid grid-cols-2 gap-2 text-sm">
                                                     <div>
-                                                        <span className="text-gray-500">Rol:</span>
+                                                        <span className="text-gray-500">{t('roleLabel')}:</span>
                                                         <span className="text-gray-300 ml-2">
                                                             {adminTypeLabels[invitation.role as AdminType] || invitation.role}
                                                         </span>
                                                     </div>
                                                     {invitation.businessName && (
                                                         <div>
-                                                            <span className="text-gray-500">İşletme:</span>
+                                                            <span className="text-gray-500">{t('businessLabel')}:</span>
                                                             <span className="text-gray-300 ml-2">{invitation.businessName}</span>
                                                         </div>
                                                     )}
                                                     <div>
-                                                        <span className="text-gray-500">Davet Eden:</span>
+                                                        <span className="text-gray-500">{t('invitedByLabel')}:</span>
                                                         <span className="text-gray-300 ml-2">{invitation.invitedByName}</span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-gray-500">Tarih:</span>
+                                                        <span className="text-gray-500">{t('dateLabel')}:</span>
                                                         <span className="text-gray-300 ml-2">
                                                             {invitation.createdAt.toLocaleDateString('tr-TR')}
                                                         </span>
@@ -647,10 +648,10 @@ export default function AdminHeader() {
                                             {invitation.status === 'registered' && (
                                                 <div className="flex flex-col gap-2 ml-4">
                                                     <button className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors">
-                                                        ✓ Onayla
+                                                        ✓ {t('approve')}
                                                     </button>
                                                     <button className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors">
-                                                        ✗ Reddet
+                                                        ✗ {t('reject')}
                                                     </button>
                                                 </div>
                                             )}
@@ -664,7 +665,7 @@ export default function AdminHeader() {
                             onClick={() => setShowPendingModal(false)}
                             className="w-full mt-6 px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-medium transition-colors"
                         >
-                            Kapat
+                            {t('close')}
                         </button>
                     </div>
                 </div>
