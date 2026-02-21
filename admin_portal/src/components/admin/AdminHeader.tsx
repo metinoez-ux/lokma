@@ -331,7 +331,7 @@ export default function AdminHeader() {
                                 { href: '/admin/staff-shifts', icon: '⏱️', label: t('shifts') },
                                 { href: '/admin/image-generator', icon: '🎨', label: t('imageGen') },
                                 { href: '/admin/ai-menu', icon: '🤖', label: t('aiMenu') },
-                                { href: '/admin/ui-translations', icon: '🌍', label: 'Arayüz Çevirileri' },
+                                { href: '/admin/ui-translations', icon: '🌍', label: t('uiTranslations') },
                                 { href: '/admin/settings', icon: '⚙️', label: t('settings') },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);

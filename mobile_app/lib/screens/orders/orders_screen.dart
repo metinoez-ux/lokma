@@ -9,6 +9,7 @@ import '../../models/product_option.dart';
 import '../../models/table_group_session_model.dart';
 import '../../services/order_service.dart';
 import '../../services/table_group_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'rating_screen.dart';
 import 'courier_tracking_screen.dart';
 import 'group_order_history_card.dart';
@@ -51,7 +52,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
-          'Siparişlerim',
+          'orders.title'.tr(),
           style: TextStyle(
             color: textColor,
             fontSize: 17,
@@ -83,7 +84,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             Icon(Icons.login, size: 64, color: subtitleColor),
             const SizedBox(height: 16),
             Text(
-              'Siparişlerinizi görmek için giriş yapın',
+              'orders.login_prompt'.tr(),
               style: TextStyle(color: subtitleColor, fontSize: 16),
             ),
             const SizedBox(height: 24),
@@ -96,7 +97,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               ),
               onPressed: () => context.go('/profile'),
-              child: const Text('Giriş Yap', style: TextStyle(color: Colors.white)),
+              child: Text('orders.login_button'.tr(), style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -111,7 +112,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              'Hata: ${snapshot.error}',
+              '${'orders.error'.tr()}: ${snapshot.error}',
               style: const TextStyle(color: Colors.red),
             ),
           );
@@ -133,12 +134,12 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 Icon(Icons.receipt_long_outlined, size: 64, color: subtitleColor),
                 const SizedBox(height: 16),
                 Text(
-                  'Henüz siparişiniz yok',
+                  'orders.no_orders_title'.tr(),
                   style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sipariş vermek için bir işletme seçin!',
+                  'orders.no_orders_subtitle'.tr(),
                   style: TextStyle(color: subtitleColor, fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
@@ -170,7 +171,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                       Icon(Icons.check_circle_outline, size: 48, color: Colors.green[300]),
                       const SizedBox(height: 12),
                       Text(
-                        'Aktif siparişiniz yok',
+                        'orders.no_active_orders'.tr(),
                         style: TextStyle(color: subtitleColor, fontSize: 15, fontWeight: FontWeight.w500),
                       ),
                     ],
@@ -191,7 +192,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                       Icon(Icons.history, size: 20, color: subtitleColor),
                       const SizedBox(width: 8),
                       Text(
-                        'Geçmiş Siparişler (${completedOrders.length})',
+                        '${'orders.past_orders'.tr()} (${completedOrders.length})',
                         style: TextStyle(
                           color: textColor,
                           fontSize: 15,
@@ -226,7 +227,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                         Icon(Icons.groups_rounded, size: 20, color: subtitleColor),
                         const SizedBox(width: 8),
                         Text(
-                          'Geçmiş Grup Siparişlerim (${groupSessions.length})',
+                          '${'orders.past_group_orders'.tr()} (${groupSessions.length})',
                           style: TextStyle(
                             color: textColor,
                             fontSize: 15,
@@ -324,27 +325,27 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   String _getStatusText(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return 'Beklemede';
+        return 'orders.status_pending'.tr();
       case OrderStatus.accepted:
-        return 'Onaylandı';
+        return 'orders.status_accepted'.tr();
       case OrderStatus.preparing:
-        return 'Hazırlanıyor';
+        return 'orders.status_preparing'.tr();
       case OrderStatus.ready:
-        return 'Hazır';
+        return 'orders.status_ready'.tr();
       case OrderStatus.served:
-        return 'Servis Edildi';
+        return 'orders.status_served'.tr();
       case OrderStatus.onTheWay:
-        return 'Yolda';
+        return 'orders.status_on_the_way'.tr();
       case OrderStatus.delivered:
-        return 'Teslim Edildi';
+        return 'orders.status_delivered'.tr();
       case OrderStatus.cancelled:
-        return 'İptal';
+        return 'orders.status_cancelled'.tr();
     }
   }
 
   String _getStatusTextCustom(LokmaOrder order) {
     if ((order.orderType == OrderType.dineIn || order.tableSessionId != null) && order.status == OrderStatus.delivered) {
-      return 'Servis Edildi';
+      return 'orders.status_served'.tr();
     }
     return _getStatusText(order.status);
   }
@@ -356,7 +357,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
     if (diff.inDays == 0) {
       return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year.toString().substring(2)} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     } else if (diff.inDays == 1) {
-      return 'Dün';
+      return 'orders.yesterday'.tr();
     } else {
       return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year.toString().substring(2)}';
     }
@@ -457,7 +458,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               // Receipt header
               Center(
                 child: Text(
-                  'Sipariş Detayı',
+                  'orders.order_detail'.tr(),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -468,7 +469,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               const SizedBox(height: 4),
               Center(
                 child: Text(
-                  'Sipariş No: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
+                  '${'orders.order_no'.tr()}: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                   style: TextStyle(color: Colors.grey[600], fontSize: 13),
                 ),
               ),
@@ -508,7 +509,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '${order.unavailableItems.length} ürün mevcut değil',
+                          '${order.unavailableItems.length} ${'orders.unavailable_items'.tr()}',
                           style: TextStyle(fontSize: 13, color: Colors.red[700], fontWeight: FontWeight.w600),
                         ),
                       ),

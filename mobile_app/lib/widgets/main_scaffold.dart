@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../providers/cart_provider.dart';
 import '../providers/kermes_cart_provider.dart';
 import '../services/order_service.dart';
@@ -15,12 +16,12 @@ class MainScaffold extends ConsumerStatefulWidget {
   
   const MainScaffold({super.key, required this.child});
 
-  static const List<_NavItemData> _items = [
-    _NavItemData(icon: Icons.restaurant_menu, label: 'Yemek', path: '/restoran'),
-    _NavItemData(icon: Icons.storefront_rounded, label: 'Market', path: '/market'),
-    _NavItemData(icon: null, label: 'Kermes', path: '/kermesler', isKermes: true),
-    _NavItemData(icon: Icons.shopping_bag_rounded, label: 'Sepetim', path: '/cart', isCart: true),
-    _NavItemData(icon: Icons.person_rounded, label: 'Profilim', path: '/profile'),
+  static List<_NavItemData> get _items => [
+    _NavItemData(icon: Icons.restaurant_menu, label: 'navigation.food'.tr(), path: '/restoran'),
+    _NavItemData(icon: Icons.storefront_rounded, label: 'navigation.market'.tr(), path: '/market'),
+    _NavItemData(icon: null, label: 'navigation.kermes'.tr(), path: '/kermesler', isKermes: true),
+    _NavItemData(icon: Icons.shopping_bag_rounded, label: 'navigation.cart'.tr(), path: '/cart', isCart: true),
+    _NavItemData(icon: Icons.person_rounded, label: 'navigation.profile'.tr(), path: '/profile'),
   ];
   
   @override
@@ -166,7 +167,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
 
   Widget _buildFloatingDeliveryButton(LokmaOrder order) {
     // Only onTheWay orders show the floating button
-    final statusText = 'Kurye Yolda';
+    final statusText = 'home.courier_on_the_way'.tr();
     final statusColor = Colors.green;
     final statusIcon = Icons.motorcycle;
 

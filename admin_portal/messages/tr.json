@@ -95,5 +95,108 @@
     "cookies": "Çerez Tercihleri",
     "copyright": "© 2024 LOKMA Platform. Tüm hakları saklıdır.",
     "langSupport": "Dil Desteği Aktif"
+  },
+  "AdminPortal": {
+    "Orders": {
+      "title": "Sipariş Merkezi",
+      "filters": {
+        "today": "Bugün",
+        "week": "Bu Hafta",
+        "month": "Bu Ay",
+        "allDates": "Tüm Zamanlar",
+        "allStatuses": "Tüm Durumlar",
+        "allTypes": "Tüm Tipler",
+        "searchBusiness": "İşletme Ara...",
+        "allBusinesses": "Tüm İşletmeler",
+        "noResults": "Sonuç bulunamadı",
+        "narrowSearch": "daha... (Aramayı daraltın)"
+      },
+      "stats": {
+        "total": "Toplam",
+        "pending": "Bekleyen",
+        "preparing": "Hazırlanan",
+        "revenue": "Ciro"
+      },
+      "workflow": {
+        "title": "Sipariş Durumları (Anlık)",
+        "subtitle": "Şu anki siparişler",
+        "pending": "Bekleyen",
+        "preparing": "Hazırlanıyor",
+        "ready": "Hazır",
+        "inTransit": "Yolda",
+        "completed": "Tamamlanan"
+      },
+      "kanban": {
+        "loading": "Siparişler yükleniyor...",
+        "empty": "Sipariş bulunamadı",
+        "more": "daha",
+        "table": "Masa",
+        "group": "Grup",
+        "person": "kişi",
+        "waiter": "Garson",
+        "customerApp": "Müşteri-App",
+        "servedBy": "tarafından servis edildi"
+      },
+      "modal": {
+        "order": "Sipariş",
+        "status": "Durum",
+        "business": "İşletme",
+        "type": "Tip",
+        "dineInDetail": "Yerinde Sipariş Detayı",
+        "table": "Masa",
+        "waiter": "Garson",
+        "payment": "Ödeme",
+        "paid": "Ödendi",
+        "unpaid": "Ödenmedi",
+        "card": "Kart",
+        "cash": "Nakit",
+        "servedBy": "Servis Eden",
+        "customer": "Müşteri",
+        "guest": "Misafir",
+        "address": "Adres",
+        "products": "Ürünler",
+        "kitchenSummary": "Mutfak Özeti",
+        "participantBreakdown": "Kişi Bazlı Dağılım",
+        "subtotal": "Ara Toplam",
+        "deliveryFee": "Teslimat",
+        "total": "Toplam",
+        "notes": "Sipariş Notu",
+        "updateStatus": "Durumu Güncelle",
+        "deleteOrder": "Siparişi Sil"
+      },
+      "actions": {
+        "accept": "Siparişi Onayla",
+        "acceptWithMissing": "Eksik ürünlerle onayla",
+        "startPreparing": "Hazırlamaya Başla",
+        "ready": "Sipariş Hazır",
+        "served": "Servis Edildi"
+      },
+      "cancelModal": {
+        "title": "Sipariş İptal Sebebi",
+        "subtitle": "Lütfen siparişin neden iptal edildiğini belirtin. Bu bilgi müşteriye iletilecektir.",
+        "reasons": {
+          "outOfStock": "Ürün stokta kalmadı",
+          "closed": "İşletme şu an kapalı",
+          "noDelivery": "Teslimat yapılamıyor",
+          "duplicate": "Sipariş tekrarı",
+          "customerRequest": "Müşteri talebiyle"
+        },
+        "customReason": "veya özel sebep yazın:",
+        "placeholder": "İptal sebebini girin...",
+        "warning": "İptal bildirimi müşteriye gönderilecek ve ödeme yapıldıysa iade bilgisi eklenecektir.",
+        "cancel": "Vazgeç",
+        "confirm": "İptal Et"
+      },
+      "missingModal": {
+        "title": "Eksik Ürünler",
+        "subtitle": "Aşağıdaki ürünler işaretlenmedi ve mevcut değil olarak kaydedilecek. Müşteriye bildirim gönderilecektir.",
+        "unavailable": "Mevcut Değil",
+        "cardPaid": "Müşteri kartla ödeme yapmış.",
+        "partialRefund": "kısmi iade aynı yoldan yapılacak.",
+        "warning": "Müşteriye eksik ürün bildirimi gönderilecek. Bu durum işletme performans puanına yansıyacaktır.",
+        "cancel": "Vazgeç",
+        "confirm": "Eksiklerle Onayla"
+      }
+    }
   }
 }

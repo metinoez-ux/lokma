@@ -61,7 +61,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Profil Fotoğrafı',
+                'profile.profile_photo'.tr(),
                 style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 18,
@@ -78,10 +78,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Icon(Icons.camera_alt,
                       color: Theme.of(context).primaryColor),
                 ),
-                title: Text('Kamera',
+                title: Text('profile.camera'.tr(),
                     style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface)),
-                subtitle: Text('Yeni fotoğraf çek',
+                subtitle: Text('profile.take_new_photo'.tr(),
                     style: TextStyle(color: Colors.grey)),
                 onTap: () => Navigator.pop(ctx, ImageSource.camera),
               ),
@@ -95,11 +95,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Icon(Icons.photo_library,
                       color: Theme.of(context).primaryColor),
                 ),
-                title: Text('Galeri',
+                title: Text('profile.gallery'.tr(),
                     style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface)),
                 subtitle:
-                    Text('Galeriden seç', style: TextStyle(color: Colors.grey)),
+                    Text('profile.choose_from_gallery'.tr(), style: TextStyle(color: Colors.grey)),
                 onTap: () => Navigator.pop(ctx, ImageSource.gallery),
               ),
             ],
@@ -151,7 +151,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ Profil fotoğrafı güncellendi'),
+            content: Text('✅ ${'profile.photo_updated'.tr()}'),
             backgroundColor: Colors.green,
           ),
         );
@@ -160,7 +160,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       setState(() => _isUploadingPhoto = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('${'profile.error'.tr()}: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -175,7 +175,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
-        title: Text('Hesabım',
+        title: Text('profile.my_account'.tr(),
             style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold)),
@@ -234,7 +234,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: 32),
             Text(
-              'Siparişlerinizi takip etmek ve özel fırsatlardan yararlanmak için giriş yapın.',
+              'profile.login_subtitle'.tr(),
               style: TextStyle(color: Colors.grey[600], fontSize: 14),
               textAlign: TextAlign.center,
             ),
@@ -262,7 +262,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 child: const Center(
                   child: Text(
-                    'Giriş Yap / Kayıt Ol',
+                    'profile.login_register_button'.tr(),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 17,
@@ -285,7 +285,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text('Giriş hatası: $e'),
+                          content: Text('${'profile.login_error'.tr()}: $e'),
                           backgroundColor: Colors.red),
                     );
                   }
@@ -293,7 +293,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 setState(() => _isLoading = false);
               },
               child: Text(
-                'Misafir olarak devam et',
+                'profile.continue_as_guest'.tr(),
                 style: TextStyle(
                   color: Colors.grey[700],
                   fontSize: 14,
@@ -387,7 +387,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Merhaba, ${firstName.isNotEmpty ? firstName : displayName}',
+                              '${'profile.greeting'.tr()}, ${firstName.isNotEmpty ? firstName : displayName}',
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: 24,
@@ -431,17 +431,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               children: [
                                 _buildQuickAccessChip(
                                     Icons.receipt_long_outlined,
-                                    'Siparişlerim',
+                                    'profile.my_orders'.tr(),
                                     () => context.push('/orders')),
                                 const SizedBox(width: 12),
                                 _buildQuickAccessChip(
                                     Icons.favorite_outline,
-                                    'Favoriler',
+                                    'profile.favorites'.tr(),
                                     () => context.push('/favorites')),
                                 const SizedBox(width: 12),
                                 _buildQuickAccessChip(
                                     Icons.location_on_outlined,
-                                    'Adreslerim',
+                                    'profile.my_addresses'.tr(),
                                     () => context.push('/my-info')),
                               ],
                             ),
@@ -451,12 +451,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               children: [
                                 _buildQuickAccessChip(
                                     Icons.table_restaurant,
-                                    'Masa\nRezervasyonum',
+                                    'profile.my_reservations'.tr().replaceAll(' ', '\n'),
                                     () => context.push('/my-reservations')),
                                 const SizedBox(width: 12),
                                 _buildQuickAccessChip(
                                     Icons.notifications_active_outlined,
-                                    'Bildirim\nAyarları',
+                                    'profile.notification_settings'.tr().replaceAll(' ', '\n'),
                                     () =>
                                         context.push('/notification-settings')),
                                 const SizedBox(width: 12),
@@ -533,7 +533,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               const Text(
-                                                'Personel Girişi',
+                                                'profile.staff_login'.tr(),
                                                 style: TextStyle(
                                                   color: Color(0xFFFB335B),
                                                   fontSize: 15,
@@ -542,9 +542,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                               ),
                                               Text(
                                                 [
-                                                  if (isDriver) 'Teslimat',
+                                                  if (isDriver) 'profile.delivery'.tr(),
                                                   if (hasReservation)
-                                                    'Rezervasyon',
+                                                    'profile.reservation'.tr(),
                                                 ].join(' • '),
                                                 style: TextStyle(
                                                   color: Colors.grey[500],
@@ -580,14 +580,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 24),
 
               // === DAHA FAZLA SECTION ===
-              _buildSectionTitle('Daha Fazla'),
-              _buildSectionItem(Icons.help_outline, 'Yardım Merkezi',
+              _buildSectionTitle('profile.more'.tr()),
+              _buildSectionItem(Icons.help_outline, 'profile.help_center'.tr(),
                   () => context.push('/help')),
               _buildSectionItem(Icons.article_outlined,
-                  'Kullanım Koşulları ve Veri Politikası', () {
+                  'profile.terms_and_data'.tr(), () {
                 context.push('/help');
               }),
-              _buildSectionItem(Icons.rate_review_outlined, 'Geri Bildirim',
+              _buildSectionItem(Icons.rate_review_outlined, 'profile.feedback'.tr(),
                   () {
                 context.push('/help');
               }),
@@ -595,13 +595,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 24),
 
               // === DİL / LANGUAGE SECTION ===
-              _buildSectionTitle('Uygulama Dili / Language'),
+              _buildSectionTitle('profile.language'.tr()),
               _buildLanguageSelector(context),
 
               const SizedBox(height: 24),
 
               // === GÖRÜNÜM SECTION ===
-              _buildSectionTitle('Görünüm'),
+              _buildSectionTitle('profile.appearance'.tr()),
               _buildThemeSelector(),
 
               const SizedBox(height: 24),
@@ -627,7 +627,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             Icon(Icons.logout,
                                 color: Colors.grey[600], size: 22),
                             const SizedBox(width: 16),
-                            Text('Çıkış Yap',
+                            Text('profile.logout'.tr(),
                                 style: TextStyle(
                                     color: Colors.grey[800], fontSize: 15)),
                           ],
@@ -648,7 +648,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             Icon(Icons.delete_outline,
                                 color: Colors.red[400], size: 22),
                             const SizedBox(width: 16),
-                            Text('Hesabı Sil',
+                            Text('profile.delete_account'.tr(),
                                 style: TextStyle(
                                     color: Colors.grey[800], fontSize: 15)),
                           ],
@@ -666,7 +666,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: FutureBuilder<String>(
                   future: _getVersionString(),
                   builder: (context, snap) => Text(
-                    snap.data ?? 'Versiyon ...',
+                    snap.data ?? '${'profile.version'.tr()} ...',
                     style: TextStyle(color: Colors.grey[700], fontSize: 12),
                   ),
                 ),
@@ -728,7 +728,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<String> _getVersionString() async {
     final info = await PackageInfo.fromPlatform();
-    return 'Versiyon ${info.version} (${info.buildNumber})';
+    return '${'profile.version'.tr()} ${info.version} (${info.buildNumber})';
   }
 
   /// Check if current user is staff for a business with reservation support

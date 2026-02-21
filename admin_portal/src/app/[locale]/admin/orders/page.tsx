@@ -6,6 +6,7 @@ import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 // Canonical Order Status Set (7 statuses)
 // Synchronized with Mobile App OrderStatus enum
@@ -82,6 +83,7 @@ interface Order {
 }
 
 export default function OrdersPage() {
+    const t = useTranslations('AdminPortal.Orders');
     const { admin, loading: adminLoading } = useAdmin();
     const [orders, setOrders] = useState<Order[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
@@ -679,7 +681,7 @@ export default function OrdersPage() {
                                 onChange={(e) => setStatusFilter(e.target.value)}
                                 className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
                             >
-                                <option value="all">Tüm Durumlar</option>
+                                <option value="all">{t('filters.allStatuses')}</option>
                                 {Object.entries(orderStatuses).map(([key, value]) => (
                                     <option key={key} value={key}>{value.icon} {value.label}</option>
                                 ))}
@@ -690,7 +692,7 @@ export default function OrdersPage() {
                                 onChange={(e) => setTypeFilter(e.target.value)}
                                 className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
                             >
-                                <option value="all">Tüm Tipler</option>
+                                <option value="all">{t('filters.allTypes')}</option>
                                 {Object.entries(orderTypes).map(([key, value]) => (
                                     <option key={key} value={key}>{value.icon} {value.label}</option>
                                 ))}
@@ -814,7 +816,7 @@ export default function OrdersPage() {
                                 {stats.pending}
                             </p>
                             <p className="text-yellow-300 text-sm font-medium">
-                                🔔 Bekleyen
+                                🔔 {t('workflow.pending')}
                             </p>
                         </div>
 
@@ -826,7 +828,7 @@ export default function OrdersPage() {
                             <p className="text-amber-400 text-3xl font-bold">
                                 {stats.preparing}
                             </p>
-                            <p className="text-gray-400 text-sm">👨‍🍳 Hazırlanıyor</p>
+                            <p className="text-gray-400 text-sm">👨‍🍳 {t('workflow.preparing')}</p>
                         </div>
 
                         <div className="text-gray-500 text-xl">→</div>
@@ -837,7 +839,7 @@ export default function OrdersPage() {
                             <p className="text-green-400 text-3xl font-bold">
                                 {stats.ready}
                             </p>
-                            <p className="text-gray-400 text-sm">📦 Hazır</p>
+                            <p className="text-gray-400 text-sm">📦 {t('workflow.ready')}</p>
                         </div>
 
                         <div className="text-gray-500 text-xl">→</div>
@@ -848,7 +850,7 @@ export default function OrdersPage() {
                             <p className="text-indigo-400 text-3xl font-bold">
                                 {stats.inTransit}
                             </p>
-                            <p className="text-gray-400 text-sm">🛵 Yolda</p>
+                            <p className="text-gray-400 text-sm">🛵 {t('workflow.inTransit')}</p>
                         </div>
 
                         <div className="text-gray-500 text-xl">→</div>
@@ -859,7 +861,7 @@ export default function OrdersPage() {
                             <p className="text-emerald-400 text-3xl font-bold">
                                 {stats.completed}
                             </p>
-                            <p className="text-gray-400 text-sm">✓ Tamamlanan</p>
+                            <p className="text-gray-400 text-sm">✓ {t('workflow.completed')}</p>
                         </div>
                     </div>
 
@@ -886,14 +888,14 @@ export default function OrdersPage() {
                         <div className="bg-gray-800 rounded-xl p-4">
                             <h3 className="text-yellow-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
-                                Bekleyen ({pendingOrders.length})
+                                {t('workflow.pending')} ({pendingOrders.length})
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                                 {pendingOrders.slice(0, 10).map(order => (
-                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
+                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} />
                                 ))}
                                 {pendingOrders.length > 10 && (
-                                    <p className="text-gray-500 text-center text-sm">+{pendingOrders.length - 10} daha</p>
+                                    <p className="text-gray-500 text-center text-sm">+{pendingOrders.length - 10} {t('kanban.more')}</p>
                                 )}
                             </div>
                         </div>
@@ -902,14 +904,14 @@ export default function OrdersPage() {
                         <div className="bg-gray-800 rounded-xl p-4">
                             <h3 className="text-amber-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-amber-400 rounded-full"></span>
-                                Hazırlanıyor ({preparingOrders.length})
+                                {t('workflow.preparing')} ({preparingOrders.length})
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                                 {preparingOrders.slice(0, 10).map(order => (
-                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
+                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} />
                                 ))}
                                 {preparingOrders.length > 10 && (
-                                    <p className="text-gray-500 text-center text-sm">+{preparingOrders.length - 10} daha</p>
+                                    <p className="text-gray-500 text-center text-sm">+{preparingOrders.length - 10} {t('kanban.more')}</p>
                                 )}
                             </div>
                         </div>
@@ -918,14 +920,14 @@ export default function OrdersPage() {
                         <div className="bg-gray-800 rounded-xl p-4">
                             <h3 className="text-green-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-green-400 rounded-full"></span>
-                                Hazır ({readyOrders.length})
+                                {t('workflow.ready')} ({readyOrders.length})
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                                 {readyOrders.slice(0, 10).map(order => (
-                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
+                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} />
                                 ))}
                                 {readyOrders.length > 10 && (
-                                    <p className="text-gray-500 text-center text-sm">+{readyOrders.length - 10} daha</p>
+                                    <p className="text-gray-500 text-center text-sm">+{readyOrders.length - 10} {t('kanban.more')}</p>
                                 )}
                             </div>
                         </div>
@@ -937,14 +939,14 @@ export default function OrdersPage() {
                         <div className="bg-gray-800 rounded-xl p-4">
                             <h3 className="text-indigo-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-indigo-400 rounded-full"></span>
-                                Yolda ({inTransitOrders.length})
+                                {t('workflow.inTransit')} ({inTransitOrders.length})
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                                 {inTransitOrders.slice(0, 10).map(order => (
-                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
+                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} />
                                 ))}
                                 {inTransitOrders.length > 10 && (
-                                    <p className="text-gray-500 text-center text-sm">+{inTransitOrders.length - 10} daha</p>
+                                    <p className="text-gray-500 text-center text-sm">+{inTransitOrders.length - 10} {t('kanban.more')}</p>
                                 )}
                             </div>
                         </div>
@@ -953,14 +955,14 @@ export default function OrdersPage() {
                         <div className="bg-gray-800 rounded-xl p-4">
                             <h3 className="text-emerald-400 font-medium mb-4 flex items-center gap-2">
                                 <span className="w-3 h-3 bg-emerald-400 rounded-full"></span>
-                                Tamamlanan ({completedOrders.length})
+                                {t('workflow.completed')} ({completedOrders.length})
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                                 {completedOrders.slice(0, 10).map(order => (
-                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} />
+                                    <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} />
                                 ))}
                                 {completedOrders.length > 10 && (
-                                    <p className="text-gray-500 text-center text-sm">+{completedOrders.length - 10} daha</p>
+                                    <p className="text-gray-500 text-center text-sm">+{completedOrders.length - 10} {t('kanban.more')}</p>
                                 )}
                             </div>
                         </div>
@@ -974,7 +976,7 @@ export default function OrdersPage() {
                     <div className="bg-gray-800 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-gray-700 flex items-center justify-between">
                             <h2 className="text-xl font-bold text-white">
-                                📦 Sipariş #{selectedOrder.orderNumber || selectedOrder.id.slice(0, 6).toUpperCase()}
+                                📦 {t('modal.order')} #{selectedOrder.orderNumber || selectedOrder.id.slice(0, 6).toUpperCase()}
                             </h2>
                             <button
                                 onClick={() => setSelectedOrder(null)}
@@ -987,7 +989,7 @@ export default function OrdersPage() {
                         <div className="p-6 space-y-4">
                             {/* Status */}
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">Durum</span>
+                                <span className="text-gray-400">{t('modal.status')}</span>
                                 <span className={`px-3 py-1 rounded-full text-sm bg-${orderStatuses[selectedOrder.status].color}-600/20 text-${orderStatuses[selectedOrder.status].color}-400`}>
                                     {orderStatuses[selectedOrder.status].icon} {orderStatuses[selectedOrder.status].label}
                                 </span>
@@ -995,7 +997,7 @@ export default function OrdersPage() {
 
                             {/* Business */}
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">İşletme</span>
+                                <span className="text-gray-400">{t('modal.business')}</span>
                                 <Link href={`/admin/butchers/${selectedOrder.businessId}`} className="text-blue-400 hover:underline">
                                     {businesses[selectedOrder.businessId] || selectedOrder.businessId}
                                 </Link>
@@ -1003,7 +1005,7 @@ export default function OrdersPage() {
 
                             {/* Type */}
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">Tip</span>
+                                <span className="text-gray-400">{t('modal.type')}</span>
                                 <span className="text-white">
                                     {orderTypes[selectedOrder.type]?.icon} {orderTypes[selectedOrder.type]?.label}
                                 </span>
@@ -1012,33 +1014,33 @@ export default function OrdersPage() {
                             {/* Dine-in Info */}
                             {selectedOrder.type === 'dine_in' && (
                                 <div className="bg-amber-600/10 border border-amber-500/30 rounded-xl p-4 space-y-3">
-                                    <h4 className="text-amber-400 font-medium text-sm flex items-center gap-2">🍽️ Yerinde Sipariş Detayı</h4>
+                                    <h4 className="text-amber-400 font-medium text-sm flex items-center gap-2">🍽️ {t('modal.dineInDetail')}</h4>
                                     {selectedOrder.tableNumber && (
                                         <div className="flex items-center justify-between">
-                                            <span className="text-gray-400">Masa</span>
+                                            <span className="text-gray-400">{t('modal.table')}</span>
                                             <span className="text-white font-bold text-lg">#{selectedOrder.tableNumber}</span>
                                         </div>
                                     )}
                                     {selectedOrder.waiterName && (
                                         <div className="flex items-center justify-between">
-                                            <span className="text-gray-400">Garson</span>
+                                            <span className="text-gray-400">{t('modal.waiter')}</span>
                                             <span className="text-white">{selectedOrder.waiterName}</span>
                                         </div>
                                     )}
                                     <div className="flex items-center justify-between">
-                                        <span className="text-gray-400">Ödeme</span>
+                                        <span className="text-gray-400">{t('modal.payment')}</span>
                                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedOrder.paymentStatus === 'paid'
                                             ? 'bg-green-600/20 text-green-400'
                                             : 'bg-red-600/20 text-red-400'
                                             }`}>
                                             {selectedOrder.paymentStatus === 'paid'
-                                                ? `✅ Ödendi${selectedOrder.paymentMethod === 'card' ? ' (Kart)' : selectedOrder.paymentMethod === 'cash' ? ' (Nakit)' : ''}`
-                                                : '⏳ Ödenmedi'}
+                                                ? `✅ ${t('modal.paid')}${selectedOrder.paymentMethod === 'card' ? ` (${t('modal.card')})` : selectedOrder.paymentMethod === 'cash' ? ` (${t('modal.cash')})` : ''}`
+                                                : `⏳ ${t('modal.unpaid')}`}
                                         </span>
                                     </div>
                                     {selectedOrder.servedByName && (
                                         <div className="flex items-center justify-between">
-                                            <span className="text-gray-400">Servis Eden</span>
+                                            <span className="text-gray-400">{t('modal.servedBy')}</span>
                                             <span className="text-teal-400 font-medium">🍽️ {selectedOrder.servedByName}</span>
                                         </div>
                                     )}
@@ -1047,9 +1049,9 @@ export default function OrdersPage() {
 
                             {/* Customer */}
                             <div className="flex items-center justify-between">
-                                <span className="text-gray-400">Müşteri</span>
+                                <span className="text-gray-400">{t('modal.customer')}</span>
                                 <div className="text-right">
-                                    <p className="text-white">{selectedOrder.customerName || 'Misafir'}</p>
+                                    <p className="text-white">{selectedOrder.customerName || t('modal.guest')}</p>
                                     {selectedOrder.customerPhone && (
                                         <a href={`tel:${selectedOrder.customerPhone}`} className="text-blue-400 text-sm">
                                             {selectedOrder.customerPhone}
@@ -1061,7 +1063,7 @@ export default function OrdersPage() {
                             {/* Address */}
                             {selectedOrder.address && (
                                 <div className="flex items-center justify-between">
-                                    <span className="text-gray-400">Adres</span>
+                                    <span className="text-gray-400">{t('modal.address')}</span>
                                     <div className="text-right text-white text-sm">
                                         <p>{selectedOrder.address.street}</p>
                                         <p>{selectedOrder.address.postalCode} {selectedOrder.address.city}</p>
@@ -1072,7 +1074,7 @@ export default function OrdersPage() {
                             {/* Items */}
                             <div className="border-t border-gray-700 pt-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <h4 className="text-white font-medium">Ürünler</h4>
+                                    <h4 className="text-white font-medium">{t('modal.products')}</h4>
                                     {selectedOrder.items?.length > 0 && (
                                         <span className={`text-xs px-2 py-0.5 rounded-full ${allItemsChecked(selectedOrder.id, selectedOrder.items.length)
                                             ? 'bg-green-600/30 text-green-400'
@@ -1085,7 +1087,7 @@ export default function OrdersPage() {
                                 {/* Group Order Kitchen Summary */}
                                 {selectedOrder.isGroupOrder && selectedOrder.items?.length > 0 && (
                                     <div className="mb-4">
-                                        <h5 className="text-amber-400 font-medium text-sm mb-2">👨‍🍳 Mutfak Özeti</h5>
+                                        <h5 className="text-amber-400 font-medium text-sm mb-2">👨‍🍳 {t('modal.kitchenSummary')}</h5>
                                         <div className="bg-gray-800 rounded-lg p-3 space-y-1 text-sm text-gray-200">
                                             {Object.values(
                                                 selectedOrder.items.reduce((acc: any, item: any) => {
@@ -1110,7 +1112,7 @@ export default function OrdersPage() {
                                 )}
 
                                 {selectedOrder.isGroupOrder && (
-                                    <h5 className="text-teal-400 font-medium text-sm mt-4 mb-2">🍽️ Kişi Bazlı Dağılım</h5>
+                                    <h5 className="text-teal-400 font-medium text-sm mt-4 mb-2">🍽️ {t('modal.participantBreakdown')}</h5>
                                 )}
 
                                 <div className="space-y-4">
@@ -1166,7 +1168,7 @@ export default function OrdersPage() {
                                             // Group by participantName
                                             const groupedByParticipant: Record<string, { item: any, index: number }[]> = {};
                                             selectedOrder.items?.forEach((item: any, idx: number) => {
-                                                const pName = item.participantName || 'Misafir';
+                                                const pName = item.participantName || t('modal.guest');
                                                 if (!groupedByParticipant[pName]) groupedByParticipant[pName] = [];
                                                 groupedByParticipant[pName].push({ item, index: idx });
                                             });
@@ -1223,17 +1225,17 @@ export default function OrdersPage() {
                             {/* Totals */}
                             <div className="border-t border-gray-700 pt-4 space-y-2">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-400">Ara Toplam</span>
+                                    <span className="text-gray-400">{t('modal.subtotal')}</span>
                                     <span className="text-white">{formatCurrency(selectedOrder.subtotal || 0)}</span>
                                 </div>
                                 {selectedOrder.deliveryFee && (
                                     <div className="flex justify-between">
-                                        <span className="text-gray-400">Teslimat</span>
+                                        <span className="text-gray-400">{t('modal.deliveryFee')}</span>
                                         <span className="text-white">{formatCurrency(selectedOrder.deliveryFee)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-lg font-bold">
-                                    <span className="text-white">Toplam</span>
+                                    <span className="text-white">{t('modal.total')}</span>
                                     <span className="text-green-400">{formatCurrency(selectedOrder.total || 0)}</span>
                                 </div>
                             </div>
@@ -1241,14 +1243,14 @@ export default function OrdersPage() {
                             {/* Notes */}
                             {selectedOrder.notes && (
                                 <div className="border-t border-gray-700 pt-4">
-                                    <h4 className="text-yellow-400 font-medium text-sm mb-1 flex items-center gap-1">📝 Sipariş Notu</h4>
+                                    <h4 className="text-yellow-400 font-medium text-sm mb-1 flex items-center gap-1">📝 {t('modal.notes')}</h4>
                                     <p className="text-white bg-yellow-600/20 border border-yellow-500/30 rounded-lg p-3">{selectedOrder.notes}</p>
                                 </div>
                             )}
 
                             {/* Status Actions */}
                             <div className="border-t border-gray-700 pt-4">
-                                <h4 className="text-white font-medium mb-3">Durumu Güncelle</h4>
+                                <h4 className="text-white font-medium mb-3">{t('modal.updateStatus')}</h4>
                                 <div className="grid grid-cols-2 gap-2">
                                     {Object.entries(orderStatuses).map(([key, value]) => (
                                         <button
@@ -1273,7 +1275,7 @@ export default function OrdersPage() {
                                     onClick={() => handleDeleteOrder(selectedOrder.id)}
                                     className="w-full px-4 py-3 bg-red-600/20 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-600/30 transition flex items-center justify-center gap-2"
                                 >
-                                    🗑️ Siparişi Sil
+                                    🗑️ {t('modal.deleteOrder')}
                                 </button>
                             </div>
                         </div>
@@ -1287,7 +1289,7 @@ export default function OrdersPage() {
                     <div className="bg-gray-800 rounded-2xl w-full max-w-md">
                         <div className="p-6 border-b border-gray-700 flex items-center justify-between">
                             <h2 className="text-xl font-bold text-white">
-                                ❌ Sipariş İptal Sebebi
+                                ❌ {t('cancelModal.title')}
                             </h2>
                             <button
                                 onClick={() => {
@@ -1303,17 +1305,17 @@ export default function OrdersPage() {
 
                         <div className="p-6 space-y-4">
                             <p className="text-gray-400 text-sm">
-                                Lütfen siparişin neden iptal edildiğini belirtin. Bu bilgi müşteriye iletilecektir.
+                                {t('cancelModal.subtitle')}
                             </p>
 
                             {/* Quick Reason Buttons */}
                             <div className="grid grid-cols-1 gap-2">
                                 {[
-                                    'Ürün stokta kalmadı',
-                                    'İşletme şu an kapalı',
-                                    'Teslimat yapılamıyor',
-                                    'Sipariş tekrarı',
-                                    'Müşteri talebiyle',
+                                    t('cancelModal.reasons.outOfStock'),
+                                    t('cancelModal.reasons.closed'),
+                                    t('cancelModal.reasons.noDelivery'),
+                                    t('cancelModal.reasons.duplicate'),
+                                    t('cancelModal.reasons.customerRequest'),
                                 ].map((reason) => (
                                     <button
                                         key={reason}
@@ -1331,12 +1333,12 @@ export default function OrdersPage() {
                             {/* Custom Reason Input */}
                             <div>
                                 <label className="text-gray-400 text-sm block mb-2">
-                                    veya özel sebep yazın:
+                                    {t('cancelModal.customReason')}
                                 </label>
                                 <textarea
                                     value={cancelReason}
                                     onChange={(e) => setCancelReason(e.target.value)}
-                                    placeholder="İptal sebebini girin..."
+                                    placeholder={t('cancelModal.placeholder')}
                                     rows={3}
                                     className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none"
                                 />
@@ -1345,7 +1347,7 @@ export default function OrdersPage() {
                             {/* Warning */}
                             <div className="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-3">
                                 <p className="text-yellow-400 text-sm">
-                                    ⚠️ İptal bildirimi müşteriye gönderilecek ve ödeme yapıldıysa iade bilgisi eklenecektir.
+                                    ⚠️ {t('cancelModal.warning')}
                                 </p>
                             </div>
 
@@ -1359,7 +1361,7 @@ export default function OrdersPage() {
                                     }}
                                     className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
                                 >
-                                    Vazgeç
+                                    {t('cancelModal.cancel')}
                                 </button>
                                 <button
                                     onClick={handleCancelConfirm}
@@ -1369,7 +1371,7 @@ export default function OrdersPage() {
                                         : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                         }`}
                                 >
-                                    ❌ İptal Et
+                                    ❌ {t('cancelModal.confirm')}
                                 </button>
                             </div>
                         </div>
@@ -1383,7 +1385,7 @@ export default function OrdersPage() {
                     <div className="bg-gray-800 rounded-2xl w-full max-w-md">
                         <div className="p-6 border-b border-gray-700 flex items-center justify-between">
                             <h2 className="text-xl font-bold text-white">
-                                ⚠️ Eksik Ürünler
+                                ⚠️ {t('missingModal.title')}
                             </h2>
                             <button
                                 onClick={() => {
@@ -1399,7 +1401,7 @@ export default function OrdersPage() {
 
                         <div className="p-6 space-y-4">
                             <p className="text-gray-400 text-sm">
-                                Aşağıdaki ürünler işaretlenmedi ve <strong className="text-yellow-400">mevcut değil</strong> olarak kaydedilecek. Müşteriye bildirim gönderilecektir.
+                                {t('missingModal.subtitle')}
                             </p>
 
                             {/* Unavailable items list */}
@@ -1409,7 +1411,7 @@ export default function OrdersPage() {
                                         <span className="text-red-400 font-bold">❌</span>
                                         <span className="text-white flex-1">{item.quantity}x {item.name}</span>
                                         <span className="text-gray-400 text-sm">€{((item.price || 0) * item.quantity).toFixed(2)}</span>
-                                        <span className="bg-red-500/20 text-red-300 text-xs px-2 py-0.5 rounded-full">Mevcut Değil</span>
+                                        <span className="bg-red-500/20 text-red-300 text-xs px-2 py-0.5 rounded-full">{t('missingModal.unavailable')}</span>
                                     </div>
                                 ))}
                             </div>
@@ -1424,7 +1426,7 @@ export default function OrdersPage() {
                                         {isCardPaid && refundTotal > 0 && (
                                             <div className="bg-blue-600/20 border border-blue-500/50 rounded-lg p-3">
                                                 <p className="text-blue-400 text-sm">
-                                                    💳 Müşteri kartla ödeme yapmış. <strong className="text-blue-300">€{refundTotal.toFixed(2)}</strong> kısmi iade aynı yoldan yapılacak.
+                                                    💳 {t('missingModal.cardPaid')} <strong className="text-blue-300">€{refundTotal.toFixed(2)}</strong> {t('missingModal.partialRefund')}
                                                 </p>
                                             </div>
                                         )}
@@ -1435,7 +1437,7 @@ export default function OrdersPage() {
                             {/* Warning */}
                             <div className="bg-yellow-600/20 border border-yellow-500/50 rounded-lg p-3">
                                 <p className="text-yellow-400 text-sm">
-                                    ⚠️ Müşteriye eksik ürün bildirimi gönderilecek. Bu durum işletme performans puanına yansıyacaktır.
+                                    ⚠️ {t('missingModal.warning')}
                                 </p>
                             </div>
 
@@ -1449,7 +1451,7 @@ export default function OrdersPage() {
                                     }}
                                     className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
                                 >
-                                    Vazgeç
+                                    {t('missingModal.cancel')}
                                 </button>
                                 <button
                                     onClick={async () => {
@@ -1462,7 +1464,7 @@ export default function OrdersPage() {
                                     }}
                                     className="flex-1 px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition flex items-center justify-center gap-2"
                                 >
-                                    ⚠️ Eksiklerle Onayla
+                                    ⚠️ {t('missingModal.confirm')}
                                 </button>
                             </div>
                         </div>
@@ -1478,12 +1480,14 @@ function OrderCard({
     order,
     businesses,
     checkedItems,
-    onClick
+    onClick,
+    t
 }: {
     order: Order;
     businesses: Record<string, string>;
     checkedItems: Record<string, Record<number, boolean>>;
     onClick: () => void;
+    t: any;
 }) {
     const statusInfo = orderStatuses[order.status];
     const typeInfo = orderTypes[order.type];
@@ -1505,7 +1509,7 @@ function OrderCard({
                 </span>
             </div>
             <p className="text-gray-400 text-xs mb-1">
-                {businesses[order.businessId] || 'İşletme'}
+                {businesses[order.businessId] || t('modal.business')}
             </p>
             {/* Dine-in table badge + source */}
             {order.type === 'dine_in' && (
@@ -1516,7 +1520,7 @@ function OrderCard({
                         </span>
                         {order.isGroupOrder && (
                             <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
-                                👥 Grup{order.groupParticipantCount ? ` (${order.groupParticipantCount} kişi)` : ''}
+                                👥 {t('kanban.group')}{order.groupParticipantCount ? ` (${order.groupParticipantCount} ${t('kanban.person')})` : ''}
                             </span>
                         )}
                         {order.paymentStatus === 'paid' && (
@@ -1524,11 +1528,11 @@ function OrderCard({
                         )}
                     </div>
                     <p className="text-gray-400 text-xs pl-0.5">
-                        {order.waiterName ? `👤 ${order.waiterName}` : '📱 Müşteri-App'}
+                        {order.waiterName ? `👤 ${order.waiterName}` : `📱 ${t('kanban.customerApp')}`}
                     </p>
                     {order.servedByName && (order.status === 'served' || order.status === 'delivered' || order.status === 'completed') && (
                         <p className="text-teal-400 text-xs pl-0.5">
-                            🍽️ {order.servedByName} tarafından servis edildi
+                            🍽️ {order.servedByName} {t('kanban.servedBy')}
                         </p>
                     )}
                 </div>

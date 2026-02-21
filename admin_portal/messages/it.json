@@ -1,6 +1,6 @@
 {
   "Navigation": {
-    "dashboard": "Pannello"
+    "dashboard": "Dashboard"
   },
   "Landing": {
     "home": "Home",
@@ -70,5 +70,30 @@
     "cookies": "Preferenze cookie",
     "copyright": "© 2024 LOKMA Platform. Tutti i diritti riservati.",
     "langSupport": "Supporto multilingue attivo"
+  },
+  "AdminNav": {
+    "businesses": "Aziende",
+    "orders": "Ordini",
+    "masterCatalog": "Catalogo Master",
+    "invoices": "Fatture",
+    "commissions": "Commissioni",
+    "plans": "Piani",
+    "activityLogs": "Registri Attività",
+    "userManagement": "Gestione Utenti",
+    "analytics": "Analitica",
+    "sectors": "Gestione Settore",
+    "kermes": "Kermes",
+    "drivers": "Autisti",
+    "reservations": "Prenotazioni",
+    "shifts": "Turni",
+    "imageGen": "Generatore Immagini",
+    "aiMenu": "Menu IA",
+    "settings": "Impostazioni",
+    "dashboard": "Dashboard",
+    "customers": "Clienti",
+    "suppliers": "Fornitori",
+    "productsCategories": "Prodotti & Categorie",
+    "staff": "Personale",
+    "logout": "Esci"
   }
 }

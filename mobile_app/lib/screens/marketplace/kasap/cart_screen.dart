@@ -287,14 +287,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     
     if (currentUser == null && firebaseUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen önce giriş yapın')),
+        const SnackBar(content: Text('cart.login_required')),
       );
       return;
     }
 
     if (cart.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sepetiniz boş')),
+        const SnackBar(content: Text('cart.cart_empty')),
       );
       return;
     }
@@ -339,7 +339,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         Navigator.pop(context); // Close loading dialog
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Kullanıcı bilgisi alınamadı. Lütfen tekrar giriş yapın.')),
+          const SnackBar(content: Text('cart.user_info_error')),
         );
         return;
       }
@@ -477,7 +477,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       Navigator.pop(context); // Close loading
       debugPrint('Order error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sipariş hatası: $e')),
+        SnackBar(content: Text('${'cart.order_error'.tr()}: $e')),
       );
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -519,7 +519,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           },
         ),
         title: Text(
-          'Sepetim',
+          'cart.my_cart'.tr(),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -536,8 +536,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
           tabs: const [
-            Tab(text: 'Sepetim'),
-            Tab(text: 'Siparişlerim'),
+            Tab(text: 'cart.my_cart'.tr()),
+            Tab(text: 'cart.my_orders'.tr()),
           ],
         ),
       ),
@@ -595,7 +595,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              'Hata: ${snapshot.error}',
+              '${'common.error'.tr()}: ${snapshot.error}',
               style: TextStyle(color: Colors.red),
             ),
           );
@@ -608,7 +608,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         final allOrders = snapshot.data ?? [];
         
         if (allOrders.isEmpty) {
-          return _buildEmptyOrders('Henüz siparişiniz yok', Icons.receipt_long_outlined);
+          return _buildEmptyOrders('cart.no_orders'.tr(), Icons.receipt_long_outlined);
         }
         
         // Sort: active orders first (by createdAt desc), then completed (by createdAt desc)
@@ -637,7 +637,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       Icon(Icons.check_circle_outline, size: 48, color: Colors.green[300]),
                       const SizedBox(height: 12),
                       Text(
-                        'Aktif siparişiniz yok',
+                        'cart.no_active_orders'.tr(),
                         style: TextStyle(color: subtitleColor, fontSize: 15, fontWeight: FontWeight.w500),
                       ),
                     ],
@@ -658,7 +658,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       Icon(Icons.history, size: 20, color: subtitleColor),
                       const SizedBox(width: 8),
                       Text(
-                        'Geçmiş Siparişler (${completedOrders.length})',
+                        '${'cart.past_orders'.tr()} (${completedOrders.length})',
                         style: TextStyle(
                           color: textColor,
                           fontSize: 15,
@@ -702,7 +702,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           Icon(Icons.login, size: 64, color: Colors.grey[400]),
           SizedBox(height: 16),
           Text(
-            'Siparişlerinizi görmek için giriş yapın',
+            'cart.login_to_see_orders'.tr(),
             style: TextStyle(color: Colors.grey, fontSize: 16),
           ),
           SizedBox(height: 24),
@@ -715,7 +715,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
             ),
             onPressed: () => context.go('/profile'),
-            child: Text('Giriş Yap', style: TextStyle(color: Colors.white)),
+            child: Text('cart.login'.tr(), style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -736,7 +736,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           ),
           SizedBox(height: 8),
           Text(
-            'Sipariş vermek için bir işletme seçin!',
+            'cart.select_business'.tr(),
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
         ],
@@ -904,7 +904,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         SizedBox(height: 4),
                         // "Siparişi Görüntüle" link
                         Text(
-                          'Siparişi Görüntüle',
+                          'cart.view_order'.tr(),
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 13,
@@ -915,7 +915,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         SizedBox(height: 4),
                         // Items and price
                         Text(
-                          '${order.items.length} ürün • €${order.totalAmount.toStringAsFixed(2)}',
+                          '${order.items.length} ${'cart.items'.tr()} • €${order.totalAmount.toStringAsFixed(2)}',
                           style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                         ),
                       ],
@@ -962,7 +962,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         padding: EdgeInsets.zero,
                       ),
                       child: Text(
-                        'Puan Ver',
+                        'cart.rate'.tr(),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -988,7 +988,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         padding: EdgeInsets.zero,
                       ),
                       child: Text(
-                        'Tekrar Sipariş Ver',
+                        'cart.reorder'.tr(),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1059,7 +1059,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       children: [
                         // Order date and time header
                         Text(
-                          'Sipariş ${_formatDateFull(order.createdAt)}',
+                          '${'cart.order_date'.tr()} ${_formatDateFull(order.createdAt)}',
                           style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
                         ),
                         SizedBox(height: 4),
@@ -1112,7 +1112,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             },
                             icon: const Icon(Icons.star_border, color: Colors.white, size: 20),
                             label: Text(
-                              'Puan Ver',
+                              'cart.rate'.tr(),
                               style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
                             ),
                           ),
@@ -1134,7 +1134,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               _reorder(order);
                             },
                             child: Text(
-                              'Tekrar Sipariş Ver',
+                              'cart.reorder'.tr(),
                               style: TextStyle(color: colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w600),
                             ),
                           ),
@@ -1147,7 +1147,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         
                         // Delivery/Pickup address section
                         Text(
-                          order.orderType == OrderType.delivery ? 'Teslimat Adresi:' : 'Gel Al:',
+                          order.orderType == OrderType.delivery ? 'cart.delivery_address'.tr() : 'cart.pickup'.tr(),
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 16,
@@ -1181,7 +1181,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             onPressed: () => _openMapsForBusiness(order.butcherId, order.butcherName),
                             icon: Icon(Icons.navigation_outlined, color: colorScheme.onSurface.withOpacity(0.7), size: 18),
                             label: Text(
-                              'Haritada Göster',
+                              'cart.show_on_map'.tr(),
                               style: TextStyle(color: colorScheme.onSurface.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w500),
                             ),
                           ),
@@ -1210,7 +1210,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    'Sipariş No: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
+                                    '${'orders.order_no'.tr()}: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                                     style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                                   ),
                                 ],
@@ -1270,7 +1270,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Ödenen Toplam',
+                              'cart.total_paid'.tr(),
                               style: TextStyle(
                                 color: colorScheme.onSurface,
                                 fontSize: 15,
@@ -1293,7 +1293,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         GestureDetector(
                           onTap: () => _showReceiptSheet(order, brandColor),
                           child: Text(
-                            'Fişi Görüntüle',
+                            'cart.view_receipt'.tr(),
                             style: TextStyle(
                               color: brandColor,
                               fontSize: 14,
@@ -1315,7 +1315,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Bir sorun mu var?',
+                                    'cart.have_a_problem'.tr(),
                                     style: TextStyle(
                                       color: colorScheme.onSurface,
                                       fontSize: 16,
@@ -1324,7 +1324,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    'Yardımcımız size yardımcı olabilir',
+                                    'cart.helper_can_assist'.tr(),
                                     style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                                   ),
                                   SizedBox(height: 12),
@@ -1337,7 +1337,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Text(
-                                        'Sohbeti Başlat',
+                                        'cart.start_chat'.tr(),
                                         style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
                                       ),
                                     ),
@@ -1493,7 +1493,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Harita açılırken hata oluştu: $e'),
+            content: Text('${'cart.map_error'.tr()}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1585,13 +1585,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       SizedBox(height: 16),
                       
                       // Order info
-                      _buildReceiptRow('SİPARİŞ NO:', order.orderNumber ?? order.id.substring(0, 6).toUpperCase()),
+                      _buildReceiptRow('cart.order_no_label'.tr(), order.orderNumber ?? order.id.substring(0, 6).toUpperCase()),
                       SizedBox(height: 4),
-                      _buildReceiptRow('TARİH:', DateFormat('dd.MM.yyyy').format(order.createdAt)),
+                      _buildReceiptRow('cart.date'.tr(), DateFormat('dd.MM.yyyy').format(order.createdAt)),
                       SizedBox(height: 4),
-                      _buildReceiptRow('SAAT:', DateFormat('HH:mm').format(order.createdAt)),
+                      _buildReceiptRow('cart.time'.tr(), DateFormat('HH:mm').format(order.createdAt)),
                       SizedBox(height: 4),
-                      _buildReceiptRow('TİP:', order.orderType == OrderType.delivery ? 'TESLİMAT' : 'GEL AL'),
+                      _buildReceiptRow('cart.type_label'.tr(), order.orderType == OrderType.delivery ? 'cart.type_delivery'.tr() : 'cart.type_pickup'.tr()),
                       SizedBox(height: 16),
                       _buildDashedLine(),
                       SizedBox(height: 16),
