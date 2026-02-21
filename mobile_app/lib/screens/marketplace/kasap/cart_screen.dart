@@ -494,6 +494,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild on language change
+    context.locale;
     final cart = ref.watch(cartProvider);
     final kermesCart = ref.watch(kermesCartProvider);
     final theme = Theme.of(context);

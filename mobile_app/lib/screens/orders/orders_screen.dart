@@ -36,6 +36,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild on language change
+    context.locale;
     final authState = ref.watch(authProvider);
     final userId = authState.user?.uid;
     final isDark = Theme.of(context).brightness == Brightness.dark;

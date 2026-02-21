@@ -738,6 +738,8 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild on language change
+    context.locale;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
     

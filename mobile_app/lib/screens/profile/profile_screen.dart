@@ -168,6 +168,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild on language change
+    context.locale;
     final user = _auth.currentUser;
 
     return Scaffold(
