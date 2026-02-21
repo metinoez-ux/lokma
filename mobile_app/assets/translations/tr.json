@@ -72,7 +72,12 @@
         "delivery": "Teslimat",
         "reservation": "Rezervasyon",
         "version": "Versiyon",
-        "error": "Hata"
+        "error": "Hata",
+        "cancel": "İptal",
+        "account_deleted": "Hesabınız silindi.",
+        "delete": "Sil",
+        "apple_coming_soon": "Apple Sign In yakında aktif olacak",
+        "login_success": "Giriş başarılı!"
     },
     "navigation": {
         "food": "Yemek",
@@ -105,6 +110,31 @@
         "yesterday": "Dün",
         "order_detail": "Sipariş Detayı",
         "order_no": "Sipariş No",
-        "unavailable_items": "ürün mevcut değil"
+        "unavailable_items": "ürün mevcut değil",
+        "delivery_photo": "Teslimat Fotoğrafı",
+        "not_available": "Mevcut Değil",
+        "total": "Toplam",
+        "unknown_user": "Bilinmeyen Kullanıcı",
+        "my_order": "Benim Siparişim",
+        "their_order": "{name}'nin Siparişi",
+        "subtotal": "Alt Toplam:",
+        "total_my_share": "Toplam (Benim Payım)",
+        "total_group": "Grup Toplamı (Tüm Masa)",
+        "pay_cash": "Nakit Ödeme",
+        "pay_card": "Kart ile Ödeme",
+        "pay_online": "Online Ödeme",
+        "label_group_order": "Grup Siparişi",
+        "label_courier": "Kurye",
+        "label_pickup": "Gel Al",
+        "label_table": "Masa",
+        "view_order": "Siparişi Görüntüle",
+        "delivery_personal": "Bizzat teslim edildi",
+        "delivery_other": "Başka birine teslim edildi",
+        "delivery_door": "Kapıya bırakıldı",
+        "delivery_success": "Teslim edildi",
+        "tap_to_enlarge": "Fotoğrafı büyütmek için dokunun",
+        "track_courier": "Kuryeyi Takip Et",
+        "rate_order": "Puan Ver",
+        "reorder": "Tekrar Sipariş Ver"
     }
 }

@@ -379,13 +379,13 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   String _getDeliveryTypeText(String? type) {
     switch (type) {
       case 'personal_handoff':
-        return '✓ Bizzat teslim edildi';
+        return '✓ ${'orders.delivery_personal'.tr()}';
       case 'handed_to_other':
-        return '✓ Başka birine teslim edildi';
+        return '✓ ${'orders.delivery_other'.tr()}';
       case 'left_at_door':
-        return '📸 Kapıya bırakıldı';
+        return '📸 ${'orders.delivery_door'.tr()}';
       default:
-        return '✓ Teslim edildi';
+        return '✓ ${'orders.delivery_success'.tr()}';
     }
   }
 
@@ -397,7 +397,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             AppBar(
-              title: const Text('Teslimat Fotoğrafı'),
+              title: Text('orders.delivery_photo'.tr()),
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
               automaticallyImplyLeading: false,
@@ -579,7 +579,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                                     border: Border.all(color: Colors.red[200]!),
                                   ),
                                   child: Text(
-                                    '❌ Mevcut Değil',
+                                    '❌ ${'orders.not_available'.tr()}',
                                     style: TextStyle(fontSize: 10, color: Colors.red[700], fontWeight: FontWeight.w600),
                                   ),
                                 )
@@ -612,7 +612,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Toplam', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            Text('orders.total'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             Text(
                               '€${order.totalAmount.toStringAsFixed(2)}',
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -633,7 +633,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
 
                   for (var item in order.items) {
                     final pId = item.participantId;
-                    final pName = item.participantName ?? 'Bilinmeyen Kullanıcı';
+                    final pName = item.participantName ?? 'orders.unknown_user'.tr();
                     
                     if (pId == currentUserId || (pId == null && item.participantName == null)) {
                       // If it's the current user, or legacy fallback (no names/id)
@@ -650,13 +650,13 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   // 1. My Items Section
                   if (myItems.isNotEmpty) {
                     widgets.add(
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 8, top: 4),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8, top: 4),
                         child: Row(
                           children: [
-                            Icon(Icons.person, size: 16, color: Color(0xFFFF8000)),
-                            SizedBox(width: 6),
-                            Text('Benim Siparişim', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFFF8000))),
+                            const Icon(Icons.person, size: 16, color: Color(0xFFFF8000)),
+                            const SizedBox(width: 6),
+                            Text('orders.my_order'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFFF8000))),
                           ],
                         ),
                       )
@@ -669,7 +669,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   // 2. Other Participants Section
                   if (otherItemsByParticipant.isNotEmpty) {
                     otherItemsByParticipant.forEach((pId, items) {
-                      final pName = participantNames[pId] ?? 'Bilinmeyen Kullanıcı';
+                      final pName = participantNames[pId] ?? 'orders.unknown_user'.tr();
                       widgets.add(const SizedBox(height: 8));
                       widgets.add(
                         Padding(
@@ -678,7 +678,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                             children: [
                               Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
                               const SizedBox(width: 6),
-                              Text('$pName\'nin Siparişi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey[700])),
+                              Text('orders.their_order'.tr(namedArgs: {'name': pName}), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey[700])),
                             ],
                           ),
                         )
@@ -694,7 +694,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              Text('Alt Toplam: €${participantTotal.toStringAsFixed(2)}', style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
+                              Text('${'orders.subtotal'.tr()} €${participantTotal.toStringAsFixed(2)}', style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
                             ],
                           ),
                         )
@@ -709,7 +709,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Toplam (Benim Payım)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.normal)),
+                        Text('orders.total_my_share'.tr(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal)),
                         Text(
                           '€${myTotal.toStringAsFixed(2)}', 
                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
@@ -722,7 +722,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Grup Toplamı (Tüm Masa)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFF8000))),
+                        Text('orders.total_group'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFF8000))),
                         Text(
                           '€${(myTotal < order.totalAmount ? order.totalAmount : myTotal).toStringAsFixed(2)}', // Fallback for total
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFF8000)),
@@ -792,7 +792,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                               Icon(Icons.payment, size: 16, color: Colors.grey[600]),
                               const SizedBox(width: 8),
                               Text(
-                                order.paymentMethod == 'cash' ? 'Nakit Ödeme' : order.paymentMethod == 'card' ? 'Kart ile Ödeme' : 'Online Ödeme',
+                                order.paymentMethod == 'cash' ? 'orders.pay_cash'.tr() : order.paymentMethod == 'card' ? 'orders.pay_card'.tr() : 'orders.pay_online'.tr(),
                                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
                               ),
                             ],
@@ -857,23 +857,23 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
 
     if (tableSessionId != null) {
       icon = Icons.groups;
-      label = 'Grup Siparişi';
+      label = 'orders.label_group_order'.tr();
       color = const Color(0xFFE91E63); // Pink for groups
     } else {
       switch (type) {
         case OrderType.delivery:
           icon = Icons.delivery_dining;
-          label = 'Kurye';
+          label = 'orders.label_courier'.tr();
           color = const Color(0xFF2196F3); // Blue
           break;
         case OrderType.pickup:
           icon = Icons.storefront;
-          label = 'Gel Al';
+          label = 'orders.label_pickup'.tr();
           color = const Color(0xFFFFC107); // Orange
           break;
         case OrderType.dineIn:
           icon = Icons.restaurant;
-          label = 'Masa';
+          label = 'orders.label_table'.tr();
           color = const Color(0xFF9C27B0); // Purple
           break;
       }
@@ -1027,7 +1027,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       GestureDetector(
                         onTap: _showOrderDetails,
                         child: Text(
-                          'Siparişi Görüntüle',
+                          'orders.view_order'.tr(),
                           style: TextStyle(
                             color: textColor,
                             fontSize: 13,
@@ -1130,7 +1130,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Fotoğrafı büyütmek için dokunun',
+                        'orders.tap_to_enlarge'.tr(),
                         style: TextStyle(
                           fontSize: 11,
                           color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
@@ -1166,7 +1166,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       label: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text('Kuryeyi Takip Et'),
+                          Text('orders.track_courier'.tr()),
                           if (order.etaMinutes != null) ...[
                             const SizedBox(width: 8),
                             Container(
@@ -1224,7 +1224,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       padding: EdgeInsets.zero,
                     ),
                     child: Text(
-                      'Puan Ver',
+                      'orders.rate_order'.tr(),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -1288,8 +1288,8 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       ),
                       padding: EdgeInsets.zero,
                     ),
-                    child: const Text(
-                      'Tekrar Sipariş Ver',
+                    child: Text(
+                      'orders.reorder'.tr(),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

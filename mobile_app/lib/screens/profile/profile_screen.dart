@@ -150,7 +150,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text('✅ ${'profile.photo_updated'.tr()}'),
             backgroundColor: Colors.green,
           ),
@@ -260,10 +260,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ],
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'profile.login_register_button'.tr(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -532,9 +532,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              const Text(
+                                              Text(
                                                 'profile.staff_login'.tr(),
-                                                style: TextStyle(
+                                                style: const TextStyle(
                                                   color: Color(0xFFFB335B),
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.w700,
@@ -1047,7 +1047,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Hesabı Sil',
+        title: Text('profile.delete_account'.tr(),
             style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: Text(
           'Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve tüm verileriniz silinecektir.',
@@ -1056,7 +1056,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('İptal', style: TextStyle(color: Colors.grey)),
+            child: Text('profile.cancel'.tr(), style: const TextStyle(color: Colors.grey)),
           ),
           TextButton(
             onPressed: () async {
@@ -1066,21 +1066,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 setState(() {});
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Hesabınız silindi.'),
-                        backgroundColor: Colors.red),
-                  );
+                        SnackBar(
+                          content: Text('profile.account_deleted'.tr()),
+                          backgroundColor: Colors.green,
+                  ));
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text('Hata: $e'), backgroundColor: Colors.red),
+                        content: Text('${'profile.error'.tr()}: $e'), backgroundColor: Colors.red),
                   );
                 }
               }
             },
-            child: const Text('Sil', style: TextStyle(color: Colors.red)),
+            child: Text('profile.delete'.tr(), style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -1124,7 +1124,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _signInWithApple() async {
     // TODO: Implement Apple Sign-In
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Apple Sign In yakında aktif olacak')),
+      SnackBar(content: Text('profile.apple_coming_soon'.tr())),
     );
   }
 
@@ -1150,9 +1150,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Giriş başarılı!'),
-            backgroundColor: Colors.green,
+            SnackBar(
+              content: Text('✅ ${'profile.login_success'.tr()}'),
+              backgroundColor: Colors.green,
           ),
         );
       }
@@ -1161,7 +1161,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hata: $e'),
+            content: Text('${'profile.error'.tr()}: $e'),
             backgroundColor: Colors.red,
           ),
         );

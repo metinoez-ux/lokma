@@ -72,7 +72,12 @@
         "delivery": "Lieferung",
         "reservation": "Reservierung",
         "version": "Version",
-        "error": "Fehler"
+        "error": "Fehler",
+        "cancel": "Abbrechen",
+        "account_deleted": "Ihr Konto wurde gelöscht.",
+        "delete": "Löschen",
+        "apple_coming_soon": "Apple Sign In wird bald aktiv sein",
+        "login_success": "Anmeldung erfolgreich!"
     },
     "navigation": {
         "food": "Essen",
@@ -105,6 +110,31 @@
         "yesterday": "Gestern",
         "order_detail": "Bestelldetails",
         "order_no": "Bestell-Nr",
-        "unavailable_items": "Artikel nicht verfügbar"
+        "unavailable_items": "Artikel nicht verfügbar",
+        "delivery_photo": "Zustellfoto",
+        "not_available": "Nicht verfügbar",
+        "total": "Gesamt",
+        "unknown_user": "Unbekannter Benutzer",
+        "my_order": "Meine Bestellung",
+        "their_order": "Bestellung von {name}",
+        "subtotal": "Zwischensumme:",
+        "total_my_share": "Summe (Mein Anteil)",
+        "total_group": "Gruppensumme (Ganzes Tisch)",
+        "pay_cash": "Barzahlung",
+        "pay_card": "Kartenzahlung",
+        "pay_online": "Online Zahlung",
+        "label_group_order": "Gruppenbestellung",
+        "label_courier": "Kurier",
+        "label_pickup": "Abholung",
+        "label_table": "Tisch",
+        "view_order": "Bestellung ansehen",
+        "delivery_personal": "Persönlich übergeben",
+        "delivery_other": "Anderem übergeben",
+        "delivery_door": "An der Tür verlassen",
+        "delivery_success": "Geliefert",
+        "tap_to_enlarge": "Tippen zum Vergrößern",
+        "track_courier": "Kurier verfolgen",
+        "rate_order": "Bewerten",
+        "reorder": "Erneut bestellen"
     }
 }

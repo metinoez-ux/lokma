@@ -30,7 +30,12 @@
         "delivery": "Livraison",
         "reservation": "Réservation",
         "version": "Version",
-        "error": "Erreur"
+        "error": "Erreur",
+        "cancel": "Annuler",
+        "account_deleted": "Votre compte a été supprimé.",
+        "delete": "Supprimer",
+        "apple_coming_soon": "Apple Sign In sera bientôt actif",
+        "login_success": "Connexion réussie !"
     },
     "cart": {
         "checkout_button": "Payer",
@@ -98,6 +103,31 @@
         "yesterday": "Hier",
         "order_detail": "Détail de la Commande",
         "order_no": "N° de Commande",
-        "unavailable_items": "articles indisponibles"
+        "unavailable_items": "articles indisponibles",
+        "delivery_photo": "Photo de livraison",
+        "not_available": "Indisponible",
+        "total": "Total",
+        "unknown_user": "Utilisateur inconnu",
+        "my_order": "Ma commande",
+        "their_order": "Commande de {name}",
+        "subtotal": "Sous-total:",
+        "total_my_share": "Total (Ma part)",
+        "total_group": "Total du groupe (Toute la table)",
+        "pay_cash": "Paiement en espèces",
+        "pay_card": "Paiement par carte",
+        "pay_online": "Paiement en ligne",
+        "label_group_order": "Commande de groupe",
+        "label_courier": "Livreur",
+        "label_pickup": "À emporter",
+        "label_table": "Sur place",
+        "view_order": "Voir la commande",
+        "delivery_personal": "Remis en main propre",
+        "delivery_other": "Remis à un tiers",
+        "delivery_door": "Laissé à la porte",
+        "delivery_success": "Livré",
+        "tap_to_enlarge": "Appuyez pour agrandir",
+        "track_courier": "Suivre le livreur",
+        "rate_order": "Noter",
+        "reorder": "Commander à nouveau"
     }
 }

@@ -72,7 +72,12 @@
         "delivery": "Delivery",
         "reservation": "Reservation",
         "version": "Version",
-        "error": "Error"
+        "error": "Error",
+        "cancel": "Cancel",
+        "account_deleted": "Your account has been deleted.",
+        "delete": "Delete",
+        "apple_coming_soon": "Apple Sign In will be active soon",
+        "login_success": "Login successful!"
     },
     "navigation": {
         "food": "Food",
@@ -105,6 +110,31 @@
         "yesterday": "Yesterday",
         "order_detail": "Order Detail",
         "order_no": "Order No",
-        "unavailable_items": "items unavailable"
+        "unavailable_items": "items unavailable",
+        "delivery_photo": "Delivery Photo",
+        "not_available": "Not Available",
+        "total": "Total",
+        "unknown_user": "Unknown User",
+        "my_order": "My Order",
+        "their_order": "{name}'s Order",
+        "subtotal": "Subtotal:",
+        "total_my_share": "Total (My Share)",
+        "total_group": "Group Total (All Table)",
+        "pay_cash": "Cash Payment",
+        "pay_card": "Pay with Card",
+        "pay_online": "Online Payment",
+        "label_group_order": "Group Order",
+        "label_courier": "Courier",
+        "label_pickup": "Pickup",
+        "label_table": "Dine-In",
+        "view_order": "View Order",
+        "delivery_personal": "Handed directly",
+        "delivery_other": "Handed to someone else",
+        "delivery_door": "Left at door",
+        "delivery_success": "Delivered",
+        "tap_to_enlarge": "Tap to enlarge photo",
+        "track_courier": "Track Courier",
+        "rate_order": "Rate Order",
+        "reorder": "Order Again"
     }
 }

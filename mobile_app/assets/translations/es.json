@@ -30,7 +30,12 @@
         "delivery": "Entrega",
         "reservation": "Reserva",
         "version": "Versión",
-        "error": "Error"
+        "error": "Error",
+        "cancel": "Cancelar",
+        "account_deleted": "Su cuenta ha sido eliminada.",
+        "delete": "Eliminar",
+        "apple_coming_soon": "Apple Sign In estará activo pronto",
+        "login_success": "¡Inicio de sesión exitoso!"
     },
     "cart": {
         "checkout_button": "Pagar",
@@ -98,6 +103,31 @@
         "yesterday": "Ayer",
         "order_detail": "Detalle del Pedido",
         "order_no": "Pedido N°",
-        "unavailable_items": "artículos no disponibles"
+        "unavailable_items": "artículos no disponibles",
+        "delivery_photo": "Foto de entrega",
+        "not_available": "No disponible",
+        "total": "Total",
+        "unknown_user": "Usuario desconocido",
+        "my_order": "Mi pedido",
+        "their_order": "Pedido de {name}",
+        "subtotal": "Subtotal:",
+        "total_my_share": "Total (Mi parte)",
+        "total_group": "Total del grupo (Toda la mesa)",
+        "pay_cash": "Pago en efectivo",
+        "pay_card": "Pago con tarjeta",
+        "pay_online": "Pago en línea",
+        "label_group_order": "Pedido de grupo",
+        "label_courier": "Repartidor",
+        "label_pickup": "Para recoger",
+        "label_table": "En mesa",
+        "view_order": "Ver pedido",
+        "delivery_personal": "Entregado en mano",
+        "delivery_other": "Entregado a otro",
+        "delivery_door": "Dejado en la puerta",
+        "delivery_success": "Entregado",
+        "tap_to_enlarge": "Toca para ampliar",
+        "track_courier": "Rastrear repartidor",
+        "rate_order": "Opinar",
+        "reorder": "Volver a pedir"
     }
 }
