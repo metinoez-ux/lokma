@@ -37,7 +37,7 @@ class GroupTableOrderScreen extends ConsumerStatefulWidget {
 class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  String _selectedCategory = 'Tümü';
+  String _selectedCategory = tr('customer.tumu');
   String _menuSearchQuery = '';
   bool _isSubmitting = false;
   bool _hasShownClosedPrompt = false;
@@ -78,18 +78,18 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
               Icon(Icons.warning_amber_rounded, color: Colors.orange),
               SizedBox(width: 8),
-              Text('Zaman Aşımı Uyarısı'),
+              Text(tr('customer.zaman_asimi_uyarisi')),
             ],
           ),
-          content: const Text('15 dakikadır hiçbir ürün sipariş etmediniz. Masanın yeni müşterilere açılabilmesi için lütfen siparişinizi tamamlayınız veya masayı boşaltınız.'),
+          content: Text(tr('customer.15_dakikadir_hicbir_urun_sipar')),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Tamam'),
+              child: Text(tr('customer.tamam')),
             ),
           ],
         ),
@@ -117,8 +117,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     final success = await notifier.resumeSession(sessionId);
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Oturum yenilenemedi. Lütfen tekrar katılın.'),
+        SnackBar(
+          content: Text(tr('customer.oturum_yenilenemedi_lutfen_tek')),
           backgroundColor: Colors.orange,
         ),
       );
@@ -169,7 +169,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'Ödeme Tamamlandı! 🎉',
+              tr('customer.odeme_tamamlandi'),
               style: TextStyle(
                 color: isDark ? Colors.white : Colors.black87,
                 fontSize: 20,
@@ -178,7 +178,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             ),
             const SizedBox(height: 10),
             Text(
-              'Hesap oluşturarak sipariş geçmişinizi kaydedin ve bir sonraki siparişinizde kolayca erişin!',
+              tr('customer.hesap_olusturarak_siparis_gecm'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -196,8 +196,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   Navigator.of(context).popUntil((route) => route.isFirst);
                 },
                 icon: const Icon(Icons.person_add_rounded),
-                label: const Text(
-                  'Hesap Oluştur',
+                label: Text(
+                  tr('customer.hesap_olustur'),
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
                 ),
                 style: FilledButton.styleFrom(
@@ -216,7 +216,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   Navigator.of(context).pop();
                 },
                 child: Text(
-                  'Geç',
+                  tr('customer.gec'),
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.grey[600],
                     fontWeight: FontWeight.w600,
@@ -242,8 +242,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ref.read(tableGroupProvider.notifier).clearSession();
-        context.go('/restoran');
-        final String title = 'Siparişiniz işletme tarafından iptal edildi';
+        context.go(tr('customer.restoran'));
+        final String title = tr('customer.siparisiniz_isletme_tarafindan');
         final String? reason = session.cancelReason;
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -294,17 +294,17 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           ref.read(tableGroupProvider.notifier).clearSession();
-          context.go('/restoran');
+          context.go(tr('customer.restoran'));
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Row(
+              content: Row(
                 children: [
                   Icon(Icons.person_remove, color: Colors.white, size: 20),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Grup yöneticisi tarafından oturumdan çıkarıldınız.',
+                      tr('customer.grup_yoneticisi_tarafindan_otu'),
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -334,11 +334,11 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Row(
+              content: Row(
                 children: [
                   Icon(Icons.check_circle, color: Colors.white, size: 20),
                   SizedBox(width: 8),
-                  Expanded(child: Text('Ödeme tamamlandı! Sipariş geçmişinize kaydedildi.')),
+                  Expanded(child: Text(tr('customer.odeme_tamamlandi_siparis_gecmi'))),
                 ],
               ),
               backgroundColor: Colors.green.shade600,
@@ -439,13 +439,13 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             },
             itemBuilder: (context) => [
               if (groupState.isHost)
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'cancel',
                   child: Row(
                     children: [
                       Icon(Icons.cancel, color: Colors.red, size: 20),
                       SizedBox(width: 8),
-                      Text('Grubu İptal Et', style: TextStyle(color: Colors.red)),
+                      Text(tr('customer.grubu_i_ptal_et'), style: TextStyle(color: Colors.red)),
                     ],
                   ),
                 )
@@ -470,7 +470,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           indicatorColor: _accent,
           indicatorSize: TabBarIndicatorSize.label,
           tabs: [
-            const Tab(icon: Icon(Icons.restaurant_menu, size: 20), text: 'Menü'),
+            Tab(icon: Icon(Icons.restaurant_menu, size: 20), text: tr('customer.menu')),
             Tab(
               icon: Badge(
                 isLabelVisible: (groupState.myParticipant?.totalItemCount ?? 0) > 0,
@@ -583,7 +583,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           child: TextField(
             onChanged: (v) => setState(() => _menuSearchQuery = v),
             decoration: InputDecoration(
-              hintText: 'Menüde ara...',
+              hintText: tr('customer.menude_ara'),
               prefixIcon: const Icon(Icons.search),
               filled: true,
               fillColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -616,13 +616,13 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           .where('isActive', isEqualTo: true)
           .snapshots(),
       builder: (context, snapshot) {
-        final categories = <String>{'Tümü'};
+        final categories = <String>{tr('customer.tumu')};
         if (snapshot.hasData) {
           for (final doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
             final sku = data['masterProductId'] ?? data['masterProductSku'];
             final masterData = MASTER_PRODUCT_CATALOG[sku];
-            final cat = data['category'] ?? masterData?.category ?? 'Diğer';
+            final cat = data['category'] ?? masterData?.category ?? tr('customer.diger');
             categories.add(cat);
           }
         }
@@ -687,7 +687,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         }
 
         // Filter
-        var filtered = _selectedCategory == 'Tümü'
+        var filtered = _selectedCategory == tr('customer.tumu')
             ? products
             : products.where((p) => p.category == _selectedCategory).toList();
 
@@ -702,7 +702,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
 
         if (filtered.isEmpty) {
           return Center(
-            child: Text('Ürün bulunamadı', style: TextStyle(color: Colors.grey[500])),
+            child: Text(tr('customer.urun_bulunamadi'), style: TextStyle(color: Colors.grey[500])),
           );
         }
 
@@ -854,13 +854,13 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey[300]),
             const SizedBox(height: 16),
             Text(
-              'Henüz ürün eklemediniz',
+              tr('customer.henuz_urun_eklemediniz'),
               style: TextStyle(fontSize: 16, color: Colors.grey[500]),
             ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => _tabController.animateTo(0),
-              child: Text('Menüye git →', style: TextStyle(color: _accent)),
+              child: Text(tr('customer.menuye_git'), style: TextStyle(color: _accent)),
             ),
           ],
         ),
@@ -915,7 +915,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 Icon(Icons.check_circle, color: Colors.green.shade700),
                 const SizedBox(width: 8),
                 Text(
-                  'Ödeme tamamlandı ✓',
+                  tr('customer.odeme_tamamlandi'),
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: Colors.green.shade700,
@@ -991,7 +991,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               if (item.isSubmitted) ...[
                 Builder(
                   builder: (context) {
-                    String statusText = '🍽️ Siparişte';
+                    String statusText = tr('customer.sipariste');
                     Color statusColor = Colors.grey.shade700;
                     Color statusBgColor = Colors.grey.withOpacity(0.1);
 
@@ -1002,7 +1002,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         statusBgColor = Colors.orange.withOpacity(0.1);
                         break;
                       case 'accepted':
-                        statusText = '✅ Onaylandı';
+                        statusText = tr('customer.onaylandi');
                         statusColor = Colors.blue.shade700;
                         statusBgColor = Colors.blue.withOpacity(0.1);
                         break;
@@ -1023,7 +1023,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         statusBgColor = Colors.teal.withOpacity(0.1);
                         break;
                       case 'cancelled':
-                        statusText = '❌ İptal';
+                        statusText = tr('customer.i_ptal');
                         statusColor = Colors.red.shade700;
                         statusBgColor = Colors.red.withOpacity(0.1);
                         break;
@@ -1102,7 +1102,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
 
         // Per-person breakdown
         Text(
-          'Kişi Bazlı',
+          tr('customer.kisi_bazli'),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -1153,7 +1153,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Ödenen', style: TextStyle(color: Colors.green.shade700)),
+                    Text(tr('customer.odenen'), style: TextStyle(color: Colors.green.shade700)),
                     Text(
                       '-€${session.paidTotal.toStringAsFixed(2)}',
                       style: TextStyle(
@@ -1215,7 +1215,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                session.allReady ? 'Herkes hazır! 🎉' : 'Masa Sipariş Durumu',
+                session.allReady ? 'Herkes hazır! 🎉' : tr('customer.masa_siparis_durumu'),
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
@@ -1267,7 +1267,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     final aggregated = session.aggregatedItems;
     if (aggregated.isEmpty) {
       return Center(
-        child: Text('Henüz sipariş yok', style: TextStyle(color: Colors.grey[500])),
+        child: Text(tr('customer.henuz_siparis_yok'), style: TextStyle(color: Colors.grey[500])),
       );
     }
 
@@ -1281,7 +1281,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Toplam Ürünler',
+            tr('customer.toplam_urunler'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -1415,7 +1415,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '✅ Seçimi Tamam',
+                  tr('customer.secimi_tamam'),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1432,7 +1432,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '⏳ Seçiyor',
+                  tr('customer.seciyor'),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1448,7 +1448,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '💳 Ödendi',
+                  tr('customer.odendi'),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1615,8 +1615,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     groupNotifier.toggleReady();
                   },
                   icon: const Icon(Icons.undo),
-                  label: const Text(
-                    'Siparişimi Değiştir',
+                  label: Text(
+                    tr('customer.siparisimi_degistir'),
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -1694,8 +1694,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                           child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
                       : const Icon(Icons.restaurant),
-                  label: const Text(
-                    '🍳 Yeni Ürünleri Mutfağa Yolla',
+                  label: Text(
+                    tr('customer.yeni_urunleri_mutfaga_yolla'),
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                   style: FilledButton.styleFrom(
@@ -1714,8 +1714,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 child: OutlinedButton.icon(
                   onPressed: _isSubmitting ? null : () => _showReadyToggle(),
                   icon: const Icon(Icons.undo),
-                  label: const Text(
-                    'Siparişimi Değiştir',
+                  label: Text(
+                    tr('customer.siparisimi_degistir'),
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -1765,7 +1765,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   icon: const Icon(Icons.payment),
                   label: Text(
                     hasIncompleteItems
-                        ? 'Siparişiniz Bekleniyor'
+                        ? tr('customer.siparisiniz_bekleniyor')
                         : 'Sadece Hesabımı Öde (€${groupState.myParticipant!.subtotal.toStringAsFixed(2)})',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
@@ -1791,7 +1791,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   icon: const Icon(Icons.groups),
                   label: Text(
                     hasIncompleteItems
-                        ? 'Grupla Ödeme Bekleniyor'
+                        ? tr('customer.grupla_odeme_bekleniyor')
                         : 'Masa Hesabını Öde (€${session.remainingBalance.toStringAsFixed(2)})',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
@@ -1860,8 +1860,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         SnackBar(
           content: Text(
             wasReady
-                ? 'Siparişiniz tekrar düzenleniyor ⏳'
-                : 'Siparişiniz hazır olarak işaretlendi ✅',
+                ? tr('customer.siparisiniz_tekrar_duzenleniyo')
+                : tr('customer.siparisiniz_hazir_olarak_isare'),
           ),
           backgroundColor: wasReady ? Colors.amber.shade700 : Colors.green.shade700,
           behavior: SnackBarBehavior.floating,
@@ -1916,8 +1916,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 child: Icon(Icons.person, size: 32, color: _accent),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Hesabımı Öde',
+              Text(
+                tr('customer.hesabimi_ode'),
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                 textAlign: TextAlign.center,
               ),
@@ -1959,9 +1959,9 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         child: const Icon(Icons.payments_rounded, color: Colors.green, size: 24),
                       ),
                       const SizedBox(width: 16),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Nakit Öde',
+                          tr('customer.nakit_ode'),
                           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -1998,9 +1998,9 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         child: Icon(Icons.credit_card_rounded, color: _accent, size: 24),
                       ),
                       const SizedBox(width: 16),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Kart ile Öde',
+                          tr('customer.kart_ile_ode'),
                           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -2018,7 +2018,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: Text(
-                  'İptal',
+                  tr('customer.i_ptal'),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade500),
                 ),
               ),
@@ -2075,8 +2075,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 child: Icon(Icons.groups, size: 32, color: _accent),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Masa Hesabını Öde',
+              Text(
+                tr('customer.masa_hesabini_ode'),
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                 textAlign: TextAlign.center,
               ),
@@ -2118,9 +2118,9 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         child: const Icon(Icons.payments_rounded, color: Colors.green, size: 24),
                       ),
                       const SizedBox(width: 16),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Nakit Öde',
+                          tr('customer.nakit_ode'),
                           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -2157,9 +2157,9 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         child: Icon(Icons.credit_card_rounded, color: _accent, size: 24),
                       ),
                       const SizedBox(width: 16),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Kart ile Öde',
+                          tr('customer.kart_ile_ode'),
                           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -2178,7 +2178,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: Text(
-                  'İptal',
+                  tr('customer.i_ptal'),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey.shade500),
                 ),
               ),
@@ -2196,8 +2196,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(tr('orders.cancel_group')),
-        content: const Text(
-          'Grup siparişini iptal etmek istediğinize emin misiniz?\n\nTüm katılımcılar gruptan çıkarılacak.',
+        content: Text(
+          tr('customer.grup_siparisini_iptal_etmek_is'),
         ),
         actions: [
           TextButton(
@@ -2239,8 +2239,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(tr('orders.leave_group')),
-        content: const Text(
-          'Grup siparişinden ayrılmak istediğinize emin misiniz?\n\nEklediğiniz ürünler kaldırılacak.',
+        content: Text(
+          tr('customer.grup_siparisinden_ayrilmak_ist'),
         ),
         actions: [
           TextButton(

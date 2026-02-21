@@ -49,7 +49,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       if (doc.exists) {
         final data = doc.data()!;
         setState(() {
-          _driverName = data['name'] ?? data['displayName'] ?? 'Sürücü';
+          _driverName = data['name'] ?? data['displayName'] ?? tr('driver.surucu');
           _driverPhone = data['phone'] ?? data['phoneNumber'] ?? '';
         });
       }
@@ -67,8 +67,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(tr('staff.break_continues')),
-          content: const Text(
-            'Teslimat üstlenmek için molanız sonlandırılacak.\n\n'
+          content: Text(
+            tr('driver.teslimat_ustlenmek_icin_molani')
             'Devam etmek istiyor musunuz?',
           ),
           actions: [
@@ -79,7 +79,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-              child: const Text('Molayı Bitir ve Üstlen', style: TextStyle(color: Colors.white)),
+              child: Text(tr('driver.molayi_bitir_ve_ustlen'), style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -106,7 +106,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       builder: (ctx) => AlertDialog(
         title: Text(tr('driver.take_delivery')),
         content: Text(
-          'Bu siparişi üstlenmek istediğinize emin misiniz?\n\n'
+          tr('driver.bu_siparisi_ustlenmek_istedigi')
           '🏪 ${order.butcherName}\n'
           '📍 ${order.deliveryAddress ?? "Adres yok"}\n'
           '💰 ${order.totalAmount.toStringAsFixed(2)}€',
@@ -119,7 +119,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-            child: const Text('Üstlen', style: TextStyle(color: Colors.white)),
+            child: Text(tr('driver.ustlen'), style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -146,7 +146,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           content: Text(
             breakEnded
                 ? '☕ Molanız durduruldu. Teslimatınızı teslim edebilirsiniz!'
-                : '✅ Teslimat üstlenildi! Konum takibi başladı.',
+                : tr('driver.teslimat_ustlenildi_konum_taki'),
           ),
           backgroundColor: Colors.green,
         ),
@@ -231,7 +231,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    'Tüm Siparişler',
+                    tr('driver.tum_siparisler'),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -286,38 +286,38 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       body: driverState.isLoading
           ? const Center(child: CircularProgressIndicator())
           : !driverState.isDriver
-              ? const Center(
+              ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.warning_amber_rounded, size: 80, color: Colors.amber),
                       SizedBox(height: 16),
                       Text(
-                        'Sürücü yetkisi bulunamadı',
+                        tr('driver.surucu_yetkisi_bulunamadi'),
                         style: TextStyle(fontSize: 18, color: Colors.grey),
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Lütfen yöneticinize başvurun',
+                        tr('driver.lutfen_yoneticinize_basvurun'),
                         style: TextStyle(color: Colors.grey),
                       ),
                     ],
                   ),
                 )
               : businessIds.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.store_mall_directory_outlined, size: 80, color: Colors.grey),
                           SizedBox(height: 16),
                           Text(
-                            'Henüz işletme atanmamış',
+                            tr('driver.henuz_isletme_atanmamis'),
                             style: TextStyle(fontSize: 18, color: Colors.grey),
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Admin panelinden işletme ataması yapılmalı',
+                            tr('driver.admin_panelinden_isletme_atama'),
                             style: TextStyle(color: Colors.grey),
                           ),
                         ],
@@ -359,7 +359,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       Icon(Icons.check_circle_outline, size: 80, color: Colors.grey[400]),
                       const SizedBox(height: 16),
                       Text(
-                        'Üstlenebilecek teslimat yok',
+                        tr('driver.ustlenebilecek_teslimat_yok'),
                         style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 8),
@@ -394,7 +394,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     );
   }
 
-  /// Build the "Tüm Siparişler" view — all orders from assigned businesses
+  /// Build the tr('driver.tum_siparisler') view — all orders from assigned businesses
   Widget _buildAllOrdersView(List<String> businessIds) {
     return StreamBuilder<List<LokmaOrder>>(
       stream: _orderService.getAllBusinessOrdersStream(businessIds),
@@ -411,7 +411,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                 Icon(Icons.inbox_outlined, size: 80, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
-                  'Aktif sipariş yok',
+                  tr('driver.aktif_siparis_yok'),
                   style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 8),
@@ -762,10 +762,10 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
             ),
             children: completedOrders.isEmpty
                 ? [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(16),
                       child: Text(
-                        'Bugün henüz teslimat yok',
+                        tr('driver.bugun_henuz_teslimat_yok'),
                         style: TextStyle(color: Colors.grey),
                       ),
                     ),
@@ -908,7 +908,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     
     if (isClaimedByMe) {
       statusColor = Colors.blue;
-      statusText = isOnTheWay ? '🚗 Yolda' : 'Üstlenildi';
+      statusText = isOnTheWay ? '🚗 Yolda' : tr('driver.ustlenildi');
       statusIcon = Icons.local_shipping;
     } else if (isReady) {
       statusColor = Colors.purple;
@@ -1010,7 +1010,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                 children: [
                   // Business name
                   Text(
-                    order.butcherName ?? 'İşletme',
+                    order.butcherName ?? tr('driver.i_sletme'),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
@@ -1125,7 +1125,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                         isClaimedByMe 
                             ? '🚗 Devam Et' 
                             : isReady 
-                                ? '🚗 Üstlen' 
+                                ? tr('driver.ustlen') 
                                 : isPreparing 
                                     ? '👨‍🍳 Hazırlanıyor' 
                                     : '⏳ Bekliyor',
@@ -1180,10 +1180,10 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
-                  'Harita Uygulaması Seçin',
+                  tr('driver.harita_uygulamasi_secin'),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -1237,8 +1237,8 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
             ),
           ),
           // Header
-          const Text(
-            'Atanmış İşletmeler',
+          Text(
+            tr('driver.atanmis_i_sletmeler'),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -1397,7 +1397,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
                         _buildCountBadge(biz['ready'] as int, Colors.green, '✅'),
                       if ((biz['total'] as int) == 0)
                         Text(
-                          'Sipariş yok',
+                          tr('driver.siparis_yok'),
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.grey[500],
@@ -1416,12 +1416,12 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
                   color: Colors.blue,
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.navigation, color: Colors.white, size: 14),
                     SizedBox(width: 4),
-                    Text('GİT', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text(tr('driver.gi_t'), style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
                   ],
                 ),
               )

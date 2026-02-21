@@ -1999,7 +1999,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             BoxShadow(
               color: brandColor.withValues(alpha: 0.1),
               blurRadius: 15,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),
@@ -2010,14 +2010,14 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [Color(0xFFFA4C71), Color(0xFFFE0032)],
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.local_shipping, color: Colors.white, size: 28),
+              child: Icon(Icons.local_shipping, color: Theme.of(context).colorScheme.surface, size: 28),
             ),
             const SizedBox(width: 16),
             // Title + live status chips
@@ -2113,7 +2113,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             BoxShadow(
               color: brandColor.withValues(alpha: 0.1),
               blurRadius: 15,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),
@@ -2123,14 +2123,14 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [Color(0xFF66BB6A), Color(0xFF388E3C)],
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.restaurant, color: Colors.white, size: 28),
+              child: Icon(Icons.restaurant, color: Theme.of(context).colorScheme.surface, size: 28),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -2279,7 +2279,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                   ),
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(icon, color: Colors.white, size: 22),
+                child: Icon(icon, color: Theme.of(context).colorScheme.surface, size: 22),
               ),
               const SizedBox(width: 16),
               // Text
@@ -2294,7 +2294,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: TextStyle(
@@ -2308,15 +2308,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               // Badge or arrow
               if (badgeCount > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: color,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '$badgeCount',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.surface,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -2689,7 +2689,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('✅ Servis Ettim', style: TextStyle(color: Colors.white)),
+            child: Text('✅ Servis Ettim', style: TextStyle(color: Theme.of(context).colorScheme.surface)),
           ),
         ],
       ),
@@ -2934,7 +2934,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                       '+${items.length - 3} ürün daha',
                                       style: TextStyle(fontSize: 12, color: Colors.grey[500], fontStyle: FontStyle.italic),
                                     ),
-                                  const SizedBox(height: 6),
+                                  SizedBox(height: 6),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
@@ -2950,7 +2950,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                   ),
                                   // Waiter service actions
                                   if (status == 'ready') ...[
-                                    const SizedBox(height: 10),
+                                    SizedBox(height: 10),
                                     SizedBox(
                                       width: double.infinity,
                                       child: ElevatedButton.icon(
@@ -2958,11 +2958,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           orders[index].id,
                                           orderId,
                                         ),
-                                        icon: const Icon(Icons.restaurant, color: Colors.white, size: 18),
-                                        label: const Text(
+                                        icon: Icon(Icons.restaurant, color: Theme.of(context).colorScheme.surface, size: 18),
+                                        label: Text(
                                           '🍽️ Servis Ettim',
                                           style: TextStyle(
-                                            color: Colors.white,
+                                            color: Theme.of(context).colorScheme.surface,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
                                           ),
@@ -3415,8 +3415,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             color: Colors.amber,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Center(
-                            child: Text('R', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
+                          child: Center(
+                            child: Text('R', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 8, fontWeight: FontWeight.w900)),
                           ),
                         ),
                       ),
@@ -3554,8 +3554,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                           color: Colors.amber,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Center(
-                          child: Text('R', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
+                        child: Center(
+                          child: Text('R', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 8, fontWeight: FontWeight.w900)),
                         ),
                       ),
                     ),
@@ -3682,7 +3682,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     children: [
                       // Handle bar
                       Container(
-                        margin: const EdgeInsets.only(top: 12, bottom: 8),
+                        margin: EdgeInsets.only(top: 12, bottom: 8),
                         width: 40, height: 4,
                         decoration: BoxDecoration(
                           color: Colors.grey[400],
@@ -3691,7 +3691,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       ),
                       // Header
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [Colors.amber.shade700, Colors.amber.shade700],
@@ -3699,39 +3699,39 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.receipt_long, size: 28, color: Colors.white),
-                            const SizedBox(width: 12),
+                            Icon(Icons.receipt_long, size: 28, color: Theme.of(context).colorScheme.surface),
+                            SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Masa $tableNumber — Toptan Hesap',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w900,
-                                      color: Colors.white,
+                                      color: Theme.of(context).colorScheme.surface,
                                     ),
                                   ),
                                   Text(
                                     '${unpaidOrders.length} açık sipariş',
-                                    style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.85)),
+                                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.surface.withOpacity(0.85)),
                                   ),
                                 ],
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 '€${grandTotal.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w900,
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.surface,
                                 ),
                               ),
                             ),
@@ -3752,7 +3752,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
                             return Container(
                               margin: const EdgeInsets.only(bottom: 10),
-                              padding: const EdgeInsets.all(14),
+                              padding: EdgeInsets.all(14),
                               decoration: BoxDecoration(
                                 color: cardBg,
                                 borderRadius: BorderRadius.circular(14),
@@ -3767,17 +3767,17 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                   Row(
                                     children: [
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                         decoration: BoxDecoration(
                                           color: Colors.amber.shade700,
                                           borderRadius: BorderRadius.circular(6),
                                         ),
                                         child: Text(
                                           '#$displayId',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w800,
-                                            color: Colors.white,
+                                            color: Theme.of(context).colorScheme.surface,
                                           ),
                                         ),
                                       ),
@@ -4178,7 +4178,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                     ),
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
-                                      BoxShadow(color: Colors.amber.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4)),
+                                      BoxShadow(color: Colors.amber.withOpacity(0.3), blurRadius: 12, offset: Offset(0, 4)),
                                     ],
                                   ),
                                   child: Material(
@@ -4192,42 +4192,42 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         session.tableNumber,
                                       ),
                                       child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                         child: Row(
                                           children: [
-                                            const Icon(Icons.receipt_long, size: 24, color: Colors.white),
-                                            const SizedBox(width: 10),
+                                            Icon(Icons.receipt_long, size: 24, color: Theme.of(context).colorScheme.surface),
+                                            SizedBox(width: 10),
                                             Expanded(
                                               child: Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
-                                                  const Text(
+                                                  Text(
                                                     '🧾 Toptan Hesap Öde',
                                                     style: TextStyle(
                                                       fontSize: 16,
                                                       fontWeight: FontWeight.w900,
-                                                      color: Colors.white,
+                                                      color: Theme.of(context).colorScheme.surface,
                                                     ),
                                                   ),
                                                   Text(
                                                     '${unpaidOrders.length} açık sipariş',
-                                                    style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.8)),
+                                                    style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.surface.withOpacity(0.8)),
                                                   ),
                                                 ],
                                               ),
                                             ),
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                               decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(0.2),
+                                                color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               child: Text(
                                                 '€${unpaidTotal.toStringAsFixed(2)}',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.w900,
-                                                  color: Colors.white,
+                                                  color: Theme.of(context).colorScheme.surface,
                                                 ),
                                               ),
                                             ),

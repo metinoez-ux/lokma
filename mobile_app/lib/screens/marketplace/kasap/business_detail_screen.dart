@@ -530,14 +530,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             child: Column(
               children: [
                 Container(
-                  margin: const EdgeInsets.symmetric(vertical: 16),
+                  margin: EdgeInsets.symmetric(vertical: 16),
                   width: 40, height: 4,
                   decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                 ),
                 
                 // Header (Summary)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  padding: EdgeInsets.fromLTRB(24, 0, 24, 24),
                   child: Row(
                     children: [
                        Column(
@@ -545,13 +545,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                          children: [
                            Row(
                              children: [
-                               Text('$rating', style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.bold)),
+                               Text('$rating', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 42, fontWeight: FontWeight.bold)),
                                const SizedBox(width: 8),
                                Column(
                                  crossAxisAlignment: CrossAxisAlignment.start,
                                  children: [
                                    Row(children: List.generate(5, (i) => Icon(Icons.star, color: i < rating.round() ? Colors.amber : Colors.grey, size: 14))),
-                                   const SizedBox(height: 4),
+                                   SizedBox(height: 4),
                                    Text('$total Değerlendirme', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
                                  ],
                                ),
@@ -559,21 +559,21 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            ),
                          ],
                        ),
-                       const Spacer(),
-                       const Icon(FontAwesomeIcons.google, color: Colors.white, size: 28),
+                       Spacer(),
+                       Icon(FontAwesomeIcons.google, color: Theme.of(context).colorScheme.surface, size: 28),
                     ],
                   ),
                 ),
 
-                const Divider(color: Colors.white10, height: 1),
+                Divider(color: Colors.white10, height: 1),
 
                 // Sort Dropdown
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Yorumlar', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('Yorumlar', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.bold)),
                       PopupMenuButton<String>(
                         initialValue: selectedSort,
                         color: const Color(0xFF2C2C2C),
@@ -613,14 +613,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     backgroundImage: NetworkImage(review['profile_photo_url'] ?? ''),
                                     backgroundColor: Colors.grey[800],
                                     radius: 16,
-                                    child: review['profile_photo_url'] == null ? const Icon(Icons.person, color: Colors.white) : null,
+                                    child: review['profile_photo_url'] == null ? Icon(Icons.person, color: Theme.of(context).colorScheme.surface) : null,
                                   ),
-                                  const SizedBox(width: 12),
+                                  SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(review['author_name'] ?? 'Misafir', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                        Text(review['author_name'] ?? 'Misafir', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.bold)),
                                         const SizedBox(height: 2),
                                         Text(review['relative_time_description'] ?? '', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
                                       ],
@@ -782,7 +782,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (_, controller) => Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Color(0xFF1E1E1E),
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
@@ -791,8 +791,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               // 1. Red Brand Header
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                decoration: const BoxDecoration(
+                padding: EdgeInsets.fromLTRB(24, 32, 24, 24),
+                decoration: BoxDecoration(
                   color: Color(0xFFFB335B), // Deep Red
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                 ),
@@ -800,15 +800,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   children: [
                     Container(
                       width: 40, height: 4,
-                      margin: const EdgeInsets.only(bottom: 20),
+                      margin: EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                     ),
-                    Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.bold))),
-                    const SizedBox(height: 16),
-                    const Text(
+                    Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.bold))),
+                    SizedBox(height: 16),
+                    Text(
                       'Avrupa\'nın En Güvenilir Helal Et Markası',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -820,11 +820,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   padding: const EdgeInsets.all(24),
                   children: [
                      // Intro Text
-                     const Text(
+                     Text(
                        '1987 yılında Köln\'de küçük bir kasap dükkanı olarak başlayan yolculuğumuz, bugün Avrupa\'nın en modern helal et entegre tesislerinden birine dönüştü.',
                        style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
                      ),
-                     const SizedBox(height: 24),
+                     SizedBox(height: 24),
                      
                      // Icons Row
                      Row(
@@ -835,10 +835,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                          _buildBrandIconElement(Icons.clean_hands, 'Kuru Yolum', Colors.amber),
                        ],
                      ),
-                     const SizedBox(height: 32),
+                     SizedBox(height: 32),
                      
                      // Standards List
-                     const Text('Tedarik Standartları', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                     Text('Tedarik Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold)),
                      const SizedBox(height: 16),
                      _buildCheckItem('Helal Kesim', 'İslami usullere uygun kesim'),
                      _buildCheckItem('Elle Kesim', 'Geleneksel yöntemlerle'),
@@ -866,7 +866,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              ],
                            ),
                            const SizedBox(height: 8),
-                           const Text(
+                           Text(
                              'İslami usullere göre kesimi yapılan tavuğun, haşlama kazanı, ilaçlı ve yüksek sıcaklıkta su kullanılmadan tüylerinin temizlenmesi işlemidir. Kuru yolum işlemi uygulanan tavuklarda bakteri, toz ve necaset bulunmaz.',
                              style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
                            ),
@@ -874,8 +874,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                        ),
                      ),
                      
-                     const SizedBox(height: 24),
-                     const Text('Üretim Standartları', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                     SizedBox(height: 24),
+                     Text('Üretim Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold)),
                      const SizedBox(height: 16),
                      _buildCheckItem('Yüksek Et Oranı', 'Kaliteli et kullanımı'),
                      _buildCheckItem('E621 İçermez', 'Glutamat/Çin tuzu yok'),
@@ -915,13 +915,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle, color: Colors.green, size: 20),
-          const SizedBox(width: 12),
+          Icon(Icons.check_circle, color: Colors.green, size: 20),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(title, style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.bold, fontSize: 15)),
                 Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 13)),
               ],
             ),
@@ -980,9 +980,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           child: Container(
                             alignment: Alignment.centerLeft,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFB335B),
+                                color: Color(0xFFFB335B),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row( // Added Row for Arrow hint
@@ -990,7 +990,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 children: [
                                   Text(
                                    _getBrandLabel(_butcherDoc?['brand']),
-                                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 12, fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(width: 4),
                                   const Icon(Icons.info, color: Colors.white70, size: 14),
@@ -1546,7 +1546,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
@@ -1640,9 +1640,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 width: 56,
                                 height: 56,
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8)],
+                                  boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), blurRadius: 8)],
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
@@ -1659,8 +1659,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               top: 12,
                               left: 0,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: const BoxDecoration(
+                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
                                   color: Color(0xFFFB335B),
                                   borderRadius: BorderRadius.only(
                                     topRight: Radius.circular(8),
@@ -1669,8 +1669,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                                 child: Text(
                                   _getBrandLabel(brand).toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.surface,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 0.5,
@@ -1696,7 +1696,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   padding: const EdgeInsets.all(8),
                                   child: Icon(
                                     isFavorite ? Icons.favorite : Icons.favorite_border,
-                                    color: Colors.white,
+                                    color: Theme.of(context).colorScheme.surface,
                                     size: 22,
                                   ),
                                 ),
@@ -2030,7 +2030,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -2080,10 +2080,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     decoration: BoxDecoration(
                       color: product.allowBackorder 
                         ? (product.expectedRestockDate != null ? Colors.blue[800] : Colors.amber[800])
-                        : const Color(0xFFFB335B), // Red Pill if truly out
+                        : Color(0xFFFB335B), // Red Pill if truly out
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
-                         BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 4, offset:const Offset(0,2))
+                         BoxShadow(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), blurRadius: 4, offset:Offset(0,2))
                       ],
                     ),
                     child: Text(
@@ -2092,7 +2092,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             ? 'GELİYOR: ${product.expectedRestockDate!.day}.${product.expectedRestockDate!.month} ${product.expectedRestockDate!.hour.toString().padLeft(2, '0')}:${product.expectedRestockDate!.minute.toString().padLeft(2, '0')}' 
                             : 'ÖN SİPARİŞ')
                         : 'TÜKENDİ',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                     ),
                   ),
                 ),
@@ -2102,7 +2102,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           // 2. Content Area
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2111,8 +2111,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     I18nUtils.getLocalizedText(context, product.nameData),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white, 
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.surface, 
                       fontWeight: FontWeight.bold, 
                       fontSize: 16
                     ),
@@ -2237,8 +2237,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             isByWeight 
                                 ? (currentQty * 1000).toStringAsFixed(0) 
                                 : currentQty.toStringAsFixed(0),
-                            style: const TextStyle(
-                              color: Colors.white, 
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.surface, 
                               fontSize: 16, 
                               fontWeight: FontWeight.bold
                             ),
@@ -2279,12 +2279,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           content: Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(8),
+                                padding: EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF4CAF50),
+                                  color: Color(0xFF4CAF50),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                                child: Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 24),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -2390,7 +2390,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           color: Colors.white10,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: Colors.white, size: 18),
+        child: Icon(icon, color: Theme.of(context).colorScheme.surface, size: 18),
       ),
     );
   }
@@ -2686,10 +2686,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               setStateModal(() => selectedQty = selectedQty + product.stepQuantity);
                             },
                             borderRadius: BorderRadius.circular(8),
-                            child: const SizedBox(
+                            child: SizedBox(
                               width: 44,
                               height: 44,
-                              child: Icon(Icons.add, color: Colors.white),
+                              child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface),
                             ),
                           ),
                         ),
@@ -2769,7 +2769,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           border: inCart && isAvailable ? Border.all(color: accent.withOpacity(0.5), width: 2) : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(isDark ? 0.3 : 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -2928,7 +2928,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      const SizedBox(width: 6),
+                                      SizedBox(width: 6),
                                       Text(
                                         '€${ci.unitPrice.toStringAsFixed(2)}',
                                         style: TextStyle(
@@ -2938,7 +2938,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         ),
                                       ),
                                       if (ci.quantity > 1) ...[
-                                        const SizedBox(width: 4),
+                                        SizedBox(width: 4),
                                         Container(
                                           width: 20,
                                           height: 20,
@@ -2949,10 +2949,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           alignment: Alignment.center,
                                           child: Text(
                                             '${ci.quantity.toInt()}',
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                                              color: Theme.of(context).colorScheme.surface,
                                             ),
                                           ),
                                         ),
@@ -3002,20 +3002,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 onTap: () => _showProductBottomSheet(product),
                                 borderRadius: BorderRadius.circular(10),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
                                         // Option products always show add, simple products show edit when in cart
                                         (inCart && product.optionGroups.isEmpty) ? Icons.edit : Icons.add, 
-                                        color: Colors.white, size: 16,
+                                        color: Theme.of(context).colorScheme.surface, size: 16,
                                       ),
-                                      const SizedBox(width: 4),
+                                      SizedBox(width: 4),
                                       Text(
                                         (inCart && product.optionGroups.isEmpty) ? 'Düzenle' : '+ Ekle',
-                                        style: const TextStyle(
-                                          color: Colors.white,
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.surface,
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -3187,7 +3187,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 SnackBar(
                   content: Row(
                     children: [
-                      Icon(Icons.check_circle, color: Colors.white, size: 20),
+                      Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 20),
                       SizedBox(width: 8),
                       Text(tr('orders.table_order_mode_active_add_products')),
                     ],
@@ -3375,7 +3375,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
               color: scaffoldBg,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -3607,15 +3607,15 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                               ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     // 🎨 BRAND COLOUR: "+" pill button (same style as main menu)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
                         color: accent,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.add, color: Colors.white, size: 16),
+                      child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface, size: 16),
                     ),
                   ],
                 ),

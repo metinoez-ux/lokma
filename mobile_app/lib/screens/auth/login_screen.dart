@@ -75,7 +75,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       color = Colors.grey;
     } else if (password.length < 6) {
       strength = 1;
-      text = 'Çok Kısa (min 6 karakter)';
+      text = tr('auth.cok_kisa_min_6_karakter');
       color = Colors.red;
     } else {
       // Base score for meeting minimum length
@@ -98,7 +98,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       
       switch (strength) {
         case 1:
-          text = 'Çok Zayıf';
+          text = tr('auth.cok_zayif');
           color = Colors.red;
           break;
         case 2:
@@ -110,11 +110,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           color = Colors.amber;
           break;
         case 4:
-          text = 'Güçlü';
+          text = tr('auth.guclu');
           color = Colors.lightGreen;
           break;
         case 5:
-          text = 'Çok Güçlü ✓';
+          text = tr('auth.cok_guclu');
           color = Colors.green;
           break;
       }
@@ -223,13 +223,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _showCountryPicker() {
     final countries = [
       {'iso': 'DE', 'name': 'Almanya', 'code': '+49', 'flag': '🇩🇪'},
-      {'iso': 'TR', 'name': 'Türkiye', 'code': '+90', 'flag': '🇹🇷'},
+      {'iso': 'TR', 'name': tr('auth.turkiye'), 'code': '+90', 'flag': '🇹🇷'},
       {'iso': 'AT', 'name': 'Avusturya', 'code': '+43', 'flag': '🇦🇹'},
-      {'iso': 'CH', 'name': 'İsviçre', 'code': '+41', 'flag': '🇨🇭'},
+      {'iso': 'CH', 'name': tr('auth.i_svicre'), 'code': '+41', 'flag': '🇨🇭'},
       {'iso': 'NL', 'name': 'Hollanda', 'code': '+31', 'flag': '🇳🇱'},
-      {'iso': 'BE', 'name': 'Belçika', 'code': '+32', 'flag': '🇧🇪'},
+      {'iso': 'BE', 'name': tr('auth.belcika'), 'code': '+32', 'flag': '🇧🇪'},
       {'iso': 'FR', 'name': 'Fransa', 'code': '+33', 'flag': '🇫🇷'},
-      {'iso': 'GB', 'name': 'İngiltere', 'code': '+44', 'flag': '🇬🇧'},
+      {'iso': 'GB', 'name': tr('auth.i_ngiltere'), 'code': '+44', 'flag': '🇬🇧'},
       {'iso': 'US', 'name': 'ABD', 'code': '+1', 'flag': '🇺🇸'},
     ];
     
@@ -240,7 +240,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -252,15 +252,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Ülke Seçin',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            SizedBox(height: 16),
+            Text(
+              tr('auth.ulke_secin'),
+              style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ...countries.map((c) => ListTile(
-              leading: Text(c['flag']!, style: const TextStyle(fontSize: 24)),
-              title: Text(c['name']!, style: const TextStyle(color: Colors.white)),
+              leading: Text(c['flag']!, style: TextStyle(fontSize: 24)),
+              title: Text(c['name']!, style: TextStyle(color: Theme.of(context).colorScheme.surface)),
               trailing: Text(c['code']!, style: const TextStyle(color: Colors.white70)),
               onTap: () {
                 _setCountryCode(c['iso']!);
@@ -326,18 +326,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  const SizedBox(height: 60),
+                  SizedBox(height: 60),
                   
                   // LOKMA Logo - Prominent
                   _buildLogoSection(),
                   
-                  const SizedBox(height: 48),
+                  SizedBox(height: 48),
                   
                   // Auth Content
                   if (authState.isLoading || _isLoading)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.all(40),
-                      child: CircularProgressIndicator(color: Colors.white),
+                      child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface),
                     )
                   else
                     _buildCurrentView(),
@@ -363,11 +363,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           width: 160,
           height: 160,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -378,7 +378,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Image.asset(
               'assets/images/lokma_logo.png',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Center(
+              errorBuilder: (_, __, ___) => Center(
                 child: Text(
                   'LOKMA',
                   style: TextStyle(
@@ -392,13 +392,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ),
         
-        const SizedBox(height: 24),
+        SizedBox(height: 24),
         
         // Tagline - Official slogan
-        const Text(
+        Text(
           'Fresh. Fast. Local.',
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             fontSize: 18,
             fontWeight: FontWeight.w300,
             letterSpacing: 3,
@@ -433,13 +433,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           height: 56,
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.15),
             borderRadius: BorderRadius.circular(28),
           ),
           child: Row(
             children: [
-              _buildPillTab('Giriş Yap', 0),
-              _buildPillTab('Yeni Müşteri', 1),
+              _buildPillTab(tr('auth.giris_yap'), 0),
+              _buildPillTab(tr('auth.yeni_musteri'), 1),
             ],
           ),
         ),
@@ -449,8 +449,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // SMS Auth Button - Dynamic based on auth mode
         _buildAuthButton(
           icon: Icons.sms_outlined,
-          label: _authMode == 0 ? 'SMS ile Giriş Yap' : 'SMS ile Kayıt Ol',
-          color: Colors.white,
+          label: _authMode == 0 ? tr('auth.sms_ile_giris_yap') : 'SMS ile Kayıt Ol',
+          color: Theme.of(context).colorScheme.surface,
           textColor: lokmaDark,
           onTap: () => setState(() => _loginMode = 'phone'),
         ),
@@ -460,8 +460,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Email Auth Button - Dynamic based on auth mode
         _buildAuthButton(
           icon: Icons.email_outlined,
-          label: _authMode == 0 ? 'E-posta ile Giriş Yap' : 'E-posta ile Kayıt Ol',
-          color: Colors.white.withOpacity(0.15),
+          label: _authMode == 0 ? tr('auth.e_posta_ile_giris_yap') : 'E-posta ile Kayıt Ol',
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.15),
           textColor: Colors.white,
           borderColor: Colors.white.withOpacity(0.3),
           onTap: () => setState(() => _loginMode = 'email'),
@@ -472,15 +472,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Divider
         Row(
           children: [
-            Expanded(child: Divider(color: Colors.white.withOpacity(0.3))),
+            Expanded(child: Divider(color: Theme.of(context).colorScheme.surface.withOpacity(0.3))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 'veya',
-                style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.6), fontSize: 14),
               ),
             ),
-            Expanded(child: Divider(color: Colors.white.withOpacity(0.3))),
+            Expanded(child: Divider(color: Theme.of(context).colorScheme.surface.withOpacity(0.3))),
           ],
         ),
         
@@ -509,7 +509,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Text(
             'Misafir olarak devam et',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
               fontSize: 14,
               decoration: TextDecoration.underline,
               decorationColor: Colors.white.withOpacity(0.5),
@@ -535,7 +535,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: isSelected ? [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -610,11 +610,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         width: 56,
         height: 56,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -640,11 +640,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         width: 56,
         height: 56,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -687,14 +687,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _passwordController.clear();
               _confirmPasswordController.clear();
             }),
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.surface),
           ),
         ),
         
         Text(
-          _authMode == 1 ? '📧 E-posta ile Kayıt' : '📧 E-posta ile Giriş',
-          style: const TextStyle(
-            color: Colors.white,
+          _authMode == 1 ? '📧 E-posta ile Kayıt' : tr('auth.e_posta_ile_giris'),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.surface,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
@@ -713,7 +713,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         
         _buildTextField(
           controller: _passwordController,
-          label: 'Şifre',
+          label: tr('auth.sifre'),
           icon: Icons.lock_outline,
           obscureText: _obscurePassword,
           suffixIcon: IconButton(
@@ -732,7 +732,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           const SizedBox(height: 12),
           _buildTextField(
             controller: _confirmPasswordController,
-            label: 'Şifre Tekrar',
+            label: tr('auth.sifre_tekrar'),
             icon: Icons.lock_outline,
             obscureText: _obscurePassword,
           ),
@@ -741,15 +741,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         const SizedBox(height: 24),
         
         _buildPrimaryButton(
-          label: _authMode == 1 ? 'Kayıt Ol' : 'Giriş Yap',
+          label: _authMode == 1 ? 'Kayıt Ol' : tr('auth.giris_yap'),
           onTap: _handleEmailSubmit,
         ),
         
         if (_authMode == 0)
           TextButton(
             onPressed: _handleForgotPassword,
-            child: const Text(
-              'Şifremi Unuttum',
+            child: Text(
+              tr('auth.sifremi_unuttum'),
               style: TextStyle(color: Colors.white70),
             ),
           ),
@@ -774,14 +774,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               _phoneController.clear();
               _smsCodeController.clear();
             }),
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.surface),
           ),
         ),
         
         Text(
-          _codeSent ? '🔐 SMS Kodunu Gir' : '📱 Telefon ile Giriş',
-          style: const TextStyle(
-            color: Colors.white,
+          _codeSent ? '🔐 SMS Kodunu Gir' : tr('auth.telefon_ile_giris'),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.surface,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
@@ -793,7 +793,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           // Phone input with country code prefix
           Container(
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white24),
             ),
@@ -803,10 +803,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 GestureDetector(
                   onTap: _showCountryPicker,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: const BorderRadius.only(
+                      color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                      borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(16),
                         bottomLeft: Radius.circular(16),
                       ),
@@ -816,14 +816,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       children: [
                         Text(
                           '$_countryFlag $_countryCode',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.surface,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.arrow_drop_down, color: Colors.white54, size: 20),
+                        SizedBox(width: 4),
+                        Icon(Icons.arrow_drop_down, color: Colors.white54, size: 20),
                       ],
                     ),
                   ),
@@ -833,10 +833,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: TextField(
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16),
                     decoration: InputDecoration(
                       hintText: _exampleNumber,
-                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                      hintStyle: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.4)),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
@@ -849,23 +849,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           const SizedBox(height: 12),
           
           Text(
-            'SMS ile doğrulama kodu gönderilecek',
-            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
+            tr('auth.sms_ile_dogrulama_kodu_gonderi'),
+            style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.7), fontSize: 13),
           ),
           
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           
           _buildPrimaryButton(
-            label: 'SMS Kodu Gönder',
+            label: tr('auth.sms_kodu_gonder'),
             onTap: _handleSendSmsCode,
           ),
         ] else ...[
           Text(
-            '6 haneli doğrulama kodunu girin',
-            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+            tr('auth.6_haneli_dogrulama_kodunu_giri'),
+            style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.7), fontSize: 14),
           ),
           
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           
           _buildTextField(
             controller: _smsCodeController,
@@ -875,25 +875,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             keyboardType: TextInputType.number,
             maxLength: 6,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
               letterSpacing: 12,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
             ),
           ),
           
           const SizedBox(height: 24),
           
           _buildPrimaryButton(
-            label: 'Doğrula ve Giriş Yap',
+            label: tr('auth.dogrula_ve_giris_yap'),
             onTap: _handleVerifySmsCode,
           ),
           
           TextButton(
             onPressed: _handleSendSmsCode,
-            child: const Text(
-              'Kodu Tekrar Gönder',
+            child: Text(
+              tr('auth.kodu_tekrar_gonder'),
               style: TextStyle(color: Colors.white70),
             ),
           ),
@@ -940,12 +940,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Requirements
         if (_passwordStrength < 3) ...[
           Text(
-            '💡 Güçlü şifre için:',
-            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11),
+            tr('auth.guclu_sifre_icin'),
+            style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.7), fontSize: 11),
           ),
           const SizedBox(height: 4),
           _buildRequirementRow('En az 6 karakter', _passwordController.text.length >= 6),
-          _buildRequirementRow('Büyük harf (A-Z)', _passwordController.text.contains(RegExp(r'[A-Z]'))),
+          _buildRequirementRow(tr('auth.buyuk_harf_a_z'), _passwordController.text.contains(RegExp(r'[A-Z]'))),
           _buildRequirementRow('Rakam (0-9)', _passwordController.text.contains(RegExp(r'[0-9]'))),
           _buildRequirementRow('Özel karakter (!@#\$...)', _passwordController.text.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))),
         ],
@@ -994,12 +994,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       obscureText: obscureText,
       maxLength: maxLength,
       textAlign: textAlign,
-      style: style ?? const TextStyle(color: Colors.white),
+      style: style ?? TextStyle(color: Theme.of(context).colorScheme.surface),
       decoration: InputDecoration(
         labelText: label.isNotEmpty ? label : null,
         hintText: hint,
-        labelStyle: const TextStyle(color: Colors.white70),
-        hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+        labelStyle: TextStyle(color: Colors.white70),
+        hintStyle: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.4)),
         prefixIcon: Icon(icon, color: Colors.white70),
         suffixIcon: suffixIcon,
         counterText: '',
@@ -1011,7 +1011,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Colors.white, width: 2),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface, width: 2),
         ),
       ),
     );
@@ -1030,11 +1030,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),

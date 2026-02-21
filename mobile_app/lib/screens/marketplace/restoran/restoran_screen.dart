@@ -762,16 +762,16 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           top: -4,
                           right: -6,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                             decoration: BoxDecoration(
                               color: lokmaPink,
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: Colors.white, width: 1),
+                              border: Border.all(color: Theme.of(context).colorScheme.surface, width: 1),
                             ),
                             child: Text(
                               '${favorites.length}',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.surface,
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -805,7 +805,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -1372,11 +1372,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       children: [
         // Count header
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+          padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Text(
             tr('discovery.businesses_at_service', namedArgs: {'count': restaurants.length.toString()}),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.surface,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -1630,7 +1630,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1697,7 +1697,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     if (!isAvailable)
                       Positioned.fill(
                         child: Container(
-                          color: Colors.black.withOpacity(0.35),
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
                         ),
                       ),
                     
@@ -1712,11 +1712,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -1746,20 +1746,20 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFB335B), // TUNA red
+                              color: Color(0xFFFB335B), // TUNA red
                               borderRadius: BorderRadius.circular(16), // Pill shape
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                                   blurRadius: 4,
-                                  offset: const Offset(0, 2),
+                                  offset: Offset(0, 2),
                                 ),
                               ],
                             ),
-                            child: const Text(
+                            child: Text(
                               'TUNA',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.surface,
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2,
@@ -1781,7 +1781,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -1806,11 +1806,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -1828,17 +1828,17 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                       right: -8,
                                       top: -8,
                                       child: Container(
-                                        padding: const EdgeInsets.all(4),
+                                        padding: EdgeInsets.all(4),
                                         decoration: BoxDecoration(
                                           color: Theme.of(context).colorScheme.primary,
                                           shape: BoxShape.circle,
                                         ),
-                                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                                        constraints: BoxConstraints(minWidth: 18, minHeight: 18),
                                         child: Center(
                                           child: Text(
                                             '${cartState.items.length}',
-                                            style: const TextStyle(
-                                              color: Colors.white,
+                                            style: TextStyle(
+                                              color: Theme.of(context).colorScheme.surface,
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -2336,14 +2336,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   
                   // Bottom Result Button
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: cardBg,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                           blurRadius: 10,
-                          offset: const Offset(0, -2),
+                          offset: Offset(0, -2),
                         ),
                       ],
                     ),
@@ -2362,8 +2362,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
                           child: Text(
                             '$totalResults İşletme Göster',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.surface,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -2432,7 +2432,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ],
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: 2),
                       Text(
                         subtitle,
                         style: TextStyle(
@@ -2457,7 +2457,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ),
                   ),
                   child: isSelected
-                      ? const Icon(Icons.check, color: Colors.white, size: 14)
+                      ? Icon(Icons.check, color: Theme.of(context).colorScheme.surface, size: 14)
                       : null,
                 ),
               ],
@@ -2661,35 +2661,35 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           BoxShadow(
                             color: Colors.teal.withValues(alpha: 0.2),
                             blurRadius: 12,
-                            offset: const Offset(0, 4),
+                            offset: Offset(0, 4),
                           ),
                         ],
                       ),
                       child: Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
+                              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.15),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.history,
                               size: 20,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.surface,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Aktif Siparişinize Dönün',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.white,
+                                    color: Theme.of(context).colorScheme.surface,
                                     letterSpacing: -0.2,
                                   ),
                                 ),
@@ -2698,7 +2698,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                   'Önceki masanıza hemen geçin',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.white.withValues(alpha: 0.85),
+                                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
                                   ),
                                 ),
                               ],
@@ -2707,7 +2707,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           Icon(
                             Icons.arrow_forward_ios,
                             size: 16,
-                            color: Colors.white.withValues(alpha: 0.7),
+                            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
                           ),
                         ],
                       ),
@@ -2742,13 +2742,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         BoxShadow(
                           color: lokmaPink.withOpacity(0.35),
                           blurRadius: 24,
-                          offset: const Offset(0, 8),
+                          offset: Offset(0, 8),
                           spreadRadius: 0,
                         ),
                         BoxShadow(
                           color: lokmaPink.withOpacity(0.15),
                           blurRadius: 48,
-                          offset: const Offset(0, 16),
+                          offset: Offset(0, 16),
                           spreadRadius: 0,
                         ),
                       ],
@@ -2760,22 +2760,22 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.qr_code_scanner,
                             size: 34,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                           ),
                         ),
-                        const SizedBox(height: 14),
-                        const Text(
+                        SizedBox(height: 14),
+                        Text(
                           'QR ile Sipariş Ver',
                           style: TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.surface,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -2784,7 +2784,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           'Masanızdaki QR kodu okutun',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.white.withOpacity(0.8),
+                            color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
                           ),
                         ),
                       ],
@@ -2813,7 +2813,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ? []
                           : [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -3340,7 +3340,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
                 blurRadius: 30,
                 offset: const Offset(0, -10),
               ),
@@ -3579,7 +3579,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 20),
                 const SizedBox(width: 8),
                 Text('Masa $tableNum seçildi ✓'),
               ],
@@ -4021,7 +4021,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       SnackBar(
                         content: Row(
                           children: [
-                            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                            Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 20),
                             const SizedBox(width: 8),
                             Text('Masa $tableNum doğrulandı ✓'),
                           ],

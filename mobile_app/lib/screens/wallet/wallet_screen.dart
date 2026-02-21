@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../providers/auth_provider.dart';
@@ -111,12 +112,12 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
             child: const Icon(Icons.wallet, color: Colors.white, size: 28),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'LOKMA Cüzdan',
+                  tr('wallet.lokma_cuzdan'),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -125,7 +126,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                   ),
                 ),
                 Text(
-                  'Müşteri Kartınız',
+                  tr('wallet.musteri_kartiniz'),
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 14,
@@ -298,7 +299,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'KART SAHİBİ',
+                                tr('wallet.kart_sahi_bi'),
                                 style: TextStyle(
                                   color: Colors.grey[500],
                                   fontSize: 10,
@@ -321,7 +322,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                'MÜŞTERİ NO',
+                                tr('wallet.musteri_no'),
                                 style: TextStyle(
                                   color: Colors.grey[500],
                                   fontSize: 10,
@@ -376,14 +377,14 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
           const SizedBox(width: 12),
           _buildActionButton(
             icon: Icons.share,
-            label: 'Paylaş',
+            label: tr('wallet.paylas'),
             color: const Color(0xFF6C63FF),
             onTap: () => _shareCard(),
           ),
           const SizedBox(width: 12),
           _buildActionButton(
             icon: Icons.history,
-            label: 'Geçmiş',
+            label: tr('wallet.gecmis'),
             color: const Color(0xFF00C851),
             onTap: () {},
           ),
@@ -456,7 +457,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                   child: Icon(Icons.local_offer, color: cardGold, size: 24),
                 ),
                 const SizedBox(width: 12),
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -468,7 +469,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                       ),
                     ),
                     Text(
-                      'İndirim veya kampanya kodu girin',
+                      tr('wallet.i_ndirim_veya_kampanya_kodu_gi'),
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                   ],
@@ -495,7 +496,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                       ),
                       textCapitalization: TextCapitalization.characters,
                       decoration: InputDecoration(
-                        hintText: 'KODU GİRİN',
+                        hintText: tr('wallet.kodu_gi_ri_n'),
                         hintStyle: TextStyle(color: Colors.grey[600], letterSpacing: 2),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -553,22 +554,22 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
           const SizedBox(height: 16),
           _buildBenefitCard(
             icon: Icons.percent,
-            title: 'Özel İndirimler',
-            subtitle: 'Üyelere özel kampanyalar',
+            title: tr('wallet.ozel_i_ndirimler'),
+            subtitle: tr('wallet.uyelere_ozel_kampanyalar'),
             color: lokmaRed,
           ),
           const SizedBox(height: 12),
           _buildBenefitCard(
             icon: Icons.flash_on,
-            title: 'Hızlı Ödeme',
-            subtitle: 'QR ile anında ödeme',
+            title: tr('wallet.hizli_odeme'),
+            subtitle: tr('wallet.qr_ile_aninda_odeme'),
             color: cardGold,
           ),
           const SizedBox(height: 12),
           _buildBenefitCard(
             icon: Icons.card_giftcard,
             title: 'Puan Kazanın',
-            subtitle: 'Her alışverişte puan',
+            subtitle: tr('wallet.her_alisveriste_puan'),
             color: const Color(0xFF6C63FF),
           ),
         ],
@@ -637,8 +638,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
 
   void _shareCard() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Kart paylaşımı yakında aktif olacak!', style: TextStyle(color: Colors.white)),
+      SnackBar(
+        content: Text(tr('wallet.kart_paylasimi_yakinda_aktif_o'), style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF6C63FF),
       ),
     );

@@ -1,0 +1,2562 @@
+diff --git a/mobile_app/lib/screens/auth/login_screen.dart b/mobile_app/lib/screens/auth/login_screen.dart
+index c078185..18bf16e 100644
+--- a/mobile_app/lib/screens/auth/login_screen.dart
++++ b/mobile_app/lib/screens/auth/login_screen.dart
+@@ -253,14 +253,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+               ),
+             ),
+             const SizedBox(height: 16),
+-            const Text(
++            Text(
+               'Ülke Seçin',
+-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
++              style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold),
+             ),
+             const SizedBox(height: 16),
+             ...countries.map((c) => ListTile(
+               leading: Text(c['flag']!, style: const TextStyle(fontSize: 24)),
+-              title: Text(c['name']!, style: const TextStyle(color: Colors.white)),
++              title: Text(c['name']!, style: TextStyle(color: Theme.of(context).colorScheme.surface)),
+               trailing: Text(c['code']!, style: const TextStyle(color: Colors.white70)),
+               onTap: () {
+                 _setCountryCode(c['iso']!);
+@@ -335,9 +335,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+                   
+                   // Auth Content
+                   if (authState.isLoading || _isLoading)
+-                    const Padding(
++                    Padding(
+                       padding: EdgeInsets.all(40),
+-                      child: CircularProgressIndicator(color: Colors.white),
++                      child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface),
+                     )
+                   else
+                     _buildCurrentView(),
+@@ -363,11 +363,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+           width: 160,
+           height: 160,
+           decoration: BoxDecoration(
+-            color: Colors.white,
++            color: Theme.of(context).colorScheme.surface,
+             borderRadius: BorderRadius.circular(32),
+             boxShadow: [
+               BoxShadow(
+-                color: Colors.black.withOpacity(0.2),
++                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                 blurRadius: 30,
+                 offset: const Offset(0, 10),
+               ),
+@@ -395,10 +395,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+         const SizedBox(height: 24),
+         
+         // Tagline - Official slogan
+-        const Text(
++        Text(
+           'Fresh. Fast. Local.',
+           style: TextStyle(
+-            color: Colors.white,
++            color: Theme.of(context).colorScheme.surface,
+             fontSize: 18,
+             fontWeight: FontWeight.w300,
+             letterSpacing: 3,
+@@ -433,7 +433,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+           height: 56,
+           padding: const EdgeInsets.all(4),
+           decoration: BoxDecoration(
+-            color: Colors.white.withOpacity(0.15),
++            color: Theme.of(context).colorScheme.surface.withOpacity(0.15),
+             borderRadius: BorderRadius.circular(28),
+           ),
+           child: Row(
+@@ -450,7 +450,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+         _buildAuthButton(
+           icon: Icons.sms_outlined,
+           label: _authMode == 0 ? 'SMS ile Giriş Yap' : 'SMS ile Kayıt Ol',
+-          color: Colors.white,
++          color: Theme.of(context).colorScheme.surface,
+           textColor: lokmaDark,
+           onTap: () => setState(() => _loginMode = 'phone'),
+         ),
+@@ -461,7 +461,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+         _buildAuthButton(
+           icon: Icons.email_outlined,
+           label: _authMode == 0 ? 'E-posta ile Giriş Yap' : 'E-posta ile Kayıt Ol',
+-          color: Colors.white.withOpacity(0.15),
++          color: Theme.of(context).colorScheme.surface.withOpacity(0.15),
+           textColor: Colors.white,
+           borderColor: Colors.white.withOpacity(0.3),
+           onTap: () => setState(() => _loginMode = 'email'),
+@@ -472,15 +472,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+         // Divider
+         Row(
+           children: [
+-            Expanded(child: Divider(color: Colors.white.withOpacity(0.3))),
++            Expanded(child: Divider(color: Theme.of(context).colorScheme.surface.withOpacity(0.3))),
+             Padding(
+               padding: const EdgeInsets.symmetric(horizontal: 16),
+               child: Text(
+                 'veya',
+-                style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14),
++                style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.6), fontSize: 14),
+               ),
+             ),
+-            Expanded(child: Divider(color: Colors.white.withOpacity(0.3))),
++            Expanded(child: Divider(color: Theme.of(context).colorScheme.surface.withOpacity(0.3))),
+           ],
+         ),
+         
+@@ -509,7 +509,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+           child: Text(
+             'Misafir olarak devam et',
+             style: TextStyle(
+-              color: Colors.white.withOpacity(0.7),
++              color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+               fontSize: 14,
+               decoration: TextDecoration.underline,
+               decorationColor: Colors.white.withOpacity(0.5),
+@@ -535,7 +535,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+             borderRadius: BorderRadius.circular(24),
+             boxShadow: isSelected ? [
+               BoxShadow(
+-                color: Colors.black.withOpacity(0.1),
++                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                 blurRadius: 8,
+                 offset: const Offset(0, 2),
+               ),
+@@ -610,11 +610,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+         width: 56,
+         height: 56,
+         decoration: BoxDecoration(
+-          color: Colors.white,
++          color: Theme.of(context).colorScheme.surface,
+           shape: BoxShape.circle,
+           boxShadow: [
+             BoxShadow(
+-              color: Colors.black.withOpacity(0.1),
++              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+               blurRadius: 10,
+               offset: const Offset(0, 4),
+             ),
+@@ -640,11 +640,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+         width: 56,
+         height: 56,
+         decoration: BoxDecoration(
+-          color: Colors.white,
++          color: Theme.of(context).colorScheme.surface,
+           shape: BoxShape.circle,
+           boxShadow: [
+             BoxShadow(
+-              color: Colors.black.withOpacity(0.1),
++              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+               blurRadius: 10,
+               offset: const Offset(0, 4),
+             ),
+@@ -687,14 +687,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+               _passwordController.clear();
+               _confirmPasswordController.clear();
+             }),
+-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
++            icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.surface),
+           ),
+         ),
+         
+         Text(
+           _authMode == 1 ? '📧 E-posta ile Kayıt' : '📧 E-posta ile Giriş',
+-          style: const TextStyle(
+-            color: Colors.white,
++          style: TextStyle(
++            color: Theme.of(context).colorScheme.surface,
+             fontSize: 24,
+             fontWeight: FontWeight.bold,
+           ),
+@@ -774,14 +774,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+               _phoneController.clear();
+               _smsCodeController.clear();
+             }),
+-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
++            icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.surface),
+           ),
+         ),
+         
+         Text(
+           _codeSent ? '🔐 SMS Kodunu Gir' : '📱 Telefon ile Giriş',
+-          style: const TextStyle(
+-            color: Colors.white,
++          style: TextStyle(
++            color: Theme.of(context).colorScheme.surface,
+             fontSize: 24,
+             fontWeight: FontWeight.bold,
+           ),
+@@ -793,7 +793,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+           // Phone input with country code prefix
+           Container(
+             decoration: BoxDecoration(
+-              color: Colors.white.withOpacity(0.1),
++              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+               borderRadius: BorderRadius.circular(16),
+               border: Border.all(color: Colors.white24),
+             ),
+@@ -805,7 +805,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+                   child: Container(
+                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                     decoration: BoxDecoration(
+-                      color: Colors.white.withOpacity(0.05),
++                      color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                       borderRadius: const BorderRadius.only(
+                         topLeft: Radius.circular(16),
+                         bottomLeft: Radius.circular(16),
+@@ -816,8 +816,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+                       children: [
+                         Text(
+                           '$_countryFlag $_countryCode',
+-                          style: const TextStyle(
+-                            color: Colors.white,
++                          style: TextStyle(
++                            color: Theme.of(context).colorScheme.surface,
+                             fontSize: 16,
+                             fontWeight: FontWeight.w500,
+                           ),
+@@ -833,10 +833,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+                   child: TextField(
+                     controller: _phoneController,
+                     keyboardType: TextInputType.phone,
+-                    style: const TextStyle(color: Colors.white, fontSize: 16),
++                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16),
+                     decoration: InputDecoration(
+                       hintText: _exampleNumber,
+-                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
++                      hintStyle: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.4)),
+                       border: InputBorder.none,
+                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                     ),
+@@ -850,7 +850,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+           
+           Text(
+             'SMS ile doğrulama kodu gönderilecek',
+-            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 13),
++            style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.7), fontSize: 13),
+           ),
+           
+           const SizedBox(height: 24),
+@@ -862,7 +862,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+         ] else ...[
+           Text(
+             '6 haneli doğrulama kodunu girin',
+-            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
++            style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.7), fontSize: 14),
+           ),
+           
+           const SizedBox(height: 24),
+@@ -875,11 +875,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+             keyboardType: TextInputType.number,
+             maxLength: 6,
+             textAlign: TextAlign.center,
+-            style: const TextStyle(
++            style: TextStyle(
+               fontSize: 28,
+               letterSpacing: 12,
+               fontWeight: FontWeight.bold,
+-              color: Colors.white,
++              color: Theme.of(context).colorScheme.surface,
+             ),
+           ),
+           
+@@ -941,7 +941,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+         if (_passwordStrength < 3) ...[
+           Text(
+             '💡 Güçlü şifre için:',
+-            style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 11),
++            style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.7), fontSize: 11),
+           ),
+           const SizedBox(height: 4),
+           _buildRequirementRow('En az 6 karakter', _passwordController.text.length >= 6),
+@@ -994,12 +994,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+       obscureText: obscureText,
+       maxLength: maxLength,
+       textAlign: textAlign,
+-      style: style ?? const TextStyle(color: Colors.white),
++      style: style ?? TextStyle(color: Theme.of(context).colorScheme.surface),
+       decoration: InputDecoration(
+         labelText: label.isNotEmpty ? label : null,
+         hintText: hint,
+         labelStyle: const TextStyle(color: Colors.white70),
+-        hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
++        hintStyle: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.4)),
+         prefixIcon: Icon(icon, color: Colors.white70),
+         suffixIcon: suffixIcon,
+         counterText: '',
+@@ -1011,7 +1011,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+         ),
+         focusedBorder: OutlineInputBorder(
+           borderRadius: BorderRadius.circular(16),
+-          borderSide: const BorderSide(color: Colors.white, width: 2),
++          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface, width: 2),
+         ),
+       ),
+     );
+@@ -1030,11 +1030,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
+         width: double.infinity,
+         padding: const EdgeInsets.symmetric(vertical: 18),
+         decoration: BoxDecoration(
+-          color: Colors.white,
++          color: Theme.of(context).colorScheme.surface,
+           borderRadius: BorderRadius.circular(16),
+           boxShadow: [
+             BoxShadow(
+-              color: Colors.black.withOpacity(0.2),
++              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+               blurRadius: 12,
+               offset: const Offset(0, 6),
+             ),
+diff --git a/mobile_app/lib/screens/kermes/kermes_checkout_sheet.dart b/mobile_app/lib/screens/kermes/kermes_checkout_sheet.dart
+index 2c90979..1a1de18 100644
+--- a/mobile_app/lib/screens/kermes/kermes_checkout_sheet.dart
++++ b/mobile_app/lib/screens/kermes/kermes_checkout_sheet.dart
+@@ -285,9 +285,9 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
+                       color: _cardBg(isDark),
+                       borderRadius: BorderRadius.circular(12),
+                     ),
+-                    child: const Icon(
++                    child: Icon(
+                       Icons.arrow_back_ios_new,
+-                      color: Colors.white,
++                      color: Theme.of(context).colorScheme.surface,
+                       size: 20,
+                     ),
+                   ),
+@@ -609,7 +609,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
+                               color: lokmaPink,
+                               borderRadius: BorderRadius.horizontal(left: Radius.circular(8)),
+                             ),
+-                            child: const Icon(Icons.remove, color: Colors.white, size: 18),
++                            child: Icon(Icons.remove, color: Theme.of(context).colorScheme.surface, size: 18),
+                           ),
+                         ),
+                         Container(
+@@ -617,8 +617,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
+                           alignment: Alignment.center,
+                           child: Text(
+                             quantity.toString(),
+-                            style: const TextStyle(
+-                              color: Colors.white,
++                            style: TextStyle(
++                              color: Theme.of(context).colorScheme.surface,
+                               fontWeight: FontWeight.bold,
+                               fontSize: 15,
+                             ),
+@@ -639,7 +639,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
+                               color: lokmaPink,
+                               borderRadius: BorderRadius.horizontal(right: Radius.circular(8)),
+                             ),
+-                            child: const Icon(Icons.add, color: Colors.white, size: 18),
++                            child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface, size: 18),
+                           ),
+                         ),
+                       ],
+@@ -1254,7 +1254,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
+                     color: lokmaPink,
+                     shape: BoxShape.circle,
+                   ),
+-                  child: const Icon(Icons.check, color: Colors.white, size: 16),
++                  child: Icon(Icons.check, color: Theme.of(context).colorScheme.surface, size: 16),
+                 )
+               else
+                 Container(
+@@ -1364,12 +1364,12 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
+                   elevation: 2,
+                 ),
+                 child: _isSubmitting
+-                    ? const SizedBox(
++                    ? SizedBox(
+                         width: 18,
+                         height: 18,
+                         child: CircularProgressIndicator(
+                           strokeWidth: 2,
+-                          color: Colors.white,
++                          color: Theme.of(context).colorScheme.surface,
+                         ),
+                       )
+                     : Row(
+@@ -1377,15 +1377,15 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
+                         children: [
+                           Text(
+                             isLastStep ? 'Siparişi Onayla' : 'Devam Et',
+-                            style: const TextStyle(
+-                              color: Colors.white,
++                            style: TextStyle(
++                              color: Theme.of(context).colorScheme.surface,
+                               fontSize: 15,
+                               fontWeight: FontWeight.bold,
+                             ),
+                           ),
+                           if (!isLastStep) ...[
+                             const SizedBox(width: 6),
+-                            const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
++                            Icon(Icons.arrow_forward, color: Theme.of(context).colorScheme.surface, size: 18),
+                           ],
+                         ],
+                       ),
+diff --git a/mobile_app/lib/screens/kermes/kermes_detail_sheet.dart b/mobile_app/lib/screens/kermes/kermes_detail_sheet.dart
+index 162b80d..230009b 100644
+--- a/mobile_app/lib/screens/kermes/kermes_detail_sheet.dart
++++ b/mobile_app/lib/screens/kermes/kermes_detail_sheet.dart
+@@ -322,7 +322,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                     width: 40,
+                     height: 4,
+                     decoration: BoxDecoration(
+-                      color: Colors.white.withOpacity(0.2),
++                      color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
+                       borderRadius: BorderRadius.circular(2),
+                     ),
+                   ),
+@@ -367,8 +367,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                 imageUrl: displayImage,
+                 fit: BoxFit.cover,
+                 colorBlendMode: BlendMode.colorBurn,
+-                color: Colors.black.withOpacity(0.4),
+-                placeholder: (context, url) => Container(color: Colors.black),
++                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
++                placeholder: (context, url) => Container(color: Theme.of(context).colorScheme.onSurface),
+                 errorWidget: (context, url, error) => Container(
+                   color: primaryRuby.withOpacity(0.3),
+                   child: const Center(
+@@ -455,8 +455,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                         ),
+                         child: Text(
+                           widget.event.city.toUpperCase(),
+-                          style: const TextStyle(
+-                            color: Colors.white,
++                          style: TextStyle(
++                            color: Theme.of(context).colorScheme.surface,
+                             fontSize: 10,
+                             fontWeight: FontWeight.w900,
+                             letterSpacing: 2,
+@@ -470,7 +470,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                     Text(
+                       '${widget.event.country} ${_getCountryFlag(widget.event.country)}',
+                       style: TextStyle(
+-                        color: Colors.white.withOpacity(0.6),
++                        color: Theme.of(context).colorScheme.surface.withOpacity(0.6),
+                         fontSize: 11,
+                         fontWeight: FontWeight.w600,
+                         letterSpacing: 1,
+@@ -484,8 +484,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                   widget.event.title.isNotEmpty 
+                     ? widget.event.title 
+                     : '${widget.event.city} Büyük Türk Festivali',
+-                  style: const TextStyle(
+-                    color: Colors.white,
++                  style: TextStyle(
++                    color: Theme.of(context).colorScheme.surface,
+                     fontSize: 28,
+                     fontWeight: FontWeight.w900,
+                     letterSpacing: -0.5,
+@@ -518,9 +518,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+         Container(
+           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+           decoration: BoxDecoration(
+-            color: Colors.black.withOpacity(0.4),
++            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+             borderRadius: BorderRadius.circular(24),
+-            border: Border.all(color: Colors.white.withOpacity(0.1)),
++            border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+           ),
+           child: Row(
+             mainAxisSize: MainAxisSize.min,
+@@ -546,8 +546,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                 isFinished 
+                   ? 'BİTTİ' 
+                   : '${_days.toString().padLeft(2, '0')} GÜN : ${_hours.toString().padLeft(2, '0')} SAAT',
+-                style: const TextStyle(
+-                  color: Colors.white,
++                style: TextStyle(
++                  color: Theme.of(context).colorScheme.surface,
+                   fontSize: 11,
+                   fontWeight: FontWeight.w800,
+                   letterSpacing: 1.5,
+@@ -576,12 +576,12 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+     return Container(
+       padding: const EdgeInsets.all(16),
+       decoration: BoxDecoration(
+-        color: Colors.black.withOpacity(0.6),
++        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+         borderRadius: BorderRadius.circular(20),
+-        border: Border.all(color: Colors.white.withOpacity(0.1)),
++        border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+         boxShadow: [
+           BoxShadow(
+-            color: Colors.black.withOpacity(0.7),
++            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+             blurRadius: 50,
+             offset: const Offset(0, 20),
+           ),
+@@ -597,11 +597,11 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                   width: 32,
+                   height: 32,
+                   decoration: BoxDecoration(
+-                    color: Colors.white.withOpacity(0.05),
++                    color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                     borderRadius: BorderRadius.circular(10),
+-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
++                    border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+                   ),
+-                  child: const Icon(Icons.calendar_month, color: Colors.white, size: 14),
++                  child: Icon(Icons.calendar_month, color: Theme.of(context).colorScheme.surface, size: 14),
+                 ),
+                 const SizedBox(width: 8),
+                 Flexible(
+@@ -620,8 +620,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                       const SizedBox(height: 2),
+                       Text(
+                         _dateText,
+-                        style: const TextStyle(
+-                          color: Colors.white,
++                        style: TextStyle(
++                          color: Theme.of(context).colorScheme.surface,
+                           fontSize: 12,
+                           fontWeight: FontWeight.w700,
+                         ),
+@@ -638,7 +638,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+           Container(
+             height: 32,
+             width: 1,
+-            color: Colors.white.withOpacity(0.1),
++            color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+             margin: const EdgeInsets.symmetric(horizontal: 8),
+           ),
+           
+@@ -662,8 +662,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                     const SizedBox(height: 2),
+                     Text(
+                       _timeText,
+-                      style: const TextStyle(
+-                        color: Colors.white,
++                      style: TextStyle(
++                        color: Theme.of(context).colorScheme.surface,
+                         fontSize: 12,
+                         fontWeight: FontWeight.w700,
+                       ),
+@@ -675,11 +675,11 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                   width: 32,
+                   height: 32,
+                   decoration: BoxDecoration(
+-                    color: Colors.white.withOpacity(0.05),
++                    color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                     borderRadius: BorderRadius.circular(10),
+-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
++                    border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+                   ),
+-                  child: const Icon(Icons.schedule, color: Colors.white, size: 14),
++                  child: Icon(Icons.schedule, color: Theme.of(context).colorScheme.surface, size: 14),
+                 ),
+               ],
+             ),
+@@ -701,12 +701,12 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+         width: 40,
+         height: 40,
+         decoration: BoxDecoration(
+-          color: Colors.black.withOpacity(0.4),
++          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+           borderRadius: BorderRadius.circular(12),
+-          border: Border.all(color: Colors.white.withOpacity(0.1)),
++          border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+           boxShadow: [
+             BoxShadow(
+-              color: Colors.black.withOpacity(0.7),
++              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+               blurRadius: 50,
+               offset: const Offset(0, 20),
+             ),
+@@ -737,10 +737,10 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+         decoration: BoxDecoration(
+           color: surfaceObsidian,
+           borderRadius: BorderRadius.circular(32),
+-          border: Border.all(color: Colors.white.withOpacity(0.05)),
++          border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+           boxShadow: [
+             BoxShadow(
+-              color: Colors.black.withOpacity(0.7),
++              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+               blurRadius: 50,
+               offset: const Offset(0, 20),
+             ),
+@@ -794,10 +794,10 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                     ),
+                   ],
+                 ),
+-                child: const Text(
++                child: Text(
+                   '★ Popüler',
+                   style: TextStyle(
+-                    color: Colors.white,
++                    color: Theme.of(context).colorScheme.surface,
+                     fontSize: 10,
+                     fontWeight: FontWeight.w900,
+                     letterSpacing: 1,
+@@ -816,10 +816,10 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                 decoration: BoxDecoration(
+                   color: surfaceObsidian.withOpacity(0.8),
+                   borderRadius: BorderRadius.circular(20),
+-                  border: Border.all(color: Colors.white.withOpacity(0.1)),
++                  border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+                   boxShadow: [
+                     BoxShadow(
+-                      color: Colors.black.withOpacity(0.5),
++                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                       blurRadius: 20,
+                     ),
+                   ],
+@@ -840,10 +840,10 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                           ),
+                         ),
+                         const SizedBox(height: 4),
+-                        const Text(
++                        Text(
+                           'Menü ve\nSipariş',
+                           style: TextStyle(
+-                            color: Colors.white,
++                            color: Theme.of(context).colorScheme.surface,
+                             fontSize: 24,
+                             fontWeight: FontWeight.w900,
+                             letterSpacing: -0.5,
+@@ -870,7 +870,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                           ),
+                         ],
+                       ),
+-                      child: const Icon(Icons.restaurant_menu, color: Colors.white, size: 24),
++                      child: Icon(Icons.restaurant_menu, color: Theme.of(context).colorScheme.surface, size: 24),
+                     ),
+                   ],
+                 ),
+@@ -976,8 +976,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+           const SizedBox(width: 6),
+           Text(
+             label.toUpperCase(),
+-            style: const TextStyle(
+-              color: Colors.white,
++            style: TextStyle(
++              color: Theme.of(context).colorScheme.surface,
+               fontSize: 9,
+               fontWeight: FontWeight.w800,
+               letterSpacing: 0.3,
+@@ -995,16 +995,16 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+       decoration: BoxDecoration(
+         color: surfaceObsidian.withOpacity(0.4),
+         borderRadius: BorderRadius.circular(32),
+-        border: Border.all(color: Colors.white.withOpacity(0.05)),
++        border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+         boxShadow: [
+           BoxShadow(
+-            color: Colors.black.withOpacity(0.7),
++            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+             blurRadius: 50,
+             offset: const Offset(0, 20),
+           ),
+           // Inner sheen
+           BoxShadow(
+-            color: Colors.white.withOpacity(0.03),
++            color: Theme.of(context).colorScheme.surface.withOpacity(0.03),
+             blurRadius: 1,
+             spreadRadius: 0,
+             offset: const Offset(0, 1),
+@@ -1047,8 +1047,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                           ),
+                           Text(
+                             '${widget.event.city}, ${widget.event.country.split(' ').first}',
+-                            style: const TextStyle(
+-                              color: Colors.white,
++                            style: TextStyle(
++                              color: Theme.of(context).colorScheme.surface,
+                               fontSize: 13,
+                               fontWeight: FontWeight.w700,
+                             ),
+@@ -1077,8 +1077,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+           // Adres
+           Text(
+             widget.event.address,
+-            style: const TextStyle(
+-              color: Colors.white,
++            style: TextStyle(
++              color: Theme.of(context).colorScheme.surface,
+               fontSize: 18,
+               fontWeight: FontWeight.w700,
+               height: 1.3,
+@@ -1100,19 +1100,19 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                   BoxShadow(
+                     color: primaryRuby.withOpacity(0.3),
+                     blurRadius: 30,
+-                    offset: const Offset(0, 10),
++                    offset: Offset(0, 10),
+                   ),
+                 ],
+               ),
+               child: Row(
+                 mainAxisAlignment: MainAxisAlignment.center,
+-                children: const [
+-                  Icon(Icons.navigation, color: Colors.white, size: 18),
++                children: [
++                  Icon(Icons.navigation, color: Theme.of(context).colorScheme.surface, size: 18),
+                   SizedBox(width: 12),
+                   Text(
+                     'NAVİGASYON',
+                     style: TextStyle(
+-                      color: Colors.white,
++                      color: Theme.of(context).colorScheme.surface,
+                       fontSize: 11,
+                       fontWeight: FontWeight.w900,
+                       letterSpacing: 2,
+@@ -1131,9 +1131,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+     return Container(
+       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+       decoration: BoxDecoration(
+-        color: Colors.white.withOpacity(0.05),
++        color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+         borderRadius: BorderRadius.circular(20),
+-        border: Border.all(color: Colors.white.withOpacity(0.05)),
++        border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+       ),
+       child: Row(
+         mainAxisSize: MainAxisSize.min,
+@@ -1142,8 +1142,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+           const SizedBox(width: 6),
+           Text(
+             text,
+-            style: const TextStyle(
+-              color: Colors.white,
++            style: TextStyle(
++              color: Theme.of(context).colorScheme.surface,
+               fontSize: 10,
+               fontWeight: FontWeight.w700,
+             ),
+@@ -1171,10 +1171,10 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+         height: 144,
+         decoration: BoxDecoration(
+           borderRadius: BorderRadius.circular(32),
+-          border: Border.all(color: Colors.white.withOpacity(0.05)),
++          border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+           boxShadow: [
+             BoxShadow(
+-              color: Colors.black.withOpacity(0.7),
++              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+               blurRadius: 50,
+               offset: const Offset(0, 20),
+             ),
+@@ -1188,7 +1188,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+               child: Image.network(
+                 parkingImageUrl,
+                 fit: BoxFit.cover,
+-                color: Colors.white.withOpacity(0.6),
++                color: Theme.of(context).colorScheme.surface.withOpacity(0.6),
+                 colorBlendMode: BlendMode.overlay,
+                 errorBuilder: (_, __, ___) => Container(color: surfaceObsidian),
+               ),
+@@ -1231,11 +1231,11 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                         ),
+                       ],
+                     ),
+-                    child: const Center(
++                    child: Center(
+                       child: Text(
+                         'P',
+                         style: TextStyle(
+-                          color: Colors.white,
++                          color: Theme.of(context).colorScheme.surface,
+                           fontSize: 36,
+                           fontWeight: FontWeight.w900,
+                         ),
+@@ -1249,10 +1249,10 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       mainAxisAlignment: MainAxisAlignment.center,
+                       children: [
+-                        const Text(
++                        Text(
+                           'Park Bilgisi',
+                           style: TextStyle(
+-                            color: Colors.white,
++                            color: Theme.of(context).colorScheme.surface,
+                             fontSize: 18,
+                             fontWeight: FontWeight.w800,
+                           ),
+@@ -1460,8 +1460,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                           const SizedBox(width: 6),
+                           Text(
+                             '${day.avgTemperature.round()}°',
+-                            style: const TextStyle(
+-                              color: Colors.white,
++                            style: TextStyle(
++                              color: Theme.of(context).colorScheme.surface,
+                               fontSize: 24,
+                               fontWeight: FontWeight.w900,
+                               letterSpacing: -1,
+@@ -1478,7 +1478,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                         decoration: BoxDecoration(
+                           border: Border(
+                             top: BorderSide(
+-                              color: Colors.white.withOpacity(0.08),
++                              color: Theme.of(context).colorScheme.surface.withOpacity(0.08),
+                             ),
+                           ),
+                         ),
+@@ -1553,7 +1553,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                   decoration: BoxDecoration(
+                     color: surfaceObsidian.withOpacity(0.4),
+                     borderRadius: BorderRadius.circular(12),
+-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
++                    border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+                   ),
+                   child: Column(
+                     mainAxisAlignment: MainAxisAlignment.center,
+@@ -1580,8 +1580,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                       const SizedBox(height: 4),
+                       Text(
+                         '${hour.temperature.round()}°',
+-                        style: const TextStyle(
+-                          color: Colors.white,
++                        style: TextStyle(
++                          color: Theme.of(context).colorScheme.surface,
+                           fontSize: 12,
+                           fontWeight: FontWeight.w800,
+                         ),
+@@ -1661,8 +1661,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                         const SizedBox(width: 8),
+                         Text(
+                           '${weather.temp.round()}°',
+-                          style: const TextStyle(
+-                            color: Colors.white,
++                          style: TextStyle(
++                            color: Theme.of(context).colorScheme.surface,
+                             fontSize: 28,
+                             fontWeight: FontWeight.w900,
+                           ),
+@@ -1704,10 +1704,10 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+       decoration: BoxDecoration(
+         color: surfaceObsidian.withOpacity(0.4),
+         borderRadius: BorderRadius.circular(32),
+-        border: Border.all(color: Colors.white.withOpacity(0.05)),
++        border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+         boxShadow: [
+           BoxShadow(
+-            color: Colors.black.withOpacity(0.7),
++            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+             blurRadius: 50,
+             offset: const Offset(0, 20),
+           ),
+@@ -1720,9 +1720,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+             width: 48,
+             height: 48,
+             decoration: BoxDecoration(
+-              color: Colors.white.withOpacity(0.05),
++              color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+               borderRadius: BorderRadius.circular(16),
+-              border: Border.all(color: Colors.white.withOpacity(0.05)),
++              border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+             ),
+             child: const Icon(Icons.person, color: primaryRuby, size: 24),
+           ),
+@@ -1747,8 +1747,8 @@ Gel, birlikte güzel vakit geçirelim! 🤝
+                   widget.event.contactName?.isNotEmpty == true 
+                     ? widget.event.contactName!
+                     : (widget.event.title.isNotEmpty ? widget.event.title : 'Yetkili Kişi'),
+-                  style: const TextStyle(
+-                    color: Colors.white,
++                  style: TextStyle(
++                    color: Theme.of(context).colorScheme.surface,
+                     fontSize: 15,
+                     fontWeight: FontWeight.w700,
+                   ),
+diff --git a/mobile_app/lib/screens/kermes/kermes_menu_screen.dart b/mobile_app/lib/screens/kermes/kermes_menu_screen.dart
+index f2c8c89..768ae33 100644
+--- a/mobile_app/lib/screens/kermes/kermes_menu_screen.dart
++++ b/mobile_app/lib/screens/kermes/kermes_menu_screen.dart
+@@ -470,8 +470,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
+                     ),
+                     child: Text(
+                       _totalItems.toString(),
+-                      style: const TextStyle(
+-                        color: Colors.white,
++                      style: TextStyle(
++                        color: Theme.of(context).colorScheme.surface,
+                         fontSize: 10,
+                         fontWeight: FontWeight.bold,
+                       ),
+@@ -598,16 +598,16 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
+                           children: [
+                             Text(
+                               '$_totalItems ürün',
+-                              style: const TextStyle(
+-                                color: Colors.white,
++                              style: TextStyle(
++                                color: Theme.of(context).colorScheme.surface,
+                                 fontSize: 13,
+                                 fontWeight: FontWeight.w500,
+                               ),
+                             ),
+                             Text(
+                               '${_totalPrice.toStringAsFixed(2)} €',
+-                              style: const TextStyle(
+-                                color: Colors.white,
++                              style: TextStyle(
++                                color: Theme.of(context).colorScheme.surface,
+                                 fontSize: 22,
+                                 fontWeight: FontWeight.bold,
+                               ),
+@@ -714,7 +714,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
+                     boxShadow: hasImage
+                         ? [
+                             BoxShadow(
+-                              color: Colors.black.withOpacity(0.2),
++                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                               blurRadius: 4,
+                               offset: const Offset(0, 2),
+                             ),
+@@ -862,9 +862,9 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
+                           ),
+                         ],
+                       ),
+-                      child: const Icon(
++                      child: Icon(
+                         Icons.add,
+-                        color: Colors.white,
++                        color: Theme.of(context).colorScheme.surface,
+                         size: 24,
+                       ),
+                     ),
+@@ -893,7 +893,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
+                               bottomLeft: Radius.circular(10),
+                             ),
+                           ),
+-                          child: const Icon(Icons.remove, color: Colors.white, size: 18),
++                          child: Icon(Icons.remove, color: Theme.of(context).colorScheme.surface, size: 18),
+                         ),
+                       ),
+                       // Quantity
+@@ -902,8 +902,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
+                         alignment: Alignment.center,
+                         child: Text(
+                           cartQuantity.toString(),
+-                          style: const TextStyle(
+-                            color: Colors.white,
++                          style: TextStyle(
++                            color: Theme.of(context).colorScheme.surface,
+                             fontWeight: FontWeight.bold,
+                             fontSize: 16,
+                           ),
+@@ -922,7 +922,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
+                               bottomRight: Radius.circular(10),
+                             ),
+                           ),
+-                          child: const Icon(Icons.add, color: Colors.white, size: 18),
++                          child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface, size: 18),
+                         ),
+                       ),
+                     ],
+@@ -1343,7 +1343,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
+                   ),
+                   child: Text(
+                     deliveryLabel,
+-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
++                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 13, fontWeight: FontWeight.w500),
+                   ),
+                 ),
+                 Container(
+@@ -1354,7 +1354,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
+                   ),
+                   child: Text(
+                     order.paymentMethodLabel,
+-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
++                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 13, fontWeight: FontWeight.w500),
+                   ),
+                 ),
+               ],
+diff --git a/mobile_app/lib/screens/kermes/kermes_parking_screen.dart b/mobile_app/lib/screens/kermes/kermes_parking_screen.dart
+index ed2343c..a6f1615 100644
+--- a/mobile_app/lib/screens/kermes/kermes_parking_screen.dart
++++ b/mobile_app/lib/screens/kermes/kermes_parking_screen.dart
+@@ -158,10 +158,10 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+               child: const Icon(Icons.campaign, color: Colors.red, size: 24),
+             ),
+             const SizedBox(width: 12),
+-            const Expanded(
++            Expanded(
+               child: Text(
+                 'Acil Park Anonsu',
+-                style: TextStyle(color: Colors.white, fontSize: 18),
++                style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18),
+               ),
+             ),
+           ],
+@@ -177,7 +177,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+             TextField(
+               controller: controller,
+               maxLines: 3,
+-              style: const TextStyle(color: Colors.white),
++              style: TextStyle(color: Theme.of(context).colorScheme.surface),
+               decoration: InputDecoration(
+                 hintText: 'Örn: AB-123 plakalı araç acil çekilmeli!',
+                 hintStyle: TextStyle(color: Colors.grey[600]),
+@@ -236,7 +236,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+           SnackBar(
+             content: Row(
+               children: [
+-                const Icon(Icons.check_circle, color: Colors.white),
++                Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface),
+                 const SizedBox(width: 12),
+                 Text(tr('kermes.emergency_announcement_sent')),
+               ],
+@@ -283,9 +283,9 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                 ),
+               ),
+               const SizedBox(height: 20),
+-              const Text(
++              Text(
+                 'Haritayı Seç',
+-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
++                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.surface),
+               ),
+               const SizedBox(height: 20),
+               
+@@ -340,7 +340,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+         decoration: BoxDecoration(
+           color: _cardBg(isDark),
+           borderRadius: BorderRadius.circular(16),
+-          border: Border.all(color: Colors.white.withOpacity(0.1)),
++          border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+         ),
+         child: Row(
+           children: [
+@@ -358,7 +358,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+               child: Column(
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+-                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
++                  Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.surface)),
+                   Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                 ],
+               ),
+@@ -424,11 +424,11 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+               child: Container(
+                 margin: const EdgeInsets.all(8),
+                 decoration: BoxDecoration(
+-                  color: Colors.black.withOpacity(0.4),
++                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                   borderRadius: BorderRadius.circular(12),
+-                  border: Border.all(color: Colors.white.withOpacity(0.1)),
++                  border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+                 ),
+-                child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
++                child: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.surface, size: 20),
+               ),
+             ),
+             actions: [
+@@ -481,7 +481,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                               decoration: BoxDecoration(
+                                 color: const Color(0xFF2563EB),
+                                 borderRadius: BorderRadius.circular(8),
+-                                border: Border.all(color: Colors.white, width: 2),
++                                border: Border.all(color: Theme.of(context).colorScheme.surface, width: 2),
+                                 boxShadow: [
+                                   BoxShadow(
+                                     color: const Color(0xFF2563EB).withOpacity(0.4),
+@@ -490,13 +490,13 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                                   ),
+                                 ],
+                               ),
+-                              child: const Center(
++                              child: Center(
+                                 child: Text(
+                                   'P',
+                                   style: TextStyle(
+                                     fontSize: 26,
+                                     fontWeight: FontWeight.w900,
+-                                    color: Colors.white,
++                                    color: Theme.of(context).colorScheme.surface,
+                                   ),
+                                 ),
+                               ),
+@@ -506,9 +506,9 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               mainAxisSize: MainAxisSize.min,
+                               children: [
+-                                const Text(
++                                Text(
+                                   'Park İmkanları',
+-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
++                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.surface),
+                                 ),
+                                 Text(
+                                   '${_parkingList.length} park alanı',
+@@ -523,9 +523,9 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                         Container(
+                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                           decoration: BoxDecoration(
+-                            color: Colors.white.withOpacity(0.1),
++                            color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+                             borderRadius: BorderRadius.circular(20),
+-                            border: Border.all(color: Colors.white.withOpacity(0.2)),
++                            border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.2)),
+                           ),
+                           child: Row(
+                             mainAxisSize: MainAxisSize.min,
+@@ -534,10 +534,10 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                               const SizedBox(width: 6),
+                               Text(
+                                 widget.event.city,
+-                                style: const TextStyle(
++                                style: TextStyle(
+                                   fontSize: 14,
+                                   fontWeight: FontWeight.w500,
+-                                  color: Colors.white,
++                                  color: Theme.of(context).colorScheme.surface,
+                                 ),
+                               ),
+                             ],
+@@ -572,7 +572,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                     Expanded(
+                       child: Text(
+                         _generalParkingNote,
+-                        style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.4),
++                        style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 14, height: 1.4),
+                       ),
+                     ),
+                   ],
+@@ -633,8 +633,8 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+         child: FloatingActionButton.extended(
+           onPressed: _showAddParkingDialogFull,
+           backgroundColor: const Color(0xFF2563EB),
+-          icon: const Icon(Icons.add_location_alt, color: Colors.white),
+-          label: const Text('Park Ekle', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
++          icon: Icon(Icons.add_location_alt, color: Theme.of(context).colorScheme.surface),
++          label: Text('Park Ekle', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600)),
+         ),
+       ) : null,
+       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+@@ -689,7 +689,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                     child: Center(
+                       child: Text(
+                         'P${index + 1}',
+-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Colors.white),
++                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.surface),
+                       ),
+                     ),
+                   ),
+@@ -701,7 +701,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                       children: [
+                         Text(
+                           info.street.isNotEmpty ? info.street : 'Park Alanı ${index + 1}',
+-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
++                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.surface),
+                           maxLines: 1,
+                           overflow: TextOverflow.ellipsis,
+                         ),
+@@ -768,7 +768,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                   Expanded(
+                     child: Text(
+                       info.note!,
+-                      style: const TextStyle(color: Colors.white, fontSize: 13),
++                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 13),
+                     ),
+                   ),
+                 ],
+@@ -880,14 +880,14 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+       context: context,
+       builder: (context) => AlertDialog(
+         backgroundColor: _surfaceDark(isDark),
+-        title: const Text('Yeni Park Alanı', style: TextStyle(color: Colors.white)),
++        title: Text('Yeni Park Alanı', style: TextStyle(color: Theme.of(context).colorScheme.surface)),
+         content: SingleChildScrollView(
+           child: Column(
+             mainAxisSize: MainAxisSize.min,
+             children: [
+               TextField(
+                 controller: streetController,
+-                style: const TextStyle(color: Colors.white),
++                style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                 decoration: InputDecoration(
+                   labelText: 'Sokak/Cadde',
+                   labelStyle: TextStyle(color: Colors.grey[400]),
+@@ -902,7 +902,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                   Expanded(
+                     child: TextField(
+                       controller: postalCodeController,
+-                      style: const TextStyle(color: Colors.white),
++                      style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                       decoration: InputDecoration(
+                         labelText: 'Posta Kodu',
+                         labelStyle: TextStyle(color: Colors.grey[400]),
+@@ -917,7 +917,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                     flex: 2,
+                     child: TextField(
+                       controller: cityController,
+-                      style: const TextStyle(color: Colors.white),
++                      style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                       decoration: InputDecoration(
+                         labelText: 'Şehir',
+                         labelStyle: TextStyle(color: Colors.grey[400]),
+@@ -932,7 +932,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+               const SizedBox(height: 12),
+               TextField(
+                 controller: noteController,
+-                style: const TextStyle(color: Colors.white),
++                style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                 maxLines: 2,
+                 decoration: InputDecoration(
+                   labelText: 'Not (opsiyonel)',
+@@ -1050,12 +1050,12 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                     // Geri butonu
+                     IconButton(
+                       onPressed: () => Navigator.pop(context, false),
+-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 22),
++                      icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.surface, size: 22),
+                     ),
+-                    const Expanded(
++                    Expanded(
+                       child: Text(
+                         'Yeni Park Alanı',
+-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
++                        style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold),
+                         textAlign: TextAlign.center,
+                       ),
+                     ),
+@@ -1072,7 +1072,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       // === HIZLI EKLEME BUTONLARI ===
+-                      const Text('🚀 Hızlı Ekle', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
++                      Text('🚀 Hızlı Ekle', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                       const SizedBox(height: 12),
+                       Row(
+                         children: [
+@@ -1136,12 +1136,12 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                                 child: Column(
+                                   children: [
+                                     isGettingLocation
+-                                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+-                                        : const Icon(Icons.my_location, color: Colors.white, size: 24),
++                                        ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2))
++                                        : Icon(Icons.my_location, color: Theme.of(context).colorScheme.surface, size: 24),
+                                     const SizedBox(height: 8),
+                                     Text(
+                                       isGettingLocation ? 'Alınıyor...' : 'GPS ile Ekle',
+-                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
++                                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 12, fontWeight: FontWeight.w500),
+                                     ),
+                                   ],
+                                 ),
+@@ -1198,13 +1198,13 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                                   borderRadius: BorderRadius.circular(12),
+                                   border: Border.all(color: const Color(0xFF2563EB).withOpacity(0.5)),
+                                 ),
+-                                child: const Column(
++                                child: Column(
+                                   children: [
+-                                    Icon(Icons.business, color: Colors.white, size: 24),
++                                    Icon(Icons.business, color: Theme.of(context).colorScheme.surface, size: 24),
+                                     SizedBox(height: 8),
+                                     Text(
+                                       'Kermes Adresi',
+-                                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
++                                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 12, fontWeight: FontWeight.w500),
+                                     ),
+                                   ],
+                                 ),
+@@ -1217,7 +1217,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                       const SizedBox(height: 24),
+                       
+                       // === GOOGLE PLACES ARAMA ===
+-                      const Text('🔍 Adres Ara (Google)', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
++                      Text('🔍 Adres Ara (Google)', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                       const SizedBox(height: 12),
+                       GooglePlaceAutoCompleteTextField(
+                         textEditingController: addressSearchController,
+@@ -1231,7 +1231,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                           prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                         ),
+-                        textStyle: const TextStyle(color: Colors.white),
++                        textStyle: TextStyle(color: Theme.of(context).colorScheme.surface),
+                         debounceTime: 400,
+                         countries: const ['de'],
+                         isLatLngRequired: false,
+@@ -1276,7 +1276,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                                 Expanded(
+                                   child: Text(
+                                     prediction.description ?? '',
+-                                    style: const TextStyle(color: Colors.white, fontSize: 14),
++                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 14),
+                                   ),
+                                 ),
+                               ],
+@@ -1291,11 +1291,11 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                       const SizedBox(height: 24),
+                       
+                       // === ADRES BİLGİLERİ ===
+-                      const Text('📍 Adres Bilgileri', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
++                      Text('📍 Adres Bilgileri', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                       const SizedBox(height: 12),
+                       TextField(
+                         controller: streetController,
+-                        style: const TextStyle(color: Colors.white),
++                        style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                         decoration: InputDecoration(
+                           labelText: 'Sokak / Cadde',
+                           hintText: 'Örn: Hauptstraße 15',
+@@ -1313,7 +1313,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                           Expanded(
+                             child: TextField(
+                               controller: postalCodeController,
+-                              style: const TextStyle(color: Colors.white),
++                              style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                               keyboardType: TextInputType.number,
+                               decoration: InputDecoration(
+                                 labelText: 'Posta Kodu',
+@@ -1331,7 +1331,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                             flex: 2,
+                             child: TextField(
+                               controller: cityController,
+-                              style: const TextStyle(color: Colors.white),
++                              style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                               decoration: InputDecoration(
+                                 labelText: 'Şehir',
+                                 hintText: 'Hückelhoven',
+@@ -1349,11 +1349,11 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                       const SizedBox(height: 24),
+                       
+                       // === NOT ===
+-                      const Text('📝 Açıklama', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
++                      Text('📝 Açıklama', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                       const SizedBox(height: 12),
+                       TextField(
+                         controller: noteController,
+-                        style: const TextStyle(color: Colors.white),
++                        style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                         maxLines: 3,
+                         decoration: InputDecoration(
+                           hintText: 'Park hakkında bilgi ekleyin...\nÖrn: Cadde boyu sağlı sollu park edilebilir.',
+@@ -1367,7 +1367,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                       const SizedBox(height: 24),
+                       
+                       // === RESİMLER ===
+-                      const Text('📷 Resimler (Max 3)', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
++                      Text('📷 Resimler (Max 3)', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                       const SizedBox(height: 12),
+                       Wrap(
+                         spacing: 12,
+@@ -1401,7 +1401,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                                       color: Colors.red,
+                                       shape: BoxShape.circle,
+                                     ),
+-                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
++                                    child: Icon(Icons.close, color: Theme.of(context).colorScheme.surface, size: 16),
+                                   ),
+                                 ),
+                               ),
+@@ -1508,15 +1508,15 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                       ),
+                       child: isUploading
+-                          ? const Row(
++                          ? Row(
+                               mainAxisAlignment: MainAxisAlignment.center,
+                               children: [
+-                                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
++                                SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2)),
+                                 SizedBox(width: 12),
+-                                Text('Yükleniyor...', style: TextStyle(color: Colors.white, fontSize: 16)),
++                                Text('Yükleniyor...', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16)),
+                               ],
+                             )
+-                          : const Text('Park Alanı Ekle', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
++                          : Text('Park Alanı Ekle', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                     ),
+                   ),
+                 ),
+@@ -1590,12 +1590,12 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                     children: [
+                       IconButton(
+                         onPressed: () => Navigator.pop(context, false),
+-                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 22),
++                        icon: Icon(Icons.arrow_back_ios, color: Theme.of(context).colorScheme.surface, size: 22),
+                       ),
+                       Expanded(
+                         child: Text(
+                           'Park Alanı ${index + 1} Düzenle',
+-                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
++                          style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold),
+                           textAlign: TextAlign.center,
+                         ),
+                       ),
+@@ -1611,11 +1611,11 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: [
+                         // Adres Bilgileri
+-                        const Text('📍 Adres Bilgileri', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
++                        Text('📍 Adres Bilgileri', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                         const SizedBox(height: 12),
+                         TextField(
+                           controller: streetController,
+-                          style: const TextStyle(color: Colors.white),
++                          style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                           decoration: InputDecoration(
+                             labelText: 'Sokak / Cadde',
+                             labelStyle: TextStyle(color: Colors.grey[400]),
+@@ -1631,7 +1631,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                             Expanded(
+                               child: TextField(
+                                 controller: postalCodeController,
+-                                style: const TextStyle(color: Colors.white),
++                                style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                                 keyboardType: TextInputType.number,
+                                 decoration: InputDecoration(
+                                   labelText: 'Posta Kodu',
+@@ -1647,7 +1647,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                               flex: 2,
+                               child: TextField(
+                                 controller: cityController,
+-                                style: const TextStyle(color: Colors.white),
++                                style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                                 decoration: InputDecoration(
+                                   labelText: 'Şehir',
+                                   labelStyle: TextStyle(color: Colors.grey[400]),
+@@ -1663,11 +1663,11 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                         const SizedBox(height: 24),
+                         
+                         // Not
+-                        const Text('📝 Açıklama', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
++                        Text('📝 Açıklama', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                         const SizedBox(height: 12),
+                         TextField(
+                           controller: noteController,
+-                          style: const TextStyle(color: Colors.white),
++                          style: TextStyle(color: Theme.of(context).colorScheme.surface),
+                           maxLines: 3,
+                           decoration: InputDecoration(
+                             hintText: 'Park hakkında bilgi...',
+@@ -1681,7 +1681,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                         const SizedBox(height: 24),
+                         
+                         // Resimler
+-                        const Text('📷 Resimler', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
++                        Text('📷 Resimler', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                         const SizedBox(height: 12),
+                         Wrap(
+                           spacing: 12,
+@@ -1715,7 +1715,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                                         color: Colors.red,
+                                         shape: BoxShape.circle,
+                                       ),
+-                                      child: const Icon(Icons.close, color: Colors.white, size: 16),
++                                      child: Icon(Icons.close, color: Theme.of(context).colorScheme.surface, size: 16),
+                                     ),
+                                   ),
+                                 ),
+@@ -1749,7 +1749,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                                         color: Colors.red,
+                                         shape: BoxShape.circle,
+                                       ),
+-                                      child: const Icon(Icons.close, color: Colors.white, size: 16),
++                                      child: Icon(Icons.close, color: Theme.of(context).colorScheme.surface, size: 16),
+                                     ),
+                                   ),
+                                 ),
+@@ -1858,15 +1858,15 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                         ),
+                         child: isUploading
+-                            ? const Row(
++                            ? Row(
+                                 mainAxisAlignment: MainAxisAlignment.center,
+                                 children: [
+-                                  SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
++                                  SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2)),
+                                   SizedBox(width: 12),
+-                                  Text('Kaydediliyor...', style: TextStyle(color: Colors.white, fontSize: 16)),
++                                  Text('Kaydediliyor...', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16)),
+                                 ],
+                               )
+-                            : const Text('Değişiklikleri Kaydet', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
++                            : Text('Değişiklikleri Kaydet', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
+                       ),
+                     ),
+                   ),
+@@ -1897,7 +1897,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+       context: context,
+       builder: (context) => AlertDialog(
+         backgroundColor: _surfaceDark(isDark),
+-        title: const Text('Park Alanını Sil', style: TextStyle(color: Colors.white)),
++        title: Text('Park Alanını Sil', style: TextStyle(color: Theme.of(context).colorScheme.surface)),
+         content: const Text('Bu park alanını silmek istediğinize emin misiniz?', style: TextStyle(color: Colors.grey)),
+         actions: [
+           TextButton(
+@@ -1953,7 +1953,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
+             backgroundColor: Colors.transparent,
+             elevation: 0,
+             leading: IconButton(
+-              icon: const Icon(Icons.close, color: Colors.white),
++              icon: Icon(Icons.close, color: Theme.of(context).colorScheme.surface),
+               onPressed: () => Navigator.pop(context),
+             ),
+           ),
+diff --git a/mobile_app/lib/screens/marketplace/kasap/business_detail_screen.dart b/mobile_app/lib/screens/marketplace/kasap/business_detail_screen.dart
+index 23897bc..c8d5715 100644
+--- a/mobile_app/lib/screens/marketplace/kasap/business_detail_screen.dart
++++ b/mobile_app/lib/screens/marketplace/kasap/business_detail_screen.dart
+@@ -545,7 +545,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                          children: [
+                            Row(
+                              children: [
+-                               Text('$rating', style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.bold)),
++                               Text('$rating', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 42, fontWeight: FontWeight.bold)),
+                                const SizedBox(width: 8),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+@@ -560,7 +560,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                          ],
+                        ),
+                        const Spacer(),
+-                       const Icon(FontAwesomeIcons.google, color: Colors.white, size: 28),
++                       Icon(FontAwesomeIcons.google, color: Theme.of(context).colorScheme.surface, size: 28),
+                     ],
+                   ),
+                 ),
+@@ -573,7 +573,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                   child: Row(
+                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                     children: [
+-                      const Text('Yorumlar', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
++                      Text('Yorumlar', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.bold)),
+                       PopupMenuButton<String>(
+                         initialValue: selectedSort,
+                         color: const Color(0xFF2C2C2C),
+@@ -613,14 +613,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                                     backgroundImage: NetworkImage(review['profile_photo_url'] ?? ''),
+                                     backgroundColor: Colors.grey[800],
+                                     radius: 16,
+-                                    child: review['profile_photo_url'] == null ? const Icon(Icons.person, color: Colors.white) : null,
++                                    child: review['profile_photo_url'] == null ? Icon(Icons.person, color: Theme.of(context).colorScheme.surface) : null,
+                                   ),
+                                   const SizedBox(width: 12),
+                                   Expanded(
+                                     child: Column(
+                                       crossAxisAlignment: CrossAxisAlignment.start,
+                                       children: [
+-                                        Text(review['author_name'] ?? 'Misafir', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
++                                        Text(review['author_name'] ?? 'Misafir', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.bold)),
+                                         const SizedBox(height: 2),
+                                         Text(review['relative_time_description'] ?? '', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                                       ],
+@@ -800,15 +800,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                   children: [
+                     Container(
+                       width: 40, height: 4,
+-                      margin: const EdgeInsets.only(bottom: 20),
++                      margin: EdgeInsets.only(bottom: 20),
+                       decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                     ),
+-                    Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => const Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Colors.white, fontWeight: FontWeight.bold))),
+-                    const SizedBox(height: 16),
+-                    const Text(
++                    Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.bold))),
++                    SizedBox(height: 16),
++                    Text(
+                       'Avrupa\'nın En Güvenilir Helal Et Markası',
+                       textAlign: TextAlign.center,
+-                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
++                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold),
+                     ),
+                   ],
+                 ),
+@@ -835,10 +835,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                          _buildBrandIconElement(Icons.clean_hands, 'Kuru Yolum', Colors.amber),
+                        ],
+                      ),
+-                     const SizedBox(height: 32),
++                     SizedBox(height: 32),
+                      
+                      // Standards List
+-                     const Text('Tedarik Standartları', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
++                     Text('Tedarik Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                      _buildCheckItem('Helal Kesim', 'İslami usullere uygun kesim'),
+                      _buildCheckItem('Elle Kesim', 'Geleneksel yöntemlerle'),
+@@ -875,7 +875,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                      ),
+                      
+                      const SizedBox(height: 24),
+-                     const Text('Üretim Standartları', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
++                     Text('Üretim Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 16),
+                      _buildCheckItem('Yüksek Et Oranı', 'Kaliteli et kullanımı'),
+                      _buildCheckItem('E621 İçermez', 'Glutamat/Çin tuzu yok'),
+@@ -921,7 +921,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+             child: Column(
+               crossAxisAlignment: CrossAxisAlignment.start,
+               children: [
+-                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
++                Text(title, style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.bold, fontSize: 15)),
+                 Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 13)),
+               ],
+             ),
+@@ -990,7 +990,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                                 children: [
+                                   Text(
+                                    _getBrandLabel(_butcherDoc?['brand']),
+-                                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
++                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 12, fontWeight: FontWeight.bold),
+                                   ),
+                                   const SizedBox(width: 4),
+                                   const Icon(Icons.info, color: Colors.white70, size: 14),
+@@ -1546,7 +1546,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                             border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
+                             boxShadow: [
+                               BoxShadow(
+-                                color: Colors.black.withOpacity(0.05),
++                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                                 blurRadius: 4,
+                                 offset: const Offset(0, 2),
+                               ),
+@@ -1640,9 +1640,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                                 width: 56,
+                                 height: 56,
+                                 decoration: BoxDecoration(
+-                                  color: Colors.white,
++                                  color: Theme.of(context).colorScheme.surface,
+                                   borderRadius: BorderRadius.circular(8),
+-                                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 8)],
++                                  boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), blurRadius: 8)],
+                                 ),
+                                 child: ClipRRect(
+                                   borderRadius: BorderRadius.circular(8),
+@@ -1669,8 +1669,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                                 ),
+                                 child: Text(
+                                   _getBrandLabel(brand).toUpperCase(),
+-                                  style: const TextStyle(
+-                                    color: Colors.white,
++                                  style: TextStyle(
++                                    color: Theme.of(context).colorScheme.surface,
+                                     fontSize: 12,
+                                     fontWeight: FontWeight.bold,
+                                     letterSpacing: 0.5,
+@@ -1696,7 +1696,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                                   padding: const EdgeInsets.all(8),
+                                   child: Icon(
+                                     isFavorite ? Icons.favorite : Icons.favorite_border,
+-                                    color: Colors.white,
++                                    color: Theme.of(context).colorScheme.surface,
+                                     size: 22,
+                                   ),
+                                 ),
+@@ -2030,7 +2030,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+         borderRadius: BorderRadius.circular(16),
+         boxShadow: [
+           BoxShadow(
+-            color: Colors.black.withOpacity(0.2),
++            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+             blurRadius: 8,
+             offset: const Offset(0, 4),
+           ),
+@@ -2083,7 +2083,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                         : const Color(0xFFFB335B), // Red Pill if truly out
+                       borderRadius: BorderRadius.circular(20),
+                       boxShadow: [
+-                         BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 4, offset:const Offset(0,2))
++                         BoxShadow(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), blurRadius: 4, offset:const Offset(0,2))
+                       ],
+                     ),
+                     child: Text(
+@@ -2092,7 +2092,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                             ? 'GELİYOR: ${product.expectedRestockDate!.day}.${product.expectedRestockDate!.month} ${product.expectedRestockDate!.hour.toString().padLeft(2, '0')}:${product.expectedRestockDate!.minute.toString().padLeft(2, '0')}' 
+                             : 'ÖN SİPARİŞ')
+                         : 'TÜKENDİ',
+-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
++                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                     ),
+                   ),
+                 ),
+@@ -2111,8 +2111,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                     I18nUtils.getLocalizedText(context, product.nameData),
+                     maxLines: 1,
+                     overflow: TextOverflow.ellipsis,
+-                    style: const TextStyle(
+-                      color: Colors.white, 
++                    style: TextStyle(
++                      color: Theme.of(context).colorScheme.surface, 
+                       fontWeight: FontWeight.bold, 
+                       fontSize: 16
+                     ),
+@@ -2237,8 +2237,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                             isByWeight 
+                                 ? (currentQty * 1000).toStringAsFixed(0) 
+                                 : currentQty.toStringAsFixed(0),
+-                            style: const TextStyle(
+-                              color: Colors.white, 
++                            style: TextStyle(
++                              color: Theme.of(context).colorScheme.surface, 
+                               fontSize: 16, 
+                               fontWeight: FontWeight.bold
+                             ),
+@@ -2284,7 +2284,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                                   color: const Color(0xFF4CAF50),
+                                   borderRadius: BorderRadius.circular(8),
+                                 ),
+-                                child: const Icon(Icons.check_circle, color: Colors.white, size: 24),
++                                child: Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 24),
+                               ),
+                               const SizedBox(width: 12),
+                               Expanded(
+@@ -2390,7 +2390,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+           color: Colors.white10,
+           borderRadius: BorderRadius.circular(12),
+         ),
+-        child: Icon(icon, color: Colors.white, size: 18),
++        child: Icon(icon, color: Theme.of(context).colorScheme.surface, size: 18),
+       ),
+     );
+   }
+@@ -2686,10 +2686,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                               setStateModal(() => selectedQty = selectedQty + product.stepQuantity);
+                             },
+                             borderRadius: BorderRadius.circular(8),
+-                            child: const SizedBox(
++                            child: SizedBox(
+                               width: 44,
+                               height: 44,
+-                              child: Icon(Icons.add, color: Colors.white),
++                              child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface),
+                             ),
+                           ),
+                         ),
+@@ -2769,7 +2769,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+           border: inCart && isAvailable ? Border.all(color: accent.withOpacity(0.5), width: 2) : null,
+           boxShadow: [
+             BoxShadow(
+-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
++              color: Theme.of(context).colorScheme.onSurface.withOpacity(isDark ? 0.3 : 0.08),
+               blurRadius: 8,
+               offset: const Offset(0, 2),
+             ),
+@@ -2949,10 +2949,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                                           alignment: Alignment.center,
+                                           child: Text(
+                                             '${ci.quantity.toInt()}',
+-                                            style: const TextStyle(
++                                            style: TextStyle(
+                                               fontSize: 10,
+                                               fontWeight: FontWeight.bold,
+-                                              color: Colors.white,
++                                              color: Theme.of(context).colorScheme.surface,
+                                             ),
+                                           ),
+                                         ),
+@@ -3009,13 +3009,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                                       Icon(
+                                         // Option products always show add, simple products show edit when in cart
+                                         (inCart && product.optionGroups.isEmpty) ? Icons.edit : Icons.add, 
+-                                        color: Colors.white, size: 16,
++                                        color: Theme.of(context).colorScheme.surface, size: 16,
+                                       ),
+                                       const SizedBox(width: 4),
+                                       Text(
+                                         (inCart && product.optionGroups.isEmpty) ? 'Düzenle' : '+ Ekle',
+-                                        style: const TextStyle(
+-                                          color: Colors.white,
++                                        style: TextStyle(
++                                          color: Theme.of(context).colorScheme.surface,
+                                           fontSize: 13,
+                                           fontWeight: FontWeight.w600,
+                                         ),
+@@ -3187,7 +3187,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
+                 SnackBar(
+                   content: Row(
+                     children: [
+-                      Icon(Icons.check_circle, color: Colors.white, size: 20),
++                      Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 20),
+                       SizedBox(width: 8),
+                       Text(tr('orders.table_order_mode_active_add_products')),
+                     ],
+@@ -3375,7 +3375,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
+               color: scaffoldBg,
+               boxShadow: [
+                 BoxShadow(
+-                  color: Colors.black.withOpacity(0.05),
++                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                   blurRadius: 4,
+                   offset: const Offset(0, 2),
+                 ),
+@@ -3615,7 +3615,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
+                         color: accent,
+                         borderRadius: BorderRadius.circular(10),
+                       ),
+-                      child: const Icon(Icons.add, color: Colors.white, size: 16),
++                      child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface, size: 16),
+                     ),
+                   ],
+                 ),
+diff --git a/mobile_app/lib/screens/marketplace/kasap/cart_screen.dart b/mobile_app/lib/screens/marketplace/kasap/cart_screen.dart
+index 43b8be1..91f9680 100644
+--- a/mobile_app/lib/screens/marketplace/kasap/cart_screen.dart
++++ b/mobile_app/lib/screens/marketplace/kasap/cart_screen.dart
+@@ -718,7 +718,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+             ),
+             onPressed: () => context.go('/profile'),
+-            child: Text('cart.login'.tr(), style: TextStyle(color: Colors.white)),
++            child: Text('cart.login'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.surface)),
+           ),
+         ],
+       ),
+@@ -763,7 +763,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+           border: Border.all(color: isDark ? Colors.grey.shade600 : Colors.grey.shade300, width: 1.5),
+           boxShadow: [
+             BoxShadow(
+-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
++              color: Theme.of(context).colorScheme.onSurface.withOpacity(isDark ? 0.2 : 0.04),
+               blurRadius: 8,
+               offset: const Offset(0, 2),
+             ),
+@@ -851,7 +851,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                                         'TUNA',
+                                         textAlign: TextAlign.center,
+                                         style: TextStyle(
+-                                          color: Colors.white,
++                                          color: Theme.of(context).colorScheme.surface,
+                                           fontSize: 9,
+                                           fontWeight: FontWeight.bold,
+                                           letterSpacing: 0.5,
+@@ -995,7 +995,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                         style: TextStyle(
+                           fontSize: 14,
+                           fontWeight: FontWeight.w600,
+-                          color: Colors.white,
++                          color: Theme.of(context).colorScheme.surface,
+                         ),
+                       ),
+                     ),
+@@ -1113,10 +1113,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                               Navigator.pop(context);
+                               _rateOrder(order);
+                             },
+-                            icon: const Icon(Icons.star_border, color: Colors.white, size: 20),
++                            icon: Icon(Icons.star_border, color: Theme.of(context).colorScheme.surface, size: 20),
+                             label: Text(
+                               'cart.rate'.tr(),
+-                              style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
++                              style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 15, fontWeight: FontWeight.w600),
+                             ),
+                           ),
+                         ),
+@@ -1341,7 +1341,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                                       ),
+                                       child: Text(
+                                         'cart.start_chat'.tr(),
+-                                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
++                                        style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 13, fontWeight: FontWeight.w600),
+                                       ),
+                                     ),
+                                   ),
+@@ -1986,12 +1986,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+       margin: const EdgeInsets.only(bottom: 12),
+       padding: const EdgeInsets.all(16),
+       decoration: BoxDecoration(
+-        color: Colors.white,
++        color: Theme.of(context).colorScheme.surface,
+         borderRadius: BorderRadius.circular(16),
+         border: isActive ? Border.all(color: statusColor.withOpacity(0.5), width: 1) : Border.all(color: Colors.grey.withOpacity(0.1)),
+         boxShadow: [
+           BoxShadow(
+-            color: Colors.black.withOpacity(0.05),
++            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+             blurRadius: 8,
+             offset: const Offset(0, 2),
+           ),
+@@ -2271,7 +2271,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+       return Container(
+         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+         decoration: BoxDecoration(
+-          color: Colors.white,
++          color: Theme.of(context).colorScheme.surface,
+           borderRadius: BorderRadius.circular(28),
+           border: Border.all(color: Colors.grey.shade300),
+         ),
+@@ -2348,7 +2348,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                 color: const Color(0xFF4CAF50),
+                 borderRadius: BorderRadius.circular(12),
+               ),
+-              child: const Icon(Icons.check, color: Colors.white, size: 14),
++              child: Icon(Icons.check, color: Theme.of(context).colorScheme.surface, size: 14),
+             ),
+             SizedBox(width: 10),
+             Expanded(
+@@ -2523,8 +2523,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+             alignment: Alignment.center,
+             child: Text(
+               '#$positionNumber',
+-              style: const TextStyle(
+-                color: Colors.white,
++              style: TextStyle(
++                color: Theme.of(context).colorScheme.surface,
+                 fontWeight: FontWeight.w700,
+                 fontSize: 12,
+               ),
+@@ -2765,7 +2765,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+               backgroundColor: const Color(0xFFFF6B00),
+               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+             ),
+-            child: const Text('Kaydet', style: TextStyle(color: Colors.white)),
++            child: Text('Kaydet', style: TextStyle(color: Theme.of(context).colorScheme.surface)),
+           ),
+         ],
+       ),
+@@ -2840,7 +2840,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                   ),
+                   boxShadow: [
+                     BoxShadow(
+-                      color: Colors.black.withOpacity(0.05),
++                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                       blurRadius: 8,
+                       offset: Offset(0, 2),
+                     ),
+@@ -2967,7 +2967,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                                       color: _accentColor,
+                                       borderRadius: BorderRadius.circular(8),
+                                     ),
+-                                    child: Icon(Icons.add, color: Colors.white, size: 16),
++                                    child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface, size: 16),
+                                   ),
+                                 ),
+                               ],
+@@ -3070,15 +3070,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+             mainAxisSize: MainAxisSize.min,
+             children: [
+               if (_isDineIn && _scannedTableNumber == null) ...[
+-                const Icon(Icons.qr_code_scanner, color: Colors.white, size: 20),
++                Icon(Icons.qr_code_scanner, color: Theme.of(context).colorScheme.surface, size: 20),
+                 const SizedBox(width: 8),
+               ],
+               Text(
+                 (_isDineIn && _scannedTableNumber == null)
+                     ? 'Masa QR Kodunu Tara · ${total.toStringAsFixed(2)} €'
+                     : 'Siparişi Onayla · ${total.toStringAsFixed(2)} €',
+-                style: const TextStyle(
+-                  color: Colors.white,
++                style: TextStyle(
++                  color: Theme.of(context).colorScheme.surface,
+                   fontSize: 16,
+                   fontWeight: FontWeight.bold,
+                 ),
+@@ -3109,7 +3109,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+             boxShadow: [
+               BoxShadow(
+-                color: Colors.black.withOpacity(0.3),
++                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                 blurRadius: 30,
+                 offset: const Offset(0, -10),
+               ),
+@@ -3552,7 +3552,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                     SnackBar(
+                       content: Row(
+                         children: [
+-                          const Icon(Icons.check_circle, color: Colors.white, size: 20),
++                          Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 20),
+                           const SizedBox(width: 8),
+                           Text('Masa $tableNum doğrulandı ✓'),
+                         ],
+@@ -3800,12 +3800,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+     return Container(
+       padding: const EdgeInsets.all(16),
+       decoration: BoxDecoration(
+-        color: Colors.white,
++        color: Theme.of(context).colorScheme.surface,
+         borderRadius: BorderRadius.circular(16),
+         border: Border.all(color: const Color(0xFFFB335B).withOpacity(0.3)),
+         boxShadow: [
+           BoxShadow(
+-            color: Colors.black.withOpacity(0.05),
++            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+             blurRadius: 8,
+             offset: const Offset(0, 2),
+           ),
+@@ -3871,7 +3871,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                     child: Text(
+                       '${item.quantity}',
+                       style: TextStyle(
+-                        color: Colors.white,
++                        color: Theme.of(context).colorScheme.surface,
+                         fontWeight: FontWeight.bold,
+                         fontSize: 13,
+                       ),
+@@ -3898,7 +3898,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+             ),
+           )),
+           
+-          const Divider(color: Colors.black12),
++          Divider(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.12)),
+           
+           // Toplam
+           Row(
+@@ -4095,10 +4095,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+             Container(
+               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+               decoration: BoxDecoration(
+-                color: Colors.white,
++                color: Theme.of(context).colorScheme.surface,
+                 borderRadius: BorderRadius.circular(12),
+                 boxShadow: [
+-                  BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
++                  BoxShadow(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
+                 ],
+               ),
+               child: Row(
+@@ -4131,14 +4131,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                     ? SizedBox(
+                         width: 24,
+                         height: 24,
+-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
++                        child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2.5),
+                       )
+                     : Text(
+                         'Siparişi Onayla',
+                         style: TextStyle(
+                           fontSize: 16,
+                           fontWeight: FontWeight.w600,
+-                          color: Colors.white,
++                          color: Theme.of(context).colorScheme.surface,
+                         ),
+                       ),
+               ),
+@@ -4158,7 +4158,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+             SizedBox(height: 16),
+             Text(
+               'Sepet yüklenirken hata oluştu',
+-              style: TextStyle(color: Colors.white, fontSize: 18),
++              style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18),
+             ),
+             SizedBox(height: 8),
+             Text(
+@@ -4733,7 +4733,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                       color: Theme.of(context).scaffoldBackgroundColor,
+                       boxShadow: [
+                         BoxShadow(
+-                          color: Colors.black.withOpacity(0.05),
++                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                           blurRadius: 10,
+                           offset: const Offset(0, -4),
+                         ),
+@@ -4773,13 +4773,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+                         ),
+                         child: Center(
+                           child: _isSubmitting
+-                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
++                              ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2.5))
+                               : Text(
+                                   _isDineIn && _scannedTableNumber != null
+                                     ? 'Siparişi Gönder · Masa $_scannedTableNumber'
+                                     : 'Siparişi Gönder · ${grandTotal.toStringAsFixed(2)} €',
+-                                  style: const TextStyle(
+-                                    color: Colors.white,
++                                  style: TextStyle(
++                                    color: Theme.of(context).colorScheme.surface,
+                                     fontSize: 16,
+                                     fontWeight: FontWeight.bold,
+                                   ),
+@@ -4831,7 +4831,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+       child: Container(
+         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+         decoration: BoxDecoration(
+-          color: Colors.white,
++          color: Theme.of(context).colorScheme.surface,
+           borderRadius: BorderRadius.circular(12),
+           border: Border.all(color: Colors.grey.shade300),
+         ),
+@@ -4890,7 +4890,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+     return Container(
+       padding: const EdgeInsets.all(16),
+       decoration: BoxDecoration(
+-        color: Colors.white,
++        color: Theme.of(context).colorScheme.surface,
+         borderRadius: BorderRadius.circular(12),
+         border: Border.all(color: Colors.grey.withOpacity(0.2)),
+       ),
+@@ -4990,7 +4990,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
+       child: Container(
+         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+         decoration: BoxDecoration(
+-          color: Colors.white,
++          color: Theme.of(context).colorScheme.surface,
+           borderRadius: BorderRadius.circular(12),
+           border: Border.all(color: Colors.grey.shade300),
+         ),
+diff --git a/mobile_app/lib/screens/marketplace/restoran/restoran_screen.dart b/mobile_app/lib/screens/marketplace/restoran/restoran_screen.dart
+index 57f6604..f4ce061 100644
+--- a/mobile_app/lib/screens/marketplace/restoran/restoran_screen.dart
++++ b/mobile_app/lib/screens/marketplace/restoran/restoran_screen.dart
+@@ -766,12 +766,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                             decoration: BoxDecoration(
+                               color: lokmaPink,
+                               borderRadius: BorderRadius.circular(6),
+-                              border: Border.all(color: Colors.white, width: 1),
++                              border: Border.all(color: Theme.of(context).colorScheme.surface, width: 1),
+                             ),
+                             child: Text(
+                               '${favorites.length}',
+-                              style: const TextStyle(
+-                                color: Colors.white,
++                              style: TextStyle(
++                                color: Theme.of(context).colorScheme.surface,
+                                 fontSize: 9,
+                                 fontWeight: FontWeight.bold,
+                               ),
+@@ -805,7 +805,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+             borderRadius: BorderRadius.circular(30),
+             boxShadow: [
+               BoxShadow(
+-                color: Colors.black.withOpacity(0.05),
++                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                 blurRadius: 4,
+                 offset: const Offset(0, 2),
+               ),
+@@ -1375,8 +1375,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+           child: Text(
+             tr('discovery.businesses_at_service', namedArgs: {'count': restaurants.length.toString()}),
+-            style: const TextStyle(
+-              color: Colors.white,
++            style: TextStyle(
++              color: Theme.of(context).colorScheme.surface,
+               fontSize: 15,
+               fontWeight: FontWeight.w600,
+             ),
+@@ -1630,7 +1630,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+           borderRadius: BorderRadius.circular(12),
+           boxShadow: [
+             BoxShadow(
+-              color: Colors.black.withOpacity(0.08),
++              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+               blurRadius: 8,
+               offset: const Offset(0, 2),
+             ),
+@@ -1697,7 +1697,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                     if (!isAvailable)
+                       Positioned.fill(
+                         child: Container(
+-                          color: Colors.black.withOpacity(0.35),
++                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                         ),
+                       ),
+                     
+@@ -1712,11 +1712,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                             width: 48,
+                             height: 48,
+                             decoration: BoxDecoration(
+-                              color: Colors.white,
++                              color: Theme.of(context).colorScheme.surface,
+                               borderRadius: BorderRadius.circular(8),
+                               boxShadow: [
+                                 BoxShadow(
+-                                  color: Colors.black.withOpacity(0.2),
++                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                                   blurRadius: 6,
+                                   offset: const Offset(0, 2),
+                                 ),
+@@ -1750,16 +1750,16 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                               borderRadius: BorderRadius.circular(16), // Pill shape
+                               boxShadow: [
+                                 BoxShadow(
+-                                  color: Colors.black.withOpacity(0.3),
++                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                                   blurRadius: 4,
+                                   offset: const Offset(0, 2),
+                                 ),
+                               ],
+                             ),
+-                            child: const Text(
++                            child: Text(
+                               'TUNA',
+                               style: TextStyle(
+-                                color: Colors.white,
++                                color: Theme.of(context).colorScheme.surface,
+                                 fontSize: 13,
+                                 fontWeight: FontWeight.bold,
+                                 letterSpacing: 1.2,
+@@ -1781,7 +1781,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                         child: Container(
+                           padding: const EdgeInsets.all(8),
+                           decoration: BoxDecoration(
+-                            color: Colors.black.withOpacity(0.5),
++                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                             shape: BoxShape.circle,
+                           ),
+                           child: Icon(
+@@ -1806,11 +1806,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                               child: Container(
+                                 padding: const EdgeInsets.all(10),
+                                 decoration: BoxDecoration(
+-                                  color: Colors.white,
++                                  color: Theme.of(context).colorScheme.surface,
+                                   borderRadius: BorderRadius.circular(12),
+                                   boxShadow: [
+                                     BoxShadow(
+-                                      color: Colors.black.withOpacity(0.2),
++                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                                       blurRadius: 8,
+                                       offset: const Offset(0, 2),
+                                     ),
+@@ -1837,8 +1837,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                                         child: Center(
+                                           child: Text(
+                                             '${cartState.items.length}',
+-                                            style: const TextStyle(
+-                                              color: Colors.white,
++                                            style: TextStyle(
++                                              color: Theme.of(context).colorScheme.surface,
+                                               fontSize: 10,
+                                               fontWeight: FontWeight.bold,
+                                             ),
+@@ -2341,7 +2341,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                       color: cardBg,
+                       boxShadow: [
+                         BoxShadow(
+-                          color: Colors.black.withOpacity(0.3),
++                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                           blurRadius: 10,
+                           offset: const Offset(0, -2),
+                         ),
+@@ -2362,8 +2362,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                           ),
+                           child: Text(
+                             '$totalResults İşletme Göster',
+-                            style: const TextStyle(
+-                              color: Colors.white,
++                            style: TextStyle(
++                              color: Theme.of(context).colorScheme.surface,
+                               fontSize: 16,
+                               fontWeight: FontWeight.w600,
+                             ),
+@@ -2457,7 +2457,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                     ),
+                   ),
+                   child: isSelected
+-                      ? const Icon(Icons.check, color: Colors.white, size: 14)
++                      ? Icon(Icons.check, color: Theme.of(context).colorScheme.surface, size: 14)
+                       : null,
+                 ),
+               ],
+@@ -2670,13 +2670,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                           Container(
+                             padding: const EdgeInsets.all(8),
+                             decoration: BoxDecoration(
+-                              color: Colors.white.withValues(alpha: 0.15),
++                              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.15),
+                               shape: BoxShape.circle,
+                             ),
+-                            child: const Icon(
++                            child: Icon(
+                               Icons.history,
+                               size: 20,
+-                              color: Colors.white,
++                              color: Theme.of(context).colorScheme.surface,
+                             ),
+                           ),
+                           const SizedBox(width: 12),
+@@ -2684,12 +2684,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                             child: Column(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+-                                const Text(
++                                Text(
+                                   'Aktif Siparişinize Dönün',
+                                   style: TextStyle(
+                                     fontSize: 16,
+                                     fontWeight: FontWeight.w700,
+-                                    color: Colors.white,
++                                    color: Theme.of(context).colorScheme.surface,
+                                     letterSpacing: -0.2,
+                                   ),
+                                 ),
+@@ -2698,7 +2698,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                                   'Önceki masanıza hemen geçin',
+                                   style: TextStyle(
+                                     fontSize: 12,
+-                                    color: Colors.white.withValues(alpha: 0.85),
++                                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
+                                   ),
+                                 ),
+                               ],
+@@ -2707,7 +2707,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                           Icon(
+                             Icons.arrow_forward_ios,
+                             size: 16,
+-                            color: Colors.white.withValues(alpha: 0.7),
++                            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
+                           ),
+                         ],
+                       ),
+@@ -2760,22 +2760,22 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                           width: 64,
+                           height: 64,
+                           decoration: BoxDecoration(
+-                            color: Colors.white.withOpacity(0.2),
++                            color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
+                             shape: BoxShape.circle,
+                           ),
+-                          child: const Icon(
++                          child: Icon(
+                             Icons.qr_code_scanner,
+                             size: 34,
+-                            color: Colors.white,
++                            color: Theme.of(context).colorScheme.surface,
+                           ),
+                         ),
+                         const SizedBox(height: 14),
+-                        const Text(
++                        Text(
+                           'QR ile Sipariş Ver',
+                           style: TextStyle(
+                             fontSize: 19,
+                             fontWeight: FontWeight.w700,
+-                            color: Colors.white,
++                            color: Theme.of(context).colorScheme.surface,
+                             letterSpacing: -0.3,
+                           ),
+                         ),
+@@ -2784,7 +2784,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                           'Masanızdaki QR kodu okutun',
+                           style: TextStyle(
+                             fontSize: 13,
+-                            color: Colors.white.withOpacity(0.8),
++                            color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                           ),
+                         ),
+                       ],
+@@ -2813,7 +2813,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                           ? []
+                           : [
+                               BoxShadow(
+-                                color: Colors.black.withOpacity(0.04),
++                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.04),
+                                 blurRadius: 12,
+                                 offset: const Offset(0, 4),
+                               ),
+@@ -3340,7 +3340,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+             boxShadow: [
+               BoxShadow(
+-                color: Colors.black.withOpacity(0.3),
++                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                 blurRadius: 30,
+                 offset: const Offset(0, -10),
+               ),
+@@ -3579,7 +3579,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+           SnackBar(
+             content: Row(
+               children: [
+-                const Icon(Icons.check_circle, color: Colors.white, size: 20),
++                Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 20),
+                 const SizedBox(width: 8),
+                 Text('Masa $tableNum seçildi ✓'),
+               ],
+@@ -4021,7 +4021,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
+                       SnackBar(
+                         content: Row(
+                           children: [
+-                            const Icon(Icons.check_circle, color: Colors.white, size: 20),
++                            Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 20),
+                             const SizedBox(width: 8),
+                             Text('Masa $tableNum doğrulandı ✓'),
+                           ],
+diff --git a/mobile_app/lib/screens/staff/staff_hub_screen.dart b/mobile_app/lib/screens/staff/staff_hub_screen.dart
+index a8cfb2e..cec6b4e 100644
+--- a/mobile_app/lib/screens/staff/staff_hub_screen.dart
++++ b/mobile_app/lib/screens/staff/staff_hub_screen.dart
+@@ -2017,7 +2017,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                 ),
+                 borderRadius: BorderRadius.circular(16),
+               ),
+-              child: const Icon(Icons.local_shipping, color: Colors.white, size: 28),
++              child: Icon(Icons.local_shipping, color: Theme.of(context).colorScheme.surface, size: 28),
+             ),
+             const SizedBox(width: 16),
+             // Title + live status chips
+@@ -2130,7 +2130,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                 ),
+                 borderRadius: BorderRadius.circular(16),
+               ),
+-              child: const Icon(Icons.restaurant, color: Colors.white, size: 28),
++              child: Icon(Icons.restaurant, color: Theme.of(context).colorScheme.surface, size: 28),
+             ),
+             const SizedBox(width: 16),
+             Expanded(
+@@ -2279,7 +2279,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                   ),
+                   borderRadius: BorderRadius.circular(13),
+                 ),
+-                child: Icon(icon, color: Colors.white, size: 22),
++                child: Icon(icon, color: Theme.of(context).colorScheme.surface, size: 22),
+               ),
+               const SizedBox(width: 16),
+               // Text
+@@ -2315,8 +2315,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                   ),
+                   child: Text(
+                     '$badgeCount',
+-                    style: const TextStyle(
+-                      color: Colors.white,
++                    style: TextStyle(
++                      color: Theme.of(context).colorScheme.surface,
+                       fontWeight: FontWeight.bold,
+                       fontSize: 14,
+                     ),
+@@ -2689,7 +2689,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+           ElevatedButton(
+             onPressed: () => Navigator.pop(ctx, true),
+             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+-            child: const Text('✅ Servis Ettim', style: TextStyle(color: Colors.white)),
++            child: Text('✅ Servis Ettim', style: TextStyle(color: Theme.of(context).colorScheme.surface)),
+           ),
+         ],
+       ),
+@@ -2958,11 +2958,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                                           orders[index].id,
+                                           orderId,
+                                         ),
+-                                        icon: const Icon(Icons.restaurant, color: Colors.white, size: 18),
+-                                        label: const Text(
++                                        icon: Icon(Icons.restaurant, color: Theme.of(context).colorScheme.surface, size: 18),
++                                        label: Text(
+                                           '🍽️ Servis Ettim',
+                                           style: TextStyle(
+-                                            color: Colors.white,
++                                            color: Theme.of(context).colorScheme.surface,
+                                             fontWeight: FontWeight.bold,
+                                             fontSize: 14,
+                                           ),
+@@ -3415,8 +3415,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                             color: Colors.amber,
+                             borderRadius: BorderRadius.circular(4),
+                           ),
+-                          child: const Center(
+-                            child: Text('R', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
++                          child: Center(
++                            child: Text('R', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 8, fontWeight: FontWeight.w900)),
+                           ),
+                         ),
+                       ),
+@@ -3554,8 +3554,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                           color: Colors.amber,
+                           borderRadius: BorderRadius.circular(4),
+                         ),
+-                        child: const Center(
+-                          child: Text('R', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
++                        child: Center(
++                          child: Text('R', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 8, fontWeight: FontWeight.w900)),
+                         ),
+                       ),
+                     ),
+@@ -3699,7 +3699,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                         ),
+                         child: Row(
+                           children: [
+-                            const Icon(Icons.receipt_long, size: 28, color: Colors.white),
++                            Icon(Icons.receipt_long, size: 28, color: Theme.of(context).colorScheme.surface),
+                             const SizedBox(width: 12),
+                             Expanded(
+                               child: Column(
+@@ -3707,15 +3707,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                                 children: [
+                                   Text(
+                                     'Masa $tableNumber — Toptan Hesap',
+-                                    style: const TextStyle(
++                                    style: TextStyle(
+                                       fontSize: 18,
+                                       fontWeight: FontWeight.w900,
+-                                      color: Colors.white,
++                                      color: Theme.of(context).colorScheme.surface,
+                                     ),
+                                   ),
+                                   Text(
+                                     '${unpaidOrders.length} açık sipariş',
+-                                    style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.85)),
++                                    style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.surface.withOpacity(0.85)),
+                                   ),
+                                 ],
+                               ),
+@@ -3723,15 +3723,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                             Container(
+                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                               decoration: BoxDecoration(
+-                                color: Colors.white.withOpacity(0.2),
++                                color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
+                                 borderRadius: BorderRadius.circular(12),
+                               ),
+                               child: Text(
+                                 '€${grandTotal.toStringAsFixed(2)}',
+-                                style: const TextStyle(
++                                style: TextStyle(
+                                   fontSize: 22,
+                                   fontWeight: FontWeight.w900,
+-                                  color: Colors.white,
++                                  color: Theme.of(context).colorScheme.surface,
+                                 ),
+                               ),
+                             ),
+@@ -3774,10 +3774,10 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                                         ),
+                                         child: Text(
+                                           '#$displayId',
+-                                          style: const TextStyle(
++                                          style: TextStyle(
+                                             fontSize: 12,
+                                             fontWeight: FontWeight.w800,
+-                                            color: Colors.white,
++                                            color: Theme.of(context).colorScheme.surface,
+                                           ),
+                                         ),
+                                       ),
+@@ -4195,23 +4195,23 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                         child: Row(
+                                           children: [
+-                                            const Icon(Icons.receipt_long, size: 24, color: Colors.white),
++                                            Icon(Icons.receipt_long, size: 24, color: Theme.of(context).colorScheme.surface),
+                                             const SizedBox(width: 10),
+                                             Expanded(
+                                               child: Column(
+                                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                                 children: [
+-                                                  const Text(
++                                                  Text(
+                                                     '🧾 Toptan Hesap Öde',
+                                                     style: TextStyle(
+                                                       fontSize: 16,
+                                                       fontWeight: FontWeight.w900,
+-                                                      color: Colors.white,
++                                                      color: Theme.of(context).colorScheme.surface,
+                                                     ),
+                                                   ),
+                                                   Text(
+                                                     '${unpaidOrders.length} açık sipariş',
+-                                                    style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.8)),
++                                                    style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.surface.withOpacity(0.8)),
+                                                   ),
+                                                 ],
+                                               ),
+@@ -4219,15 +4219,15 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
+                                             Container(
+                                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                               decoration: BoxDecoration(
+-                                                color: Colors.white.withOpacity(0.2),
++                                                color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
+                                                 borderRadius: BorderRadius.circular(12),
+                                               ),
+                                               child: Text(
+                                                 '€${unpaidTotal.toStringAsFixed(2)}',
+-                                                style: const TextStyle(
++                                                style: TextStyle(
+                                                   fontSize: 20,
+                                                   fontWeight: FontWeight.w900,
+-                                                  color: Colors.white,
++                                                  color: Theme.of(context).colorScheme.surface,
+                                                 ),
+                                               ),
+                                             ),

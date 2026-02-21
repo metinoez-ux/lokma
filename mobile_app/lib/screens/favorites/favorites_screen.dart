@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -81,10 +82,10 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
           // 3D Pill Slider Custom TabBar
           ThreeDimensionalPillTabBar(
             selectedIndex: _selectedIndex,
-            tabs: const [
-              TabItem(title: 'İşletmeler', icon: Icons.store),
-              TabItem(title: 'Ürünler', icon: Icons.shopping_bag),
-              TabItem(title: 'Siparişlerim', icon: Icons.receipt_long),
+            tabs: [
+              TabItem(title: tr('common.i_sletmeler'), icon: Icons.store),
+              TabItem(title: tr('common.urunler'), icon: Icons.shopping_bag),
+              TabItem(title: tr('common.siparislerim'), icon: Icons.receipt_long),
             ],
             onTabSelected: (index) {
               setState(() => _selectedIndex = index);
@@ -118,8 +119,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     if (user == null) {
       return _buildEmptyState(
         icon: Icons.login_rounded,
-        title: 'Giriş Yapın',
-        subtitle: 'Siparişlerinizi görmek için giriş yapın.',
+        title: tr('common.giris_yapin'),
+        subtitle: tr('common.siparislerinizi_gormek_icin_gi'),
         isDark: isDark,
       );
     }
@@ -144,8 +145,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return _buildEmptyState(
             icon: Icons.receipt_long_rounded,
-            title: 'Henüz Sipariş Yok',
-            subtitle: 'Verdiğiniz siparişler burada listelenecek.',
+            title: tr('common.henuz_siparis_yok'),
+            subtitle: tr('common.verdiginiz_siparisler_burada_l'),
             isDark: isDark,
           );
         }
@@ -164,7 +165,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
   }
 
   Widget _buildOrderCard(String orderId, Map<String, dynamic> data, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
-    final businessName = data['butcherName'] ?? 'İşletme';
+    final businessName = data['butcherName'] ?? tr('common.i_sletme');
     final businessId = data['butcherId'] ?? '';
     final status = data['status'] ?? 'pending';
     final createdAt = data['createdAt'] as Timestamp?;
@@ -181,7 +182,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
       if (diff.inDays == 0) {
         formattedDate = '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year.toString().substring(2)} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
       } else if (diff.inDays == 1) {
-        formattedDate = 'Dün';
+        formattedDate = tr('common.dun');
       } else {
         formattedDate = '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year.toString().substring(2)}';
       }
@@ -192,12 +193,12 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     
     switch (status) {
       case 'pending':
-        statusText = 'Beklemede';
+        statusText = tr('common.beklemede');
         statusColor = Colors.amber;
         break;
       case 'accepted':
       case 'confirmed':
-        statusText = 'Onaylandı';
+        statusText = tr('common.onaylandi');
         statusColor = Colors.blue;
         break;
       case 'preparing':
@@ -217,7 +218,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         statusColor = Colors.green;
         break;
       case 'cancelled':
-        statusText = 'İptal Edildi';
+        statusText = tr('common.i_ptal_edildi');
         statusColor = Colors.red;
         break;
       default:
@@ -348,9 +349,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                             style: TextStyle(color: textSubtle, fontSize: 13),
                           ),
                           const SizedBox(height: 4),
-                          // "Siparişi Görüntüle" link
+                          // tr('common.siparisi_goruntule') link
                           Text(
-                            'Siparişi Görüntüle',
+                            tr('common.siparisi_goruntule'),
                             style: TextStyle(
                               color: textPrimary,
                               fontSize: 13,
@@ -483,8 +484,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                           ),
                           padding: EdgeInsets.zero,
                         ),
-                        child: const Text(
-                          'Tekrar Sipariş Ver',
+                        child: Text(
+                          tr('common.tekrar_siparis_ver'),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -514,8 +515,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     if (favoriteIds.isEmpty) {
       return _buildEmptyState(
         icon: Icons.store_outlined,
-        title: 'Favori İşletme Yok',
-        subtitle: 'Beğendiğiniz işletmeleri kalp ile favorilere ekleyin!',
+        title: tr('common.favori_i_sletme_yok'),
+        subtitle: tr('common.begendiginiz_isletmeleri_kalp'),
         isDark: isDark,
       );
     }
@@ -530,8 +531,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return _buildEmptyState(
             icon: Icons.store_outlined,
-            title: 'İşletme Bulunamadı',
-            subtitle: 'Favori işletmeleriniz yüklenemedi.',
+            title: tr('common.i_sletme_bulunamadi'),
+            subtitle: tr('common.favori_isletmeleriniz_yuklenem'),
             isDark: isDark,
           );
         }
@@ -561,7 +562,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
   }
 
   Widget _buildBusinessCard(String id, Map<String, dynamic> data, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
-    final name = data['companyName'] ?? data['name'] ?? 'İşletme';
+    final name = data['companyName'] ?? data['name'] ?? tr('common.i_sletme');
     final imageUrl = data['imageUrl'] as String?;
     final address = data['address'] as Map<String, dynamic>?;
     final city = address?['city'] ?? '';
@@ -634,8 +635,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
     if (favoriteSkus.isEmpty) {
       return _buildEmptyState(
         icon: Icons.shopping_bag_outlined,
-        title: 'Favori Ürün Yok',
-        subtitle: 'Beğendiğiniz ürünleri kalp ile favorilere ekleyin!',
+        title: tr('common.favori_urun_yok'),
+        subtitle: tr('common.begendiginiz_urunleri_kalp_ile'),
         isDark: isDark,
       );
     }
@@ -650,8 +651,8 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return _buildEmptyState(
             icon: Icons.shopping_bag_outlined,
-            title: 'Ürün Bulunamadı',
-            subtitle: 'Favori ürünleriniz yüklenemedi.',
+            title: tr('common.urun_bulunamadi'),
+            subtitle: tr('common.favori_urunleriniz_yuklenemedi'),
             isDark: isDark,
           );
         }
@@ -711,7 +712,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
   }
 
   Widget _buildProductCard(Map<String, dynamic> product, Color surfaceCard, Color textPrimary, Color textSubtle, Color borderSubtle, bool isDark) {
-    final name = product['name'] ?? 'Ürün';
+    final name = product['name'] ?? tr('common.urun');
     final sku = product['sku'] ?? '';
     final price = (product['price'] ?? 0).toDouble();
     final imageUrl = product['imageUrl'] as String?;

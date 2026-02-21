@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -181,7 +182,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                           style: TextStyle(color: textColor, fontSize: 15),
                           textInputAction: TextInputAction.search,
                           decoration: InputDecoration(
-                            hintText: 'Restoran mı arıyorsunuz?',
+                            hintText: tr('search.restoran_mi_ariyorsunuz'),
                             hintStyle: TextStyle(color: hintColor, fontSize: 15),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
@@ -278,9 +279,9 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
           children: [
             _buildFilterChip('Kampanyalar', Icons.local_offer_outlined, isDark, SearchFilters.kampanyalar, activeFilters),
             const SizedBox(width: 8),
-            _buildFilterChip('Nakit Ödeme', Icons.payments_outlined, isDark, SearchFilters.nakitOdeme, activeFilters),
+            _buildFilterChip(tr('search.nakit_odeme'), Icons.payments_outlined, isDark, SearchFilters.nakitOdeme, activeFilters),
             const SizedBox(width: 8),
-            _buildFilterChip('Ücretsiz Teslimat', Icons.delivery_dining_outlined, isDark, SearchFilters.ucretsizTeslimat, activeFilters),
+            _buildFilterChip(tr('search.ucretsiz_teslimat'), Icons.delivery_dining_outlined, isDark, SearchFilters.ucretsizTeslimat, activeFilters),
             const SizedBox(width: 8),
             _buildFilterChip('4.5+ Puan', Icons.star_border_rounded, isDark, SearchFilters.highRating, activeFilters),
           ],
@@ -334,8 +335,8 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
     // Local sort state (synced on apply)
     String localSelectedSort = switch (searchState.sortType) {
       SearchSortType.nearest => 'En Yakın',
-      SearchSortType.rating => 'Müşteri Puanı',
-      SearchSortType.deliveryFee => 'Teslimat Ücreti',
+      SearchSortType.rating => tr('search.musteri_puani'),
+      SearchSortType.deliveryFee => tr('search.teslimat_ucreti'),
     };
     
     showModalBottomSheet(
@@ -371,7 +372,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                       GestureDetector(
                         onTap: () => Navigator.pop(sheetContext),
                         child: Text(
-                          'İptal',
+                          tr('search.i_ptal'),
                           style: TextStyle(
                             color: lokmaPink,
                             fontSize: 15,
@@ -380,7 +381,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                         ),
                       ),
                       Text(
-                        'Sonuçları Filtrele',
+                        tr('search.sonuclari_filtrele'),
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.black87,
                           fontSize: 16,
@@ -423,7 +424,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                 
                 // Filter options - connected to provider
                 _buildSheetFilterOption('Kampanyalar', SearchFilters.kampanyalar, activeFilters, isDark, setSheetState),
-                _buildSheetFilterOption('Nakit Ödeme', SearchFilters.nakitOdeme, activeFilters, isDark, setSheetState),
+                _buildSheetFilterOption(tr('search.nakit_odeme'), SearchFilters.nakitOdeme, activeFilters, isDark, setSheetState),
                 _buildSheetFilterOption('Puan Kartı', SearchFilters.puanKarti, activeFilters, isDark, setSheetState),
                 _buildSheetFilterOption('4.5+ Puan', SearchFilters.highRating, activeFilters, isDark, setSheetState),
                 _buildSheetFilterOption('Helal', SearchFilters.helal, activeFilters, isDark, setSheetState),
@@ -446,10 +447,10 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                 _buildSheetSortOption('En Yakın', localSelectedSort, isDark, (val) {
                   setSheetState(() => localSelectedSort = val);
                 }),
-                _buildSheetSortOption('Müşteri Puanı', localSelectedSort, isDark, (val) {
+                _buildSheetSortOption(tr('search.musteri_puani'), localSelectedSort, isDark, (val) {
                   setSheetState(() => localSelectedSort = val);
                 }),
-                _buildSheetSortOption('Teslimat Ücreti', localSelectedSort, isDark, (val) {
+                _buildSheetSortOption(tr('search.teslimat_ucreti'), localSelectedSort, isDark, (val) {
                   setSheetState(() => localSelectedSort = val);
                 }),
                 
@@ -461,11 +462,13 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                   child: GestureDetector(
                     onTap: () {
                       // Apply sort type to provider
-                      final sortType = switch (localSelectedSort) {
-                        'Müşteri Puanı' => SearchSortType.rating,
-                        'Teslimat Ücreti' => SearchSortType.deliveryFee,
-                        _ => SearchSortType.nearest,
-                      };
+                      SearchSortType sortType = SearchSortType.nearest;
+                      if (localSelectedSort == tr('search.musteri_puani')) {
+                        sortType = SearchSortType.rating;
+                      } else if (localSelectedSort == tr('search.teslimat_ucreti')) {
+                        sortType = SearchSortType.deliveryFee;
+                      }
+                      
                       ref.read(searchProvider.notifier).setSortType(sortType);
                       Navigator.pop(sheetContext);
                     },
@@ -476,9 +479,9 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                         color: lokmaPink,
                         borderRadius: BorderRadius.circular(28),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Text(
-                          'İşletmeleri Göster',
+                          tr('search.i_sletmeleri_goster'),
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -627,7 +630,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
           const Text('🔍', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 16),
           Text(
-            'Sonuç bulunamadı',
+            tr('search.sonuc_bulunamadi'),
             style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 16),
           ),
           const SizedBox(height: 8),
@@ -710,7 +713,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Daha Fazla Göster',
+                      tr('search.daha_fazla_goster'),
                       style: TextStyle(color: lokmaPink, fontSize: 13, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(width: 4),

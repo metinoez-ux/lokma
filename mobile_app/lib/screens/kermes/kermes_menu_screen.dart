@@ -460,18 +460,18 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                   top: 8,
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: lokmaPink,
                       shape: BoxShape.circle,
                     ),
-                    constraints: const BoxConstraints(
+                    constraints: BoxConstraints(
                       minWidth: 18,
                       minHeight: 18,
                     ),
                     child: Text(
                       _totalItems.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.surface,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -573,7 +573,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
           ? Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [lokmaPink.withOpacity(0.9), const Color(0xFFFB335B)],
+                  colors: [lokmaPink.withOpacity(0.9), Color(0xFFFB335B)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -581,13 +581,13 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                   BoxShadow(
                     color: lokmaPink.withOpacity(0.3),
                     blurRadius: 12,
-                    offset: const Offset(0, -4),
+                    offset: Offset(0, -4),
                   ),
                 ],
               ),
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
                       // Total info
@@ -598,16 +598,16 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                           children: [
                             Text(
                               '$_totalItems ürün',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.surface,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             Text(
                               '${_totalPrice.toStringAsFixed(2)} €',
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.surface,
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -714,7 +714,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                     boxShadow: hasImage
                         ? [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -850,7 +850,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
+                        gradient: LinearGradient(
                           colors: [lokmaPink, Color(0xFFFB335B)],
                         ),
                         borderRadius: BorderRadius.circular(12),
@@ -858,13 +858,13 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                           BoxShadow(
                             color: lokmaPink.withOpacity(0.4),
                             blurRadius: 6,
-                            offset: const Offset(0, 3),
+                            offset: Offset(0, 3),
                           ),
                         ],
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.add,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         size: 24,
                       ),
                     ),
@@ -886,14 +886,14 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         child: Container(
                           width: 32,
                           height: 32,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: lokmaPink,
                             borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(10),
                               bottomLeft: Radius.circular(10),
                             ),
                           ),
-                          child: const Icon(Icons.remove, color: Colors.white, size: 18),
+                          child: Icon(Icons.remove, color: Theme.of(context).colorScheme.surface, size: 18),
                         ),
                       ),
                       // Quantity
@@ -902,8 +902,8 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         alignment: Alignment.center,
                         child: Text(
                           cartQuantity.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.surface,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
@@ -915,14 +915,14 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         child: Container(
                           width: 32,
                           height: 32,
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: lokmaPink,
                             borderRadius: BorderRadius.only(
                               topRight: Radius.circular(10),
                               bottomRight: Radius.circular(10),
                             ),
                           ),
-                          child: const Icon(Icons.add, color: Colors.white, size: 18),
+                          child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface, size: 18),
                         ),
                       ),
                     ],
@@ -1329,32 +1329,32 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               'Siparişiniz ${order.kermesName} Kermesi\'ne iletildi.',
               style: TextStyle(color: dialogSubtleColor, fontSize: 15),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             // Teslimat ve Ödeme bilgisi
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: lokmaPink.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     deliveryLabel,
-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     order.paymentMethodLabel,
-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                 ),
               ],

@@ -267,7 +267,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDark ? Colors.white : Colors.black87;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      padding: EdgeInsets.fromLTRB(20, 12, 20, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -280,14 +280,14 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 GestureDetector(
                   onTap: _previousStep,
                   child: Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: _cardBg(isDark),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_back_ios_new,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       size: 20,
                     ),
                   ),
@@ -605,11 +605,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           child: Container(
                             width: 32,
                             height: 32,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: lokmaPink,
                               borderRadius: BorderRadius.horizontal(left: Radius.circular(8)),
                             ),
-                            child: const Icon(Icons.remove, color: Colors.white, size: 18),
+                            child: Icon(Icons.remove, color: Theme.of(context).colorScheme.surface, size: 18),
                           ),
                         ),
                         Container(
@@ -617,8 +617,8 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           alignment: Alignment.center,
                           child: Text(
                             quantity.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.surface,
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
                             ),
@@ -635,11 +635,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           child: Container(
                             width: 32,
                             height: 32,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               color: lokmaPink,
                               borderRadius: BorderRadius.horizontal(right: Radius.circular(8)),
                             ),
-                            child: const Icon(Icons.add, color: Colors.white, size: 18),
+                            child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface, size: 18),
                           ),
                         ),
                       ],
@@ -1238,7 +1238,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 13),
@@ -1250,11 +1250,11 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 Container(
                   width: 24,
                   height: 24,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color: lokmaPink,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check, color: Colors.white, size: 16),
+                  child: Icon(Icons.check, color: Theme.of(context).colorScheme.surface, size: 16),
                 )
               else
                 Container(
@@ -1344,7 +1344,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 ),
               ],
             ),
-            const Spacer(),
+            Spacer(),
           ],
           
           // Next/Submit button
@@ -1357,19 +1357,19 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: lokmaPink,
                   disabledBackgroundColor: isDark ? Colors.grey[700] : Colors.grey[400],
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 2,
                 ),
                 child: _isSubmitting
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                         ),
                       )
                     : Row(
@@ -1377,15 +1377,15 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         children: [
                           Text(
                             isLastStep ? 'Siparişi Onayla' : 'Devam Et',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.surface,
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           if (!isLastStep) ...[
-                            const SizedBox(width: 6),
-                            const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+                            SizedBox(width: 6),
+                            Icon(Icons.arrow_forward, color: Theme.of(context).colorScheme.surface, size: 18),
                           ],
                         ],
                       ),

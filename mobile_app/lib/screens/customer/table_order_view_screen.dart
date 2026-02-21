@@ -39,7 +39,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
   TableSession? _linkedSession; // Only if PIN entered
   bool _isJoining = false;
   bool _showPinEntry = false;
-  String _selectedCategory = 'Tümü';
+  String _selectedCategory = tr('customer.tumu');
   String _menuSearchQuery = '';
   final Map<String, _CartItem> _cart = {};
   bool _isSubmitting = false;
@@ -222,7 +222,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
           .collection('users')
           .doc(user.uid)
           .get();
-      final userName = userDoc.data()?['name'] ?? user.displayName ?? 'Müşteri';
+      final userName = userDoc.data()?['name'] ?? user.displayName ?? tr('customer.musteri');
 
       final items = _cart.values
           .map((ci) => OrderItem(
@@ -317,8 +317,8 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
       backgroundColor: scaffoldBg,
       appBar: AppBar(
         title: Text(
-          _tableNumber != null ? 'Masa $_tableNumber' : 'Masa Siparişi',
-          style: const TextStyle(fontWeight: FontWeight.w700),
+          _tableNumber != null ? 'Masa $_tableNumber' : tr('customer.masa_siparisi'),
+          style: TextStyle(fontWeight: FontWeight.w700),
         ),
         backgroundColor: scaffoldBg,
         surfaceTintColor: scaffoldBg,
@@ -336,9 +336,9 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                 controller: _tabController,
                 labelColor: Colors.amber.shade700,
                 indicatorColor: Colors.amber.shade700,
-                tabs: const [
-                  Tab(icon: Icon(Icons.restaurant_menu), text: 'Menü'),
-                  Tab(icon: Icon(Icons.receipt_long), text: 'Siparişlerim'),
+                tabs: [
+                  Tab(icon: Icon(Icons.restaurant_menu), text: tr('customer.menu')),
+                  Tab(icon: Icon(Icons.receipt_long), text: tr('customer.siparislerim')),
                 ],
               )
             : null,
@@ -379,14 +379,14 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
               child: const Icon(Icons.table_restaurant, size: 52, color: Colors.white),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Masanızdan Sipariş Verin',
+            Text(
+              tr('customer.masanizdan_siparis_verin'),
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Masa numaranızı girerek doğrudan mutfağa sipariş verebilirsiniz.',
+              tr('customer.masa_numaranizi_girerek_dogrud'),
               style: TextStyle(fontSize: 14, color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
@@ -407,7 +407,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'İşletme bilgisi bulunamadı. Garsondan yardım isteyin.',
+                        tr('customer.i_sletme_bilgisi_bulunamadi_ga'),
                         style: TextStyle(fontSize: 13, color: Colors.red.shade700),
                       ),
                     ),
@@ -448,7 +448,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                     child: FilledButton.icon(
                       onPressed: _businessId != null ? _joinTable : null,
                       icon: const Icon(Icons.restaurant_menu),
-                      label: const Text('Menüyü Aç', style: TextStyle(fontSize: 16)),
+                      label: Text(tr('customer.menuyu_ac'), style: TextStyle(fontSize: 16)),
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.amber.shade700,
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -540,7 +540,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
           child: TextField(
             onChanged: (v) => setState(() => _menuSearchQuery = v),
             decoration: InputDecoration(
-              hintText: 'Menüde ara...',
+              hintText: tr('customer.menude_ara'),
               prefixIcon: const Icon(Icons.search),
               filled: true,
               fillColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
@@ -573,13 +573,13 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
           .where('isActive', isEqualTo: true)
           .snapshots(),
       builder: (context, snapshot) {
-        final categories = <String>{'Tümü'};
+        final categories = <String>{tr('customer.tumu')};
         if (snapshot.hasData) {
           for (final doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
             final sku = data['masterProductId'] ?? data['masterProductSku'];
             final masterData = MASTER_PRODUCT_CATALOG[sku];
-            final cat = data['category'] ?? masterData?.category ?? 'Diğer';
+            final cat = data['category'] ?? masterData?.category ?? tr('customer.diger');
             categories.add(cat);
           }
         }
@@ -644,7 +644,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
         }
 
         // Filter
-        var filtered = _selectedCategory == 'Tümü'
+        var filtered = _selectedCategory == tr('customer.tumu')
             ? products
             : products.where((p) => p.category == _selectedCategory).toList();
 
@@ -659,7 +659,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
 
         if (filtered.isEmpty) {
           return Center(
-            child: Text('Ürün bulunamadı', style: TextStyle(color: Colors.grey[500])),
+            child: Text(tr('customer.urun_bulunamadi'), style: TextStyle(color: Colors.grey[500])),
           );
         }
 
@@ -771,7 +771,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
   Widget _buildOrdersTab(bool isDark) {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      return const Center(child: Text('Giriş yapmalısınız'));
+      return Center(child: Text(tr('customer.giris_yapmalisiniz')));
     }
 
     // Show both: customer's own orders and linked session orders
@@ -810,12 +810,12 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                 Icon(Icons.receipt_long, size: 56, color: Colors.grey[300]),
                 const SizedBox(height: 12),
                 Text(
-                  'Henüz sipariş yok',
+                  tr('customer.henuz_siparis_yok'),
                   style: TextStyle(fontSize: 16, color: Colors.grey[500]),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Menüden sipariş verin veya\ngarson PIN ile bağlanın',
+                  tr('customer.menuden_siparis_verin_veya_nga'),
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: Colors.grey[400]),
                 ),
@@ -981,11 +981,11 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
     switch (status) {
       case 'pending':
         color = Colors.amber;
-        label = 'Beklemede';
+        label = tr('customer.beklemede');
         emoji = '⏳';
       case 'accepted':
         color = Colors.blue;
-        label = 'Onaylandı';
+        label = tr('customer.onaylandi');
         emoji = '✅';
       case 'preparing':
         color = Colors.amber;
@@ -1005,7 +1005,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
         emoji = '✅';
       case 'cancelled':
         color = Colors.red;
-        label = 'İptal';
+        label = tr('customer.i_ptal');
         emoji = '❌';
       default:
         color = Colors.grey;
