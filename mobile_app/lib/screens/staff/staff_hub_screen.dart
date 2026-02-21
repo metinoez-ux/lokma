@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -482,17 +483,17 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Vardiyayı Bitir'),
-        content: const Text('Vardiyayı sonlandırmak istediğinize emin misiniz?'),
+        title: Text(tr('staff.end_shift')),
+        content: Text(tr('staff.confirm_end_shift')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('İptal'),
+            child: Text(tr('common.cancel')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Bitir'),
+            child: Text(tr('common.finish')),
           ),
         ],
       ),
@@ -714,7 +715,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               child: const Icon(Icons.check_circle, color: Colors.green, size: 24),
             ),
             const SizedBox(width: 12),
-            const Text('Vardiya Tamamlandı'),
+            Text(tr('staff.shift_completed')),
           ],
         ),
         content: Column(
@@ -1820,8 +1821,8 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               _showShiftHistorySheet();
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Paketinizde bu özellik aktif değil. Lütfen yöneticinizle iletişime geçin.'),
+                                SnackBar(
+                                  content: Text(tr('staff.feature_not_active_in_plan')),
                                   duration: Duration(seconds: 3),
                                 ),
                               );
@@ -2675,7 +2676,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('🍽️ Siparişi Servis Et'),
+        title: Text(tr('staff.serve_order_btn')),
         content: Text(
           'Sipariş #$displayOrderId masaya servis edildi olarak işaretlenecek.\n\n'
           'Devam etmek istiyor musunuz?',
@@ -2683,7 +2684,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('İptal'),
+            child: Text(tr('common.cancel')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -2775,7 +2776,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}&tableNumber=$tableNum');
                           },
                           icon: const Icon(Icons.add, size: 16),
-                          label: const Text('Yeni Sipariş'),
+                          label: Text(tr('staff.new_order')),
                           style: FilledButton.styleFrom(
                             backgroundColor: brandColor,
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -3019,7 +3020,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                   HapticFeedback.mediumImpact();
                                                   ScaffoldMessenger.of(context).showSnackBar(
                                                     SnackBar(
-                                                      content: const Text('✅ Nakit ödeme alındı!'),
+                                                      content: Text(tr('payments.cash_payment_received')),
                                                       backgroundColor: Colors.green.shade700,
                                                       behavior: SnackBarBehavior.floating,
                                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -3029,7 +3030,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                               } catch (e) {
                                                 if (mounted) {
                                                   ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                    SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
                                                   );
                                                 }
                                               }
@@ -3057,7 +3058,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                   HapticFeedback.mediumImpact();
                                                   ScaffoldMessenger.of(context).showSnackBar(
                                                     SnackBar(
-                                                      content: const Text('✅ Kart ödeme alındı!'),
+                                                      content: Text(tr('payments.card_payment_received')),
                                                       backgroundColor: Colors.blue.shade700,
                                                       behavior: SnackBarBehavior.floating,
                                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -3067,7 +3068,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                               } catch (e) {
                                                 if (mounted) {
                                                   ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                    SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
                                                   );
                                                 }
                                               }
@@ -3944,7 +3945,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         setModalState(() => isProcessing = false);
                                         if (mounted) {
                                           ScaffoldMessenger.of(parentContext).showSnackBar(
-                                            SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                            SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
                                           );
                                         }
                                       }
@@ -3990,7 +3991,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         setModalState(() => isProcessing = false);
                                         if (mounted) {
                                           ScaffoldMessenger.of(parentContext).showSnackBar(
-                                            SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                            SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
                                           );
                                         }
                                       }
@@ -4335,7 +4336,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                   HapticFeedback.mediumImpact();
                                                   ScaffoldMessenger.of(context).showSnackBar(
                                                     SnackBar(
-                                                      content: const Text('✅ Sipariş servis edildi!'),
+                                                      content: Text(tr('staff.order_served_success')),
                                                       backgroundColor: Colors.teal.shade700,
                                                       behavior: SnackBarBehavior.floating,
                                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -4345,7 +4346,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                               } catch (e) {
                                                 if (mounted) {
                                                   ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                    SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
                                                   );
                                                 }
                                               }
@@ -4379,7 +4380,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                       HapticFeedback.mediumImpact();
                                                       ScaffoldMessenger.of(context).showSnackBar(
                                                         SnackBar(
-                                                          content: const Text('✅ Nakit ödeme alındı!'),
+                                                          content: Text(tr('payments.cash_payment_received')),
                                                           backgroundColor: Colors.green.shade700,
                                                           behavior: SnackBarBehavior.floating,
                                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -4389,7 +4390,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                   } catch (e) {
                                                     if (mounted) {
                                                       ScaffoldMessenger.of(context).showSnackBar(
-                                                        SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                        SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
                                                       );
                                                     }
                                                   }
@@ -4417,7 +4418,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                       HapticFeedback.mediumImpact();
                                                       ScaffoldMessenger.of(context).showSnackBar(
                                                         SnackBar(
-                                                          content: const Text('✅ Kart ödeme alındı!'),
+                                                          content: Text(tr('payments.card_payment_received')),
                                                           backgroundColor: Colors.blue.shade700,
                                                           behavior: SnackBarBehavior.floating,
                                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -4427,7 +4428,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                   } catch (e) {
                                                     if (mounted) {
                                                       ScaffoldMessenger.of(context).showSnackBar(
-                                                        SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                        SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
                                                       );
                                                     }
                                                   }

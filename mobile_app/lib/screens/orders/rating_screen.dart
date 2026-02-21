@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/rating_service.dart';
 
@@ -47,10 +48,10 @@ class _RatingScreenState extends State<RatingScreen> {
 
   void _showOrderNotCompletedWarning() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Siparişiniz henüz tamamlanmadı. Teslim edildikten sonra puan verebilirsiniz.'),
+      SnackBar(
+        content: Text(tr('orders.cannot_rate_before_completion')),
         backgroundColor: Colors.amber,
-        duration: Duration(seconds: 3),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
@@ -92,7 +93,7 @@ class _RatingScreenState extends State<RatingScreen> {
   Future<void> _submitRating() async {
     if (_businessRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen işletmeyi puanlayın')),
+        SnackBar(content: Text(tr('orders.please_rate_business'))),
       );
       return;
     }
@@ -115,8 +116,8 @@ class _RatingScreenState extends State<RatingScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Değerlendirmeniz kaydedildi. Teşekkürler! 🎉'),
+          SnackBar(
+            content: Text(tr('orders.rating_saved_thanks')),
             backgroundColor: Colors.green,
           ),
         );

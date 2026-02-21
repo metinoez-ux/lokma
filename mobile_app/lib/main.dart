@@ -14,6 +14,7 @@ import 'package:geolocator/geolocator.dart';
 import 'providers/theme_provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'utils/firestore_asset_loader.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 String? _initError;
 
@@ -53,6 +54,11 @@ void main() async {
       if (permission == LocationPermission.denied) {
         await Geolocator.requestPermission();
       }
+      
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenSplash = prefs.getBool('has_seen_splash') ?? false;
+      AppRouter.initializeRouter(hasSeenSplash);
+      
     } catch (e, stack) {
       _initError = 'Firebase Error: $e';
       debugPrint('Firebase init error: $e\n$stack');

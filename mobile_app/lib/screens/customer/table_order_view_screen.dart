@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 import '../../utils/i18n_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -97,7 +98,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
     final tableNum = int.tryParse(_tableController.text.trim());
     if (tableNum == null || tableNum <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Geçerli bir masa numarası girin')),
+        SnackBar(content: Text(tr('orders.enter_valid_table_number'))),
       );
       return;
     }
@@ -112,7 +113,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
     final pin = _pinController.text.trim();
     if (pin.length != 4 || _businessId == null || _tableNumber == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('4 haneli PIN girin')),
+        SnackBar(content: Text(tr('orders.enter_4_digit_pin'))),
       );
       return;
     }
@@ -153,7 +154,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Garson siparişlerine bağlandınız! ✓'),
+              content: Text(tr('staff.connected_to_waiter_orders')),
               backgroundColor: Colors.green.shade700,
             ),
           );
@@ -211,7 +212,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sipariş vermek için giriş yapmalısınız')),
+          SnackBar(content: Text(tr('orders.login_required_to_order'))),
         );
         return;
       }
@@ -283,7 +284,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 8),
-                Text('Siparişiniz mutfağa gönderildi! 🎉'),
+                Text(tr('orders.order_sent_to_kitchen')),
               ],
             ),
             backgroundColor: Colors.green.shade700,
@@ -299,7 +300,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
       if (mounted) {
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sipariş gönderilemedi: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('orders.could_not_send_order_e')), backgroundColor: Colors.red),
         );
       }
     }
@@ -506,7 +507,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                   style: FilledButton.styleFrom(backgroundColor: Colors.amber.shade700),
                   child: _isJoining
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Bağlan'),
+                      : Text(tr('common.connect')),
                 ),
               ],
             ),
@@ -754,7 +755,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
             FilledButton.icon(
               onPressed: () => _addToCart(product),
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Ekle'),
+              label: Text(tr('common.add')),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.amber.shade700,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

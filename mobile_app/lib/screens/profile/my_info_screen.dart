@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -270,7 +271,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
   Future<void> _searchGoogleAddressDirect() async {
      if (_addressController.text.length < 3) {
        ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(content: Text('Lütfen en az 3 karakter girin.'))
+           SnackBar(content: Text(tr('common.min_3_chars')))
        );
        return;
      }
@@ -305,7 +306,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
        }
      } catch (e) {
        ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(content: Text('Bağlantı Hatası: $e')),
+         SnackBar(content: Text(tr('common.connection_error_e'))),
        );
      } finally {
        setState(() => _isLoading = false);
@@ -407,8 +408,8 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Bilgileriniz başarıyla güncellendi'),
+            SnackBar(
+              content: Text(tr('profile.info_updated_successfully')),
               backgroundColor: Color(0xFFE30A17),
             ),
           );
@@ -417,7 +418,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kaydedilirken hata oluştu: $e')),
+        SnackBar(content: Text(tr('common.error_saving_e'))),
       );
     } finally {
       setState(() => _isSaving = false);

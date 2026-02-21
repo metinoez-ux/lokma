@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../screens/splash/splash_screen.dart';
 import '../screens/marketplace/kasap/kasap_screen.dart';
 import '../screens/marketplace/kasap/business_detail_screen.dart';
 import '../screens/marketplace/market/market_screen.dart';
@@ -33,9 +34,12 @@ class AppRouter {
   // Global navigator key for FCM notification deep linking
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   
-  static final router = GoRouter(
-    navigatorKey: navigatorKey,
-    initialLocation: '/restoran',  // Open directly to Yemek (food) page
+  static late final GoRouter router;
+
+  static void initializeRouter(bool hasSeenSplash) {
+    router = GoRouter(
+      navigatorKey: navigatorKey,
+      initialLocation: hasSeenSplash ? '/restoran' : '/splash',  // Open directly to Yemek (food) page or splash
     // Handle Firebase Auth callback URLs - redirect to login and let Firebase SDK handle internally
     redirect: (context, state) {
       final location = state.uri.toString();
@@ -46,6 +50,10 @@ class AppRouter {
       return null;  // No redirect for normal routes
     },
     routes: [
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       ShellRoute(
         builder: (context, state, child) => MainScaffold(child: child),
         routes: [
@@ -228,4 +236,5 @@ class AppRouter {
       ),
     ],
   );
+  }
 }

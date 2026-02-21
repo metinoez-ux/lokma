@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -80,8 +81,8 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Ödeme tercihleri kaydedildi'),
+          SnackBar(
+            content: Text(tr('profile.payment_prefs_saved')),
             backgroundColor: Colors.green,
           ),
         );
@@ -90,7 +91,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
         );
       }
     }

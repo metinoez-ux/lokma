@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -345,7 +346,7 @@ class MyReservationsScreen extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: () => _showCalendarOptions(context, businessName, resDate, partySize, tableCardNumbers),
                 icon: const Icon(Icons.calendar_month, size: 16),
-                label: const Text('Takvime Ekle'),
+                label: Text(tr('profile.add_to_calendar')),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.blue[700],
                   side: BorderSide(color: Colors.blue[300]!),
@@ -362,7 +363,7 @@ class MyReservationsScreen extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: () => _showCancelDialog(context, doc.reference),
                 icon: const Icon(Icons.cancel_outlined, size: 16),
-                label: const Text('Rezervasyonu İptal Et'),
+                label: Text(tr('profile.cancel_reservation')),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.red[700],
                   side: BorderSide(color: Colors.red[300]!),
@@ -395,12 +396,12 @@ class MyReservationsScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: const Text('Rezervasyonu İptal Et'),
-        content: const Text('Bu rezervasyonu iptal etmek istediğinize emin misiniz?'),
+        title: Text(tr('profile.cancel_reservation')),
+        content: Text(tr('profile.confirm_cancel_reservation')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Hayır'),
+            child: Text(tr('common.no')),
           ),
           TextButton(
             onPressed: () async {
@@ -408,8 +409,8 @@ class MyReservationsScreen extends StatelessWidget {
               await ref.update({'status': 'cancelled'});
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Rezervasyon iptal edildi'),
+                  SnackBar(
+                    content: Text(tr('profile.reservation_cancelled')),
                     backgroundColor: Colors.amber,
                   ),
                 );
@@ -635,8 +636,8 @@ END:VCALENDAR''';
       debugPrint('Error opening iCal file: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Takvim dosyası açılamadı'),
+          SnackBar(
+            content: Text(tr('profile.could_not_open_calendar_file')),
             backgroundColor: Colors.amber,
           ),
         );

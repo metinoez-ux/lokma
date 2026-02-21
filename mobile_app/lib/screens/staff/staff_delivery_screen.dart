@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -86,7 +87,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
       final endBreak = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('☕ Molanız Devam Ediyor'),
+          title: Text(tr('staff.break_continues')),
           content: const Text(
             'Teslimat üstlenmek için molanız sonlandırılacak.\n\n'
             'Devam etmek istiyor musunuz?',
@@ -94,7 +95,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('İptal'),
+              child: Text(tr('common.cancel')),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
@@ -111,8 +112,8 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
       final resumed = await shiftService.resumeShift();
       if (!resumed && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Mola sonlandırılamadı. Lütfen tekrar deneyin.'),
+          SnackBar(
+            content: Text(tr('staff.break_end_failed')),
             backgroundColor: Colors.red,
           ),
         );
@@ -124,7 +125,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Teslimatı Üstlen'),
+        title: Text(tr('driver.take_delivery')),
         content: Text(
           'Bu siparişi üstlenmek istediğinize emin misiniz?\n\n'
           '📍 ${order.deliveryAddress ?? "Adres yok"}\n'
@@ -133,7 +134,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('İptal'),
+            child: Text(tr('common.cancel')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -178,8 +179,8 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ Teslimat zaten başka biri tarafından üstlenilmiş.'),
+        SnackBar(
+          content: Text(tr('driver.delivery_already_taken')),
           backgroundColor: Colors.red,
         ),
       );
@@ -190,7 +191,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bekleyen Teslimatlar'),
+        title: Text(tr('driver.pending_deliveries')),
         backgroundColor: const Color(0xFFFB335B),
         foregroundColor: Colors.white,
       ),
@@ -694,7 +695,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          title: const Text('💵 Adım 1: Ödeme Tahsili'),
+          title: Text(tr('payments.step1_payment_collection')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -722,7 +723,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('İptal')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('common.cancel'))),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
@@ -752,7 +753,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
       if (proofPhotoUrl == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('❌ Fotoğraf gerekli!'), backgroundColor: Colors.red),
+            SnackBar(content: Text(tr('driver.photo_required')), backgroundColor: Colors.red),
           );
         }
         return;
@@ -770,7 +771,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ Teslimat tamamlandı!'), backgroundColor: Colors.green),
+        SnackBar(content: Text(tr('driver.delivery_completed_success')), backgroundColor: Colors.green),
       );
     }
   }
@@ -791,7 +792,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
       // Show uploading indicator
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('📤 Fotoğraf yükleniyor...'), duration: Duration(seconds: 10)),
+          SnackBar(content: Text(tr('driver.uploading_photo')), duration: Duration(seconds: 10)),
         );
       }
       
@@ -819,12 +820,12 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('🚗 Yola Çık'),
-        content: const Text('Siparişi aldınız ve yola çıkıyor musunuz?'),
+        title: Text(tr('driver.head_out')),
+        content: Text(tr('driver.did_you_take_order_and_head_out')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Hayır'),
+            child: Text(tr('common.no')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -841,8 +842,8 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
       await _orderService.startDelivery(widget.orderId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('🚗 Yoldasınız! İyi teslimatlar.'),
+          SnackBar(
+            content: Text(tr('driver.you_are_on_the_way')),
             backgroundColor: const Color(0xFFFB335B),
           ),
         );
@@ -858,7 +859,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('⚠️ Teslimatı İptal Et'),
+          title: Text(tr('driver.cancel_delivery')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -920,7 +921,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Hayır'),
+              child: Text(tr('common.no')),
             ),
             ElevatedButton(
               onPressed: selectedReason != null 
@@ -951,8 +952,8 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Teslimat iptal edildi'),
+          SnackBar(
+            content: Text(tr('driver.delivery_cancelled')),
             backgroundColor: Colors.red,
           ),
         );
@@ -967,7 +968,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Telefon açılamadı')),
+          SnackBar(content: Text(tr('common.could_not_open_phone'))),
         );
       }
     }
@@ -976,7 +977,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
   Future<void> _openNavigation(String? address) async {
     if (address == null || address.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Adres bulunamadı')),
+        SnackBar(content: Text(tr('common.address_not_found'))),
       );
       return;
     }
@@ -1006,8 +1007,8 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
               // Apple Maps
               ListTile(
                 leading: const Icon(Icons.map, color: Colors.green, size: 28),
-                title: const Text('Apple Haritalar'),
-                subtitle: const Text('Varsayılan iOS harita uygulaması'),
+                title: Text(tr('common.apple_maps')),
+                subtitle: Text(tr('common.default_ios_map')),
                 onTap: () async {
                   Navigator.pop(ctx);
                   // Apple Maps URL scheme
@@ -1020,8 +1021,8 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
               // Google Maps
               ListTile(
                 leading: const Icon(Icons.location_on, color: Colors.red, size: 28),
-                title: const Text('Google Maps'),
-                subtitle: const Text('Google harita uygulaması'),
+                title: Text(tr('common.google_maps')),
+                subtitle: Text(tr('common.google_map_app')),
                 onTap: () async {
                   Navigator.pop(ctx);
                   // Try Google Maps app first, fallback to web
@@ -1049,7 +1050,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Aktif Teslimat'),
+        title: Text(tr('driver.active_delivery')),
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         leading: IconButton(
@@ -1472,7 +1473,7 @@ class _DeliveryTypeSheet extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
+            child: Text(tr('common.cancel')),
           ),
           SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],

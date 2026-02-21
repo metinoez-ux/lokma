@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:screen_brightness/screen_brightness.dart';
@@ -82,7 +83,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
     HapticFeedback.lightImpact();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Sipariş numarası kopyalandı'),
+        content: Text(tr('orders.order_number_copied')),
         backgroundColor: cardBg,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 1),
@@ -364,7 +365,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('İptal Et'),
+            child: Text(tr('common.cancel_verb')),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../utils/i18n_utils.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -155,7 +156,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
-            child: const Text('Evet, Başlat'),
+            child: Text(tr('staff.yes_start')),
           ),
         ],
       ),
@@ -201,7 +202,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
         );
       }
     }
@@ -242,7 +243,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
         );
         // Go back to staff hub on error
         if (Navigator.canPop(context)) Navigator.pop(context);
@@ -478,7 +479,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                                   HapticFeedback.mediumImpact();
                                                   ScaffoldMessenger.of(context).showSnackBar(
                                                     SnackBar(
-                                                      content: const Text('✅ Sipariş servis edildi!'),
+                                                      content: Text(tr('staff.order_served_success')),
                                                       backgroundColor: Colors.teal.shade700,
                                                       behavior: SnackBarBehavior.floating,
                                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -488,7 +489,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                               } catch (e) {
                                                 if (mounted) {
                                                   ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                                    SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
                                                   );
                                                 }
                                               }
@@ -514,7 +515,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                           Expanded(
                             child: FilledButton.icon(
                               icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Sipariş Ekle'),
+                              label: Text(tr('staff.add_order')),
                               style: FilledButton.styleFrom(
                                 backgroundColor: brandColor,
                                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -534,7 +535,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                           Expanded(
                             child: OutlinedButton.icon(
                               icon: const Icon(Icons.receipt_long, size: 18),
-                              label: const Text('Hesap'),
+                              label: Text(tr('staff.bill')),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: brandColor,
                                 side: BorderSide(color: brandColor.withOpacity(0.5)),
@@ -580,7 +581,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           children: [
             Icon(Icons.lock_outline, color: const Color(0xFFFB335B)),
             const SizedBox(width: 8),
-            const Text('Masa PIN Kodu'),
+            Text(tr('staff.table_pin_code')),
           ],
         ),
         content: Column(
@@ -621,10 +622,10 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             onPressed: () {
               Clipboard.setData(ClipboardData(text: pin));
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('PIN kopyalandı')),
+                SnackBar(content: Text(tr('common.pin_copied'))),
               );
             },
-            child: const Text('Kopyala'),
+            child: Text(tr('common.copy')),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx),
@@ -730,7 +731,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sipariş gönderilemedi: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('orders.order_send_failed')), backgroundColor: Colors.red),
         );
       }
     }
@@ -1294,7 +1295,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             FilledButton.icon(
               onPressed: () => _addToCart(product),
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Ekle'),
+              label: Text(tr('common.add')),
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.amber.shade700,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1609,7 +1610,7 @@ class _TableBillView extends StatelessWidget {
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           icon: const Icon(Icons.phone_android),
-                          label: const Text('Müşteri Öder (Online)'),
+                          label: Text(tr('payments.customer_pays_online')),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.amber.shade700,
                             side: BorderSide(color: Colors.amber.shade300),
@@ -1619,7 +1620,7 @@ class _TableBillView extends StatelessWidget {
                           onPressed: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: const Text('Müşteri kendi telefonundan ödeme yapacak'),
+                                content: Text(tr('payments.customer_will_pay_own_phone')),
                                 backgroundColor: Colors.amber.shade700,
                               ),
                             );

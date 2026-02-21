@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 
 class HelpScreen extends StatelessWidget {
@@ -117,7 +118,7 @@ class HelpScreen extends StatelessWidget {
                     HapticFeedback.lightImpact();
                     Clipboard.setData(const ClipboardData(text: 'info@lokma.shop'));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('E-posta kopyalandı'), backgroundColor: Colors.green),
+                      SnackBar(content: Text(tr('common.email_copied')), backgroundColor: Colors.green),
                     );
                   },
                   child: Container(

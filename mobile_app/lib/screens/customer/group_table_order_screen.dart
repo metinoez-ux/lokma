@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../utils/i18n_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -827,7 +828,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 ));
               },
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Ekle'),
+              label: Text(tr('common.add')),
               style: FilledButton.styleFrom(
                 backgroundColor: _accent,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1670,7 +1671,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text('Tüm katılımcılar henüz hazır değil'),
+                              content: Text(tr('orders.not_all_participants_ready')),
                               backgroundColor: Colors.red.shade700,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -2194,14 +2195,14 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Grubu İptal Et'),
+        title: Text(tr('orders.cancel_group')),
         content: const Text(
           'Grup siparişini iptal etmek istediğinize emin misiniz?\n\nTüm katılımcılar gruptan çıkarılacak.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Vazgeç'),
+            child: Text(tr('common.give_up')),
           ),
           FilledButton(
             onPressed: () async {
@@ -2211,11 +2212,11 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Row(
+                    content: Row(
                       children: [
                         Icon(Icons.check_circle, color: Colors.white, size: 20),
                         SizedBox(width: 8),
-                        Text('Grup siparişi iptal edildi'),
+                        Text(tr('orders.group_order_cancelled')),
                       ],
                     ),
                     backgroundColor: Colors.red.shade600,
@@ -2226,7 +2227,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               }
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('İptal Et'),
+            child: Text(tr('common.cancel')),
           ),
         ],
       ),
@@ -2237,14 +2238,14 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Gruptan Ayrıl'),
+        title: Text(tr('orders.leave_group')),
         content: const Text(
           'Grup siparişinden ayrılmak istediğinize emin misiniz?\n\nEklediğiniz ürünler kaldırılacak.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Vazgeç'),
+            child: Text(tr('common.give_up')),
           ),
           FilledButton(
             onPressed: () async {
@@ -2254,11 +2255,11 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Row(
+                    content: Row(
                       children: [
                         Icon(Icons.exit_to_app, color: Colors.white, size: 20),
                         SizedBox(width: 8),
-                        Text('Gruptan ayrıldınız'),
+                        Text(tr('orders.left_the_group')),
                       ],
                     ),
                     backgroundColor: Colors.orange.shade600,
@@ -2269,7 +2270,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               }
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.orange),
-            child: const Text('Ayrıl'),
+            child: Text(tr('common.leave')),
           ),
         ],
       ),
@@ -2280,14 +2281,14 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Katılımcıyı Çıkar'),
+        title: Text(tr('orders.remove_participant')),
         content: Text(
           '"${participant.name}" adlı katılımcıyı gruptan çıkarmak istiyor musunuz?\n\nEklediği ürünler kaldırılacak.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Vazgeç'),
+            child: Text(tr('common.give_up')),
           ),
           FilledButton(
             onPressed: () async {
@@ -2313,7 +2314,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               }
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Çıkar'),
+            child: Text(tr('common.remove')),
           ),
         ],
       ),

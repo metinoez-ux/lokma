@@ -1,0 +1,296 @@
+{
+  "tr": {
+    "staff": {
+      "break_continues": "☕ Molanız Devam Ediyor",
+      "break_end_for_delivery_prompt": "Teslimat üstlenmek için molanız sonlandırılacak.\\n\\n",
+      "end_break_and_take": "Molayı Bitir ve Üstlen",
+      "break_end_failed": "❌ Mola sonlandırılamadı. Lütfen tekrar deneyin.",
+      "contact_manager": "Lütfen yöneticinize başvurun"
+    },
+    "common": {
+      "cancel": "İptal",
+      "loading": "Yükleniyor...",
+      "select_map_app": "Harita Uygulaması Seçin",
+      "apple_maps": "Apple Haritalar",
+      "google_maps": "Google Maps",
+      "go_caps": "GİT",
+      "update": "Güncelle"
+    },
+    "driver": {
+      "take_delivery": "Teslimatı Üstlen",
+      "confirm_take_delivery": "Bu siparişi üstlenmek istediğinize emin misiniz?\\n\\n",
+      "take": "Üstlen",
+      "delivery_already_taken": "❌ Teslimat zaten başka biri tarafından üstlenilmiş.",
+      "my_deliveries": "Teslimatlarım",
+      "all_orders": "Tüm Siparişler",
+      "driver_permission_not_found": "Sürücü yetkisi bulunamadı",
+      "no_business_assigned_yet": "Henüz işletme atanmamış",
+      "business_assignment_needed_admin": "Admin panelinden işletme ataması yapılmalı",
+      "no_deliveries_to_take": "Üstlenebilecek teslimat yok",
+      "no_active_orders": "Aktif sipariş yok",
+      "no_deliveries_today": "Bugün henüz teslimat yok",
+      "business_address_not_found": "İşletme adresi bulunamadı",
+      "assigned_businesses": "Atanmış İşletmeler"
+    },
+    "orders": {
+      "no_orders": "Sipariş yok",
+      "courier_tracking": "Kurye Takibi",
+      "order_not_found": "Sipariş bulunamadı",
+      "on_the_way": "Yolda",
+      "waiting_courier_location": "Kurye konumu bekleniyor...",
+      "my_account": "Hesabım",
+      "total_bill": "Toplam Hesap",
+      "cannot_rate_before_completion": "Siparişiniz henüz tamamlanmadı. Teslim edildikten sonra puan verebilirsiniz.",
+      "please_rate_business": "Lütfen işletmeyi puanlayın",
+      "rating_saved_thanks": "Değerlendirmeniz kaydedildi. Teşekkürler! 🎉",
+      "make_rating": "Değerlendirme Yap",
+      "rate_business": "İşletmeyi Puanla",
+      "write_comment": "Yorum Yazın"
+    }
+  },
+  "en": {
+    "staff": {
+      "break_continues": "☕ Your Break Continues",
+      "break_end_for_delivery_prompt": "Your break will end to take this delivery.\\n\\n",
+      "end_break_and_take": "End Break and Take",
+      "break_end_failed": "❌ Break could not be ended. Please try again.",
+      "contact_manager": "Please contact your manager"
+    },
+    "common": {
+      "cancel": "Cancel",
+      "loading": "Loading...",
+      "select_map_app": "Select Map App",
+      "apple_maps": "Apple Maps",
+      "google_maps": "Google Maps",
+      "go_caps": "GO",
+      "update": "Update"
+    },
+    "driver": {
+      "take_delivery": "Take Delivery",
+      "confirm_take_delivery": "Are you sure you want to take this order?\\n\\n",
+      "take": "Take",
+      "delivery_already_taken": "❌ Delivery already taken by someone else.",
+      "my_deliveries": "My Deliveries",
+      "all_orders": "All Orders",
+      "driver_permission_not_found": "Driver permission not found",
+      "no_business_assigned_yet": "No business assigned yet",
+      "business_assignment_needed_admin": "Business assignment must be done from the admin panel",
+      "no_deliveries_to_take": "No deliveries to take",
+      "no_active_orders": "No active orders",
+      "no_deliveries_today": "No deliveries today yet",
+      "business_address_not_found": "Business address not found",
+      "assigned_businesses": "Assigned Businesses"
+    },
+    "orders": {
+      "no_orders": "No orders",
+      "courier_tracking": "Courier Tracking",
+      "order_not_found": "Order not found",
+      "on_the_way": "On the way",
+      "waiting_courier_location": "Waiting for courier location...",
+      "my_account": "My Account",
+      "total_bill": "Total Bill",
+      "cannot_rate_before_completion": "Your order is not complete yet. You can rate after it's delivered.",
+      "please_rate_business": "Please rate the business",
+      "rating_saved_thanks": "Your rating has been saved. Thanks! 🎉",
+      "make_rating": "Rate",
+      "rate_business": "Rate Business",
+      "write_comment": "Write a Review"
+    }
+  },
+  "de": {
+    "staff": {
+      "break_continues": "☕ Ihre Pause geht weiter",
+      "break_end_for_delivery_prompt": "Ihre Pause wird beendet, um diese Lieferung zu übernehmen.\\n\\n",
+      "end_break_and_take": "Pause beenden und übernehmen",
+      "break_end_failed": "❌ Pause konnte nicht beendet werden. Bitte versuchen Sie es erneut.",
+      "contact_manager": "Bitte kontaktieren Sie Ihren Manager"
+    },
+    "common": {
+      "cancel": "Abbrechen",
+      "loading": "Wird geladen...",
+      "select_map_app": "Karten-App auswählen",
+      "apple_maps": "Apple Karten",
+      "google_maps": "Google Maps",
+      "go_caps": "LOS",
+      "update": "Aktualisieren"
+    },
+    "driver": {
+      "take_delivery": "Lieferung übernehmen",
+      "confirm_take_delivery": "Möchten Sie diese Bestellung wirklich übernehmen?\\n\\n",
+      "take": "Übernehmen",
+      "delivery_already_taken": "❌ Lieferung wurde bereits von jemand anderem übernommen.",
+      "my_deliveries": "Meine Lieferungen",
+      "all_orders": "Alle Bestellungen",
+      "driver_permission_not_found": "Fahrerberechtigung nicht gefunden",
+      "no_business_assigned_yet": "Noch kein Geschäft zugewiesen",
+      "business_assignment_needed_admin": "Die Geschäftszuweisung muss über das Admin-Panel erfolgen",
+      "no_deliveries_to_take": "Keine Lieferungen zum Übernehmen",
+      "no_active_orders": "Keine aktiven Bestellungen",
+      "no_deliveries_today": "Noch keine Lieferungen heute",
+      "business_address_not_found": "Geschäftsadresse nicht gefunden",
+      "assigned_businesses": "Zugewiesene Geschäfte"
+    },
+    "orders": {
+      "no_orders": "Keine Bestellungen",
+      "courier_tracking": "Kurierverfolgung",
+      "order_not_found": "Bestellung nicht gefunden",
+      "on_the_way": "Unterwegs",
+      "waiting_courier_location": "Warten auf Kurierstandort...",
+      "my_account": "Mein Konto",
+      "total_bill": "Gesamtrechnung",
+      "cannot_rate_before_completion": "Ihre Bestellung ist noch nicht vollständig. Sie können bewerten, nachdem sie geliefert wurde.",
+      "please_rate_business": "Bitte bewerten Sie das Geschäft",
+      "rating_saved_thanks": "Ihre Bewertung wurde gespeichert. Danke! 🎉",
+      "make_rating": "Bewerten",
+      "rate_business": "Geschäft bewerten",
+      "write_comment": "Eine Bewertung schreiben"
+    }
+  },
+  "fr": {
+    "staff": {
+      "break_continues": "☕ Votre pause continue",
+      "break_end_for_delivery_prompt": "Votre pause prendra fin pour prendre cette livraison.\\n\\n",
+      "end_break_and_take": "Finir la pause et prendre",
+      "break_end_failed": "❌ La pause n'a pas pu être terminée. Veuillez réessayer.",
+      "contact_manager": "Veuillez contacter votre responsable"
+    },
+    "common": {
+      "cancel": "Annuler",
+      "loading": "Chargement...",
+      "select_map_app": "Sélectionnez l'application de carte",
+      "apple_maps": "Plans d'Apple",
+      "google_maps": "Google Maps",
+      "go_caps": "ALLER",
+      "update": "Mettre à jour"
+    },
+    "driver": {
+      "take_delivery": "Prendre la livraison",
+      "confirm_take_delivery": "Êtes-vous sûr de vouloir prendre cette commande ?\\n\\n",
+      "take": "Prendre",
+      "delivery_already_taken": "❌ Livraison déjà prise par quelqu'un d'autre.",
+      "my_deliveries": "Mes livraisons",
+      "all_orders": "Toutes les commandes",
+      "driver_permission_not_found": "Autorisation de conducteur introuvable",
+      "no_business_assigned_yet": "Aucun magasin attribué pour le moment",
+      "business_assignment_needed_admin": "L'attribution du magasin doit être effectuée depuis le panneau d'administration",
+      "no_deliveries_to_take": "Aucune livraison à prendre",
+      "no_active_orders": "Aucune commande active",
+      "no_deliveries_today": "Pas de livraisons aujourd'hui",
+      "business_address_not_found": "Adresse du magasin introuvable",
+      "assigned_businesses": "Magasins attribués"
+    },
+    "orders": {
+      "no_orders": "Pas de commandes",
+      "courier_tracking": "Suivi de coursier",
+      "order_not_found": "Commande introuvable",
+      "on_the_way": "En route",
+      "waiting_courier_location": "En attente de l'emplacement du coursier...",
+      "my_account": "Mon compte",
+      "total_bill": "Facture totale",
+      "cannot_rate_before_completion": "Votre commande n'est pas encore terminée. Vous pouvez la noter après sa livraison.",
+      "please_rate_business": "Veuillez évaluer le magasin",
+      "rating_saved_thanks": "Votre évaluation a été enregistrée. Merci ! 🎉",
+      "make_rating": "Évaluer",
+      "rate_business": "Évaluer le magasin",
+      "write_comment": "Rédiger un avis"
+    }
+  },
+  "it": {
+    "staff": {
+      "break_continues": "☕ La tua pausa continua",
+      "break_end_for_delivery_prompt": "La tua pausa terminerà per prendere questa consegna.\\n\\n",
+      "end_break_and_take": "Termina la pausa e prendi",
+      "break_end_failed": "❌ Impossibile terminare la pausa. Riprova.",
+      "contact_manager": "Si prega di contattare il proprio manager"
+    },
+    "common": {
+      "cancel": "Annulla",
+      "loading": "Caricamento...",
+      "select_map_app": "Seleziona App Mappe",
+      "apple_maps": "Mappe Apple",
+      "google_maps": "Google Maps",
+      "go_caps": "VAI",
+      "update": "Aggiorna"
+    },
+    "driver": {
+      "take_delivery": "Prendi la consegna",
+      "confirm_take_delivery": "Sei sicuro di voler prendere questo ordine?\\n\\n",
+      "take": "Prendi",
+      "delivery_already_taken": "❌ Consegna già presa da qualcun altro.",
+      "my_deliveries": "Le Mie Consegne",
+      "all_orders": "Tutti gli ordini",
+      "driver_permission_not_found": "Permesso conducente non trovato",
+      "no_business_assigned_yet": "Ancora nessun negozio assegnato",
+      "business_assignment_needed_admin": "L'assegnazione del negozio deve essere effettuata dal pannello di amministrazione",
+      "no_deliveries_to_take": "Nessuna consegna da prendere",
+      "no_active_orders": "Nessun ordine attivo",
+      "no_deliveries_today": "Nessuna consegna oggi per ora",
+      "business_address_not_found": "Indirizzo del negozio non trovato",
+      "assigned_businesses": "Negozi Assegnati"
+    },
+    "orders": {
+      "no_orders": "Nessun ordine",
+      "courier_tracking": "Tracciamento Corriere",
+      "order_not_found": "Ordine non trovato",
+      "on_the_way": "In arrivo",
+      "waiting_courier_location": "In attesa della posizione del corriere...",
+      "my_account": "Il mio conto",
+      "total_bill": "Conto totale",
+      "cannot_rate_before_completion": "Il tuo ordine non è ancora completo. Puoi valutarlo dopo la consegna.",
+      "please_rate_business": "Per favore vota il negozio",
+      "rating_saved_thanks": "La tua recensione è stata salvata. Grazie! 🎉",
+      "make_rating": "Valuta",
+      "rate_business": "Valuta Negozio",
+      "write_comment": "Scrivi una Recensione"
+    }
+  },
+  "es": {
+    "staff": {
+      "break_continues": "☕ Tu descanso continúa",
+      "break_end_for_delivery_prompt": "Su descanso terminará para tomar esta entrega.\\n\\n",
+      "end_break_and_take": "Terminar descanso y tomar",
+      "break_end_failed": "❌ No se pudo terminar el descanso. Inténtalo de nuevo.",
+      "contact_manager": "Por favor comuníquese con su administrador"
+    },
+    "common": {
+      "cancel": "Cancelar",
+      "loading": "Cargando...",
+      "select_map_app": "Seleccionar aplicación de mapas",
+      "apple_maps": "Mapas de Apple",
+      "google_maps": "Google Maps",
+      "go_caps": "IR",
+      "update": "Actualizar"
+    },
+    "driver": {
+      "take_delivery": "Tomar la entrega",
+      "confirm_take_delivery": "¿Seguro que quieres tomar este pedido?\\n\\n",
+      "take": "Tomar",
+      "delivery_already_taken": "❌ Entrega ya tomada por otra persona.",
+      "my_deliveries": "Mis entregas",
+      "all_orders": "Todos los pedidos",
+      "driver_permission_not_found": "Permiso de conductor no encontrado",
+      "no_business_assigned_yet": "Aún no se ha asignado ningún negocio",
+      "business_assignment_needed_admin": "La asignación de negocios debe hacerse desde el panel de administración",
+      "no_deliveries_to_take": "No hay entregas para tomar",
+      "no_active_orders": "No hay pedidos activos",
+      "no_deliveries_today": "Aún no hay entregas hoy",
+      "business_address_not_found": "Dirección de la empresa no encontrada",
+      "assigned_businesses": "Negocios asignados"
+    },
+    "orders": {
+      "no_orders": "Sin pedidos",
+      "courier_tracking": "Seguimiento de mensajería",
+      "order_not_found": "Pedido no encontrado",
+      "on_the_way": "En camino",
+      "waiting_courier_location": "Esperando la ubicación del mensajero...",
+      "my_account": "Mi cuenta",
+      "total_bill": "Factura total",
+      "cannot_rate_before_completion": "Su pedido aún no está completo. Puede calificar después de que se entregue.",
+      "please_rate_business": "Por favor califique el negocio",
+      "rating_saved_thanks": "Su calificación ha sido guardada. ¡Gracias! 🎉",
+      "make_rating": "Calificar",
+      "rate_business": "Calificar Negocio",
+      "write_comment": "Escribir un comentario"
+    }
+  }
+}

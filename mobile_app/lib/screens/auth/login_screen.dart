@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -1071,7 +1072,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       debugPrint('Google sign-in error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Google giriş hatası: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('auth.google_login_error_e')), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -1088,7 +1089,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       debugPrint('Guest sign-in error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Misafir giriş hatası: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('auth.guest_login_error_e')), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -1102,7 +1103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('E-posta ve şifre gerekli'), backgroundColor: Colors.red),
+        SnackBar(content: Text(tr('auth.email_pass_required')), backgroundColor: Colors.red),
       );
       return;
     }
@@ -1114,7 +1115,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Register
         if (password != _confirmPasswordController.text) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Şifreler eşleşmiyor'), backgroundColor: Colors.red),
+            SnackBar(content: Text(tr('auth.passwords_do_not_match')), backgroundColor: Colors.red),
           );
           setState(() => _isLoading = false);
           return;
@@ -1127,7 +1128,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           await user.sendEmailVerification();
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('✅ Kayıt başarılı! Doğrulama e-postası gönderildi.'), backgroundColor: Colors.green),
+              SnackBar(content: Text(tr('auth.registration_success_email_sent')), backgroundColor: Colors.green),
             );
           }
         }
@@ -1138,7 +1139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       debugPrint('Email auth error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Giriş hatası: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('auth.login_error_e')), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -1150,7 +1151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen e-posta adresinizi girin'), backgroundColor: Colors.amber),
+        SnackBar(content: Text(tr('auth.please_enter_email')), backgroundColor: Colors.amber),
       );
       return;
     }
@@ -1160,13 +1161,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('📧 Şifre sıfırlama e-postası gönderildi'), backgroundColor: Colors.green),
+          SnackBar(content: Text(tr('auth.pass_reset_email_sent')), backgroundColor: Colors.green),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
         );
       }
     }
@@ -1177,7 +1178,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final phone = _phoneController.text.trim().replaceAll(' ', '').replaceAll('-', '');
     if (phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Telefon numarası gerekli'), backgroundColor: Colors.red),
+        SnackBar(content: Text(tr('auth.phone_number_required')), backgroundColor: Colors.red),
       );
       return;
     }
@@ -1217,7 +1218,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             _loginMode = 'phone';  // Ensure we're in phone mode
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('📱 SMS kodu gönderildi'), backgroundColor: Colors.green),
+            SnackBar(content: Text(tr('auth.sms_code_sent')), backgroundColor: Colors.green),
           );
         },
         verificationFailed: (error) {
@@ -1225,7 +1226,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           if (!mounted) return;
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Hata: ${error.message ?? error.code}'), backgroundColor: Colors.red),
+            SnackBar(content: Text(tr('common.error_message_or_code')), backgroundColor: Colors.red),
           );
         },
         verificationCompleted: (credential) async {
@@ -1238,7 +1239,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             if (mounted) {
               setState(() => _isLoading = false);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Giriş hatası: $e'), backgroundColor: Colors.red),
+                SnackBar(content: Text(tr('auth.login_error_e')), backgroundColor: Colors.red),
               );
             }
           }
@@ -1254,7 +1255,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('SMS Hatası: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('auth.sms_error_e')), backgroundColor: Colors.red),
         );
       }
     }
@@ -1264,14 +1265,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final code = _smsCodeController.text.trim();
     if (code.isEmpty || code.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('6 haneli kodu girin'), backgroundColor: Colors.red),
+        SnackBar(content: Text(tr('auth.enter_6_digit_short')), backgroundColor: Colors.red),
       );
       return;
     }
     
     if (_verificationId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Doğrulama ID bulunamadı'), backgroundColor: Colors.red),
+        SnackBar(content: Text(tr('auth.verification_id_not_found')), backgroundColor: Colors.red),
       );
       return;
     }

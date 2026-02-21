@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -89,8 +90,8 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('WhatsApp açılamadı. Link panoya kopyalandı.'),
+          SnackBar(
+            content: Text(tr('kermes.whatsapp_failed_link_copied')),
             backgroundColor: Colors.amber,
           ),
         );
@@ -108,11 +109,11 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
       setState(() => _linkCopied = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
               Icon(Icons.check_circle, color: Colors.white, size: 20),
               SizedBox(width: 8),
-              Text('Link kopyalandı!'),
+              Text(tr('common.link_copied')),
             ],
           ),
           backgroundColor: Colors.green,

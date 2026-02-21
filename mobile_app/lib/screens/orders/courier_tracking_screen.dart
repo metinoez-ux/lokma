@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -131,7 +132,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Kurye Takibi'),
+            Text(tr('orders.courier_tracking')),
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () {
@@ -176,7 +177,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
           }
 
           if (!snapshot.hasData) {
-            return const Center(child: Text('Sipariş bulunamadı'));
+            return Center(child: Text(tr('orders.order_not_found')));
           }
 
           final order = snapshot.data!;

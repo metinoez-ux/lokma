@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -1522,7 +1523,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Kapat'),
+            child: Text(tr('common.close')),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1537,7 +1538,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               backgroundColor: lokmaPink,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Menüyü Gör'),
+            child: Text(tr('marketplace.see_menu')),
           ),
         ],
       ),
@@ -3531,7 +3532,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               backgroundColor: lokmaPink,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Onayla'),
+            child: Text(tr('common.confirm')),
           ),
         ],
       ),
@@ -3884,7 +3885,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   showDialog(
                     context: context,
                     builder: (confirmCtx) => AlertDialog(
-                      title: const Text('Oturumu Kapat'),
+                      title: Text(tr('auth.close_session')),
                       content: const Text(
                         'Şifreye ulaşamıyor musunuz? Masadaki mevcut sipariş oturumunu kapatıp baştan başlayabilirsiniz. Bu işlem mevcut gruptakilerin siparişe devam etmesini engeller. Devam etmek istiyor musunuz?',
                       ),

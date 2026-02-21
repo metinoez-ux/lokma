@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -122,8 +123,8 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bildirim ayarları kaydedildi'),
+          SnackBar(
+            content: Text(tr('profile.notification_settings_saved')),
             backgroundColor: Colors.green,
           ),
         );
@@ -132,7 +133,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
       debugPrint('Error saving notification preferences: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
         );
       }
     }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -97,7 +98,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Geri bildirim için giriş yapmalısınız.'), backgroundColor: Colors.amber),
+        SnackBar(content: Text(tr('auth.login_required_for_feedback')), backgroundColor: Colors.amber),
       );
       return;
     }
@@ -107,7 +108,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
         _appUsabilityRating == 0 && _deliverySpeedRating == 0 && _overallExperienceRating == 0 &&
         _foodFreshnessRating == 0 && _courierProfessionalismRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen en az bir kategoriyi puanlayın.'), backgroundColor: Colors.amber),
+        SnackBar(content: Text(tr('common.rate_at_least_one_category')), backgroundColor: Colors.amber),
       );
       return;
     }
@@ -145,7 +146,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Geri bildiriminiz için teşekkürler! 🙏'), backgroundColor: Colors.green),
+          SnackBar(content: Text(tr('common.thank_you_for_feedback_pray')), backgroundColor: Colors.green),
         );
         Navigator.pop(context);
       }
@@ -153,7 +154,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
       debugPrint('Error submitting feedback: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
         );
       }
     } finally {

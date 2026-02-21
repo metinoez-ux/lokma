@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -50,8 +51,8 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
     final user = _auth.currentUser;
     if (user == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Bildirimler')),
-        body: const Center(child: Text('Giriş yapmanız gerekiyor.')),
+        appBar: AppBar(title: Text(tr('profile.notifications'))),
+        body: Center(child: Text(tr('auth.need_to_login'))),
       );
     }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -65,7 +66,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       final endBreak = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('☕ Molanız Devam Ediyor'),
+          title: Text(tr('staff.break_continues')),
           content: const Text(
             'Teslimat üstlenmek için molanız sonlandırılacak.\n\n'
             'Devam etmek istiyor musunuz?',
@@ -73,7 +74,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('İptal'),
+              child: Text(tr('common.cancel')),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
@@ -90,8 +91,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       final resumed = await shiftService.resumeShift();
       if (!resumed && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Mola sonlandırılamadı. Lütfen tekrar deneyin.'),
+          SnackBar(
+            content: Text(tr('staff.break_end_failed')),
             backgroundColor: Colors.red,
           ),
         );
@@ -103,7 +104,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Teslimatı Üstlen'),
+        title: Text(tr('driver.take_delivery')),
         content: Text(
           'Bu siparişi üstlenmek istediğinize emin misiniz?\n\n'
           '🏪 ${order.butcherName}\n'
@@ -113,7 +114,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('İptal'),
+            child: Text(tr('common.cancel')),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -159,8 +160,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ Teslimat zaten başka biri tarafından üstlenilmiş.'),
+        SnackBar(
+          content: Text(tr('driver.delivery_already_taken')),
           backgroundColor: Colors.red,
         ),
       );
@@ -682,9 +683,9 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
             border: Border(top: BorderSide(color: borderColor!)),
           ),
           child: snapshot.connectionState == ConnectionState.waiting
-            ? const ListTile(
+            ? ListTile(
                 leading: Icon(Icons.history, color: Colors.amber),
-                title: Text('Yükleniyor...'),
+                title: Text(tr('common.loading')),
               )
             : ExpansionTile(
             backgroundColor: bgColor,
@@ -1161,7 +1162,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
   Future<void> _openBusinessNavigation(String? address) async {
     if (address == null || address.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('İşletme adresi bulunamadı')),
+        SnackBar(content: Text(tr('driver.business_address_not_found'))),
       );
       return;
     }
@@ -1188,7 +1189,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
               ),
               ListTile(
                 leading: const Icon(Icons.map, color: Colors.green, size: 28),
-                title: const Text('Apple Haritalar'),
+                title: Text(tr('common.apple_maps')),
                 onTap: () async {
                   Navigator.pop(ctx);
                   final appleUri = Uri.parse('maps://?q=$encodedAddress');
@@ -1199,7 +1200,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
               ),
               ListTile(
                 leading: const Icon(Icons.location_on, color: Colors.red, size: 28),
-                title: const Text('Google Maps'),
+                title: Text(tr('common.google_maps')),
                 onTap: () async {
                   Navigator.pop(ctx);
                   final googleAppUri = Uri.parse('comgooglemaps://?q=$encodedAddress');

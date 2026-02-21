@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/models/kermes_model.dart';
@@ -207,7 +208,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Sipariş hatası: $e'),
+          content: Text(tr('orders.order_error_e')),
           backgroundColor: Colors.red,
         ),
       );

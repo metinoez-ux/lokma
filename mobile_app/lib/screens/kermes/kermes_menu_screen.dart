@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -315,7 +316,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text('Sepeti Değiştir'),
+            child: Text(tr('cart.change_cart')),
           ),
         ],
       ),
@@ -1277,7 +1278,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Sipariş oluşturulamadı: $e'),
+            content: Text(tr('orders.could_not_create_order_e')),
             backgroundColor: Colors.red,
           ),
         );

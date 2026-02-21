@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:io';
@@ -202,7 +203,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               }
             },
             icon: const Icon(Icons.send, size: 18),
-            label: const Text('Gönder'),
+            label: Text(tr('common.send')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
@@ -237,7 +238,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               children: [
                 const Icon(Icons.check_circle, color: Colors.white),
                 const SizedBox(width: 12),
-                const Text('Acil anons gönderildi!'),
+                Text(tr('kermes.emergency_announcement_sent')),
               ],
             ),
             backgroundColor: Colors.green,
@@ -250,7 +251,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Hata: $e'),
+            content: Text(tr('common.error_e')),
             backgroundColor: Colors.red,
           ),
         );
@@ -612,7 +613,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       ElevatedButton.icon(
                         onPressed: _showAddParkingDialog,
                         icon: const Icon(Icons.add),
-                        label: const Text('İlk Park Alanını Ekle'),
+                        label: Text(tr('kermes.add_first_parking_area')),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2563EB),
                         ),
@@ -824,7 +825,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                 child: ElevatedButton.icon(
                   onPressed: () => _showMapSelectionDialog(context, address, info.lat, info.lng),
                   icon: const Icon(Icons.directions, size: 18),
-                  label: const Text('Yol Tarifi'),
+                  label: Text(tr('common.directions')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2563EB),
                     foregroundColor: Colors.white,
@@ -840,7 +841,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                   Clipboard.setData(ClipboardData(text: address));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Adres kopyalandı'),
+                      content: Text(tr('common.address_copied')),
                       backgroundColor: Colors.green,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -952,7 +953,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB)),
-            child: const Text('Ekle'),
+            child: Text(tr('common.add')),
           ),
         ],
       ),
@@ -976,7 +977,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Park alanı eklendi'),
+              content: Text(tr('kermes.parking_area_added')),
               backgroundColor: Colors.green,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -986,7 +987,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+            SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
           );
         }
       }
@@ -1110,8 +1111,8 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                     });
                                     
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('📍 Konum alındı!'),
+                                      SnackBar(
+                                        content: Text(tr('kermes.location_received_pin')),
                                         backgroundColor: Colors.green,
                                         duration: Duration(seconds: 2),
                                       ),
@@ -1119,7 +1120,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                   }
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Konum hatası: $e'), backgroundColor: Colors.red),
+                                    SnackBar(content: Text(tr('common.location_error_e')), backgroundColor: Colors.red),
                                   );
                                 } finally {
                                   setModalState(() => isGettingLocation = false);
@@ -1183,8 +1184,8 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                   postalCodeController.text = postalCode;
                                 });
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('📍 Kermes adresi eklendi!'),
+                                  SnackBar(
+                                    content: Text(tr('kermes.kermes_address_added_pin')),
                                     backgroundColor: Colors.green,
                                     duration: Duration(seconds: 2),
                                   ),
@@ -1457,7 +1458,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       onPressed: isUploading ? null : () async {
                         if (streetController.text.isEmpty || cityController.text.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Adres bilgilerini doldurun'), backgroundColor: Colors.amber),
+                            SnackBar(content: Text(tr('common.fill_address_info')), backgroundColor: Colors.amber),
                           );
                           return;
                         }
@@ -1496,7 +1497,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                           setModalState(() => isUploading = false);
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                              SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
                             );
                           }
                         }
@@ -1530,7 +1531,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     if (result == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('✅ Park alanı eklendi!'),
+          content: Text(tr('kermes.parking_area_added_success')),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1805,7 +1806,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         onPressed: isUploading ? null : () async {
                           if (streetController.text.isEmpty || cityController.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Adres bilgilerini doldurun'), backgroundColor: Colors.amber),
+                              SnackBar(content: Text(tr('common.fill_address_info')), backgroundColor: Colors.amber),
                             );
                             return;
                           }
@@ -1846,7 +1847,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                             setModalState(() => isUploading = false);
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+                                SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
                               );
                             }
                           }
@@ -1880,7 +1881,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
     if (result == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('✅ Park alanı güncellendi!'),
+          content: Text(tr('kermes.parking_area_updated_success')),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1906,7 +1907,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Sil'),
+            child: Text(tr('common.delete')),
           ),
         ],
       ),
@@ -1924,7 +1925,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Park alanı silindi'),
+              content: Text(tr('kermes.parking_area_deleted')),
               backgroundColor: Colors.amber,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1934,7 +1935,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+            SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
           );
         }
       }

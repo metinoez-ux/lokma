@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -359,7 +360,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     context.pop(); // Go back to list
                   },
                   icon: const Icon(Icons.search, size: 18),
-                  label: const Text('Açık İşletmeleri Bul'),
+                  label: Text(tr('marketplace.find_open_businesses')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _getAccent(context),
                     foregroundColor: Colors.white,
@@ -2780,7 +2781,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               : () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Dieser Artikel ist zurzeit nicht verfügbar.'),
+                      content: Text(tr('marketplace.item_not_available_de')),
                       duration: const Duration(seconds: 2),
                       behavior: SnackBarBehavior.floating,
                       backgroundColor: isDark ? Colors.grey[800] : Colors.grey[700],
@@ -3184,11 +3185,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               setState(() => _deliveryModeIndex = 2);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Row(
+                  content: Row(
                     children: [
                       Icon(Icons.check_circle, color: Colors.white, size: 20),
                       SizedBox(width: 8),
-                      Text('Masada sipariş modu aktif! Menüden ürün ekleyin.'),
+                      Text(tr('orders.table_order_mode_active_add_products')),
                     ],
                   ),
                   backgroundColor: Colors.green,
@@ -3198,7 +3199,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               );
             },
             icon: const Icon(Icons.check, size: 18),
-            label: const Text('Onaylıyorum'),
+            label: Text(tr('common.i_confirm')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.amber,
               foregroundColor: Colors.white,

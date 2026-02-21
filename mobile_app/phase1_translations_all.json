@@ -1,0 +1,410 @@
+{
+  "tr": {
+    "common": {
+      "distance": "Mesafe:",
+      "cancel": "İptal",
+      "login_required": "Giriş Gerekli",
+      "link_copied": "Link kopyalandı!",
+      "copied": "Kopyalandı",
+      "ok": "Tamam",
+      "understood": "Anladım",
+      "give_up": "Vazgeç",
+      "cancel_verb": "İptal Et",
+      "total": "Toplam",
+      "your_name": "Adınız",
+      "create_link": "Link Oluştur",
+      "letter_p": "P",
+      "weather": "Hava Durumu",
+      "no_results_found": "Sonuç bulunamadı",
+      "try_different_search": "Farklı bir arama terimi deneyin"
+    },
+    "cart": {
+      "how_to_receive": "Nasıl Almak İstersiniz?",
+      "continue_order": "Siparişe Devam Et",
+      "order_type": "Sipariş Türü",
+      "how_to_order": "Nasıl sipariş vermek istersiniz?"
+    },
+    "kermes": {
+      "link_copied_whatsapp": "Link panoya kopyalandı! WhatsApp\\",
+      "whatsapp_failed_link_copied": "WhatsApp açılamadı. Link panoya kopyalandı.",
+      "group_order_created": "Grup Siparişi Oluşturuldu!",
+      "pay_cash_at_kermes_qr": "Kermes alanındaki kasada bu QR kodu göstererek nakit ödeme yapabilirsiniz.",
+      "contact_staff_at_counter": "Lütfen tezgahta personel ile iletişime geçin.",
+      "show_qr_to_counter_staff": "Bu QR kodu tezgah personeline gösterin",
+      "start_family_order": "Ailecek Sipariş Başlat",
+      "order_duration": "Sipariş Süresi",
+      "participants_can_order": "Katılımcılar bu süre içinde sipariş verebilir",
+      "share_link_whatsapp": "Link oluşturulduktan sonra WhatsApp ile paylaşabilirsiniz",
+      "select_association_icon": "🕌 Dernek Seç"
+    },
+    "orders": {
+      "order_number_copied": "Sipariş numarası kopyalandı",
+      "order_cancellation": "Sipariş İptali",
+      "confirm_cancel_order": "Siparişinizi iptal etmek istediğinize emin misiniz?",
+      "order_cancelled": "Sipariş İptal Edildi",
+      "cannot_cancel": "İptal Edilemiyor",
+      "order_started_prep_no_cancel": "Siparişiniz hazırlanmaya başladığı için artık iptal edilemiyor. 🍳",
+      "order_number_title": "Sipariş Numarası",
+      "order_prep_after_payment": "Siparişiniz ödeme yapıldıktan sonra\\nhazırlanmaya başlanacaktır",
+      "order_cancelled_caps": "SİPARİŞ İPTAL EDİLDİ",
+      "order_received": "Sipariş Alındı!"
+    },
+    "payments": {
+      "payment_completed": "Ödeme Tamamlandı!",
+      "cash_payment": "Nakit Ödeme",
+      "refund_in_days": "Ödemeniz 2-3 iş günü içinde iade edilecektir.",
+      "payment_refunded": "Ödemeniz iade edildi.",
+      "refund_notice": "💡 İade tutarı 2-3 iş günü içinde hesabınıza yansıyacaktır. Bu teknik bir işlem süresidir.",
+      "cash_payment_icon": "💵 Nakit Ödeme",
+      "payment_method": "Ödeme Yöntemi"
+    },
+    "discovery": {
+      "view_menu_order": "Menüyü Gör & Sipariş Ver",
+      "parking_options": "Park İmkanları",
+      "available_parking": "Müsait park alanı"
+    },
+    "staff": {
+      "authorized_person": "Yetkili Kişi"
+    }
+  },
+  "en": {
+    "common": {
+      "distance": "Distance:",
+      "cancel": "Cancel",
+      "login_required": "Login Required",
+      "link_copied": "Link copied!",
+      "copied": "Copied",
+      "ok": "OK",
+      "understood": "Understood",
+      "give_up": "Give up",
+      "cancel_verb": "Cancel",
+      "total": "Total",
+      "your_name": "Your Name",
+      "create_link": "Create Link",
+      "letter_p": "P",
+      "weather": "Weather",
+      "no_results_found": "No results found",
+      "try_different_search": "Try a different search term"
+    },
+    "cart": {
+      "how_to_receive": "How would you like to receive it?",
+      "continue_order": "Continue with Order",
+      "order_type": "Order Type",
+      "how_to_order": "How would you like to place your order?"
+    },
+    "kermes": {
+      "link_copied_whatsapp": "Link copied to clipboard! WhatsApp\\",
+      "whatsapp_failed_link_copied": "Could not open WhatsApp. Link copied to clipboard.",
+      "group_order_created": "Group Order Created!",
+      "pay_cash_at_kermes_qr": "You can pay cash at the Kermes area by showing this QR code.",
+      "contact_staff_at_counter": "Please contact the staff at the counter.",
+      "show_qr_to_counter_staff": "Show this QR code to the counter staff",
+      "start_family_order": "Start Family Order",
+      "order_duration": "Order Duration",
+      "participants_can_order": "Participants can order within this time",
+      "share_link_whatsapp": "After the link is created, you can share it via WhatsApp",
+      "select_association_icon": "🕌 Select Association"
+    },
+    "orders": {
+      "order_number_copied": "Order number copied",
+      "order_cancellation": "Order Cancellation",
+      "confirm_cancel_order": "Are you sure you want to cancel your order?",
+      "order_cancelled": "Order Cancelled",
+      "cannot_cancel": "Cannot be Cancelled",
+      "order_started_prep_no_cancel": "Your order has started preparation and cannot be cancelled anymore. 🍳",
+      "order_number_title": "Order Number",
+      "order_prep_after_payment": "Your order will begin preparation\\nafter payment",
+      "order_cancelled_caps": "ORDER CANCELLED",
+      "order_received": "Order Received!"
+    },
+    "payments": {
+      "payment_completed": "Payment Completed!",
+      "cash_payment": "Cash Payment",
+      "refund_in_days": "Your payment will be refunded in 2-3 business days.",
+      "payment_refunded": "Your payment was refunded.",
+      "refund_notice": "💡 The refund will reflect in 2-3 business days due to processing times.",
+      "cash_payment_icon": "💵 Cash Payment",
+      "payment_method": "Payment Method"
+    },
+    "discovery": {
+      "view_menu_order": "View Menu & Order",
+      "parking_options": "Parking Options",
+      "available_parking": "Available parking space"
+    },
+    "staff": {
+      "authorized_person": "Authorized Person"
+    }
+  },
+  "de": {
+    "common": {
+      "distance": "Entfernung:",
+      "cancel": "Abbrechen",
+      "login_required": "Anmeldung erforderlich",
+      "link_copied": "Link kopiert!",
+      "copied": "Kopiert",
+      "ok": "OK",
+      "understood": "Verstanden",
+      "give_up": "Aufgeben",
+      "cancel_verb": "Abbrechen",
+      "total": "Gesamt",
+      "your_name": "Ihr Name",
+      "create_link": "Link erstellen",
+      "letter_p": "P",
+      "weather": "Wetter",
+      "no_results_found": "Keine Ergebnisse gefunden",
+      "try_different_search": "Probieren Sie einen anderen Suchbegriff"
+    },
+    "cart": {
+      "how_to_receive": "Wie möchten Sie es erhalten?",
+      "continue_order": "Mit Bestellung fortfahren",
+      "order_type": "Bestellart",
+      "how_to_order": "Wie möchten Sie bestellen?"
+    },
+    "kermes": {
+      "link_copied_whatsapp": "Link in die Zwischenablage kopiert! WhatsApp\\",
+      "whatsapp_failed_link_copied": "WhatsApp konnte nicht geöffnet werden. Link in die Zwischenablage kopiert.",
+      "group_order_created": "Gruppenbestellung erstellt!",
+      "pay_cash_at_kermes_qr": "Sie können bar bezahlen, indem Sie diesen QR-Code an der Kasse zeigen.",
+      "contact_staff_at_counter": "Bitte wenden Sie sich an das Personal am Schalter.",
+      "show_qr_to_counter_staff": "Zeigen Sie diesen QR-Code dem Personal am Schalter",
+      "start_family_order": "Familienbestellung starten",
+      "order_duration": "Bestelldauer",
+      "participants_can_order": "Teilnehmer können in dieser Zeit bestellen",
+      "share_link_whatsapp": "Nachdem der Link erstellt wurde, können Sie ihn über WhatsApp teilen",
+      "select_association_icon": "🕌 Verein wählen"
+    },
+    "orders": {
+      "order_number_copied": "Bestellnummer kopiert",
+      "order_cancellation": "Bestellstornierung",
+      "confirm_cancel_order": "Möchten Sie Ihre Bestellung wirklich stornieren?",
+      "order_cancelled": "Bestellung storniert",
+      "cannot_cancel": "Stornierung nicht möglich",
+      "order_started_prep_no_cancel": "Ihre Bestellung wird bereits zubereitet und kann nicht mehr storniert werden. 🍳",
+      "order_number_title": "Bestellnummer",
+      "order_prep_after_payment": "Ihre Bestellung wird nach\\nZahlungseingang zubereitet",
+      "order_cancelled_caps": "BESTELLUNG STORNIERT",
+      "order_received": "Bestellung eingegangen!"
+    },
+    "payments": {
+      "payment_completed": "Zahlung abgeschlossen!",
+      "cash_payment": "Barzahlung",
+      "refund_in_days": "Ihre Zahlung wird innerhalb von 2-3 Werktagen zurückerstattet.",
+      "payment_refunded": "Ihre Zahlung wurde zurückerstattet.",
+      "refund_notice": "💡 Die Rückerstattung wird aufgrund von Bearbeitungszeiten in 2-3 Werktagen angezeigt.",
+      "cash_payment_icon": "💵 Barzahlung",
+      "payment_method": "Zahlungsmethode"
+    },
+    "discovery": {
+      "view_menu_order": "Menü ansehen & bestellen",
+      "parking_options": "Parkmöglichkeiten",
+      "available_parking": "Verfügbarer Parkplatz"
+    },
+    "staff": {
+      "authorized_person": "Befugte Person"
+    }
+  },
+  "fr": {
+    "common": {
+      "distance": "Distance :",
+      "cancel": "Annuler",
+      "login_required": "Connexion requise",
+      "link_copied": "Lien copié !",
+      "copied": "Copié",
+      "ok": "OK",
+      "understood": "Compris",
+      "give_up": "Annuler",
+      "cancel_verb": "Annuler",
+      "total": "Total",
+      "your_name": "Votre Nom",
+      "create_link": "Créer un lien",
+      "letter_p": "P",
+      "weather": "Météo",
+      "no_results_found": "Aucun résultat trouvé",
+      "try_different_search": "Essayez un terme de recherche différent"
+    },
+    "cart": {
+      "how_to_receive": "Comment souhaitez-vous le recevoir ?",
+      "continue_order": "Continuer la commande",
+      "order_type": "Type de commande",
+      "how_to_order": "Comment souhaitez-vous commander ?"
+    },
+    "kermes": {
+      "link_copied_whatsapp": "Lien copié dans le presse-papiers ! WhatsApp\\",
+      "whatsapp_failed_link_copied": "Impossible d'ouvrir WhatsApp. Lien copié.",
+      "group_order_created": "Commande de groupe créée !",
+      "pay_cash_at_kermes_qr": "Vous pouvez payer en espèces en montrant ce code QR.",
+      "contact_staff_at_counter": "Veuillez contacter le personnel au comptoir.",
+      "show_qr_to_counter_staff": "Montrez ce code QR au personnel du comptoir",
+      "start_family_order": "Commencer une commande familiale",
+      "order_duration": "Durée de la commande",
+      "participants_can_order": "Les participants peuvent commander pendant ce temps",
+      "share_link_whatsapp": "Une fois le lien créé, vous pouvez le partager via WhatsApp",
+      "select_association_icon": "🕌 Sélectionner l'association"
+    },
+    "orders": {
+      "order_number_copied": "Numéro de commande copié",
+      "order_cancellation": "Annulation de commande",
+      "confirm_cancel_order": "Voulez-vous vraiment annuler votre commande ?",
+      "order_cancelled": "Commande annulée",
+      "cannot_cancel": "Impossible d'annuler",
+      "order_started_prep_no_cancel": "Votre commande est en préparation et ne peut plus être annulée. 🍳",
+      "order_number_title": "Numéro de commande",
+      "order_prep_after_payment": "Votre commande sera préparée\\naprès le paiement",
+      "order_cancelled_caps": "COMMANDE ANNULÉE",
+      "order_received": "Commande reçue !"
+    },
+    "payments": {
+      "payment_completed": "Paiement terminé !",
+      "cash_payment": "Paiement en espèces",
+      "refund_in_days": "Votre paiement sera remboursé sous 2 à 3 jours ouvrables.",
+      "payment_refunded": "Votre paiement a été remboursé.",
+      "refund_notice": "💡 Le remboursement apparaîtra sous 2 à 3 jours ouvrables.",
+      "cash_payment_icon": "💵 Paiement en espèces",
+      "payment_method": "Mode de paiement"
+    },
+    "discovery": {
+      "view_menu_order": "Voir le menu et commander",
+      "parking_options": "Options de stationnement",
+      "available_parking": "Place de parking disponible"
+    },
+    "staff": {
+      "authorized_person": "Personne autorisée"
+    }
+  },
+  "it": {
+    "common": {
+      "distance": "Distanza:",
+      "cancel": "Annulla",
+      "login_required": "Accesso richiesto",
+      "link_copied": "Link copiato!",
+      "copied": "Copiato",
+      "ok": "OK",
+      "understood": "Ho capito",
+      "give_up": "Rinuncia",
+      "cancel_verb": "Annulla",
+      "total": "Totale",
+      "your_name": "Il tuo nome",
+      "create_link": "Crea link",
+      "letter_p": "P",
+      "weather": "Meteo",
+      "no_results_found": "Nessun risultato trovato",
+      "try_different_search": "Prova un altro termine di ricerca"
+    },
+    "cart": {
+      "how_to_receive": "Come vorresti riceverlo?",
+      "continue_order": "Continua con l'ordine",
+      "order_type": "Tipo di ordine",
+      "how_to_order": "Come desideri ordinare?"
+    },
+    "kermes": {
+      "link_copied_whatsapp": "Link copiato negli appunti! WhatsApp\\",
+      "whatsapp_failed_link_copied": "Impossibile aprire WhatsApp. Link copiato negli appunti.",
+      "group_order_created": "Ordine di gruppo creato!",
+      "pay_cash_at_kermes_qr": "Puoi pagare in contanti mostrando questo codice QR alla cassa.",
+      "contact_staff_at_counter": "Si prega di contattare il personale al bancone.",
+      "show_qr_to_counter_staff": "Mostra questo codice QR al personale del bancone",
+      "start_family_order": "Avvia Ordine Familiare",
+      "order_duration": "Durata dell'ordine",
+      "participants_can_order": "I partecipanti possono ordinare in questo periodo",
+      "share_link_whatsapp": "Dopo che il link è stato creato, puoi condividerlo tramite WhatsApp",
+      "select_association_icon": "🕌 Seleziona l'associazione"
+    },
+    "orders": {
+      "order_number_copied": "Numero d'ordine copiato",
+      "order_cancellation": "Cancellazione dell'ordine",
+      "confirm_cancel_order": "Sei sicuro di voler annullare l'ordine?",
+      "order_cancelled": "Ordine Annullato",
+      "cannot_cancel": "Impossibile annullare",
+      "order_started_prep_no_cancel": "Il tuo ordine è in preparazione e non può più essere annullato. 🍳",
+      "order_number_title": "Numero d'ordine",
+      "order_prep_after_payment": "Il tuo ordine verrà preparato\\ndopo il pagamento",
+      "order_cancelled_caps": "ORDINE ANNULLATO",
+      "order_received": "Ordine ricevuto!"
+    },
+    "payments": {
+      "payment_completed": "Pagamento completato!",
+      "cash_payment": "Pagamento in contanti",
+      "refund_in_days": "Il pagamento verrà rimborsato in 2-3 giorni lavorativi.",
+      "payment_refunded": "Il tuo pagamento è stato rimborsato.",
+      "refund_notice": "💡 Il rimborso sarà visibile in 2-3 giorni lavorativi per i tempi di elaborazione.",
+      "cash_payment_icon": "💵 Pagamento in contanti",
+      "payment_method": "Metodo di pagamento"
+    },
+    "discovery": {
+      "view_menu_order": "Vedi menu odina",
+      "parking_options": "Opzioni di parcheggio",
+      "available_parking": "Spazio parcheggio disponibile"
+    },
+    "staff": {
+      "authorized_person": "Persona autorizzata"
+    }
+  },
+  "es": {
+    "common": {
+      "distance": "Distancia:",
+      "cancel": "Cancelar",
+      "login_required": "Inicio de sesión requerido",
+      "link_copied": "¡Enlace copiado!",
+      "copied": "Copiado",
+      "ok": "Aceptar",
+      "understood": "Entendido",
+      "give_up": "Renunciar",
+      "cancel_verb": "Cancelar",
+      "total": "Total",
+      "your_name": "Su nombre",
+      "create_link": "Crear enlace",
+      "letter_p": "P",
+      "weather": "Clima",
+      "no_results_found": "No se encontraron resultados",
+      "try_different_search": "Intente un término de búsqueda diferente"
+    },
+    "cart": {
+      "how_to_receive": "¿Cómo le gustaría recibirlo?",
+      "continue_order": "Continuar con el pedido",
+      "order_type": "Tipo de pedido",
+      "how_to_order": "¿Cómo desea realizar su pedido?"
+    },
+    "kermes": {
+      "link_copied_whatsapp": "¡Enlace copiado al portapapeles! WhatsApp\\",
+      "whatsapp_failed_link_copied": "No se pudo abrir WhatsApp. Enlace copiado al portapapeles.",
+      "group_order_created": "¡Pedido de grupo creado!",
+      "pay_cash_at_kermes_qr": "Puede pagar en efectivo mostrando este código QR en la caja.",
+      "contact_staff_at_counter": "Póngase en contacto con el personal del mostrador.",
+      "show_qr_to_counter_staff": "Muestre este código QR al personal del mostrador",
+      "start_family_order": "Iniciar pedido familiar",
+      "order_duration": "Duración del pedido",
+      "participants_can_order": "Los participantes pueden pedir en este tiempo",
+      "share_link_whatsapp": "Después de que se crea el enlace, puede compartirlo a través de WhatsApp",
+      "select_association_icon": "🕌 Seleccionar asociación"
+    },
+    "orders": {
+      "order_number_copied": "Número de pedido copiado",
+      "order_cancellation": "Cancelación de pedido",
+      "confirm_cancel_order": "¿Estás seguro de que deseas cancelar tu pedido?",
+      "order_cancelled": "Pedido Cancelado",
+      "cannot_cancel": "No se puede cancelar",
+      "order_started_prep_no_cancel": "Tu pedido ha comenzado a prepararse y ya no se puede cancelar. 🍳",
+      "order_number_title": "Número de pedido",
+      "order_prep_after_payment": "Su pedido comenzará a prepararse\\ndespués del pago",
+      "order_cancelled_caps": "PEDIDO CANCELADO",
+      "order_received": "¡Pedido recibido!"
+    },
+    "payments": {
+      "payment_completed": "¡Pago completado!",
+      "cash_payment": "Pago en efectivo",
+      "refund_in_days": "Su pago será reembolsado en 2-3 días hábiles.",
+      "payment_refunded": "Su pago fue reembolsado.",
+      "refund_notice": "💡 El reembolso se reflejará en 2-3 días hábiles debido a los tiempos de procesamiento.",
+      "cash_payment_icon": "💵 Pago en efectivo",
+      "payment_method": "Método de pago"
+    },
+    "discovery": {
+      "view_menu_order": "Ver menú y pedir",
+      "parking_options": "Opciones de aparcamiento",
+      "available_parking": "Plaza de aparcamiento disponible"
+    },
+    "staff": {
+      "authorized_person": "Persona autorizada"
+    }
+  }
+}

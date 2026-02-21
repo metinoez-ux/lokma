@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -321,7 +322,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
-                        child: const Text('İptal'),
+                        child: Text(tr('common.cancel')),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -419,8 +420,8 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
         debugPrint('[StaffReservations] Error confirming: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Hata oluştu. Tekrar deneyin.'),
+            SnackBar(
+              content: Text(tr('common.error_occurred_try_again')),
               backgroundColor: Colors.red,
             ),
           );
@@ -497,8 +498,8 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
       debugPrint('[StaffReservations] Error updating status: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Hata oluştu. Tekrar deneyin.'),
+          SnackBar(
+            content: Text(tr('common.error_occurred_try_again')),
             backgroundColor: Colors.red,
           ),
         );
@@ -510,7 +511,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
   void _callCustomer(String? phone) {
     if (phone == null || phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Telefon numarası bulunamadı')),
+        SnackBar(content: Text(tr('common.phone_number_not_found'))),
       );
       return;
     }

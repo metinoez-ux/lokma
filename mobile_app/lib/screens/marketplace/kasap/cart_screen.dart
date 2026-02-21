@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../utils/i18n_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -537,7 +538,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
           labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          tabs: const [
+          tabs: [
             Tab(text: 'cart.my_cart'.tr()),
             Tab(text: 'cart.my_orders'.tr()),
           ],
@@ -2147,7 +2148,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 );
               },
               icon: const Icon(Icons.qr_code, size: 20),
-              label: Text('Hesabı Göster'),
+              label: Text(tr('orders.show_receipt')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFB335B),
                 foregroundColor: Colors.white,
@@ -3294,7 +3295,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Onayla'),
+            child: Text(tr('common.confirm')),
           ),
         ],
       ),
@@ -3422,7 +3423,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   final pin = pinController.text.trim();
                   if (pin.length != 4) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('4 haneli PIN girin'), backgroundColor: Colors.orange),
+                      SnackBar(content: Text(tr('orders.enter_4_digit_pin')), backgroundColor: Colors.orange),
                     );
                     return;
                   }
@@ -3458,7 +3459,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('Hayır, tek başıma sipariş vereyim'),
+                child: Text(tr('orders.no_order_by_myself')),
               ),
             ),
             const SizedBox(height: 16),
@@ -4169,7 +4170,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             ElevatedButton(
               onPressed: () => context.go('/'),
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
-              child: Text('Ana Sayfaya Dön'),
+              child: Text(tr('common.return_to_homepage')),
             ),
           ],
         ),
@@ -4184,8 +4185,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final firebaseUser = FirebaseAuth.instance.currentUser;
     if (authState.appUser == null && firebaseUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sipariş vermek için giriş yapmalısınız'),
+        SnackBar(
+          content: Text(tr('orders.login_required_to_order')),
           backgroundColor: Colors.amber,
         ),
       );
@@ -4744,7 +4745,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         if (_isDineIn && (_scannedTableNumber ?? _tableNumberController.text.trim()).isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text('Lütfen masa numaranızı girin'),
+                              content: Text(tr('orders.please_enter_table_number')),
                               backgroundColor: Colors.amber,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

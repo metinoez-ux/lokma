@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -132,7 +133,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
         final descController = TextEditingController();
         
         return AlertDialog(
-          title: const Text('Menü Öğesi Ekle'),
+          title: Text(tr('kermes.add_menu_item')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -156,7 +157,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('İptal'),
+              child: Text(tr('common.cancel')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -171,7 +172,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Ekle'),
+              child: Text(tr('common.add')),
             ),
           ],
         );
@@ -187,7 +188,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
         final descController = TextEditingController();
         
         return AlertDialog(
-          title: const Text('Park Alanı Ekle'),
+          title: Text(tr('kermes.add_parking_area')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -206,7 +207,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('İptal'),
+              child: Text(tr('common.cancel')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -220,7 +221,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Ekle'),
+              child: Text(tr('common.add')),
             ),
           ],
         );
@@ -273,8 +274,8 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Kermes başarıyla eklendi! Onay bekleniyor.'),
+          SnackBar(
+            content: Text(tr('kermes.kermes_added_waiting_approval')),
             backgroundColor: Colors.green,
           ),
         );
@@ -283,7 +284,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(tr('common.error_e')), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -360,7 +361,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
                 );
               },
               icon: const Text('🕌', style: TextStyle(fontSize: 20)),
-              label: const Text('Dernek Seç'),
+              label: Text(tr('kermes.select_association')),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 backgroundColor: Colors.blue[700],
@@ -579,26 +580,26 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
               ],
             ),
             
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             
             // Sponsor Seçimi
             DropdownButtonFormField<String>(
               value: _selectedSponsor,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Sponsor',
                 prefixIcon: Icon(Icons.store),
                 border: OutlineInputBorder(),
               ),
-              items: const [
+              items: [
                 DropdownMenuItem(value: 'tuna', child: Row(children: [
                   Text('🇪🇺 ', style: TextStyle(fontSize: 20)),
-                  Text('Tuna Et Mamülleri (Avrupa)'),
+                  Text(tr('kermes.tuna_meat_europe')),
                 ])),
                 DropdownMenuItem(value: 'akdenizToros', child: Row(children: [
                   Text('🇹🇷 ', style: TextStyle(fontSize: 20)),
-                  Text('Akdeniz Toros (Türkiye)'),
+                  Text(tr('kermes.akdeniz_toros_turkey')),
                 ])),
-                DropdownMenuItem(value: 'none', child: Text('Sponsor Yok')),
+                DropdownMenuItem(value: 'none', child: Text(tr('kermes.no_sponsor'))),
               ],
               onChanged: (v) => setState(() => _selectedSponsor = v!),
             ),
@@ -624,7 +625,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
             OutlinedButton.icon(
               onPressed: _addMenuItem,
               icon: const Icon(Icons.add),
-              label: const Text('Menü Öğesi Ekle'),
+              label: Text(tr('kermes.add_menu_item')),
             ),
             
             const SizedBox(height: 24),
@@ -648,7 +649,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
             OutlinedButton.icon(
               onPressed: _addParkingItem,
               icon: const Icon(Icons.add),
-              label: const Text('Park Alanı Ekle'),
+              label: Text(tr('kermes.add_parking_area')),
             ),
             
             const SizedBox(height: 32),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Dialog: Bireysel mi Grup Siparişi mi?
@@ -427,7 +428,7 @@ class _CreateGroupOrderDialogState
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Vazgeç'),
+                    child: Text(tr('common.give_up')),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -450,7 +451,7 @@ class _CreateGroupOrderDialogState
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Link Oluştur'),
+                    child: Text(tr('common.create_link')),
                   ),
                 ),
               ],
