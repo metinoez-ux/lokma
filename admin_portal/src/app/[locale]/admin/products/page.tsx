@@ -18,6 +18,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "@/lib/firebase";
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useTranslations } from 'next-intl';
 import { normalizeTurkish, getLocalizedText } from "@/lib/utils";
 import MultiLanguageInput from '@/components/ui/MultiLanguageInput';
 import { MASTER_PRODUCTS, MasterProduct } from "@/lib/master_products";
@@ -46,49 +47,7 @@ const BUSINESS_TYPE_OPTIONS = getBusinessTypesList().map(bt => ({
     color: `bg-${bt.color}-600`,
 }));
 
-// Ürün türleri (sadece gıda/ürün kategorileri için)
-const PRODUCT_TYPE_OPTIONS = [
-    { value: 'dana', label: '🐄 Dana', color: 'bg-red-600' },
-    { value: 'kuzu', label: '🐏 Kuzu', color: 'bg-green-600' },
-    { value: 'tavuk', label: '🐔 Tavuk', color: 'bg-amber-600' },
-    { value: 'icecek', label: '🥤 İçecek', color: 'bg-blue-600' },
-    { value: 'tatli', label: '🍰 Tatlı', color: 'bg-pink-600' },
-    { value: 'sebze', label: '🥬 Sebze/Meyve', color: 'bg-green-600' },
-    // 🆕 KERMES KATEGORİLERİ
-    { value: 'kermes_yemek', label: '🍲 Kermes Yemek', color: 'bg-purple-600' },
-    { value: 'kermes_tatli', label: '🧁 Kermes Tatlı', color: 'bg-pink-500' },
-    { value: 'kermes_icecek', label: '🧃 Kermes İçecek', color: 'bg-cyan-600' },
-    { value: 'kermes_atistirmalik', label: '🥨 Kermes Atıştırmalık', color: 'bg-amber-600' },
-    { value: 'diger', label: '📦 Diğer', color: 'bg-gray-600' },
-];
-
-// Marka Etiketleri (Kasap Zincirleri)
-const BRAND_LABELS = [
-    { value: 'tuna', label: 'TUNA', color: 'bg-red-600', icon: '🔴' },
-    { value: 'akdeniz_toros', label: 'Akdeniz Toros', color: 'bg-gray-800', icon: '⚫' },
-];
-
-// Toptancı/Kaynak Filtreleri
-const WHOLESALER_OPTIONS = [
-    { value: 'all', label: 'Tüm Kaynaklar', icon: '📦' },
-    { value: 'foodpaket', label: 'Foodpaket', icon: '🛒' },
-    { value: 'asia_express', label: 'Asia Express', icon: '🌏' },
-    { value: 'dovgan', label: 'Dovgan', icon: '🇷🇺' },
-    { value: 'manual', label: 'Manuel', icon: '✏️' },
-];
-
-// Ülke Filtreleri
-const COUNTRY_OPTIONS = [
-    { value: 'all', label: 'Tüm Ülkeler', icon: '🌍' },
-    { value: 'japan', label: 'Japonya', icon: '🇯🇵' },
-    { value: 'korea', label: 'Kore', icon: '🇰🇷' },
-    { value: 'china', label: 'Çin', icon: '🇨🇳' },
-    { value: 'thailand', label: 'Tayland', icon: '🇹🇭' },
-    { value: 'vietnam', label: 'Vietnam', icon: '🇻🇳' },
-    { value: 'turkey', label: 'Türkiye', icon: '🇹🇷' },
-    { value: 'germany', label: 'Almanya', icon: '🇩🇪' },
-    { value: 'other', label: 'Diğer', icon: '🔸' },
-];
+// Removed options to be placed inside the component
 
 // Validation Errors Type
 interface ValidationErrors {
@@ -109,6 +68,51 @@ interface BusinessInfo {
 }
 
 function GlobalProductsPageContent() {
+    const t = useTranslations('AdminProducts');
+
+    // Ürün türleri (sadece gıda/ürün kategorileri için)
+    const PRODUCT_TYPE_OPTIONS = [
+        { value: 'dana', label: '🐄 Dana', color: 'bg-red-600' },
+        { value: 'kuzu', label: '🐏 Kuzu', color: 'bg-green-600' },
+        { value: 'tavuk', label: '🐔 Tavuk', color: 'bg-amber-600' },
+        { value: 'icecek', label: t('icecek'), color: 'bg-blue-600' },
+        { value: 'tatli', label: t('tatli'), color: 'bg-pink-600' },
+        { value: 'sebze', label: '🥬 Sebze/Meyve', color: 'bg-green-600' },
+        // 🆕 KERMES KATEGORİLERİ
+        { value: 'kermes_yemek', label: '🍲 Kermes Yemek', color: 'bg-purple-600' },
+        { value: 'kermes_tatli', label: t('kermesTatli'), color: 'bg-pink-500' },
+        { value: 'kermes_icecek', label: t('kermesIcecek'), color: 'bg-cyan-600' },
+        { value: 'kermes_atistirmalik', label: t('kermesAtistirmalik'), color: 'bg-amber-600' },
+        { value: 'diger', label: t('diger'), color: 'bg-gray-600' },
+    ];
+
+    // Marka Etiketleri (Kasap Zincirleri)
+    const BRAND_LABELS = [
+        { value: 'tuna', label: 'TUNA', color: 'bg-red-600', icon: '🔴' },
+        { value: 'akdeniz_toros', label: 'Akdeniz Toros', color: 'bg-gray-800', icon: '⚫' },
+    ];
+
+    // Toptancı/Kaynak Filtreleri
+    const WHOLESALER_OPTIONS = [
+        { value: 'all', label: t('tumKaynaklar'), icon: '📦' },
+        { value: 'foodpaket', label: 'Foodpaket', icon: '🛒' },
+        { value: 'asia_express', label: 'Asia Express', icon: '🌏' },
+        { value: 'dovgan', label: 'Dovgan', icon: '🇷🇺' },
+        { value: 'manual', label: 'Manuel', icon: '✏️' },
+    ];
+
+    // Ülke Filtreleri
+    const COUNTRY_OPTIONS = [
+        { value: 'all', label: t('tumUlkeler'), icon: '🌍' },
+        { value: 'japan', label: 'Japonya', icon: '🇯🇵' },
+        { value: 'korea', label: 'Kore', icon: '🇰🇷' },
+        { value: 'china', label: t('cin'), icon: '🇨🇳' },
+        { value: 'thailand', label: 'Tayland', icon: '🇹🇭' },
+        { value: 'vietnam', label: 'Vietnam', icon: '🇻🇳' },
+        { value: 'turkey', label: t('turkiye'), icon: '🇹🇷' },
+        { value: 'germany', label: 'Almanya', icon: '🇩🇪' },
+        { value: 'other', label: t('diger1'), icon: '🔸' },
+    ];
     // 🆕 Context-awareness: Support for businessId query parameter
     const { admin, loading: adminLoading } = useAdmin();
     const searchParams = useSearchParams();
@@ -223,7 +227,7 @@ function GlobalProductsPageContent() {
             setProducts(fetchedProducts);
         } catch (error) {
             console.error("Error fetching master products:", error);
-            alert("Ürünler yüklenirken hata oluştu.");
+            alert(t('urunlerYuklenirkenHataOlustu'));
         } finally {
             setLoading(false);
         }
@@ -286,7 +290,7 @@ function GlobalProductsPageContent() {
                     const data = businessDoc.data();
                     setBusinessInfo({
                         id: businessDoc.id,
-                        companyName: data.companyName || data.name || data.brand || 'İşletme',
+                        companyName: data.companyName || data.name || data.brand || t('isletme'),
                         type: data.type || data.businessType,
                     });
                 }
@@ -370,7 +374,7 @@ function GlobalProductsPageContent() {
             setCategoryFormData({ name: '', icon: '📦', isActive: true });
         } catch (error) {
             console.error('Error saving category:', error);
-            alert('Kategori kaydedilirken hata oluştu.');
+            alert(t('kategoriKaydedilirkenHataOlustu'));
         }
         setSavingCategory(false);
     };
@@ -378,13 +382,13 @@ function GlobalProductsPageContent() {
     const handleCategoryDelete = async (cat: { id: string; name: any }) => {
         if (!contextBusinessId) return;
         const catNameStr = getLocalizedText(cat.name);
-        if (!window.confirm(`"${catNameStr}" kategorisini silmek istediğinize emin misiniz?`)) return;
+        if (!window.confirm(`"${catNameStr}${t('kategorisiniSilmekIstediginizeEminMisiniz')}`)) return;
         try {
             await deleteDoc(doc(db, `businesses/${contextBusinessId}/categories`, cat.id));
             await reloadBusinessCategories();
         } catch (error) {
             console.error('Error deleting category:', error);
-            alert('Kategori silinirken hata oluştu.');
+            alert(t('kategoriSilinirkenHataOlustu'));
         }
     };
 
@@ -430,22 +434,22 @@ function GlobalProductsPageContent() {
     const handleSeed = () => {
         setConfirmModal({
             isOpen: true,
-            title: 'Varsayılan Ürünleri Yükle',
-            message: 'Mevcut veritabanına varsayılan ürünler eklenecek. Devam edilsin mi?',
+            title: t('varsayilanUrunleriYukle'),
+            message: t('mevcutVeritabaninaVarsayilanUrunlerEklenecekDevam'),
             variant: 'warning',
-            confirmText: 'Evet, Yükle',
-            loadingText: 'Yükleniyor...',
+            confirmText: t('evetYukle'),
+            loadingText: t('yukleniyor'),
             onConfirm: async () => {
                 setSeeding(true);
                 try {
                     for (const product of MASTER_PRODUCTS) {
                         await setDoc(doc(db, "master_products", product.id), product);
                     }
-                    alert("Varsayılan ürünler başarıyla eklendi!");
+                    alert(t('varsayilanUrunlerBasariylaEklendi'));
                     fetchProducts();
                 } catch (error) {
                     console.error("Error seeding products:", error);
-                    alert("Veri eklenirken hata oluştu.");
+                    alert(t('veriEklenirkenHataOlustu'));
                 } finally {
                     setSeeding(false);
                 }
@@ -459,7 +463,7 @@ function GlobalProductsPageContent() {
         const nameStr = getLocalizedText(formData.name);
         const errors: ValidationErrors = {};
         if (!formData.id?.trim()) errors.id = 'SKU (ID) zorunludur';
-        if (!nameStr.trim()) errors.name = 'Ürün adı zorunludur';
+        if (!nameStr.trim()) errors.name = t('urunAdiZorunludur');
 
         if (Object.keys(errors).length > 0) {
             setValidationErrors(errors);
@@ -536,7 +540,7 @@ function GlobalProductsPageContent() {
             }
         } catch (error: any) {
             console.error("Error saving product:", error);
-            alert(`Ürün kaydedilirken hata oluştu: ${error?.message || 'Bilinmeyen hata'}`);
+            alert(`${t('urunKaydedilirkenHataOlustu')} ${error?.message || 'Bilinmeyen hata'}`);
         }
     };
 
@@ -545,8 +549,8 @@ function GlobalProductsPageContent() {
         const product = products.find(p => p.id === id);
         setConfirmModal({
             isOpen: true,
-            title: 'Ürün Sil',
-            message: 'Bu ürünü silmek istediğinize emin misiniz? (Bu işlem kasapların mevcut listesini etkilemeyebilir ama yeni eklemelerde görünmez)',
+            title: t('urunSil'),
+            message: t('buUrunuSilmekIstediginizeEminMisiniz'),
             itemName: getLocalizedText(product?.name),
             variant: 'danger',
             confirmText: 'Evet, Sil',
@@ -557,7 +561,7 @@ function GlobalProductsPageContent() {
                     fetchProducts();
                 } catch (error) {
                     console.error("Error deleting product:", error);
-                    alert("Ürün silinirken hata oluştu.");
+                    alert(t('urunSilinirkenHataOlustu'));
                 }
             },
         });
@@ -584,7 +588,7 @@ function GlobalProductsPageContent() {
 
     const handleBulkAction = (action: 'activate' | 'deactivate' | 'delete') => {
         if (selectedProducts.size === 0) {
-            alert("Lütfen işlem yapılacak ürünleri seçin.");
+            alert(t('lutfenIslemYapilacakUrunleriSecin'));
             return;
         }
 
@@ -597,11 +601,11 @@ function GlobalProductsPageContent() {
         const count = selectedProducts.size;
         setConfirmModal({
             isOpen: true,
-            title: 'Toplu İşlem',
-            message: `Seçili ${count} ürünü ${actionLabels[action]} yapmak istediğinize emin misiniz?`,
+            title: t('topluIslem'),
+            message: `${t('secili')} ${count} ${t('urunu')} ${actionLabels[action]} ${t('yapmakIstediginizeEminMisiniz')}`,
             variant: action === 'delete' ? 'danger' : 'warning',
             confirmText: `Evet, ${actionLabels[action]} Yap`,
-            loadingText: 'İşleniyor...',
+            loadingText: t('isleniyor'),
             onConfirm: async () => {
                 setIsProcessingBulk(true);
                 try {
@@ -619,10 +623,10 @@ function GlobalProductsPageContent() {
                     await batch.commit();
                     setSelectedProducts(new Set());
                     fetchProducts();
-                    alert(`${count} ürün başarıyla ${actionLabels[action]} yapıldı.`);
+                    alert(`${count} ${t('urunBasariyla')} ${actionLabels[action]} ${t('yapildi')}`);
                 } catch (error) {
                     console.error("Bulk action error:", error);
-                    alert("Toplu işlem sırasında hata oluştu.");
+                    alert(t('topluIslemSirasindaHataOlustu'));
                 } finally {
                     setIsProcessingBulk(false);
                 }
@@ -633,7 +637,7 @@ function GlobalProductsPageContent() {
     // 🆕 Bulk Assign Business Types
     const handleBulkAssignBusinessType = (businessType: string) => {
         if (selectedProducts.size === 0) {
-            alert("Lütfen işlem yapılacak ürünleri seçin.");
+            alert(t('lutfenIslemYapilacakUrunleriSecin'));
             return;
         }
 
@@ -641,8 +645,8 @@ function GlobalProductsPageContent() {
         const count = selectedProducts.size;
         setConfirmModal({
             isOpen: true,
-            title: 'İşletme Türü Ata',
-            message: `Seçili ${count} ürüne "${typeLabel}" işletme türü eklensin mi?`,
+            title: t('isletmeTuruAta'),
+            message: `${t('secili')} ${count} ${t('urune')}${typeLabel}${t('isletmeTuruEklensinMi')}`,
             variant: 'warning',
             confirmText: 'Evet, Ekle',
             loadingText: 'Ekleniyor...',
@@ -665,10 +669,10 @@ function GlobalProductsPageContent() {
                     await batch.commit();
                     setSelectedProducts(new Set());
                     fetchProducts();
-                    alert(`${count} ürüne "${typeLabel}" türü başarıyla eklendi.`);
+                    alert(`${count} ${t('urune')}${typeLabel}${t('turuBasariylaEklendi')}`);
                 } catch (error) {
                     console.error("Bulk assign error:", error);
-                    alert("Toplu atama sırasında hata oluştu.");
+                    alert(t('topluAtamaSirasindaHataOlustu'));
                 } finally {
                     setIsProcessingBulk(false);
                 }
@@ -679,7 +683,7 @@ function GlobalProductsPageContent() {
     // 🔴 Bulk Assign Brand Labels (TUNA / Akdeniz Toros)
     const handleBulkAssignBrand = (brandValue: string) => {
         if (selectedProducts.size === 0) {
-            alert("Lütfen işlem yapılacak ürünleri seçin.");
+            alert(t('lutfenIslemYapilacakUrunleriSecin'));
             return;
         }
 
@@ -690,11 +694,11 @@ function GlobalProductsPageContent() {
         if (brandValue === 'remove') {
             setConfirmModal({
                 isOpen: true,
-                title: 'Marka Etiketlerini Kaldır',
-                message: `Seçili ${count} üründen marka etiketleri kaldırılsın mı?`,
+                title: t('markaEtiketleriniKaldir'),
+                message: `${t('secili')} ${count} ${t('urundenMarkaEtiketleriKaldirilsinMi')}`,
                 variant: 'warning',
-                confirmText: 'Evet, Kaldır',
-                loadingText: 'Kaldırılıyor...',
+                confirmText: t('evetKaldir'),
+                loadingText: t('kaldiriliyor'),
                 onConfirm: async () => {
                     setIsProcessingBulk(true);
                     try {
@@ -706,10 +710,10 @@ function GlobalProductsPageContent() {
                         await batch.commit();
                         setSelectedProducts(new Set());
                         fetchProducts();
-                        alert(`${count} üründen marka etiketleri kaldırıldı.`);
+                        alert(`${count} ${t('urundenMarkaEtiketleriKaldirildi')}`);
                     } catch (error) {
                         console.error("Bulk remove brand error:", error);
-                        alert("Toplu işlem sırasında hata oluştu.");
+                        alert(t('topluIslemSirasindaHataOlustu'));
                     } finally {
                         setIsProcessingBulk(false);
                     }
@@ -722,7 +726,7 @@ function GlobalProductsPageContent() {
         setConfirmModal({
             isOpen: true,
             title: 'Marka Etiketi Ekle',
-            message: `Seçili ${count} ürüne "${brandLabel}" marka etiketi eklensin mi?`,
+            message: `${t('secili')} ${count} ${t('urune')}${brandLabel}" marka etiketi eklensin mi?`,
             variant: 'warning',
             confirmText: 'Evet, Ekle',
             loadingText: 'Ekleniyor...',
@@ -745,10 +749,10 @@ function GlobalProductsPageContent() {
                     await batch.commit();
                     setSelectedProducts(new Set());
                     fetchProducts();
-                    alert(`${count} ürüne "${brandLabel}" etiketi başarıyla eklendi.`);
+                    alert(`${count} ${t('urune')}${brandLabel}${t('etiketiBasariylaEklendi')}`);
                 } catch (error) {
                     console.error("Bulk assign brand error:", error);
-                    alert("Toplu marka atama sırasında hata oluştu.");
+                    alert(t('topluMarkaAtamaSirasindaHataOlustu'));
                 } finally {
                     setIsProcessingBulk(false);
                 }
@@ -765,7 +769,7 @@ function GlobalProductsPageContent() {
         const remainingSlots = maxImages - currentImages.length;
 
         if (remainingSlots <= 0) {
-            alert("Maksimum 5 görsel ekleyebilirsiniz.");
+            alert(t('maksimum5GorselEkleyebilirsiniz'));
             return;
         }
 
@@ -784,7 +788,7 @@ function GlobalProductsPageContent() {
             setFormData({ ...formData, images: [...currentImages, ...newUrls] });
         } catch (error) {
             console.error("Image upload error:", error);
-            alert("Görsel yüklenirken hata oluştu.");
+            alert(t('gorselYuklenirkenHataOlustu'));
         } finally {
             setUploadingImages(false);
         }
@@ -897,7 +901,7 @@ function GlobalProductsPageContent() {
                     <div>
                         <div className="flex items-center gap-2 text-gray-400 mb-1">
                             {isBusinessContext ? (
-                                <Link href="/admin/business" className="hover:text-white transition-colors">← İşletme Listesi</Link>
+                                <Link href="/admin/business" className="hover:text-white transition-colors">{t('isletmeListesi')}</Link>
                             ) : (
                                 <Link href="/admin/dashboard" className="hover:text-white transition-colors">← Dashboard</Link>
                             )}
@@ -905,16 +909,16 @@ function GlobalProductsPageContent() {
                         <h1 className="text-3xl font-bold flex items-center gap-3">
                             {isBusinessContext ? (
                                 <>
-                                    🏪 {businessInfo?.companyName || 'İşletme'} - Ürünler
+                                    🏪 {businessInfo?.companyName || t('isletme')} {t('urunler')}
                                 </>
                             ) : (
-                                <>📦 Master Ürün Kataloğu</>
+                                <>{t('masterUrunKatalogu')}</>
                             )}
                         </h1>
                         <p className="text-gray-400 mt-1">
                             {isBusinessContext
-                                ? `${businessInfo?.companyName || 'Bu işletme'} için ürün yönetimi.`
-                                : 'Tüm işletmelerde geçerli olan genel ürün tanımları.'}
+                                ? `${businessInfo?.companyName || t('buIsletme')} ${t('icinUrunYonetimi')}`
+                                : t('tumIsletmelerdeGecerliOlanGenelUrun')}
                         </p>
                     </div>
 
@@ -925,14 +929,14 @@ function GlobalProductsPageContent() {
                                 disabled={seeding}
                                 className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 text-gray-300 font-medium transition-colors"
                             >
-                                {seeding ? "Ekleniyor..." : "📥 Varsayılanları Yükle (Seed)"}
+                                {seeding ? "Ekleniyor..." : t('varsayilanlariYukleSeed')}
                             </button>
                         )}
                         <button
                             onClick={openAdd}
                             className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 text-white font-bold transition-colors flex items-center gap-2"
                         >
-                            <span>+</span> Yeni Ürün {isBusinessContext ? 'Ekle' : 'Tanımla'}
+                            <span>+</span> {t('yeniUrun')} {isBusinessContext ? 'Ekle' : t('tanimla')}
                         </button>
                     </div>
                 </div>
@@ -946,7 +950,7 @@ function GlobalProductsPageContent() {
                             : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                             }`}
                     >
-                        📦 Master Ürünler
+                        {t('masterUrunler')}
                     </button>
                     {/* Kermes button: Only show if Super Admin without business context OR business type is kermes */}
                     {((!isBusinessContext && isSuperAdmin) || businessInfo?.type === 'kermes') && (
@@ -957,7 +961,7 @@ function GlobalProductsPageContent() {
                                 : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                                 }`}
                         >
-                            🎪 Kermes Menü Oluştur
+                            {t('kermesMenuOlustur')}
                             {!isBusinessContext && (
                                 <span className="ml-2 px-2 py-0.5 bg-yellow-500/20 text-yellow-300 text-xs rounded-full">
                                     SUPER ADMIN
@@ -971,16 +975,16 @@ function GlobalProductsPageContent() {
                 {pageMode === 'kermes' ? (
                     <div className="bg-gray-800 rounded-xl border border-pink-500/30 p-6">
                         <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                            🎪 Kermes Menü Oluşturma
+                            {t('kermesMenuOlusturma')}
                             <span className="text-sm font-normal text-pink-300">
-                                (Belirli bir organizasyon için özel menü hazırla)
+                                {t('belirliBirOrganizasyonIcinOzelMenu')}
                             </span>
                         </h2>
 
                         {/* Organizasyon Seçimi */}
                         <div className="mb-6">
                             <label className="block text-gray-400 text-sm mb-2">
-                                🕌 Organizasyon Seçin (Kermes yapılacak cami/dernek)
+                                {t('organizasyonSecinKermesYapilacakCamidernek')}
                             </label>
                             {selectedOrganization ? (
                                 <div className="flex items-center gap-3 p-4 bg-pink-900/30 border border-pink-500 rounded-xl">
@@ -996,7 +1000,7 @@ function GlobalProductsPageContent() {
                                         }}
                                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
                                     >
-                                        ✕ Değiştir
+                                        {t('degistir')}
                                     </button>
                                 </div>
                             ) : (
@@ -1006,14 +1010,14 @@ function GlobalProductsPageContent() {
                                         type="text"
                                         value={kermesOrgSearch}
                                         onChange={(e) => setKermesOrgSearch(e.target.value)}
-                                        placeholder="🔍 Cami adı, şehir veya posta kodu ara..."
+                                        placeholder={t('camiAdiSehirVeyaPostaKodu')}
                                         className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-pink-500 mb-3"
                                     />
                                     {/* Liste */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
                                         {loadingOrganizations ? (
                                             <div className="col-span-full text-center py-8 text-gray-400">
-                                                ⏳ Organizasyonlar yükleniyor...
+                                                {t('organizasyonlarYukleniyor')}
                                             </div>
                                         ) : (
                                             organizations
@@ -1049,8 +1053,8 @@ function GlobalProductsPageContent() {
                                     {organizations.length === 0 && !loadingOrganizations && (
                                         <div className="text-center py-8 text-gray-500">
                                             <p className="text-3xl mb-2">🕌</p>
-                                            <p>Henüz organizasyon yok</p>
-                                            <p className="text-sm">İlk önce İşletme Yönetimi → Kermes bölümünden organizasyon ekleyin</p>
+                                            <p>{t('henuzOrganizasyonYok')}</p>
+                                            <p className="text-sm">{t('ilkOnceIsletmeYonetimiKermesBolumunden')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1061,9 +1065,9 @@ function GlobalProductsPageContent() {
                         {selectedOrganization && (
                             <div>
                                 <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                                    🍲 Kermes Menüsü Hazırla
+                                    {t('kermesMenusuHazirla')}
                                     <span className="text-sm font-normal text-gray-400">
-                                        (Mevcut kermes ürünlerinden seçin veya yeni ekleyin)
+                                        {t('mevcutKermesUrunlerindenSecinVeyaYeni')}
                                     </span>
                                 </h3>
 
@@ -1072,7 +1076,7 @@ function GlobalProductsPageContent() {
                                     {kermesProducts.length === 0 ? (
                                         <div className="col-span-full text-center py-8 bg-gray-700/50 rounded-xl">
                                             <p className="text-2xl mb-2">🍲</p>
-                                            <p className="text-gray-400">Henüz kermes ürünü yok</p>
+                                            <p className="text-gray-400">{t('henuzKermesUrunuYok')}</p>
                                             <button
                                                 onClick={() => {
                                                     setPageMode('products');
@@ -1080,7 +1084,7 @@ function GlobalProductsPageContent() {
                                                 }}
                                                 className="mt-3 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-500"
                                             >
-                                                ➕ Kermes Ürünü Ekle
+                                                {t('kermesUrunuEkle')}
                                             </button>
                                         </div>
                                     ) : (
@@ -1107,7 +1111,7 @@ function GlobalProductsPageContent() {
                                                     </p>
                                                     {isSelected && (
                                                         <span className="inline-block mt-2 px-2 py-0.5 bg-pink-600 text-white text-xs rounded-full">
-                                                            ✓ Seçildi
+                                                            {t('secildi')}
                                                         </span>
                                                     )}
                                                 </button>
@@ -1121,10 +1125,10 @@ function GlobalProductsPageContent() {
                                     <div className="bg-pink-900/30 border border-pink-500/50 rounded-xl p-4 mt-4">
                                         <div className="flex items-center justify-between mb-3">
                                             <h4 className="text-white font-bold">
-                                                🎪 {selectedOrganization.shortName || selectedOrganization.name} Kermes Menüsü
+                                                🎪 {selectedOrganization.shortName || selectedOrganization.name} {t('kermesMenusu')}
                                             </h4>
                                             <span className="px-3 py-1 bg-pink-600 text-white rounded-full text-sm">
-                                                {kermesMenuProducts.length} ürün
+                                                {kermesMenuProducts.length} {t('urun')}
                                             </span>
                                         </div>
                                         <div className="flex flex-wrap gap-2 mb-4">
@@ -1161,10 +1165,10 @@ function GlobalProductsPageContent() {
                                                         updatedAt: new Date(),
                                                     };
                                                     await setDoc(doc(db, 'kermes_menus', selectedOrganization.id), menuData);
-                                                    alert('✅ Kermes menüsü başarıyla kaydedildi!');
+                                                    alert(t('kermesMenusuBasariylaKaydedildi'));
                                                 } catch (error) {
                                                     console.error('Error saving kermes menu:', error);
-                                                    alert('❌ Menü kaydedilirken hata oluştu');
+                                                    alert(t('menuKaydedilirkenHataOlustu'));
                                                 } finally {
                                                     setSavingKermesMenu(false);
                                                 }
@@ -1172,7 +1176,7 @@ function GlobalProductsPageContent() {
                                             disabled={savingKermesMenu}
                                             className="w-full py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-bold hover:from-pink-500 hover:to-purple-500 disabled:opacity-50 transition-all"
                                         >
-                                            {savingKermesMenu ? '⏳ Kaydediliyor...' : '💾 Kermes Menüsünü Kaydet'}
+                                            {savingKermesMenu ? '⏳ Kaydediliyor...' : t('kermesMenusunuKaydet')}
                                         </button>
                                     </div>
                                 )}
@@ -1188,9 +1192,9 @@ function GlobalProductsPageContent() {
                                 {/* Section Header with Title + View Mode Toggle */}
                                 <div className="flex items-center justify-between mb-5">
                                     <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                                        📋 Menü & Ürünler
+                                        {t('menuUrunler')}
                                         <span className="text-sm font-normal text-gray-400">
-                                            — {businessInfo?.companyName || 'İşletme'}
+                                            — {businessInfo?.companyName || t('isletme')}
                                         </span>
                                     </h2>
                                     <button
@@ -1219,7 +1223,7 @@ function GlobalProductsPageContent() {
                                             : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
                                             }`}
                                     >
-                                        🏷️ Ürünler ({businessProducts.length})
+                                        {t('urunler1')}{businessProducts.length})
                                     </button>
                                 </div>
 
@@ -1230,7 +1234,7 @@ function GlobalProductsPageContent() {
                                     <div>
                                         <div className="flex items-center justify-between mb-4">
                                             <div className="text-gray-400 text-sm">
-                                                🗂️ Kategorileri sıralayın, düzenleyin veya yeni ekleyin
+                                                {t('kategorileriSiralayinDuzenleyinVeyaYeniEkleyin')}
                                             </div>
                                             <button
                                                 onClick={openCategoryAdd}
@@ -1241,17 +1245,17 @@ function GlobalProductsPageContent() {
                                         </div>
 
                                         {loadingBusinessCategories ? (
-                                            <div className="text-center py-8 text-gray-400">⏳ Kategoriler yükleniyor...</div>
+                                            <div className="text-center py-8 text-gray-400">{t('kategorilerYukleniyor')}</div>
                                         ) : businessCategories.length === 0 ? (
                                             <div className="text-center py-12 bg-gray-700/30 rounded-xl border border-dashed border-gray-600">
                                                 <p className="text-4xl mb-3">🗂️</p>
-                                                <p className="text-gray-300 font-medium mb-1">Henüz kategori eklenmemiş</p>
-                                                <p className="text-sm text-gray-500 mb-4">Ürünlerinizi düzenlemek için kategori ekleyin</p>
+                                                <p className="text-gray-300 font-medium mb-1">{t('henuzKategoriEklenmemis')}</p>
+                                                <p className="text-sm text-gray-500 mb-4">{t('urunleriniziDuzenlemekIcinKategoriEkleyin')}</p>
                                                 <button
                                                     onClick={openCategoryAdd}
                                                     className="px-6 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-500 transition font-medium"
                                                 >
-                                                    + İlk Kategoriyi Ekle
+                                                    {t('ilkKategoriyiEkle')}
                                                 </button>
                                             </div>
                                         ) : (
@@ -1275,14 +1279,14 @@ function GlobalProductsPageContent() {
                                                                     onClick={() => handleCategoryMove(index, 'up')}
                                                                     disabled={index === 0}
                                                                     className="text-gray-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition text-xs px-1"
-                                                                    title="Yukarı Taşı"
+                                                                    title={t('yukariTasi')}
                                                                 >▲</button>
                                                                 <span className="text-[10px] text-gray-600 text-center">{index + 1}</span>
                                                                 <button
                                                                     onClick={() => handleCategoryMove(index, 'down')}
                                                                     disabled={index === businessCategories.length - 1}
                                                                     className="text-gray-500 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition text-xs px-1"
-                                                                    title="Aşağı Taşı"
+                                                                    title={t('asagiTasi')}
                                                                 >▼</button>
                                                             </div>
 
@@ -1293,7 +1297,7 @@ function GlobalProductsPageContent() {
                                                             <div className="flex-1 min-w-0">
                                                                 <h3 className="text-white font-bold text-base">{getLocalizedText(cat.name)}</h3>
                                                                 <p className="text-gray-500 text-xs">
-                                                                    {productCount} ürün • {cat.isActive ? '✅ Aktif' : '🔴 Pasif'}
+                                                                    {productCount} {t('urun1')} {cat.isActive ? '✅ Aktif' : '🔴 Pasif'}
                                                                 </p>
                                                             </div>
 
@@ -1302,7 +1306,7 @@ function GlobalProductsPageContent() {
                                                                 <button
                                                                     onClick={() => openCategoryEdit(cat)}
                                                                     className="p-2 bg-yellow-600/80 hover:bg-yellow-500 rounded-lg transition text-white text-sm"
-                                                                    title="Düzenle"
+                                                                    title={t('duzenle')}
                                                                 >✏️</button>
                                                                 <button
                                                                     onClick={() => handleCategoryDelete(cat)}
@@ -1333,7 +1337,7 @@ function GlobalProductsPageContent() {
                                                         : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-gray-200'
                                                         }`}
                                                 >
-                                                    📋 Tümü
+                                                    {t('tumu')}
                                                     <span className={`px-1.5 py-0.5 rounded-full text-xs ${activeCategoryTab === 'all' ? 'bg-emerald-500/50' : 'bg-gray-600'
                                                         }`}>{businessProducts.length}</span>
                                                 </button>
@@ -1382,12 +1386,12 @@ function GlobalProductsPageContent() {
 
                                         {/* Product Table */}
                                         {loadingBusinessProducts ? (
-                                            <div className="text-center py-8 text-gray-400">⏳ Ürünler yükleniyor...</div>
+                                            <div className="text-center py-8 text-gray-400">{t('urunlerYukleniyor')}</div>
                                         ) : businessProducts.length === 0 ? (
                                             <div className="text-center py-8 bg-gray-700/30 rounded-xl border border-dashed border-gray-600">
                                                 <p className="text-3xl mb-2">📭</p>
-                                                <p className="text-gray-400 mb-2">Bu işletmeye henüz ürün atanmamış</p>
-                                                <p className="text-sm text-gray-500">Aşağıdan Master Katalogdan ürün ekleyebilirsiniz</p>
+                                                <p className="text-gray-400 mb-2">{t('buIsletmeyeHenuzUrunAtanmamis')}</p>
+                                                <p className="text-sm text-gray-500">{t('asagidanMasterKatalogdanUrunEkleyebilirsiniz')}</p>
                                             </div>
                                         ) : (
                                             <div className="overflow-x-auto">
@@ -1396,11 +1400,11 @@ function GlobalProductsPageContent() {
                                                         <tr className="text-left text-gray-400 border-b border-gray-700">
                                                             <th className="py-2 pr-2">Durum</th>
                                                             <th className="py-2 pr-2">SKU</th>
-                                                            <th className="py-2 pr-4 min-w-[200px]">Ürün Adı</th>
+                                                            <th className="py-2 pr-4 min-w-[200px]">{t('urunAdi')}</th>
                                                             <th className="py-2 pr-2">Kategoriler</th>
                                                             <th className="py-2 pr-2">Fiyat</th>
                                                             <th className="py-2 pr-2">Birim</th>
-                                                            <th className="py-2">İşlemler</th>
+                                                            <th className="py-2">{t('islemler')}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -1472,22 +1476,22 @@ function GlobalProductsPageContent() {
                                                                                 onClick={() => openEdit(product)}
                                                                                 className="px-2 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50 text-xs"
                                                                             >
-                                                                                ✏️ Düzenle
+                                                                                {t('duzenle1')}
                                                                             </button>
                                                                             <button
                                                                                 onClick={async () => {
                                                                                     const prodNameStr = getLocalizedText(product.name);
-                                                                                    if (!window.confirm(`"${prodNameStr}" ürününü silmek istediğinize emin misiniz?`)) return;
+                                                                                    if (!window.confirm(`"${prodNameStr}${t('urununuSilmekIstediginizeEminMisiniz')}`)) return;
                                                                                     try {
                                                                                         await deleteDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id));
                                                                                         setBusinessProducts(prev => prev.filter(p => p.id !== product.id));
                                                                                     } catch (err) {
                                                                                         console.error('Delete error:', err);
-                                                                                        alert('Ürün silinirken hata oluştu.');
+                                                                                        alert(t('urunSilinirkenHataOlustu'));
                                                                                     }
                                                                                 }}
                                                                                 className="px-2 py-1 bg-red-600/30 text-red-300 rounded hover:bg-red-600/50 text-xs"
-                                                                                title="Ürünü sil"
+                                                                                title={t('urunuSil')}
                                                                             >
                                                                                 🗑
                                                                             </button>
@@ -1509,12 +1513,12 @@ function GlobalProductsPageContent() {
                             <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                                 <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700">
                                     <h2 className="text-xl font-bold text-white mb-4">
-                                        {editingCategoryItem ? '✏️ Kategori Düzenle' : '+ Yeni Kategori'}
+                                        {editingCategoryItem ? t('kategoriDuzenle') : '+ Yeni Kategori'}
                                     </h2>
 
                                     {/* Icon Selection */}
                                     <div className="mb-4">
-                                        <label className="text-gray-400 text-sm mb-2 block">İkon</label>
+                                        <label className="text-gray-400 text-sm mb-2 block">{t('ikon')}</label>
                                         <div className="flex flex-wrap gap-2">
                                             {CATEGORY_ICONS.map(icon => (
                                                 <button
@@ -1532,7 +1536,7 @@ function GlobalProductsPageContent() {
                                     {/* Name Input */}
                                     <div className="mb-4">
                                         <MultiLanguageInput
-                                            label="Kategori Adı"
+                                            label={t('kategoriAdi')}
                                             value={categoryFormData.name}
                                             onChange={(val) => setCategoryFormData({ ...categoryFormData, name: val })}
                                             required
@@ -1548,7 +1552,7 @@ function GlobalProductsPageContent() {
                                                 onChange={(e) => setCategoryFormData({ ...categoryFormData, isActive: e.target.checked })}
                                                 className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-violet-500 focus:ring-violet-500"
                                             />
-                                            <span className="text-gray-300">Aktif (uygulamada görünsün)</span>
+                                            <span className="text-gray-300">{t('aktifUygulamadaGorunsun')}</span>
                                         </label>
                                     </div>
 
@@ -1557,7 +1561,7 @@ function GlobalProductsPageContent() {
                                         <button
                                             onClick={() => { setShowCategoryModal(false); setEditingCategoryItem(null); }}
                                             className="flex-1 px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
-                                        >İptal</button>
+                                        >{t('iptal')}</button>
                                         <button
                                             onClick={handleCategorySave}
                                             disabled={savingCategory || !getLocalizedText(categoryFormData.name).trim()}
@@ -1574,7 +1578,7 @@ function GlobalProductsPageContent() {
                         {isBusinessContext && (
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-bold text-gray-400">
-                                    📦 Master Katalogdan Ürün Ekle
+                                    {t('masterKatalogdanUrunEkle')}
                                 </h3>
                                 <button
                                     onClick={() => setShowAllMasterProducts(!showAllMasterProducts)}
@@ -1583,7 +1587,7 @@ function GlobalProductsPageContent() {
                                         : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                                         }`}
                                 >
-                                    {showAllMasterProducts ? '📂 Listeyi Gizle' : '📁 Tüm Ürünleri Göster'}
+                                    {showAllMasterProducts ? '📂 Listeyi Gizle' : t('tumUrunleriGoster')}
                                 </button>
                             </div>
                         )}
@@ -1598,7 +1602,7 @@ function GlobalProductsPageContent() {
                                                 type="text"
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                                placeholder="🔍 Ürün ara (isim, SKU, açıklama)..."
+                                                placeholder={t('urunAraIsimSkuAciklama')}
                                                 className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-500 focus:ring-1 focus:ring-green-500"
                                             />
                                         </div>
@@ -1629,11 +1633,11 @@ function GlobalProductsPageContent() {
                                                 onChange={(e) => setBrandFilter(e.target.value)}
                                                 className={`px-3 py-2 rounded-lg font-medium transition-colors cursor-pointer ${brandFilter !== 'all' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300'}`}
                                             >
-                                                <option value="all">🏷️ Tüm Markalar</option>
+                                                <option value="all">{t('tumMarkalar')}</option>
                                                 {BRAND_LABELS.map(brand => (
                                                     <option key={brand.value} value={brand.value}>{brand.icon} {brand.label}</option>
                                                 ))}
-                                                <option value="remove">❌ Marka Kaldır</option>
+                                                <option value="remove">{t('markaKaldir')}</option>
                                             </select>
                                             {/* Aktif Filtreleri Sıfırla */}
                                             {(wholesalerFilter !== 'all' || countryFilter !== 'all' || brandFilter !== 'all') && (
@@ -1653,11 +1657,11 @@ function GlobalProductsPageContent() {
                                     <div className="flex items-center justify-between mt-2">
                                         {searchQuery ? (
                                             <p className="text-gray-400 text-sm">
-                                                "{searchQuery}" için {filteredProducts.length} sonuç bulundu
+                                                "{searchQuery}{t('icin')} {filteredProducts.length} {t('sonucBulundu')}
                                             </p>
                                         ) : (
                                             <p className="text-gray-400 text-sm">
-                                                Toplam {filteredProducts.length} ürün • Sayfa {currentPage}/{totalPages || 1} (sayfa başı {PRODUCTS_PER_PAGE})
+                                                Toplam {filteredProducts.length} {t('urunSayfa')} {currentPage}/{totalPages || 1} {t('sayfaBasi')} {PRODUCTS_PER_PAGE})
                                             </p>
                                         )}
                                     </div>
@@ -1667,7 +1671,7 @@ function GlobalProductsPageContent() {
                                 {selectedProducts.size > 0 && (
                                     <div className="bg-blue-900/50 border border-blue-600 rounded-xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
                                         <div className="text-white">
-                                            <span className="font-bold">{selectedProducts.size}</span> ürün seçildi
+                                            <span className="font-bold">{selectedProducts.size}</span> {t('urunSecildi')}
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             {/* 🆕 İşletme Türüne Ata Dropdown */}
@@ -1681,7 +1685,7 @@ function GlobalProductsPageContent() {
                                                 disabled={isProcessingBulk}
                                                 className="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 cursor-pointer"
                                             >
-                                                <option value="">🏪 İşletme Türüne Ata...</option>
+                                                <option value="">{t('isletmeTuruneAta')}</option>
                                                 {BUSINESS_TYPE_OPTIONS.map(bt => (
                                                     <option key={bt.value} value={bt.value}>{bt.label}</option>
                                                 ))}
@@ -1701,7 +1705,7 @@ function GlobalProductsPageContent() {
                                                 {BRAND_LABELS.map(brand => (
                                                     <option key={brand.value} value={brand.value}>{brand.icon} {brand.label}</option>
                                                 ))}
-                                                <option value="remove">❌ Marka Kaldır</option>
+                                                <option value="remove">{t('markaKaldir')}</option>
                                             </select>
                                             <button
                                                 onClick={() => handleBulkAction('activate')}
@@ -1728,7 +1732,7 @@ function GlobalProductsPageContent() {
                                                 onClick={() => setSelectedProducts(new Set())}
                                                 className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-sm"
                                             >
-                                                İptal
+                                                {t('iptal')}
                                             </button>
                                         </div>
                                     </div>
@@ -1736,17 +1740,17 @@ function GlobalProductsPageContent() {
 
                                 {/* Content */}
                                 {loading ? (
-                                    <div className="text-center py-20 text-gray-500">Yükleniyor...</div>
+                                    <div className="text-center py-20 text-gray-500">{t('yukleniyor')}</div>
                                 ) : products.length === 0 ? (
                                     <div className="bg-gray-800 rounded-xl p-12 text-center border border-gray-700">
                                         <p className="text-2xl mb-4">📭</p>
-                                        <p className="text-xl font-bold mb-2">Henüz Ürün Yok</p>
-                                        <p className="text-gray-400 mb-6">"Varsayılanları Yükle" butonuna basarak başlangıç verilerini ekleyebilirsiniz.</p>
+                                        <p className="text-xl font-bold mb-2">{t('henuzUrunYok')}</p>
+                                        <p className="text-gray-400 mb-6">{t('varsayilanlariYukleButonunaBasarakBaslangicVerilerini')}</p>
                                         <button
                                             onClick={handleSeed}
                                             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-500"
                                         >
-                                            Verileri Yükle
+                                            {t('verileriYukle')}
                                         </button>
                                     </div>
                                 ) : (
@@ -1765,7 +1769,7 @@ function GlobalProductsPageContent() {
                                                         </th>
                                                         <th className="px-4 py-4">Durum</th>
                                                         <th className="px-4 py-4">SKU (ID)</th>
-                                                        <th className="px-4 py-4">Ürün Adı</th>
+                                                        <th className="px-4 py-4">{t('urunAdi')}</th>
                                                         <th className="px-4 py-4">Kaynak</th>
                                                         <th className="px-4 py-4">Marka</th>
                                                         <th className="px-4 py-4">Kategoriler</th>
@@ -1860,7 +1864,7 @@ function GlobalProductsPageContent() {
                                             !searchQuery && totalPages > 1 && (
                                                 <div className="flex items-center justify-between px-6 py-4 border-t border-gray-700 bg-gray-900/30">
                                                     <div className="text-sm text-gray-400">
-                                                        {startIndex + 1} - {Math.min(startIndex + PRODUCTS_PER_PAGE, filteredProducts.length)} / {filteredProducts.length} ürün gösteriliyor
+                                                        {startIndex + 1} - {Math.min(startIndex + PRODUCTS_PER_PAGE, filteredProducts.length)} / {filteredProducts.length} {t('urunGosteriliyor')}
                                                     </div>
                                                     <div className="flex items-center gap-2">
                                                         <button
@@ -1875,7 +1879,7 @@ function GlobalProductsPageContent() {
                                                             disabled={currentPage === 1}
                                                             className="px-3 py-1 rounded bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                                                         >
-                                                            ← Önceki
+                                                            {t('onceki')}
                                                         </button>
 
                                                         {/* Page Numbers */}
@@ -1935,14 +1939,14 @@ function GlobalProductsPageContent() {
                             showModal && (
                                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
                                     <div className="bg-gray-800 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto p-6 border border-gray-700 shadow-2xl">
-                                        <h2 className="text-xl font-bold mb-4">{editingProduct ? "Ürünü Düzenle" : "Yeni Ürün Ekle"}</h2>
+                                        <h2 className="text-xl font-bold mb-4">{editingProduct ? t('urunuDuzenle') : t('yeniUrunEkle')}</h2>
 
                                         {/* Validation Errors Banner */}
                                         {Object.entries(validationErrors).filter(([, v]) => !!v).length > 0 && (
                                             <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-xl">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <span className="text-red-400 text-lg">⚠️</span>
-                                                    <h4 className="text-red-400 font-semibold">Lütfen aşağıdaki zorunlu alanları doldurun:</h4>
+                                                    <h4 className="text-red-400 font-semibold">{t('lutfenAsagidakiZorunluAlanlariDoldurun')}</h4>
                                                 </div>
                                                 <ul className="list-disc list-inside space-y-1">
                                                     {Object.entries(validationErrors).filter(([, v]) => !!v).map(([field, message]) => (
@@ -1987,7 +1991,7 @@ function GlobalProductsPageContent() {
                                             {/* Marka Etiketleri (TUNA / Akdeniz Toros) */}
                                             <div className="border-b border-gray-700 pb-4">
                                                 <h3 className="text-sm font-medium text-yellow-400 mb-3">🏷️ Marka Etiketleri (Kasap Zincirleri)</h3>
-                                                <p className="text-xs text-gray-500 mb-3">İşaretlediğiniz markalar uygulamada ürünün üzerinde badge olarak görünecektir.</p>
+                                                <p className="text-xs text-gray-500 mb-3">{t('isaretlediginizMarkalarUygulamadaUrununUzerindeBadge')}</p>
                                                 <div className="flex flex-wrap gap-3">
                                                     {BRAND_LABELS.map(brand => (
                                                         <button
@@ -2017,12 +2021,12 @@ function GlobalProductsPageContent() {
 
                                             {/* Ürün Detay */}
                                             <div className="border-b border-gray-700 pb-4">
-                                                <h3 className="text-sm font-medium text-green-400 mb-3">📦 Ürün Detayları</h3>
+                                                <h3 className="text-sm font-medium text-green-400 mb-3">{t('urunDetaylari')}</h3>
                                                 <div className="space-y-3">
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div>
                                                             <MultiLanguageInput
-                                                                label="Ürün Adı"
+                                                                label={t('urunAdi')}
                                                                 value={formData.name || { tr: '' }}
                                                                 onChange={(val) => {
                                                                     setFormData(prev => ({ ...prev, name: val }));
@@ -2033,21 +2037,21 @@ function GlobalProductsPageContent() {
                                                             />
                                                         </div>
                                                         <div>
-                                                            <label className="block text-sm text-gray-400 mb-1">Üretici Markası</label>
+                                                            <label className="block text-sm text-gray-400 mb-1">{t('ureticiMarkasi')}</label>
                                                             <input
                                                                 type="text"
                                                                 value={(formData as any).brand || ''}
                                                                 onChange={e => setFormData({ ...formData, brand: e.target.value } as any)}
                                                                 className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
-                                                                placeholder="Örn: Gazi, Pınar, Yayla"
+                                                                placeholder={t('ornGaziPinarYayla')}
                                                             />
                                                         </div>
                                                     </div>
 
                                                     {/* Hangi İşletme Türleri Satabilir */}
                                                     <div className="border-b border-gray-700 pb-4">
-                                                        <h3 className="text-sm font-medium text-purple-400 mb-3">🏪 Satış Yapabilecek İşletme Türleri</h3>
-                                                        <p className="text-xs text-gray-500 mb-3">Bu ürünü hangi işletme türleri kendi kataloglarına ekleyebilir?</p>
+                                                        <h3 className="text-sm font-medium text-purple-400 mb-3">{t('satisYapabilecekIsletmeTurleri')}</h3>
+                                                        <p className="text-xs text-gray-500 mb-3">{t('buUrunuHangiIsletmeTurleriKendi')}</p>
                                                         <div className="flex flex-wrap gap-2">
                                                             {BUSINESS_TYPE_OPTIONS.map(bt => (
                                                                 <button
@@ -2080,7 +2084,7 @@ function GlobalProductsPageContent() {
                                                                 onChange={e => setFormData(prev => ({ ...prev, isProcessed: e.target.checked } as any))}
                                                                 className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-600"
                                                             />
-                                                            <span className="text-sm text-gray-300">Hazır/İşlenmiş</span>
+                                                            <span className="text-sm text-gray-300">{t('hazirislenmis')}</span>
                                                         </label>
                                                         <label className="flex items-center gap-2 cursor-pointer">
                                                             <input
@@ -2110,7 +2114,7 @@ function GlobalProductsPageContent() {
                                                                 }}
                                                                 className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-green-600"
                                                             />
-                                                            <span className="text-sm text-gray-300">🥬 Açık (Lose Ware)</span>
+                                                            <span className="text-sm text-gray-300">{t('acikLoseWare')}</span>
                                                         </label>
                                                     </div>
 
@@ -2140,13 +2144,13 @@ function GlobalProductsPageContent() {
                                                             </select>
                                                         </div>
                                                         <div>
-                                                            <label className="block text-sm text-gray-400 mb-1">Vergi Oranı</label>
+                                                            <label className="block text-sm text-gray-400 mb-1">{t('vergiOrani')}</label>
                                                             <select
                                                                 value={(formData as any).taxRate === undefined ? '7' : String((formData as any).taxRate)}
                                                                 onChange={e => {
                                                                     const val = e.target.value;
                                                                     if (val === 'custom') {
-                                                                        const customRate = prompt('Vergi oranını girin (%):', '0');
+                                                                        const customRate = prompt(t('vergiOraniniGirin'), '0');
                                                                         if (customRate !== null) {
                                                                             setFormData({ ...formData, taxRate: parseFloat(customRate) || 0 } as any);
                                                                         }
@@ -2157,9 +2161,9 @@ function GlobalProductsPageContent() {
                                                                 className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2"
                                                             >
                                                                 <option value="0">%0 (Vergisiz)</option>
-                                                                <option value="7">%7 (İndirimli)</option>
+                                                                <option value="7">{t('7Indirimli')}</option>
                                                                 <option value="19">%19 (Standart)</option>
-                                                                <option value="custom">📝 Manuel Giriş</option>
+                                                                <option value="custom">{t('manuelGiris')}</option>
                                                             </select>
                                                         </div>
                                                         {/* Show current custom rate if not 0, 7, or 19 */}
@@ -2174,7 +2178,7 @@ function GlobalProductsPageContent() {
                                                     </div>
                                                     <div>
                                                         <MultiLanguageInput
-                                                            label="Açıklama"
+                                                            label={t('aciklama')}
                                                             value={formData.description || { tr: "" }}
                                                             onChange={val => setFormData({ ...formData, description: val })}
                                                             isTextArea={true}
@@ -2185,7 +2189,7 @@ function GlobalProductsPageContent() {
 
                                             {/* Ürün Görselleri */}
                                             <div className="border-b border-gray-700 pb-4">
-                                                <h3 className="text-sm font-medium text-purple-400 mb-3">🖼️ Ürün Görselleri (Max 5)</h3>
+                                                <h3 className="text-sm font-medium text-purple-400 mb-3">{t('urunGorselleriMax5')}</h3>
                                                 <div className="space-y-3">
                                                     {/* Image Preview Grid */}
                                                     {((formData as any).images || []).length > 0 && (
@@ -2194,7 +2198,7 @@ function GlobalProductsPageContent() {
                                                                 <div key={idx} className="relative group">
                                                                     <img
                                                                         src={img}
-                                                                        alt={`Ürün ${idx + 1}`}
+                                                                        alt={`${t('urun2')} ${idx + 1}`}
                                                                         className="w-20 h-20 object-cover rounded-lg border border-gray-600"
                                                                     />
                                                                     <button
@@ -2229,15 +2233,15 @@ function GlobalProductsPageContent() {
                                                                 {uploadingImages ? (
                                                                     <>
                                                                         <span className="animate-spin">⏳</span>
-                                                                        Yükleniyor...
+                                                                        {t('yukleniyor')}
                                                                     </>
                                                                 ) : (
                                                                     <>
-                                                                        📤 Görsel Yükle
+                                                                        {t('gorselYukle')}
                                                                     </>
                                                                 )}
                                                             </button>
-                                                            <p className="text-xs text-gray-500 mt-1">{5 - ((formData as any).images || []).length} görsel daha ekleyebilirsiniz</p>
+                                                            <p className="text-xs text-gray-500 mt-1">{5 - ((formData as any).images || []).length} {t('gorselDahaEkleyebilirsiniz')}</p>
                                                         </div>
                                                     )}
                                                 </div>
@@ -2250,22 +2254,22 @@ function GlobalProductsPageContent() {
                                                     onClick={() => setFormData(prev => ({ ...prev, _tedarikOpen: !(prev as any)._tedarikOpen } as any))}
                                                     className="flex items-center justify-between w-full text-sm font-medium text-amber-400 mb-1 hover:text-amber-300 transition-colors"
                                                 >
-                                                    <span>🚚 Tedarik & İzlenebilirlik</span>
-                                                    <span className="text-xs text-gray-500">{(formData as any)._tedarikOpen ? '▲ Kapat' : '▼ Aç'}</span>
+                                                    <span>{t('tedarikIzlenebilirlik')}</span>
+                                                    <span className="text-xs text-gray-500">{(formData as any)._tedarikOpen ? '▲ Kapat' : t('ac')}</span>
                                                 </button>
                                                 {(formData as any)._tedarikOpen && <div className="grid grid-cols-2 gap-3 mt-3">
                                                     <div>
-                                                        <label className="block text-sm text-gray-400 mb-1">Toptancı Adı</label>
+                                                        <label className="block text-sm text-gray-400 mb-1">{t('toptanciAdi')}</label>
                                                         <input
                                                             type="text"
                                                             value={(formData as any).supplierName || ''}
                                                             onChange={e => setFormData({ ...formData, supplierName: e.target.value } as any)}
                                                             className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
-                                                            placeholder="Örn: Metro, Selgros"
+                                                            placeholder={t('ornMetroSelgros')}
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm text-gray-400 mb-1">Şarj Numarası</label>
+                                                        <label className="block text-sm text-gray-400 mb-1">{t('sarjNumarasi')}</label>
                                                         <input
                                                             type="text"
                                                             value={(formData as any).batchNumber || ''}
@@ -2275,7 +2279,7 @@ function GlobalProductsPageContent() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm text-gray-400 mb-1">Alış Fiyatı (€)</label>
+                                                        <label className="block text-sm text-gray-400 mb-1">{t('alisFiyati')}</label>
                                                         <input
                                                             type="number"
                                                             step="0.01"
@@ -2286,7 +2290,7 @@ function GlobalProductsPageContent() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm text-gray-400 mb-1">Satış Fiyatı (€)</label>
+                                                        <label className="block text-sm text-gray-400 mb-1">{t('satisFiyati')}</label>
                                                         <input
                                                             type="number"
                                                             step="0.01"
@@ -2304,7 +2308,7 @@ function GlobalProductsPageContent() {
                                                 <h3 className="text-sm font-medium text-purple-400 mb-3">📅 Tarihler</h3>
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <div>
-                                                        <label className="block text-sm text-gray-400 mb-1">Üretim Tarihi</label>
+                                                        <label className="block text-sm text-gray-400 mb-1">{t('uretimTarihi')}</label>
                                                         <input
                                                             type="date"
                                                             value={(formData as any).productionDate || ''}
@@ -2326,9 +2330,9 @@ function GlobalProductsPageContent() {
 
                                             {/* Görsel */}
                                             <div className="border-b border-gray-700 pb-4">
-                                                <h3 className="text-sm font-medium text-cyan-400 mb-3">🖼️ Görsel</h3>
+                                                <h3 className="text-sm font-medium text-cyan-400 mb-3">{t('gorsel')}</h3>
                                                 <div>
-                                                    <label className="block text-sm text-gray-400 mb-1">Görsel URL</label>
+                                                    <label className="block text-sm text-gray-400 mb-1">{t('gorselUrl')}</label>
                                                     <input
                                                         type="text"
                                                         value={(formData as any).imageAsset || ''}
@@ -2341,7 +2345,7 @@ function GlobalProductsPageContent() {
 
                                             {/* Stok Yönetimi */}
                                             <div>
-                                                <h3 className="text-sm font-medium text-emerald-400 mb-3">📦 Stok Yönetimi</h3>
+                                                <h3 className="text-sm font-medium text-emerald-400 mb-3">{t('stokYonetimi')}</h3>
                                                 <div className="grid grid-cols-3 gap-3 mb-3">
                                                     <div>
                                                         <label className="block text-sm text-gray-400 mb-1">Mevcut Stok</label>
@@ -2366,7 +2370,7 @@ function GlobalProductsPageContent() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm text-gray-400 mb-1">Sipariş Noktası</label>
+                                                        <label className="block text-sm text-gray-400 mb-1">{t('siparisNoktasi')}</label>
                                                         <input
                                                             type="number"
                                                             step="0.1"
@@ -2399,14 +2403,14 @@ function GlobalProductsPageContent() {
                                                             value={(formData as any).stockLocation || ''}
                                                             onChange={e => setFormData({ ...formData, stockLocation: e.target.value } as any)}
                                                             className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
-                                                            placeholder="Örn: Raf A-3, Soğuk Depo"
+                                                            placeholder={t('ornRafA3SogukDepo')}
                                                         />
                                                     </div>
                                                 </div>
                                                 {/* Stok Uyarısı */}
                                                 {(formData as any).currentStock > 0 && (formData as any).currentStock <= (formData as any).minStock && (
                                                     <div className="mt-3 bg-red-900/30 border border-red-500/30 rounded-lg p-3">
-                                                        <p className="text-red-300 text-sm">⚠️ Stok minimum seviyenin altında! Yeniden sipariş verin.</p>
+                                                        <p className="text-red-300 text-sm">{t('stokMinimumSeviyeninAltindaYenidenSiparis')}</p>
                                                     </div>
                                                 )}
                                             </div>
@@ -2414,7 +2418,7 @@ function GlobalProductsPageContent() {
                                             {/* 🎛️ Ürün Seçenekleri (Lieferando-style Option Groups) */}
                                             <div className="lg:col-span-2 border-t border-gray-700 pt-4">
                                                 <div className="flex items-center justify-between mb-3">
-                                                    <h3 className="text-sm font-medium text-amber-400">🎛️ Ürün Seçenekleri (Varyantlar / Ekstralar)</h3>
+                                                    <h3 className="text-sm font-medium text-amber-400">{t('urunSecenekleriVaryantlarEkstralar')}</h3>
                                                     <button
                                                         type="button"
                                                         onClick={() => {
@@ -2438,8 +2442,8 @@ function GlobalProductsPageContent() {
 
                                                 {((formData as any).optionGroups || []).length === 0 ? (
                                                     <div className="bg-gray-900/50 border border-dashed border-gray-600 rounded-xl p-6 text-center">
-                                                        <p className="text-gray-500 text-sm">Henüz seçenek grubu yok</p>
-                                                        <p className="text-gray-600 text-xs mt-1">Boyut seçimi, ekstralar veya Sonderwunsch eklemek için &quot;Grup Ekle&quot; butonuna tıklayın</p>
+                                                        <p className="text-gray-500 text-sm">{t('henuzSecenekGrubuYok')}</p>
+                                                        <p className="text-gray-600 text-xs mt-1">{t('boyutSecimiEkstralarVeyaSonderwunschEklemek')}</p>
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-4">
@@ -2457,7 +2461,7 @@ function GlobalProductsPageContent() {
                                                                             setFormData({ ...formData, optionGroups: groups } as any);
                                                                         }}
                                                                         className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-sm font-semibold"
-                                                                        placeholder="Grup adı (örn: Boyut Seçimi, Ekstralar, Sonderwunsch)"
+                                                                        placeholder={t('grupAdiOrnBoyutSecimiEkstralar')}
                                                                     />
                                                                     <button
                                                                         type="button"
@@ -2489,8 +2493,8 @@ function GlobalProductsPageContent() {
                                                                         }}
                                                                         className="bg-gray-800 border border-gray-600 rounded-lg px-2 py-1 text-xs"
                                                                     >
-                                                                        <option value="radio">🔘 Tek Seçim (Radio)</option>
-                                                                        <option value="checkbox">☑️ Çoklu Seçim (Checkbox)</option>
+                                                                        <option value="radio">{t('tekSecimRadio')}</option>
+                                                                        <option value="checkbox">{t('cokluSecimCheckbox')}</option>
                                                                     </select>
 
                                                                     <label className="flex items-center gap-1.5 cursor-pointer">
@@ -2540,7 +2544,7 @@ function GlobalProductsPageContent() {
                                                                                     }}
                                                                                     className="w-14 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-xs text-center"
                                                                                 />
-                                                                                <span className="text-[10px] text-gray-600">(-1 = sınırsız)</span>
+                                                                                <span className="text-[10px] text-gray-600">{t('1Sinirsiz')}</span>
                                                                             </div>
                                                                         </>
                                                                     )}
@@ -2562,7 +2566,7 @@ function GlobalProductsPageContent() {
                                                                                     setFormData({ ...formData, optionGroups: groups } as any);
                                                                                 }}
                                                                                 className="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-sm"
-                                                                                placeholder="Seçenek adı (örn: Klein, Groß, mit Käse)"
+                                                                                placeholder={t('secenekAdiOrnKleinGroMit')}
                                                                             />
                                                                             <div className="flex items-center gap-1">
                                                                                 <span className="text-xs text-gray-500">+€</span>
@@ -2582,7 +2586,7 @@ function GlobalProductsPageContent() {
                                                                                     placeholder="0.00"
                                                                                 />
                                                                             </div>
-                                                                            <label className="flex items-center gap-1 cursor-pointer" title="Varsayılan seçili">
+                                                                            <label className="flex items-center gap-1 cursor-pointer" title={t('varsayilanSecili')}>
                                                                                 <input
                                                                                     type="checkbox"
                                                                                     checked={opt.defaultSelected || false}
@@ -2602,7 +2606,7 @@ function GlobalProductsPageContent() {
                                                                                     }}
                                                                                     className="w-3.5 h-3.5 rounded border-gray-600 bg-gray-700 text-amber-500"
                                                                                 />
-                                                                                <span className="text-[10px] text-gray-500">Varsayılan</span>
+                                                                                <span className="text-[10px] text-gray-500">{t('varsayilan')}</span>
                                                                             </label>
                                                                             <button
                                                                                 type="button"
@@ -2614,7 +2618,7 @@ function GlobalProductsPageContent() {
                                                                                     setFormData({ ...formData, optionGroups: groups } as any);
                                                                                 }}
                                                                                 className="text-red-400 hover:text-red-300 text-xs px-1"
-                                                                                title="Seçeneği Sil"
+                                                                                title={t('secenegiSil')}
                                                                             >
                                                                                 ✕
                                                                             </button>
@@ -2640,16 +2644,16 @@ function GlobalProductsPageContent() {
                                                                         }}
                                                                         className="w-full py-1.5 border border-dashed border-gray-600 hover:border-amber-500 rounded-lg text-xs text-gray-500 hover:text-amber-400 transition-colors"
                                                                     >
-                                                                        + Seçenek Ekle
+                                                                        {t('secenekEkle')}
                                                                     </button>
                                                                 </div>
 
                                                                 {/* Group Summary Badge */}
                                                                 {group.options && group.options.length > 0 && (
                                                                     <div className="mt-2 flex gap-2 text-[10px] text-gray-500">
-                                                                        <span>{group.options.length} seçenek</span>
+                                                                        <span>{group.options.length} {t('secenek')}</span>
                                                                         <span>•</span>
-                                                                        <span>{group.type === 'radio' ? 'Tek seçim' : 'Çoklu seçim'}</span>
+                                                                        <span>{group.type === 'radio' ? t('tekSecim') : t('cokluSecim')}</span>
                                                                         {group.required && <><span>•</span><span className="text-red-400">Zorunlu</span></>}
                                                                     </div>
                                                                 )}
@@ -2665,7 +2669,7 @@ function GlobalProductsPageContent() {
                                                 onClick={() => setShowModal(false)}
                                                 className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
                                             >
-                                                İptal
+                                                {t('iptal')}
                                             </button>
                                             <button
                                                 onClick={handleSave}
@@ -2705,10 +2709,11 @@ function GlobalProductsPageContent() {
 
 // Wrapper with Suspense for useSearchParams (Next.js 16 requirement)
 export default function GlobalProductsPage() {
+    const t = useTranslations('AdminProducts');
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-                <div className="text-xl">Yükleniyor...</div>
+                <div className="text-xl">{t('yukleniyor')}</div>
             </div>
         }>
             <GlobalProductsPageContent />
