@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 /**
  * /admin/staff → Redirect to unified Kullanıcı Yönetimi
@@ -11,6 +12,7 @@ import { useRouter } from 'next/navigation';
  * now consolidated into the Dashboard's Kullanıcı Yönetimi section.
  */
 export default function StaffRedirectPage() {
+    const tAdminStaff = useTranslations('AdminStaff');
     const router = useRouter();
 
     useEffect(() => {
@@ -21,7 +23,7 @@ export default function StaffRedirectPage() {
         <div className="min-h-screen bg-gray-900 flex items-center justify-center">
             <div className="text-center">
                 <div className="animate-spin text-4xl mb-4">⏳</div>
-                <p className="text-gray-400">Personel yönetimine yönlendiriliyorsunuz...</p>
+                <p className="text-gray-400">{tAdminStaff('personel_yonetimine_yonlendiriliyorsunuz')}</p>
             </div>
         </div>
     );

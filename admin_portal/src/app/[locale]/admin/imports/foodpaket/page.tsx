@@ -5,6 +5,7 @@ import { collection, addDoc, getDocs, query, where, writeBatch, doc, serverTimes
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 // Category mapping from Foodpaket German to LOKMA categories
 const CATEGORY_MAPPING: Record<string, string> = {
@@ -128,7 +129,9 @@ interface FoodpaketProduct {
 }
 
 export default function FoodpaketImportPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminImportsFoodpaket');
+const { admin, loading: adminLoading } = useAdmin();
     const [products, setProducts] = useState<FoodpaketProduct[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [importing, setImporting] = useState(false);
@@ -256,10 +259,10 @@ export default function FoodpaketImportPage() {
             });
 
         } catch (error) {
-            console.error('Import error:', error);
+            console.error(t('import_error'), error);
             setResult({
                 success: false,
-                message: `❌ Hata: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`
+                message: `❌ Hata: ${error instanceof Error ? error.message : t('bilinmeyen_hata')}`
             });
         }
 
@@ -282,9 +285,9 @@ export default function FoodpaketImportPage() {
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
                 <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md border border-gray-700">
                     <span className="text-5xl">🔒</span>
-                    <h2 className="text-xl font-bold text-white mt-4">Erişim Yok</h2>
-                    <p className="text-gray-400 mt-2">Bu sayfa sadece Süper Admin'ler için.</p>
-                    <p className="text-gray-500 text-xs mt-2">Admin: {admin?.email || 'Yok'}</p>
+                    <h2 className="text-xl font-bold text-white mt-4">{t('erisim_yok')}</h2>
+                    <p className="text-gray-400 mt-2">{t('bu_sayfa_sadece_super_admin_ler_icin')}</p>
+                    <p className="text-gray-500 text-xs mt-2">Admin: {admin?.email || t('yok')}</p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg">
                         Dashboard'a Git
                     </Link>
@@ -303,8 +306,8 @@ export default function FoodpaketImportPage() {
                             <span className="text-3xl">📦</span>
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-white">Foodpaket Import</h1>
-                            <p className="text-emerald-200">1019 ürünü Master Katalog'a aktar</p>
+                            <h1 className="text-2xl font-bold text-white">{t('foodpaket_import')}</h1>
+                            <p className="text-emerald-200">{t('1019_urunu_master_katalog_a_aktar')}</p>
                         </div>
                     </div>
                 </div>
@@ -312,7 +315,7 @@ export default function FoodpaketImportPage() {
                 {/* Stats */}
                 <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-medium text-white">📊 Kategori Dağılımı</h2>
+                        <h2 className="text-lg font-medium text-white">{t('kategori_dagilimi')}</h2>
                         <button
                             onClick={calculateStats}
                             className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
@@ -336,14 +339,14 @@ export default function FoodpaketImportPage() {
 
                 {/* Import */}
                 <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-                    <h2 className="text-lg font-medium text-white mb-4">🚀 Import</h2>
+                    <h2 className="text-lg font-medium text-white mb-4">{t('import')}</h2>
 
                     {/* Progress */}
                     {importing && (
                         <div className="mb-4">
                             <div className="flex justify-between text-sm text-gray-400 mb-2">
                                 <span>{progress.current} / {progress.total}</span>
-                                <span>{progress.skipped} atlandı</span>
+                                <span>{progress.skipped} {t('atlandi')}</span>
                             </div>
                             <div className="w-full bg-gray-700 rounded-full h-3">
                                 <div
@@ -369,18 +372,18 @@ export default function FoodpaketImportPage() {
                         disabled={importing}
                         className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold rounded-xl text-lg"
                     >
-                        {importing ? '⏳ Import ediliyor...' : '📥 1019 Ürünü Import Et'}
+                        {importing ? t('import_ediliyor') : t('1019_urunu_import_et')}
                     </button>
 
                     <p className="text-gray-500 text-sm mt-4 text-center">
-                        Ürünler 'super_admin_only' görünürlüğü ile import edilecek.
+                        {t('urunler_super_admin_only_gorunurlugu_ile')}
                     </p>
                 </div>
 
                 {/* Back Link */}
                 <div className="mt-6 text-center">
                     <Link href="/admin/products" className="text-emerald-400 hover:text-emerald-300">
-                        ← Ürün Yönetimine Dön
+                        {t('urun_yonetimine_don')}
                     </Link>
                 </div>
             </div>

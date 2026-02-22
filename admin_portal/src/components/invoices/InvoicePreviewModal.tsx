@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface Invoice {
     id: string;
@@ -25,7 +26,9 @@ interface InvoicePreviewModalProps {
 }
 
 export default function InvoicePreviewModal({ invoice, onClose }: InvoicePreviewModalProps) {
-    const [printing, setPrinting] = useState(false);
+    
+  const t = useTranslations('AdminComponentInvoicePreviewModal');
+const [printing, setPrinting] = useState(false);
 
     const handlePrint = () => {
         setPrinting(true);
@@ -55,7 +58,7 @@ export default function InvoicePreviewModal({ invoice, onClose }: InvoicePreview
             <div className="bg-white rounded-xl w-full max-w-3xl mx-auto my-8 shadow-2xl print:shadow-none print:rounded-none">
                 {/* Header with close button (hidden in print) */}
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 print:hidden">
-                    <h2 className="text-xl font-bold text-gray-800">📄 Fatura Önizleme</h2>
+                    <h2 className="text-xl font-bold text-gray-800">{t('fatura_onizleme')}</h2>
                     <button
                         onClick={onClose}
                         className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -73,7 +76,7 @@ export default function InvoicePreviewModal({ invoice, onClose }: InvoicePreview
                             <p className="text-sm text-gray-600">GmbH</p>
                             <p className="text-xs text-gray-500 mt-2">
                                 Schulte-Braucks-Str. 1<br />
-                                41836 Hückelhoven<br />
+                                {t('41836_huckelhoven')}<br />
                                 Deutschland
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
@@ -123,7 +126,7 @@ export default function InvoicePreviewModal({ invoice, onClose }: InvoicePreview
                             <tr className="border-b">
                                 <td className="px-4 py-4">
                                     <p className="font-medium">{invoice.description || 'LOKMA Abonnement'}</p>
-                                    <p className="text-sm text-gray-500">Monatliche Nutzungsgebühr</p>
+                                    <p className="text-sm text-gray-500">{t('monatliche_nutzungsgebuhr')}</p>
                                 </td>
                                 <td className="px-4 py-4 text-center">1</td>
                                 <td className="px-4 py-4 text-right">{formatCurrency(invoice.subtotal)}</td>
@@ -153,10 +156,10 @@ export default function InvoicePreviewModal({ invoice, onClose }: InvoicePreview
                     {/* Payment Info */}
                     <div className="mt-8 pt-6 border-t border-gray-200 text-sm text-gray-600">
                         <p className="font-semibold mb-2">Zahlungsinformationen:</p>
-                        <p>Bitte überweisen Sie den Betrag bis zum {formatDate(invoice.dueDate)} auf folgendes Konto:</p>
+                        <p>{t('bitte_uberweisen_sie_den_betrag_bis_zum')} {formatDate(invoice.dueDate)} auf folgendes Konto:</p>
                         <div className="mt-2 bg-gray-50 rounded-lg p-4 font-mono text-xs">
-                            <p>IBAN: DE89 3704 0044 0532 0130 00 (Demo)</p>
-                            <p>BIC: COBADEFFXXX</p>
+                            <p>{t('iban_de89_3704_0044_0532_0130_00_demo')}</p>
+                            <p>{t('bic_cobadeffxxx')}</p>
                             <p>Verwendungszweck: {invoice.invoiceNumber}</p>
                         </div>
                     </div>
@@ -170,15 +173,15 @@ export default function InvoicePreviewModal({ invoice, onClose }: InvoicePreview
                             }`}>
                             {invoice.status === 'paid' ? '✅ BEZAHLT' :
                                 invoice.status === 'pending' ? '⏳ OFFEN' :
-                                    invoice.status === 'overdue' ? '⚠️ ÜBERFÄLLIG' :
+                                    invoice.status === 'overdue' ? t('uberf_llig') :
                                         invoice.status.toUpperCase()}
                         </span>
                     </div>
 
                     {/* Footer */}
                     <div className="mt-8 pt-4 border-t border-gray-200 text-xs text-gray-400 text-center">
-                        <p>LOKMA GmbH | Schulte-Braucks-Str. 1, 41836 Hückelhoven | info@lokma.shop</p>
-                        <p className="mt-1">Steuernummer: DEMO-ST-123456 | USt-IdNr: DEMO-UST-DE123456</p>
+                        <p>{t('lokma_gmbh_schulte_braucks_str_1_41836_h')}</p>
+                        <p className="mt-1">{t('steuernummer_demo_st_123456_ust_idnr_dem')}</p>
                     </div>
                 </div>
 
@@ -188,14 +191,14 @@ export default function InvoicePreviewModal({ invoice, onClose }: InvoicePreview
                         onClick={onClose}
                         className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500"
                     >
-                        Kapat
+                        {t('kapat')}
                     </button>
                     <button
                         onClick={handlePrint}
                         disabled={printing}
                         className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
                     >
-                        {printing ? 'Hazırlanıyor...' : '🖨️ Yazdır'}
+                        {printing ? t('hazirlaniyor') : t('yazdir')}
                     </button>
                     {invoice.pdfUrl && (
                         <a

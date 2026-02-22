@@ -6,6 +6,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, orderBy, onSnapshot, doc, getDoc, updateDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 interface OrderItem {
     productId: string;
@@ -39,7 +40,9 @@ interface BusinessInfo {
 }
 
 export default function BusinessOrdersPage() {
-    const params = useParams();
+    
+  const t = useTranslations('AdminBusiness[idOrders');
+const params = useParams();
     const businessId = params.id as string;
 
     const [orders, setOrders] = useState<BusinessOrder[]>([]);
@@ -326,8 +329,8 @@ export default function BusinessOrdersPage() {
             cancelled: 'bg-red-600 text-white',
         };
         const labels: Record<string, string> = {
-            pending: 'Hazırlanmayı Bekliyor',
-            preparing: 'Hazırlanıyor',
+            pending: t('hazirlanmayi_bekliyor'),
+            preparing: t('hazirlaniyor'),
             ready: 'Hazır',
             completed: 'Tamamlandı',
             cancelled: 'İptal',
@@ -374,16 +377,16 @@ export default function BusinessOrdersPage() {
                             href={isVendorUser ? '/admin/businesses' : '/admin/businesses'}
                             className="text-red-200 hover:text-white text-sm"
                         >
-                            ← {isVendorUser ? 'Dashboard' : 'İşletmelere Dön'}
+                            ← {isVendorUser ? 'Dashboard' : t('i_sletmelere_don')}
                         </Link>
                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                             <span className="text-2xl">📦</span>
                         </div>
                         <div>
-                            <h1 className="font-bold">{butcher?.companyName || 'Kasap'} - Siparişler</h1>
+                            <h1 className="font-bold">{butcher?.companyName || 'Kasap'} {t('siparisler')}</h1>
                             <p className="text-xs text-red-200">
                                 {butcher?.brand === 'tuna' && <span className="bg-red-600 px-2 py-0.5 rounded text-xs mr-2">TUNA</span>}
-                                Toplam {stats.total} sipariş
+                                {t('toplam')} {stats.total} {t('siparis')}
                             </p>
                         </div>
                     </div>
@@ -396,7 +399,7 @@ export default function BusinessOrdersPage() {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mb-4 md:mb-6">
                     <div className="bg-gray-800 rounded-lg p-4">
                         <div className="text-2xl font-bold text-white">{stats.total}</div>
-                        <div className="text-sm text-gray-400">Toplam</div>
+                        <div className="text-sm text-gray-400">{t('toplam')}</div>
                     </div>
                     <div className="bg-yellow-600/20 rounded-lg p-4 border-l-4 border-yellow-500">
                         <div className="text-2xl font-bold text-yellow-400">{stats.pending}</div>
@@ -404,7 +407,7 @@ export default function BusinessOrdersPage() {
                     </div>
                     <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
                         <div className="text-2xl font-bold text-blue-400">{stats.preparing}</div>
-                        <div className="text-sm text-blue-300">Hazırlanıyor</div>
+                        <div className="text-sm text-blue-300">{t('hazirlaniyor')}</div>
                     </div>
                     <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
                         <div className="text-2xl font-bold text-green-400">{stats.ready}</div>
@@ -425,7 +428,7 @@ export default function BusinessOrdersPage() {
                             )}
                         </div>
                         <div className="text-sm text-gray-400">
-                            {showCompletedOrders ? '📑 Tümünü Göster (Aktif)' : '📦 Tamamlandı'}
+                            {showCompletedOrders ? t('tumunu_goster_aktif') : '📦 Tamamlandı'}
                         </div>
                     </button>
                 </div>
@@ -438,7 +441,7 @@ export default function BusinessOrdersPage() {
                             <label className="block text-xs text-gray-400 mb-1">Ara</label>
                             <input
                                 type="text"
-                                placeholder="Sipariş No, Müşteri Adı..."
+                                placeholder={t('siparis_no_musteri_adi')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full bg-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 border-none outline-none"
@@ -447,15 +450,15 @@ export default function BusinessOrdersPage() {
 
                         {/* Status Filter */}
                         <div>
-                            <label className="block text-xs text-gray-500 mb-1">Durum</label>
+                            <label className="block text-xs text-gray-500 mb-1">{t('durum')}</label>
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500"
                             >
-                                <option value="all">Tümü</option>
+                                <option value="all">{t('tumu')}</option>
                                 <option value="pending">Bekliyor</option>
-                                <option value="preparing">Hazırlanıyor</option>
+                                <option value="preparing">{t('hazirlaniyor')}</option>
                                 <option value="ready">Hazır</option>
                                 <option value="completed">Tamamlandı</option>
                                 <option value="cancelled">İptal</option>
@@ -464,7 +467,7 @@ export default function BusinessOrdersPage() {
 
                         {/* Date Range */}
                         <div>
-                            <label className="block text-xs text-gray-500 mb-1">Başlangıç</label>
+                            <label className="block text-xs text-gray-500 mb-1">{t('baslangic')}</label>
                             <input
                                 type="date"
                                 value={dateFrom}
@@ -473,7 +476,7 @@ export default function BusinessOrdersPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-xs text-gray-500 mb-1">Bitiş</label>
+                            <label className="block text-xs text-gray-500 mb-1">{t('bitis')}</label>
                             <input
                                 type="date"
                                 value={dateTo}
@@ -518,16 +521,16 @@ export default function BusinessOrdersPage() {
                                         Müşteri
                                     </th>
                                     <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">
-                                        Tarih
+                                        {t('tarih')}
                                     </th>
                                     <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider hidden lg:table-cell">
                                         Teslim
                                     </th>
                                     <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                        Tutar
+                                        {t('tutar')}
                                     </th>
                                     <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                        Durum
+                                        {t('durum')}
                                     </th>
                                     <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
 
@@ -538,7 +541,7 @@ export default function BusinessOrdersPage() {
                                 {filteredOrders.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
-                                            {orders.length === 0 ? 'Henüz sipariş yok' : 'Filtreye uygun sipariş bulunamadı'}
+                                            {orders.length === 0 ? t('henuz_siparis_yok') : t('filtreye_uygun_siparis_bulunamadi')}
                                         </td>
                                     </tr>
                                 ) : (
@@ -590,7 +593,7 @@ export default function BusinessOrdersPage() {
                                                             {order.fulfillmentType === 'pickup' ? (
                                                                 <span className="text-blue-400">🏪 Gel Al</span>
                                                             ) : (
-                                                                <span className="text-amber-400">🛵 Kurye</span>
+                                                                <span className="text-amber-400">{t('kurye')}</span>
                                                             )}
                                                         </div>
                                                         <div className="text-xs text-gray-400">{formatDate(order.scheduledDateTime)}</div>
@@ -625,7 +628,7 @@ export default function BusinessOrdersPage() {
                                                                     onClick={() => updateOrderStatus(order.id, 'preparing')}
                                                                     className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-4 rounded-lg text-sm transition-all active:scale-95"
                                                                 >
-                                                                    ▶ SİPARİŞİ BAŞLAT
+                                                                    {t('si_pari_si_baslat')}
                                                                 </button>
                                                             )}
                                                             {order.status === 'preparing' && (
@@ -633,7 +636,7 @@ export default function BusinessOrdersPage() {
                                                                     onClick={() => updateOrderStatus(order.id, 'ready')}
                                                                     className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg text-sm transition-all active:scale-95"
                                                                 >
-                                                                    ✓ HAZIR
+                                                                    {t('hazir')}
                                                                 </button>
                                                             )}
                                                             {order.status === 'ready' && (
@@ -645,7 +648,7 @@ export default function BusinessOrdersPage() {
                                                                 </button>
                                                             )}
                                                             {order.status === 'completed' && (
-                                                                <span className="flex-1 text-center text-gray-400 py-3 text-sm">✓ Tamamlandı</span>
+                                                                <span className="flex-1 text-center text-gray-400 py-3 text-sm">{t('tamamlandi')}</span>
                                                             )}
                                                             {order.status === 'cancelled' && (
                                                                 <span className="flex-1 text-center text-red-400 py-3 text-sm">❌ İptal</span>
@@ -657,7 +660,7 @@ export default function BusinessOrdersPage() {
                                                                     <button
                                                                         onClick={() => setEditingOrderItems(order)}
                                                                         className="w-8 h-8 rounded-full bg-gray-600 hover:bg-yellow-600 flex items-center justify-center text-white"
-                                                                        title="Düzenle"
+                                                                        title={t('duzenle')}
                                                                     >
                                                                         ✏️
                                                                     </button>
@@ -680,7 +683,7 @@ export default function BusinessOrdersPage() {
                                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                                 {/* Customer Info */}
                                                                 <div className="bg-gray-800 rounded-lg p-4">
-                                                                    <h4 className="text-sm font-medium text-gray-400 mb-2">👤 Müşteri</h4>
+                                                                    <h4 className="text-sm font-medium text-gray-400 mb-2">{t('musteri')}</h4>
                                                                     <p className="text-white font-medium">{order.customerName}</p>
                                                                     {/* Phone: Only visible and clickable during active orders */}
                                                                     {['pending', 'preparing', 'ready'].includes(order.status) ? (
@@ -692,7 +695,7 @@ export default function BusinessOrdersPage() {
                                                                 {/* Delivery Info */}
                                                                 <div className="bg-gray-800 rounded-lg p-4">
                                                                     <h4 className="text-sm font-medium text-gray-400 mb-2">📦 Teslim</h4>
-                                                                    <p className="text-white">{order.fulfillmentType === 'pickup' ? '🏪 Gel Al' : '🛵 Kurye'}</p>
+                                                                    <p className="text-white">{order.fulfillmentType === 'pickup' ? '🏪 Gel Al' : t('kurye')}</p>
                                                                     <p className="text-gray-400 text-sm">{formatDate(order.scheduledDateTime)}</p>
                                                                 </div>
                                                                 {/* Order Total */}
@@ -703,7 +706,7 @@ export default function BusinessOrdersPage() {
                                                             </div>
                                                             {/* Items */}
                                                             <div className="mt-4 bg-gray-800 rounded-lg p-4">
-                                                                <h4 className="text-sm font-medium text-gray-400 mb-3">🥩 Ürünler</h4>
+                                                                <h4 className="text-sm font-medium text-gray-400 mb-3">{t('urunler')}</h4>
                                                                 <div className="space-y-2">
                                                                     {order.items.map((item: OrderItem, idx: number) => (
                                                                         <div key={idx} className="flex justify-between items-center text-sm">
@@ -739,12 +742,12 @@ export default function BusinessOrdersPage() {
                         <div className="bg-white rounded-lg shadow-xl max-w-md w-full m-4">
                             <div className="p-6">
                                 <h2 className="text-lg font-bold text-red-600 mb-4">
-                                    ❌ Sipariş Reddet - {rejectingOrder.orderNumber}
+                                    {t('siparis_reddet')} {rejectingOrder.orderNumber}
                                 </h2>
 
                                 <div className="bg-yellow-50 rounded-lg p-4 mb-4">
                                     <p className="text-sm text-yellow-800">
-                                        <strong>⚠️ Dikkat:</strong> Siparişi reddettiğinizde müşteriye bildirim gidecek.
+                                        <strong>⚠️ Dikkat:</strong> {t('siparisi_reddettiginizde_musteriye_bildi')}
                                     </p>
                                 </div>
 
@@ -755,16 +758,16 @@ export default function BusinessOrdersPage() {
                                         onChange={(e) => setRejectReason(e.target.value)}
                                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500"
                                         rows={3}
-                                        placeholder="İstediğiniz ürün şu an mevcut değil..."
+                                        placeholder={t('i_stediginiz_urun_su_an_mevcut_degil')}
                                     />
                                 </div>
 
                                 <div className="bg-blue-50 rounded-lg p-4 mb-4">
                                     <p className="text-sm text-blue-800">
-                                        <strong>📞 Kasap Telefon:</strong> {butcher?.phone || 'Belirtilmemiş'}
+                                        <strong>📞 Kasap Telefon:</strong> {butcher?.phone || t('belirtilmemis')}
                                     </p>
                                     <p className="text-xs text-blue-600 mt-1">
-                                        Bu numara müşteriye gösterilecek
+                                        {t('bu_numara_musteriye_gosterilecek')}
                                     </p>
                                 </div>
 
@@ -779,7 +782,7 @@ export default function BusinessOrdersPage() {
                                         onClick={handleRejectOrder}
                                         className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                                     >
-                                        ❌ Siparişi Reddet
+                                        {t('siparisi_reddet')}
                                     </button>
                                 </div>
                             </div>

@@ -7,9 +7,12 @@ import { getSuppliers } from '@/services/supplierService';
 import { addOrder } from '@/services/orderService';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 export default function CreateOrderPage() {
-    const { admin } = useAdmin();
+    
+  const t = useTranslations('AdminOrdersCreate');
+const { admin } = useAdmin();
     const router = useRouter();
 
     // Wizard State
@@ -104,7 +107,7 @@ export default function CreateOrderPage() {
             router.push('/admin/orders');
         } catch (e) {
             console.error(e);
-            alert('Sipariş oluşturulurken hata oluştu.');
+            alert(t('siparis_olusturulurken_hata_olustu'));
         } finally {
             setIsSubmitting(false);
         }
@@ -116,8 +119,8 @@ export default function CreateOrderPage() {
                 <div className="mb-8 flex items-center justify-between">
                     <div>
                         <Link href="/admin/orders" className="text-gray-400 text-sm hover:text-white mb-2 inline-block">← İptal</Link>
-                        <h1 className="text-3xl font-bold">Yeni Sipariş Oluştur</h1>
-                        <p className="text-gray-400">Adım {step}/3: {step === 1 ? 'Tedarikçi Seçimi' : step === 2 ? 'Ürünleri Gir' : 'Önizleme & Gönder'}</p>
+                        <h1 className="text-3xl font-bold">{t('yeni_siparis_olustur')}</h1>
+                        <p className="text-gray-400">{t('adim')} {step}/3: {step === 1 ? t('tedarikci_secimi') : step === 2 ? t('urunleri_gir') : t('onizleme_gonder')}</p>
                     </div>
                 </div>
 
@@ -126,8 +129,8 @@ export default function CreateOrderPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {suppliers.length === 0 && (
                             <div className="col-span-full text-center py-12 bg-gray-800 rounded-xl">
-                                <p className="text-gray-400 mb-4">Kayıtlı tedarikçiniz yok.</p>
-                                <Link href="/admin/orders/suppliers" className="text-green-400 underline font-bold">Tedarikçi Ekle</Link>
+                                <p className="text-gray-400 mb-4">{t('kayitli_tedarikciniz_yok')}</p>
+                                <Link href="/admin/orders/suppliers" className="text-green-400 underline font-bold">{t('tedarikci_ekle')}</Link>
                             </div>
                         )}
                         {suppliers.map(s => (
@@ -152,9 +155,9 @@ export default function CreateOrderPage() {
                         {/* Smart Paste Area */}
                         <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
                             <h3 className="font-bold mb-2 flex items-center gap-2">
-                                <span>🤖</span> Hızlı Ekle (Smart Paste)
+                                <span>🤖</span> {t('hizli_ekle_smart_paste')}
                             </h3>
-                            <p className="text-xs text-gray-400 mb-2">Listenizi alt alta yapıştırın (Örn: "50 kg Dana Kıyma")</p>
+                            <p className="text-xs text-gray-400 mb-2">{t('listenizi_alt_alta_yapistirin_orn_50_kg_')}</p>
                             <div className="flex gap-2">
                                 <textarea
                                     value={rawText}
@@ -166,16 +169,16 @@ export default function CreateOrderPage() {
                                     onClick={() => parseTextToItems(rawText)}
                                     className="bg-blue-600 hover:bg-blue-500 px-6 rounded-lg font-bold"
                                 >
-                                    Çevir ⚡️
+                                    {t('cevir')}
                                 </button>
                             </div>
                         </div>
 
                         {/* Items Table */}
                         <div className="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                            <h3 className="font-bold mb-4">Sipariş Listesi ({items.length})</h3>
+                            <h3 className="font-bold mb-4">{t('siparis_listesi')}{items.length})</h3>
                             {items.length === 0 ? (
-                                <div className="text-center text-gray-500 py-4">Listeniz boş</div>
+                                <div className="text-center text-gray-500 py-4">{t('listeniz_bos')}</div>
                             ) : (
                                 <div className="space-y-2">
                                     {items.map((item, idx) => (
@@ -224,7 +227,7 @@ export default function CreateOrderPage() {
                                 onClick={() => setItems([...items, { name: '', quantity: 1, unit: 'adt' }])}
                                 className="mt-4 text-sm text-blue-400 hover:text-blue-300 font-bold"
                             >
-                                + Satır Ekle
+                                {t('satir_ekle')}
                             </button>
                         </div>
 
@@ -248,18 +251,18 @@ export default function CreateOrderPage() {
                             {/* Print Header */}
                             <div className="border-b-2 border-black pb-4 mb-4 flex justify-between items-start">
                                 <div>
-                                    <h2 className="text-2xl font-black uppercase">Sipariş Formu</h2>
+                                    <h2 className="text-2xl font-black uppercase">{t('siparis_formu')}</h2>
                                     <p className="text-sm text-gray-600">{formatLocalDate(new Date())}</p>
                                 </div>
                                 <div className="text-right">
-                                    <h3 className="font-bold">{admin?.butcherId || 'MIRA'}</h3>
-                                    <p className="text-sm">Müşteri No: {admin?.butcherId?.substring(0, 6)}</p>
+                                    <h3 className="font-bold">{admin?.butcherId || t('mira')}</h3>
+                                    <p className="text-sm">{t('musteri_no')} {admin?.butcherId?.substring(0, 6)}</p>
                                 </div>
                             </div>
 
                             {/* Supplier Info */}
                             <div className="mb-6 bg-gray-100 p-4 rounded-lg">
-                                <span className="text-xs font-bold uppercase text-gray-500 block mb-1">ALICI (TEDARİKÇİ)</span>
+                                <span className="text-xs font-bold uppercase text-gray-500 block mb-1">{t('alici_tedari_kci')}</span>
                                 <h3 className="text-xl font-bold">{selectedSupplier.name}</h3>
                                 <p className="text-gray-600">{selectedSupplier.phone}</p>
                             </div>
@@ -270,7 +273,7 @@ export default function CreateOrderPage() {
                                     <tr className="border-b border-black text-left text-sm uppercase">
                                         <th className="pb-2 w-24">Miktar</th>
                                         <th className="pb-2 w-20">Birim</th>
-                                        <th className="pb-2">Ürün Adı</th>
+                                        <th className="pb-2">{t('urun_adi')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="font-mono text-lg">
@@ -286,17 +289,17 @@ export default function CreateOrderPage() {
 
                             {/* Notes */}
                             <div className="mb-8">
-                                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Sipariş Notu</label>
+                                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">{t('siparis_notu')}</label>
                                 <textarea
                                     value={orderNote}
                                     onChange={e => setOrderNote(e.target.value)}
                                     className="w-full bg-yellow-50 border border-yellow-200 p-3 rounded text-sm min-h-[80px]"
-                                    placeholder="Varsa özel notunuz..."
+                                    placeholder={t('varsa_ozel_notunuz')}
                                 />
                             </div>
 
                             <div className="mb-8">
-                                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Teslimat Tarihi (İsteğe bağlı)</label>
+                                <label className="block text-xs font-bold uppercase text-gray-500 mb-1">{t('teslimat_tarihi_i_stege_bagli')}</label>
                                 <input
                                     type="date"
                                     value={deliveryDate}
@@ -306,7 +309,7 @@ export default function CreateOrderPage() {
                             </div>
 
                             <div className="text-center text-xs text-gray-400 mt-12 border-t pt-4">
-                                MIRA Retail OS tarafından oluşturulmuştur • miraportal.com
+                                {t('mira_retail_os_tarafindan_olusturulmustu')}
                             </div>
                         </div>
 
@@ -317,7 +320,7 @@ export default function CreateOrderPage() {
                                 disabled={isSubmitting}
                                 className="bg-green-500 hover:bg-green-400 text-white p-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"
                             >
-                                <span>💬</span> WhatsApp ile Gönder
+                                <span>💬</span> {t('whatsapp_ile_gonder')}
                             </button>
                             <button
                                 onClick={() => {
@@ -328,11 +331,11 @@ export default function CreateOrderPage() {
                                 disabled={isSubmitting}
                                 className="bg-gray-700 hover:bg-gray-600 text-white p-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"
                             >
-                                <span>🖨️</span> PDF / Yazdır
+                                <span>🖨️</span> {t('pdf_yazdir')}
                             </button>
                         </div>
 
-                        <button onClick={() => setStep(2)} className="w-full text-center text-gray-500 hover:text-gray-300 mt-4">Düzenlemeye Dön</button>
+                        <button onClick={() => setStep(2)} className="w-full text-center text-gray-500 hover:text-gray-300 mt-4">{t('duzenlemeye_don')}</button>
                     </div>
                 )}
             </div>

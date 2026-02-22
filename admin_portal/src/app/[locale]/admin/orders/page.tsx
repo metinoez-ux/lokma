@@ -123,7 +123,7 @@ export default function OrdersPage() {
                 [`checkedItems.${itemIdx}`]: newChecked,
             });
         } catch (e) {
-            console.error('Error updating checkedItems:', e);
+            console.error(t('error_updating_checkeditems'), e);
         }
     };
 
@@ -157,20 +157,20 @@ export default function OrdersPage() {
         if (['pending', 'accepted'].includes(status) && status === 'pending') {
             if (hasItems && checkedCount > 0) {
                 if (allChecked) {
-                    return { label: '✅ Siparişi Onayla', action: 'accepted' as OrderStatus, style: 'bg-blue-600 hover:bg-blue-700', hasUnavailable: false };
+                    return { label: t('siparisi_onayla'), action: 'accepted' as OrderStatus, style: 'bg-blue-600 hover:bg-blue-700', hasUnavailable: false };
                 } else {
-                    return { label: '⚠️ Eksik ürünlerle onayla', action: 'accepted' as OrderStatus, style: 'bg-yellow-600 hover:bg-yellow-700', hasUnavailable: true };
+                    return { label: t('eksik_urunlerle_onayla'), action: 'accepted' as OrderStatus, style: 'bg-yellow-600 hover:bg-yellow-700', hasUnavailable: true };
                 }
             }
             return null; // No action yet — need to check some items first
         }
 
         if (status === 'accepted') {
-            return { label: '👨‍🍳 Hazırlamaya Başla', action: 'preparing' as OrderStatus, style: 'bg-amber-600 hover:bg-amber-700', hasUnavailable: false };
+            return { label: t('hazirlamaya_basla'), action: 'preparing' as OrderStatus, style: 'bg-amber-600 hover:bg-amber-700', hasUnavailable: false };
         }
 
         if (status === 'preparing') {
-            return { label: '📦 Sipariş Hazır', action: 'ready' as OrderStatus, style: 'bg-green-600 hover:bg-green-700', hasUnavailable: false };
+            return { label: t('siparis_hazir'), action: 'ready' as OrderStatus, style: 'bg-green-600 hover:bg-green-700', hasUnavailable: false };
         }
 
         // For dine-in ready orders, mark as delivered (= completed)
@@ -404,7 +404,7 @@ export default function OrdersPage() {
                                 status: 'cancelled',
                                 closedAt: Timestamp.now(),
                                 cancelledBy: auth.currentUser?.uid || 'Admin',
-                                cancelReason: cancellationReason || 'Sipariş admin panelden iptal edildi',
+                                cancelReason: cancellationReason || t('siparis_admin_panelden_iptal_edildi'),
                             });
                         } catch (sessionError) {
                             console.warn('Could not clean up group session:', sessionError);
@@ -469,7 +469,7 @@ export default function OrdersPage() {
                             }
                         } catch (refundError) {
                             console.error('Error processing partial refund:', refundError);
-                            showToast('Kısmi iade işlenemedi — manuel kontrol gerekli', 'error');
+                            showToast(t('kismi_iade_islenemedi_manuel_kontrol_ger'), 'error');
                         }
                     }
 
@@ -545,18 +545,18 @@ export default function OrdersPage() {
                 }
             }
 
-            showToast('Sipariş durumu güncellendi', 'success');
+            showToast(t('siparis_durumu_guncellendi'), 'success');
             setSelectedOrder(null);
         } catch (error) {
             console.error('Error updating order:', error);
-            showToast('Durum güncellenirken hata oluştu', 'error');
+            showToast(t('durum_guncellenirken_hata_olustu'), 'error');
         }
     };
 
     // Handle cancellation with reason
     const handleCancelConfirm = async () => {
         if (!cancelOrderId || !cancelReason.trim()) {
-            showToast('Lütfen iptal sebebi girin', 'error');
+            showToast(t('lutfen_iptal_sebebi_girin'), 'error');
             return;
         }
         await updateOrderStatus(cancelOrderId, 'cancelled', cancelReason.trim());
@@ -587,7 +587,7 @@ export default function OrdersPage() {
                         status: 'cancelled',
                         closedAt: Timestamp.now(),
                         cancelledBy: 'Admin Panel',
-                        cancelReason: 'Sipariş admin panelden silindi',
+                        cancelReason: t('siparis_admin_panelden_silindi'),
                     });
                 } catch (sessionError) {
                     console.warn('Could not clean up group session:', sessionError);
@@ -595,12 +595,12 @@ export default function OrdersPage() {
                 }
             }
 
-            showToast('Sipariş silindi', 'success');
+            showToast(t('siparis_silindi'), 'success');
             setSelectedOrder(null);
             setConfirmDeleteOrderId(null);
         } catch (error) {
             console.error('Error deleting order:', error);
-            showToast('Sipariş silinirken hata oluştu', 'error');
+            showToast(t('siparis_silinirken_hata_olustu'), 'error');
         }
     };
 
@@ -661,7 +661,7 @@ export default function OrdersPage() {
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
                     <div className="flex flex-col gap-2">
                         <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                            📦 Sipariş Merkezi
+                            {t('siparis_merkezi')}
                         </h1>
                         {/* Filters inline */}
                         <div className="flex flex-wrap items-center gap-2">
@@ -670,10 +670,10 @@ export default function OrdersPage() {
                                 onChange={(e) => setDateFilter(e.target.value)}
                                 className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600"
                             >
-                                <option value="today">📅 Bugün</option>
+                                <option value="today">{t('bugun')}</option>
                                 <option value="week">📅 Bu Hafta</option>
                                 <option value="month">📅 Bu Ay</option>
-                                <option value="all">📅 Tümü</option>
+                                <option value="all">{t('tumu')}</option>
                             </select>
 
                             <select
@@ -713,7 +713,7 @@ export default function OrdersPage() {
                                                 }
                                             }}
                                             onFocus={() => setShowBusinessDropdown(true)}
-                                            placeholder="🔍 İşletme Ara..."
+                                            placeholder={t('i_sletme_ara')}
                                             className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg border border-gray-600 w-48"
                                         />
                                         {businessFilter !== 'all' && (
@@ -738,7 +738,7 @@ export default function OrdersPage() {
                                                     setShowBusinessDropdown(false);
                                                 }}
                                             >
-                                                ✓ Tüm İşletmeler
+                                                {t('tum_i_sletmeler')}
                                             </div>
                                             {filteredBusinesses.slice(0, 15).map(([id, name]) => (
                                                 <div
@@ -755,12 +755,12 @@ export default function OrdersPage() {
                                             ))}
                                             {filteredBusinesses.length === 0 && businessSearch && (
                                                 <div className="px-4 py-2 text-gray-500">
-                                                    Sonuç bulunamadı
+                                                    {t('sonuc_bulunamadi')}
                                                 </div>
                                             )}
                                             {filteredBusinesses.length > 15 && (
                                                 <div className="px-4 py-2 text-gray-500 text-sm">
-                                                    +{filteredBusinesses.length - 15} daha... (Aramayı daraltın)
+                                                    +{filteredBusinesses.length - 15} {t('daha_aramayi_daraltin')}
                                                 </div>
                                             )}
                                         </div>
@@ -774,15 +774,15 @@ export default function OrdersPage() {
                     <div className="flex gap-2 shrink-0">
                         <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl px-3 py-1.5 text-center">
                             <p className="text-xl font-bold text-blue-400">{stats.total}</p>
-                            <p className="text-[10px] text-blue-300">Toplam</p>
+                            <p className="text-[10px] text-blue-300">{t('toplam')}</p>
                         </div>
                         <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-3 py-1.5 text-center">
                             <p className="text-xl font-bold text-yellow-400">{stats.pending}</p>
-                            <p className="text-[10px] text-yellow-300">Bekleyen</p>
+                            <p className="text-[10px] text-yellow-300">{t('bekleyen')}</p>
                         </div>
                         <div className="bg-amber-600/20 border border-amber-500/30 rounded-xl px-3 py-1.5 text-center">
                             <p className="text-xl font-bold text-amber-400">{stats.preparing}</p>
-                            <p className="text-[10px] text-amber-300">Hazırlanan</p>
+                            <p className="text-[10px] text-amber-300">{t('hazirlanan')}</p>
                         </div>
                         <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-3 py-1.5 text-center">
                             <p className="text-xl font-bold text-green-400">{formatCurrency(stats.revenue)}</p>
@@ -797,10 +797,10 @@ export default function OrdersPage() {
                 <div className="bg-gray-800 rounded-xl p-6">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-white font-bold">
-                            📊 Sipariş Durumları (Anlık)
+                            {t('siparis_durumlari_anlik')}
                         </h3>
                         <span className="text-gray-400 text-sm">
-                            Şu anki siparişler
+                            {t('su_anki_siparisler')}
                         </span>
                     </div>
 
@@ -875,12 +875,12 @@ export default function OrdersPage() {
                 {loading ? (
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                        <p className="text-gray-400 mt-4">Siparişler yükleniyor...</p>
+                        <p className="text-gray-400 mt-4">{t('siparisler_yukleniyor')}</p>
                     </div>
                 ) : filteredOrders.length === 0 ? (
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
                         <p className="text-4xl mb-4">📭</p>
-                        <p className="text-gray-400">Sipariş bulunamadı</p>
+                        <p className="text-gray-400">{t('siparis_bulunamadi')}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-4">

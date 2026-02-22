@@ -585,7 +585,7 @@ export default function BusinessesPage() {
             showToast(t('bilgilerGoogledanCekildiKontrolEdipEksikleri'), 'success');
             setActiveTab('manual');
         } catch (error: any) {
-            console.error('Import error:', error);
+            console.error(t('import_error'), error);
             showToast(t('iceAktarmaBasarisiz') + error.message, 'error');
         } finally {
             setIsImporting(false);
@@ -1004,7 +1004,7 @@ export default function BusinessesPage() {
                         >
                             <option value="all">{t('tumDurumlar')}</option>
                             <option value="active">✅ Aktif</option>
-                            <option value="inactive">🔴 Pasif</option>
+                            <option value="inactive">{t('pasif')}</option>
                             <option value="archived">{t('arsiv')}</option>
                         </select>
                     </div>
@@ -1041,7 +1041,7 @@ export default function BusinessesPage() {
                                     <thead className="bg-pink-900/30 text-pink-300 text-sm">
                                         <tr>
                                             <th className="px-4 py-3">🎪 Kermes</th>
-                                            <th className="px-4 py-3">📅 Tarih</th>
+                                            <th className="px-4 py-3">{t('tarih')}</th>
                                             <th className="px-4 py-3">📍 Konum</th>
                                             <th className="px-4 py-3">{t('menu')}</th>
                                             <th className="px-4 py-3">📊 Durum</th>
@@ -1245,7 +1245,7 @@ export default function BusinessesPage() {
                                     <table className="w-full text-left">
                                         <thead className="bg-gray-700/50 text-gray-400 text-sm">
                                             <tr>
-                                                <th className="px-4 py-3 w-20">ID</th>
+                                                <th className="px-4 py-3 w-20">{t('id')}</th>
                                                 <th className="px-4 py-3">{t('isletme')}</th>
                                                 <th className="px-4 py-3">Marka</th>
                                                 <th className="px-4 py-3">{t('tur')}</th>
@@ -1336,7 +1336,7 @@ export default function BusinessesPage() {
                                                                     : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
                                                                     } transition`}
                                                             >
-                                                                {business.isActive !== false ? '✅ Aktif' : '🔴 Pasif'}
+                                                                {business.isActive !== false ? '✅ Aktif' : t('pasif')}
                                                             </button>
                                                         </td>
                                                         {/* Actions Column */}
@@ -1364,7 +1364,7 @@ export default function BusinessesPage() {
                                 {totalPages > 1 && (
                                     <div className="flex items-center justify-between mt-4 px-4">
                                         <p className="text-sm text-gray-400">
-                                            Toplam {filteredBusinesses.length} {t('isletmeden')} {(currentPage - 1) * BUSINESSES_PER_PAGE + 1}-{Math.min(currentPage * BUSINESSES_PER_PAGE, filteredBusinesses.length)} {t('gosteriliyor')}
+                                            {t('toplam')} {filteredBusinesses.length} {t('isletmeden')} {(currentPage - 1) * BUSINESSES_PER_PAGE + 1}-{Math.min(currentPage * BUSINESSES_PER_PAGE, filteredBusinesses.length)} {t('gosteriliyor')}
                                         </p>
                                         <div className="flex gap-2">
                                             <button
@@ -1542,14 +1542,14 @@ export default function BusinessesPage() {
                                     {formData.googlePlaceId && (
                                         <div className="col-span-2 bg-green-900/20 rounded-xl p-4 border border-green-700/50">
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="text-green-400 text-sm font-medium">🌍 Google Verisi Aktif</span>
+                                                <span className="text-green-400 text-sm font-medium">{t('google_verisi_aktif')}</span>
                                                 {formData.rating > 0 && (
                                                     <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm font-medium">
                                                         ⭐ {formData.rating} ({formData.reviewCount} {t('degerlendirme')}
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-gray-400 text-xs">Place ID: {formData.googlePlaceId}</p>
+                                            <p className="text-gray-400 text-xs">{t('place_id')} {formData.googlePlaceId}</p>
                                             {formData.openingHours && (
                                                 <p className="text-gray-400 text-xs mt-1">{t('calismaSaatleri')} {formData.openingHours.substring(0, 50)}...</p>
                                             )}
@@ -1688,7 +1688,7 @@ export default function BusinessesPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-gray-400 text-sm mb-1">Toplam Koltuk Kapasitesi</label>
+                                            <label className="block text-gray-400 text-sm mb-1">{t('toplam_koltuk_kapasitesi')}</label>
                                             <input
                                                 type="number"
                                                 min="0"
@@ -1742,11 +1742,11 @@ export default function BusinessesPage() {
                                 </h3>
 
                                 {/* Brand Label - SUPER ADMIN ONLY - Only for Kasap & Restoran */}
-                                {(formData.type === 'kasap' || formData.type === 'restoran') && (
+                                {(formData.type === 'kasap' || formData.type === t('restoran')) && (
                                     <div className="bg-gradient-to-r from-amber-900/30 to-red-900/30 rounded-lg p-3 border border-amber-600/40">
                                         <h4 className="text-amber-400 text-sm font-bold mb-2 flex items-center gap-2">
                                             🏷️ Marka Etiketi
-                                            <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">SUPER ADMIN</span>
+                                            <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">{t('super_admin')}</span>
                                         </h4>
                                         <p className="text-gray-400 text-xs mb-3">{t('buEtiketSadeceSuperAdminTarafindan')}</p>
                                         <div className="flex gap-2">
@@ -1809,7 +1809,7 @@ export default function BusinessesPage() {
                                             />
                                         </div>
                                         <div className="col-span-2">
-                                            <label className="block text-gray-500 text-xs mb-1">IBAN</label>
+                                            <label className="block text-gray-500 text-xs mb-1">{t('iban')}</label>
                                             <input
                                                 type="text"
                                                 value={formData.bankIban}
@@ -1819,7 +1819,7 @@ export default function BusinessesPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-gray-500 text-xs mb-1">BIC/SWIFT</label>
+                                            <label className="block text-gray-500 text-xs mb-1">{t('bic_swift')}</label>
                                             <input
                                                 type="text"
                                                 value={formData.bankBic}
@@ -1842,7 +1842,7 @@ export default function BusinessesPage() {
                                                 onChange={(e) => setFormData({ ...formData, subscriptionPlan: e.target.value })}
                                                 className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                                             >
-                                                <option value="none">⊘ Plan Yok</option>
+                                                <option value="none">{t('plan_yok')}</option>
                                                 {availablePlans.map(plan => (
                                                     <option key={plan.code} value={plan.code}>{plan.name}</option>
                                                 ))}
@@ -1855,7 +1855,7 @@ export default function BusinessesPage() {
                                                 onChange={(e) => setFormData({ ...formData, subscriptionStatus: e.target.value as any })}
                                                 className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                                             >
-                                                <option value="active">✓ Aktif</option>
+                                                <option value="active">{t('aktif')}</option>
                                                 <option value="trial">🎁 Deneme</option>
                                                 <option value="paused">⏸ Durduruldu</option>
                                                 <option value="cancelled">{t('iptal')}</option>
@@ -1902,7 +1902,7 @@ export default function BusinessesPage() {
                                             </div>
                                             <div className="text-center">
                                                 <p className="text-2xl font-bold text-green-400">€{editingBusiness.orderStats?.totalRevenue?.toFixed(0) || '0'}</p>
-                                                <p className="text-gray-500 text-xs">Toplam Ciro</p>
+                                                <p className="text-gray-500 text-xs">{t('toplam_ciro')}</p>
                                             </div>
                                             <div className="text-center">
                                                 <p className="text-sm text-gray-300">
@@ -1928,7 +1928,7 @@ export default function BusinessesPage() {
                                             </div>
                                             <div className="text-center">
                                                 <p className="text-xl font-bold text-white">€{editingBusiness.billing?.lastPaymentAmount?.toFixed(2) || '0.00'}</p>
-                                                <p className="text-gray-500 text-xs">Son Tutar</p>
+                                                <p className="text-gray-500 text-xs">{t('son_tutar')}</p>
                                             </div>
                                             <div className="text-center">
                                                 <p className={`text-xl font-bold ${(editingBusiness.billing?.openBalance || 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>

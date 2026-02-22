@@ -7,6 +7,7 @@ import { collection, getDocs, doc, setDoc, deleteDoc, query, orderBy } from 'fir
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 interface KermesMenuItem {
     id: string;
@@ -33,6 +34,8 @@ const UNIT_OPTIONS = [
 ];
 
 export default function KermesMenusPage() {
+
+    const t = useTranslations('AdminSettingsKermesmenus');
     const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
@@ -85,7 +88,7 @@ export default function KermesMenusPage() {
                 setCategories(catDoc.data().categories || []);
             } else {
                 // Default categories
-                setCategories(['Ana Yemek', 'Çorba', 'Tatlı', 'İçecek', 'Atıştırmalık']);
+                setCategories(['Ana Yemek', t('corba'), t('tatli'), t('i_cecek'), t('atistirmalik')]);
             }
 
             // Load menu items
@@ -108,7 +111,7 @@ export default function KermesMenusPage() {
 
     const handleSaveItem = async () => {
         if (!formData.name || !formData.category || !formData.sku) {
-            alert('Lütfen zorunlu alanları doldurun!');
+            alert(t('lutfen_zorunlu_alanlari_doldurun'));
             return;
         }
 
@@ -138,7 +141,7 @@ export default function KermesMenusPage() {
             resetForm();
         } catch (error) {
             console.error('Error saving item:', error);
-            alert('Kaydetme hatası!');
+            alert(t('kaydetme_hatasi'));
         } finally {
             setSaving(false);
         }
@@ -224,7 +227,7 @@ export default function KermesMenusPage() {
     if (!admin || admin.role !== 'super_admin') {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-white">Erişim reddedildi - Sadece Super Admin</div>
+                <div className="text-white">{t('erisim_reddedildi_sadece_super_admin')}</div>
             </div>
         );
     }
@@ -234,16 +237,16 @@ export default function KermesMenusPage() {
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <Link href="/admin/kermes" className="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-2">
-                    ← Kermes Yönetimi
+                    {t('kermes_yonetimi')}
                 </Link>
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2 mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            🍽️ Kermes Menüleri
+                            {t('kermes_menuleri')}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            Tüm kermes menü öğelerini yönetin • {menuItems.length} ürün
+                            {t('tum_kermes_menu_ogelerini_yonetin')} {menuItems.length} {t('urun')}
                         </p>
                     </div>
                     <button
@@ -261,7 +264,7 @@ export default function KermesMenusPage() {
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                         <input
                             type="text"
-                            placeholder="Ürün adı veya SKU ara..."
+                            placeholder={t('urun_adi_veya_sku_ara')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
@@ -272,7 +275,7 @@ export default function KermesMenusPage() {
                         onChange={(e) => setSelectedCategory(e.target.value)}
                         className="px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
                     >
-                        <option value="all">Tüm Kategoriler</option>
+                        <option value="all">{t('tum_kategoriler')}</option>
                         {categories.map(cat => (
                             <option key={cat} value={cat}>{cat}</option>
                         ))}
@@ -314,7 +317,7 @@ export default function KermesMenusPage() {
                                     onClick={() => openEditModal(item)}
                                     className="flex-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition"
                                 >
-                                    ✏️ Düzenle
+                                    {t('duzenle')}
                                 </button>
                                 <button
                                     onClick={() => handleToggleActive(item)}
@@ -336,8 +339,8 @@ export default function KermesMenusPage() {
                 {filteredItems.length === 0 && (
                     <div className="text-center py-12 text-gray-400">
                         <p className="text-4xl mb-4">🍽️</p>
-                        <p>Henüz menü öğesi yok</p>
-                        <p className="text-sm mt-2">Yeni bir menü öğesi ekleyerek başlayın</p>
+                        <p>{t('henuz_menu_ogesi_yok')}</p>
+                        <p className="text-sm mt-2">{t('yeni_bir_menu_ogesi_ekleyerek_baslayin')}</p>
                     </div>
                 )}
             </div>
@@ -347,7 +350,7 @@ export default function KermesMenusPage() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold text-white mb-4">
-                            {editingItem ? '✏️ Menü Düzenle' : '➕ Yeni Menü Ekle'}
+                            {editingItem ? t('menu_duzenle') : t('yeni_menu_ekle')}
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -362,13 +365,13 @@ export default function KermesMenusPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Kategori *</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('kategori')}</label>
                                 <select
                                     value={formData.category}
                                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg"
                                 >
-                                    <option value="">Kategori Seç</option>
+                                    <option value="">{t('kategori_sec')}</option>
                                     {categories.map(cat => (
                                         <option key={cat} value={cat}>{cat}</option>
                                     ))}
@@ -395,17 +398,17 @@ export default function KermesMenusPage() {
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Açıklama (TR)</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('aciklama_tr')}</label>
                                 <textarea
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg"
                                     rows={2}
-                                    placeholder="Ürün açıklaması..."
+                                    placeholder={t('urun_aciklamasi')}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Varsayılan Fiyat (€)</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('varsayilan_fiyat')}</label>
                                 <input
                                     type="number"
                                     step="0.50"
@@ -427,13 +430,13 @@ export default function KermesMenusPage() {
                                 </select>
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Etiketler (virgülle ayırın)</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('etiketler_virgulle_ayirin')}</label>
                                 <input
                                     type="text"
                                     value={formData.tags}
                                     onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg"
-                                    placeholder="popüler, vejetaryen"
+                                    placeholder={t('populer_vejetaryen')}
                                 />
                             </div>
                         </div>
@@ -450,7 +453,7 @@ export default function KermesMenusPage() {
                                 disabled={saving}
                                 className="flex-1 px-4 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-lg hover:from-pink-500 hover:to-purple-500 transition disabled:opacity-50"
                             >
-                                {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                                {saving ? 'Kaydediliyor...' : t('kaydet')}
                             </button>
                         </div>
                     </div>
@@ -462,11 +465,11 @@ export default function KermesMenusPage() {
                 isOpen={!!confirmDeleteItemId}
                 onClose={() => setConfirmDeleteItemId(null)}
                 onConfirm={handleDeleteItemConfirm}
-                title="Menü Öğesi Sil"
-                message="Bu menü öğesini silmek istediğinize emin misiniz?"
+                title={t('menu_ogesi_sil')}
+                message={t('bu_menu_ogesini_silmek_istediginize_emin')}
                 itemName={menuItems.find(i => i.id === confirmDeleteItemId)?.name}
                 variant="danger"
-                confirmText="Evet, Sil"
+                confirmText={t('evet_sil')}
                 loadingText="Siliniyor..."
             />
         </div>

@@ -313,27 +313,102 @@ export default function AdminHeader() {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="flex flex-wrap gap-2 mt-2 items-center">
+                            {/* İşletmeler Dropdown */}
+                            <div className="relative group">
+                                <button
+                                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${isActiveNav('/admin/business') ||
+                                        isActiveNav('/admin/sectors') ||
+                                        isActiveNav('/admin/kermes')
+                                        ? 'bg-white/20 border-white/40 text-white'
+                                        : 'bg-indigo-800/50 hover:bg-indigo-700 border-indigo-600 text-indigo-100'
+                                        }`}
+                                >
+                                    <span className="text-lg">🏪</span>
+                                    <span className="text-sm font-medium">{t('businesses')}</span>
+                                    <span className="text-[10px] ml-1">▼</span>
+
+                                    {(isActiveNav('/admin/business') || isActiveNav('/admin/sectors') || isActiveNav('/admin/kermes')) && (
+                                        <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full" />
+                                    )}
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                <div className="absolute left-0 top-full mt-2 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
+                                    <div className="py-1">
+                                        <Link
+                                            href="/admin/business"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/business') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span className="text-lg">🏪</span> {t('businesses')}
+                                        </Link>
+                                        <Link
+                                            href="/admin/sectors"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/sectors') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span className="text-lg">🏭</span> {t('sectors')}
+                                        </Link>
+                                        <Link
+                                            href="/admin/kermes"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/kermes') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span className="text-lg">🎪</span> {t('kermes')}
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Muhasebe Dropdown */}
+                            <div className="relative group">
+                                <button
+                                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${isActiveNav('/admin/invoices') ||
+                                        isActiveNav('/admin/commissions') ||
+                                        isActiveNav('/admin/plans')
+                                        ? 'bg-white/20 border-white/40 text-white'
+                                        : 'bg-indigo-800/50 hover:bg-indigo-700 border-indigo-600 text-indigo-100'
+                                        }`}
+                                >
+                                    <span className="text-lg">🧾</span>
+                                    <span className="text-sm font-medium">{t('accounting')}</span>
+                                    <span className="text-[10px] ml-1">▼</span>
+
+                                    {(isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans')) && (
+                                        <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full" />
+                                    )}
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                <div className="absolute left-0 top-full mt-2 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
+                                    <div className="py-1">
+                                        <Link
+                                            href="/admin/invoices"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/invoices') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span className="text-lg">📄</span> {t('invoices')}
+                                        </Link>
+                                        <Link
+                                            href="/admin/commissions"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/commissions') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span className="text-lg">💰</span> {t('commissions')}
+                                        </Link>
+                                        <Link
+                                            href="/admin/plans"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/plans') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span className="text-lg">📅</span> {t('plans')}
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Navigation Chips - Consistent styling with active underline */}
                             {[
-                                { href: '/admin/business', icon: '🏪', label: t('businesses') },
                                 { href: '/admin/orders', icon: '📦', label: t('orders') },
-                                { href: '/admin/products', icon: '📋', label: t('masterCatalog') },
-                                { href: '/admin/invoices', icon: '📄', label: t('invoices') },
-                                { href: '/admin/commissions', icon: '💰', label: t('commissions') },
-                                { href: '/admin/plans', icon: '📅', label: t('plans') },
-                                { href: '/admin/activity-logs', icon: '📝', label: t('activityLogs') },
-                                { href: '/admin/dashboard', icon: '👥', label: t('userManagement') },
+                                { href: '/admin/products', icon: '📋', label: t('productsCategories') },
+                                { href: '/admin/activity-logs', icon: '🎧', label: t('activityLogs') },
                                 { href: '/admin/analytics', icon: '📊', label: t('analytics') },
-                                { href: '/admin/sectors', icon: '🏭', label: t('sectors') },
-                                { href: '/admin/kermes', icon: '🎪', label: t('kermes') },
-                                { href: '/admin/drivers', icon: '🚗', label: t('drivers') },
                                 { href: '/admin/reservations', icon: '🍽️', label: t('reservations') },
-                                { href: '/admin/staff-shifts', icon: '⏱️', label: t('shifts') },
-                                { href: '/admin/image-generator', icon: '🎨', label: t('imageGen') },
-                                { href: '/admin/ai-menu', icon: '🤖', label: t('aiMenu') },
-                                { href: '/admin/ui-translations', icon: '🌍', label: t('uiTranslations') },
-                                { href: '/admin/settings', icon: '⚙️', label: t('settings') },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);
                                 return (
@@ -354,6 +429,101 @@ export default function AdminHeader() {
                                     </Link>
                                 );
                             })}
+
+                            {/* Kullanıcı & Personel Dropdown */}
+                            <div className="relative group">
+                                <button
+                                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${isActiveNav('/admin/dashboard') ||
+                                        isActiveNav('/admin/drivers') ||
+                                        isActiveNav('/admin/staff-dashboard')
+                                        ? 'bg-white/20 border-white/40 text-white'
+                                        : 'bg-indigo-800/50 hover:bg-indigo-700 border-indigo-600 text-indigo-100'
+                                        }`}
+                                >
+                                    <span className="text-lg">👥</span>
+                                    <span className="text-sm font-medium">{t('usersAndStaff')}</span>
+                                    <span className="text-[10px] ml-1">▼</span>
+
+                                    {(isActiveNav('/admin/dashboard') || isActiveNav('/admin/drivers') || isActiveNav('/admin/staff-dashboard')) && (
+                                        <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full" />
+                                    )}
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                <div className="absolute right-0 top-full mt-2 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
+                                    <div className="py-1">
+                                        <Link
+                                            href="/admin/drivers"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/drivers') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span className="text-lg">🚗</span> {t('drivers')}
+                                        </Link>
+                                        <Link
+                                            href="/admin/staff-dashboard"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/staff-dashboard') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span className="text-lg">👔</span> {t('staff')}
+                                        </Link>
+                                        <Link
+                                            href="/admin/dashboard"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/dashboard') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span className="text-lg">👥</span> {t('userManagement')}
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Settings Dropdown */}
+                            <div className="relative group">
+                                <button
+                                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${isActiveNav('/admin/settings') ||
+                                        isActiveNav('/admin/image-generator') ||
+                                        isActiveNav('/admin/ai-menu') ||
+                                        isActiveNav('/admin/ui-translations')
+                                        ? 'bg-white/20 border-white/40 text-white'
+                                        : 'bg-indigo-800/50 hover:bg-indigo-700 border-indigo-600 text-indigo-100'
+                                        }`}
+                                >
+                                    <span className="text-lg">⚙️</span>
+                                    <span className="text-sm font-medium">{t('settings')}</span>
+                                    <span className="text-[10px] ml-1">▼</span>
+
+                                    {(isActiveNav('/admin/settings') || isActiveNav('/admin/image-generator') || isActiveNav('/admin/ai-menu') || isActiveNav('/admin/ui-translations')) && (
+                                        <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full" />
+                                    )}
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                <div className="absolute right-0 top-full mt-2 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
+                                    <div className="py-1">
+                                        <Link
+                                            href="/admin/settings"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/settings') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span>⚙️</span> {t('settings')}
+                                        </Link>
+                                        <Link
+                                            href="/admin/ui-translations"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/ui-translations') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span>🌍</span> {t('uiTranslations')}
+                                        </Link>
+                                        <Link
+                                            href="/admin/image-generator"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/image-generator') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span>🎨</span> {t('imageGen')}
+                                        </Link>
+                                        <Link
+                                            href="/admin/ai-menu"
+                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/ai-menu') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                        >
+                                            <span>🤖</span> {t('aiMenu')}
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -407,8 +577,6 @@ export default function AdminHeader() {
                                     { href: '/admin/dashboard?view=customers', label: t('customers') },
                                     { href: '/admin/orders/suppliers', label: t('suppliers') },
                                     { href: '/admin/products', label: t('productsCategories') },
-                                    { href: '/admin/staff-dashboard', label: t('staff') },
-                                    { href: '/admin/settings', label: t('settings') },
                                 ].map(({ href, label }) => (
                                     <Link
                                         key={href}
@@ -421,6 +589,79 @@ export default function AdminHeader() {
                                         {label}
                                     </Link>
                                 ))}
+
+                                {/* Personel Dropdown for Regular Admin */}
+                                <div className="relative group">
+                                    <button
+                                        className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/staff-dashboard') ||
+                                            isActiveNav('/admin/staff-shifts')
+                                            ? 'bg-white/15 text-white'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                                            }`}
+                                    >
+                                        {t('staff')}
+                                        <span className="text-[10px]">▼</span>
+                                    </button>
+
+                                    {/* Dropdown Menu */}
+                                    <div className="absolute right-0 top-full mt-2 bg-slate-800 rounded-lg shadow-xl border border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
+                                        <div className="py-1">
+                                            <Link
+                                                href="/admin/staff-dashboard"
+                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/staff-dashboard') ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                                            >
+                                                {t('staff')}
+                                            </Link>
+                                            <Link
+                                                href="/admin/staff-shifts"
+                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/staff-shifts') ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                                            >
+                                                {t('shifts')}
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Settings Dropdown for Regular Admin */}
+                                <div className="relative group">
+                                    <button
+                                        className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/settings') ||
+                                            isActiveNav('/admin/delivery-settings')
+                                            ? 'bg-white/15 text-white'
+                                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                                            }`}
+                                    >
+                                        {t('settings')}
+                                        <span className="text-[10px]">▼</span>
+                                    </button>
+
+                                    {/* Dropdown Menu */}
+                                    <div className="absolute right-0 top-full mt-2 bg-slate-800 rounded-lg shadow-xl border border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
+                                        <div className="py-1">
+                                            <Link
+                                                href="/admin/settings"
+                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/settings') ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                                            >
+                                                {t('settings')}
+                                            </Link>
+                                            <Link
+                                                href="/admin/delivery-settings"
+                                                className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/delivery-settings') ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                                            >
+                                                Teslimat Ayarları
+                                            </Link>
+                                            {/* Add AI Menu here for regular admins as well if it's available for them */}
+                                            {admin?.adminType === 'restoran' && (
+                                                <Link
+                                                    href="/admin/ai-menu"
+                                                    className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/ai-menu') ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+                                                >
+                                                    {t('aiMenu')}
+                                                </Link>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Profile & Role */}
@@ -532,7 +773,7 @@ export default function AdminHeader() {
                                                             ? 'bg-red-600/30 text-red-300'
                                                             : 'bg-purple-600/30 text-purple-300'
                                                             }`}>
-                                                            {(user.appSource || user.platform)?.toLowerCase()?.includes('lokma') ? '🍖 LOKMA' : '✨ MIRA'}
+                                                            {(user.appSource || user.platform)?.toLowerCase()?.includes('lokma') ? '🍖 LOKMA' : t('mira')}
                                                         </span>
                                                     )}
                                                 </div>

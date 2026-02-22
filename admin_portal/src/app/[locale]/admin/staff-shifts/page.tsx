@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useTranslations } from 'next-intl';
 
 interface ShiftRecord {
     id: string;
@@ -23,7 +24,9 @@ interface ShiftRecord {
 }
 
 export default function StaffShiftsPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminStaffshifts');
+const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
 
     const [shifts, setShifts] = useState<ShiftRecord[]>([]);
@@ -123,7 +126,7 @@ export default function StaffShiftsPage() {
     const exportCSV = () => {
         setExporting(true);
         try {
-            const headers = ['Personel', 'Tarih', 'Başlangıç', 'Bitiş', 'Toplam (dk)', 'Mola (dk)', 'Net (dk)', 'Masalar', 'Kurye', 'Durum'];
+            const headers = ['Personel', t('tarih'), 'Başlangıç', 'Bitiş', t('toplam_dk'), 'Mola (dk)', 'Net (dk)', 'Masalar', 'Kurye', 'Durum'];
             const rows = shifts.map(s => [
                 s.staffName,
                 s.date,
@@ -140,7 +143,7 @@ export default function StaffShiftsPage() {
             // Add summary section
             rows.push([]);
             rows.push(['=== ÖZET ===']);
-            rows.push(['Personel', 'Toplam Vardiya', 'Toplam Süre', 'Toplam Mola', 'Net Çalışma', 'Kurye Vardiya']);
+            rows.push(['Personel', t('toplam_vardiya'), 'Toplam Süre', t('toplam_mola'), 'Net Çalışma', 'Kurye Vardiya']);
             staffSummary.forEach(s => {
                 rows.push([
                     s.name,
@@ -281,7 +284,7 @@ export default function StaffShiftsPage() {
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                             ⏱️ Çalışma Saatleri
                         </h1>
-                        <p className="text-gray-400 mt-1">Personel vardiya takibi ve raporlama</p>
+                        <p className="text-gray-400 mt-1">{t('personel_vardiya_takibi_ve_raporlama')}</p>
                     </div>
                     <div className="flex items-center gap-3">
                         {/* Month Selector */}
@@ -312,7 +315,7 @@ export default function StaffShiftsPage() {
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-5">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Toplam Vardiya</p>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('toplam_vardiya')}</p>
                         <p className="text-3xl font-black text-white mt-1">{shifts.length}</p>
                     </div>
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-5">
@@ -326,7 +329,7 @@ export default function StaffShiftsPage() {
                         </p>
                     </div>
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-5">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Toplam Mola</p>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('toplam_mola')}</p>
                         <p className="text-3xl font-black text-amber-400 mt-1">
                             {formatMinutes(staffSummary.reduce((t, s) => t + s.pauseMinutes, 0))}
                         </p>
@@ -346,7 +349,7 @@ export default function StaffShiftsPage() {
                                     <tr className="border-b border-gray-700">
                                         <th className="text-left px-5 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Personel</th>
                                         <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Vardiya</th>
-                                        <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Toplam</th>
+                                        <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('toplam')}</th>
                                         <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Mola</th>
                                         <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Net Çalışma</th>
                                         <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Kurye</th>
@@ -400,10 +403,10 @@ export default function StaffShiftsPage() {
                                 <thead>
                                     <tr className="border-b border-gray-700">
                                         <th className="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase">Personel</th>
-                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Tarih</th>
+                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('tarih')}</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Başlangıç</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Bitiş</th>
-                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Toplam</th>
+                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('toplam')}</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Mola</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Net</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Masalar</th>
@@ -438,7 +441,7 @@ export default function StaffShiftsPage() {
                                                     ? 'bg-green-900/40 text-green-400 border border-green-700/40'
                                                     : 'bg-gray-700/40 text-gray-400 border border-gray-600/40'
                                                     }`}>
-                                                    {s.status === 'active' ? '🟢 Aktif' : '✓ Bitti'}
+                                                    {s.status === 'active' ? t('aktif') : '✓ Bitti'}
                                                 </span>
                                             </td>
                                         </tr>

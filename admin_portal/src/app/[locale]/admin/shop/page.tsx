@@ -5,6 +5,7 @@ import { collection, getDocs, query, where, orderBy, limit } from 'firebase/fire
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 interface ShopStats {
     totalProducts: number;
@@ -24,7 +25,9 @@ interface RecentOrder {
 }
 
 export default function ShopDashboard() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminShop');
+const { admin, loading: adminLoading } = useAdmin();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<ShopStats>({
         totalProducts: 0,
@@ -103,8 +106,8 @@ export default function ShopDashboard() {
 
     const statusLabels: Record<string, string> = {
         pending: 'Bekliyor',
-        confirmed: 'Onaylandı',
-        preparing: 'Hazırlanıyor',
+        confirmed: t('onaylandi'),
+        preparing: t('hazirlaniyor'),
         shipped: 'Kargoda',
         delivered: 'Teslim Edildi',
         cancelled: 'İptal'
@@ -124,7 +127,7 @@ export default function ShopDashboard() {
                                 🛍️ E-Ticaret / Online Shop
                             </h1>
                             <p className="text-gray-400 text-sm mt-1">
-                                Monte Bueno & Diğer Markalar
+                                {t('monte_bueno_diger_markalar')}
                             </p>
                         </div>
                     </div>
@@ -134,14 +137,14 @@ export default function ShopDashboard() {
                             className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-500 hover:to-indigo-500 transition shadow-lg flex items-center gap-2"
                         >
                             <span>📦</span>
-                            Ürünler
+                            {t('urunler')}
                         </Link>
                         <Link
                             href="/admin/shop/orders"
                             className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-500 hover:to-emerald-500 transition shadow-lg flex items-center gap-2"
                         >
                             <span>📋</span>
-                            Siparişler
+                            {t('siparisler')}
                         </Link>
                     </div>
                 </div>
@@ -153,22 +156,22 @@ export default function ShopDashboard() {
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                         <div className="text-3xl mb-2">📦</div>
                         <div className="text-2xl font-bold text-white">{stats.totalProducts}</div>
-                        <div className="text-gray-400 text-sm">Toplam Ürün</div>
+                        <div className="text-gray-400 text-sm">{t('toplam_urun')}</div>
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                         <div className="text-3xl mb-2">✅</div>
                         <div className="text-2xl font-bold text-green-400">{stats.activeProducts}</div>
-                        <div className="text-gray-400 text-sm">Aktif Ürün</div>
+                        <div className="text-gray-400 text-sm">{t('aktif_urun')}</div>
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                         <div className="text-3xl mb-2">⏳</div>
                         <div className="text-2xl font-bold text-yellow-400">{stats.pendingOrders}</div>
-                        <div className="text-gray-400 text-sm">Bekleyen Sipariş</div>
+                        <div className="text-gray-400 text-sm">{t('bekleyen_siparis')}</div>
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                         <div className="text-3xl mb-2">📅</div>
                         <div className="text-2xl font-bold text-blue-400">{stats.todayOrders}</div>
-                        <div className="text-gray-400 text-sm">Bugün</div>
+                        <div className="text-gray-400 text-sm">{t('bugun')}</div>
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                         <div className="text-3xl mb-2">💰</div>
@@ -183,16 +186,16 @@ export default function ShopDashboard() {
                 {/* Quick Actions */}
                 <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
                     <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        ⚡ Hızlı İşlemler
+                        {t('hizli_i_slemler')}
                     </h2>
                     <div className="grid grid-cols-2 gap-3">
                         <Link href="/admin/shop/products?action=add" className="bg-purple-600/20 hover:bg-purple-600/30 border border-purple-600/30 rounded-xl p-4 text-center transition">
                             <div className="text-2xl mb-2">➕</div>
-                            <div className="text-purple-300 text-sm font-medium">Yeni Ürün Ekle</div>
+                            <div className="text-purple-300 text-sm font-medium">{t('yeni_urun_ekle')}</div>
                         </Link>
                         <Link href="/admin/shop/orders?status=pending" className="bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-600/30 rounded-xl p-4 text-center transition">
                             <div className="text-2xl mb-2">📋</div>
-                            <div className="text-yellow-300 text-sm font-medium">Bekleyen Siparişler</div>
+                            <div className="text-yellow-300 text-sm font-medium">{t('bekleyen_siparisler')}</div>
                         </Link>
                         <Link href="/admin/shop/orders?status=shipped" className="bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-600/30 rounded-xl p-4 text-center transition">
                             <div className="text-2xl mb-2">🚚</div>
@@ -200,7 +203,7 @@ export default function ShopDashboard() {
                         </Link>
                         <Link href="/admin/shop/products" className="bg-gray-700/50 hover:bg-gray-700 border border-gray-600 rounded-xl p-4 text-center transition">
                             <div className="text-2xl mb-2">📊</div>
-                            <div className="text-gray-300 text-sm font-medium">Stok Kontrolü</div>
+                            <div className="text-gray-300 text-sm font-medium">{t('stok_kontrolu')}</div>
                         </Link>
                     </div>
                 </div>
@@ -209,16 +212,16 @@ export default function ShopDashboard() {
                 <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                            📋 Son Siparişler
+                            {t('son_siparisler')}
                         </h2>
                         <Link href="/admin/shop/orders" className="text-blue-400 hover:text-blue-300 text-sm">
-                            Tümünü Gör →
+                            {t('tumunu_gor')}
                         </Link>
                     </div>
                     {recentOrders.length === 0 ? (
                         <div className="text-center py-8">
                             <div className="text-4xl mb-3">📭</div>
-                            <p className="text-gray-400">Henüz sipariş yok</p>
+                            <p className="text-gray-400">{t('henuz_siparis_yok')}</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -254,12 +257,12 @@ export default function ShopDashboard() {
                     <div className="bg-gradient-to-br from-yellow-900/50 to-amber-900/50 border border-yellow-700/50 rounded-xl p-6 text-center">
                         <div className="text-4xl mb-3">🫒</div>
                         <h3 className="text-white font-bold">Monte Bueno</h3>
-                        <p className="text-yellow-300/70 text-sm">Zeytinyağı & Zeytin</p>
+                        <p className="text-yellow-300/70 text-sm">{t('zeytinyagi_zeytin')}</p>
                     </div>
                     <div className="bg-gray-800/50 border border-gray-700/50 rounded-xl p-6 text-center opacity-50">
                         <div className="text-4xl mb-3">🌿</div>
-                        <h3 className="text-gray-400 font-bold">Yeni Marka</h3>
-                        <p className="text-gray-500 text-sm">Yakında...</p>
+                        <h3 className="text-gray-400 font-bold">{t('yeni_marka')}</h3>
+                        <p className="text-gray-500 text-sm">{t('yakinda')}</p>
                     </div>
                 </div>
             </div>

@@ -5,6 +5,7 @@ import { collection, getDocs, updateDoc, doc, query, orderBy } from 'firebase/fi
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 interface ShopOrder {
     id: string;
@@ -61,7 +62,9 @@ const CARRIER_OPTIONS = [
 ];
 
 export default function ShopOrdersPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminShopOrders');
+const { admin, loading: adminLoading } = useAdmin();
 
     const [loading, setLoading] = useState(true);
     const [orders, setOrders] = useState<ShopOrder[]>([]);
@@ -197,19 +200,19 @@ export default function ShopOrdersPage() {
                     <div className="flex items-center gap-4">
                         <Link href="/admin/shop" className="text-gray-400 hover:text-white">← E-Ticaret</Link>
                         <div>
-                            <h1 className="text-2xl font-bold text-white flex items-center gap-2">📋 Sipariş Yönetimi</h1>
+                            <h1 className="text-2xl font-bold text-white flex items-center gap-2">{t('siparis_yonetimi')}</h1>
                             <p className="text-gray-400 text-sm mt-1">{filteredOrders.length} sipariş</p>
                         </div>
                     </div>
                     <div className="flex gap-2">
                         {pendingCount > 0 && (
                             <span className="bg-yellow-600/20 text-yellow-400 px-3 py-1 rounded-lg text-sm">
-                                ⏳ {pendingCount} Bekleyen
+                                ⏳ {pendingCount} {t('bekleyen')}
                             </span>
                         )}
                         {confirmedCount > 0 && (
                             <span className="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-lg text-sm">
-                                ✅ {confirmedCount} Hazırlanacak
+                                ✅ {confirmedCount} {t('hazirlanacak')}
                             </span>
                         )}
                         {shippedCount > 0 && (
@@ -226,7 +229,7 @@ export default function ShopOrdersPage() {
                 <div className="flex flex-wrap gap-3">
                     <input
                         type="text"
-                        placeholder="🔍 Sipariş ara..."
+                        placeholder={t('siparis_ara')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-green-500"
@@ -236,7 +239,7 @@ export default function ShopOrdersPage() {
                         onChange={(e) => setSelectedStatus(e.target.value)}
                         className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-green-500"
                     >
-                        <option value="all">Tüm Durumlar</option>
+                        <option value="all">{t('tum_durumlar')}</option>
                         {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
                 </div>
@@ -247,8 +250,8 @@ export default function ShopOrdersPage() {
                 {filteredOrders.length === 0 ? (
                     <div className="bg-gray-800 rounded-xl p-12 text-center border border-gray-700">
                         <div className="text-6xl mb-4">📭</div>
-                        <h2 className="text-xl font-bold text-white mb-2">Sipariş Bulunamadı</h2>
-                        <p className="text-gray-400">Henüz sipariş yok veya filtreye uygun sipariş bulunamadı.</p>
+                        <h2 className="text-xl font-bold text-white mb-2">{t('siparis_bulunamadi')}</h2>
+                        <p className="text-gray-400">{t('henuz_siparis_yok_veya_filtreye_uygun_si')}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -272,7 +275,7 @@ export default function ShopOrdersPage() {
                                 <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                                     {/* Customer */}
                                     <div>
-                                        <h4 className="text-gray-400 text-sm mb-2">👤 Müşteri</h4>
+                                        <h4 className="text-gray-400 text-sm mb-2">{t('musteri')}</h4>
                                         <div className="text-white font-medium">{order.customerName}</div>
                                         <div className="text-gray-400 text-sm">{order.customerEmail}</div>
                                         <div className="text-gray-400 text-sm">{order.customerPhone}</div>
@@ -290,7 +293,7 @@ export default function ShopOrdersPage() {
 
                                     {/* Items */}
                                     <div>
-                                        <h4 className="text-gray-400 text-sm mb-2">📦 Ürünler ({order.items?.length || 0})</h4>
+                                        <h4 className="text-gray-400 text-sm mb-2">{t('urunler')}{order.items?.length || 0})</h4>
                                         <div className="space-y-1 text-sm">
                                             {order.items?.slice(0, 3).map((item, i) => (
                                                 <div key={i} className="text-white flex justify-between">
@@ -335,7 +338,7 @@ export default function ShopOrdersPage() {
                                             onClick={() => updateOrderStatus(order.id, 'confirmed')}
                                             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 text-sm font-medium"
                                         >
-                                            ✅ Onayla
+                                            {t('onayla')}
                                         </button>
                                     )}
                                     {order.status === 'confirmed' && (
@@ -343,7 +346,7 @@ export default function ShopOrdersPage() {
                                             onClick={() => updateOrderStatus(order.id, 'preparing')}
                                             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-500 text-sm font-medium"
                                         >
-                                            📦 Hazırlanıyor
+                                            {t('hazirlaniyor')}
                                         </button>
                                     )}
                                     {(order.status === 'confirmed' || order.status === 'preparing') && (
@@ -388,13 +391,13 @@ export default function ShopOrdersPage() {
 
                         <div className="p-6 space-y-4">
                             <div className="bg-gray-700/50 rounded-lg p-3">
-                                <div className="text-gray-400 text-sm">Sipariş</div>
+                                <div className="text-gray-400 text-sm">{t('siparis')}</div>
                                 <div className="text-white font-bold">{selectedOrder.orderNumber}</div>
                                 <div className="text-gray-400 text-sm">{selectedOrder.customerName}</div>
                             </div>
 
                             <div>
-                                <label className="text-gray-300 text-sm font-medium mb-2 block">Kargo Şirketi</label>
+                                <label className="text-gray-300 text-sm font-medium mb-2 block">{t('kargo_sirketi')}</label>
                                 <select
                                     value={shippingCarrier}
                                     onChange={(e) => setShippingCarrier(e.target.value)}
@@ -405,7 +408,7 @@ export default function ShopOrdersPage() {
                             </div>
 
                             <div>
-                                <label className="text-gray-300 text-sm font-medium mb-2 block">Takip Numarası *</label>
+                                <label className="text-gray-300 text-sm font-medium mb-2 block">{t('takip_numarasi')}</label>
                                 <input
                                     type="text"
                                     value={trackingNumber}
@@ -425,7 +428,7 @@ export default function ShopOrdersPage() {
                                 disabled={saving || !trackingNumber}
                                 className="px-6 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {saving ? 'Gönderiliyor...' : '🚚 Kargoya Ver'}
+                                {saving ? t('gonderiliyor') : '🚚 Kargoya Ver'}
                             </button>
                         </div>
                     </div>

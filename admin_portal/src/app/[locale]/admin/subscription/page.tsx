@@ -3,19 +3,22 @@
 import { useState, useEffect } from 'react';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 export default function SubscriptionPage() {
-    const { admin, loading } = useAdmin();
+    
+  const t = useTranslations('AdminSubscription');
+const { admin, loading } = useAdmin();
 
-    if (loading) return <div className="p-8 text-white">Yükleniyor...</div>;
+    if (loading) return <div className="p-8 text-white">{t('yukleniyor')}</div>;
 
     if (!admin?.butcherId) {
-        return <div className="p-8 text-white">Bu sayfaya erişim yetkiniz yok.</div>;
+        return <div className="p-8 text-white">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>;
     }
 
     // Mock Data (In production, fetch from /api/subscription/status)
     const currentPlan = (admin.adminType as string) === 'super_admin' ? 'ULTRA' : 'PRO'; // Mock
-    const nextBillingDate = '01 Şubat 2026';
+    const nextBillingDate = t('01_subat_2026');
     const monthlyFee = currentPlan === 'ULTRA' ? 99 : 49;
 
     // ESL Mock Data (Rent-to-Own)
@@ -28,8 +31,8 @@ export default function SubscriptionPage() {
     return (
         <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
             <div className="max-w-6xl mx-auto">
-                <h1 className="text-3xl font-bold mb-2">Abonelik ve Ödemeler</h1>
-                <p className="text-gray-400 mb-8">Planınızı ve faturalarınızı buradan yönetin.</p>
+                <h1 className="text-3xl font-bold mb-2">{t('abonelik_ve_odemeler')}</h1>
+                <p className="text-gray-400 mb-8">{t('planinizi_ve_faturalarinizi_buradan_yone')}</p>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
                     {/* CURRENT PLAN CARD */}
@@ -51,23 +54,23 @@ export default function SubscriptionPage() {
 
                         <div className="space-y-3 mb-8">
                             <div className="flex items-center gap-3 text-sm text-gray-300">
-                                <span className="text-green-400">✓</span> Sınırsız Sipariş
+                                <span className="text-green-400">✓</span> {t('sinirsiz_siparis')}
                             </div>
                             <div className="flex items-center gap-3 text-sm text-gray-300">
-                                <span className="text-green-400">✓</span> B2B Toptancı Modülü
+                                <span className="text-green-400">✓</span> {t('b2b_toptanci_modulu')}
                             </div>
                             <div className="flex items-center gap-3 text-sm text-gray-300">
                                 <span className="text-green-400">✓</span> 7/24 Destek
                             </div>
                             {currentPlan === 'ULTRA' && (
                                 <div className="flex items-center gap-3 text-sm text-gray-300">
-                                    <span className="text-purple-400">★</span> AI Tahminleme
+                                    <span className="text-purple-400">★</span> {t('ai_tahminleme')}
                                 </div>
                             )}
                         </div>
 
                         <button className="w-full bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white py-3 rounded-xl font-bold transition">
-                            Planı Değiştir
+                            {t('plani_degistir')}
                         </button>
                     </div>
 
@@ -77,18 +80,18 @@ export default function SubscriptionPage() {
                         <div className="absolute -right-8 -top-8 text-9xl text-gray-700/20 rotate-12">🏷️</div>
 
                         <div className="relative z-10">
-                            <p className="text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">DONANIM KİRALAMA (ESL)</p>
+                            <p className="text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">{t('donanim_ki_ralama_esl')}</p>
                             <h3 className="text-2xl font-bold mb-6">Elektronik Etiketler</h3>
 
                             {eslEnabled ? (
                                 <>
                                     <div className="grid grid-cols-2 gap-4 mb-6">
                                         <div className="bg-gray-900 p-4 rounded-xl border border-gray-700">
-                                            <p className="text-xs text-gray-500 mb-1">ADET</p>
+                                            <p className="text-xs text-gray-500 mb-1">{t('adet')}</p>
                                             <p className="text-2xl font-bold">{eslCount}</p>
                                         </div>
                                         <div className="bg-gray-900 p-4 rounded-xl border border-gray-700">
-                                            <p className="text-xs text-gray-500 mb-1">AYLIK</p>
+                                            <p className="text-xs text-gray-500 mb-1">{t('aylik')}</p>
                                             <p className="text-2xl font-bold">€{eslTotal}</p>
                                         </div>
                                     </div>
@@ -105,13 +108,13 @@ export default function SubscriptionPage() {
                                             </div>
                                         </div>
                                         <p className="text-xs text-gray-500 mt-2">
-                                            20 ay sonra bu cihazlar tamamen sizin olacak ve aylık kira ücreti alınmayacak.
+                                            {t('20_ay_sonra_bu_cihazlar_tamamen_sizin_ol')}
                                         </p>
                                     </div>
                                 </>
                             ) : (
                                 <div className="text-center py-8">
-                                    <p className="text-gray-400 mb-4">Henüz elektronik etiket kullanmıyorsunuz.</p>
+                                    <p className="text-gray-400 mb-4">{t('henuz_elektronik_etiket_kullanmiyorsunuz')}</p>
                                     <button className="text-green-400 underline">ESL Paketlerini İncele</button>
                                 </div>
                             )}
@@ -120,7 +123,7 @@ export default function SubscriptionPage() {
 
                     {/* BILLING & INVOICES */}
                     <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8 shadow-xl flex flex-col">
-                        <p className="text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">ÖDEME YÖNTEMİ</p>
+                        <p className="text-sm text-gray-400 uppercase font-bold tracking-wider mb-2">{t('odeme_yontemi')}</p>
                         <div className="flex items-center gap-4 mb-8 bg-gray-900 p-4 rounded-xl border border-gray-700">
                             <div className="bg-white p-2 rounded w-12 h-8 flex items-center justify-center">
                                 <div className="w-8 h-8 rounded-full bg-amber-500 translate-x-2 opacity-80"></div>
@@ -130,7 +133,7 @@ export default function SubscriptionPage() {
                                 <p className="font-bold">Mastercard •••• 4242</p>
                                 <p className="text-xs text-gray-400">Son kullanma: 12/28</p>
                             </div>
-                            <button className="ml-auto text-sm text-gray-400 hover:text-white">Değiştir</button>
+                            <button className="ml-auto text-sm text-gray-400 hover:text-white">{t('degistir')}</button>
                         </div>
 
                         <div className="flex-1">
@@ -142,17 +145,17 @@ export default function SubscriptionPage() {
                                             <div className="bg-gray-700 group-hover:bg-gray-600 p-2 rounded text-gray-300">📄</div>
                                             <div>
                                                 <p className="font-bold text-sm">Ocak 2026</p>
-                                                <p className="text-xs text-gray-500">MIRA-2026-00{i}</p>
+                                                <p className="text-xs text-gray-500">{t('mira_2026_00')}{i}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-bold text-sm">€{monthlyFee + eslTotal}</p>
-                                            <p className="text-xs text-green-400">Ödendi</p>
+                                            <p className="text-xs text-green-400">{t('odendi')}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                            <button className="w-full text-center text-sm text-gray-500 hover:text-white mt-4">Tümünü Gör</button>
+                            <button className="w-full text-center text-sm text-gray-500 hover:text-white mt-4">{t('tumunu_gor')}</button>
                         </div>
                     </div>
                 </div>

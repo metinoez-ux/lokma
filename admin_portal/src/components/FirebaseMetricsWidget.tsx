@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FirebaseMetrics } from '@/services/firebase_metrics';
+import { useTranslations } from 'next-intl';
 
 interface MetricCardProps {
     title: string;
@@ -54,7 +55,9 @@ interface FirebaseMetricsWidgetProps {
 }
 
 export default function FirebaseMetricsWidget({ dateFilter = 'month' }: FirebaseMetricsWidgetProps) {
-    const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
+    
+  const t = useTranslations('AdminComponentFirebaseMetricsWidget');
+const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -62,14 +65,14 @@ export default function FirebaseMetricsWidget({ dateFilter = 'month' }: Firebase
     // Get date label for display
     const getDateLabel = () => {
         switch (dateFilter) {
-            case 'today': return 'Bugün';
-            case 'yesterday': return 'Dün';
-            case 'week': return 'Son 7 Gün';
-            case 'month': return 'Son 30 Gün';
-            case 'year': return 'Bu Yıl';
-            case 'lastYear': return 'Geçen Yıl';
-            case 'all': return 'Tüm Zamanlar';
-            default: return 'Son 30 Gün';
+            case 'today': return t('bugun');
+            case 'yesterday': return t('dun');
+            case 'week': return t('son_7_gun');
+            case 'month': return t('son_30_gun');
+            case 'year': return t('bu_yil');
+            case 'lastYear': return t('gecen_yil');
+            case 'all': return t('tum_zamanlar');
+            default: return t('son_30_gun');
         }
     };
 
@@ -89,7 +92,7 @@ export default function FirebaseMetricsWidget({ dateFilter = 'month' }: Firebase
             setLastUpdate(new Date());
         } catch (err) {
             console.error('Metrics fetch error:', err);
-            setError(err instanceof Error ? err.message : 'Bilinmeyen hata');
+            setError(err instanceof Error ? err.message : t('bilinmeyen_hata'));
         } finally {
             setLoading(false);
         }
@@ -115,7 +118,7 @@ export default function FirebaseMetricsWidget({ dateFilter = 'month' }: Firebase
     if (error) {
         return (
             <div className="bg-red-900/20 border border-red-700 rounded-lg p-6 text-center">
-                <p className="text-red-400 mb-2">⚠️ Metrikler yüklenemedi</p>
+                <p className="text-red-400 mb-2">{t('metrikler_yuklenemedi')}</p>
                 <p className="text-sm text-gray-400">{error}</p>
                 <button
                     onClick={fetchMetrics}
@@ -134,7 +137,7 @@ export default function FirebaseMetricsWidget({ dateFilter = 'month' }: Firebase
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-bold text-white">📊 Firebase Kullanım Metrikleri</h2>
+                    <h2 className="text-xl font-bold text-white">{t('firebase_kullanim_metrikleri')}</h2>
                     <p className="text-sm text-gray-400">
                         📅 {getDateLabel()} | {lastUpdate && `Son güncelleme: ${lastUpdate.toLocaleTimeString('tr-TR')}`}
                     </p>
@@ -149,7 +152,7 @@ export default function FirebaseMetricsWidget({ dateFilter = 'month' }: Firebase
 
             {/* Firestore Metrics */}
             <div>
-                <h3 className="text-sm font-semibold text-gray-400 mb-3">Firestore (Günlük Limitler)</h3>
+                <h3 className="text-sm font-semibold text-gray-400 mb-3">{t('firestore_gunluk_limitler')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <MetricCard
                         title="Okuma (Reads)"
@@ -188,54 +191,54 @@ export default function FirebaseMetricsWidget({ dateFilter = 'month' }: Firebase
 
             {/* User-Level Breakdown */}
             <div>
-                <h3 className="text-sm font-semibold text-gray-400 mb-3">👥 Kullanıcı Bazında Data Kullanımı (Tahmini)</h3>
+                <h3 className="text-sm font-semibold text-gray-400 mb-3">{t('kullanici_bazinda_data_kullanimi_tahmini')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <MetricCard
-                        title="Super Admin Kullanımı"
+                        title={t('super_admin_kullanimi')}
                         value={metrics.usage.superAdmins.estimatedReads}
                         percentage={metrics.usage.superAdmins.percentage}
                         icon="👑"
-                        subtitle="Master Catalog erişimi"
+                        subtitle={t('master_catalog_erisimi')}
                     />
                     <MetricCard
-                        title="İşletme Admin Kullanımı"
+                        title={t('i_sletme_admin_kullanimi')}
                         value={metrics.usage.businessAdmins.estimatedReads}
                         percentage={metrics.usage.businessAdmins.percentage}
                         icon="🏪"
-                        subtitle="İşletme yönetimi"
+                        subtitle={t('i_sletme_yonetimi')}
                     />
                     <MetricCard
-                        title="Son Kullanıcı Kullanımı"
+                        title={t('son_kullanici_kullanimi')}
                         value={metrics.usage.endUsers.estimatedReads}
                         percentage={metrics.usage.endUsers.percentage}
                         icon="👤"
-                        subtitle="Mobil app kullanımı"
+                        subtitle={t('mobil_app_kullanimi')}
                     />
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                    ℹ️ Kullanıcı seviyesi metrikleri tahminidir (Super Admin: %60, İşletme Admin: %25, Son Kullanıcılar: %15)
+                    {t('kullanici_seviyesi_metrikleri_tahminidir')}
                 </p>
             </div>
 
             {/* Functions & Storage */}
             <div>
-                <h3 className="text-sm font-semibold text-gray-400 mb-3">Diğer Servisler</h3>
+                <h3 className="text-sm font-semibold text-gray-400 mb-3">{t('diger_servisler')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <MetricCard
-                        title="Functions Çağrısı"
+                        title={t('functions_cagrisi')}
                         value={metrics.functions.invocations.monthly}
                         icon="⚡"
                         subtitle={getDateLabel()}
                     />
                     <MetricCard
-                        title="Functions Hataları"
+                        title={t('functions_hatalari')}
                         value={metrics.functions.errors.count}
                         percentage={metrics.functions.errors.percentage}
                         icon="❌"
                         subtitle={`%${(metrics.functions.errors.percentage ?? 0).toFixed(1)} hata oranı`}
                     />
                     <MetricCard
-                        title="Storage Bant Genişliği"
+                        title={t('storage_bant_genisligi')}
                         value={metrics.storage.bandwidth.monthly}
                         limit={metrics.storage.bandwidth.limit}
                         percentage={metrics.storage.bandwidth.percentage}
@@ -255,8 +258,7 @@ export default function FirebaseMetricsWidget({ dateFilter = 'month' }: Firebase
             {/* Info banner */}
             <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
                 <p className="text-sm text-blue-300">
-                    💡 <strong>Bilgi:</strong> Günlük limitler Pacific Time saat 00:00'da sıfırlanır.
-                    Blaze plan ile limitler aşıldığında otomatik ücretlendirme yapılır.
+                    💡 <strong>{t('bilgi')}</strong> {t('gunluk_limitler_pacific_time_saat_00_00_')}
                 </p>
             </div>
         </div>

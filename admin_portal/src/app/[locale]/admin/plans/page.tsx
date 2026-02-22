@@ -8,9 +8,12 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { useSectors } from '@/hooks/useSectors';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 export default function PlansPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminPlans');
+const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
     const { sectors, loading: sectorsLoading } = useSectors();
 
@@ -75,7 +78,7 @@ export default function PlansPage() {
         { label: 'Purple', value: 'bg-purple-600' },
         { label: 'Red', value: 'bg-red-600' },
         { label: 'Pink', value: 'bg-pink-600' },
-        { label: 'Indigo', value: 'bg-indigo-600' },
+        { label: t('indigo'), value: 'bg-indigo-600' },
     ];
 
     // Set default selected business type from sectors
@@ -102,7 +105,7 @@ export default function PlansPage() {
             setPlans(data);
         } catch (error) {
             console.error('Failed to load plans', error);
-            toast.error('Planlar yüklenirken hata oluştu.');
+            toast.error(t('planlar_yuklenirken_hata_olustu'));
         } finally {
             setLoading(false);
         }
@@ -174,10 +177,10 @@ export default function PlansPage() {
 
             if (editingPlan) {
                 await subscriptionService.updatePlan(editingPlan.id, commonData);
-                toast.success('Plan güncellendi.');
+                toast.success(t('plan_guncellendi'));
             } else {
                 if (!formData.code || !formData.name) {
-                    toast.error('Kod ve İsim zorunludur.');
+                    toast.error(t('kod_ve_i_sim_zorunludur'));
                     return;
                 }
                 const newPlan: ButcherSubscriptionPlan = {
@@ -196,13 +199,13 @@ export default function PlansPage() {
                     updatedAt: new Date()
                 };
                 await subscriptionService.createPlan(newPlan);
-                toast.success('Yeni plan oluşturuldu.');
+                toast.success(t('yeni_plan_olusturuldu'));
             }
             setIsModalOpen(false);
             loadPlans();
         } catch (error: any) {
             console.error(error);
-            toast.error(error.message || 'Bir hata oluştu.');
+            toast.error(error.message || t('bir_hata_olustu'));
         }
     };
 
@@ -216,14 +219,14 @@ export default function PlansPage() {
             loadPlans();
             toast.success('Plan silindi.');
         } catch (error) {
-            toast.error('Silme işlemi başarısız.');
+            toast.error(t('silme_islemi_basarisiz'));
         } finally {
             setDeleting(false);
             setConfirmDelete(null);
         }
     };
 
-    if (loading || adminLoading || sectorsLoading) return <div className="p-8 text-white">Yükleniyor...</div>;
+    if (loading || adminLoading || sectorsLoading) return <div className="p-8 text-white">{t('yukleniyor')}</div>;
 
     return (
         <div className="flex flex-col min-h-screen bg-gray-900 text-white">
@@ -234,19 +237,19 @@ export default function PlansPage() {
                     className="flex items-center text-gray-400 hover:text-white mb-6 transition-colors group"
                 >
                     <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
-                    Panela Geri Dön
+                    {t('panela_geri_don')}
                 </button>
 
                 <div className="flex justify-between items-center mb-8">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Abonelik Paketleri</h1>
-                        <p className="text-gray-400 mt-1">İşletme türüne göre abonelik planlarını yönetin.</p>
+                        <p className="text-gray-400 mt-1">{t('i_sletme_turune_gore_abonelik_planlarini')}</p>
                     </div>
                     <button
                         onClick={handleCreate}
                         className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl font-medium shadow-lg hover:shadow-green-500/20 transition-all flex items-center gap-2 text-sm"
                     >
-                        <span>+</span> Yeni Paket
+                        <span>+</span> {t('yeni_paket')}
                     </button>
                 </div>
 
@@ -306,10 +309,10 @@ export default function PlansPage() {
                                                 {plan.features?.campaigns ? '✓' : '·'} Kampanya
                                             </span>
                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${plan.features?.onlinePayment ? 'bg-amber-900/40 text-amber-400 border border-amber-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {plan.features?.onlinePayment ? '✓' : '·'} Ödeme
+                                                {plan.features?.onlinePayment ? '✓' : '·'} {t('odeme')}
                                             </span>
                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.dineInQR ? 'bg-amber-900/40 text-amber-400 border border-amber-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {(plan.features as any)?.dineInQR ? '✓' : '·'} QR Sipariş
+                                                {(plan.features as any)?.dineInQR ? '✓' : '·'} {t('qr_siparis')}
                                             </span>
                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.waiterOrder ? 'bg-teal-900/40 text-teal-400 border border-teal-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
                                                 {(plan.features as any)?.waiterOrder ? '✓' : '·'} Garson
@@ -318,13 +321,13 @@ export default function PlansPage() {
                                                 {(plan.features as any)?.staffShiftTracking ? '✓' : '·'} Vardiya
                                             </span>
                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.sponsoredProducts ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {(plan.features as any)?.sponsoredProducts ? '✓' : '·'} Öne Çıkan {(plan.features as any)?.sponsoredProducts && <span className="opacity-70">€{((plan as any).sponsoredFeePerConversion ?? 0.40).toFixed(2)}</span>}
+                                                {(plan.features as any)?.sponsoredProducts ? '✓' : '·'} {t('one_cikan')} {(plan.features as any)?.sponsoredProducts && <span className="opacity-70">€{((plan as any).sponsoredFeePerConversion ?? 0.40).toFixed(2)}</span>}
                                             </span>
                                         </div>
 
                                         {/* Limits */}
                                         <div className="w-24 shrink-0 text-center">
-                                            <p className="text-xs text-gray-500">Sipariş</p>
+                                            <p className="text-xs text-gray-500">{t('siparis')}</p>
                                             <p className="text-sm font-bold text-gray-300">{plan.orderLimit === null ? '∞' : plan.orderLimit}/ay</p>
                                         </div>
 
@@ -339,7 +342,7 @@ export default function PlansPage() {
                                             <button
                                                 onClick={() => handleEdit(plan)}
                                                 className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-colors"
-                                                title="Düzenle"
+                                                title={t('duzenle')}
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -348,7 +351,7 @@ export default function PlansPage() {
                                             <button
                                                 onClick={() => setConfirmDelete({ id: plan.id, name: plan.name })}
                                                 className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
-                                                title="Sil"
+                                                title={t('sil')}
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -369,7 +372,7 @@ export default function PlansPage() {
                         <div className="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-gray-700 flex items-center justify-center transition-colors">
                             <span className="text-lg font-light">+</span>
                         </div>
-                        <span className="font-medium text-sm">Yeni Paket Ekle</span>
+                        <span className="font-medium text-sm">{t('yeni_paket_ekle')}</span>
                     </button>
                 </div>
 
@@ -378,11 +381,11 @@ export default function PlansPage() {
                     isOpen={!!confirmDelete}
                     onClose={() => setConfirmDelete(null)}
                     onConfirm={handleDeleteConfirm}
-                    title="Planı Sil"
-                    message="Bu planı kalıcı olarak silmek istediğinizden emin misiniz?"
+                    title={t('plani_sil')}
+                    message={t('bu_plani_kalici_olarak_silmek_istedigini')}
                     itemName={confirmDelete?.name}
                     variant="danger"
-                    confirmText="Evet, Sil"
+                    confirmText={t('evet_sil')}
                     loadingText="Siliniyor..."
                 />
 
@@ -395,12 +398,12 @@ export default function PlansPage() {
                                 {/* Modal Header */}
                                 <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-900 rounded-t-2xl">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-white">{editingPlan ? 'Paketi Düzenle' : 'Yeni Paket Oluştur'}</h2>
+                                        <h2 className="text-2xl font-bold text-white">{editingPlan ? t('paketi_duzenle') : t('yeni_paket_olustur')}</h2>
                                         <p className="text-sm text-gray-400 mt-1">
                                             <span className="bg-blue-900/50 text-blue-200 px-2 py-0.5 rounded text-xs border border-blue-800 uppercase tracking-wide mr-2">
                                                 {(sectorCategories.find(t => t.id === formData.businessType)?.label || formData.businessType || selectedBusinessType)}
                                             </span>
-                                            için abonelik detaylarını yapılandırın.
+                                            {t('icin_abonelik_detaylarini_yapilandirin')}
                                         </p>
                                     </div>
                                     <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white transition-colors">
@@ -421,21 +424,21 @@ export default function PlansPage() {
                                             <div className="bg-gray-800/50 p-5 rounded-xl border border-gray-700/50">
                                                 <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
                                                     <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
-                                                    Paket Kimliği & Fiyatlandırma
+                                                    {t('paket_kimligi_fiyatlandirma')}
                                                 </h3>
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="col-span-2">
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Paket Adı</label>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('paket_adi')}</label>
                                                         <input
                                                             type="text"
                                                             value={formData.name}
                                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                                             className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                                                            placeholder="Örn: Gold Paket"
+                                                            placeholder={t('orn_gold_paket')}
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Kod (ID)</label>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('kod_id')}</label>
                                                         <input
                                                             type="text"
                                                             value={formData.code}
@@ -457,7 +460,7 @@ export default function PlansPage() {
                                                         </select>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Aylık Ücret (€)</label>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('aylik_ucret')}</label>
                                                         <input
                                                             type="number"
                                                             step="0.01"
@@ -468,7 +471,7 @@ export default function PlansPage() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Yıllık Ücret (€)</label>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('yillik_ucret')}</label>
                                                         <input
                                                             type="number"
                                                             step="0.01"
@@ -479,13 +482,13 @@ export default function PlansPage() {
                                                         />
                                                     </div>
                                                     <div className="col-span-2">
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Açıklama</label>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('aciklama')}</label>
                                                         <input
                                                             type="text"
                                                             value={formData.description || ''}
                                                             onChange={e => setFormData({ ...formData, description: e.target.value })}
                                                             className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
-                                                            placeholder="Paket açıklaması..."
+                                                            placeholder={t('paket_aciklamasi')}
                                                         />
                                                     </div>
                                                 </div>
@@ -495,17 +498,17 @@ export default function PlansPage() {
                                             <div className="bg-gray-800/50 p-5 rounded-xl border border-gray-700/50">
                                                 <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
                                                     <span className="w-1 h-6 bg-yellow-500 rounded-full"></span>
-                                                    Limitler & Hizmet Şartları
+                                                    {t('limitler_hizmet_sartlari')}
                                                 </h3>
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Ürün Limiti</label>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('urun_limiti')}</label>
                                                         <div className="flex gap-2">
                                                             <input
                                                                 type="number"
                                                                 value={formData.productLimit === null ? '' : formData.productLimit}
                                                                 onChange={e => setFormData({ ...formData, productLimit: e.target.value ? parseInt(e.target.value) : null })}
-                                                                placeholder="Sınırsız"
+                                                                placeholder={t('sinirsiz')}
                                                                 disabled={formData.productLimit === null}
                                                                 className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
                                                             />
@@ -519,13 +522,13 @@ export default function PlansPage() {
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Sipariş Limiti (Ay)</label>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('siparis_limiti_ay')}</label>
                                                         <div className="flex gap-2">
                                                             <input
                                                                 type="number"
                                                                 value={formData.orderLimit === null ? '' : formData.orderLimit}
                                                                 onChange={e => setFormData({ ...formData, orderLimit: e.target.value ? parseInt(e.target.value) : null })}
-                                                                placeholder="Sınırsız"
+                                                                placeholder={t('sinirsiz')}
                                                                 disabled={formData.orderLimit === null}
                                                                 className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
                                                             />
@@ -540,7 +543,7 @@ export default function PlansPage() {
                                                     </div>
                                                     {/* Kurye Provizyon Sistemi */}
                                                     <div className="col-span-2">
-                                                        <label className="block text-xs font-medium text-amber-400 mb-2">💰 Kurye Bazlı Provizyon Oranları (%)</label>
+                                                        <label className="block text-xs font-medium text-amber-400 mb-2">{t('kurye_bazli_provizyon_oranlari')}</label>
                                                         <div className="grid grid-cols-3 gap-3">
                                                             <div className="bg-gray-900 rounded-lg p-3 border border-green-600/40">
                                                                 <label className="block text-xs text-green-400 mb-1">🛒 Gel-Al</label>
@@ -553,7 +556,7 @@ export default function PlansPage() {
                                                                 />
                                                             </div>
                                                             <div className="bg-gray-900 rounded-lg p-3 border border-blue-600/40">
-                                                                <label className="block text-xs text-blue-400 mb-1">🚗 Kendi Kurye</label>
+                                                                <label className="block text-xs text-blue-400 mb-1">{t('kendi_kurye')}</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
@@ -563,7 +566,7 @@ export default function PlansPage() {
                                                                 />
                                                             </div>
                                                             <div className="bg-gray-900 rounded-lg p-3 border border-purple-600/40">
-                                                                <label className="block text-xs text-purple-400 mb-1">🛵 LOKMA Kurye</label>
+                                                                <label className="block text-xs text-purple-400 mb-1">{t('lokma_kurye')}</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
@@ -575,7 +578,7 @@ export default function PlansPage() {
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">🎁 Ücretsiz Sipariş (İlk X adet)</label>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('ucretsiz_siparis_i_lk_x_adet')}</label>
                                                         <input
                                                             type="number"
                                                             value={(formData as any).freeOrderCount ?? 0}
@@ -585,7 +588,7 @@ export default function PlansPage() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Kampanya (Push) Gönderim Limiti</label>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('kampanya_push_gonderim_limiti')}</label>
                                                         <input
                                                             type="number"
                                                             value={formData.campaignLimit || ''}
@@ -607,7 +610,7 @@ export default function PlansPage() {
                                                                         onClick={() => setFormData({ ...formData, perOrderFeeType: type } as any)}
                                                                         className={`px-3 py-2 text-xs font-medium transition-colors ${(formData as any).perOrderFeeType === type ? 'bg-amber-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
                                                                     >
-                                                                        {type === 'none' ? 'Yok' : type === 'percentage' ? '%' : '€'}
+                                                                        {type === 'none' ? t('yok') : type === 'percentage' ? '%' : '€'}
                                                                     </button>
                                                                 ))}
                                                             </div>
@@ -640,13 +643,13 @@ export default function PlansPage() {
                                                                         <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${formData.features?.tableReservation ? 'left-4' : 'left-0.5'}`}></div>
                                                                     </div>
                                                                 </div>
-                                                                <span className="ml-2 text-xs text-gray-400">{formData.features?.tableReservation ? 'Aktif' : 'Kapalı'}</span>
+                                                                <span className="ml-2 text-xs text-gray-400">{formData.features?.tableReservation ? t('aktif') : t('kapali')}</span>
                                                             </label>
                                                         </div>
                                                         {formData.features?.tableReservation && (
                                                             <div className="grid grid-cols-2 gap-3 bg-gray-900/50 p-3 rounded-lg border border-pink-900/30">
                                                                 <div>
-                                                                    <label className="block text-xs text-gray-500 mb-1">Dahil Masa Sayısı</label>
+                                                                    <label className="block text-xs text-gray-500 mb-1">{t('dahil_masa_sayisi')}</label>
                                                                     <div className="flex gap-2">
                                                                         <input
                                                                             type="number"
@@ -666,7 +669,7 @@ export default function PlansPage() {
                                                                     </div>
                                                                 </div>
                                                                 <div>
-                                                                    <label className="block text-xs text-gray-500 mb-1">Aşım Ücreti (€)</label>
+                                                                    <label className="block text-xs text-gray-500 mb-1">{t('asim_ucreti')}</label>
                                                                     <input
                                                                         type="number"
                                                                         step="0.01"
@@ -691,7 +694,7 @@ export default function PlansPage() {
                                                         </div>
                                                     </div>
                                                     <span className={`text-sm font-medium ${formData.isActive ? 'text-white' : 'text-gray-400'}`}>
-                                                        {formData.isActive ? '✅ Plan Aktif' : '❌ Plan Pasif'}
+                                                        {formData.isActive ? t('plan_aktif') : t('plan_pasif')}
                                                     </span>
                                                     <input
                                                         type="checkbox"
@@ -711,21 +714,21 @@ export default function PlansPage() {
                                             <div className="bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 h-full">
                                                 <h3 className="text-white font-semibold mb-6 flex items-center gap-2 border-b border-gray-700 pb-4">
                                                     <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
-                                                    Özellikler & Modüller
+                                                    {t('ozellikler_moduller')}
                                                 </h3>
 
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     {[
                                                         { key: 'clickAndCollect', label: 'Click & Collect (Gel-Al)', color: 'text-purple-400' },
-                                                        { key: 'delivery', label: 'Kurye / Teslimat', color: 'text-purple-400' },
-                                                        { key: 'onlinePayment', label: 'Online Ödeme (Kart/Apple)', color: 'text-purple-400' },
-                                                        { key: 'campaigns', label: 'Kampanya Yönetimi', color: 'text-purple-400' },
+                                                        { key: 'delivery', label: t('kurye_teslimat'), color: 'text-purple-400' },
+                                                        { key: 'onlinePayment', label: t('online_odeme_kart_apple'), color: 'text-purple-400' },
+                                                        { key: 'campaigns', label: t('kampanya_yonetimi'), color: 'text-purple-400' },
                                                         { key: 'marketing', label: 'Marketing (Banner/Vitrin)', color: 'text-purple-400' },
-                                                        { key: 'liveCourierTracking', label: 'Canlı Kurye Takibi', color: 'text-purple-400' },
-                                                        { key: 'dineInQR', label: '🪑 Masada Sipariş (QR Kod)', color: 'text-amber-400' },
-                                                        { key: 'waiterOrder', label: '👨‍🍳 Garson Sipariş', color: 'text-teal-400' },
+                                                        { key: 'liveCourierTracking', label: t('canli_kurye_takibi'), color: 'text-purple-400' },
+                                                        { key: 'dineInQR', label: t('masada_siparis_qr_kod'), color: 'text-amber-400' },
+                                                        { key: 'waiterOrder', label: t('garson_siparis'), color: 'text-teal-400' },
                                                         { key: 'staffShiftTracking', label: '⏱️ Vardiya Takibi & Export', color: 'text-cyan-400' },
-                                                        { key: 'sponsoredProducts', label: '⭐ Öne Çıkan Ürünler', color: 'text-yellow-400', hasSubFields: true },
+                                                        { key: 'sponsoredProducts', label: t('one_cikan_urunler'), color: 'text-yellow-400', hasSubFields: true },
                                                         { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-gray-400', invert: true }, // Logic invert handled in render
                                                     ].map((feature) => (
                                                         <label key={feature.key} className="flex items-center p-3 rounded-lg bg-gray-900 border border-gray-800 hover:border-gray-600 hover:bg-gray-800 transition-all cursor-pointer group">
@@ -749,10 +752,10 @@ export default function PlansPage() {
                                                 {/* Sponsored Products Sub-Settings */}
                                                 {(formData.features as any)?.sponsoredProducts && (
                                                     <div className="mt-4 bg-yellow-900/10 border border-yellow-700/30 rounded-xl p-4">
-                                                        <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">⭐ Öne Çıkan Ürün Ayarları</h4>
+                                                        <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">{t('one_cikan_urun_ayarlari')}</h4>
                                                         <div className="grid grid-cols-2 gap-4">
                                                             <div>
-                                                                <label className="block text-xs text-gray-400 mb-1.5">Sipariş Başı Ücret (€)</label>
+                                                                <label className="block text-xs text-gray-400 mb-1.5">{t('siparis_basi_ucret')}</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.01"
@@ -762,10 +765,10 @@ export default function PlansPage() {
                                                                     className="w-full bg-gray-900 border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
                                                                     placeholder="0.40"
                                                                 />
-                                                                <p className="text-xs text-gray-500 mt-1">0 = Bedava (bu plan için sponsored ücretsiz)</p>
+                                                                <p className="text-xs text-gray-500 mt-1">{t('0_bedava_bu_plan_icin_sponsored_ucretsiz')}</p>
                                                             </div>
                                                             <div>
-                                                                <label className="block text-xs text-gray-400 mb-1.5">Max Ürün Sayısı</label>
+                                                                <label className="block text-xs text-gray-400 mb-1.5">{t('max_urun_sayisi')}</label>
                                                                 <input
                                                                     type="number"
                                                                     min="1"
@@ -775,15 +778,15 @@ export default function PlansPage() {
                                                                     className="w-full bg-gray-900 border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
                                                                     placeholder="5"
                                                                 />
-                                                                <p className="text-xs text-gray-500 mt-1">Bu plandaki işletme kaç ürün öne çıkarabilir</p>
+                                                                <p className="text-xs text-gray-500 mt-1">{t('bu_plandaki_isletme_kac_urun_one_cikarab')}</p>
                                                             </div>
                                                         </div>
                                                         <div className="mt-3 bg-gray-900/50 rounded-lg px-3 py-2">
                                                             <p className="text-xs text-yellow-300/80">
-                                                                📊 Bu plandaki işletmeler max <strong>{(formData as any).sponsoredMaxProducts ?? 5}</strong> ürün seçebilir.
+                                                                {t('bu_plandaki_isletmeler_max')} <strong>{(formData as any).sponsoredMaxProducts ?? 5}</strong> {t('urun_secebilir')}
                                                                 {((formData as any).sponsoredFeePerConversion ?? 0.40) > 0
-                                                                    ? <> Her sipariş başı <strong>€{((formData as any).sponsoredFeePerConversion ?? 0.40).toFixed(2)}</strong> ücretlendirilir.</>
-                                                                    : <> Sponsored ürünler <strong className="text-green-400">ücretsiz</strong> olarak sunulur.</>
+                                                                    ? <> {t('her_siparis_basi')} <strong>€{((formData as any).sponsoredFeePerConversion ?? 0.40).toFixed(2)}</strong> {t('ucretlendirilir')}</>
+                                                                    : <> {t('sponsored_urunler')} <strong className="text-green-400">{t('ucretsiz')}</strong> olarak sunulur.</>
                                                                 }
                                                             </p>
                                                         </div>
@@ -794,12 +797,12 @@ export default function PlansPage() {
                                                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-1">Gelecek Entegrasyonlar</h4>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         {[
-                                                            { key: 'eslIntegration', label: 'ESL Etiket Desteği', color: 'text-indigo-300' },
+                                                            { key: 'eslIntegration', label: t('esl_etiket_destegi'), color: 'text-indigo-300' },
                                                             { key: 'posIntegration', label: 'POS Entegrasyonu', color: 'text-gray-400' },
-                                                            { key: 'scaleIntegration', label: 'Akıllı Kantar', color: 'text-gray-400' },
+                                                            { key: 'scaleIntegration', label: t('akilli_kantar'), color: 'text-gray-400' },
                                                             { key: 'accountingIntegration', label: 'Muhasebe (Datev)', color: 'text-gray-400' },
-                                                            { key: 'aiSupplierOrdering', label: 'B2B: AI Sipariş', color: 'text-green-400' },
-                                                            { key: 'aiBestPrice', label: '🧠 AI Fiyat Önerisi', color: 'text-amber-400' },
+                                                            { key: 'aiSupplierOrdering', label: t('b2b_ai_siparis'), color: 'text-green-400' },
+                                                            { key: 'aiBestPrice', label: t('ai_fiyat_onerisi'), color: 'text-amber-400' },
                                                         ].map((feature) => (
                                                             <label key={feature.key} className="flex items-center p-3 rounded-lg bg-gray-900 border border-gray-800 hover:border-gray-600 hover:bg-gray-800 transition-all cursor-pointer group">
                                                                 <div className="relative flex items-center">
@@ -819,14 +822,14 @@ export default function PlansPage() {
 
                                                 {/* Stripe ID Section (Compact) */}
                                                 <div className="mt-8 pt-6 border-t border-gray-700/50">
-                                                    <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">Teknik: Stripe IDs</h4>
+                                                    <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">{t('teknik_stripe_ids')}</h4>
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <input
                                                             type="text"
                                                             value={formData.stripeProductId || ''}
                                                             onChange={e => setFormData({ ...formData, stripeProductId: e.target.value })}
                                                             className="bg-gray-900 border border-gray-800 rounded px-2 py-1.5 text-xs font-mono text-gray-400 focus:text-white focus:border-blue-500 outline-none"
-                                                            placeholder="Product ID (prod_...)"
+                                                            placeholder={t('product_id_prod')}
                                                         />
                                                         <input
                                                             type="text"
@@ -836,7 +839,7 @@ export default function PlansPage() {
                                                                 stripePriceId: { ...formData.stripePriceId, monthly: e.target.value } as any
                                                             })}
                                                             className="bg-gray-900 border border-gray-800 rounded px-2 py-1.5 text-xs font-mono text-gray-400 focus:text-white focus:border-blue-500 outline-none"
-                                                            placeholder="Monthly Price ID"
+                                                            placeholder={t('monthly_price_id')}
                                                         />
                                                     </div>
                                                 </div>
@@ -858,7 +861,7 @@ export default function PlansPage() {
                                         onClick={handleSave}
                                         className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all transform active:scale-95"
                                     >
-                                        Değişiklikleri Kaydet
+                                        {t('degisiklikleri_kaydet')}
                                     </button>
                                 </div>
                             </div >

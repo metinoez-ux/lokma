@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 
 interface Sector {
     id: string;
@@ -45,7 +46,9 @@ const DEFAULT_NEW_SECTOR: Omit<Sector, 'id'> = {
 };
 
 export default function SectorsPage() {
-    const [sectors, setSectors] = useState<Sector[]>([]);
+    
+  const t = useTranslations('AdminSectors');
+const [sectors, setSectors] = useState<Sector[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingSector, setEditingSector] = useState<Sector | null>(null);
     const [isNewSector, setIsNewSector] = useState(false);
@@ -63,7 +66,7 @@ export default function SectorsPage() {
             setSectors(data.sectors || []);
         } catch (error) {
             console.error('Failed to fetch sectors:', error);
-            toast.error('Sektörler yüklenemedi');
+            toast.error(t('sektorler_yuklenemedi'));
         } finally {
             setLoading(false);
         }
@@ -85,7 +88,7 @@ export default function SectorsPage() {
                 toast.error(data.error);
             }
         } catch (error) {
-            toast.error('Seed işlemi başarısız');
+            toast.error(t('seed_islemi_basarisiz'));
         } finally {
             setSaving(false);
         }
@@ -97,15 +100,15 @@ export default function SectorsPage() {
         // Validate ID
         const sectorId = editingSector.id.toLowerCase().replace(/[^a-z0-9]/g, '');
         if (!sectorId || sectorId.length < 2) {
-            toast.error('Geçerli bir sektör ID giriniz (en az 2 karakter)');
+            toast.error(t('gecerli_bir_sektor_id_giriniz_en_az_2_ka'));
             return;
         }
         if (sectors.some(s => s.id === sectorId)) {
-            toast.error('Bu ID zaten kullanılıyor');
+            toast.error(t('bu_id_zaten_kullaniliyor'));
             return;
         }
         if (!editingSector.label) {
-            toast.error('Sektör adı giriniz');
+            toast.error(t('sektor_adi_giriniz'));
             return;
         }
 
@@ -121,7 +124,7 @@ export default function SectorsPage() {
             });
             const data = await res.json();
             if (data.success) {
-                toast.success('Yeni sektör oluşturuldu');
+                toast.success(t('yeni_sektor_olusturuldu'));
                 setEditingSector(null);
                 setIsNewSector(false);
                 fetchSectors();
@@ -129,7 +132,7 @@ export default function SectorsPage() {
                 toast.error(data.error);
             }
         } catch (error) {
-            toast.error('Oluşturma başarısız');
+            toast.error(t('olusturma_basarisiz'));
         } finally {
             setSaving(false);
         }
@@ -147,14 +150,14 @@ export default function SectorsPage() {
             });
             const data = await res.json();
             if (data.success) {
-                toast.success('Sektör güncellendi');
+                toast.success(t('sektor_guncellendi'));
                 setEditingSector(null);
                 fetchSectors();
             } else {
                 toast.error(data.error);
             }
         } catch (error) {
-            toast.error('Güncelleme başarısız');
+            toast.error(t('guncelleme_basarisiz'));
         } finally {
             setSaving(false);
         }
@@ -170,7 +173,7 @@ export default function SectorsPage() {
             });
             const data = await res.json();
             if (data.success) {
-                toast.success('Sektör silindi');
+                toast.success(t('sektor_silindi'));
                 setDeleteConfirm(null);
                 setEditingSector(null);
                 fetchSectors();
@@ -178,7 +181,7 @@ export default function SectorsPage() {
                 toast.error(data.error);
             }
         } catch (error) {
-            toast.error('Silme başarısız');
+            toast.error(t('silme_basarisiz'));
         } finally {
             setSaving(false);
         }
@@ -218,9 +221,9 @@ export default function SectorsPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold">🏭 Sektör Yönetimi</h1>
+                        <h1 className="text-2xl font-bold">{t('sektor_yonetimi')}</h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            Sektörlerin hangi kategoride görüneceğini belirleyin
+                            {t('sektorlerin_hangi_kategoride_gorunecegin')}
                         </p>
                     </div>
                     <div className="flex gap-3">
@@ -230,7 +233,7 @@ export default function SectorsPage() {
                                 disabled={saving}
                                 className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium disabled:opacity-50"
                             >
-                                {saving ? 'Yükleniyor...' : '🌱 Varsayılan Sektörleri Yükle'}
+                                {saving ? t('yukleniyor') : t('varsayilan_sektorleri_yukle')}
                             </button>
                         )}
                         <button
@@ -275,7 +278,7 @@ export default function SectorsPage() {
                             </div>
                             <div className="flex items-center justify-between">
                                 {getCategoryBadge(sector.category)}
-                                <span className="text-xs text-gray-500">Sıra: {sector.sortOrder}</span>
+                                <span className="text-xs text-gray-500">{t('sira')} {sector.sortOrder}</span>
                             </div>
                         </div>
                     ))}
@@ -287,7 +290,7 @@ export default function SectorsPage() {
                         <div className="bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-lg border border-gray-800 max-h-[90vh] overflow-y-auto">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-xl font-bold">
-                                    {isNewSector ? '➕ Yeni Sektör Ekle' : `${editingSector.icon} ${editingSector.label}`}
+                                    {isNewSector ? t('yeni_sektor_ekle') : `${editingSector.icon} ${editingSector.label}`}
                                 </h2>
                                 <button onClick={() => { setEditingSector(null); setIsNewSector(false); }} className="text-gray-500 hover:text-white">
                                     ✕
@@ -298,7 +301,7 @@ export default function SectorsPage() {
                             {isNewSector && (
                                 <div className="mb-4">
                                     <label className="block text-sm font-medium text-gray-400 mb-2">
-                                        Sektör ID (küçük harf, boşluksuz)
+                                        {t('sektor_id_kucuk_harf_bosluksuz')}
                                     </label>
                                     <input
                                         type="text"
@@ -313,13 +316,13 @@ export default function SectorsPage() {
                             {/* Label */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-400 mb-2">
-                                    Sektör Adı
+                                    {t('sektor_adi')}
                                 </label>
                                 <input
                                     type="text"
                                     value={editingSector.label}
                                     onChange={(e) => setEditingSector({ ...editingSector, label: e.target.value })}
-                                    placeholder="Dönerci"
+                                    placeholder={t('donerci')}
                                     className="w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg focus:border-red-500 outline-none"
                                 />
                             </div>
@@ -327,13 +330,13 @@ export default function SectorsPage() {
                             {/* Description */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-400 mb-2">
-                                    Açıklama
+                                    {t('aciklama')}
                                 </label>
                                 <input
                                     type="text"
                                     value={editingSector.description}
                                     onChange={(e) => setEditingSector({ ...editingSector, description: e.target.value })}
-                                    placeholder="Döner & Kebap"
+                                    placeholder={t('doner_kebap')}
                                     className="w-full px-3 py-2 bg-[#0f0f0f] border border-gray-700 rounded-lg focus:border-red-500 outline-none"
                                 />
                             </div>
@@ -362,7 +365,7 @@ export default function SectorsPage() {
                             {/* Category Selection */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-400 mb-2">
-                                    Kategori (Mobil App Sekmesi)
+                                    {t('kategori_mobil_app_sekmesi')}
                                 </label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {CATEGORY_OPTIONS.map(cat => (
@@ -384,7 +387,7 @@ export default function SectorsPage() {
                             {/* Sort Order */}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-400 mb-2">
-                                    Sıralama
+                                    {t('siralama')}
                                 </label>
                                 <input
                                     type="number"
@@ -397,7 +400,7 @@ export default function SectorsPage() {
                             {/* Active Toggle */}
                             <div className="mb-6">
                                 <label className="flex items-center justify-between cursor-pointer">
-                                    <span className="text-sm font-medium text-gray-400">Aktif</span>
+                                    <span className="text-sm font-medium text-gray-400">{t('aktif')}</span>
                                     <div
                                         onClick={() => setEditingSector({ ...editingSector, isActive: !editingSector.isActive })}
                                         className={`w-12 h-6 rounded-full transition-colors ${editingSector.isActive ? 'bg-green-500' : 'bg-gray-600'
@@ -416,7 +419,7 @@ export default function SectorsPage() {
                                         onClick={() => setDeleteConfirm(editingSector.id)}
                                         className="px-4 py-2 border border-red-700 text-red-400 rounded-lg hover:bg-red-900/30"
                                     >
-                                        🗑️ Sil
+                                        {t('sil')}
                                     </button>
                                 )}
                                 <button
@@ -437,7 +440,7 @@ export default function SectorsPage() {
                                     disabled={saving}
                                     className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50"
                                 >
-                                    {saving ? 'Kaydediliyor...' : (isNewSector ? 'Oluştur' : 'Kaydet')}
+                                    {saving ? 'Kaydediliyor...' : (isNewSector ? t('olustur') : t('kaydet'))}
                                 </button>
                             </div>
                         </div>
@@ -448,9 +451,9 @@ export default function SectorsPage() {
                 {deleteConfirm && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4">
                         <div className="bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-sm border border-red-800">
-                            <h3 className="text-lg font-bold mb-4 text-red-400">⚠️ Sektörü Sil</h3>
+                            <h3 className="text-lg font-bold mb-4 text-red-400">{t('sektoru_sil')}</h3>
                             <p className="text-gray-400 mb-6">
-                                Bu sektörü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                                {t('bu_sektoru_silmek_istediginizden_emin_mi')}
                             </p>
                             <div className="flex gap-3">
                                 <button
@@ -464,7 +467,7 @@ export default function SectorsPage() {
                                     disabled={saving}
                                     className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg disabled:opacity-50"
                                 >
-                                    {saving ? 'Siliniyor...' : 'Evet, Sil'}
+                                    {saving ? 'Siliniyor...' : t('evet_sil')}
                                 </button>
                             </div>
                         </div>

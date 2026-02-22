@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { collection, query, onSnapshot, doc, updateDoc, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 interface AdminStaff {
     id: string;
@@ -30,7 +31,9 @@ interface Business {
 }
 
 export default function DriverManagementPage() {
-    const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
+    
+  const t = useTranslations('AdminDrivers');
+const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
     const [businesses, setBusinesses] = useState<Business[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -165,7 +168,7 @@ export default function DriverManagementPage() {
             setSelectedBusinessIds([]);
         } catch (error) {
             console.error('Error saving driver:', error);
-            alert('Sürücü kaydedilirken hata oluştu');
+            alert(t('surucu_kaydedilirken_hata_olustu'));
         }
     };
 
@@ -209,8 +212,8 @@ export default function DriverManagementPage() {
                 {/* Header */}
                 <div className="mb-6 flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold">🚗 Sürücü Yönetimi</h1>
-                        <p className="text-gray-400 text-sm">Personeli sürücü olarak ata ve işletmelere görevlendir</p>
+                        <h1 className="text-2xl font-bold">{t('surucu_yonetimi')}</h1>
+                        <p className="text-gray-400 text-sm">{t('personeli_surucu_olarak_ata_ve_isletmele')}</p>
                     </div>
                     <a
                         href="/admin/drivers/performance"
@@ -228,7 +231,7 @@ export default function DriverManagementPage() {
                     </div>
                     <div className="bg-green-900/30 rounded-lg p-4 border-l-4 border-green-500">
                         <div className="text-2xl font-bold text-green-400">{stats.activeDrivers}</div>
-                        <div className="text-sm text-green-300">✓ Aktif</div>
+                        <div className="text-sm text-green-300">{t('aktif')}</div>
                     </div>
                     <div className="bg-blue-900/30 rounded-lg p-4 border-l-4 border-blue-500">
                         <div className="text-2xl font-bold text-blue-400">{stats.availableStaff}</div>
@@ -236,7 +239,7 @@ export default function DriverManagementPage() {
                     </div>
                     <div className="bg-amber-900/30 rounded-lg p-4 border-l-4 border-amber-500">
                         <div className="text-2xl font-bold text-amber-400">{stats.totalAssignments}</div>
-                        <div className="text-sm text-amber-300">🏪 Toplam Atama</div>
+                        <div className="text-sm text-amber-300">{t('toplam_atama')}</div>
                     </div>
                 </div>
 
@@ -255,15 +258,15 @@ export default function DriverManagementPage() {
                             onChange={(e) => setFilterMode(e.target.value as 'drivers' | 'all')}
                             className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white"
                         >
-                            <option value="drivers">Sadece Sürücüler</option>
-                            <option value="all">Tüm Personel</option>
+                            <option value="drivers">{t('sadece_suruculer')}</option>
+                            <option value="all">{t('tum_personel')}</option>
                         </select>
                     </div>
                     <button
                         onClick={() => openAssignModal()}
                         className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 flex items-center gap-2"
                     >
-                        ➕ Personeli Sürücü Yap
+                        {t('personeli_surucu_yap')}
                     </button>
                 </div>
 
@@ -271,7 +274,7 @@ export default function DriverManagementPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredDrivers.length === 0 ? (
                         <div className="col-span-full text-center py-12 text-gray-400">
-                            {searchQuery ? 'Arama sonucu bulunamadı' : 'Henüz sürücü atanmamış'}
+                            {searchQuery ? t('arama_sonucu_bulunamadi') : t('henuz_surucu_atanmamis')}
                         </div>
                     ) : (
                         filteredDrivers.map(person => (
@@ -296,13 +299,13 @@ export default function DriverManagementPage() {
                                             {(person.isDriver || person.role === 'driver') && (
                                                 <>
                                                     <span className="px-2 py-0.5 text-xs rounded-full bg-green-900/50 text-green-300">
-                                                        🚗 Sürücü
+                                                        {t('surucu')}
                                                     </span>
                                                     <span className={`px-2 py-0.5 text-xs rounded-full ${person.driverType === 'lokma'
                                                             ? 'bg-blue-900/50 text-blue-300'
                                                             : 'bg-amber-900/50 text-amber-300'
                                                         }`}>
-                                                        {person.driverType === 'lokma' ? '🔵 LOKMA' : '🟠 İşletme'}
+                                                        {person.driverType === 'lokma' ? '🔵 LOKMA' : t('i_sletme')}
                                                     </span>
                                                 </>
                                             )}
@@ -313,7 +316,7 @@ export default function DriverManagementPage() {
                                 {/* Assigned Businesses */}
                                 {(person.isDriver || person.role === 'driver') && (
                                     <div className="mb-3">
-                                        <div className="text-xs text-gray-500 mb-1">Atanmış İşletmeler:</div>
+                                        <div className="text-xs text-gray-500 mb-1">{t('atanmis_i_sletmeler')}</div>
                                         <div className="flex flex-wrap gap-1">
                                             {(person.assignedBusinessNames?.length ?? 0) > 0 ? (
                                                 person.assignedBusinessNames?.map((name, idx) => (
@@ -325,7 +328,7 @@ export default function DriverManagementPage() {
                                                     </span>
                                                 ))
                                             ) : (
-                                                <span className="text-gray-500 text-sm">Henüz atanmamış</span>
+                                                <span className="text-gray-500 text-sm">{t('henuz_atanmamis')}</span>
                                             )}
                                         </div>
                                     </div>
@@ -339,7 +342,7 @@ export default function DriverManagementPage() {
                                                 onClick={() => openAssignModal(person)}
                                                 className="flex-1 text-sm text-blue-400 hover:text-blue-300 py-1"
                                             >
-                                                ✏️ İşletmeleri Düzenle
+                                                {t('i_sletmeleri_duzenle')}
                                             </button>
                                             <button
                                                 onClick={() => setConfirmRemoveDriver(person)}
@@ -353,7 +356,7 @@ export default function DriverManagementPage() {
                                             onClick={() => openAssignModal(person)}
                                             className="flex-1 text-sm text-green-400 hover:text-green-300 py-1"
                                         >
-                                            🚗 Sürücü Yap
+                                            {t('surucu_yap')}
                                         </button>
                                     )}
                                 </div>
@@ -369,14 +372,14 @@ export default function DriverManagementPage() {
                     <div className="bg-gray-800 rounded-lg shadow-xl max-w-lg w-full m-4 max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <h2 className="text-lg font-bold mb-4">
-                                {selectedStaff ? `🚗 ${selectedStaff.name} - Sürücü Ataması` : '🚗 Personel Seç'}
+                                {selectedStaff ? `🚗 ${selectedStaff.name} - Sürücü Ataması` : t('personel_sec')}
                             </h2>
 
                             {/* If no staff selected, show staff list */}
                             {!selectedStaff ? (
                                 <div>
                                     <div className="text-sm text-gray-400 mb-3">
-                                        Sürücü olarak atamak istediğiniz personeli seçin:
+                                        {t('surucu_olarak_atamak_istediginiz_persone')}
                                     </div>
                                     <input
                                         type="text"
@@ -396,7 +399,7 @@ export default function DriverManagementPage() {
                                                 // Determine Turkish role label
                                                 const getRoleLabel = () => {
                                                     if (staff.role === 'admin') {
-                                                        return 'İşletme Sahibi';
+                                                        return t('i_sletme_sahibi');
                                                     } else if (staff.role === 'staff') {
                                                         return 'Personel';
                                                     }
@@ -439,7 +442,7 @@ export default function DriverManagementPage() {
                                         }
                                         {availableStaff.length === 0 && (
                                             <div className="text-center text-gray-500 py-4">
-                                                Atanabilir personel bulunamadı
+                                                {t('atanabilir_personel_bulunamadi')}
                                             </div>
                                         )}
                                     </div>
@@ -454,7 +457,7 @@ export default function DriverManagementPage() {
 
                                     {/* Driver Type Selection */}
                                     <div className="mb-4">
-                                        <label className="block text-sm text-gray-400 mb-2">Sürücü Tipi:</label>
+                                        <label className="block text-sm text-gray-400 mb-2">{t('surucu_tipi')}</label>
                                         <div className="grid grid-cols-2 gap-3">
                                             <button
                                                 type="button"
@@ -464,8 +467,8 @@ export default function DriverManagementPage() {
                                                         : 'border-gray-600 bg-gray-700 hover:border-gray-500'
                                                     }`}
                                             >
-                                                <div className="font-medium text-sm">🟠 İşletme Kuryesi</div>
-                                                <div className="text-xs text-gray-400 mt-1">İşletmenin kendi çalışanı</div>
+                                                <div className="font-medium text-sm">{t('i_sletme_kuryesi')}</div>
+                                                <div className="text-xs text-gray-400 mt-1">{t('i_sletmenin_kendi_calisani')}</div>
                                             </button>
                                             <button
                                                 type="button"
@@ -485,7 +488,7 @@ export default function DriverManagementPage() {
                                     {selectedBusinessIds.length > 0 && (
                                         <div className="mb-4">
                                             <div className="text-sm text-gray-400 mb-2">
-                                                Seçili İşletmeler ({selectedBusinessIds.length}):
+                                                {t('secili_i_sletmeler')}{selectedBusinessIds.length}):
                                             </div>
                                             <div className="flex flex-wrap gap-2">
                                                 {selectedBusinessIds.map(id => {
@@ -512,11 +515,11 @@ export default function DriverManagementPage() {
                                     {/* Business Search */}
                                     <div>
                                         <label className="block text-sm text-gray-400 mb-2">
-                                            İşletme Ara ve Ekle:
+                                            {t('i_sletme_ara_ve_ekle')}
                                         </label>
                                         <input
                                             type="text"
-                                            placeholder="🔍 İşletme adı yazın..."
+                                            placeholder={t('i_sletme_adi_yazin')}
                                             value={businessSearchQuery}
                                             onChange={(e) => setBusinessSearchQuery(e.target.value)}
                                             className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-amber-500 mb-2"
@@ -524,7 +527,7 @@ export default function DriverManagementPage() {
                                         <div className="max-h-48 overflow-y-auto bg-gray-700 rounded-lg">
                                             {filteredBusinesses.length === 0 ? (
                                                 <div className="text-gray-500 text-sm text-center py-4">
-                                                    {businessSearchQuery ? 'İşletme bulunamadı' : 'Arama yapmak için yazın'}
+                                                    {businessSearchQuery ? t('i_sletme_bulunamadi') : t('arama_yapmak_icin_yazin')}
                                                 </div>
                                             ) : (
                                                 filteredBusinesses.map(business => (
@@ -576,7 +579,7 @@ export default function DriverManagementPage() {
                                         disabled={selectedBusinessIds.length === 0}
                                         className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50"
                                     >
-                                        ✓ Kaydet
+                                        {t('kaydet')}
                                     </button>
                                 )}
                             </div>
@@ -590,12 +593,12 @@ export default function DriverManagementPage() {
                 isOpen={!!confirmRemoveDriver}
                 onClose={() => setConfirmRemoveDriver(null)}
                 onConfirm={handleRemoveDriverConfirm}
-                title="Sürücü Yetkisini Kaldır"
-                message="Bu kişinin sürücü yetkisini kaldırmak istediğinizden emin misiniz?"
+                title={t('surucu_yetkisini_kaldir')}
+                message={t('bu_kisinin_surucu_yetkisini_kaldirmak_is')}
                 itemName={confirmRemoveDriver?.name}
                 variant="warning"
-                confirmText="Evet, Kaldır"
-                loadingText="Kaldırılıyor..."
+                confirmText={t('evet_kaldir')}
+                loadingText={t('kaldiriliyor')}
             />
         </div>
     );

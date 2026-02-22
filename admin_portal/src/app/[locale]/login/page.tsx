@@ -20,19 +20,24 @@ import { isSuperAdmin } from '@/lib/config';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
-// Country codes for phone input
-const countryCodes = [
-    { code: '+49', country: '🇩🇪', name: 'Almanya' },
-    { code: '+90', country: '🇹🇷', name: 'Türkiye' },
-    { code: '+43', country: '🇦🇹', name: 'Avusturya' },
-    { code: '+41', country: '🇨🇭', name: 'İsviçre' },
-    { code: '+31', country: '🇳🇱', name: 'Hollanda' },
-    { code: '+32', country: '🇧🇪', name: 'Belçika' },
-    { code: '+33', country: '🇫🇷', name: 'Fransa' },
-];
+
 
 export default function LoginPage() {
+    const tAdminLogin = useTranslations('AdminLogin');
+
+    // Country codes for phone input
+    const countryCodes = [
+        { code: '+49', country: '🇩🇪', name: 'Almanya' },
+        { code: '+90', country: '🇹🇷', name: tAdminLogin('turkiye') },
+        { code: '+43', country: '🇦🇹', name: 'Avusturya' },
+        { code: '+41', country: '🇨🇭', name: tAdminLogin('i̇svicre') },
+        { code: '+31', country: '🇳🇱', name: 'Hollanda' },
+        { code: '+32', country: '🇧🇪', name: tAdminLogin('belcika') },
+        { code: '+33', country: '🇫🇷', name: 'Fransa' },
+    ];
+
     // Email auth state
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -63,7 +68,7 @@ export default function LoginPage() {
     // Handle forgot password
     const handleForgotPassword = async () => {
         if (!email.trim()) {
-            setError('Lütfen önce e-posta adresinizi girin.');
+            setError(tAdminLogin('lutfen_once_eposta_adresinizi_girin'));
             return;
         }
 
@@ -78,13 +83,13 @@ export default function LoginPage() {
             console.error('Password reset error:', err);
             if (err instanceof Error) {
                 if (err.message.includes('auth/user-not-found')) {
-                    setError('Bu e-posta adresiyle kayıtlı kullanıcı bulunamadı.');
+                    setError(tAdminLogin('bu_eposta_adresiyle_kayitli_kullanici_bu'));
                 } else if (err.message.includes('auth/invalid-email')) {
-                    setError('Geçersiz e-posta adresi.');
+                    setError(tAdminLogin('gecersiz_eposta_adresi'));
                 } else if (err.message.includes('auth/too-many-requests')) {
-                    setError('Çok fazla deneme. Lütfen bir süre bekleyin.');
+                    setError(tAdminLogin('cok_fazla_deneme_lutfen_bir_sure_bekleyi'));
                 } else {
-                    setError('Şifre sıfırlama e-postası gönderilemedi.');
+                    setError(tAdminLogin('sifre_sifirlama_epostasi_gonderilemedi'));
                 }
             }
         }
@@ -275,7 +280,7 @@ export default function LoginPage() {
             await setDoc(userDocRef, {
                 email: userEmail || null,
                 phoneNumber: userPhone || null,
-                displayName: auth.currentUser?.displayName || userEmail?.split('@')[0] || 'MIRA Kullanıcı',
+                displayName: auth.currentUser?.displayName || userEmail?.split('@')[0] || tAdminLogin('mira_kullanici'),
                 firstName: auth.currentUser?.displayName?.split(' ')[0] || null,
                 lastName: auth.currentUser?.displayName?.split(' ').slice(1).join(' ') || null,
                 photoURL: auth.currentUser?.photoURL || null, // CRITICAL: Save Google profile picture
@@ -319,11 +324,11 @@ export default function LoginPage() {
         } catch (err: unknown) {
             if (err instanceof Error) {
                 if (err.message.includes('auth/invalid-credential')) {
-                    setError('E-posta veya şifre hatalı.');
+                    setError(tAdminLogin('eposta_veya_sifre_hatali'));
                 } else if (err.message.includes('auth/user-not-found')) {
-                    setError('Bu e-posta ile kayıtlı kullanıcı bulunamadı.');
+                    setError(tAdminLogin('bu_eposta_ile_kayitli_kullanici_bulunama'));
                 } else {
-                    setError('Giriş yapılamadı. Lütfen tekrar deneyin.');
+                    setError(tAdminLogin('giris_yapilamadi_lutfen_tekrar_deneyin'));
                 }
             }
             setLoading(false);
@@ -339,7 +344,7 @@ export default function LoginPage() {
             await handleUserRedirect(result.user.uid, result.user.email);
         } catch (err) {
             console.error('Google login error:', err);
-            setError('Google ile giriş yapılamadı.');
+            setError(tAdminLogin('google_ile_giris_yapilamadi'));
             setLoading(false);
         }
     };
@@ -355,7 +360,7 @@ export default function LoginPage() {
             await handleUserRedirect(result.user.uid, result.user.email);
         } catch (err) {
             console.error('Apple login error:', err);
-            setError('Apple ile giriş yapılamadı.');
+            setError(tAdminLogin('apple_ile_giris_yapilamadi'));
             setLoading(false);
         }
     };
@@ -388,7 +393,7 @@ export default function LoginPage() {
                 'expired-callback': () => {
                     console.log('reCAPTCHA expired - clearing for retry');
                     recaptchaVerifierRef.current = null;
-                    setError('Güvenlik doğrulaması süresi doldu. Lütfen tekrar deneyin.');
+                    setError(tAdminLogin('guvenlik_dogrulamasi_suresi_doldu_lutfen'));
                 }
             });
 
@@ -411,7 +416,7 @@ export default function LoginPage() {
 
         // Simple validation
         if (phoneNumber.length < 6) {
-            setError('Geçerli bir telefon numarası girin.');
+            setError(tAdminLogin('gecerli_bir_telefon_numarasi_girin'));
             setLoading(false);
             return;
         }
@@ -420,7 +425,7 @@ export default function LoginPage() {
             await initRecaptcha();
 
             if (!recaptchaVerifierRef.current) {
-                setError('Güvenlik doğrulaması başlatılamadı. Sayfayı yenileyin.');
+                setError(tAdminLogin('guvenlik_dogrulamasi_baslatilamadi_sayfa'));
                 setLoading(false);
                 return;
             }
@@ -433,13 +438,13 @@ export default function LoginPage() {
             console.error('Send OTP error:', err);
             if (err instanceof Error) {
                 if (err.message.includes('auth/invalid-phone-number')) {
-                    setError('Geçersiz telefon numarası formatı.');
+                    setError(tAdminLogin('gecersiz_telefon_numarasi_formati'));
                 } else if (err.message.includes('auth/too-many-requests')) {
-                    setError('Çok fazla deneme. Lütfen bir süre bekleyin.');
+                    setError(tAdminLogin('cok_fazla_deneme_lutfen_bir_sure_bekleyi'));
                 } else if (err.message.includes('auth/quota-exceeded')) {
-                    setError('SMS kotası doldu. Lütfen daha sonra tekrar deneyin.');
+                    setError(tAdminLogin('sms_kotasi_doldu_lutfen_daha_sonra_tekra'));
                 } else {
-                    setError('SMS gönderilemedi. Lütfen tekrar deneyin.');
+                    setError(tAdminLogin('sms_gonderilemedi_lutfen_tekrar_deneyin'));
                 }
             }
             // Reset recaptcha for retry
@@ -455,14 +460,14 @@ export default function LoginPage() {
         setLoading(true);
 
         if (otpCode.length !== 6) {
-            setError('6 haneli doğrulama kodunu girin.');
+            setError(tAdminLogin('6_haneli_dogrulama_kodunu_girin'));
             setLoading(false);
             return;
         }
 
         try {
             if (!confirmationResult) {
-                setError('Doğrulama süresi dolmuş. Tekrar SMS gönderin.');
+                setError(tAdminLogin('dogrulama_suresi_dolmus_tekrar_sms_gonde'));
                 setLoading(false);
                 return;
             }
@@ -541,7 +546,7 @@ export default function LoginPage() {
                 // Use firstName/lastName from state, or from matched admin data
                 const userFirstName = matchedAdminData?.firstName || firstName.trim() || '';
                 const userLastName = matchedAdminData?.lastName || lastName.trim() || '';
-                const fullName = `${userFirstName} ${userLastName}`.trim() || 'LOKMA Kullanıcı';
+                const fullName = `${userFirstName} ${userLastName}`.trim() || tAdminLogin('lokma_kullanici');
 
                 await setDoc(doc(db, 'users', user.uid), {
                     phoneNumber: phoneNumber,
@@ -557,7 +562,7 @@ export default function LoginPage() {
                 });
 
                 // Update display name in Auth (use admin name if available)
-                if (fullName && fullName !== 'LOKMA Kullanıcı') {
+                if (fullName && fullName !== tAdminLogin('lokma_kullanici')) {
                     await updateProfile(user, { displayName: fullName });
                 }
             } else if (matchedAdminData) {
@@ -594,13 +599,13 @@ export default function LoginPage() {
             console.error('Verify OTP error:', err);
             if (err instanceof Error) {
                 if (err.message.includes('auth/invalid-verification-code')) {
-                    setError('Yanlış doğrulama kodu. Tekrar deneyin.');
+                    setError(tAdminLogin('yanlis_dogrulama_kodu_tekrar_deneyin'));
                 } else if (err.message.includes('auth/code-expired')) {
-                    setError('Doğrulama kodunun süresi doldu. Yeni kod gönderin.');
+                    setError(tAdminLogin('dogrulama_kodunun_suresi_doldu_yeni_kod_'));
                     setShowOtpInput(false);
                     setConfirmationResult(null);
                 } else {
-                    setError('Doğrulama başarısız. Lütfen tekrar deneyin.');
+                    setError(tAdminLogin('dogrulama_basarisiz_lutfen_tekrar_deneyi'));
                 }
             }
             setLoading(false);
@@ -619,7 +624,7 @@ export default function LoginPage() {
         }
 
         if (password.length < 6) {
-            setError('Şifre en az 6 karakter olmalıdır.');
+            setError(tAdminLogin('sifre_en_az_6_karakter_olmalidir'));
             setLoading(false);
             return;
         }
@@ -654,18 +659,18 @@ export default function LoginPage() {
             console.log('User registered successfully, verification email sent:', userCredential.user.uid);
 
             // Show success message and redirect
-            alert('✅ Hesap oluşturuldu! Lütfen e-posta adresinize gelen doğrulama linkine tıklayın.');
+            alert(tAdminLogin('_hesap_olusturuldu_lutfen_eposta_adresin'));
             router.push('/login');
         } catch (err: unknown) {
             if (err instanceof Error) {
                 if (err.message.includes('auth/email-already-in-use')) {
-                    setError('Bu e-posta adresi zaten kullanılıyor.');
+                    setError(tAdminLogin('bu_eposta_adresi_zaten_kullaniliyor'));
                 } else if (err.message.includes('auth/weak-password')) {
-                    setError('Şifre çok zayıf. En az 6 karakter olmalıdır.');
+                    setError(tAdminLogin('sifre_cok_zayif_en_az_6_karakter_olmalid'));
                 } else if (err.message.includes('auth/invalid-email')) {
-                    setError('Geçersiz e-posta adresi.');
+                    setError(tAdminLogin('gecersiz_eposta_adresi'));
                 } else {
-                    setError('Hesap oluşturulamadı. Lütfen tekrar deneyin.');
+                    setError(tAdminLogin('hesap_olusturulamadi_lutfen_tekrar_deney'));
                 }
             }
             setLoading(false);
@@ -686,7 +691,7 @@ export default function LoginPage() {
             <div className="w-full max-w-md">
                 {/* Back to Home */}
                 <Link href="/" className="inline-flex items-center text-white/60 hover:text-white mb-6">
-                    ← Ana Sayfaya Dön
+                    {tAdminLogin('_ana_sayfaya_don')}
                 </Link>
 
                 <div className="bg-[#1a1010] border border-white/10 rounded-2xl shadow-xl p-8">
@@ -694,10 +699,10 @@ export default function LoginPage() {
                     <div className="text-center mb-6">
                         <img src="/lokma_logo.png" alt="LOKMA" className="w-16 h-16 mx-auto rounded-2xl mb-4" />
                         <h1 className="text-2xl font-bold text-white">
-                            {isRegister ? 'Hesap Oluştur' : 'Hoş Geldiniz'}
+                            {isRegister ? tAdminLogin('hesap_olustur') : tAdminLogin('hos_geldiniz')}
                         </h1>
                         <p className="text-white/60 text-sm mt-1">
-                            {isRegister ? 'Yeni bir LOKMA hesabı oluşturun' : 'LOKMA hesabınıza giriş yapın'}
+                            {isRegister ? tAdminLogin('yeni_bir_lokma_hesabi_olusturun') : tAdminLogin('lokma_hesabiniza_giris_yapin')}
                         </p>
                     </div>
 
@@ -714,7 +719,7 @@ export default function LoginPage() {
                                 : 'text-white/50 hover:text-white/70'
                                 }`}
                         >
-                            Giriş Yap
+                            {tAdminLogin('giris_yap')}
                         </button>
                         <button
                             onClick={() => { setIsRegister(true); setError(''); }}
@@ -723,7 +728,7 @@ export default function LoginPage() {
                                 : 'text-white/50 hover:text-white/70'
                                 }`}
                         >
-                            Hesap Oluştur
+                            {tAdminLogin('hesap_olustur')}
                         </button>
                     </div>
 
@@ -732,7 +737,7 @@ export default function LoginPage() {
                         <div className="bg-amber-500/20 border border-amber-500/30 text-amber-300 px-4 py-3 rounded-lg mb-4 text-sm flex items-start gap-3">
                             <span className="text-lg">⚠️</span>
                             <div className="flex-1">
-                                <p className="font-medium">Oturumunuz sonlandırıldı</p>
+                                <p className="font-medium">{tAdminLogin('oturumunuz_sonlandirildi')}</p>
                                 <p className="text-amber-400/80">{logoutReason}</p>
                             </div>
                             <button
@@ -761,7 +766,7 @@ export default function LoginPage() {
                             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
                             </svg>
-                            <span>Apple ile Giriş Yap</span>
+                            <span>{tAdminLogin('apple_ile_giris_yap')}</span>
                         </button>
 
                         <button
@@ -775,7 +780,7 @@ export default function LoginPage() {
                                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                             </svg>
-                            <span>Google ile Giriş Yap</span>
+                            <span>{tAdminLogin('google_ile_giris_yap')}</span>
                         </button>
                     </div>
 
@@ -819,7 +824,7 @@ export default function LoginPage() {
                                                         value={firstName}
                                                         onChange={(e) => setFirstName(e.target.value)}
                                                         className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
-                                                        placeholder="Adınız"
+                                                        placeholder={tAdminLogin('adiniz')}
                                                         required
                                                     />
                                                 </div>
@@ -832,13 +837,13 @@ export default function LoginPage() {
                                                         value={lastName}
                                                         onChange={(e) => setLastName(e.target.value)}
                                                         className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
-                                                        placeholder="Soyadınız"
+                                                        placeholder={tAdminLogin('soyadiniz')}
                                                         required
                                                     />
                                                 </div>
                                             </div>
                                             <p className="text-xs text-gray-500 mt-1">
-                                                Siparişlerinizde ve profilinizde görünecek isim
+                                                {tAdminLogin('siparislerinizde_ve_profilinizde_gorunec')}
                                             </p>
                                         </div>
                                     )}
@@ -846,14 +851,14 @@ export default function LoginPage() {
                                     {/* Phone Number with Country Code */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Telefon Numarası
+                                            {tAdminLogin('telefon_numarasi')}
                                         </label>
                                         <div className="flex gap-2">
                                             <select
                                                 value={countryCode}
                                                 onChange={(e) => setCountryCode(e.target.value)}
                                                 className="px-3 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white"
-                                                title="Ülke kodu seçimi"
+                                                title={tAdminLogin('ulke_kodu_secimi')}
                                             >
                                                 {countryCodes.map((c) => (
                                                     <option key={c.code} value={c.code}>
@@ -883,22 +888,22 @@ export default function LoginPage() {
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
-                                                SMS gönderiliyor...
+                                                {tAdminLogin('sms_gonderiliyor')}
                                             </span>
                                         ) : (
-                                            '📲 Doğrulama Kodu Gönder'
+                                            tAdminLogin('_dogrulama_kodu_gonder')
                                         )}
                                     </button>
                                 </form>
                             ) : (
                                 <form onSubmit={handleVerifyOTP} className="space-y-4">
                                     <div className="bg-green-500/20 border border-green-500/30 text-green-300 px-4 py-3 rounded-lg mb-4 text-sm">
-                                        📱 <strong>{countryCode} {phoneNumber}</strong> numarasına SMS gönderildi.
+                                        📱 <strong>{countryCode} {phoneNumber}</strong> {tAdminLogin('numarasina_sms_gonderildi')}
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            6 Haneli Doğrulama Kodu
+                                            {tAdminLogin('6_haneli_dogrulama_kodu')}
                                         </label>
                                         <input
                                             type="text"
@@ -923,10 +928,10 @@ export default function LoginPage() {
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
-                                                Doğrulanıyor...
+                                                {tAdminLogin('dogrulaniyor')}
                                             </span>
                                         ) : (
-                                            '✓ Doğrula ve Giriş Yap'
+                                            tAdminLogin('_dogrula_ve_giris_yap')
                                         )}
                                     </button>
 
@@ -935,7 +940,7 @@ export default function LoginPage() {
                                         onClick={() => { setShowOtpInput(false); setOtpCode(''); setConfirmationResult(null); recaptchaVerifierRef.current = null; }}
                                         className="w-full py-2 text-white/50 hover:text-white/70 text-sm"
                                     >
-                                        ← Telefon numarasını değiştir
+                                        {tAdminLogin('_telefon_numarasini_degistir')}
                                     </button>
                                 </form>
                             )}
@@ -952,8 +957,8 @@ export default function LoginPage() {
                                 <div className="space-y-4">
                                     <div className="text-center mb-4">
                                         <div className="text-4xl mb-2">🔐</div>
-                                        <h3 className="text-lg font-semibold text-white">Şifrenizi mi unuttunuz?</h3>
-                                        <p className="text-sm text-white/60 mt-1">E-posta adresinizi girin, şifre sıfırlama linki göndereceğiz.</p>
+                                        <h3 className="text-lg font-semibold text-white">{tAdminLogin('sifrenizi_mi_unuttunuz')}</h3>
+                                        <p className="text-sm text-white/60 mt-1">{tAdminLogin('eposta_adresinizi_girin_sifre_sifirlama_')}</p>
                                     </div>
 
                                     <div>
@@ -976,8 +981,8 @@ export default function LoginPage() {
                                         <div className="bg-green-500/20 border border-green-500/30 text-green-300 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
                                             <span className="text-lg">✉️</span>
                                             <div>
-                                                <p className="font-medium">Şifre sıfırlama e-postası gönderildi!</p>
-                                                <p className="text-green-400 text-xs">{email} adresine gelen linke tıklayarak yeni şifrenizi belirleyin.</p>
+                                                <p className="font-medium">{tAdminLogin('sifre_sifirlama_epostasi_gonderildi')}</p>
+                                                <p className="text-green-400 text-xs">{email} {tAdminLogin('adresine_gelen_linke_tiklayarak_yeni_sif')}</p>
                                             </div>
                                         </div>
                                     )}
@@ -994,10 +999,10 @@ export default function LoginPage() {
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
-                                                Gönderiliyor...
+                                                {tAdminLogin('gonderiliyor')}
                                             </span>
                                         ) : (
-                                            '📧 Şifre Sıfırlama E-postası Gönder'
+                                            tAdminLogin('_sifre_sifirlama_epostasi_gonder')
                                         )}
                                     </button>
 
@@ -1010,7 +1015,7 @@ export default function LoginPage() {
                                         }}
                                         className="w-full py-2 text-white/50 hover:text-white/70 text-sm"
                                     >
-                                        ← Giriş ekranına dön
+                                        {tAdminLogin('_giris_ekranina_don')}
                                     </button>
                                 </div>
                             ) : (
@@ -1028,7 +1033,7 @@ export default function LoginPage() {
                                                     value={firstName}
                                                     onChange={(e) => setFirstName(e.target.value)}
                                                     className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
-                                                    placeholder="Adınız"
+                                                    placeholder={tAdminLogin('adiniz')}
                                                     required
                                                 />
                                             </div>
@@ -1041,7 +1046,7 @@ export default function LoginPage() {
                                                     value={lastName}
                                                     onChange={(e) => setLastName(e.target.value)}
                                                     className="w-full px-4 py-3 border border-white/20 rounded-xl focus:ring-2 focus:ring-[#fb335b] focus:border-transparent transition bg-white/5 text-white placeholder:text-white/40"
-                                                    placeholder="Soyadınız"
+                                                    placeholder={tAdminLogin('soyadiniz')}
                                                     required
                                                 />
                                             </div>
@@ -1064,7 +1069,7 @@ export default function LoginPage() {
 
                                     <div>
                                         <label className="block text-sm font-medium text-white/70 mb-1">
-                                            Şifre
+                                            {tAdminLogin('sifre')}
                                         </label>
                                         <input
                                             type="password"
@@ -1075,7 +1080,7 @@ export default function LoginPage() {
                                             required
                                         />
                                         {isRegister ? (
-                                            <p className="text-xs text-white/50 mt-1">En az 6 karakter olmalıdır</p>
+                                            <p className="text-xs text-white/50 mt-1">{tAdminLogin('en_az_6_karakter_olmalidir')}</p>
                                         ) : (
                                             <div className="flex justify-end mt-1">
                                                 <button
@@ -1086,7 +1091,7 @@ export default function LoginPage() {
                                                     }}
                                                     className="text-xs text-[#fb335b] hover:text-[#ff6b7a] hover:underline"
                                                 >
-                                                    Şifremi unuttum
+                                                    {tAdminLogin('sifremi_unuttum')}
                                                 </button>
                                             </div>
                                         )}
@@ -1103,10 +1108,10 @@ export default function LoginPage() {
                                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                 </svg>
-                                                {isRegister ? 'Hesap oluşturuluyor...' : 'Giriş yapılıyor...'}
+                                                {isRegister ? tAdminLogin('hesap_olusturuluyor') : tAdminLogin('giris_yapiliyor')}
                                             </span>
                                         ) : (
-                                            isRegister ? 'Hesap Oluştur' : 'Giriş Yap'
+                                            isRegister ? tAdminLogin('hesap_olustur') : tAdminLogin('giris_yap')
                                         )}
                                     </button>
                                 </form>
@@ -1116,8 +1121,8 @@ export default function LoginPage() {
 
                     {/* Footer */}
                     <p className="text-center text-white/40 text-xs mt-8">
-                        Giriş yaparak <Link href="/terms" className="text-[#fb335b] hover:underline">Kullanım Koşullarını</Link> ve{' '}
-                        <Link href="/privacy" className="text-[#fb335b] hover:underline">Gizlilik Politikasını</Link> kabul etmiş olursunuz.
+                        {tAdminLogin('giris_yaparak')} <Link href="/terms" className="text-[#fb335b] hover:underline">{tAdminLogin('kullanim_kosullarini')}</Link> ve{' '}
+                        <Link href="/privacy" className="text-[#fb335b] hover:underline">{tAdminLogin('gizlilik_politikasini')}</Link> {tAdminLogin('kabul_etmis_olursunuz')}
                     </p>
                 </div>
             </div>

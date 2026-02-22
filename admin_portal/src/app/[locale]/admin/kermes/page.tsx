@@ -8,6 +8,7 @@ import { KermesEvent } from '@/types';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 type KermesWithOrg = KermesEvent & {
     organizationName?: string;
@@ -19,7 +20,9 @@ type KermesWithOrg = KermesEvent & {
 };
 
 export default function KermesListPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminKermes');
+const { admin, loading: adminLoading } = useAdmin();
     const [loading, setLoading] = useState(true);
     const [events, setEvents] = useState<KermesWithOrg[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -102,7 +105,7 @@ export default function KermesListPage() {
             case 'past':
                 return { label: 'Geçmiş', color: 'bg-gray-600', border: 'border-gray-500', text: 'text-gray-300', bg: 'bg-gray-800/50' };
             case 'active':
-                return { label: 'Aktif', color: 'bg-green-600', border: 'border-green-500', text: 'text-green-400', bg: 'bg-green-900/20' };
+                return { label: t('aktif'), color: 'bg-green-600', border: 'border-green-500', text: 'text-green-400', bg: 'bg-green-900/20' };
             case 'future':
                 return { label: 'Yaklaşan', color: 'bg-blue-600', border: 'border-blue-500', text: 'text-blue-400', bg: 'bg-blue-900/20' };
         }
@@ -123,7 +126,7 @@ export default function KermesListPage() {
         if (start && end && start !== end) {
             return `${start} - ${end}`;
         }
-        return start || 'Tarih yok';
+        return start || t('tarih_yok');
     };
 
     // Get location display - try multiple fields
@@ -405,7 +408,7 @@ export default function KermesListPage() {
                             className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 min-w-[180px]"
                         >
                             <option value="all">📋 Tüm Kermesler</option>
-                            <option value="active">🟢 Aktif (Devam Eden)</option>
+                            <option value="active">{t('aktif_devam_eden')}</option>
                             <option value="future">🔵 Yaklaşan</option>
                             <option value="past">⚫ Geçmiş</option>
                             {admin.role === 'super_admin' && (
@@ -476,7 +479,7 @@ export default function KermesListPage() {
 
                                             {/* Date */}
                                             <div className="hidden md:block">
-                                                <span className="text-gray-500 text-xs">📅 Tarih</span>
+                                                <span className="text-gray-500 text-xs">{t('tarih')}</span>
                                                 <p className="text-white text-sm truncate">{formatDateRange(event)}</p>
                                             </div>
 

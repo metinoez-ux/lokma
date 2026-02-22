@@ -414,11 +414,11 @@ export default function SuperAdminDashboard() {
                 }, (error) => {
                     console.error("Error getting location", error);
                     setIsGeocoding(false);
-                    alert("Konum alınamadı. Lütfen GPS izni verin.");
+                    alert(tNav('konum_alinamadi_lutfen_gps_izni_verin'));
                 });
                 return;
             } else {
-                alert("GPS verisi bulunamadı.");
+                alert(tNav('gps_verisi_bulunamadi'));
                 return;
             }
         }
@@ -441,7 +441,7 @@ export default function SuperAdminDashboard() {
 
                 if (status !== 'OK' || !results || results.length === 0) {
                     console.error("Geocoding failed:", status);
-                    alert("Adres çözümlenemedi. Lütfen manuel olarak girin.");
+                    alert(tNav('adres_cozumlenemedi_lutfen_manuel_olarak'));
                     return;
                 }
 
@@ -499,7 +499,7 @@ export default function SuperAdminDashboard() {
         } catch (error) {
             console.error("Geocoding error:", error);
             setIsGeocoding(false);
-            alert("Adres çözümlenemedi. Google Maps yüklenemedi.");
+            alert(tNav('adres_cozumlenemedi_google_maps_yuklenem'));
         }
     };
 
@@ -911,7 +911,7 @@ export default function SuperAdminDashboard() {
             setHasMore(false); // Search doesn't easily support pagination across multiple queries
         } catch (error) {
             console.error('Search error:', error);
-            showToast('Arama sırasında hata oluştu', 'error');
+            showToast(tNav('arama_sirasinda_hata_olustu'), 'error');
         } finally {
             setSearchLoading(false);
         }
@@ -1015,7 +1015,7 @@ export default function SuperAdminDashboard() {
                 // OR users created by this business
                 allowedUserIds = new Set<string>();
 
-                console.log('🔒 SECURITY: Loading customers for business:', admin.butcherId);
+                console.log(tNav('security_loading_customers_for_business'), admin.butcherId);
 
                 // 1️⃣ Query orders collection for this business (try both businessId and butcherId for backward compatibility)
                 const ordersQueryByBusinessId = query(
@@ -1044,7 +1044,7 @@ export default function SuperAdminDashboard() {
                     }
                 });
 
-                console.log('🔒 SECURITY: Found', allowedUserIds.size, 'customers from orders');
+                console.log(tNav('security_found'), allowedUserIds.size, 'customers from orders');
 
                 // 2️⃣ Also get users CREATED by this business's admins
                 // First get all admin emails for this business
@@ -1061,7 +1061,7 @@ export default function SuperAdminDashboard() {
                     }
                 });
 
-                console.log('🔒 SECURITY: Business has', businessAdminEmails.size, 'admins');
+                console.log(tNav('security_business_has'), businessAdminEmails.size, 'admins');
 
                 // Now find users created by these admins (createdBySource: 'business_admin')
                 // We need to check each user's createdBy field
@@ -1069,12 +1069,12 @@ export default function SuperAdminDashboard() {
                 // Store the admin emails for later filtering
                 (allowedUserIds as any)._businessAdminEmails = businessAdminEmails;
 
-                console.log('🔒 SECURITY: Total allowed users (orders):', allowedUserIds.size);
+                console.log(tNav('security_total_allowed_users_orders'), allowedUserIds.size);
 
                 // Don't return early if no orders - there might be users created by the business
             } else if (admin?.adminType !== 'super') {
                 // Non-super admin without a business - show nothing
-                console.log('🔒 SECURITY: Admin has no business, showing empty list');
+                console.log(tNav('security_admin_has_no_business_showing_e'));
                 setUsers([]);
                 setAllUsersTotal(0);
                 setAllUsersPage(1);
@@ -1290,7 +1290,7 @@ export default function SuperAdminDashboard() {
             }
         } catch (error) {
             console.error('Delete user error:', error);
-            showToast('Kullanıcı silinirken hata oluştu', 'error');
+            showToast(tNav('kullanici_silinirken_hata_olustu'), 'error');
         }
     };
 
@@ -1299,8 +1299,8 @@ export default function SuperAdminDashboard() {
         if (!selectedUser || !assignRole) return;
 
         // Validate business selection for kasap/restoran roles
-        if ((assignRole === 'kasap' || assignRole === 'kasap_staff' || assignRole === 'restoran' || assignRole === 'restoran_staff') && !selectedButcherId) {
-            showToast('Lütfen bir işletme seçin', 'error');
+        if ((assignRole === 'kasap' || assignRole === 'kasap_staff' || assignRole === tNav('restoran') || assignRole === 'restoran_staff') && !selectedButcherId) {
+            showToast(tNav('lutfen_bir_isletme_secin'), 'error');
             return;
         }
 
@@ -1341,10 +1341,10 @@ export default function SuperAdminDashboard() {
                     : u
             ));
 
-            showToast('Admin rolü başarıyla atandı!', 'success');
+            showToast(tNav('admin_rolu_basariyla_atandi'), 'success');
         } catch (error) {
             console.error('Assign role error:', error);
-            showToast('Rol atanırken hata oluştu: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'), 'error');
+            showToast('Rol atanırken hata oluştu: ' + (error instanceof Error ? error.message : tNav('bilinmeyen_hata')), 'error');
         }
         setAssigning(false);
     };
@@ -1353,11 +1353,11 @@ export default function SuperAdminDashboard() {
     const handleRemoveAdmin = async (adminId: string, adminName?: string) => {
         setConfirmState({
             isOpen: true,
-            title: 'Admin Yetkisini Kaldır',
-            message: 'Bu kullanıcının admin yetkisini TAMAMEN KALDIRMAK istediğinize emin misiniz? Bu işlem geri alınamaz.',
+            title: tNav('admin_yetkisini_kaldir'),
+            message: tNav('bu_kullanicinin_admin_yetkisini_tamamen_'),
             itemName: adminName,
             variant: 'danger',
-            confirmText: 'Evet, Yetkiyi Kaldır',
+            confirmText: tNav('evet_yetkiyi_kaldir'),
             onConfirm: async () => {
                 setConfirmState(prev => ({ ...prev, isOpen: false }));
                 try {
@@ -1378,7 +1378,7 @@ export default function SuperAdminDashboard() {
                     }
 
                     setAdmins(admins.filter(a => a.id !== adminId));
-                    showToast('Admin yetkisi kaldırıldı', 'success');
+                    showToast(tNav('admin_yetkisi_kaldirildi'), 'success');
                 } catch (error) {
                     console.error('Remove admin error:', error);
                     showToast('Hata oluştu: ' + (error as Error).message, 'error');
@@ -1390,8 +1390,8 @@ export default function SuperAdminDashboard() {
     // Open edit modal for an admin
     const handleEditAdmin = (adminToEdit: Admin) => {
         // 🔍 CRITICAL DEBUG: Log everything about the admin being edited
-        console.log('🎯 ============= EDIT ADMIN DEBUG =============');
-        console.log('🎯 Admin ID:', adminToEdit.id);
+        console.log(tNav('edit_admin_debug'));
+        console.log(tNav('admin_id'), adminToEdit.id);
         console.log('🎯 Admin displayName:', adminToEdit.displayName);
         console.log('🎯 Admin email:', adminToEdit.email);
         console.log('🎯 Admin adminType:', adminToEdit.adminType);
@@ -1442,7 +1442,7 @@ export default function SuperAdminDashboard() {
 
         // 🔒 CRITICAL PROTECTION: Never allow editing super admin role
         if (editingAdmin.adminType === 'super') {
-            showToast('❌ Super Admin rolü değiştirilemez!', 'error');
+            showToast(tNav('super_admin_rolu_degistirilemez'), 'error');
             return;
         }
 
@@ -1452,7 +1452,7 @@ export default function SuperAdminDashboard() {
             // SPECIAL CASE: Demotion to 'user' - Deactivate admin record
             // ═══════════════════════════════════════════════════════════════════
             if (editRole === 'user') {
-                console.log('🔻 DEMOTION TO USER: Deactivating admin record for', editingAdmin.displayName);
+                console.log(tNav('demotion_to_user_deactivating_admin_reco'), editingAdmin.displayName);
 
                 // Deactivate admin record
                 await updateDoc(doc(db, 'admins', editingAdmin.id), {
@@ -1464,7 +1464,7 @@ export default function SuperAdminDashboard() {
                     updatedBy: admin?.email || 'system',
                     deactivatedBy: admin?.email || admin?.displayName || 'system',
                     deactivatedAt: new Date(),
-                    deactivationReason: 'Admin rolü kaldırıldı - Kullanıcıya indirgendi',
+                    deactivationReason: tNav('admin_rolu_kaldirildi_kullaniciya_indirg'),
                 });
 
                 // Also update user record if exists (check both firebaseUid and admin.id)
@@ -1549,8 +1549,8 @@ export default function SuperAdminDashboard() {
             }
 
             // 🔍 CRITICAL DEBUG: Log exact admin being updated
-            console.log('📝 ============= ADMIN UPDATE DEBUG =============');
-            console.log('📝 Admin ID being updated:', editingAdmin.id);
+            console.log(tNav('admin_update_debug'));
+            console.log(tNav('admin_id_being_updated'), editingAdmin.id);
             console.log('📝 Admin name:', editingAdmin.displayName);
             console.log('📝 Admin email:', editingAdmin.email);
             console.log('📝 Current adminType:', editingAdmin.adminType);
@@ -1603,10 +1603,10 @@ export default function SuperAdminDashboard() {
             await reloadAdmins();
 
             setEditingAdmin(null);
-            showToast('Admin bilgileri güncellendi!', 'success');
+            showToast(tNav('admin_bilgileri_guncellendi'), 'success');
         } catch (error) {
             console.error('Save admin error:', error);
-            showToast('Kaydetme hatası: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'), 'error');
+            showToast('Kaydetme hatası: ' + (error instanceof Error ? error.message : tNav('bilinmeyen_hata')), 'error');
         }
         setSaving(false);
     };
@@ -1615,18 +1615,18 @@ export default function SuperAdminDashboard() {
     const handleCreateUser = async () => {
         // Email OR Phone is required (at least one contact method)
         if (!newUserEmail && !newUserPhone) {
-            setCreateError('E-posta veya telefon numarasından en az biri zorunludur');
+            setCreateError(tNav('e_posta_veya_telefon_numarasindan_en_az_'));
             return;
         }
 
         if (!newUserPassword || !newUserName) {
-            setCreateError('Şifre ve isim alanları zorunludur');
+            setCreateError(tNav('sifre_ve_isim_alanlari_zorunludur'));
             return;
         }
 
         // Password confirmation check
         if (newUserPassword !== newUserConfirmPassword) {
-            setCreateError('Şifreler eşleşmiyor');
+            setCreateError(tNav('sifreler_eslesmiyor'));
             return;
         }
 
@@ -1636,7 +1636,7 @@ export default function SuperAdminDashboard() {
         const hasBusinessId = selectedButcherId || admin?.butcherId;
 
         if (needsBusinessAssignment && !hasBusinessId) {
-            setCreateError('İşletme rolleri için işletme seçimi veya ataması zorunludur');
+            setCreateError(tNav('i_sletme_rolleri_icin_isletme_secimi_vey'));
             return;
         }
 
@@ -1708,7 +1708,7 @@ export default function SuperAdminDashboard() {
             showToast(data.message, 'success');
         } catch (error) {
             console.error('Create user error:', error);
-            setCreateError('Bağlantı hatası');
+            setCreateError(tNav('baglanti_hatasi'));
         }
         setCreating(false);
     };
@@ -1716,18 +1716,18 @@ export default function SuperAdminDashboard() {
     // Send invitation via SMS
     const handleSendInvitation = async () => {
         if (!newUserPhone) {
-            setCreateError('Telefon numarası zorunludur');
+            setCreateError(tNav('telefon_numarasi_zorunludur'));
             return;
         }
 
         if (newUserRole === 'user') {
-            setCreateError('Bir rol seçmelisiniz');
+            setCreateError(tNav('bir_rol_secmelisiniz'));
             return;
         }
 
         // For kasap roles, require business selection OR admin must have butcherId
         if ((newUserRole === 'kasap' || newUserRole === 'kasap_staff') && !selectedButcherId && !admin?.butcherId) {
-            setCreateError('İşletme seçimi zorunludur');
+            setCreateError(tNav('i_sletme_secimi_zorunludur'));
             return;
         }
 
@@ -1784,7 +1784,7 @@ export default function SuperAdminDashboard() {
             setShowShareModal(true);
         } catch (error) {
             console.error('Send invitation error:', error);
-            setCreateError('Bağlantı hatası');
+            setCreateError(tNav('baglanti_hatasi'));
         }
         setCreating(false);
     };
@@ -1881,7 +1881,7 @@ export default function SuperAdminDashboard() {
                 {activeTab === 'users' && (
                     <div className="bg-gray-800 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-bold text-white">👥 Kullanıcı Yönetimi</h2>
+                            <h2 className="text-xl font-bold text-white">{tNav('kullanici_yonetimi')}</h2>
                             {/* Super Admin ve İşletme Sahipleri kullanıcı/personel ekleyebilir */}
                             {(admin?.adminType === 'super' || (admin?.adminType && !admin?.adminType?.includes('_staff'))) && (
                                 <button
@@ -1899,7 +1899,7 @@ export default function SuperAdminDashboard() {
                                     }}
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 font-medium flex items-center gap-2"
                                 >
-                                    ➕ Yeni Kullanıcı Ekle
+                                    {tNav('yeni_kullanici_ekle')}
                                 </button>
                             )}
                         </div>
@@ -1922,7 +1922,7 @@ export default function SuperAdminDashboard() {
                                     : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                                     }`}
                             >
-                                📦 Arşivlenmiş ({users.filter(u => (u as any).isActive === false).length})
+                                {tNav('arsivlenmis')}{users.filter(u => (u as any).isActive === false).length})
                             </button>
                         </div>
 
@@ -1960,13 +1960,13 @@ export default function SuperAdminDashboard() {
                             {/* Sorting Controls (only when showing all users) */}
                             {showAllUsers && (
                                 <div className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg">
-                                    <span className="text-gray-400 text-sm">Sırala:</span>
+                                    <span className="text-gray-400 text-sm">{tNav('sirala')}</span>
                                     <select
                                         value={allUsersSortBy}
                                         onChange={(e) => setAllUsersSortBy(e.target.value as 'createdAt' | 'firstName' | 'lastName')}
                                         className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
                                     >
-                                        <option value="createdAt">📅 Kayıt Tarihi</option>
+                                        <option value="createdAt">{tNav('kayit_tarihi')}</option>
                                         <option value="firstName">👤 İsim (A-Z)</option>
                                         <option value="lastName">👤 Soyisim (A-Z)</option>
                                     </select>
@@ -1985,13 +1985,13 @@ export default function SuperAdminDashboard() {
                                         onChange={(e) => setUserTypeFilter(e.target.value as 'all' | 'user' | 'admin' | 'staff' | 'super' | 'driver' | 'driver_lokma' | 'driver_business')}
                                         className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
                                     >
-                                        <option value="all">👥 Tümü</option>
-                                        <option value="user">👤 Sadece Kullanıcılar</option>
+                                        <option value="all">{tNav('tumu')}</option>
+                                        <option value="user">{tNav('sadece_kullanicilar')}</option>
                                         <option value="admin">🎫 {t('businessAdmins')}</option>
                                         <option value="staff">👷 Personel</option>
-                                        <option value="driver">🚗 Tüm Sürücüler</option>
+                                        <option value="driver">{tNav('tum_suruculer')}</option>
                                         <option value="driver_lokma">🚚 LOKMA Filosu</option>
-                                        <option value="driver_business">🏪 İşletme Sürücüleri</option>
+                                        <option value="driver_business">{tNav('i_sletme_suruculeri')}</option>
                                         {/* 🔒 SECURITY: Super Admin filter only visible to super admins */}
                                         {admin?.adminType === 'super' && (
                                             <option value="super">👑 Super Admin</option>
@@ -2008,7 +2008,7 @@ export default function SuperAdminDashboard() {
                                         disabled={allUsersPage <= 1}
                                         className="px-3 py-2 bg-gray-600 text-white rounded-lg disabled:opacity-50"
                                     >
-                                        ◀ Önceki
+                                        {tNav('onceki')}
                                     </button>
                                     <button
                                         onClick={() => loadAllUsers(allUsersPage + 1)}
@@ -2022,7 +2022,7 @@ export default function SuperAdminDashboard() {
 
                             {!showAllUsers && (
                                 <p className="text-gray-400 text-sm mt-2">
-                                    İsim, soyisim, e-posta veya telefon ile kullanıcı arayın. Tüm listeyi görmek için "{t('allUsers')}" butonunu kullanın.
+                                    {tNav('i_sim_soyisim_e_posta_veya_telefon_ile_k')}{t('allUsers')}" butonunu kullanın.
                                 </p>
                             )}
                         </div>
@@ -2178,7 +2178,7 @@ export default function SuperAdminDashboard() {
                                                             }`}>
                                                             {(user as any).firstName && (user as any).lastName
                                                                 ? `${(user as any).firstName} ${(user as any).lastName}`
-                                                                : user.displayName || 'İsimsiz Kullanıcı'}
+                                                                : user.displayName || tNav('i_simsiz_kullanici')}
                                                         </p>
 
                                                         {/* Status Badge */}
@@ -2196,7 +2196,7 @@ export default function SuperAdminDashboard() {
                                                             user.adminType === 'super' ? (
                                                                 // 🔴 SUPER ADMIN - Red
                                                                 <span className="px-2 py-0.5 bg-red-600 text-white rounded-full text-xs font-medium">
-                                                                    👑 Süper Admin
+                                                                    {tNav('super_admin')}
                                                                 </span>
                                                             ) : user.adminType?.includes('_staff') ? (
                                                                 // 🟢 STAFF/PERSONEL - Green
@@ -2227,7 +2227,7 @@ export default function SuperAdminDashboard() {
                                                                 ? 'bg-emerald-600 text-white'
                                                                 : 'bg-amber-600 text-white'
                                                                 }`}>
-                                                                {(user.adminProfile as any)?.driverType === 'lokma_fleet' ? '🚚 LOKMA Filo' : '🏪 İşletme Sürücü'}
+                                                                {(user.adminProfile as any)?.driverType === 'lokma_fleet' ? '🚚 LOKMA Filo' : tNav('i_sletme_surucu')}
                                                             </span>
                                                         )}
                                                         {/* Location - City, Country */}
@@ -2249,7 +2249,7 @@ export default function SuperAdminDashboard() {
                                                             {(user.adminProfile as any).butcherName}
                                                         </p>
                                                         <p className="text-gray-500 text-xs flex items-center justify-end gap-1">
-                                                            🇩🇪 {(user as any).postalCode || '41836'} {(user as any).city || 'Hückelhoven'}
+                                                            🇩🇪 {(user as any).postalCode || '41836'} {(user as any).city || tNav('huckelhoven')}
                                                         </p>
                                                     </div>
                                                 )}
@@ -2275,7 +2275,7 @@ export default function SuperAdminDashboard() {
                                                                     : `${user.displayName} adlı kullanıcıyı tekrar aktifleştirmek istediğinize emin misiniz?`,
                                                                 itemName: user.displayName || user.email,
                                                                 variant: isActive ? 'warning' : undefined,
-                                                                confirmText: isActive ? 'Evet, Arşivle' : 'Evet, Aktifleştir',
+                                                                confirmText: isActive ? tNav('evet_arsivle') : tNav('evet_aktiflestir'),
                                                                 onConfirm: async () => {
                                                                     setConfirmState(prev => ({ ...prev, isOpen: false }));
                                                                     const userRef = doc(db, 'users', user.id);
@@ -2284,7 +2284,7 @@ export default function SuperAdminDashboard() {
                                                                         await updateDoc(userRef, {
                                                                             isActive: false,
                                                                             deactivatedAt: now,
-                                                                            deactivationReason: 'Admin panelinden arşivlendi',
+                                                                            deactivationReason: tNav('admin_panelinden_arsivlendi'),
                                                                         }).then(() => {
                                                                             showToast(`${user.displayName} arşivlendi`, 'success');
                                                                             loadAllUsers(allUsersPage);
@@ -2333,7 +2333,7 @@ export default function SuperAdminDashboard() {
                         ) : (
                             <div className="text-center py-12 text-gray-400">
                                 <p className="text-4xl mb-4">👆</p>
-                                <p>Aramaya başlamak için yukarıya yazın veya "{t('allUsers')}" butonunu kullanın</p>
+                                <p>{tNav('aramaya_baslamak_icin_yukariya_yazin_vey')}{t('allUsers')}{tNav('butonunu_kullanin')}</p>
                             </div>
                         )}
                     </div>
@@ -2362,7 +2362,7 @@ export default function SuperAdminDashboard() {
                                     }}
                                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 font-medium flex items-center gap-2"
                                 >
-                                    ➕ Yeni Personel Ekle
+                                    {tNav('yeni_personel_ekle')}
                                 </button>
                             </div>
 
@@ -2384,7 +2384,7 @@ export default function SuperAdminDashboard() {
                                         : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                                         }`}
                                 >
-                                    📦 Arşivlenmiş ({admins.filter(a => a.isActive === false).length})
+                                    {tNav('arsivlenmis')}{admins.filter(a => a.isActive === false).length})
                                 </button>
                             </div>
 
@@ -2396,7 +2396,7 @@ export default function SuperAdminDashboard() {
                                         <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
                                         <input
                                             type="text"
-                                            placeholder="İsim, e-posta veya telefon ile ara..."
+                                            placeholder={tNav('i_sim_e_posta_veya_telefon_ile_ara')}
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -2412,7 +2412,7 @@ export default function SuperAdminDashboard() {
                                         onChange={(e) => setAdminFilter(e.target.value as 'all' | 'business' | 'staff' | 'super')}
                                         className="px-3 py-2 bg-gray-600 text-white rounded-lg border border-gray-500"
                                     >
-                                        <option value="all">👥 Tümü</option>
+                                        <option value="all">{tNav('tumu')}</option>
                                         <option value="business">🎫 {t('businessAdmins')}</option>
                                         <option value="staff">👷 Personel</option>
                                         {/* 🔒 SECURITY: Super Admin filter only visible to super admins */}
@@ -2433,7 +2433,7 @@ export default function SuperAdminDashboard() {
                                                 (adminFilter === 'staff' && a.adminType?.includes('_staff')) ||
                                                 (adminFilter === 'business' && a.adminType !== 'super' && !a.adminType?.includes('_staff'));
                                             return matchesSearch && matchesFilter;
-                                        }).length} admin gösteriliyor
+                                        }).length} {tNav('admin_gosteriliyor')}
                                     </span>
                                 </div>
                             </div>
@@ -2443,8 +2443,8 @@ export default function SuperAdminDashboard() {
                                         <th className="pb-3 py-2">Kullanıcı</th>
                                         <th className="pb-3 py-2">Rol</th>
                                         <th className="pb-3 py-2">Konum</th>
-                                        <th className="pb-3 py-2">Durum</th>
-                                        <th className="pb-3 py-2">İşlemler</th>
+                                        <th className="pb-3 py-2">{tNav('durum')}</th>
+                                        <th className="pb-3 py-2">{tNav('i_slemler')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-white">
@@ -2468,7 +2468,7 @@ export default function SuperAdminDashboard() {
                                             <tr>
                                                 <td colSpan={5} className="py-8 text-center text-gray-400">
                                                     <p className="text-2xl mb-2">👥</p>
-                                                    <p>{adminStatusFilter === 'archived' ? 'Arşivlenmiş admin bulunamadı' : t('noAdminsFound')}</p>
+                                                    <p>{adminStatusFilter === 'archived' ? tNav('arsivlenmis_admin_bulunamadi') : t('noAdminsFound')}</p>
                                                 </td>
                                             </tr>
                                         )}
@@ -2492,14 +2492,14 @@ export default function SuperAdminDashboard() {
                                                 <div>
                                                     <p className="font-medium">{a.displayName}</p>
                                                     <p className="text-gray-400 text-sm">{a.email}</p>
-                                                    <p className="text-gray-500 text-xs font-mono">ID: {a.id}</p>
+                                                    <p className="text-gray-500 text-xs font-mono">{tNav('id')} {a.id}</p>
                                                 </div>
                                             </td>
                                             <td className="py-4">
                                                 {/* 🟣 Primary Admin (İşletme Sahibi) - Purple */}
                                                 {(a as any).isPrimaryAdmin ? (
                                                     <span className="px-2 py-1 rounded text-xs bg-purple-600 text-white font-medium">
-                                                        👑 {getRoleLabel(a.adminType) || a.adminType} / İşletme Sahibi
+                                                        👑 {getRoleLabel(a.adminType) || a.adminType} {tNav('i_sletme_sahibi')}
                                                     </span>
                                                 ) : a.adminType === 'super' ? (
                                                     <span className="px-2 py-1 rounded text-xs bg-red-600 text-white">
@@ -2520,7 +2520,7 @@ export default function SuperAdminDashboard() {
                                             </td>
                                             <td className="py-4">
                                                 <span className={`px-2 py-1 rounded text-xs ${a.isActive ? 'bg-green-600' : 'bg-red-600'}`}>
-                                                    {a.isActive ? 'Aktif' : 'Devre Dışı'}
+                                                    {a.isActive ? 'Aktif' : tNav('devre_disi')}
                                                 </span>
                                             </td>
                                             <td className="py-4">
@@ -2532,7 +2532,7 @@ export default function SuperAdminDashboard() {
                                                             onClick={() => handleEditAdmin(a)}
                                                             className="text-blue-400 hover:text-blue-300 text-sm"
                                                         >
-                                                            ✏️ Düzenle
+                                                            {tNav('duzenle')}
                                                         </button>
 
                                                         {/* 🛡️ Primary Admin Koruması: Arşivle, Yetkiyi Kaldır, Sil butonları GİZLİ (Super Admin hariç) */}
@@ -2544,13 +2544,13 @@ export default function SuperAdminDashboard() {
                                                                         const isActive = a.isActive !== false;
                                                                         setConfirmState({
                                                                             isOpen: true,
-                                                                            title: isActive ? 'Admin Arşivle' : 'Admin Aktifleştir',
+                                                                            title: isActive ? tNav('admin_arsivle') : tNav('admin_aktiflestir'),
                                                                             message: isActive
                                                                                 ? `${a.displayName} adlı admini arşivlemek istediğinize emin misiniz?`
                                                                                 : `${a.displayName} adlı admini tekrar aktifleştirmek istediğinize emin misiniz?`,
                                                                             itemName: a.displayName,
                                                                             variant: isActive ? 'warning' : undefined,
-                                                                            confirmText: isActive ? 'Evet, Arşivle' : 'Evet, Aktifleştir',
+                                                                            confirmText: isActive ? tNav('evet_arsivle') : tNav('evet_aktiflestir'),
                                                                             onConfirm: async () => {
                                                                                 setConfirmState(prev => ({ ...prev, isOpen: false }));
                                                                                 try {
@@ -2562,7 +2562,7 @@ export default function SuperAdminDashboard() {
                                                                                             isActive: false,
                                                                                             deactivatedBy: admin?.email || 'system',
                                                                                             deactivatedAt: now,
-                                                                                            deactivationReason: 'Admin panelinden arşivlendi',
+                                                                                            deactivationReason: tNav('admin_panelinden_arsivlendi'),
                                                                                             updatedAt: now,
                                                                                             updatedBy: admin?.email || 'system',
                                                                                         });
@@ -2583,21 +2583,21 @@ export default function SuperAdminDashboard() {
                                                                                     await reloadAdmins();
                                                                                 } catch (error) {
                                                                                     console.error('Archive/activate error:', error);
-                                                                                    showToast('İşlem sırasında hata oluştu', 'error');
+                                                                                    showToast(tNav('i_slem_sirasinda_hata_olustu'), 'error');
                                                                                 }
                                                                             },
                                                                         });
                                                                     }}
                                                                     className={`text-sm ${a.isActive !== false ? 'text-amber-400 hover:text-amber-300' : 'text-green-400 hover:text-green-300'}`}
                                                                 >
-                                                                    {a.isActive !== false ? '📦 Arşivle' : '✅ Aktifleştir'}
+                                                                    {a.isActive !== false ? tNav('arsivle') : tNav('aktiflestir')}
                                                                 </button>
                                                                 {/* Yetkiyi Kaldır (soft delete - removes admin role) */}
                                                                 <button
                                                                     onClick={() => handleRemoveAdmin(a.id, a.displayName)}
                                                                     className="text-amber-400 hover:text-amber-300 text-sm"
                                                                 >
-                                                                    🚫 Yetkiyi Kaldır
+                                                                    {tNav('yetkiyi_kaldir')}
                                                                 </button>
                                                                 {/* Kalıcı Sil button */}
                                                                 <button
@@ -2605,10 +2605,10 @@ export default function SuperAdminDashboard() {
                                                                         setConfirmState({
                                                                             isOpen: true,
                                                                             title: t('deleteAdminPerm'),
-                                                                            message: 'DİKKAT: Bu admini kalıcı olarak silmek istediğinize emin misiniz? Bu işlem geri alınamaz!',
+                                                                            message: tNav('di_kkat_bu_admini_kalici_olarak_silmek_i'),
                                                                             itemName: a.displayName,
                                                                             variant: 'danger',
-                                                                            confirmText: 'Evet, Kalıcı Sil',
+                                                                            confirmText: tNav('evet_kalici_sil'),
                                                                             onConfirm: async () => {
                                                                                 setConfirmState(prev => ({ ...prev, isOpen: false }));
                                                                                 try {
@@ -2626,7 +2626,7 @@ export default function SuperAdminDashboard() {
                                                                     }}
                                                                     className="text-red-400 hover:text-red-300 text-sm"
                                                                 >
-                                                                    🗑️ Sil
+                                                                    {tNav('sil')}
                                                                 </button>
                                                             </>
                                                         )}
@@ -2647,7 +2647,7 @@ export default function SuperAdminDashboard() {
                 selectedUser && (
                     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
                         <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl">
-                            <h3 className="text-xl font-bold text-white mb-4">Admin Rolü Ata</h3>
+                            <h3 className="text-xl font-bold text-white mb-4">{tNav('admin_rolu_ata')}</h3>
 
                             <div className="bg-gray-700 rounded-lg p-4 mb-6">
                                 <p className="text-white font-medium">{selectedUser.displayName || t('unnamed')}</p>
@@ -2656,7 +2656,7 @@ export default function SuperAdminDashboard() {
 
                             <div className="space-y-4 mb-6">
                                 <div>
-                                    <label className="block text-gray-300 text-sm mb-2">Admin Rolü</label>
+                                    <label className="block text-gray-300 text-sm mb-2">{tNav('admin_rolu')}</label>
                                     <select
                                         value={assignRole}
                                         onChange={(e) => setAssignRole(e.target.value as AdminType)}
@@ -2669,13 +2669,13 @@ export default function SuperAdminDashboard() {
                                 </div>
 
                                 {/* Business Selection - for kasap/restoran roles */}
-                                {(assignRole === 'kasap' || assignRole === 'kasap_staff' || assignRole === 'restoran' || assignRole === 'restoran_staff') && (
+                                {(assignRole === 'kasap' || assignRole === 'kasap_staff' || assignRole === tNav('restoran') || assignRole === 'restoran_staff') && (
                                     <div>
                                         <label className="block text-gray-300 text-sm mb-2">🏪 İşletme Seçin</label>
                                         {selectedButcherId && (
                                             <div className="mb-2 px-4 py-2 bg-green-600/20 border border-green-500 rounded-lg flex items-center justify-between">
                                                 <span className="text-green-400">
-                                                    ✅ {butcherList.find(b => b.id === selectedButcherId)?.name || 'Seçili'}
+                                                    ✅ {butcherList.find(b => b.id === selectedButcherId)?.name || tNav('secili')}
                                                 </span>
                                                 <button
                                                     onClick={() => setSelectedButcherId('')}
@@ -2722,7 +2722,7 @@ export default function SuperAdminDashboard() {
                                                     b.city.toLowerCase().includes(assignLocation.toLowerCase()) ||
                                                     b.postalCode.includes(assignLocation)
                                                 ).length === 0 && (
-                                                        <p className="px-4 py-3 text-gray-400 text-sm">İşletme bulunamadı</p>
+                                                        <p className="px-4 py-3 text-gray-400 text-sm">{tNav('i_sletme_bulunamadi')}</p>
                                                     )}
                                             </div>
                                         )}
@@ -2743,7 +2743,7 @@ export default function SuperAdminDashboard() {
                                     disabled={assigning}
                                     className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50"
                                 >
-                                    {assigning ? 'Atanıyor...' : '✓ Rolü Ata'}
+                                    {assigning ? tNav('ataniyor') : tNav('rolu_ata')}
                                 </button>
                             </div>
                         </div>
@@ -2757,7 +2757,7 @@ export default function SuperAdminDashboard() {
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                         <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl">
                             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                                <span>📱</span> Admin Davetiyesi Gönder
+                                <span>📱</span> {tNav('admin_davetiyesi_gonder')}
                             </h3>
 
                             {createError && (
@@ -2768,7 +2768,7 @@ export default function SuperAdminDashboard() {
 
                             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-4">
                                 <p className="text-blue-400 text-sm">
-                                    📋 Davet edilen kişiye SMS gönderilecek. Link üzerinden profilini tamamlayıp kayıt olacak.
+                                    {tNav('davet_edilen_kisiye_sms_gonderilecek_lin')}
                                 </p>
                             </div>
 
@@ -2776,7 +2776,7 @@ export default function SuperAdminDashboard() {
                                 {/* Phone Number - Primary Field */}
                                 <div>
                                     <label htmlFor="invitePhone" className="block text-gray-400 text-sm mb-1">
-                                        📱 Telefon Numarası *
+                                        {tNav('telefon_numarasi')}
                                     </label>
                                     <input
                                         id="invitePhone"
@@ -2787,14 +2787,14 @@ export default function SuperAdminDashboard() {
                                         className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-500 text-lg"
                                     />
                                     <p className="text-xs text-gray-500 mt-1">
-                                        Bu numaraya davet SMS&apos;i gönderilecek
+                                        {tNav('bu_numaraya_davet_sms_i_gonderilecek')}
                                     </p>
                                 </div>
 
                                 {/* Role Selection */}
                                 <div>
                                     <label htmlFor="inviteRole" className="block text-gray-400 text-sm mb-1">
-                                        👔 Rol Seçimi *
+                                        {tNav('rol_secimi')}
                                     </label>
                                     <select
                                         id="inviteRole"
@@ -2808,15 +2808,15 @@ export default function SuperAdminDashboard() {
                                         }}
                                         className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-500"
                                     >
-                                        <option value="user" disabled>-- Rol Seçin --</option>
+                                        <option value="user" disabled>{tNav('rol_secin')}</option>
                                         <option value="kasap">🥩 Kasap Sahibi (Owner)</option>
                                         <option value="kasap_staff">👷 Kasap Personel (Staff)</option>
-                                        <option value="restoran">🍽️ Restoran Sahibi</option>
-                                        <option value="restoran_staff">👨‍🍳 Restoran Personel</option>
+                                        <option value={tNav('restoran')}>{tNav('restoran_sahibi')}</option>
+                                        <option value="restoran_staff">{tNav('restoran_personel')}</option>
                                         <option value="kermes">🎪 Kermes Admin</option>
                                         <option value="bakkal">🏪 Bakkal Admin</option>
-                                        <option value="hali_yikama">🧹 Halı Yıkama Admin</option>
-                                        <option value="transfer_surucu">✈️ Transfer Sürücü</option>
+                                        <option value="hali_yikama">{tNav('hali_yikama_admin')}</option>
+                                        <option value="transfer_surucu">{tNav('transfer_surucu')}</option>
                                         <option value="tur_rehberi">🗺️ Tur Rehberi</option>
                                     </select>
                                 </div>
@@ -2825,20 +2825,20 @@ export default function SuperAdminDashboard() {
                                 {(newUserRole === 'kasap' || newUserRole === 'kasap_staff') && (
                                     <div>
                                         <label htmlFor="selectedButcher" className="block text-gray-400 text-sm mb-1">
-                                            🏪 İşletme {admin?.adminType === 'super' ? '* (Zorunlu)' : ''}
+                                            {tNav('i_sletme')} {admin?.adminType === 'super' ? '* (Zorunlu)' : ''}
                                         </label>
 
                                         {/* If admin is a kasap admin with butcherId, show auto-assigned info */}
                                         {admin?.butcherId && admin?.adminType !== 'super' ? (
                                             <div className="w-full px-4 py-3 bg-green-900/30 border border-green-600 text-green-400 rounded-lg">
-                                                <span className="font-medium">✓ {admin.butcherName || 'Senin Kasabın'}</span>
+                                                <span className="font-medium">✓ {admin.butcherName || tNav('senin_kasabin')}</span>
                                                 <p className="text-xs text-green-500 mt-1">
-                                                    Personel davetiyesi kendi işletmene otomatik atanır
+                                                    {tNav('personel_davetiyesi_kendi_isletmene_otom')}
                                                 </p>
                                             </div>
                                         ) : loadingButchers ? (
                                             <div className="w-full px-4 py-3 bg-gray-700 text-gray-400 rounded-lg">
-                                                Kasaplar yükleniyor...
+                                                {tNav('kasaplar_yukleniyor')}
                                             </div>
                                         ) : (
                                             <div className="relative">
@@ -2846,7 +2846,7 @@ export default function SuperAdminDashboard() {
                                                 {selectedButcherId ? (
                                                     <div className="flex items-center gap-2">
                                                         <div className="flex-1 px-3 py-2 bg-green-900/30 border border-green-600 text-green-200 rounded-lg">
-                                                            ✅ {butcherList.find(b => b.id === selectedButcherId)?.name || 'Seçildi'}
+                                                            ✅ {butcherList.find(b => b.id === selectedButcherId)?.name || tNav('secildi')}
                                                             <span className="text-xs text-green-400 ml-2">
                                                                 - {butcherList.find(b => b.id === selectedButcherId)?.city}
                                                             </span>
@@ -2868,12 +2868,12 @@ export default function SuperAdminDashboard() {
                                                             type="text"
                                                             value={businessSearchFilter}
                                                             onChange={(e) => setBusinessSearchFilter(e.target.value)}
-                                                            placeholder="🔍 İşletme adı veya şehir yazın (en az 3 karakter)..."
+                                                            placeholder={tNav('i_sletme_adi_veya_sehir_yazin_en_az_3_ka')}
                                                             className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-green-500"
                                                         />
                                                         {businessSearchFilter.length > 0 && businessSearchFilter.length < 3 && (
                                                             <p className="text-yellow-400 text-xs mt-1">
-                                                                ⏳ En az 3 karakter yazın...
+                                                                {tNav('en_az_3_karakter_yazin')}
                                                             </p>
                                                         )}
 
@@ -2891,7 +2891,7 @@ export default function SuperAdminDashboard() {
                                                                     if (filtered.length === 0) {
                                                                         return (
                                                                             <div className="p-3 text-gray-400 text-center">
-                                                                                ❌ "{businessSearchFilter}" için sonuç bulunamadı
+                                                                                ❌ "{businessSearchFilter}{tNav('icin_sonuc_bulunamadi')}
                                                                             </div>
                                                                         );
                                                                     }
@@ -2928,7 +2928,7 @@ export default function SuperAdminDashboard() {
                                         {/* Only show warning for super admin dropdown */}
                                         {admin?.adminType === 'super' && !admin?.butcherId && (
                                             <p className="text-xs text-yellow-500 mt-1">
-                                                ⚠️ Doğru işletmeyi seçtiğinizden emin olun!
+                                                {tNav('dogru_isletmeyi_sectiginizden_emin_olun')}
                                             </p>
                                         )}
                                     </div>
@@ -2937,8 +2937,8 @@ export default function SuperAdminDashboard() {
                                 {/* Info Box */}
                                 <div className="bg-gray-700/50 rounded-lg p-3 mt-2">
                                     <p className="text-gray-400 text-xs">
-                                        <strong>Davetiye içeriği:</strong><br />
-                                        &quot;{admin?.displayName || 'Admin'} sizi MIRA Admin olarak davet etti.
+                                        <strong>{tNav('davetiye_icerigi')}</strong><br />
+                                        &quot;{admin?.displayName || 'Admin'} {tNav('sizi_mira_admin_olarak_davet_etti')}
                                         {selectedButcherId && butcherList.find(b => b.id === selectedButcherId) && (
                                             <> {t('businessLabel')}: {butcherList.find(b => b.id === selectedButcherId)?.name}</>
                                         )}
@@ -2966,7 +2966,7 @@ export default function SuperAdminDashboard() {
                                     className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                                 >
                                     {creating ? (
-                                        <>Gönderiliyor...</>
+                                        <>{tNav('gonderiliyor')}</>
                                     ) : (
                                         <>📱 Davetiye Gönder</>
                                     )}
@@ -2983,11 +2983,11 @@ export default function SuperAdminDashboard() {
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                         <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl">
                             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                                <span>✅</span> Davetiye Oluşturuldu!
+                                <span>✅</span> {tNav('davetiye_olusturuldu')}
                             </h3>
 
                             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-4">
-                                <div className="text-sm text-gray-400 mb-2">Davet Detayları:</div>
+                                <div className="text-sm text-gray-400 mb-2">{tNav('davet_detaylari')}</div>
                                 <div className="text-white font-medium">{invitationRole}</div>
                                 {invitationBusiness && (
                                     <div className="text-gray-300 text-sm">{invitationBusiness}</div>
@@ -3016,14 +3016,14 @@ export default function SuperAdminDashboard() {
                                             : 'bg-blue-600 text-white hover:bg-blue-700'
                                             }`}
                                     >
-                                        {linkCopied ? '✓ Kopyalandı' : '📋 Kopyala'}
+                                        {linkCopied ? tNav('kopyalandi') : '📋 Kopyala'}
                                     </button>
                                 </div>
                             </div>
 
                             {/* Share Options */}
                             <div className="space-y-3">
-                                <div className="text-gray-400 text-sm font-medium">📤 Davetiye Gönder:</div>
+                                <div className="text-gray-400 text-sm font-medium">{tNav('davetiye_gonder')}</div>
 
                                 {/* WhatsApp */}
                                 <a
@@ -3039,7 +3039,7 @@ export default function SuperAdminDashboard() {
                                     className="flex items-center gap-3 w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                                 >
                                     <span className="text-xl">📱</span>
-                                    <span className="font-medium">WhatsApp ile Gönder</span>
+                                    <span className="font-medium">{tNav('whatsapp_ile_gonder')}</span>
                                 </a>
 
                                 {/* SMS */}
@@ -3050,12 +3050,12 @@ export default function SuperAdminDashboard() {
                                     className="flex items-center gap-3 w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                 >
                                     <span className="text-xl">💬</span>
-                                    <span className="font-medium">SMS ile Gönder</span>
+                                    <span className="font-medium">{tNav('sms_ile_gonder')}</span>
                                 </a>
 
                                 {/* Email */}
                                 <a
-                                    href={`mailto:?subject=${encodeURIComponent('MIRA Admin Davetiyesi')}&body=${encodeURIComponent(
+                                    href={`mailto:?subject=${encodeURIComponent(tNav('mira_admin_davetiyesi'))}&body=${encodeURIComponent(
                                         `Merhaba,\n\n` +
                                         `Sizin için MIRA Admin Portal'da bir hesap oluşturuldu.\n\n` +
                                         `📌 {t('roleLabel')}: ${invitationRole}\n` +
@@ -3066,7 +3066,7 @@ export default function SuperAdminDashboard() {
                                     className="flex items-center gap-3 w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
                                 >
                                     <span className="text-xl">📧</span>
-                                    <span className="font-medium">E-posta ile Gönder</span>
+                                    <span className="font-medium">{tNav('e_posta_ile_gonder')}</span>
                                 </a>
 
                                 {/* Telegram */}
@@ -3079,7 +3079,7 @@ export default function SuperAdminDashboard() {
                                     className="flex items-center gap-3 w-full px-4 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors"
                                 >
                                     <span className="text-xl">✈️</span>
-                                    <span className="font-medium">Telegram ile Gönder</span>
+                                    <span className="font-medium">{tNav('telegram_ile_gonder')}</span>
                                 </a>
                             </div>
 
@@ -3102,7 +3102,7 @@ export default function SuperAdminDashboard() {
                     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 overflow-y-auto">
                         <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl my-8">
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-bold text-white">✏️ Admin Düzenle</h3>
+                                <h3 className="text-xl font-bold text-white">{tNav('admin_duzenle')}</h3>
                                 <button onClick={() => setEditingAdmin(null)} className="text-gray-400 hover:text-white text-2xl">✕</button>
                             </div>
 
@@ -3110,7 +3110,7 @@ export default function SuperAdminDashboard() {
                                 {/* 📝 Kişisel Bilgiler */}
                                 <div>
                                     <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
-                                        📝 Kişisel Bilgiler
+                                        {tNav('kisisel_bilgiler')}
                                     </h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
@@ -3151,7 +3151,7 @@ export default function SuperAdminDashboard() {
                                 {/* 📞 İletişim Bilgileri */}
                                 <div>
                                     <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
-                                        📞 İletişim Bilgileri
+                                        {tNav('i_letisim_bilgileri')}
                                     </h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
@@ -3161,7 +3161,7 @@ export default function SuperAdminDashboard() {
                                                 value={editingAdmin.email || ''}
                                                 onChange={(e) => setEditingAdmin({ ...editingAdmin, email: e.target.value })}
                                                 className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
-                                                placeholder="örn: email@example.com"
+                                                placeholder={tNav('orn_email_example_com')}
                                             />
                                         </div>
                                         <div>
@@ -3183,7 +3183,7 @@ export default function SuperAdminDashboard() {
                                                     value={(editingAdmin as any).phone || ''}
                                                     onChange={(e) => setEditingAdmin({ ...editingAdmin, phone: e.target.value } as any)}
                                                     className="flex-1 px-3 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
-                                                    placeholder="örn: XXX XXX XXXX"
+                                                    placeholder={tNav('orn_xxx_xxx_xxxx')}
                                                 />
                                             </div>
                                         </div>
@@ -3209,7 +3209,7 @@ export default function SuperAdminDashboard() {
                                                     onFocus={() => { if (addressSuggestions.length > 0) setShowAddressSuggestions(true); }}
                                                     onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
                                                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
-                                                    placeholder="örn: Musterstraße"
+                                                    placeholder={tNav('orn_musterstra_e')}
                                                     autoComplete="off"
                                                 />
                                                 {showAddressSuggestions && addressSuggestions.length > 0 && (
@@ -3239,7 +3239,7 @@ export default function SuperAdminDashboard() {
                                         </div>
                                         <div className="grid grid-cols-3 gap-3">
                                             <div className="relative">
-                                                <label className="block text-gray-400 text-sm mb-1">Şehir</label>
+                                                <label className="block text-gray-400 text-sm mb-1">{tNav('sehir')}</label>
                                                 <input
                                                     type="text"
                                                     value={(editingAdmin as any).city || ''}
@@ -3250,7 +3250,7 @@ export default function SuperAdminDashboard() {
                                                     onFocus={() => { if (citySuggestions.length > 0) setShowCitySuggestions(true); }}
                                                     onBlur={() => setTimeout(() => setShowCitySuggestions(false), 200)}
                                                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
-                                                    placeholder="örn: Berlin"
+                                                    placeholder={tNav('orn_berlin')}
                                                 />
                                                 {showCitySuggestions && citySuggestions.length > 0 && (
                                                     <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto">
@@ -3281,18 +3281,18 @@ export default function SuperAdminDashboard() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-gray-400 text-sm mb-1">Ülke</label>
+                                                <label className="block text-gray-400 text-sm mb-1">{tNav('ulke')}</label>
                                                 <select
                                                     value={(editingAdmin as any).country || 'Deutschland'}
                                                     onChange={(e) => setEditingAdmin({ ...editingAdmin, country: e.target.value } as any)}
                                                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
                                                 >
                                                     <option value="Deutschland">🇩🇪 Almanya</option>
-                                                    <option value="Österreich">🇦🇹 Avusturya</option>
-                                                    <option value="Schweiz">🇨🇭 İsviçre</option>
-                                                    <option value="Türkei">🇹🇷 Türkiye</option>
+                                                    <option value={tNav('osterreich')}>🇦🇹 Avusturya</option>
+                                                    <option value="Schweiz">{tNav('i_svicre')}</option>
+                                                    <option value={tNav('turkei')}>{tNav('turkiye')}</option>
                                                     <option value="Niederlande">🇳🇱 Hollanda</option>
-                                                    <option value="Belgien">🇧🇪 Belçika</option>
+                                                    <option value="Belgien">{tNav('belcika')}</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -3302,13 +3302,13 @@ export default function SuperAdminDashboard() {
                                 {/* 🔐 Yetki Yönetimi */}
                                 <div>
                                     <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
-                                        🔐 Yetki Yönetimi
+                                        {tNav('yetki_yonetimi')}
                                     </h4>
                                     <div className="space-y-4">
                                         {/* Role Selector - Business admins only see their sector's roles */}
                                         <div>
                                             <label className="block text-gray-400 text-sm mb-1">
-                                                {admin?.adminType === 'super' ? 'Admin Rolü' : 'Rol'}
+                                                {admin?.adminType === 'super' ? tNav('admin_rolu') : 'Rol'}
                                             </label>
                                             <select
                                                 value={editRole}
@@ -3351,7 +3351,7 @@ export default function SuperAdminDashboard() {
                                                 type="text"
                                                 value={editLocation}
                                                 onChange={(e) => setEditLocation(e.target.value)}
-                                                placeholder="örn: Hückelhoven, Almanya"
+                                                placeholder={tNav('orn_huckelhoven_almanya')}
                                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder:text-gray-500"
                                                 title="Admin konumunu girin"
                                             />
@@ -3371,7 +3371,7 @@ export default function SuperAdminDashboard() {
                                                             type="text"
                                                             value={businessSearchFilter}
                                                             onChange={(e) => setBusinessSearchFilter(e.target.value)}
-                                                            placeholder="🔍 İşletme ara..."
+                                                            placeholder={tNav('i_sletme_ara')}
                                                             className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white placeholder:text-gray-400 text-sm"
                                                         />
                                                         <select
@@ -3387,7 +3387,7 @@ export default function SuperAdminDashboard() {
                                                                     b.postalCode.toLowerCase().includes(search);
                                                             }).length + 1, 6)}
                                                         >
-                                                            <option value="">-- İşletme Seçin --</option>
+                                                            <option value="">{tNav('i_sletme_secin')}</option>
                                                             {butcherList
                                                                 .filter(b => {
                                                                     if (!businessSearchFilter.trim()) return true;
@@ -3414,10 +3414,10 @@ export default function SuperAdminDashboard() {
                                                 <div className="flex items-center justify-between">
                                                     <div>
                                                         <p className="text-purple-200 font-medium flex items-center gap-2">
-                                                            👑 İşletme Sahibi Olarak İşaretle
+                                                            {tNav('i_sletme_sahibi_olarak_i_saretle')}
                                                         </p>
                                                         <p className="text-purple-400 text-xs mt-1">
-                                                            İşletme sahipleri diğer adminler tarafından silinemez, arşivlenemez veya seviye düşürülemez.
+                                                            {tNav('i_sletme_sahipleri_diger_adminler_tarafi')}
                                                         </p>
                                                     </div>
                                                     <button
@@ -3435,7 +3435,7 @@ export default function SuperAdminDashboard() {
                                                 {editIsPrimaryAdmin && (
                                                     <div className="mt-3 bg-purple-800/30 rounded p-2 text-center">
                                                         <span className="text-purple-200 text-sm font-medium">
-                                                            ✅ Bu admin İşletme Sahibi olarak korunacak
+                                                            {tNav('bu_admin_i_sletme_sahibi_olarak_korunaca')}
                                                         </span>
                                                     </div>
                                                 )}
@@ -3446,7 +3446,7 @@ export default function SuperAdminDashboard() {
                                         {admin?.adminType !== 'super' && (
                                             <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-3">
                                                 <p className="text-blue-300 text-sm">
-                                                    ℹ️ Personel kendi işletmenize ({admin?.butcherName || t('businessLabel')}) atanacaktır.
+                                                    {tNav('personel_kendi_isletmenize')}{admin?.butcherName || t('businessLabel')}{tNav('atanacaktir')}
                                                 </p>
                                             </div>
                                         )}
@@ -3467,7 +3467,7 @@ export default function SuperAdminDashboard() {
                                     disabled={saving}
                                     className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
                                 >
-                                    {saving ? 'Kaydediliyor...' : '💾 Kaydet'}
+                                    {saving ? 'Kaydediliyor...' : tNav('kaydet')}
                                 </button>
                             </div>
                         </div>
@@ -3482,7 +3482,7 @@ export default function SuperAdminDashboard() {
                         <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-2xl w-full p-6 my-8">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                    ➕ Yeni Kullanıcı Ekle
+                                    {tNav('yeni_kullanici_ekle')}
                                 </h3>
                                 <button
                                     onClick={() => setShowNewUserModal(false)}
@@ -3502,7 +3502,7 @@ export default function SuperAdminDashboard() {
                                             value={newUserData.firstName}
                                             onChange={(e) => setNewUserData({ ...newUserData, firstName: e.target.value })}
                                             className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                            placeholder="Adı"
+                                            placeholder={tNav('adi')}
                                         />
                                     </div>
                                     <div>
@@ -3512,7 +3512,7 @@ export default function SuperAdminDashboard() {
                                             value={newUserData.lastName}
                                             onChange={(e) => setNewUserData({ ...newUserData, lastName: e.target.value })}
                                             className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                            placeholder="Soyadı"
+                                            placeholder={tNav('soyadi')}
                                         />
                                     </div>
                                 </div>
@@ -3611,7 +3611,7 @@ export default function SuperAdminDashboard() {
                                         </div>
                                         {/* Address Line 2 */}
                                         <div>
-                                            <label className="block text-gray-400 text-xs mb-1">Adres Satırı 2 (Daire, Kat vb.)</label>
+                                            <label className="block text-gray-400 text-xs mb-1">{tNav('adres_satiri_2_daire_kat_vb')}</label>
                                             <input
                                                 type="text"
                                                 value={newUserData.addressLine2}
@@ -3623,7 +3623,7 @@ export default function SuperAdminDashboard() {
                                         {/* City, Postal Code, Country */}
                                         <div className="grid grid-cols-3 gap-2">
                                             <div className="relative">
-                                                <label className="block text-gray-400 text-xs mb-1">Şehir</label>
+                                                <label className="block text-gray-400 text-xs mb-1">{tNav('sehir')}</label>
                                                 <input
                                                     type="text"
                                                     value={newUserData.city}
@@ -3635,7 +3635,7 @@ export default function SuperAdminDashboard() {
                                                         setTimeout(() => setShowCitySuggestions(false), 200);
                                                     }}
                                                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                    placeholder="Şehir yazın..."
+                                                    placeholder={tNav('sehir_yazin')}
                                                 />
                                                 {showCitySuggestions && citySuggestions.length > 0 && (
                                                     <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-40 overflow-y-auto">
@@ -3662,7 +3662,7 @@ export default function SuperAdminDashboard() {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-gray-400 text-xs mb-1">Ülke</label>
+                                                <label className="block text-gray-400 text-xs mb-1">{tNav('ulke')}</label>
                                                 <input
                                                     type="text"
                                                     value={newUserData.country}
@@ -3685,15 +3685,15 @@ export default function SuperAdminDashboard() {
                                     >
                                         {/* Normal Kullanıcı option - ONLY visible to Super Admins */}
                                         {admin?.adminType === 'super' && (
-                                            <option value="user">👤 Normal Kullanıcı</option>
+                                            <option value="user">{tNav('normal_kullanici')}</option>
                                         )}
                                         <option value="staff">👷 Personel</option>
-                                        <option value="business_admin">🏪 İşletme Admin</option>
-                                        <option value="driver_lokma">🚚 LOKMA Filosu Sürücüsü</option>
-                                        <option value="driver_business">🏪 İşletme Sürücüsü</option>
+                                        <option value="business_admin">{tNav('i_sletme_admin')}</option>
+                                        <option value="driver_lokma">{tNav('lokma_filosu_surucusu')}</option>
+                                        <option value="driver_business">{tNav('i_sletme_surucusu')}</option>
                                         {/* Super Admin option only visible to super admins */}
                                         {admin?.adminType === 'super' && (
-                                            <option value="super">👑 Süper Admin</option>
+                                            <option value="super">{tNav('super_admin')}</option>
                                         )}
                                     </select>
                                 </div>
@@ -3701,13 +3701,13 @@ export default function SuperAdminDashboard() {
                                 {/* Sector Selection - Only for Staff and Business Admin */}
                                 {(newUserData.role === 'staff' || newUserData.role === 'business_admin') && (
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">Sektör Modülü *</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{tNav('sektor_modulu')}</label>
                                         <select
                                             value={newUserData.sector}
                                             onChange={(e) => setNewUserData({ ...newUserData, sector: e.target.value })}
                                             className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
                                         >
-                                            <option value="">Sektör seçin...</option>
+                                            <option value="">{tNav('sektor_secin')}</option>
                                             {/* Filter sectors based on admin's access */}
                                             {(() => {
                                                 // Super Admin sees all sectors
@@ -3737,15 +3737,15 @@ export default function SuperAdminDashboard() {
 
                                 {/* Temporary Password */}
                                 <div>
-                                    <label className="block text-gray-400 text-sm mb-1">Geçici Şifre *</label>
+                                    <label className="block text-gray-400 text-sm mb-1">{tNav('gecici_sifre')}</label>
                                     <input
                                         type="text"
                                         value={newUserData.password}
                                         onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
                                         className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                        placeholder="Geçici şifre (en az 6 karakter)"
+                                        placeholder={tNav('gecici_sifre_en_az_6_karakter')}
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">Kullanıcı ilk girişte şifresini değiştirebilir</p>
+                                    <p className="text-xs text-gray-500 mt-1">{tNav('kullanici_ilk_giriste_sifresini_degistir')}</p>
                                 </div>
                             </div>
 
@@ -3772,11 +3772,11 @@ export default function SuperAdminDashboard() {
                                             return;
                                         }
                                         if (newUserData.password.length < 6) {
-                                            showToast('Şifre en az 6 karakter olmalı', 'error');
+                                            showToast(tNav('sifre_en_az_6_karakter_olmali'), 'error');
                                             return;
                                         }
                                         if ((newUserData.role === 'staff' || newUserData.role === 'business_admin') && !newUserData.sector) {
-                                            showToast('Lütfen sektör seçin', 'error');
+                                            showToast(tNav('lutfen_sektor_secin'), 'error');
                                             return;
                                         }
 
@@ -3872,13 +3872,13 @@ export default function SuperAdminDashboard() {
                                                 responseText = await response.text();
                                                 data = JSON.parse(responseText);
                                             } catch (parseError) {
-                                                console.error('🚨 API returned non-JSON:', responseText);
+                                                console.error(tNav('api_returned_non_json'), responseText);
                                                 showToast(`API hatası (${response.status}): ${responseText.substring(0, 100)}`, 'error');
                                                 return;
                                             }
 
                                             if (!response.ok) {
-                                                showToast(data.error || 'Kullanıcı oluşturulamadı', 'error');
+                                                showToast(data.error || tNav('kullanici_olusturulamadi'), 'error');
                                                 return;
                                             }
 
@@ -3911,7 +3911,7 @@ export default function SuperAdminDashboard() {
                                     disabled={creatingUser}
                                     className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-500 font-bold transition disabled:opacity-50"
                                 >
-                                    {creatingUser ? '⏳ Oluşturuluyor...' : '✓ Kullanıcı Oluştur'}
+                                    {creatingUser ? tNav('olusturuluyor') : tNav('kullanici_olustur')}
                                 </button>
                             </div>
                         </div>
@@ -3926,7 +3926,7 @@ export default function SuperAdminDashboard() {
                         <div className="bg-gray-800 rounded-xl border border-gray-700 shadow-2xl max-w-6xl w-full p-6 my-8">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                    👤 Kullanıcı Profili Düzenle
+                                    {tNav('kullanici_profili_duzenle')}
                                 </h3>
                                 <button
                                     onClick={() => setEditingUserProfile(null)}
@@ -3968,7 +3968,7 @@ export default function SuperAdminDashboard() {
 
                                                     // Max 5MB check
                                                     if (file.size > 5 * 1024 * 1024) {
-                                                        showToast('Dosya boyutu 5MB\'dan büyük olamaz', 'error');
+                                                        showToast(tNav('dosya_boyutu_5mb_dan_buyuk_olamaz'), 'error');
                                                         return;
                                                     }
 
@@ -3979,7 +3979,7 @@ export default function SuperAdminDashboard() {
                                                         const fileName = `profile_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
                                                         const storageRef = ref(storage, `profile_images/${editingUserProfile.userId}/${fileName}`);
 
-                                                        showToast('Resim yükleniyor...', 'success');
+                                                        showToast(tNav('resim_yukleniyor'), 'success');
 
                                                         await uploadBytes(storageRef, file);
                                                         const downloadURL = await getDownloadURL(storageRef);
@@ -3989,10 +3989,10 @@ export default function SuperAdminDashboard() {
                                                             photoURL: downloadURL
                                                         });
 
-                                                        showToast('Resim başarıyla yüklendi (Kaydet butonuna basmayı unutmayın!)', 'success');
+                                                        showToast(tNav('resim_basariyla_yuklendi_kaydet_butonuna'), 'success');
                                                     } catch (error) {
                                                         console.error('Upload error:', error);
-                                                        showToast('Resim yükleme hatası oluştu', 'error');
+                                                        showToast(tNav('resim_yukleme_hatasi_olustu'), 'error');
                                                     }
                                                 }}
                                             />
@@ -4000,16 +4000,16 @@ export default function SuperAdminDashboard() {
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between mb-1">
-                                            <h4 className="text-white font-medium">Profil Görseli</h4>
+                                            <h4 className="text-white font-medium">{tNav('profil_gorseli')}</h4>
                                             {editingUserProfile.photoURL && (
                                                 <button
                                                     onClick={() => {
                                                         setConfirmState({
                                                             isOpen: true,
-                                                            title: 'Profil Resmini Kaldır',
-                                                            message: 'Profil resmini kaldırmak istediğinizden emin misiniz?',
+                                                            title: tNav('profil_resmini_kaldir'),
+                                                            message: tNav('profil_resmini_kaldirmak_istediginizden_'),
                                                             variant: 'warning',
-                                                            confirmText: 'Evet, Kaldır',
+                                                            confirmText: tNav('evet_kaldir'),
                                                             onConfirm: () => {
                                                                 setConfirmState(prev => ({ ...prev, isOpen: false }));
                                                                 setEditingUserProfile({ ...editingUserProfile, photoURL: undefined });
@@ -4018,12 +4018,12 @@ export default function SuperAdminDashboard() {
                                                     }}
                                                     className="text-red-400 text-xs hover:text-red-300 transition flex items-center gap-1 px-2 py-1 hover:bg-red-900/20 rounded"
                                                 >
-                                                    ✕ Resmi Kaldır
+                                                    {tNav('resmi_kaldir')}
                                                 </button>
                                             )}
                                         </div>
                                         <p className="text-gray-400 text-xs leading-relaxed">
-                                            Kullanıcının profil fotoğrafını güncelleyin. Google ile giriş yapan kullanıcıların fotoğrafları varsayılan olarak gelir ancak buradan değiştirilebilir.
+                                            {tNav('kullanicinin_profil_fotografini_guncelle')}
                                         </p>
                                     </div>
                                 </div>
@@ -4035,7 +4035,7 @@ export default function SuperAdminDashboard() {
                                         {/* Personal Info */}
                                         <div>
                                             <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
-                                                📝 Kişisel Bilgiler
+                                                {tNav('kisisel_bilgiler')}
                                             </h4>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
@@ -4061,8 +4061,8 @@ export default function SuperAdminDashboard() {
                                             {/* Active/Inactive Toggle */}
                                             <div className="mt-4 flex items-center justify-between p-3 bg-gray-750 rounded-lg border border-gray-600">
                                                 <div className="flex-1">
-                                                    <span className="text-white font-medium">Hesap Durumu</span>
-                                                    <p className="text-gray-400 text-xs">Pasif hesaplar giriş yapamaz ama veriler korunur</p>
+                                                    <span className="text-white font-medium">{tNav('hesap_durumu')}</span>
+                                                    <p className="text-gray-400 text-xs">{tNav('pasif_hesaplar_giris_yapamaz_ama_veriler')}</p>
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <button
@@ -4087,7 +4087,7 @@ export default function SuperAdminDashboard() {
                                                         ? 'text-green-400'
                                                         : 'text-red-400'
                                                         }`}>
-                                                        {editingUserProfile.isActive !== false ? '✅ Aktif' : '⛔ Pasif'}
+                                                        {editingUserProfile.isActive !== false ? tNav('aktif') : tNav('pasif')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -4096,9 +4096,9 @@ export default function SuperAdminDashboard() {
                                         {/* Contact Info - GDPR Privacy: Business admins cannot see phone/email */}
                                         <div>
                                             <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
-                                                📞 İletişim Bilgileri
+                                                {tNav('i_letisim_bilgileri')}
                                                 {admin?.adminType !== 'super' && (
-                                                    <span className="text-xs text-yellow-500 font-normal ml-2">🔒 Gizlilik Korumalı</span>
+                                                    <span className="text-xs text-yellow-500 font-normal ml-2">{tNav('gizlilik_korumali')}</span>
                                                 )}
                                             </h4>
                                             {admin?.adminType === 'super' ? (
@@ -4132,7 +4132,7 @@ export default function SuperAdminDashboard() {
                                                                 value={editingUserProfile.phone}
                                                                 onChange={(e) => setEditingUserProfile({ ...editingUserProfile, phone: e.target.value })}
                                                                 className="flex-1 px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500 placeholder:text-gray-500/40 placeholder:italic"
-                                                                placeholder="örn: XXX XXX XX XX"
+                                                                placeholder={tNav('orn_xxx_xxx_xx_xx')}
                                                             />
                                                         </div>
                                                     </div>
@@ -4142,11 +4142,10 @@ export default function SuperAdminDashboard() {
                                                 <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4">
                                                     <div className="flex items-center gap-3 text-yellow-400 mb-2">
                                                         <span className="text-xl">🔒</span>
-                                                        <span className="font-medium">Müşteri Gizliliği Koruması</span>
+                                                        <span className="font-medium">{tNav('musteri_gizliligi_korumasi')}</span>
                                                     </div>
                                                     <p className="text-yellow-300/70 text-sm">
-                                                        GDPR uyumluluğu gereği, işletme yöneticileri müşterilerin e-posta ve telefon bilgilerine erişemez.
-                                                        Teslimat sırasında gerekli iletişim bilgileri sipariş detayında görüntülenir.
+                                                        {tNav('gdpr_uyumlulugu_geregi_isletme_yoneticil')}
                                                     </p>
                                                     <div className="grid grid-cols-2 gap-4 mt-3">
                                                         <div>
@@ -4176,7 +4175,7 @@ export default function SuperAdminDashboard() {
                                                     disabled={isGeocoding}
                                                     className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded flex items-center gap-1 transition disabled:opacity-50"
                                                 >
-                                                    {isGeocoding ? '📍 Aranıyor...' : '📍 GPS\'ten Adres Çek'}
+                                                    {isGeocoding ? tNav('araniyor') : tNav('gps_ten_adres_cek')}
                                                 </button>
                                             </h4>
                                             <div className="space-y-4">
@@ -4220,7 +4219,7 @@ export default function SuperAdminDashboard() {
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <label className="block text-gray-400 text-sm mb-1">Kapı No</label>
+                                                        <label className="block text-gray-400 text-sm mb-1">{tNav('kapi_no')}</label>
                                                         <input
                                                             type="text"
                                                             value={editingUserProfile.houseNumber}
@@ -4234,21 +4233,21 @@ export default function SuperAdminDashboard() {
                                                 {/* Address Line 2 */}
                                                 <div>
                                                     <label className="block text-gray-400 text-sm mb-1">
-                                                        Adres Satırı 2 <span className="text-gray-500 text-xs">(Daire, Kat, Site Adı vb.)</span>
+                                                        {tNav('adres_satiri_2')} <span className="text-gray-500 text-xs">{tNav('daire_kat_site_adi_vb')}</span>
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={editingUserProfile.addressLine2}
                                                         onChange={(e) => setEditingUserProfile({ ...editingUserProfile, addressLine2: e.target.value })}
                                                         className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                        placeholder="Zorunlu alan: Daire, Kat veya Site/Apartman adı"
+                                                        placeholder={tNav('zorunlu_alan_daire_kat_veya_site_apartma')}
                                                     />
                                                 </div>
 
                                                 {/* City, Zip, Country */}
                                                 <div className="grid grid-cols-3 gap-4">
                                                     <div className="relative">
-                                                        <label className="block text-gray-400 text-sm mb-1">Şehir</label>
+                                                        <label className="block text-gray-400 text-sm mb-1">{tNav('sehir')}</label>
                                                         <input
                                                             type="text"
                                                             value={editingUserProfile.city}
@@ -4260,7 +4259,7 @@ export default function SuperAdminDashboard() {
                                                                 setTimeout(() => setShowCitySuggestions(false), 200);
                                                             }}
                                                             className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                            placeholder="Şehir yazın..."
+                                                            placeholder={tNav('sehir_yazin')}
                                                         />
                                                         {/* City Autocomplete Dropdown */}
                                                         {showCitySuggestions && citySuggestions.length > 0 && (
@@ -4291,7 +4290,7 @@ export default function SuperAdminDashboard() {
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-gray-400 text-sm mb-1">Ülke</label>
+                                                        <label className="block text-gray-400 text-sm mb-1">{tNav('ulke')}</label>
                                                         <input
                                                             type="text"
                                                             value={editingUserProfile.country}
@@ -4308,7 +4307,7 @@ export default function SuperAdminDashboard() {
                                         {/* Admin Role Section */}
                                         <div>
                                             <h4 className="text-white font-semibold mb-3 flex items-center gap-2 border-b border-gray-700 pb-2">
-                                                🔐 Yetki Yönetimi
+                                                {tNav('yetki_yonetimi')}
                                             </h4>
                                             <div className="space-y-3">
                                                 <div>
@@ -4333,11 +4332,11 @@ export default function SuperAdminDashboard() {
                                                         }}
                                                         className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
                                                     >
-                                                        <option value="user">👤 Kullanıcı</option>
+                                                        <option value="user">{tNav('kullanici')}</option>
                                                         {/* 🆕 KONSOLİDE ROLLER */}
-                                                        <optgroup label="İşletme Rolleri">
-                                                            <option value="isletme_admin">🏪 İşletme Admin</option>
-                                                            <option value="isletme_staff">🏪 İşletme Personel</option>
+                                                        <optgroup label={tNav('i_sletme_rolleri')}>
+                                                            <option value="isletme_admin">{tNav('i_sletme_admin')}</option>
+                                                            <option value="isletme_staff">{tNav('i_sletme_personel')}</option>
                                                         </optgroup>
                                                         <optgroup label="Organizasyon Rolleri">
                                                             <option value="kermes">🎪 Kermes Admin</option>
@@ -4345,7 +4344,7 @@ export default function SuperAdminDashboard() {
                                                         </optgroup>
                                                         {/* Super Admin - sadece süper adminler görebilir */}
                                                         {(admin?.adminType === 'super' || editingUserProfile.adminType === 'super') && (
-                                                            <option value="super">👑 Süper Admin</option>
+                                                            <option value="super">{tNav('super_admin')}</option>
                                                         )}
                                                     </select>
                                                 </div>
@@ -4354,14 +4353,14 @@ export default function SuperAdminDashboard() {
                                                 {editingUserProfile.isAdmin && editingUserProfile.adminType && editingUserProfile.adminType !== 'super' && editingUserProfile.adminType !== 'user' && editingUserProfile.adminType !== 'kermes' && editingUserProfile.adminType !== 'kermes_staff' && (
                                                     <div className="relative">
                                                         <label className="block text-gray-400 text-sm mb-1">
-                                                            🏪 İşletme Seçimi <span className="text-red-500">*</span>
+                                                            {tNav('i_sletme_secimi')} <span className="text-red-500">*</span>
                                                         </label>
 
                                                         {/* Seçili işletme göster veya arama inputu */}
                                                         {editingUserProfile.butcherId ? (
                                                             <div className="flex items-center gap-2">
                                                                 <div className="flex-1 px-3 py-2 bg-green-900/30 border border-green-600 text-green-200 rounded-lg">
-                                                                    ✅ {editingUserProfile.butcherName || 'İşletme Seçildi'}
+                                                                    ✅ {editingUserProfile.butcherName || tNav('i_sletme_secildi')}
                                                                 </div>
                                                                 <button
                                                                     type="button"
@@ -4375,7 +4374,7 @@ export default function SuperAdminDashboard() {
                                                                     }}
                                                                     className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
                                                                 >
-                                                                    ✕ Değiştir
+                                                                    {tNav('degistir')}
                                                                 </button>
                                                             </div>
                                                         ) : (
@@ -4385,12 +4384,12 @@ export default function SuperAdminDashboard() {
                                                                         type="text"
                                                                         value={businessSearchFilter}
                                                                         onChange={(e) => setBusinessSearchFilter(e.target.value)}
-                                                                        placeholder="🔍 İşletme adı veya şehir yazın (en az 3 karakter)..."
+                                                                        placeholder={tNav('i_sletme_adi_veya_sehir_yazin_en_az_3_ka')}
                                                                         className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
                                                                     />
                                                                     {businessSearchFilter.length > 0 && businessSearchFilter.length < 3 && (
                                                                         <p className="text-yellow-400 text-xs mt-1">
-                                                                            ⏳ En az 3 karakter yazın...
+                                                                            {tNav('en_az_3_karakter_yazin')}
                                                                         </p>
                                                                     )}
                                                                 </div>
@@ -4414,7 +4413,7 @@ export default function SuperAdminDashboard() {
                                                                                 if (filteredBusinesses.length === 0) {
                                                                                     return (
                                                                                         <div className="p-3 text-gray-400 text-center">
-                                                                                            ❌ "{businessSearchFilter}" için sonuç bulunamadı
+                                                                                            ❌ "{businessSearchFilter}{tNav('icin_sonuc_bulunamadi')}
                                                                                         </div>
                                                                                     );
                                                                                 }
@@ -4463,14 +4462,14 @@ export default function SuperAdminDashboard() {
                                                 {editingUserProfile.isAdmin && (editingUserProfile.adminType === 'kermes' || editingUserProfile.adminType === 'kermes_staff') && (
                                                     <div className="relative">
                                                         <label className="block text-gray-400 text-sm mb-1">
-                                                            🕌 Organizasyon Seçimi (VIKZ Camii) <span className="text-red-500">*</span>
+                                                            {tNav('organizasyon_secimi_vikz_camii')} <span className="text-red-500">*</span>
                                                         </label>
 
                                                         {/* Seçili organizasyon göster veya arama inputu */}
                                                         {editingUserProfile.organizationId ? (
                                                             <div className="flex items-center gap-2">
                                                                 <div className="flex-1 px-3 py-2 bg-emerald-900/30 border border-emerald-600 text-emerald-200 rounded-lg">
-                                                                    🕌 {editingUserProfile.organizationName || 'Organizasyon Seçildi'}
+                                                                    🕌 {editingUserProfile.organizationName || tNav('organizasyon_secildi')}
                                                                 </div>
                                                                 <button
                                                                     type="button"
@@ -4484,7 +4483,7 @@ export default function SuperAdminDashboard() {
                                                                     }}
                                                                     className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500"
                                                                 >
-                                                                    ✕ Değiştir
+                                                                    {tNav('degistir')}
                                                                 </button>
                                                             </div>
                                                         ) : (
@@ -4494,12 +4493,12 @@ export default function SuperAdminDashboard() {
                                                                         type="text"
                                                                         value={organizationSearchFilter}
                                                                         onChange={(e) => setOrganizationSearchFilter(e.target.value)}
-                                                                        placeholder="🔍 Posta kodu, şehir veya dernek adı yazın (en az 3 karakter)..."
+                                                                        placeholder={tNav('posta_kodu_sehir_veya_dernek_adi_yazin_e')}
                                                                         className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-emerald-500"
                                                                     />
                                                                     {organizationSearchFilter.length > 0 && organizationSearchFilter.length < 3 && (
                                                                         <p className="text-yellow-400 text-xs mt-1">
-                                                                            ⏳ En az 3 karakter yazın...
+                                                                            {tNav('en_az_3_karakter_yazin')}
                                                                         </p>
                                                                     )}
                                                                 </div>
@@ -4509,7 +4508,7 @@ export default function SuperAdminDashboard() {
                                                                     <div className="mt-2 max-h-60 overflow-y-auto bg-gray-800 border border-gray-600 rounded-lg">
                                                                         {loadingOrganizations ? (
                                                                             <div className="p-3 text-gray-400 text-center">
-                                                                                ⏳ Organizasyonlar yükleniyor...
+                                                                                {tNav('organizasyonlar_yukleniyor')}
                                                                             </div>
                                                                         ) : (
                                                                             (() => {
@@ -4524,7 +4523,7 @@ export default function SuperAdminDashboard() {
                                                                                 if (filteredOrgs.length === 0) {
                                                                                     return (
                                                                                         <div className="p-3 text-gray-400 text-center">
-                                                                                            ❌ "{organizationSearchFilter}" için organizasyon bulunamadı
+                                                                                            ❌ "{organizationSearchFilter}{tNav('icin_organizasyon_bulunamadi')}
                                                                                         </div>
                                                                                     );
                                                                                 }
@@ -4561,7 +4560,7 @@ export default function SuperAdminDashboard() {
 
                                                         {!editingUserProfile.organizationId && (
                                                             <p className="text-red-400 text-xs mt-1">
-                                                                ⚠️ Kermes admin/personel için organizasyon seçimi zorunludur!
+                                                                {tNav('kermes_admin_personel_icin_organizasyon_')}
                                                             </p>
                                                         )}
                                                     </div>
@@ -4571,7 +4570,7 @@ export default function SuperAdminDashboard() {
                                                 <p className="text-gray-500 text-xs">
                                                     {editingUserProfile.isAdmin
                                                         ? `Bu kullanıcı "${getRoleLabel(editingUserProfile.adminType as string) || editingUserProfile.adminType || 'Admin'}" yetkisine sahip.`
-                                                        : 'Bu kullanıcının admin yetkisi bulunmuyor.'}
+                                                        : tNav('bu_kullanicinin_admin_yetkisi_bulunmuyor')}
                                                 </p>
 
                                                 {/* 🟣 İşletme Sahibi Toggle - Only Super Admin can see/set */}
@@ -4580,10 +4579,10 @@ export default function SuperAdminDashboard() {
                                                         <div className="flex items-center justify-between">
                                                             <div>
                                                                 <p className="text-purple-200 font-medium flex items-center gap-2">
-                                                                    👑 İşletme Sahibi Olarak İşaretle
+                                                                    {tNav('i_sletme_sahibi_olarak_i_saretle')}
                                                                 </p>
                                                                 <p className="text-purple-400 text-xs mt-1">
-                                                                    İşletme sahipleri diğer adminler tarafından silinemez, arşivlenemez veya seviye düşürülemez.
+                                                                    {tNav('i_sletme_sahipleri_diger_adminler_tarafi')}
                                                                 </p>
                                                             </div>
                                                             <button
@@ -4604,7 +4603,7 @@ export default function SuperAdminDashboard() {
                                                         {(editingUserProfile as any).isPrimaryAdmin && (
                                                             <div className="mt-3 bg-purple-800/30 rounded p-2 text-center">
                                                                 <span className="text-purple-200 text-sm font-medium">
-                                                                    ✅ Bu admin İşletme Sahibi olarak korunacak
+                                                                    {tNav('bu_admin_i_sletme_sahibi_olarak_korunaca')}
                                                                 </span>
                                                             </div>
                                                         )}
@@ -4617,10 +4616,10 @@ export default function SuperAdminDashboard() {
                                                         <div className="flex items-center justify-between">
                                                             <div>
                                                                 <p className="text-emerald-200 font-medium flex items-center gap-2">
-                                                                    🚗 Sürücü Olarak İşaretle
+                                                                    {tNav('surucu_olarak_i_saretle')}
                                                                 </p>
                                                                 <p className="text-emerald-400 text-xs mt-1">
-                                                                    Bu kullanıcıyı teslimat sürücüsü olarak atayın. Sürücü paneline erişim sağlar.
+                                                                    {tNav('bu_kullaniciyi_teslimat_surucusu_olarak_')}
                                                                 </p>
                                                             </div>
                                                             <button
@@ -4640,7 +4639,7 @@ export default function SuperAdminDashboard() {
                                                         </div>
                                                         {(editingUserProfile as any).isDriver && (
                                                             <div className="mt-3">
-                                                                <p className="text-emerald-300 text-xs font-medium mb-2">Sürücü Tipi:</p>
+                                                                <p className="text-emerald-300 text-xs font-medium mb-2">{tNav('surucu_tipi')}</p>
                                                                 <div className="flex gap-3">
                                                                     <label
                                                                         className={`flex-1 flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${(editingUserProfile as any).driverType === 'lokma_fleet'
@@ -4661,7 +4660,7 @@ export default function SuperAdminDashboard() {
                                                                         />
                                                                         <div>
                                                                             <p className="text-emerald-200 text-sm font-medium">🚚 LOKMA Filosu</p>
-                                                                            <p className="text-emerald-400/70 text-xs">Platform sürücüsü, tüm işletmelere atanabilir</p>
+                                                                            <p className="text-emerald-400/70 text-xs">{tNav('platform_surucusu_tum_isletmelere_atanab')}</p>
                                                                         </div>
                                                                     </label>
                                                                     <label
@@ -4682,8 +4681,8 @@ export default function SuperAdminDashboard() {
                                                                             className="accent-amber-500"
                                                                         />
                                                                         <div>
-                                                                            <p className="text-amber-200 text-sm font-medium">🏪 İşletme Sürücüsü</p>
-                                                                            <p className="text-amber-400/70 text-xs">Sadece kendi işletmesinin siparişlerini taşır</p>
+                                                                            <p className="text-amber-200 text-sm font-medium">{tNav('i_sletme_surucusu')}</p>
+                                                                            <p className="text-amber-400/70 text-xs">{tNav('sadece_kendi_isletmesinin_siparislerini_')}</p>
                                                                         </div>
                                                                     </label>
                                                                 </div>
@@ -4729,10 +4728,10 @@ export default function SuperAdminDashboard() {
                                                                 <div className="flex items-center justify-between mb-3">
                                                                     <div>
                                                                         <p className="text-amber-200 font-medium flex items-center gap-2">
-                                                                            🪑 Masa Ataması
+                                                                            {tNav('masa_atamasi')}
                                                                         </p>
                                                                         <p className="text-amber-400 text-xs mt-1">
-                                                                            Toplam {maxTablesForBusiness} masa · Seçili: {selectedTables.length}
+                                                                            {tNav('toplam')} {maxTablesForBusiness} {tNav('masa_secili')} {selectedTables.length}
                                                                         </p>
                                                                     </div>
                                                                     <div className="flex gap-2">
@@ -4741,7 +4740,7 @@ export default function SuperAdminDashboard() {
                                                                             onClick={selectAll}
                                                                             className="px-3 py-1 text-xs bg-amber-700 text-amber-100 rounded hover:bg-amber-600 transition"
                                                                         >
-                                                                            Tümünü Seç
+                                                                            {tNav('tumunu_sec')}
                                                                         </button>
                                                                         <button
                                                                             type="button"
@@ -4782,7 +4781,7 @@ export default function SuperAdminDashboard() {
                                                     <div className="mt-6 bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-700 rounded-xl p-4">
                                                         <div className="flex items-center justify-between mb-4">
                                                             <h4 className="text-indigo-200 font-semibold flex items-center gap-2">
-                                                                🎭 Kullanıcı Rolleri
+                                                                {tNav('kullanici_rolleri')}
                                                             </h4>
                                                             <button
                                                                 type="button"
@@ -4798,7 +4797,7 @@ export default function SuperAdminDashboard() {
                                                                 }}
                                                                 className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-500 transition flex items-center gap-1"
                                                             >
-                                                                ➕ Rol Ekle
+                                                                {tNav('rol_ekle')}
                                                             </button>
                                                         </div>
 
@@ -4820,7 +4819,7 @@ export default function SuperAdminDashboard() {
                                                                                 {role.type === 'super' ? '👑' :
                                                                                     role.type?.includes('kermes') ? '🎪' :
                                                                                         role.type?.includes('kasap') ? '🥩' :
-                                                                                            role.type?.includes('restoran') ? '🍽️' :
+                                                                                            role.type?.includes(tNav('restoran')) ? '🍽️' :
                                                                                                 role.type?.includes('market') ? '🛒' : '🎫'}
                                                                             </span>
                                                                             <div>
@@ -4833,7 +4832,7 @@ export default function SuperAdminDashboard() {
                                                                                     )}
                                                                                 </p>
                                                                                 <p className="text-gray-400 text-sm">
-                                                                                    {role.businessName || role.organizationName || 'Tüm Sistem'}
+                                                                                    {role.businessName || role.organizationName || tNav('tum_sistem')}
                                                                                 </p>
                                                                             </div>
                                                                         </div>
@@ -4859,7 +4858,7 @@ export default function SuperAdminDashboard() {
                                                                                         });
                                                                                     }}
                                                                                     className="px-2 py-1 text-xs bg-yellow-700 text-yellow-100 rounded hover:bg-yellow-600 transition"
-                                                                                    title="Bu rolü ana rol yap"
+                                                                                    title={tNav('bu_rolu_ana_rol_yap')}
                                                                                 >
                                                                                     ⭐ Ana Yap
                                                                                 </button>
@@ -4876,7 +4875,7 @@ export default function SuperAdminDashboard() {
                                                                                         });
                                                                                     }}
                                                                                     className="px-2 py-1 text-xs bg-red-700 text-red-100 rounded hover:bg-red-600 transition"
-                                                                                    title="Bu rolü kaldır"
+                                                                                    title={tNav('bu_rolu_kaldir')}
                                                                                 >
                                                                                     🗑️
                                                                                 </button>
@@ -4888,8 +4887,8 @@ export default function SuperAdminDashboard() {
                                                         ) : (
                                                             <div className="text-center py-6 text-gray-400">
                                                                 <p className="text-3xl mb-2">🎭</p>
-                                                                <p>Henüz ek rol atanmamış</p>
-                                                                <p className="text-xs mt-1">Mevcut ana rol: <span className="text-indigo-300 font-medium">{(editingUserProfile.adminType ? getRoleLabel(editingUserProfile.adminType) : null) || editingUserProfile.adminType || 'Atanmamış'}</span></p>
+                                                                <p>{tNav('henuz_ek_rol_atanmamis')}</p>
+                                                                <p className="text-xs mt-1">Mevcut ana rol: <span className="text-indigo-300 font-medium">{(editingUserProfile.adminType ? getRoleLabel(editingUserProfile.adminType) : null) || editingUserProfile.adminType || tNav('atanmamis')}</span></p>
                                                             </div>
                                                         )}
                                                     </div>
@@ -4909,13 +4908,13 @@ export default function SuperAdminDashboard() {
                                             const isAdmin = editingUserProfile.isAdmin;
                                             setConfirmState({
                                                 isOpen: true,
-                                                title: isAdmin ? t('archiveUser') : 'Kullanıcıyı Sil',
+                                                title: isAdmin ? t('archiveUser') : tNav('kullaniciyi_sil'),
                                                 message: isAdmin
-                                                    ? 'Bu kullanıcı admin yetkisine sahip. Arşivlemek istediğinizden emin misiniz?'
-                                                    : 'Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!',
+                                                    ? tNav('bu_kullanici_admin_yetkisine_sahip_arsiv')
+                                                    : tNav('bu_kullaniciyi_silmek_istediginizden_emi'),
                                                 itemName: `${editingUserProfile.firstName} ${editingUserProfile.lastName}`.trim() || editingUserProfile.email,
                                                 variant: isAdmin ? 'warning' : 'danger',
-                                                confirmText: isAdmin ? 'Evet, Arşivle' : 'Evet, Sil',
+                                                confirmText: isAdmin ? tNav('evet_arsivle') : 'Evet, Sil',
                                                 onConfirm: async () => {
                                                     setConfirmState(prev => ({ ...prev, isOpen: false }));
                                                     try {
@@ -4927,7 +4926,7 @@ export default function SuperAdminDashboard() {
                                                                 archivedAt: new Date(),
                                                                 archivedBy: admin?.displayName || 'admin'
                                                             });
-                                                            showToast('Kullanıcı arşivlendi', 'success');
+                                                            showToast(tNav('kullanici_arsivlendi'), 'success');
                                                         } else {
                                                             // Try to delete user via API (Firebase Auth + Firestore)
                                                             try {
@@ -4942,13 +4941,13 @@ export default function SuperAdminDashboard() {
                                                                 });
 
                                                                 if (response.ok) {
-                                                                    showToast('Kullanıcı tüm sistemlerden silindi', 'success');
+                                                                    showToast(tNav('kullanici_tum_sistemlerden_silindi'), 'success');
                                                                 } else {
                                                                     // API failed - fallback to direct Firestore delete
-                                                                    throw new Error('API hatası - fallback moduna geçiliyor');
+                                                                    throw new Error(tNav('api_hatasi_fallback_moduna_geciliyor'));
                                                                 }
                                                             } catch (apiError) {
-                                                                console.log('API delete failed, using Firestore fallback:', apiError);
+                                                                console.log(tNav('api_delete_failed_using_firestore_fallba'), apiError);
                                                                 // Fallback: Delete directly from Firestore (orphan record)
                                                                 const userDocRef = doc(db, 'users', editingUserProfile.userId);
                                                                 const adminDocRef = doc(db, 'admins', editingUserProfile.userId);
@@ -4958,14 +4957,14 @@ export default function SuperAdminDashboard() {
                                                                 await deleteDoc(adminDocRef).catch(e => console.log('admins delete:', e));
                                                                 await deleteDoc(profileDocRef).catch(e => console.log('user_profiles delete:', e));
 
-                                                                showToast('Kullanıcı Firestore\'dan silindi (Auth kontrolü atlandı)', 'success');
+                                                                showToast(tNav('kullanici_firestore_dan_silindi_auth_kon'), 'success');
                                                             }
                                                         }
                                                         setEditingUserProfile(null);
                                                         loadAllUsers();
                                                     } catch (error) {
                                                         console.error('Delete/archive error:', error);
-                                                        const errorMsg = error instanceof Error ? error.message : 'Bilinmeyen hata';
+                                                        const errorMsg = error instanceof Error ? error.message : tNav('bilinmeyen_hata');
                                                         showToast(`İşlem başarısız: ${errorMsg}`, 'error');
                                                     }
                                                 },
@@ -4976,7 +4975,7 @@ export default function SuperAdminDashboard() {
                                             : 'bg-red-600 text-white hover:bg-red-500'
                                             }`}
                                     >
-                                        {editingUserProfile.isAdmin ? '📦 Arşivle' : '🗑️ Sil'}
+                                        {editingUserProfile.isAdmin ? tNav('arsivle') : tNav('sil')}
                                     </button>
                                 )}
                                 <button
@@ -4989,18 +4988,18 @@ export default function SuperAdminDashboard() {
                                     onClick={async () => {
                                         // Validation: Non-super, non-kermes admins MUST have a business selected
                                         if (editingUserProfile.isAdmin && editingUserProfile.adminType !== 'super' && editingUserProfile.adminType !== 'kermes' && editingUserProfile.adminType !== 'kermes_staff' && !editingUserProfile.butcherId) {
-                                            showToast('Admin rolü için işletme seçimi zorunludur!', 'error');
+                                            showToast(tNav('admin_rolu_icin_isletme_secimi_zorunludu'), 'error');
                                             return;
                                         }
                                         // Validation: Kermes admins MUST have an organization selected
                                         if (editingUserProfile.isAdmin && (editingUserProfile.adminType === 'kermes' || editingUserProfile.adminType === 'kermes_staff') && !editingUserProfile.organizationId) {
-                                            showToast('Kermes rolü için organizasyon seçimi zorunludur!', 'error');
+                                            showToast(tNav('kermes_rolu_icin_organizasyon_secimi_zor'), 'error');
                                             return;
                                         }
 
                                         setSavingProfile(true);
                                         try {
-                                            console.log('🔄 SAVE STARTED - userId:', editingUserProfile.userId);
+                                            console.log(tNav('save_started_userid'), editingUserProfile.userId);
                                             console.log('📊 Profile data:', JSON.stringify({
                                                 firstName: editingUserProfile.firstName,
                                                 lastName: editingUserProfile.lastName,
@@ -5053,7 +5052,7 @@ export default function SuperAdminDashboard() {
                                             if (editingUserProfile.isActive === false) {
                                                 updateData.deactivatedBy = admin?.email || admin?.displayName || 'system';
                                                 updateData.deactivatedAt = new Date();
-                                                updateData.deactivationReason = 'Admin tarafından devre dışı bırakıldı';
+                                                updateData.deactivationReason = tNav('admin_tarafindan_devre_disi_birakildi');
                                             } else {
                                                 // If reactivating, clear deactivation fields
                                                 updateData.deactivatedBy = null;
@@ -5071,7 +5070,7 @@ export default function SuperAdminDashboard() {
                                             if (roleChanged) {
                                                 // Authorization check: Only super admin can change roles
                                                 if (admin?.adminType !== 'super') {
-                                                    showToast('Rol değiştirme yetkisi sadece Süper Admin\'a aittir', 'error');
+                                                    showToast(tNav('rol_degistirme_yetkisi_sadece_super_admi'), 'error');
                                                     setSavingProfile(false);
                                                     return;
                                                 }
@@ -5150,7 +5149,7 @@ export default function SuperAdminDashboard() {
 
                                                     // 🎉 SEND ADMIN PROMOTION NOTIFICATIONS
                                                     const roleName = getRoleLabel(editingUserProfile.adminType) || editingUserProfile.adminType;
-                                                    const businessInfo = editingUserProfile.butcherName || 'Tüm İşletmeler';
+                                                    const businessInfo = editingUserProfile.butcherName || tNav('tum_i_sletmeler');
 
                                                     // Send Email notification
                                                     if (editingUserProfile.email) {
@@ -5160,7 +5159,7 @@ export default function SuperAdminDashboard() {
                                                                 headers: { 'Content-Type': 'application/json' },
                                                                 body: JSON.stringify({
                                                                     to: editingUserProfile.email,
-                                                                    subject: '🎖️ LOKMA Admin Yetkiniz Aktif!',
+                                                                    subject: tNav('lokma_admin_yetkiniz_aktif'),
                                                                     html: `
                                                                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                                                                         <div style="background: linear-gradient(135deg, #059669, #047857); padding: 30px; border-radius: 12px; text-align: center;">
@@ -5236,7 +5235,7 @@ export default function SuperAdminDashboard() {
                                                                 // 📝 DEACTIVATION AUDIT TRAIL
                                                                 deactivatedBy: admin?.email || admin?.displayName || 'system',
                                                                 deactivatedAt: new Date(),
-                                                                deactivationReason: 'Admin rolü kaldırıldı - Kullanıcıya indirgendi',
+                                                                deactivationReason: tNav('admin_rolu_kaldirildi_kullaniciya_indirg'),
                                                             });
                                                             console.log(`✅ Admin record deactivated: ${adminId}`);
                                                             break; // Found and deactivated, no need to check more
@@ -5257,7 +5256,7 @@ export default function SuperAdminDashboard() {
                                                 console.log('✅ User demoted: business assignment cleared');
                                             }
 
-                                            showToast('Kullanıcı profili güncellendi', 'success');
+                                            showToast(tNav('kullanici_profili_guncellendi'), 'success');
                                             setEditingUserProfile(null);
                                             // Refresh user list
                                             if (showAllUsers) {
@@ -5267,7 +5266,7 @@ export default function SuperAdminDashboard() {
                                             }
                                         } catch (error) {
                                             console.error('Error updating user:', error);
-                                            showToast('Güncelleme hatası', 'error');
+                                            showToast(tNav('guncelleme_hatasi'), 'error');
                                         } finally {
                                             setSavingProfile(false);
                                         }
@@ -5275,7 +5274,7 @@ export default function SuperAdminDashboard() {
                                     disabled={savingProfile}
                                     className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500 font-bold transition disabled:opacity-50"
                                 >
-                                    {savingProfile ? '⏳ Kaydediliyor...' : '💾 Kaydet'}
+                                    {savingProfile ? '⏳ Kaydediliyor...' : tNav('kaydet')}
                                 </button>
                             </div>
                         </div>
@@ -5292,12 +5291,12 @@ export default function SuperAdminDashboard() {
                                 <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <span className="text-4xl">⚠️</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">Kullanıcıyı Sil</h3>
+                                <h3 className="text-xl font-bold text-white mb-2">{tNav('kullaniciyi_sil')}</h3>
                                 <p className="text-gray-400">
-                                    <span className="font-semibold text-white">"{deleteModal.userName}"</span> kullanıcısını silmek istediğinize emin misiniz?
+                                    <span className="font-semibold text-white">"{deleteModal.userName}"</span> {tNav('kullanicisini_silmek_istediginize_emin_m')}
                                 </p>
                                 <p className="text-red-400 text-sm mt-2 flex items-center justify-center gap-1">
-                                    ⚠️ Bu işlem geri alınamaz!
+                                    {tNav('bu_islem_geri_alinamaz')}
                                 </p>
                             </div>
                             <div className="flex gap-3">
@@ -5311,7 +5310,7 @@ export default function SuperAdminDashboard() {
                                     onClick={confirmDeleteUser}
                                     className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-500 font-bold transition"
                                 >
-                                    🗑️ Evet, Sil
+                                    {tNav('evet_sil')}
                                 </button>
                             </div>
                         </div>
@@ -5325,7 +5324,7 @@ export default function SuperAdminDashboard() {
                     <div className="bg-gray-800 rounded-xl border border-indigo-600 shadow-2xl max-w-2xl w-full p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                ➕ Yeni Rol Ekle
+                                {tNav('yeni_rol_ekle')}
                             </h3>
                             <button
                                 onClick={() => setShowAddRoleModal(false)}
@@ -5338,7 +5337,7 @@ export default function SuperAdminDashboard() {
                         <div className="space-y-4">
                             {/* Rol Türü Seçimi */}
                             <div>
-                                <label className="block text-gray-400 text-sm mb-2">Rol Türü</label>
+                                <label className="block text-gray-400 text-sm mb-2">{tNav('rol_turu')}</label>
                                 <select
                                     value={newRoleType}
                                     onChange={(e) => {
@@ -5351,10 +5350,10 @@ export default function SuperAdminDashboard() {
                                     }}
                                     className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-indigo-500"
                                 >
-                                    <option value="">-- Rol Seçin --</option>
-                                    <optgroup label="İşletme Rolleri">
-                                        <option value="isletme_admin">🏪 İşletme Admin</option>
-                                        <option value="isletme_staff">🏪 İşletme Personel</option>
+                                    <option value="">{tNav('rol_secin')}</option>
+                                    <optgroup label={tNav('i_sletme_rolleri')}>
+                                        <option value="isletme_admin">{tNav('i_sletme_admin')}</option>
+                                        <option value="isletme_staff">{tNav('i_sletme_personel')}</option>
                                     </optgroup>
                                     <optgroup label="Organizasyon Rolleri">
                                         <option value="kermes">🎪 Kermes Admin</option>
@@ -5367,7 +5366,7 @@ export default function SuperAdminDashboard() {
                             {newRoleType && ['isletme_admin', 'isletme_staff'].includes(newRoleType) && (
                                 <div>
                                     <label className="block text-gray-400 text-sm mb-2">
-                                        🏪 İşletme Seçimi <span className="text-red-500">*</span>
+                                        {tNav('i_sletme_secimi')} <span className="text-red-500">*</span>
                                     </label>
                                     {newRoleBusinessId ? (
                                         <div className="flex items-center gap-2">
@@ -5394,7 +5393,7 @@ export default function SuperAdminDashboard() {
                                                     type="text"
                                                     value={newRoleBusinessSearch}
                                                     onChange={(e) => setNewRoleBusinessSearch(e.target.value)}
-                                                    placeholder="🔍 İşletme adı veya şehir ara..."
+                                                    placeholder={tNav('i_sletme_adi_veya_sehir_ara')}
                                                     className="w-full px-4 py-2.5 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                                                     autoFocus
                                                 />
@@ -5428,8 +5427,8 @@ export default function SuperAdminDashboard() {
                                                             return (
                                                                 <div className="p-4 text-center text-gray-400">
                                                                     <p className="text-2xl mb-2">🔍</p>
-                                                                    <p>"{newRoleBusinessSearch}" bulunamadı</p>
-                                                                    <p className="text-xs mt-1">Farklı bir arama deneyin</p>
+                                                                    <p>"{newRoleBusinessSearch}{tNav('bulunamadi')}</p>
+                                                                    <p className="text-xs mt-1">{tNav('farkli_bir_arama_deneyin')}</p>
                                                                 </div>
                                                             );
                                                         }
@@ -5438,7 +5437,7 @@ export default function SuperAdminDashboard() {
                                                             <>
                                                                 {searchLower && (
                                                                     <div className="px-3 py-1.5 bg-indigo-900/30 text-indigo-300 text-xs border-b border-gray-600">
-                                                                        🔍 {results.length} sonuç bulundu
+                                                                        🔍 {results.length} {tNav('sonuc_bulundu')}
                                                                     </div>
                                                                 )}
                                                                 {results.map(b => (
@@ -5470,7 +5469,7 @@ export default function SuperAdminDashboard() {
                             {newRoleType && ['kermes', 'kermes_staff'].includes(newRoleType) && (
                                 <div>
                                     <label className="block text-gray-400 text-sm mb-2">
-                                        🕌 Organizasyon Seçimi <span className="text-red-500">*</span>
+                                        {tNav('organizasyon_secimi')} <span className="text-red-500">*</span>
                                     </label>
                                     {newRoleOrganizationId ? (
                                         <div className="flex items-center gap-2">
@@ -5497,7 +5496,7 @@ export default function SuperAdminDashboard() {
                                                     type="text"
                                                     value={newRoleOrgSearch}
                                                     onChange={(e) => setNewRoleOrgSearch(e.target.value)}
-                                                    placeholder="🔍 Posta kodu, şehir veya dernek adı ara..."
+                                                    placeholder={tNav('posta_kodu_sehir_veya_dernek_adi_ara')}
                                                     className="w-full px-4 py-2.5 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                                                     autoFocus
                                                 />
@@ -5532,8 +5531,8 @@ export default function SuperAdminDashboard() {
                                                             return (
                                                                 <div className="p-4 text-center text-gray-400">
                                                                     <p className="text-2xl mb-2">🔍</p>
-                                                                    <p>"{newRoleOrgSearch}" bulunamadı</p>
-                                                                    <p className="text-xs mt-1">Farklı bir arama deneyin</p>
+                                                                    <p>"{newRoleOrgSearch}{tNav('bulunamadi')}</p>
+                                                                    <p className="text-xs mt-1">{tNav('farkli_bir_arama_deneyin')}</p>
                                                                 </div>
                                                             );
                                                         }
@@ -5542,7 +5541,7 @@ export default function SuperAdminDashboard() {
                                                             <>
                                                                 {searchLower && (
                                                                     <div className="px-3 py-1.5 bg-emerald-900/30 text-emerald-300 text-xs border-b border-gray-600">
-                                                                        🔍 {results.length} sonuç bulundu
+                                                                        🔍 {results.length} {tNav('sonuc_bulundu')}
                                                                     </div>
                                                                 )}
                                                                 {results.map(o => (
@@ -5582,7 +5581,7 @@ export default function SuperAdminDashboard() {
                             <button
                                 onClick={async () => {
                                     if (!newRoleType) {
-                                        showToast('Lütfen rol türü seçin', 'error');
+                                        showToast(tNav('lutfen_rol_turu_secin'), 'error');
                                         return;
                                     }
 
@@ -5590,12 +5589,12 @@ export default function SuperAdminDashboard() {
                                     const needsOrg = ['kermes', 'kermes_staff'].includes(newRoleType);
 
                                     if (needsBusiness && !newRoleBusinessId) {
-                                        showToast('Lütfen işletme seçin', 'error');
+                                        showToast(tNav('lutfen_isletme_secin'), 'error');
                                         return;
                                     }
 
                                     if (needsOrg && !newRoleOrganizationId) {
-                                        showToast('Lütfen organizasyon seçin', 'error');
+                                        showToast(tNav('lutfen_organizasyon_secin'), 'error');
                                         return;
                                     }
 
@@ -5634,7 +5633,7 @@ export default function SuperAdminDashboard() {
                                 disabled={!newRoleType || addingRole}
                                 className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {addingRole ? '⏳ Ekleniyor...' : '➕ Rol Ekle'}
+                                {addingRole ? '⏳ Ekleniyor...' : tNav('rol_ekle')}
                             </button>
                         </div>
                     </div>

@@ -7,9 +7,12 @@ import { FuneralMember } from '@/types';
 import { collection, query, orderBy, limit, getDocs, startAfter, where, addDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function FuneralMembersPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminFuneralMembers');
+const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
 
     const [members, setMembers] = useState<FuneralMember[]>([]);
@@ -97,22 +100,22 @@ export default function FuneralMembersPage() {
         normalizeTurkish(m.personalInfo.lastName).includes(normalizedSearch)
     );
 
-    if (adminLoading) return <div className="p-8 text-center text-white">Yükleniyor...</div>;
+    if (adminLoading) return <div className="p-8 text-center text-white">{t('yukleniyor')}</div>;
 
     return (
         <div className="min-h-screen bg-gray-900 text-white p-6">
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
-                        Cenaze Fonu Üyeleri
+                        {t('cenaze_fonu_uyeleri')}
                     </h1>
-                    <p className="text-gray-400 mt-1">Üyelik, aidat ve durum takibi</p>
+                    <p className="text-gray-400 mt-1">{t('uyelik_aidat_ve_durum_takibi')}</p>
                 </div>
                 <button
                     onClick={() => setShowAddModal(true)}
                     className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-xl font-bold transition flex items-center gap-2"
                 >
-                    <span>➕</span> Yeni Üye Ekle
+                    <span>➕</span> {t('yeni_uye_ekle')}
                 </button>
             </div>
 
@@ -122,7 +125,7 @@ export default function FuneralMembersPage() {
                     <div className="relative">
                         <input
                             type="text"
-                            placeholder="Üye No, İsim veya TC No ile ara..."
+                            placeholder={t('uye_no_i_sim_veya_tc_no_ile_ara')}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full px-5 py-4 bg-gray-800 rounded-xl border border-gray-700 focus:border-green-500 focus:ring-1 focus:ring-green-500 transition text-lg"
@@ -132,12 +135,12 @@ export default function FuneralMembersPage() {
                 </div>
 
                 <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col justify-center items-center">
-                    <span className="text-gray-400 text-sm">Toplam Üye</span>
+                    <span className="text-gray-400 text-sm">{t('toplam_uye')}</span>
                     <span className="text-3xl font-bold text-white">{members.length}</span>
                 </div>
 
                 <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 flex flex-col justify-center items-center">
-                    <span className="text-gray-400 text-sm">Aktif Aileler</span>
+                    <span className="text-gray-400 text-sm">{t('aktif_aileler')}</span>
                     <span className="text-3xl font-bold text-green-400">
                         {members.filter(m => m.status === 'active').length}
                     </span>
@@ -150,20 +153,20 @@ export default function FuneralMembersPage() {
                     <table className="w-full text-left">
                         <thead className="bg-gray-900/50 text-gray-400 uppercase text-xs font-semibold tracking-wider">
                             <tr>
-                                <th className="px-6 py-4">Üye No</th>
+                                <th className="px-6 py-4">{t('uye_no')}</th>
                                 <th className="px-6 py-4">Ad Soyad</th>
-                                <th className="px-6 py-4">Eş/Çocuk</th>
-                                <th className="px-6 py-4">Durum</th>
+                                <th className="px-6 py-4">{t('es_cocuk')}</th>
+                                <th className="px-6 py-4">{t('durum')}</th>
                                 <th className="px-6 py-4">Bakiye</th>
                                 <th className="px-6 py-4">Plan</th>
-                                <th className="px-6 py-4 text-right">İşlem</th>
+                                <th className="px-6 py-4 text-right">{t('i_slem')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-700">
                             {loading ? (
-                                <tr><td colSpan={7} className="text-center py-8">Yükleniyor...</td></tr>
+                                <tr><td colSpan={7} className="text-center py-8">{t('yukleniyor')}</td></tr>
                             ) : filteredMembers.length === 0 ? (
-                                <tr><td colSpan={7} className="text-center py-12 text-gray-500">Üye bulunamadı.</td></tr>
+                                <tr><td colSpan={7} className="text-center py-12 text-gray-500">{t('uye_bulunamadi')}</td></tr>
                             ) : filteredMembers.map((m) => (
                                 <tr key={m.id} className="hover:bg-gray-700/50 transition duration-150">
                                     <td className="px-6 py-4 font-mono text-green-400">{m.memberNumber}</td>
@@ -172,7 +175,7 @@ export default function FuneralMembersPage() {
                                         <div className="text-xs text-gray-500">{m.personalInfo.placeOfBirth}, {new Date(m.personalInfo.dateOfBirth).getFullYear()}</div>
                                     </td>
                                     <td className="px-6 py-4 text-gray-400">
-                                        {m.dependents?.length || 0} Kişi
+                                        {m.dependents?.length || 0} {t('kisi')}
                                     </td>
                                     <td className="px-6 py-4">
                                         <StatusBadge status={m.status} />
@@ -202,21 +205,21 @@ export default function FuneralMembersPage() {
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-2xl w-full max-w-2xl p-8 border border-gray-700 shadow-2xl">
-                        <h2 className="text-2xl font-bold mb-4">Yeni Üye Kaydı</h2>
-                        <p className="text-gray-400 mb-6">Demo amaçlı hızlı kayıt formu. Gerçek uygulamada çok adımlı wizard olacak.</p>
+                        <h2 className="text-2xl font-bold mb-4">{t('yeni_uye_kaydi')}</h2>
+                        <p className="text-gray-400 mb-6">{t('demo_amacli_hizli_kayit_formu_gercek_uyg')}</p>
 
                         {/* Placeholder Form */}
                         <div className="space-y-4">
                             <input type="text" placeholder="Ad" className="w-full bg-gray-700 p-3 rounded" />
                             <input type="text" placeholder="Soyad" className="w-full bg-gray-700 p-3 rounded" />
                             <button className="w-full bg-green-600 py-3 rounded text-white font-bold hover:bg-green-500">
-                                Kaydet
+                                {t('kaydet')}
                             </button>
                             <button
                                 onClick={() => setShowAddModal(false)}
                                 className="w-full bg-transparent py-3 rounded text-gray-400 hover:text-white"
                             >
-                                Vazgeç
+                                {t('vazgec')}
                             </button>
                         </div>
                     </div>

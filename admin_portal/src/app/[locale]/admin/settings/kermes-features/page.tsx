@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 interface KermesFeature {
     id: string;
@@ -38,7 +39,9 @@ const ICON_OPTIONS = ['👨‍👩‍👧‍👦', '🅿️', '♿', '🧒', '�
 const COLOR_OPTIONS = ['#E91E63', '#2196F3', '#9C27B0', '#4CAF50', '#8BC34A', '#FF5722', '#607D8B', '#795548', '#009688', '#FF9800', '#3F51B5', '#00BCD4', '#F44336', '#455A64', '#673AB7', '#CDDC39'];
 
 export default function KermesFeaturesPage() {
-    const { admin, loading: authLoading } = useAdmin();
+    
+  const t = useTranslations('AdminSettingsKermesfeatures');
+const { admin, loading: authLoading } = useAdmin();
     const router = useRouter();
     const [features, setFeatures] = useState<KermesFeature[]>([]);
     const [loading, setLoading] = useState(true);
@@ -67,7 +70,7 @@ export default function KermesFeaturesPage() {
                 setFeatures(DEFAULT_FEATURES);
             }
         } catch (error) {
-            console.error('Özellikler yüklenemedi:', error);
+            console.error(t('ozellikler_yuklenemedi'), error);
             setFeatures(DEFAULT_FEATURES);
         } finally {
             setLoading(false);
@@ -81,8 +84,8 @@ export default function KermesFeaturesPage() {
             await setDoc(docRef, { features: updatedFeatures });
             setFeatures(updatedFeatures);
         } catch (error) {
-            console.error('Kaydetme hatası:', error);
-            alert('Kaydetme başarısız!');
+            console.error(t('kaydetme_hatasi'), error);
+            alert(t('kaydetme_basarisiz'));
         } finally {
             setSaving(false);
         }
@@ -162,8 +165,8 @@ export default function KermesFeaturesPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">Kermes Özellikleri</h1>
-                        <p className="text-gray-400 mt-1">Tüm kermeslerde kullanılacak etkinlik özelliklerini yönetin</p>
+                        <h1 className="text-2xl font-bold text-white">{t('kermes_ozellikleri')}</h1>
+                        <p className="text-gray-400 mt-1">{t('tum_kermeslerde_kullanilacak_etkinlik_oz')}</p>
                     </div>
                     <button
                         onClick={() => router.back()}
@@ -175,15 +178,15 @@ export default function KermesFeaturesPage() {
 
                 {/* Yeni Özellik Ekle */}
                 <div className="bg-gray-800 rounded-xl p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">➕ Yeni Özellik Ekle</h2>
+                    <h2 className="text-lg font-semibold text-white mb-4">{t('yeni_ozellik_ekle')}</h2>
                     <div className="flex flex-wrap gap-4 items-end">
                         <div className="flex-1 min-w-[200px]">
-                            <label className="block text-sm text-gray-400 mb-1">Özellik Adı</label>
+                            <label className="block text-sm text-gray-400 mb-1">{t('ozellik_adi')}</label>
                             <input
                                 type="text"
                                 value={newFeature.label}
                                 onChange={(e) => setNewFeature({ ...newFeature, label: e.target.value })}
-                                placeholder="Örn: Çay Bahçesi"
+                                placeholder={t('orn_cay_bahcesi')}
                                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-red-500 focus:outline-none"
                             />
                         </div>
@@ -213,14 +216,14 @@ export default function KermesFeaturesPage() {
                             disabled={!newFeature.label.trim() || saving}
                             className="px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors"
                         >
-                            {saving ? '...' : 'Ekle'}
+                            {saving ? '...' : t('ekle')}
                         </button>
                     </div>
                 </div>
 
                 {/* Mevcut Özellikler */}
                 <div className="bg-gray-800 rounded-xl p-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">📋 Mevcut Özellikler ({features.length})</h2>
+                    <h2 className="text-lg font-semibold text-white mb-4">{t('mevcut_ozellikler')}{features.length})</h2>
 
                     <div className="space-y-3">
                         {features.map((feature, index) => (
@@ -238,7 +241,7 @@ export default function KermesFeaturesPage() {
                                             onClick={() => moveFeature(index, 'up')}
                                             disabled={index === 0 || saving}
                                             className="p-1 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                            title="Yukarı taşı"
+                                            title={t('yukari_tasi')}
                                         >
                                             ▲
                                         </button>
@@ -246,7 +249,7 @@ export default function KermesFeaturesPage() {
                                             onClick={() => moveFeature(index, 'down')}
                                             disabled={index === features.length - 1 || saving}
                                             className="p-1 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                            title="Aşağı taşı"
+                                            title={t('asagi_tasi')}
                                         >
                                             ▼
                                         </button>
@@ -320,7 +323,7 @@ export default function KermesFeaturesPage() {
                                     <button
                                         onClick={() => setEditingId(editingId === feature.id ? null : feature.id)}
                                         className="p-2 text-gray-400 hover:text-white transition-colors"
-                                        title="Düzenle"
+                                        title={t('duzenle')}
                                     >
                                         ✏️
                                     </button>
@@ -329,7 +332,7 @@ export default function KermesFeaturesPage() {
                                     <button
                                         onClick={() => deleteFeature(feature.id)}
                                         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                                        title="Sil"
+                                        title={t('sil')}
                                     >
                                         🗑️
                                     </button>
@@ -340,7 +343,7 @@ export default function KermesFeaturesPage() {
 
                     {features.length === 0 && (
                         <div className="text-center py-8 text-gray-500">
-                            Henüz özellik eklenmemiş
+                            {t('henuz_ozellik_eklenmemis')}
                         </div>
                     )}
                 </div>
@@ -348,9 +351,7 @@ export default function KermesFeaturesPage() {
                 {/* Bilgi */}
                 <div className="mt-6 p-4 bg-blue-900/30 border border-blue-700/50 rounded-lg">
                     <p className="text-blue-300 text-sm">
-                        💡 <strong>İpucu:</strong> Bu özellikler tüm kermeslerde kullanılacaktır.
-                        Kermes oluştururken veya düzenlerken bu listeden seçim yapılabilir.
-                        Pasif edilen özellikler yeni kermeslerde görünmez ama mevcut kermesleri etkilemez.
+                        💡 <strong>İpucu:</strong> {t('bu_ozellikler_tum_kermeslerde_kullanilac')}
                     </p>
                 </div>
             </div>
@@ -360,11 +361,11 @@ export default function KermesFeaturesPage() {
                 isOpen={!!confirmDeleteFeatureId}
                 onClose={() => setConfirmDeleteFeatureId(null)}
                 onConfirm={handleDeleteFeatureConfirm}
-                title="Özellik Sil"
-                message="Bu özelliği silmek istediğinize emin misiniz?"
+                title={t('ozellik_sil')}
+                message={t('bu_ozelligi_silmek_istediginize_emin_mis')}
                 itemName={features.find(f => f.id === confirmDeleteFeatureId)?.label}
                 variant="danger"
-                confirmText="Evet, Sil"
+                confirmText={t('evet_sil')}
                 loadingText="Siliniyor..."
             />
         </div>

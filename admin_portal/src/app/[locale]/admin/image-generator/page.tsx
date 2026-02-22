@@ -15,6 +15,7 @@ import {
     Timestamp,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { useTranslations } from 'next-intl';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LOKMA AI GÖRSEL ÜRETİCİ — Imagen 4 powered image generation
@@ -117,7 +118,9 @@ interface GalleryImage {
 }
 
 export default function ImageGeneratorPage() {
-    const { admin } = useAdmin();
+    
+  const t = useTranslations('AdminImagegenerator');
+const { admin } = useAdmin();
     const isSuperAdmin = admin?.adminType === 'super';
 
     // ── State ────────────────────────────────────────────────────────────
@@ -175,7 +178,7 @@ export default function ImageGeneratorPage() {
     // ── Generate image via Imagen 4 API ──────────────────────────────────
     const generateImage = async () => {
         if (!keyword.trim()) {
-            showToast('Lütfen bir anahtar kelime girin (ör. "kuşbaşı", "nohut")', 'error');
+            showToast(t('lutfen_bir_anahtar_kelime_girin_or_kusba'), 'error');
             return;
         }
         if (!admin) return;
@@ -199,8 +202,8 @@ export default function ImageGeneratorPage() {
 
         try {
             // Dedicated AI Studio key for Generative Language API (not the restricted Firebase key)
-            const apiKey = process.env.NEXT_PUBLIC_IMAGEN_API_KEY || 'AIzaSyDL6yzW9O5MvXQBDaHyFhSGGHMhuQ1Z_sM';
-            if (!apiKey) throw new Error('API key not configured');
+            const apiKey = process.env.NEXT_PUBLIC_IMAGEN_API_KEY || t('aizasydl6yzw9o5mvxqbdahyfhsgghmhuq1z_sm');
+            if (!apiKey) throw new Error(t('api_key_not_configured'));
 
             const formatInfo = outputFormats.find((f) => f.id === activeFormat);
 
@@ -229,7 +232,7 @@ export default function ImageGeneratorPage() {
             // Imagen 4 predict response format
             const imageData = result.predictions?.[0]?.bytesBase64Encoded;
             if (!imageData) {
-                throw new Error('API yanıtında görsel bulunamadı');
+                throw new Error(t('api_yanitinda_gorsel_bulunamadi'));
             }
 
             // Convert base64 → blob
@@ -272,7 +275,7 @@ export default function ImageGeneratorPage() {
             setKeyword('');
         } catch (error: any) {
             console.error('Generation error:', error);
-            showToast(error.message || 'Görsel üretilirken hata oluştu', 'error');
+            showToast(error.message || t('gorsel_uretilirken_hata_olustu'), 'error');
         } finally {
             setIsGenerating(false);
         }
@@ -281,7 +284,7 @@ export default function ImageGeneratorPage() {
     // ── Delete image ─────────────────────────────────────────────────────
     const deleteImage = async (image: GalleryImage) => {
         if (!isSuperAdmin) {
-            showToast('Sadece Super Admin görselleri silebilir', 'error');
+            showToast(t('sadece_super_admin_gorselleri_silebilir'), 'error');
             return;
         }
 
@@ -297,10 +300,10 @@ export default function ImageGeneratorPage() {
             }
             // Delete from Firestore
             await deleteDoc(doc(db, GALLERY_COLLECTION, image.id));
-            showToast('Görsel silindi');
+            showToast(t('gorsel_silindi'));
         } catch (error) {
             console.error('Delete error:', error);
-            showToast('Silme hatası', 'error');
+            showToast(t('silme_hatasi'), 'error');
         } finally {
             setDeletingId(null);
         }
@@ -311,10 +314,10 @@ export default function ImageGeneratorPage() {
         try {
             await navigator.clipboard.writeText(image.imageUrl);
             setCopiedId(image.id);
-            showToast('URL kopyalandı — başka sayfalarda kullanabilirsiniz');
+            showToast(t('url_kopyalandi_baska_sayfalarda_kullanab'));
             setTimeout(() => setCopiedId(null), 2000);
         } catch {
-            showToast('URL kopyalanamadı', 'error');
+            showToast(t('url_kopyalanamadi'), 'error');
         }
     };
 
@@ -332,16 +335,16 @@ export default function ImageGeneratorPage() {
                             <span className="bg-gradient-to-br from-violet-600 to-pink-500 p-3 rounded-2xl text-white shadow-lg shadow-violet-500/30">
                                 🎨
                             </span>
-                            AI Görsel Üretici
+                            {t('ai_gorsel_uretici')}
                         </h1>
                         <p className="text-gray-400 mt-2 text-sm">
-                            Yapay zeka ile profesyonel yemek ve işletme görselleri üretin • Imagen 4 destekli
+                            {t('yapay_zeka_ile_profesyonel_yemek_ve_isle')}
                         </p>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                         <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-900/40 border border-emerald-700/50 rounded-full text-emerald-400 font-bold">
                             <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                            {gallery.length} görsel kayıtlı
+                            {gallery.length} {t('gorsel_kayitli')}
                         </span>
                     </div>
                 </div>
@@ -350,7 +353,7 @@ export default function ImageGeneratorPage() {
                 {isSuperAdmin && (
                     <div className="bg-gray-900 border border-gray-800 rounded-3xl p-6 mb-8">
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                            <span className="text-violet-400">✦</span> Yeni Görsel Üret
+                            <span className="text-violet-400">✦</span> {t('yeni_gorsel_uret')}
                         </h2>
 
                         {/* Category Pills */}
@@ -396,7 +399,7 @@ export default function ImageGeneratorPage() {
                                 className="flex items-center gap-2 text-xs text-gray-400 hover:text-violet-400 font-bold transition-colors"
                             >
                                 <span className={`transition-transform ${showAdvanced ? 'rotate-90' : ''}`}>▶</span>
-                                ⚙️ Gelişmiş Ayarlar
+                                {t('gelismis_ayarlar')}
                                 {(backgroundPrompt.trim() || negativePrompt.trim()) && (
                                     <span className="w-2 h-2 bg-violet-500 rounded-full animate-pulse" />
                                 )}
@@ -407,13 +410,13 @@ export default function ImageGeneratorPage() {
                                     {/* Background Prompt */}
                                     <div>
                                         <label className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-2">
-                                            <span className="text-emerald-400">🧠</span> Arka Plan Promptları
-                                            <span className="text-[10px] text-gray-600 font-normal">(her üretimde eklenir)</span>
+                                            <span className="text-emerald-400">🧠</span> {t('arka_plan_promptlari')}
+                                            <span className="text-[10px] text-gray-600 font-normal">{t('her_uretimde_eklenir')}</span>
                                         </label>
                                         <textarea
                                             value={backgroundPrompt}
                                             onChange={(e) => setBackgroundPrompt(e.target.value)}
-                                            placeholder="ör. beyaz arka plan, stüdyo ışığı, profesyonel çekim, yüksek çözünürlük..."
+                                            placeholder={t('or_beyaz_arka_plan_studyo_isigi_profesyo')}
                                             className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 text-sm h-20 resize-none"
                                             disabled={isGenerating}
                                         />
@@ -423,12 +426,12 @@ export default function ImageGeneratorPage() {
                                     <div>
                                         <label className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-2">
                                             <span className="text-red-400">🚫</span> Negatif Promptlar
-                                            <span className="text-[10px] text-gray-600 font-normal">(üretilmemesi gerekenler)</span>
+                                            <span className="text-[10px] text-gray-600 font-normal">{t('uretilmemesi_gerekenler')}</span>
                                         </label>
                                         <textarea
                                             value={negativePrompt}
                                             onChange={(e) => setNegativePrompt(e.target.value)}
-                                            placeholder="ör. tahta yüzey, plastik tabak, bulanık, düşük kalite, watermark..."
+                                            placeholder={t('or_tahta_yuzey_plastik_tabak_bulanik_dus')}
                                             className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 text-sm h-20 resize-none"
                                             disabled={isGenerating}
                                         />
@@ -447,20 +450,20 @@ export default function ImageGeneratorPage() {
                                     onKeyDown={(e) => e.key === 'Enter' && !isGenerating && generateImage()}
                                     placeholder={
                                         activeCategory === 'kasap'
-                                            ? 'ör. kuşbaşı, tavuk but, kıyma, dana pirzola...'
-                                            : activeCategory === 'restoran'
-                                                ? 'ör. nohut yemeği, mercimek çorbası, lahmacun...'
+                                            ? t('or_kusbasi_tavuk_but_kiyma_dana_pirzola')
+                                            : activeCategory === t('restoran')
+                                                ? t('or_nohut_yemegi_mercimek_corbasi_lahmacu')
                                                 : activeCategory === 'pizzaci'
-                                                    ? 'ör. margarita, karışık pizza, sucuklu pizza...'
+                                                    ? t('or_margarita_karisik_pizza_sucuklu_pizza')
                                                     : activeCategory === 'donerci'
-                                                        ? 'ör. tavuk döner, iskender, dürüm...'
+                                                        ? t('or_tavuk_doner_iskender_durum')
                                                         : activeCategory === 'market'
-                                                            ? 'ör. sebze reyonu, meyve standı, süt ürünleri...'
+                                                            ? t('or_sebze_reyonu_meyve_standi_sut_urunler')
                                                             : activeCategory === 'hamburger'
-                                                                ? 'ör. çift katlı burger, cheese burger, tavuk burger...'
+                                                                ? t('or_cift_katli_burger_cheese_burger_tavuk')
                                                                 : activeCategory === 'tatli'
-                                                                    ? 'ör. baklava, künefe, sütlaç, trilece...'
-                                                                    : 'ör. ayran, limonata, türk kahvesi...'
+                                                                    ? t('or_baklava_kunefe_sutlac_trilece')
+                                                                    : t('or_ayran_limonata_turk_kahvesi')
                                     }
                                     className="w-full px-5 py-4 bg-gray-800 border border-gray-700 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent text-base"
                                     disabled={isGenerating}
@@ -484,7 +487,7 @@ export default function ImageGeneratorPage() {
                                         Üretiliyor...
                                     </>
                                 ) : (
-                                    <>✨ Görsel Üret</>
+                                    <>{t('gorsel_uret')}</>
                                 )}
                             </button>
                         </div>
@@ -518,10 +521,10 @@ export default function ImageGeneratorPage() {
                     {/* Gallery Header + Filter */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                         <h2 className="text-xl font-bold flex items-center gap-2">
-                            <span className="text-pink-400">◈</span> Görsel Kütüphanesi
+                            <span className="text-pink-400">◈</span> {t('gorsel_kutuphanesi')}
                             {!isSuperAdmin && (
                                 <span className="text-xs bg-blue-900/40 text-blue-300 px-2.5 py-1 rounded-full border border-blue-700/50 ml-2">
-                                    Görselleri işletmenizde kullanabilirsiniz
+                                    {t('gorselleri_isletmenizde_kullanabilirsini')}
                                 </span>
                             )}
                         </h2>
@@ -567,8 +570,8 @@ export default function ImageGeneratorPage() {
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                     </svg>
                                 </div>
-                                <p className="text-sm font-bold text-white">Fırçalar hazırlanıyor...</p>
-                                <p className="text-xs text-gray-500 mt-2">"{keyword}" üretiliyor</p>
+                                <p className="text-sm font-bold text-white">{t('fircalar_hazirlaniyor')}</p>
+                                <p className="text-xs text-gray-500 mt-2">"{keyword}{t('uretiliyor')}</p>
                             </div>
                         )}
 
@@ -605,7 +608,7 @@ export default function ImageGeneratorPage() {
                                                 : 'bg-white/10 backdrop-blur-xl text-white hover:bg-white/20'
                                                 }`}
                                         >
-                                            {copiedId === image.id ? '✓ Kopyalandı' : '📋 URL Kopyala'}
+                                            {copiedId === image.id ? t('kopyalandi') : '📋 URL Kopyala'}
                                         </button>
 
                                         {/* Delete (Super Admin only) */}
@@ -668,11 +671,11 @@ export default function ImageGeneratorPage() {
                                 <div className="bg-gray-900 p-8 rounded-3xl mb-6 text-gray-700 border border-gray-800">
                                     <span className="text-6xl">🖼️</span>
                                 </div>
-                                <h3 className="text-xl font-black text-white">Kütüphane Boş</h3>
+                                <h3 className="text-xl font-black text-white">{t('kutuphane_bos')}</h3>
                                 <p className="text-gray-500 mt-2 text-sm max-w-xs">
                                     {isSuperAdmin
-                                        ? 'Yukarıdan bir kategori seç ve anahtar kelime yazarak ilk görselini üret!'
-                                        : 'Henüz üretilmiş bir görsel bulunmuyor. Super Admin görselleri ürettiğinde burada görünecek.'}
+                                        ? t('yukaridan_bir_kategori_sec_ve_anahtar_ke')
+                                        : t('henuz_uretilmis_bir_gorsel_bulunmuyor_su')}
                                 </p>
                             </div>
                         )}
@@ -713,13 +716,13 @@ export default function ImageGeneratorPage() {
                                         : 'bg-violet-600 text-white hover:bg-violet-500'
                                         }`}
                                 >
-                                    {copiedId === previewImage.id ? '✓ Kopyalandı' : '📋 URL Kopyala'}
+                                    {copiedId === previewImage.id ? t('kopyalandi') : '📋 URL Kopyala'}
                                 </button>
                                 <button
                                     onClick={() => setPreviewImage(null)}
                                     className="px-4 py-2.5 bg-gray-800 text-gray-400 rounded-xl text-sm font-bold hover:bg-gray-700 transition-all"
                                 >
-                                    ✕ Kapat
+                                    {t('kapat')}
                                 </button>
                             </div>
                         </div>

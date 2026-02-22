@@ -125,7 +125,7 @@ export default function BusinessDetailsPage() {
       }
 
       const timePart = todayLine.split(": ").slice(1).join(": ").trim();
-      if (!timePart) return { isOpen: false, text: "Saat Bilgisi Yok", isClosed: false };
+      if (!timePart) return { isOpen: false, text: t('saat_bilgisi_yok'), isClosed: false };
 
       const ranges = timePart.includes("–") ? timePart.split("–") : timePart.includes("-") ? timePart.split("-") : [];
 
@@ -161,7 +161,7 @@ export default function BusinessDetailsPage() {
 
   // Fallback plan labels for badge display (dynamic plans override these)
   const defaultPlanLabels: Record<string, { label: string; color: string }> = {
-    none: { label: "Yok", color: "bg-gray-800" },
+    none: { label: t('yok'), color: "bg-gray-800" },
   };
 
   // 🆕 Dynamic business type labels for UI - synced with /lib/business-types.ts
@@ -169,7 +169,7 @@ export default function BusinessDetailsPage() {
     // === MERKEZI TİPLER (business-types.ts ile uyumlu) ===
     kasap: { label: "Kasap", emoji: "🥩", color: "bg-red-600" },
     market: { label: "Market", emoji: "🛒", color: "bg-green-600" },
-    restoran: { label: "Restoran", emoji: "🍽️", color: "bg-amber-600" },
+    restoran: { label: t('restoran'), emoji: "🍽️", color: "bg-amber-600" },
     pastane: { label: t('pastaneTatlici'), emoji: "🎂", color: "bg-pink-600" },
     cicekci: { label: t('cicekci'), emoji: "🌸", color: "bg-purple-600" },
     cigkofte: { label: t('cigKofteci'), emoji: "🥙", color: "bg-emerald-600" },
@@ -1125,7 +1125,7 @@ export default function BusinessDetailsPage() {
         throw new Error(data.error || t('sunucuHatasi'));
       }
 
-      console.log("Server API Response:", data);
+      console.log(t('server_api_response'), data);
 
       let successMsg = "";
       let updates: any = {};
@@ -1202,7 +1202,7 @@ export default function BusinessDetailsPage() {
         try {
           // Try to fetch blob for upload
           const response = await fetch(data.photoUrl);
-          if (!response.ok) throw new Error("Image fetch failed");
+          if (!response.ok) throw new Error(t('image_fetch_failed'));
 
           const blob = await response.blob();
           const file = new File([blob], "google_place_photo.jpg", {
@@ -1235,7 +1235,7 @@ export default function BusinessDetailsPage() {
       if (successMsg) {
         showToast(`${t('basarili')} ${successMsg}`, "success");
       } else {
-        showToast("Veri bulundu ama eksik (Foto/Saat yok).", "error");
+        showToast(t('veri_bulundu_ama_eksik_foto_saat_yok'), "error");
       }
     } catch (error: any) {
       console.error("Fetch error:", error);
@@ -1337,7 +1337,7 @@ export default function BusinessDetailsPage() {
           );
         });
 
-        console.log("Image uploaded successfully:", downloadURL);
+        console.log(t('image_uploaded_successfully'), downloadURL);
         setUploading(false);
       }
 
@@ -1498,7 +1498,7 @@ export default function BusinessDetailsPage() {
       }
     } catch (error: any) {
       console.error("Save error:", error);
-      const errorMessage = error?.message || "Bilinmeyen bir hata.";
+      const errorMessage = error?.message || t('bilinmeyen_bir_hata');
       // Show toast
       showToast(`Hata: ${errorMessage}`, "error");
 
@@ -1619,7 +1619,7 @@ export default function BusinessDetailsPage() {
       setInviteEmail("");
       loadStaff();
     } catch (error: any) {
-      console.error("Invite error:", error);
+      console.error(t('invite_error'), error);
       const msg = error?.message || t('davetGonderilemedi');
       showToast(msg, "error");
     }
@@ -1655,7 +1655,7 @@ export default function BusinessDetailsPage() {
   availablePlans.forEach(p => {
     planLabels[p.code] = { label: `LOKMA ${p.name}`, color: p.color || 'bg-gray-600' };
   });
-  const planInfo = planLabels[business?.subscriptionPlan || "none"] || { label: business?.subscriptionPlan || 'Yok', color: 'bg-gray-600' };
+  const planInfo = planLabels[business?.subscriptionPlan || "none"] || { label: business?.subscriptionPlan || t('yok'), color: 'bg-gray-600' };
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -1914,7 +1914,7 @@ export default function BusinessDetailsPage() {
                     {orders.filter((o) => o.status === "pending").length}
                   </p>
                   <p className="text-yellow-300 text-sm font-medium">
-                    🔔 Bekleyen
+                    {t('bekleyen')}
                   </p>
                 </div>
 
@@ -1971,7 +1971,7 @@ export default function BusinessDetailsPage() {
                       .reduce((sum, o) => sum + (o.totalPrice || 0), 0)
                       .toFixed(2)}
                   </p>
-                  <p className="text-gray-400 text-sm">Toplam Ciro</p>
+                  <p className="text-gray-400 text-sm">{t('toplam_ciro')}</p>
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <p className="text-blue-400 text-2xl font-bold">
@@ -2085,7 +2085,7 @@ export default function BusinessDetailsPage() {
                         </ul>
                       ) : (
                         <span className="text-xs text-gray-500 italic">
-                          Bilgi yok
+                          {t('bilgi_yok')}
                         </span>
                       );
                     })()}
@@ -2260,7 +2260,7 @@ export default function BusinessDetailsPage() {
                             className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg"
                           >
                             <option value="kg">Kg</option>
-                            <option value="ad">Adet</option>
+                            <option value="ad">{t('adet')}</option>
                             <option value="pk">Paket</option>
                           </select>
                         </div>
@@ -2329,9 +2329,9 @@ export default function BusinessDetailsPage() {
                     <tr>
                       <th className="px-4 py-3">{t('siparisNo')}</th>
                       <th className="px-4 py-3">{t('musteri')}</th>
-                      <th className="px-4 py-3">Tutar</th>
+                      <th className="px-4 py-3">{t('tutar')}</th>
                       <th className="px-4 py-3">Durum</th>
-                      <th className="px-4 py-3">Tarih</th>
+                      <th className="px-4 py-3">{t('tarih')}</th>
                     </tr>
                   </thead>
                   <tbody className="text-white">
@@ -2425,7 +2425,7 @@ export default function BusinessDetailsPage() {
                       onClick={toggleActiveStatus}
                       className={`px-4 py-2 rounded-lg text-white font-medium ${business.isActive ? "bg-red-600 hover:bg-red-500" : "bg-green-600 hover:bg-green-500"}`}
                     >
-                      {business.isActive ? "🔴 Deaktif Et" : "🟢 Aktif Et"}
+                      {business.isActive ? "🔴 Deaktif Et" : t('aktif_et')}
                     </button>
                   )}
                   {!isEditing ? (
@@ -2517,7 +2517,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       {/* Vergi UID */}
                       <div>
-                        <label className="text-gray-400 text-sm">🇪🇺 Vergi UID Nummer (VAT)</label>
+                        <label className="text-gray-400 text-sm">{t('vergi_uid_nummer_vat')}</label>
                         <input type="text" value={formData.vatNumber || ''} onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })} disabled={!isEditing} placeholder="DE123456789" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
                         <p className="text-xs text-gray-500 mt-1">{t('avrupaBirligiVergiNumarasiOrnDe123456789')}</p>
                       </div>
@@ -2562,7 +2562,7 @@ export default function BusinessDetailsPage() {
                         <h4 className="text-white font-medium pb-2">📱 Sosyal Medya</h4>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-gray-400 text-sm">📸 Instagram</label>
+                            <label className="text-gray-400 text-sm">{t('instagram')}</label>
                             <input type="text" value={formData.instagram || ''} onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} disabled={!isEditing} placeholder="@kullaniciadi" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                           </div>
                           <div>
@@ -2621,14 +2621,14 @@ export default function BusinessDetailsPage() {
                             </div>
                           )}
                           <input type="text" value={formData.googlePlaceId} onChange={(e) => setFormData({ ...formData, googlePlaceId: e.target.value })} disabled={!isEditing} placeholder={t('chijYukaridanArayarakSecin')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono text-sm" />
-                          {formData.googlePlaceId && (<p className="text-xs text-green-400 mt-1">✅ Google Place ID set</p>)}
+                          {formData.googlePlaceId && (<p className="text-xs text-green-400 mt-1">{t('google_place_id_set')}</p>)}
                         </div>
                       </div>
                     </div>
                   )}
 
                   {/* ═══════ Tab 2: Fatura Adresi ═══════ */}
-                  {isletmeInternalTab === "fatura" && (
+                  {isletmeInternalTab === t('fatura') && (
                     <div className="space-y-6">
                       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
                         <label className="flex items-center gap-3 cursor-pointer mb-4">
@@ -2643,7 +2643,7 @@ export default function BusinessDetailsPage() {
                               <input type="text" value={formData.billingName || ''} onChange={(e) => setFormData({ ...formData, billingName: e.target.value })} disabled={!isEditing} placeholder={t('ornAbcGmbh')} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                             </div>
                             <div>
-                              <label className="text-gray-400 text-sm">Fatura Adresi</label>
+                              <label className="text-gray-400 text-sm">{t('fatura_adresi')}</label>
                               <input type="text" value={formData.billingStreet || ''} onChange={(e) => setFormData({ ...formData, billingStreet: e.target.value })} disabled={!isEditing} placeholder="Sokak / Cadde" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -2657,7 +2657,7 @@ export default function BusinessDetailsPage() {
                               </div>
                             </div>
                             <div>
-                              <label className="text-gray-400 text-sm">Fatura Vergi No</label>
+                              <label className="text-gray-400 text-sm">{t('fatura_vergi_no')}</label>
                               <input type="text" value={formData.billingVatNumber || ''} onChange={(e) => setFormData({ ...formData, billingVatNumber: e.target.value })} disabled={!isEditing} placeholder="DE..." className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
                             </div>
                           </div>
@@ -2717,11 +2717,11 @@ export default function BusinessDetailsPage() {
                           {isEditing && (
                             <div className="flex flex-col gap-2 w-full">
                               <input type="file" accept="image/*" onChange={handleImageSelect} className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
-                              <div className="flex items-center gap-2 my-1"><span className="text-gray-600 text-xs">- VEYA -</span></div>
+                              <div className="flex items-center gap-2 my-1"><span className="text-gray-600 text-xs">{t('veya')}</span></div>
                               <button onClick={fetchGoogleData} disabled={!formData.googlePlaceId || uploading} className="flex items-center justify-center px-4 py-2 bg-white text-gray-900 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors">
                                 {uploading && !imageFile ? (<span className="animate-spin mr-2">⏳</span>) : (<span className="mr-2">🪄</span>)} Google'dan Bilgileri Doldur (Server)
                               </button>
-                              {!formData.googlePlaceId && (<p className="text-xs text-red-400">Google ID gerekli</p>)}
+                              {!formData.googlePlaceId && (<p className="text-xs text-red-400">{t('google_id_gerekli')}</p>)}
                             </div>
                           )}
                         </div>
@@ -2794,7 +2794,7 @@ export default function BusinessDetailsPage() {
                               </li>
                             ))}
                           </ul>
-                        ) : (<span className="text-xs text-gray-500 italic">Bilgi yok</span>)}
+                        ) : (<span className="text-xs text-gray-500 italic">{t('bilgi_yok')}</span>)}
                       </div>
                     </div>
                   )}
@@ -2836,7 +2836,7 @@ export default function BusinessDetailsPage() {
                             <span className="text-2xl">📂</span>
                             <div>
                               <h4 className="text-white font-bold">Kategoriler</h4>
-                              <p className="text-gray-400 text-xs">{inlineCategories.length} kategori</p>
+                              <p className="text-gray-400 text-xs">{inlineCategories.length} {t('kategori')}</p>
                             </div>
                           </div>
                           <button
@@ -3123,7 +3123,7 @@ export default function BusinessDetailsPage() {
                                               </span>
                                             )}
                                             {product.isActive === false && (
-                                              <span className="block text-red-400 text-[10px]">Pasif</span>
+                                              <span className="block text-red-400 text-[10px]">{t('pasif')}</span>
                                             )}
                                           </div>
                                         </div>
@@ -3152,7 +3152,7 @@ export default function BusinessDetailsPage() {
                         <div className="flex items-center gap-2 mb-4">
                           <span className="text-2xl">🟢</span>
                           <h3 className="text-lg font-bold text-green-300">
-                            Aktif Vardiyalar ({activeShifts.length})
+                            {t('aktif_vardiyalar')}{activeShifts.length})
                           </h3>
                         </div>
                         <div className="overflow-x-auto">
@@ -3318,7 +3318,7 @@ export default function BusinessDetailsPage() {
                                 </td>
                                 <td className="py-4">
                                   <span className={`px-2 py-1 rounded text-xs ${staff.isActive !== false ? 'bg-green-600' : 'bg-red-600'}`}>
-                                    {staff.isActive !== false ? 'Aktif' : 'Pasif'}
+                                    {staff.isActive !== false ? t('aktif') : t('pasif')}
                                   </span>
                                 </td>
                                 <td className="py-4">
@@ -3872,7 +3872,7 @@ export default function BusinessDetailsPage() {
                               />
                               <div>
                                 <span className="font-medium">{t('cikistaOde')}</span>
-                                <p className="text-xs text-gray-400">Restoran — masada hesap isteme</p>
+                                <p className="text-xs text-gray-400">{t('restoran_masada_hesap_isteme')}</p>
                               </div>
                             </label>
                           </div>
@@ -3888,7 +3888,7 @@ export default function BusinessDetailsPage() {
                             className="w-5 h-5 accent-amber-500"
                           />
                           <div>
-                            <span className="text-white">Garson Servisi Aktif</span>
+                            <span className="text-white">{t('garson_servisi_aktif')}</span>
                             <p className="text-xs text-gray-400">
                               {formData.hasTableService
                                 ? t('siparisHazirOluncaMusteriyeSiparisinizMasaniza')
@@ -3926,7 +3926,7 @@ export default function BusinessDetailsPage() {
                             disabled={!isEditing}
                             className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
                           >
-                            <option value="none">Yok</option>
+                            <option value="none">{t('yok')}</option>
                             {availablePlans.map(plan => (
                               <option key={plan.code} value={plan.code}>{plan.name}</option>
                             ))}
@@ -3999,7 +3999,7 @@ export default function BusinessDetailsPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <label className="text-gray-400 text-sm">IBAN</label>
+                            <label className="text-gray-400 text-sm">{t('iban')}</label>
                             <input
                               type="text"
                               value={formData.bankIban}
@@ -4012,7 +4012,7 @@ export default function BusinessDetailsPage() {
                             />
                           </div>
                           <div>
-                            <label className="text-gray-400 text-sm">BIC</label>
+                            <label className="text-gray-400 text-sm">{t('bic')}</label>
                             <input
                               type="text"
                               value={formData.bankBic}
@@ -4561,7 +4561,7 @@ export default function BusinessDetailsPage() {
                   onClick={() => confirmModal.onConfirm(selectedNewRole)}
                   className={`flex-1 px-4 py-3 text-white rounded-lg font-medium ${confirmModal.confirmColor || "bg-red-600 hover:bg-red-500"}`}
                 >
-                  {confirmModal.confirmText || "Onayla"}
+                  {confirmModal.confirmText || t('onayla')}
                 </button>
               </div>
             </div>

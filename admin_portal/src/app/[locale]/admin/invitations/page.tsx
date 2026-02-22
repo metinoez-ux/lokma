@@ -8,6 +8,7 @@ import { isSuperAdmin, SUPER_ADMIN_EMAILS } from '@/lib/config';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 interface Invitation {
     id: string;
@@ -44,7 +45,9 @@ interface PendingAdmin {
 }
 
 export default function InvitationsPage() {
-    const [loading, setLoading] = useState(true);
+    
+  const t = useTranslations('AdminInvitations');
+const [loading, setLoading] = useState(true);
     const [invitations, setInvitations] = useState<Invitation[]>([]);
     const [pendingApprovals, setPendingApprovals] = useState<Invitation[]>([]);
     const [newEmail, setNewEmail] = useState('');
@@ -135,8 +138,8 @@ export default function InvitationsPage() {
             setNewEmail('');
             await loadInvitations();
         } catch (error) {
-            console.error('Invite error:', error);
-            alert('Davetiye gönderilemedi.');
+            console.error(t('invite_error'), error);
+            alert(t('davetiye_gonderilemedi'));
         }
         setSending(false);
     };
@@ -174,10 +177,10 @@ export default function InvitationsPage() {
 
             await loadInvitations();
             setConfirmApprove(null);
-            alert('Onaylandı! Kullanıcı artık Super Admin yetkisine sahip.');
+            alert(t('onaylandi_kullanici_artik_super_admin_ye'));
         } catch (error) {
             console.error('Approve error:', error);
-            alert('Onaylama sırasında hata oluştu.');
+            alert(t('onaylama_sirasinda_hata_olustu'));
         }
     };
 
@@ -197,7 +200,7 @@ export default function InvitationsPage() {
 
             await loadInvitations();
             setConfirmReject(null);
-            alert('Başvuru reddedildi.');
+            alert(t('basvuru_reddedildi'));
         } catch (error) {
             console.error('Reject error:', error);
         }
@@ -221,7 +224,7 @@ export default function InvitationsPage() {
                             ← Dashboard
                         </Link>
                     </div>
-                    <h1 className="font-bold">Super Admin Yönetimi</h1>
+                    <h1 className="font-bold">{t('super_admin_yonetimi')}</h1>
                     <div></div>
                 </div>
             </header>
@@ -234,7 +237,7 @@ export default function InvitationsPage() {
                         className={`px-6 py-3 rounded-lg font-medium transition ${activeTab === 'invite' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                             }`}
                     >
-                        ➕ Yeni Davet
+                        {t('yeni_davet')}
                     </button>
                     <button
                         onClick={() => setActiveTab('pending')}
@@ -262,10 +265,9 @@ export default function InvitationsPage() {
                 {/* Invite Tab */}
                 {activeTab === 'invite' && (
                     <div className="bg-gray-800 rounded-xl p-6">
-                        <h2 className="text-xl font-bold text-white mb-4">Yeni Super Admin Davet Et</h2>
+                        <h2 className="text-xl font-bold text-white mb-4">{t('yeni_super_admin_davet_et')}</h2>
                         <p className="text-gray-400 mb-6">
-                            Davet edilen kişi 48 saat içinde linke tıklayıp kayıt formunu doldurmalıdır.
-                            Kayıt sonrası sizin onayınız gerekir.
+                            {t('davet_edilen_kisi_48_saat_icinde_linke_t')}
                         </p>
 
                         <div className="space-y-4">
@@ -297,7 +299,7 @@ export default function InvitationsPage() {
                                 disabled={sending || !newEmail.trim()}
                                 className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
                             >
-                                {sending ? 'Gönderiliyor...' : '📧 Davetiye Gönder'}
+                                {sending ? t('gonderiliyor') : t('davetiye_gonder')}
                             </button>
                         </div>
 
@@ -320,8 +322,8 @@ export default function InvitationsPage() {
                                                         'bg-gray-600'
                                                 } text-white`}>
                                                 {inv.status === 'pending' ? 'Bekliyor' :
-                                                    inv.status === 'registered' ? 'Kayıt Oldu' :
-                                                        inv.status === 'approved' ? 'Onaylandı' : 'Reddedildi'}
+                                                    inv.status === 'registered' ? t('kayit_oldu') :
+                                                        inv.status === 'approved' ? t('onaylandi') : 'Reddedildi'}
                                             </span>
                                         </div>
                                     ))}
@@ -334,12 +336,12 @@ export default function InvitationsPage() {
                 {/* Pending Approvals Tab */}
                 {activeTab === 'pending' && (
                     <div className="bg-gray-800 rounded-xl p-6">
-                        <h2 className="text-xl font-bold text-white mb-4">Onay Bekleyen Başvurular</h2>
+                        <h2 className="text-xl font-bold text-white mb-4">{t('onay_bekleyen_basvurular')}</h2>
 
                         {pendingApprovals.length === 0 ? (
                             <div className="text-center py-12 text-gray-400">
                                 <p className="text-4xl mb-4">✓</p>
-                                <p>Onay bekleyen başvuru yok</p>
+                                <p>{t('onay_bekleyen_basvuru_yok')}</p>
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -359,7 +361,7 @@ export default function InvitationsPage() {
 
                                         {inv.registrationData && (
                                             <div className="bg-gray-800 rounded-lg p-4 mb-4">
-                                                <h4 className="text-white font-medium mb-3">Kayıt Bilgileri</h4>
+                                                <h4 className="text-white font-medium mb-3">{t('kayit_bilgileri')}</h4>
                                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                                     <div>
                                                         <span className="text-gray-400">Ad Soyad:</span>
@@ -372,7 +374,7 @@ export default function InvitationsPage() {
                                                         <span className="text-white ml-2">{inv.registrationData.phone}</span>
                                                     </div>
                                                     <div>
-                                                        <span className="text-gray-400">Doğum Tarihi:</span>
+                                                        <span className="text-gray-400">{t('dogum_tarihi')}</span>
                                                         <span className="text-white ml-2">{inv.registrationData.dateOfBirth}</span>
                                                     </div>
                                                     <div className="col-span-2">
@@ -391,7 +393,7 @@ export default function InvitationsPage() {
                                                 onClick={() => handleApprove(inv)}
                                                 className="flex-1 bg-green-600 text-white py-2 rounded-lg font-medium hover:bg-green-700"
                                             >
-                                                ✓ Onayla
+                                                {t('onayla')}
                                             </button>
                                             <button
                                                 onClick={() => handleReject(inv)}
@@ -418,12 +420,12 @@ export default function InvitationsPage() {
                                         <span className="text-2xl">👑</span>
                                         <span className="text-white">{email}</span>
                                     </div>
-                                    <span className="px-3 py-1 bg-green-600 text-white rounded text-sm">Aktif</span>
+                                    <span className="px-3 py-1 bg-green-600 text-white rounded text-sm">{t('aktif')}</span>
                                 </div>
                             ))}
                         </div>
                         <p className="text-gray-400 text-sm mt-4">
-                            Not: Super Admin listesi config.ts dosyasında tanımlıdır.
+                            {t('not_super_admin_listesi_config_ts_dosyas')}
                         </p>
                     </div>
                 )}
@@ -434,12 +436,12 @@ export default function InvitationsPage() {
                 isOpen={!!confirmApprove}
                 onClose={() => setConfirmApprove(null)}
                 onConfirm={handleApproveConfirm}
-                title="Admin Onayla"
-                message="Bu kişiyi Super Admin olarak onaylamak istediğinizden emin misiniz?"
+                title={t('admin_onayla')}
+                message={t('bu_kisiyi_super_admin_olarak_onaylamak_i')}
                 itemName={confirmApprove?.email}
                 variant="warning"
-                confirmText="Evet, Onayla"
-                loadingText="Onaylanıyor..."
+                confirmText={t('evet_onayla')}
+                loadingText={t('onaylaniyor')}
             />
 
             {/* Reject Confirmation Modal */}
@@ -447,11 +449,11 @@ export default function InvitationsPage() {
                 isOpen={!!confirmReject}
                 onClose={() => setConfirmReject(null)}
                 onConfirm={handleRejectConfirm}
-                title="Başvuruyu Reddet"
-                message="Bu kişinin başvurusunu reddetmek istediğinizden emin misiniz?"
+                title={t('basvuruyu_reddet')}
+                message={t('bu_kisinin_basvurusunu_reddetmek_istedig')}
                 itemName={confirmReject?.email}
                 variant="danger"
-                confirmText="Evet, Reddet"
+                confirmText={t('evet_reddet')}
                 loadingText="Reddediliyor..."
             />
         </div>

@@ -7,6 +7,7 @@ import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 interface MenuCategory {
     id: string;
@@ -28,7 +29,9 @@ const DEFAULT_ICONS = ['🍖', '🥗', '🍲', '🍰', '☕', '🥤', '🍕', '�
 const DEFAULT_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
 
 export default function KermesCategoriesPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminSettingsKermescategories');
+const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -72,10 +75,10 @@ export default function KermesCategoriesPage() {
                 // Initialize with defaults
                 const defaultCategories: MenuCategory[] = [
                     { id: 'cat-1', name: 'Ana Yemek', icon: '🍖', color: '#EF4444', sortOrder: 0, isActive: true },
-                    { id: 'cat-2', name: 'Çorba', icon: '🍲', color: '#F59E0B', sortOrder: 1, isActive: true },
-                    { id: 'cat-3', name: 'Tatlı', icon: '🍰', color: '#EC4899', sortOrder: 2, isActive: true },
-                    { id: 'cat-4', name: 'İçecek', icon: '☕', color: '#10B981', sortOrder: 3, isActive: true },
-                    { id: 'cat-5', name: 'Atıştırmalık', icon: '🥙', color: '#8B5CF6', sortOrder: 4, isActive: true },
+                    { id: 'cat-2', name: t('corba'), icon: '🍲', color: '#F59E0B', sortOrder: 1, isActive: true },
+                    { id: 'cat-3', name: t('tatli'), icon: '🍰', color: '#EC4899', sortOrder: 2, isActive: true },
+                    { id: 'cat-4', name: t('i_cecek'), icon: '☕', color: '#10B981', sortOrder: 3, isActive: true },
+                    { id: 'cat-5', name: t('atistirmalik'), icon: '🥙', color: '#8B5CF6', sortOrder: 4, isActive: true },
                 ];
                 // Try to save defaults, but don't fail if it doesn't work
                 try {
@@ -87,7 +90,7 @@ export default function KermesCategoriesPage() {
             }
         } catch (error) {
             console.error('Error loading categories:', error);
-            showToast('Kategoriler yüklenemedi', 'error');
+            showToast(t('kategoriler_yuklenemedi'), 'error');
         } finally {
             setLoading(false);
         }
@@ -112,7 +115,7 @@ export default function KermesCategoriesPage() {
             return true;
         } catch (error: unknown) {
             console.error('Error saving categories:', error);
-            const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
+            const errorMessage = error instanceof Error ? error.message : t('bilinmeyen_hata');
             showToast(`Kaydetme hatası: ${errorMessage}`, 'error');
             return false;
         } finally {
@@ -122,7 +125,7 @@ export default function KermesCategoriesPage() {
 
     const handleAddCategory = async () => {
         if (!formData.name.trim()) {
-            showToast('Lütfen kategori adı girin!', 'error');
+            showToast(t('lutfen_kategori_adi_girin'), 'error');
             return;
         }
 
@@ -146,7 +149,7 @@ export default function KermesCategoriesPage() {
 
         const success = await saveCategories(updatedCategories);
         if (success) {
-            showToast(editingCategory ? 'Kategori güncellendi! ✓' : 'Yeni kategori eklendi! ✓', 'success');
+            showToast(editingCategory ? t('kategori_guncellendi') : t('yeni_kategori_eklendi'), 'success');
             setShowAddModal(false);
             setEditingCategory(null);
             resetForm();
@@ -163,7 +166,7 @@ export default function KermesCategoriesPage() {
         if (!confirmDeleteCategory) return;
         const success = await saveCategories(categories.filter(c => c.id !== confirmDeleteCategory.id));
         if (success) {
-            showToast('Kategori silindi', 'success');
+            showToast(t('kategori_silindi'), 'success');
         }
         setConfirmDeleteCategory(null);
     };
@@ -174,7 +177,7 @@ export default function KermesCategoriesPage() {
         );
         const success = await saveCategories(updatedCategories);
         if (success) {
-            showToast(category.isActive ? 'Kategori devre dışı' : 'Kategori aktif', 'info');
+            showToast(category.isActive ? t('kategori_devre_disi') : t('kategori_aktif'), 'info');
         }
     };
 
@@ -215,7 +218,7 @@ export default function KermesCategoriesPage() {
     if (!admin || admin.role !== 'super_admin') {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-white">Erişim reddedildi - Sadece Super Admin</div>
+                <div className="text-white">{t('erisim_reddedildi_sadece_super_admin')}</div>
             </div>
         );
     }
@@ -232,7 +235,7 @@ export default function KermesCategoriesPage() {
                                 'bg-blue-600'
                             }`}
                         style={{
-                            animation: 'fadeInUp 0.3s ease-out',
+                            animation: t('fadeinup_0_3s_ease_out'),
                         }}
                     >
                         <span className="mr-2">
@@ -258,16 +261,16 @@ export default function KermesCategoriesPage() {
 
             <div className="max-w-4xl mx-auto">
                 <Link href="/admin/kermes" className="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-2">
-                    ← Kermes Yönetimi
+                    {t('kermes_yonetimi')}
                 </Link>
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2 mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            📂 Menü Kategorileri
+                            {t('menu_kategorileri')}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            Kermes menü kategorilerini yönetin • {categories.length} kategori
+                            {t('kermes_menu_kategorilerini_yonetin')} {categories.length} {t('kategori')}
                         </p>
                     </div>
                     <button
@@ -352,7 +355,7 @@ export default function KermesCategoriesPage() {
                 {categories.length === 0 && (
                     <div className="text-center py-12 text-gray-400">
                         <p className="text-4xl mb-4">📂</p>
-                        <p>Henüz kategori yok</p>
+                        <p>{t('henuz_kategori_yok')}</p>
                     </div>
                 )}
             </div>
@@ -362,12 +365,12 @@ export default function KermesCategoriesPage() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
                         <h2 className="text-xl font-bold text-white mb-4">
-                            {editingCategory ? '✏️ Kategori Düzenle' : '➕ Yeni Kategori'}
+                            {editingCategory ? t('kategori_duzenle') : t('yeni_kategori')}
                         </h2>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Kategori Adı (TR) *</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('kategori_adi_tr')}</label>
                                 <input
                                     type="text"
                                     value={formData.name}
@@ -378,7 +381,7 @@ export default function KermesCategoriesPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-1">Kategori Adı (DE)</label>
+                                <label className="block text-sm font-medium text-gray-300 mb-1">{t('kategori_adi_de')}</label>
                                 <input
                                     type="text"
                                     value={formData.name_de}
@@ -436,7 +439,7 @@ export default function KermesCategoriesPage() {
                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                         Kaydediliyor...
                                     </>
-                                ) : 'Kaydet'}
+                                ) : t('kaydet')}
                             </button>
                         </div>
                     </div>
@@ -448,11 +451,11 @@ export default function KermesCategoriesPage() {
                 isOpen={!!confirmDeleteCategory}
                 onClose={() => setConfirmDeleteCategory(null)}
                 onConfirm={handleDeleteCategoryConfirm}
-                title="Kategori Sil"
-                message="Bu kategoriyi silmek istediğinize emin misiniz?"
+                title={t('kategori_sil')}
+                message={t('bu_kategoriyi_silmek_istediginize_emin_m')}
                 itemName={confirmDeleteCategory?.name}
                 variant="danger"
-                confirmText="Evet, Sil"
+                confirmText={t('evet_sil')}
                 loadingText="Siliniyor..."
             />
         </div>

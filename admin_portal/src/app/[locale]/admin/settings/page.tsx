@@ -5,9 +5,12 @@ import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useTranslations } from 'next-intl';
 
 export default function SettingsPage() {
-    const { admin } = useAdmin();
+    
+  const t = useTranslations('AdminSettings');
+const { admin } = useAdmin();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [testLoading, setTestLoading] = useState(false);
@@ -102,7 +105,7 @@ export default function SettingsPage() {
                 setShowAlexaSetup(false);
                 await checkAlexaStatus();
             } else {
-                setAlexaMessage(`❌ ${data.message || 'Bağlantı başarısız'}`);
+                setAlexaMessage(`❌ ${data.message || t('baglanti_basarisiz')}`);
             }
         } catch (err: any) {
             setAlexaMessage(`❌ Bağlantı hatası: ${err.message}`);
@@ -114,14 +117,14 @@ export default function SettingsPage() {
     const handleAlexaDisconnect = async () => {
         const businessId = admin?.businessId || admin?.id;
         if (!gatewayUrl || !gatewayApiKey || !businessId) return;
-        if (!confirm('Alexa bağlantısını kaldırmak istediğinize emin misiniz?')) return;
+        if (!confirm(t('alexa_baglantisini_kaldirmak_istediginiz'))) return;
         try {
             await fetch(`${gatewayUrl}/alexa/disconnect/${businessId}`, {
                 method: 'DELETE',
                 headers: { 'x-api-key': gatewayApiKey },
             });
             setAlexaStatus(null);
-            setAlexaMessage('🔌 Alexa bağlantısı kaldırıldı.');
+            setAlexaMessage(t('alexa_baglantisi_kaldirildi'));
         } catch (err: any) {
             setAlexaMessage(`❌ Hata: ${err.message}`);
         }
@@ -184,7 +187,7 @@ export default function SettingsPage() {
             setTimeout(() => setSuccess(false), 3000);
         } catch (error) {
             console.error(error);
-            alert('Hata oluştu');
+            alert(t('hata_olustu'));
         } finally {
             setLoading(false);
         }
@@ -192,7 +195,7 @@ export default function SettingsPage() {
 
     const handleTestNotification = async () => {
         if (!gatewayUrl) {
-            setTestResult('❌ Gateway URL girilmemiş!');
+            setTestResult(t('gateway_url_girilmemis'));
             return;
         }
         setTestLoading(true);
@@ -210,7 +213,7 @@ export default function SettingsPage() {
                 }),
             });
             if (res.ok) {
-                setTestResult('✅ Test bildirimi gönderildi! Alexa ve LED kontrol edin.');
+                setTestResult(t('test_bildirimi_gonderildi_alexa_ve_led_k'));
             } else {
                 setTestResult(`❌ Gateway hatası: ${res.status}`);
             }
@@ -236,7 +239,7 @@ export default function SettingsPage() {
             setTimeout(() => setSponsoredSuccess(false), 3000);
         } catch (error) {
             console.error('Error saving sponsored settings:', error);
-            alert('Hata oluştu');
+            alert(t('hata_olustu'));
         } finally {
             setSponsoredLoading(false);
         }
@@ -245,7 +248,7 @@ export default function SettingsPage() {
     return (
         <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
             <div className="max-w-3xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8">{admin?.adminType === 'super' ? 'Platform Ayarları' : 'Ayarlar'}</h1>
+                <h1 className="text-3xl font-bold mb-8">{admin?.adminType === 'super' ? t('platform_ayarlari') : 'Ayarlar'}</h1>
 
                 {/* 📋 AYARLAR MENÜSÜ - Only for non-super admins */}
                 {admin?.adminType !== 'super' && (
@@ -253,8 +256,8 @@ export default function SettingsPage() {
                         <div className="flex items-center gap-3 mb-6">
                             <span className="text-3xl">📋</span>
                             <div>
-                                <h2 className="text-xl font-bold">İşletme Yönetimi</h2>
-                                <p className="text-gray-400 text-sm">İşletme ayarları, personel, masa ve hesap yönetimi.</p>
+                                <h2 className="text-xl font-bold">{t('i_sletme_yonetimi')}</h2>
+                                <p className="text-gray-400 text-sm">{t('i_sletme_ayarlari_personel_masa_ve_hesap')}</p>
                             </div>
                         </div>
 
@@ -268,8 +271,8 @@ export default function SettingsPage() {
                                     🍔
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white group-hover:text-emerald-300 transition">Menü ve Ürünler</h3>
-                                    <p className="text-xs text-gray-500">Ürün ve kategori yönetimi</p>
+                                    <h3 className="font-bold text-white group-hover:text-emerald-300 transition">{t('menu_ve_urunler')}</h3>
+                                    <p className="text-xs text-gray-500">{t('urun_ve_kategori_yonetimi')}</p>
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-emerald-400 transition text-xl">→</span>
                             </Link>
@@ -284,7 +287,7 @@ export default function SettingsPage() {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-white group-hover:text-slate-300 transition">Personel</h3>
-                                    <p className="text-xs text-gray-500">Personel listesi ve yönetimi</p>
+                                    <p className="text-xs text-gray-500">{t('personel_listesi_ve_yonetimi')}</p>
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-slate-400 transition text-xl">→</span>
                             </Link>
@@ -299,7 +302,7 @@ export default function SettingsPage() {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-white group-hover:text-teal-300 transition">Masa</h3>
-                                    <p className="text-xs text-gray-500">Masa oturumları ve grupları</p>
+                                    <p className="text-xs text-gray-500">{t('masa_oturumlari_ve_gruplari')}</p>
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-teal-400 transition text-xl">→</span>
                             </Link>
@@ -314,7 +317,7 @@ export default function SettingsPage() {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-white group-hover:text-amber-300 transition">Teslimat</h3>
-                                    <p className="text-xs text-gray-500">Kurye, teslimat ücreti ve sipariş saatleri</p>
+                                    <p className="text-xs text-gray-500">{t('kurye_teslimat_ucreti_ve_siparis_saatler')}</p>
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-amber-400 transition text-xl">→</span>
                             </Link>
@@ -329,7 +332,7 @@ export default function SettingsPage() {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-white group-hover:text-violet-300 transition">Abonelik & Plan</h3>
-                                    <p className="text-xs text-gray-500">Abonelik planı ve özellikler</p>
+                                    <p className="text-xs text-gray-500">{t('abonelik_plani_ve_ozellikler')}</p>
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-violet-400 transition text-xl">→</span>
                             </Link>
@@ -339,7 +342,7 @@ export default function SettingsPage() {
                         <div className="mt-6 bg-gray-900 rounded-xl border border-gray-700 p-6">
                             <div className="flex items-center gap-3 mb-4">
                                 <span className="text-2xl">💼</span>
-                                <h3 className="text-lg font-bold">Hesabım</h3>
+                                <h3 className="text-lg font-bold">{t('hesabim')}</h3>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <Link
@@ -350,8 +353,8 @@ export default function SettingsPage() {
                                         📄
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-white group-hover:text-amber-300 transition text-sm">Faturalarım</h4>
-                                        <p className="text-xs text-gray-500">Fatura geçmişi ve detayları</p>
+                                        <h4 className="font-semibold text-white group-hover:text-amber-300 transition text-sm">{t('faturalarim')}</h4>
+                                        <p className="text-xs text-gray-500">{t('fatura_gecmisi_ve_detaylari')}</p>
                                     </div>
                                     <span className="ml-auto text-gray-600 group-hover:text-amber-400 transition">→</span>
                                 </Link>
@@ -363,8 +366,8 @@ export default function SettingsPage() {
                                         💰
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-white group-hover:text-amber-300 transition text-sm">Ödeme Bilgileri</h4>
-                                        <p className="text-xs text-gray-500">Komisyon, bakiye ve ödeme detayları</p>
+                                        <h4 className="font-semibold text-white group-hover:text-amber-300 transition text-sm">{t('odeme_bilgileri')}</h4>
+                                        <p className="text-xs text-gray-500">{t('komisyon_bakiye_ve_odeme_detaylari')}</p>
                                     </div>
                                     <span className="ml-auto text-gray-600 group-hover:text-amber-400 transition">→</span>
                                 </Link>
@@ -379,8 +382,8 @@ export default function SettingsPage() {
                         <div className="flex items-center gap-3 mb-6">
                             <span className="text-3xl">🔔</span>
                             <div>
-                                <h2 className="text-xl font-bold">Akıllı Bildirimler (IoT Gateway)</h2>
-                                <p className="text-gray-400 text-sm">Sipariş geldiğinde Alexa&apos;dan ses + LED&apos;den ışık bildirimi.</p>
+                                <h2 className="text-xl font-bold">{t('akilli_bildirimler_iot_gateway')}</h2>
+                                <p className="text-gray-400 text-sm">{t('siparis_geldiginde_alexa_dan_ses_led_den')}</p>
                             </div>
                         </div>
 
@@ -388,8 +391,8 @@ export default function SettingsPage() {
                             {/* Master Toggle */}
                             <div className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700">
                                 <div>
-                                    <h3 className="font-bold">Sistemi Aktif Et</h3>
-                                    <p className="text-xs text-gray-500">Tüm IoT bildirimlerini açar/kapatır.</p>
+                                    <h3 className="font-bold">{t('sistemi_aktif_et')}</h3>
+                                    <p className="text-xs text-gray-500">{t('tum_iot_bildirimlerini_acar_kapatir')}</p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" checked={smartEnabled} onChange={e => setSmartEnabled(e.target.checked)} className="sr-only peer" />
@@ -408,12 +411,12 @@ export default function SettingsPage() {
                                     placeholder="https://iot.lokma.shop"
                                     disabled={!smartEnabled}
                                 />
-                                <p className="text-xs text-gray-500 mt-1">LOKMA IoT Gateway&apos;in çalıştığı sunucu adresi.</p>
+                                <p className="text-xs text-gray-500 mt-1">{t('lokma_iot_gateway_in_calistigi_sunucu_ad')}</p>
                             </div>
 
                             {/* API Key */}
                             <div className={`${!smartEnabled && 'opacity-50'}`}>
-                                <label className="block text-sm font-bold mb-2">🔑 Gateway API Key</label>
+                                <label className="block text-sm font-bold mb-2">{t('gateway_api_key')}</label>
                                 <input
                                     type="password"
                                     value={gatewayApiKey}
@@ -426,7 +429,7 @@ export default function SettingsPage() {
 
                             {/* Divider */}
                             <div className="border-t border-gray-700 pt-4">
-                                <p className="text-sm font-bold text-gray-300 mb-3">📡 Cihaz Ayarları</p>
+                                <p className="text-sm font-bold text-gray-300 mb-3">{t('cihaz_ayarlari')}</p>
                             </div>
 
                             {/* Device Toggles — 2x2 Grid */}
@@ -435,7 +438,7 @@ export default function SettingsPage() {
                                 <label className={`flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
                                     <div>
                                         <span className="font-bold text-sm">📢 Alexa Duyuru</span>
-                                        <p className="text-xs text-gray-500">TTS ile sesli sipariş bildirimi</p>
+                                        <p className="text-xs text-gray-500">{t('tts_ile_sesli_siparis_bildirimi')}</p>
                                     </div>
                                     <input type="checkbox" checked={alexaEnabled} onChange={e => setAlexaEnabled(e.target.checked)} disabled={!smartEnabled} className="accent-blue-500 w-5 h-5" />
                                 </label>
@@ -443,8 +446,8 @@ export default function SettingsPage() {
                                 {/* WLED LED */}
                                 <label className={`flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
                                     <div>
-                                        <span className="font-bold text-sm">💡 LED Şerit</span>
-                                        <p className="text-xs text-gray-500">WLED kayıtlı LED flash</p>
+                                        <span className="font-bold text-sm">{t('led_serit')}</span>
+                                        <p className="text-xs text-gray-500">{t('wled_kayitli_led_flash')}</p>
                                     </div>
                                     <input type="checkbox" checked={ledEnabled} onChange={e => setLedEnabled(e.target.checked)} disabled={!smartEnabled} className="accent-green-500 w-5 h-5" />
                                 </label>
@@ -452,8 +455,8 @@ export default function SettingsPage() {
                                 {/* Browser Sound */}
                                 <label className={`flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
                                     <div>
-                                        <span className="font-bold text-sm">🔊 Tarayıcı Sesi</span>
-                                        <p className="text-xs text-gray-500">Admin panelde gong çalar</p>
+                                        <span className="font-bold text-sm">{t('tarayici_sesi')}</span>
+                                        <p className="text-xs text-gray-500">{t('admin_panelde_gong_calar')}</p>
                                     </div>
                                     <input type="checkbox" checked={soundEnabled} onChange={e => setSoundEnabled(e.target.checked)} disabled={!smartEnabled} className="accent-green-500 w-5 h-5" />
                                 </label>
@@ -462,7 +465,7 @@ export default function SettingsPage() {
                                 <label className={`flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700 cursor-pointer ${!smartEnabled && 'opacity-50'}`}>
                                     <div>
                                         <span className="font-bold text-sm">🚨 Ekran Flash</span>
-                                        <p className="text-xs text-gray-500">Kırmızı ekran yanıp söner</p>
+                                        <p className="text-xs text-gray-500">{t('kirmizi_ekran_yanip_soner')}</p>
                                     </div>
                                     <input type="checkbox" checked={flashScreen} onChange={e => setFlashScreen(e.target.checked)} disabled={!smartEnabled} className="accent-red-500 w-5 h-5" />
                                 </label>
@@ -483,12 +486,12 @@ export default function SettingsPage() {
                                             onClick={() => setAlexaLanguage('tr')}
                                             className={`flex-1 py-3 rounded-lg font-bold text-sm transition ${alexaLanguage === 'tr' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
                                         >
-                                            🇹🇷 Türkçe
+                                            {t('turkce')}
                                         </button>
                                     </div>
                                     <p className="text-xs text-gray-500 mt-2">
-                                        Örnek: {alexaLanguage === 'tr'
-                                            ? '"Yeni sipariş geldi! Sipariş numarası 42, toplam 24 euro 50 cent"'
+                                        {t('ornek')} {alexaLanguage === 'tr'
+                                            ? t('yeni_siparis_geldi_siparis_numarasi_42_t')
                                             : '"Neue Bestellung eingegangen! Bestellnummer 42, Gesamt 24 Euro 50 Cent"'
                                         }
                                     </p>
@@ -499,20 +502,20 @@ export default function SettingsPage() {
                             {alexaEnabled && smartEnabled && gatewayUrl && gatewayApiKey && (
                                 <div className="p-4 bg-gray-900 rounded-xl border border-gray-700">
                                     <div className="flex items-center justify-between mb-3">
-                                        <label className="block text-sm font-bold">🔗 Alexa Bağlantısı</label>
+                                        <label className="block text-sm font-bold">{t('alexa_baglantisi')}</label>
                                         {alexaStatusLoading ? (
                                             <span className="text-xs text-gray-400">⏳ Kontrol ediliyor...</span>
                                         ) : alexaStatus?.connected ? (
-                                            <span className="text-xs text-green-400 font-bold">● Bağlı</span>
+                                            <span className="text-xs text-green-400 font-bold">{t('bagli')}</span>
                                         ) : (
-                                            <span className="text-xs text-red-400 font-bold">● Bağlı Değil</span>
+                                            <span className="text-xs text-red-400 font-bold">{t('bagli_degil')}</span>
                                         )}
                                     </div>
 
                                     {alexaStatus?.connected ? (
                                         <div>
                                             <div className="bg-green-950/30 border border-green-800/40 rounded-lg p-3 mb-3">
-                                                <p className="text-green-300 text-sm font-medium mb-1">📢 Bağlı Cihazlar:</p>
+                                                <p className="text-green-300 text-sm font-medium mb-1">{t('bagli_cihazlar')}</p>
                                                 {alexaStatus.devices.length > 0 ? (
                                                     <ul className="text-green-200/70 text-xs space-y-1">
                                                         {alexaStatus.devices.map((d, i) => (
@@ -520,14 +523,14 @@ export default function SettingsPage() {
                                                         ))}
                                                     </ul>
                                                 ) : (
-                                                    <p className="text-green-200/70 text-xs">Echo cihaz bulundu (detaylar yükleniyor...)</p>
+                                                    <p className="text-green-200/70 text-xs">{t('echo_cihaz_bulundu_detaylar_yukleniyor')}</p>
                                                 )}
                                             </div>
                                             <button
                                                 onClick={handleAlexaDisconnect}
                                                 className="text-sm text-red-400 hover:text-red-300 underline"
                                             >
-                                                🔌 Bağlantıyı Kaldır
+                                                {t('baglantiyi_kaldir')}
                                             </button>
                                         </div>
                                     ) : (
@@ -537,25 +540,25 @@ export default function SettingsPage() {
                                                     onClick={() => setShowAlexaSetup(true)}
                                                     className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition text-sm"
                                                 >
-                                                    📢 Alexa Bağla
+                                                    {t('alexa_bagla')}
                                                 </button>
                                             ) : (
                                                 <div className="space-y-3">
                                                     <div className="bg-blue-950/30 border border-blue-800/40 rounded-lg p-3">
-                                                        <p className="text-blue-300 text-sm font-bold mb-2">📋 Amazon Cookie Nasıl Alınır?</p>
+                                                        <p className="text-blue-300 text-sm font-bold mb-2">{t('amazon_cookie_nasil_alinir')}</p>
                                                         <ol className="text-blue-200/70 text-xs space-y-1 list-decimal list-inside">
-                                                            <li>Bilgisayarınızda <strong>alexa.amazon.de</strong> adresine gidin</li>
-                                                            <li>Amazon hesabınızla giriş yapın</li>
-                                                            <li><strong>F12</strong> tuşuna basarak DevTools açın</li>
+                                                            <li>{t('bilgisayarinizda')} <strong>alexa.amazon.de</strong> adresine gidin</li>
+                                                            <li>{t('amazon_hesabinizla_giris_yapin')}</li>
+                                                            <li><strong>F12</strong> {t('tusuna_basarak_devtools_acin')}</li>
                                                             <li><strong>Application</strong> → <strong>Cookies</strong> sekmesine gidin</li>
-                                                            <li>Tüm cookie değerlerini kopyalayın (veya <strong>Console</strong> sekmesinde <code className="bg-blue-900/50 px-1 rounded">document.cookie</code> yazın)</li>
-                                                            <li>Aşağıdaki alana yapıştırın</li>
+                                                            <li>{t('tum_cookie_degerlerini_kopyalayin_veya')} <strong>Console</strong> sekmesinde <code className="bg-blue-900/50 px-1 rounded">document.cookie</code> {t('yazin')}</li>
+                                                            <li>{t('asagidaki_alana_yapistirin')}</li>
                                                         </ol>
                                                     </div>
                                                     <textarea
                                                         value={alexaCookie}
                                                         onChange={e => setAlexaCookie(e.target.value)}
-                                                        placeholder="Amazon cookie string'ini buraya yapıştırın..."
+                                                        placeholder={t('amazon_cookie_string_ini_buraya_yapistir')}
                                                         className="w-full bg-gray-800 border border-gray-600 rounded-lg p-3 text-white text-xs font-mono h-24 focus:border-purple-500 outline-none resize-none"
                                                     />
                                                     <div className="flex gap-2">
@@ -564,7 +567,7 @@ export default function SettingsPage() {
                                                             disabled={alexaConnecting || !alexaCookie.trim()}
                                                             className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-lg transition text-sm disabled:opacity-50"
                                                         >
-                                                            {alexaConnecting ? '⏳ Bağlanıyor...' : '🔗 Bağla'}
+                                                            {alexaConnecting ? t('baglaniyor') : t('bagla')}
                                                         </button>
                                                         <button
                                                             onClick={() => { setShowAlexaSetup(false); setAlexaCookie(''); }}
@@ -594,7 +597,7 @@ export default function SettingsPage() {
                                         disabled={testLoading}
                                         className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
                                     >
-                                        {testLoading ? '⏳ Gönderiliyor...' : '🔔 Test Bildirimi Gönder'}
+                                        {testLoading ? t('gonderiliyor') : t('test_bildirimi_gonder')}
                                     </button>
                                     {testResult && (
                                         <p className={`text-sm mt-2 text-center ${testResult.startsWith('✅') ? 'text-green-400' : 'text-red-400'}`}>
@@ -610,7 +613,7 @@ export default function SettingsPage() {
                             disabled={loading}
                             className="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-blue-900/20 disabled:opacity-50"
                         >
-                            {loading ? 'Kaydediliyor...' : success ? '✅ Kaydedildi!' : 'IoT Ayarlarını Kaydet'}
+                            {loading ? 'Kaydediliyor...' : success ? '✅ Kaydedildi!' : t('iot_ayarlarini_kaydet')}
                         </button>
                     </div>
                 )}
@@ -621,8 +624,8 @@ export default function SettingsPage() {
                         <div className="flex items-center gap-3 mb-6">
                             <span className="text-3xl">⭐</span>
                             <div>
-                                <h2 className="text-xl font-bold">Öne Çıkan Ürünler (Sponsored)</h2>
-                                <p className="text-gray-400 text-sm">İşletmelerin sepette ürünlerini tanıtmasını sağlayan ücretli özellik.</p>
+                                <h2 className="text-xl font-bold">{t('one_cikan_urunler_sponsored')}</h2>
+                                <p className="text-gray-400 text-sm">{t('i_sletmelerin_sepette_urunlerini_tanitma')}</p>
                             </div>
                         </div>
 
@@ -630,8 +633,8 @@ export default function SettingsPage() {
                             {/* Global Toggle */}
                             <div className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700">
                                 <div>
-                                    <h3 className="font-bold">Özelliği Aktif Et</h3>
-                                    <p className="text-xs text-gray-500">Tüm işletmeler için &quot;Bir şey mi unuttun?&quot; bölümünü açar/kapatır.</p>
+                                    <h3 className="font-bold">{t('ozelligi_aktif_et')}</h3>
+                                    <p className="text-xs text-gray-500">{t('tum_isletmeler_icin_bir_sey_mi_unuttun_b')}</p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" checked={sponsoredEnabled} onChange={e => setSponsoredEnabled(e.target.checked)} className="sr-only peer" />
@@ -641,7 +644,7 @@ export default function SettingsPage() {
 
                             {/* Fee Per Conversion */}
                             <div className={`${!sponsoredEnabled && 'opacity-50'}`}>
-                                <label className="block text-sm font-bold mb-2">Sipariş Başı Ücret (€)</label>
+                                <label className="block text-sm font-bold mb-2">{t('siparis_basi_ucret')}</label>
                                 <div className="flex items-center gap-3">
                                     <input
                                         type="number"
@@ -652,16 +655,16 @@ export default function SettingsPage() {
                                         className="w-32 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-amber-500 outline-none font-mono text-lg text-center"
                                         disabled={!sponsoredEnabled}
                                     />
-                                    <span className="text-gray-400 text-sm">€ / sipariş</span>
+                                    <span className="text-gray-400 text-sm">{t('siparis')}</span>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2">
-                                    Sponsored ürün üzerinden sipariş geldiğinde işletmeden kesilecek ücret.
+                                    {t('sponsored_urun_uzerinden_siparis_geldigi')}
                                 </p>
                             </div>
 
                             {/* Max Products Per Business */}
                             <div className={`${!sponsoredEnabled && 'opacity-50'}`}>
-                                <label className="block text-sm font-bold mb-2">İşletme Başı Max Ürün Sayısı</label>
+                                <label className="block text-sm font-bold mb-2">{t('i_sletme_basi_max_urun_sayisi')}</label>
                                 <div className="flex items-center gap-3">
                                     <input
                                         type="number"
@@ -672,20 +675,19 @@ export default function SettingsPage() {
                                         className="w-24 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-amber-500 outline-none font-mono text-lg text-center"
                                         disabled={!sponsoredEnabled}
                                     />
-                                    <span className="text-gray-400 text-sm">ürün</span>
+                                    <span className="text-gray-400 text-sm">{t('urun')}</span>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2">
-                                    Bir işletmenin &quot;Öne Çıkan&quot; olarak seçebileceği maksimum ürün sayısı.
+                                    {t('bir_isletmenin_one_cikan_olarak_secebile')}
                                 </p>
                             </div>
 
                             {/* Preview */}
                             {sponsoredEnabled && (
                                 <div className="p-4 bg-amber-950/30 border border-amber-800/40 rounded-xl">
-                                    <p className="text-amber-300 text-sm font-medium">📊 Önizleme</p>
+                                    <p className="text-amber-300 text-sm font-medium">{t('onizleme')}</p>
                                     <p className="text-amber-200/70 text-xs mt-1">
-                                        Her işletme max <strong>{maxProductsPerBusiness}</strong> ürün seçebilir.
-                                        Sponsored ürün üzerinden sipariş geldiğinde <strong>{feePerConversion.toFixed(2)} €</strong> ücret kesilir.
+                                        {t('her_isletme_max')} <strong>{maxProductsPerBusiness}</strong> {t('urun_secebilir_sponsored_urun_uzerinden_')} <strong>{feePerConversion.toFixed(2)} €</strong> {t('ucret_kesilir')}
                                     </p>
                                 </div>
                             )}
@@ -696,7 +698,7 @@ export default function SettingsPage() {
                             disabled={sponsoredLoading || !sponsoredEnabled}
                             className="w-full mt-6 bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-amber-900/20 disabled:opacity-50"
                         >
-                            {sponsoredLoading ? 'Kaydediliyor...' : sponsoredSuccess ? '✅ Kaydedildi!' : 'Sponsored Ayarlarını Kaydet'}
+                            {sponsoredLoading ? 'Kaydediliyor...' : sponsoredSuccess ? '✅ Kaydedildi!' : t('sponsored_ayarlarini_kaydet')}
                         </button>
                     </div>
                 )}

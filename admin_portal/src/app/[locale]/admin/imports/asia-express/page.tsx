@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { collection, addDoc, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useTranslations } from 'next-intl';
 
 // Asia Express Food Categories with counts
 const CATEGORIES = [
@@ -47,7 +48,9 @@ interface ImportStats {
 }
 
 export default function AsiaExpressImportPage() {
-    const [selectedCategories, setSelectedCategories] = useState<string[]>(CATEGORIES.map(c => c.id));
+    
+  const t = useTranslations('AdminImportsAsiaexpress');
+const [selectedCategories, setSelectedCategories] = useState<string[]>(CATEGORIES.map(c => c.id));
     const [isImporting, setIsImporting] = useState(false);
     const [isScraping, setIsScraping] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -90,7 +93,7 @@ export default function AsiaExpressImportPage() {
     // Import products to Firestore
     const importToFirestore = async () => {
         if (scrapedProducts.length === 0) {
-            addLog('error', 'Önce ürünleri scrape etmeniz gerekiyor!');
+            addLog('error', t('once_urunleri_scrape_etmeniz_gerekiyor'));
             return;
         }
 
@@ -121,12 +124,12 @@ export default function AsiaExpressImportPage() {
                 const productDoc = {
                     masterProductId: `aef_${product.articleNumber || `auto_${i}`}`,
                     sku: sku,
-                    name: product.name || 'Bilinmeyen Ürün',
+                    name: product.name || t('bilinmeyen_urun'),
                     description: product.content || '',
                     category: product.lokmaCategory,
                     originalCategory: product.category,
                     brand: product.brand || '',
-                    unit: 'Adet',
+                    unit: t('adet'),
                     price: 0,
                     isActive: true,
                     taxRate: 7,
@@ -181,8 +184,8 @@ export default function AsiaExpressImportPage() {
                     <div className="flex items-center gap-4">
                         <span className="text-4xl">🌏</span>
                         <div>
-                            <h1 className="text-3xl font-bold text-white">ASIA EXPRESS FOOD Import</h1>
-                            <p className="text-amber-100">Asya ürünleri Master Kataloğa aktarılıyor</p>
+                            <h1 className="text-3xl font-bold text-white">{t('asia_express_food_import')}</h1>
+                            <p className="text-amber-100">{t('asya_urunleri_master_kataloga_aktariliyo')}</p>
                         </div>
                     </div>
                 </div>
@@ -191,11 +194,11 @@ export default function AsiaExpressImportPage() {
                 <div className="grid grid-cols-4 gap-4 mb-6">
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-blue-400">{CATEGORIES.reduce((sum, c) => sum + c.count, 0)}</div>
-                        <div className="text-sm text-gray-300">Toplam Ürün</div>
+                        <div className="text-sm text-gray-300">{t('toplam_urun')}</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-purple-400">{CATEGORIES.length}</div>
-                        <div className="text-sm text-gray-300">Kategori</div>
+                        <div className="text-sm text-gray-300">{t('kategori')}</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4 text-center">
                         <div className="text-3xl font-bold text-green-400">{scrapedProducts.length}</div>
@@ -213,7 +216,7 @@ export default function AsiaExpressImportPage() {
                         <h2 className="text-xl font-bold text-white">📦 Kategoriler</h2>
                         <div className="flex gap-2">
                             <button onClick={selectAll} className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm">
-                                Tümünü Seç
+                                {t('tumunu_sec')}
                             </button>
                             <button onClick={selectNone} className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm">
                                 Temizle
@@ -235,7 +238,7 @@ export default function AsiaExpressImportPage() {
                         ))}
                     </div>
                     <div className="mt-4 text-center text-gray-300">
-                        Seçili: <span className="text-amber-400 font-bold">{getTotalSelected()}</span> ürün
+                        {t('secili')} <span className="text-amber-400 font-bold">{getTotalSelected()}</span> {t('urun')}
                     </div>
                 </div>
 
@@ -243,13 +246,13 @@ export default function AsiaExpressImportPage() {
                 {scrapingInstructions && (
                     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
                         <div className="bg-slate-800 rounded-2xl p-6 max-w-3xl max-h-[80vh] overflow-y-auto">
-                            <h3 className="text-2xl font-bold text-white mb-4">🔧 Manuel Scraping Talimatları</h3>
+                            <h3 className="text-2xl font-bold text-white mb-4">{t('manuel_scraping_talimatlari')}</h3>
                             <div className="text-gray-300 space-y-4">
-                                <p>Asia Express Food sitesi login gerektirdiğinden, ürünleri manuel olarak scrape etmeniz gerekiyor:</p>
+                                <p>{t('asia_express_food_sitesi_login_gerektird')}</p>
 
                                 <div className="bg-slate-900 p-4 rounded-lg">
-                                    <p className="text-amber-400 font-bold mb-2">1. Browser DevTools'u açın (F12)</p>
-                                    <p className="text-amber-400 font-bold mb-2">2. Console'a bu kodu yapıştırın:</p>
+                                    <p className="text-amber-400 font-bold mb-2">{t('1_browser_devtools_u_acin_f12')}</p>
+                                    <p className="text-amber-400 font-bold mb-2">{t('2_console_a_bu_kodu_yapistirin')}</p>
                                     <pre className="bg-black p-4 rounded text-green-400 text-xs overflow-x-auto">
                                         {`// Asia Express Food Scraper
 const products = [];
@@ -272,15 +275,15 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                                     </pre>
                                 </div>
 
-                                <p>3. Her kategori sayfasında bu kodu çalıştırın</p>
-                                <p>4. Tüm ürünleri bir JSON dosyasına kaydedin</p>
-                                <p>5. Dosyayı buraya yükleyin</p>
+                                <p>{t('3_her_kategori_sayfasinda_bu_kodu_calist')}</p>
+                                <p>{t('4_tum_urunleri_bir_json_dosyasina_kayded')}</p>
+                                <p>{t('5_dosyayi_buraya_yukleyin')}</p>
                             </div>
                             <button
                                 onClick={() => setScrapingInstructions(false)}
                                 className="mt-6 w-full py-3 bg-amber-600 text-white rounded-lg font-bold"
                             >
-                                Anladım
+                                {t('anladim')}
                             </button>
                         </div>
                     </div>
@@ -289,7 +292,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                 {/* Actions */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4">
-                        <h3 className="text-lg font-bold text-white mb-3">📥 Scraped Data Yükle</h3>
+                        <h3 className="text-lg font-bold text-white mb-3">{t('scraped_data_yukle')}</h3>
                         <input
                             type="file"
                             accept=".json"
@@ -300,7 +303,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                             onClick={showScrapingInstructions}
                             className="mt-3 w-full py-2 bg-blue-600 text-white rounded-lg text-sm"
                         >
-                            🔧 Nasıl Scrape Edilir?
+                            {t('nasil_scrape_edilir')}
                         </button>
                     </div>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-4">
@@ -339,15 +342,15 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <div className="bg-green-600/20 border border-green-500 rounded-xl p-4 text-center">
                             <div className="text-3xl font-bold text-green-400">{stats.imported}</div>
-                            <div className="text-sm text-green-300">Başarılı</div>
+                            <div className="text-sm text-green-300">{t('basarili')}</div>
                         </div>
                         <div className="bg-yellow-600/20 border border-yellow-500 rounded-xl p-4 text-center">
                             <div className="text-3xl font-bold text-yellow-400">{stats.skipped}</div>
-                            <div className="text-sm text-yellow-300">Atlandı</div>
+                            <div className="text-sm text-yellow-300">{t('atlandi')}</div>
                         </div>
                         <div className="bg-red-600/20 border border-red-500 rounded-xl p-4 text-center">
                             <div className="text-3xl font-bold text-red-400">{stats.errors}</div>
-                            <div className="text-sm text-red-300">Hata</div>
+                            <div className="text-sm text-red-300">{t('hata')}</div>
                         </div>
                     </div>
                 )}
@@ -355,7 +358,7 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                 {/* Logs */}
                 {logs.length > 0 && (
                     <div className="bg-black/50 rounded-xl p-4 max-h-96 overflow-y-auto">
-                        <h3 className="text-lg font-bold text-white mb-3">📋 Import Log</h3>
+                        <h3 className="text-lg font-bold text-white mb-3">{t('import_log')}</h3>
                         <div className="space-y-1 font-mono text-sm">
                             {logs.map((log, i) => (
                                 <div key={i} className={`

@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 interface Business {
     id: string;
@@ -423,10 +424,12 @@ function CategoriesPageContent() {
 
 // Wrapper with Suspense for useSearchParams (Next.js 16 requirement)
 export default function CategoriesPage() {
-    return (
+    
+  const t = useTranslations('AdminCategories');
+return (
         <Suspense fallback={
             <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-                <div className="text-xl">Yükleniyor...</div>
+                <div className="text-xl">{t('yukleniyor')}</div>
             </div>
         }>
             <CategoriesPageContent />

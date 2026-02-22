@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 
 export interface DaySchedule {
     day: string;
@@ -98,7 +99,9 @@ export const OpeningHoursEditor: React.FC<OpeningHoursEditorProps> = ({
     onGoogleRefresh,
     isRefreshing = false,
 }) => {
-    const [schedule, setSchedule] = useState<DaySchedule[]>(value?.length > 0 ? value : defaultSchedule);
+    
+  const t = useTranslations('AdminComponentOpeningHoursEditor');
+const [schedule, setSchedule] = useState<DaySchedule[]>(value?.length > 0 ? value : defaultSchedule);
 
     useEffect(() => {
         if (value?.length > 0) {
@@ -150,7 +153,7 @@ export const OpeningHoursEditor: React.FC<OpeningHoursEditorProps> = ({
             <div className="p-4 border-b border-gray-700 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <span className="text-xl">🕒</span>
-                    <h3 className="text-white font-medium">Çalışma Saatleri</h3>
+                    <h3 className="text-white font-medium">{t('calisma_saatleri')}</h3>
                 </div>
                 {googlePlaceId && onGoogleRefresh && (
                     <button
@@ -198,7 +201,7 @@ export const OpeningHoursEditor: React.FC<OpeningHoursEditorProps> = ({
                                     value={day.openHour}
                                     onChange={(v) => updateDay(index, { openHour: v })}
                                     max={23}
-                                    label="Saat"
+                                    label={t('saat')}
                                 />
                                 <span className="text-gray-500 text-xl font-light">:</span>
                                 <TimeInput
@@ -214,7 +217,7 @@ export const OpeningHoursEditor: React.FC<OpeningHoursEditorProps> = ({
                                     value={day.closeHour}
                                     onChange={(v) => updateDay(index, { closeHour: v })}
                                     max={23}
-                                    label="Saat"
+                                    label={t('saat')}
                                 />
                                 <span className="text-gray-500 text-xl font-light">:</span>
                                 <TimeInput
@@ -230,7 +233,7 @@ export const OpeningHoursEditor: React.FC<OpeningHoursEditorProps> = ({
                                         <button
                                             onClick={() => copyToWeekdays(index)}
                                             className="px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded hover:bg-blue-600/30 transition"
-                                            title="Tüm hafta içine kopyala"
+                                            title={t('tum_hafta_icine_kopyala')}
                                         >
                                             📋 Haftaya
                                         </button>
@@ -238,7 +241,7 @@ export const OpeningHoursEditor: React.FC<OpeningHoursEditorProps> = ({
                                     <button
                                         onClick={() => copyToAll(index)}
                                         className="px-2 py-1 text-xs bg-purple-600/20 text-purple-400 rounded hover:bg-purple-600/30 transition"
-                                        title="Tüm günlere kopyala"
+                                        title={t('tum_gunlere_kopyala')}
                                     >
                                         📋 Hepsine
                                     </button>
@@ -252,7 +255,7 @@ export const OpeningHoursEditor: React.FC<OpeningHoursEditorProps> = ({
                     </div>
                 )) : (
                     <div className="p-4 text-center text-gray-500">
-                        Çalışma saati bilgisi yok
+                        {t('calisma_saati_bilgisi_yok')}
                     </div>
                 )}
             </div>
@@ -260,7 +263,7 @@ export const OpeningHoursEditor: React.FC<OpeningHoursEditorProps> = ({
             {/* Footer */}
             <div className="p-3 bg-gray-700/30 border-t border-gray-700">
                 <p className="text-gray-500 text-xs">
-                    💡 Günleri tıklayarak açık/kapalı yapabilir, saatleri yukarı/aşağı ok tuşlarıyla ayarlayabilirsiniz.
+                    {t('gunleri_tiklayarak_acik_kapali_yapabilir')}
                 </p>
             </div>
         </div>

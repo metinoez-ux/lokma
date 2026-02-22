@@ -1,12 +1,15 @@
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 
 interface OpeningHoursDisplayProps {
     rawHours: string;
 }
 
 const OpeningHoursDisplay: React.FC<OpeningHoursDisplayProps> = ({ rawHours }) => {
-    if (!rawHours) return null;
+    
+  const t = useTranslations('AdminComponentOpeningHoursDisplay');
+if (!rawHours) return null;
 
     // Expected format: "Monday: Closed | Tuesday: 9:00 AM – 6:00 PM | ..."
     const days = rawHours.split(' | ');
@@ -24,9 +27,9 @@ const OpeningHoursDisplay: React.FC<OpeningHoursDisplayProps> = ({ rawHours }) =
     // Map English Google days to Turkish
     const trDays: Record<string, string> = {
         'Monday': 'Pazartesi',
-        'Tuesday': 'Salı',
-        'Wednesday': 'Çarşamba',
-        'Thursday': 'Perşembe',
+        'Tuesday': t('sali'),
+        'Wednesday': t('carsamba'),
+        'Thursday': t('persembe'),
         'Friday': 'Cuma',
         'Saturday': 'Cumartesi',
         'Sunday': 'Pazar'
@@ -49,7 +52,7 @@ const OpeningHoursDisplay: React.FC<OpeningHoursDisplayProps> = ({ rawHours }) =
     return (
         <div className="mt-4 bg-gray-800 rounded-lg p-4 border border-gray-700">
             <h4 className="text-gray-300 text-sm font-semibold mb-3 flex items-center gap-2">
-                <span className="text-lg">🕒</span> Çalışma Saatleri (Canlı Önizleme)
+                <span className="text-lg">🕒</span> {t('calisma_saatleri_canli_onizleme')}
             </h4>
             <div className="space-y-2">
                 {days.map((dayStr, idx) => {

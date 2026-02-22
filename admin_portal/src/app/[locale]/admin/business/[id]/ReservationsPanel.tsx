@@ -14,6 +14,7 @@ import {
     Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useTranslations } from 'next-intl';
 
 interface Reservation {
     id: string;
@@ -43,7 +44,9 @@ export default function ReservationsPanel({
     businessName,
     staffName = "Admin",
 }: ReservationsPanelProps) {
-    const [reservations, setReservations] = useState<Reservation[]>([]);
+    
+  const t = useTranslations('AdminBusiness[id');
+const [reservations, setReservations] = useState<Reservation[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<"all" | "pending" | "confirmed" | "rejected" | "cancelled">("pending");
     const [dateFilter, setDateFilter] = useState<"today" | "tomorrow" | "week" | "all">("today");
@@ -186,7 +189,7 @@ export default function ReservationsPanel({
             setTimeout(() => setNotification(null), 3000);
         } catch (err) {
             console.error("Error confirming reservation:", err);
-            setNotification({ msg: "Hata oluştu", type: "error" });
+            setNotification({ msg: t('hata_olustu'), type: "error" });
             setTimeout(() => setNotification(null), 3000);
         } finally {
             setActionLoading(null);
@@ -221,7 +224,7 @@ export default function ReservationsPanel({
             setTimeout(() => setNotification(null), 3000);
         } catch (err) {
             console.error("Error updating reservation:", err);
-            setNotification({ msg: "Hata oluştu", type: "error" });
+            setNotification({ msg: t('hata_olustu'), type: "error" });
             setTimeout(() => setNotification(null), 3000);
         } finally {
             setActionLoading(null);
@@ -237,7 +240,7 @@ export default function ReservationsPanel({
         };
         const labels: Record<string, string> = {
             pending: "⏳ Bekliyor",
-            confirmed: "✅ Onaylandı",
+            confirmed: t('onaylandi'),
             rejected: "❌ Reddedildi",
             cancelled: "🚫 İptal",
         };
@@ -266,7 +269,7 @@ export default function ReservationsPanel({
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                        🍽️ Rezervasyon Yönetimi
+                        {t('rezervasyon_yonetimi')}
                         {pendingCount > 0 && (
                             <span className="bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full animate-pulse">
                                 {pendingCount} bekliyor
@@ -274,7 +277,7 @@ export default function ReservationsPanel({
                         )}
                     </h3>
                     <p className="text-sm text-gray-400">
-                        Bugün {todayCount} aktif rezervasyon
+                        {t('bugun')} {todayCount} {t('aktif_rezervasyon')}
                     </p>
                 </div>
                 <button
@@ -306,7 +309,7 @@ export default function ReservationsPanel({
                             className={`px-3 py-1 text-xs rounded-md transition ${dateFilter === d ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
                                 }`}
                         >
-                            {d === "today" ? "Bugün" : d === "tomorrow" ? "Yarın" : d === "week" ? "Bu Hafta" : "Tümü"}
+                            {d === "today" ? t('bugun') : d === "tomorrow" ? t('yarin') : d === "week" ? "Bu Hafta" : t('tumu')}
                         </button>
                     ))}
                 </div>
@@ -323,12 +326,12 @@ export default function ReservationsPanel({
                             {s === "pending"
                                 ? `⏳ Bekliyor (${reservations.filter((r) => r.status === "pending").length})`
                                 : s === "confirmed"
-                                    ? "✅ Onaylı"
+                                    ? t('onayli')
                                     : s === "rejected"
                                         ? "❌ Red"
                                         : s === "cancelled"
                                             ? "🚫 İptal"
-                                            : "Tümü"}
+                                            : t('tumu')}
                         </button>
                     ))}
                 </div>
@@ -342,8 +345,8 @@ export default function ReservationsPanel({
             ) : filtered.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
                     <p className="text-4xl mb-2">🍽️</p>
-                    <p className="font-medium">Rezervasyon bulunamadı</p>
-                    <p className="text-sm mt-1">Seçili filtreler için sonuç yok</p>
+                    <p className="font-medium">{t('rezervasyon_bulunamadi')}</p>
+                    <p className="text-sm mt-1">{t('secili_filtreler_icin_sonuc_yok')}</p>
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -361,28 +364,28 @@ export default function ReservationsPanel({
                                         <div className="flex items-center gap-2 mb-2">
                                             {statusBadge(res.status)}
                                             {isPast && res.status !== "cancelled" && res.status !== "rejected" && (
-                                                <span className="text-xs text-gray-500 bg-gray-700 px-2 py-0.5 rounded">Geçmiş</span>
+                                                <span className="text-xs text-gray-500 bg-gray-700 px-2 py-0.5 rounded">{t('gecmis')}</span>
                                             )}
                                         </div>
 
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                                             <div>
-                                                <p className="text-gray-500 text-xs">Müşteri</p>
+                                                <p className="text-gray-500 text-xs">{t('musteri')}</p>
                                                 <p className="text-white font-medium truncate">{res.userName}</p>
                                                 {res.userPhone && (
                                                     <p className="text-gray-400 text-xs">{res.userPhone}</p>
                                                 )}
                                             </div>
                                             <div>
-                                                <p className="text-gray-500 text-xs">Tarih</p>
+                                                <p className="text-gray-500 text-xs">{t('tarih')}</p>
                                                 <p className="text-white font-medium">{formatDate(res.reservationDate)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-gray-500 text-xs">Saat</p>
+                                                <p className="text-gray-500 text-xs">{t('saat')}</p>
                                                 <p className="text-white font-medium text-lg">{formatTime(res.reservationDate)}</p>
                                             </div>
                                             <div>
-                                                <p className="text-gray-500 text-xs">Kişi</p>
+                                                <p className="text-gray-500 text-xs">{t('kisi')}</p>
                                                 <p className="text-white font-medium text-lg">👥 {res.partySize}</p>
                                             </div>
                                         </div>
@@ -396,7 +399,7 @@ export default function ReservationsPanel({
 
                                         {res.confirmedBy && (
                                             <p className="text-xs text-gray-500 mt-2">
-                                                {res.status === "confirmed" ? "Onaylayan" : "İşlem yapan"}: {res.confirmedBy}
+                                                {res.status === "confirmed" ? "Onaylayan" : t('i_slem_yapan')}: {res.confirmedBy}
                                             </p>
                                         )}
 
@@ -444,11 +447,11 @@ export default function ReservationsPanel({
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
                     <div className="bg-gray-800 rounded-2xl w-full max-w-md">
                         <div className="p-6 border-b border-gray-700">
-                            <h2 className="text-xl font-bold text-white">🃏 Masa Kart Numarası Seçin</h2>
-                            <p className="text-gray-400 text-sm mt-1">Müşteriye verilecek masa kartını seçin</p>
+                            <h2 className="text-xl font-bold text-white">{t('masa_kart_numarasi_secin')}</h2>
+                            <p className="text-gray-400 text-sm mt-1">{t('musteriye_verilecek_masa_kartini_secin')}</p>
                             <div className="flex items-center gap-4 mt-3 text-xs">
-                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500 inline-block" /> Seçili</span>
-                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-600 inline-block" /> Boş</span>
+                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500 inline-block" /> {t('secili')}</span>
+                                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-gray-600 inline-block" /> {t('bos')}</span>
                                 <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-900/50 border border-red-500/30 inline-block" /> Dolu</span>
                             </div>
                         </div>
@@ -508,7 +511,7 @@ export default function ReservationsPanel({
                                     }`}
                             >
                                 {selectedCards.size === 0
-                                    ? "Numara Seçin"
+                                    ? t('numara_secin')
                                     : `✅ Onayla (${selectedCards.size} masa)`}
                             </button>
                         </div>

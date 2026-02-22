@@ -73,7 +73,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       return Color(int.parse('FF$hex', radix: 16));
     }
     // Fallback to LOKMA Rose-500
-    return const Color(0xFFFB335B);
+    return const Color(0xFFFF8000);
   }
 
   @override
@@ -532,7 +532,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFFFB335B),
+          indicatorColor: const Color(0xFFFF8000),
           indicatorWeight: 3,
           labelColor: colorScheme.onSurface,
           unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
@@ -605,7 +605,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         }
         
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFFB335B)));
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFFF8000)));
         }
         
         final allOrders = snapshot.data ?? [];
@@ -711,7 +711,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           SizedBox(height: 24),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFB335B),
+              backgroundColor: const Color(0xFFFF8000),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -841,7 +841,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFB335B),
+                                        color: const Color(0xFFFF8000),
                                         borderRadius: const BorderRadius.only(
                                           bottomLeft: Radius.circular(12),
                                           bottomRight: Radius.circular(12),
@@ -1375,7 +1375,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   
   /// Fetch brand color from Firestore
   Future<Color> _fetchBrandColor(String businessId) async {
-    if (businessId.isEmpty) return const Color(0xFFFB335B);
+    if (businessId.isEmpty) return const Color(0xFFFF8000);
     try {
       final doc = await FirebaseFirestore.instance
           .collection('businesses')
@@ -1392,7 +1392,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     } catch (e) {
       debugPrint('Error fetching brand color: $e');
     }
-    return const Color(0xFFFB335B); // Default LOKMA red
+    return const Color(0xFFFF8000); // Default LOKMA red
   }
   
   /// Open maps for business location

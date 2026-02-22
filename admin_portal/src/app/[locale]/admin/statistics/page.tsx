@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs, query, orderBy, where, onSnapshot, Timestamp, doc, getDoc, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useTranslations } from 'next-intl';
 
 interface OrderItem {
     productId: string;
@@ -44,7 +45,9 @@ interface PerfOrderStats {
 }
 
 export default function StatisticsPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminStatistics');
+const { admin, loading: adminLoading } = useAdmin();
     const [orders, setOrders] = useState<Order[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
@@ -375,7 +378,7 @@ export default function StatisticsPage() {
         })),
 
         // Orders by day of week
-        dailyDistribution: ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'].map((day, idx) => ({
+        dailyDistribution: ['Pazar', 'Pazartesi', t('sali'), t('carsamba'), t('persembe'), 'Cuma', 'Cumartesi'].map((day, idx) => ({
             day,
             count: filteredOrders.filter(o => o.createdAt?.toDate().getDay() === idx).length,
             revenue: filteredOrders.filter(o => o.createdAt?.toDate().getDay() === idx)
@@ -405,7 +408,7 @@ export default function StatisticsPage() {
                 });
             });
             return Object.values(productCounts)
-                .filter(p => p.name && p.name !== 'Ürün')
+                .filter(p => p.name && p.name !== t('urun'))
                 .sort((a, b) => b.quantity - a.quantity)
                 .slice(0, 10);
         })(),
@@ -465,7 +468,7 @@ export default function StatisticsPage() {
                             📊 İstatistikler
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            Platform sipariş ve performans analitiği
+                            {t('platform_siparis_ve_performans_analitigi')}
                         </p>
                     </div>
                 </div>
@@ -487,12 +490,12 @@ export default function StatisticsPage() {
                             }}
                             className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
                         >
-                            <option value="today">📅 Bugün</option>
+                            <option value="today">{t('bugun')}</option>
                             <option value="week">📅 Bu Hafta</option>
                             <option value="month">📅 Bu Ay</option>
-                            <option value="year">📅 Bu Yıl</option>
-                            <option value="custom">📅 Özel Tarih Aralığı</option>
-                            <option value="all">📅 Tümü</option>
+                            <option value="year">{t('bu_yil')}</option>
+                            <option value="custom">{t('ozel_tarih_araligi')}</option>
+                            <option value="all">{t('tumu')}</option>
                         </select>
 
                         {/* Custom Date Picker */}
@@ -523,10 +526,10 @@ export default function StatisticsPage() {
                             onChange={(e) => setCompareMode(e.target.value as CompareMode)}
                             className="px-4 py-2 bg-purple-700/50 text-white rounded-lg border border-purple-500"
                         >
-                            <option value="none">📊 Karşılaştırma Yok</option>
-                            <option value="lastWeek">📊 Geçen Hafta ile</option>
-                            <option value="lastMonth">📊 Geçen Ay ile</option>
-                            <option value="lastYear">📊 Geçen Yıl ile</option>
+                            <option value="none">{t('karsilastirma_yok')}</option>
+                            <option value="lastWeek">{t('gecen_hafta_ile')}</option>
+                            <option value="lastMonth">{t('gecen_ay_ile')}</option>
+                            <option value="lastYear">{t('gecen_yil_ile')}</option>
                         </select>
 
                         {/* Business Filter - Only for Super Admin */}
@@ -536,7 +539,7 @@ export default function StatisticsPage() {
                                 onChange={(e) => setBusinessFilter(e.target.value)}
                                 className="px-4 py-2 bg-emerald-700 text-white rounded-lg border border-emerald-500 font-medium"
                             >
-                                <option value="all">🏪 Tüm İşletmeler</option>
+                                <option value="all">{t('tum_i_sletmeler')}</option>
                                 {Object.entries(businesses).map(([id, name]) => (
                                     <option key={id} value={id}>{name}</option>
                                 ))}
@@ -565,7 +568,7 @@ export default function StatisticsPage() {
                     {compareMode !== 'none' && comparisonRange && (
                         <div className="flex items-center gap-3 px-3 py-2 bg-purple-900/30 border border-purple-600 rounded-lg">
                             <span className="text-purple-300 text-sm">
-                                📊 Karşılaştırma Dönemi: {comparisonRange.startDate.toLocaleDateString('tr-TR')} - {comparisonRange.endDate.toLocaleDateString('tr-TR')}
+                                {t('karsilastirma_donemi')} {comparisonRange.startDate.toLocaleDateString('tr-TR')} - {comparisonRange.endDate.toLocaleDateString('tr-TR')}
                             </span>
                             <span className="text-gray-400 text-sm">
                                 ({comparisonOrders.length} sipariş)
@@ -578,7 +581,7 @@ export default function StatisticsPage() {
             {loading ? (
                 <div className="max-w-7xl mx-auto bg-gray-800 rounded-xl p-12 text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                    <p className="text-gray-400 mt-4">Veriler yükleniyor...</p>
+                    <p className="text-gray-400 mt-4">{t('veriler_yukleniyor')}</p>
                 </div>
             ) : (
                 <div className="max-w-7xl mx-auto space-y-6">
@@ -589,9 +592,9 @@ export default function StatisticsPage() {
                                 {stats.total}
                                 {changes && formatChange(changes.total)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">Toplam Sipariş</p>
+                            <p className="text-xs text-gray-400 mt-1">{t('toplam_siparis')}</p>
                             {compStats && (
-                                <p className="text-xs text-gray-500">Önceki: {compStats.total}</p>
+                                <p className="text-xs text-gray-500">{t('onceki')} {compStats.total}</p>
                             )}
                         </div>
                         <div className="bg-gray-800 rounded-xl p-4 text-center">
@@ -599,9 +602,9 @@ export default function StatisticsPage() {
                                 {formatCurrency(stats.revenue)}
                                 {changes && formatChange(changes.revenue)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">Toplam Ciro</p>
+                            <p className="text-xs text-gray-400 mt-1">{t('toplam_ciro')}</p>
                             {compStats && (
-                                <p className="text-xs text-gray-500">Önceki: {formatCurrency(compStats.revenue)}</p>
+                                <p className="text-xs text-gray-500">{t('onceki')} {formatCurrency(compStats.revenue)}</p>
                             )}
                         </div>
                         <div className="bg-gray-800 rounded-xl p-4 text-center">
@@ -609,9 +612,9 @@ export default function StatisticsPage() {
                                 {formatCurrency(stats.avgOrderValue)}
                                 {changes && formatChange(changes.avgOrderValue)}
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">Ort. Sipariş</p>
+                            <p className="text-xs text-gray-400 mt-1">{t('ort_siparis')}</p>
                             {compStats && (
-                                <p className="text-xs text-gray-500">Önceki: {formatCurrency(compStats.avgOrderValue)}</p>
+                                <p className="text-xs text-gray-500">{t('onceki')} {formatCurrency(compStats.avgOrderValue)}</p>
                             )}
                         </div>
                         <div className="bg-gray-800 rounded-xl p-4 text-center">
@@ -621,7 +624,7 @@ export default function StatisticsPage() {
                             </p>
                             <p className="text-xs text-gray-400 mt-1">Tamamlanan</p>
                             {compStats && (
-                                <p className="text-xs text-gray-500">Önceki: {compStats.completed}</p>
+                                <p className="text-xs text-gray-500">{t('onceki')} {compStats.completed}</p>
                             )}
                         </div>
                         <div className="bg-gray-800 rounded-xl p-4 text-center">
@@ -631,35 +634,35 @@ export default function StatisticsPage() {
                             </p>
                             <p className="text-xs text-gray-400 mt-1">İptal</p>
                             {compStats && (
-                                <p className="text-xs text-gray-500">Önceki: {compStats.cancelled}</p>
+                                <p className="text-xs text-gray-500">{t('onceki')} {compStats.cancelled}</p>
                             )}
                         </div>
                         <div className="bg-gray-800 rounded-xl p-4 text-center">
                             <p className="text-3xl font-bold text-amber-400">{analytics.peakHour}:00</p>
-                            <p className="text-xs text-gray-400 mt-1">En Yoğun Saat</p>
+                            <p className="text-xs text-gray-400 mt-1">{t('en_yogun_saat')}</p>
                         </div>
                     </div>
 
                     {/* Insights Row */}
                     <div className="grid md:grid-cols-3 gap-4">
                         <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border border-green-700/30 rounded-xl p-4">
-                            <p className="text-green-400 text-sm font-medium mb-1">🔥 En Yoğun Gün</p>
+                            <p className="text-green-400 text-sm font-medium mb-1">{t('en_yogun_gun')}</p>
                             <p className="text-white text-xl font-bold">{analytics.busiestDay}</p>
                         </div>
                         <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-700/30 rounded-xl p-4">
-                            <p className="text-blue-400 text-sm font-medium mb-1">😴 En Durgun Gün</p>
+                            <p className="text-blue-400 text-sm font-medium mb-1">{t('en_durgun_gun')}</p>
                             <p className="text-white text-xl font-bold">{analytics.slowestDay}</p>
                         </div>
                         <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/30 rounded-xl p-4">
-                            <p className="text-purple-400 text-sm font-medium mb-1">📊 Sipariş Oranı</p>
+                            <p className="text-purple-400 text-sm font-medium mb-1">{t('siparis_orani')}</p>
                             {filteredOrders.length > 0 ? (
                                 <div className="flex flex-wrap gap-2 mt-1">
-                                    <span className="text-blue-400 font-bold text-sm">🚚 {Math.round((analytics.typeBreakdown.delivery / filteredOrders.length) * 100)}% Kurye</span>
+                                    <span className="text-blue-400 font-bold text-sm">🚚 {Math.round((analytics.typeBreakdown.delivery / filteredOrders.length) * 100)}{t('kurye')}</span>
                                     <span className="text-amber-400 font-bold text-sm">🪑 {Math.round((analytics.typeBreakdown.dineIn / filteredOrders.length) * 100)}% Masa</span>
                                     <span className="text-green-400 font-bold text-sm">🛍️ {Math.round((analytics.typeBreakdown.pickup / filteredOrders.length) * 100)}% Gel Al</span>
                                 </div>
                             ) : (
-                                <p className="text-gray-500 text-sm">Veri yok</p>
+                                <p className="text-gray-500 text-sm">{t('veri_yok')}</p>
                             )}
                         </div>
                     </div>
@@ -668,7 +671,7 @@ export default function StatisticsPage() {
                     <div className="grid md:grid-cols-2 gap-6">
                         {/* Hourly Distribution */}
                         <div className="bg-gray-800 rounded-xl p-6">
-                            <h3 className="text-white font-bold mb-4">🕐 Saatlik Sipariş Dağılımı</h3>
+                            <h3 className="text-white font-bold mb-4">{t('saatlik_siparis_dagilimi')}</h3>
                             {(() => {
                                 const hourData = analytics.hourlyDistribution.slice(8, 22);
                                 const maxCount = Math.max(...hourData.map(h => h.count), 1);
@@ -706,7 +709,7 @@ export default function StatisticsPage() {
 
                         {/* Daily Distribution */}
                         <div className="bg-gray-800 rounded-xl p-6">
-                            <h3 className="text-white font-bold mb-4">📅 Günlük Sipariş Dağılımı</h3>
+                            <h3 className="text-white font-bold mb-4">{t('gunluk_siparis_dagilimi')}</h3>
                             <div className="space-y-2">
                                 {analytics.dailyDistribution.map((d) => {
                                     const maxCount = Math.max(...analytics.dailyDistribution.map(d => d.count), 1);
@@ -731,7 +734,7 @@ export default function StatisticsPage() {
                     {/* Period Chart: Haftalık / Aylık / Yıllık */}
                     {(() => {
                         const now = new Date();
-                        const monthNames = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+                        const monthNames = ['Oca', t('sub'), 'Mar', 'Nis', 'May', 'Haz', 'Tem', t('agu'), 'Eyl', 'Eki', 'Kas', 'Ara'];
 
                         let periodData: { label: string; count: number; revenue: number }[] = [];
 
@@ -787,7 +790,7 @@ export default function StatisticsPage() {
                         return (
                             <div className="bg-gray-800 rounded-xl p-6">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-white font-bold">📊 Sipariş & Ciro Trendi</h3>
+                                    <h3 className="text-white font-bold">{t('siparis_ciro_trendi')}</h3>
                                     <div className="flex bg-gray-700 rounded-lg overflow-hidden">
                                         {(['weekly', 'monthly', 'yearly'] as const).map(tab => (
                                             <button
@@ -798,7 +801,7 @@ export default function StatisticsPage() {
                                                     : 'text-gray-400 hover:text-white'
                                                     }`}
                                             >
-                                                {tab === 'weekly' ? 'Haftalık' : tab === 'monthly' ? 'Aylık' : 'Yıllık'}
+                                                {tab === 'weekly' ? t('haftalik') : tab === 'monthly' ? t('aylik') : t('yillik')}
                                             </button>
                                         ))}
                                     </div>
@@ -806,7 +809,7 @@ export default function StatisticsPage() {
 
                                 {/* Order Count Bars */}
                                 <div className="mb-4">
-                                    <p className="text-gray-400 text-xs mb-2">Sipariş Sayısı</p>
+                                    <p className="text-gray-400 text-xs mb-2">{t('siparis_sayisi')}</p>
                                     <div className="flex items-end gap-1" style={{ height: 120 }}>
                                         {periodData.map((d, i) => {
                                             const h = (d.count / maxCount) * 100;
@@ -869,9 +872,9 @@ export default function StatisticsPage() {
                     <div className="grid md:grid-cols-2 gap-6">
                         {/* Top Products */}
                         <div className="bg-gray-800 rounded-xl p-6">
-                            <h3 className="text-white font-bold mb-4">🏆 En Çok Satan Ürünler</h3>
+                            <h3 className="text-white font-bold mb-4">{t('en_cok_satan_urunler')}</h3>
                             {analytics.topProducts.length === 0 ? (
-                                <p className="text-gray-500 text-center py-8">Ürün verisi bulunamadı</p>
+                                <p className="text-gray-500 text-center py-8">{t('urun_verisi_bulunamadi')}</p>
                             ) : (
                                 <div className="space-y-2">
                                     {analytics.topProducts.slice(0, 5).map((p, idx) => (
@@ -884,7 +887,7 @@ export default function StatisticsPage() {
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-green-400 font-medium">{formatCurrency(p.revenue)}</p>
-                                                <p className="text-xs text-gray-500">{p.quantity} adet</p>
+                                                <p className="text-xs text-gray-500">{p.quantity} {t('adet')}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -897,14 +900,14 @@ export default function StatisticsPage() {
                             <div className="bg-gray-800 rounded-xl p-6">
                                 <h3 className="text-white font-bold mb-4">🏪 İşletme Performansı</h3>
                                 {analytics.businessPerformance.length === 0 ? (
-                                    <p className="text-gray-500 text-center py-8">İşletme verisi bulunamadı</p>
+                                    <p className="text-gray-500 text-center py-8">{t('i_sletme_verisi_bulunamadi')}</p>
                                 ) : (
                                     <div className="space-y-2">
                                         {analytics.businessPerformance.slice(0, 5).map((b) => (
                                             <div key={b.id} className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
                                                 <div>
                                                     <p className="text-white font-medium">{b.name}</p>
-                                                    <p className="text-xs text-gray-500">{b.orders} sipariş</p>
+                                                    <p className="text-xs text-gray-500">{b.orders} {t('siparis')}</p>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-green-400 font-bold">{formatCurrency(b.revenue)}</p>
@@ -925,11 +928,11 @@ export default function StatisticsPage() {
                 <div className="max-w-7xl mx-auto mt-6">
                     <div className="bg-gray-800 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-white font-bold text-lg flex items-center gap-2">📈 İşletme Performansı</h3>
+                            <h3 className="text-white font-bold text-lg flex items-center gap-2">{t('i_sletme_performansi')}</h3>
                             <select value={perfDateRange} onChange={e => setPerfDateRange(e.target.value as any)} className="bg-purple-600 text-white rounded-lg px-3 py-2 text-sm border-none">
-                                <option value="7d">Son 7 Gün</option>
-                                <option value="30d">Son 30 Gün</option>
-                                <option value="90d">Son 90 Gün</option>
+                                <option value="7d">{t('son_7_gun')}</option>
+                                <option value="30d">{t('son_30_gun')}</option>
+                                <option value="90d">{t('son_90_gun')}</option>
                             </select>
                         </div>
 
@@ -937,7 +940,7 @@ export default function StatisticsPage() {
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                             <div className="bg-gray-900 rounded-lg p-4">
                                 <div className="text-3xl font-bold text-white">{perfStats.totalOrders}</div>
-                                <div className="text-sm text-gray-400">Toplam Sipariş</div>
+                                <div className="text-sm text-gray-400">{t('toplam_siparis')}</div>
                             </div>
                             <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
                                 <div className="text-3xl font-bold text-green-400">{perfStats.completedOrders}</div>
@@ -945,7 +948,7 @@ export default function StatisticsPage() {
                             </div>
                             <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
                                 <div className="text-3xl font-bold text-blue-400">{perfStats.avgPreparationTime}<span className="text-lg">dk</span></div>
-                                <div className="text-sm text-blue-300">Ort. Hazırlama</div>
+                                <div className="text-sm text-blue-300">{t('ort_hazirlama')}</div>
                             </div>
                             <div className="bg-purple-600/20 rounded-lg p-4 border-l-4 border-purple-500">
                                 <div className="text-3xl font-bold text-purple-400">{perfStats.avgDeliveryTime}<span className="text-lg">dk</span></div>
@@ -953,14 +956,14 @@ export default function StatisticsPage() {
                             </div>
                             <div className="bg-amber-600/20 rounded-lg p-4 border-l-4 border-amber-500">
                                 <div className="text-3xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
-                                <div className="text-sm text-amber-300">Kurye Durdurma</div>
+                                <div className="text-sm text-amber-300">{t('kurye_durdurma')}</div>
                             </div>
                         </div>
 
                         {/* Pause Statistics Row */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <div className="bg-gray-900 rounded-lg p-4">
-                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏸️</span><span className="text-gray-400">Durdurma Sayısı</span></div>
+                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏸️</span><span className="text-gray-400">{t('durdurma_sayisi')}</span></div>
                                 <div className="text-2xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
                             </div>
                             <div className="bg-gray-900 rounded-lg p-4">
@@ -968,28 +971,28 @@ export default function StatisticsPage() {
                                 <div className="text-2xl font-bold text-green-400">{pauseStats.resumeCount}</div>
                             </div>
                             <div className="bg-gray-900 rounded-lg p-4">
-                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏱️</span><span className="text-gray-400">Toplam Durdurma Süresi</span></div>
-                                <div className="text-2xl font-bold text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">saat</span></div>
+                                <div className="flex items-center gap-2 mb-2"><span className="text-xl">⏱️</span><span className="text-gray-400">{t('toplam_durdurma_suresi')}</span></div>
+                                <div className="text-2xl font-bold text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">{t('saat')}</span></div>
                             </div>
                         </div>
 
                         {/* Delivery Pause Log Table */}
                         <div className="bg-gray-900 rounded-lg overflow-hidden">
                             <div className="px-4 py-3 border-b border-gray-700">
-                                <h4 className="text-white font-bold flex items-center gap-2">🛵 Kurye Açma/Kapama Geçmişi</h4>
+                                <h4 className="text-white font-bold flex items-center gap-2">{t('kurye_acma_kapama_gecmisi')}</h4>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-700">
                                     <thead className="bg-gray-800">
                                         <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Tarih</th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">İşlem</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">{t('tarih')}</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">{t('i_slem')}</th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Admin</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-700">
                                         {pauseLogs.length === 0 ? (
-                                            <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400">Henüz kurye açma/kapama kaydı yok</td></tr>
+                                            <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-400">{t('henuz_kurye_acma_kapama_kaydi_yok')}</td></tr>
                                         ) : (
                                             pauseLogs.slice(0, 20).map(log => (
                                                 <tr key={log.id} className={log.action === 'paused' ? 'bg-amber-900/20' : 'bg-green-900/20'}>

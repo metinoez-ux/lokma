@@ -5,6 +5,7 @@ import { collection, query, orderBy, getDocs, where, Timestamp, limit, getDoc, d
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
+import { useTranslations } from 'next-intl';
 
 // Types
 interface CommissionRecord {
@@ -65,7 +66,9 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function CommissionsPage() {
-    const router = useRouter();
+    
+  const t = useTranslations('AdminCommissions');
+const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [records, setRecords] = useState<CommissionRecord[]>([]);
     const [filterPeriod, setFilterPeriod] = useState<string>('');
@@ -135,7 +138,7 @@ export default function CommissionsPage() {
             });
 
             // Resolve generic "İşletme" names from businesses collection
-            const genericRecords = list.filter(r => r.businessName === 'İşletme' || !r.businessName);
+            const genericRecords = list.filter(r => r.businessName === t('i_sletme') || !r.businessName);
             if (genericRecords.length > 0) {
                 const uniqueIds = [...new Set(genericRecords.map(r => r.businessId))];
                 for (const bizId of uniqueIds) {
@@ -143,9 +146,9 @@ export default function CommissionsPage() {
                         const bizDoc = await getDoc(doc(db, 'businesses', bizId));
                         if (bizDoc.exists()) {
                             const bizData = bizDoc.data();
-                            const realName = bizData.companyName || bizData.name || bizData.businessName || bizData.brand || 'İşletme';
+                            const realName = bizData.companyName || bizData.name || bizData.businessName || bizData.brand || t('i_sletme');
                             list.forEach(r => {
-                                if (r.businessId === bizId && (r.businessName === 'İşletme' || !r.businessName)) {
+                                if (r.businessId === bizId && (r.businessName === t('i_sletme') || !r.businessName)) {
                                     r.businessName = realName;
                                 }
                             });
@@ -249,7 +252,7 @@ export default function CommissionsPage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-white">Yükleniyor...</div>
+                <div className="text-white">{t('yukleniyor')}</div>
             </div>
         );
     }
@@ -261,14 +264,14 @@ export default function CommissionsPage() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white">💰 Provizyon Raporu</h1>
-                        <p className="text-gray-400 text-sm">İşletme bazlı provizyon takibi ve raporlama</p>
+                        <p className="text-gray-400 text-sm">{t('i_sletme_bazli_provizyon_takibi_ve_rapor')}</p>
                     </div>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setViewMode(viewMode === 'summary' ? 'detail' : 'summary')}
                             className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm"
                         >
-                            {viewMode === 'summary' ? '📋 Detay Görünümü' : '📊 Özet Görünümü'}
+                            {viewMode === 'summary' ? t('detay_gorunumu') : t('ozet_gorunumu')}
                         </button>
                         <button
                             onClick={loadRecords}
@@ -291,7 +294,7 @@ export default function CommissionsPage() {
                     </div>
                     <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
-                        <p className="text-gray-400 text-xs">Toplam Provizyon</p>
+                        <p className="text-gray-400 text-xs">{t('toplam_provizyon')}</p>
                     </div>
                     <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-green-400">€{stats.collectedAmount.toFixed(2)}</p>
@@ -299,7 +302,7 @@ export default function CommissionsPage() {
                     </div>
                     <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-yellow-400">€{stats.pendingAmount.toFixed(2)}</p>
-                        <p className="text-gray-400 text-xs">Bekleyen (Nakit)</p>
+                        <p className="text-gray-400 text-xs">{t('bekleyen_nakit')}</p>
                     </div>
                     <div className="bg-blue-600/20 border border-blue-600/30 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-blue-400">€{stats.cardCommission.toFixed(2)}</p>
@@ -311,7 +314,7 @@ export default function CommissionsPage() {
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-gray-300">€{stats.vatTotal.toFixed(2)}</p>
-                        <p className="text-gray-400 text-xs">KDV Toplam</p>
+                        <p className="text-gray-400 text-xs">{t('kdv_toplam')}</p>
                     </div>
                 </div>
 
@@ -319,7 +322,7 @@ export default function CommissionsPage() {
                 <div className="bg-gray-800 rounded-xl p-4 mb-6">
                     <div className="flex flex-wrap gap-4 items-center">
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">Dönem</label>
+                            <label className="block text-gray-400 text-xs mb-1">{t('donem')}</label>
                             <input
                                 type="month"
                                 value={filterPeriod}
@@ -328,13 +331,13 @@ export default function CommissionsPage() {
                             />
                         </div>
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">İşletme</label>
+                            <label className="block text-gray-400 text-xs mb-1">{t('i_sletme')}</label>
                             <select
                                 value={filterBusiness}
                                 onChange={(e) => setFilterBusiness(e.target.value)}
                                 className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
                             >
-                                <option value="all">Tümü</option>
+                                <option value="all">{t('tumu')}</option>
                                 {uniqueBusinesses.map(([id, name]) => (
                                     <option key={id} value={id}>{name}</option>
                                 ))}
@@ -347,11 +350,11 @@ export default function CommissionsPage() {
                                 onChange={(e) => setFilterStatus(e.target.value)}
                                 className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
                             >
-                                <option value="all">Tümü</option>
+                                <option value="all">{t('tumu')}</option>
                                 <option value="auto_collected">Otomatik Tahsil</option>
                                 <option value="pending">Bekliyor</option>
-                                <option value="invoiced">Faturalandı</option>
-                                <option value="paid">Ödendi</option>
+                                <option value="invoiced">{t('faturalandi')}</option>
+                                <option value="paid">{t('odendi')}</option>
                             </select>
                         </div>
                         <button
@@ -369,21 +372,21 @@ export default function CommissionsPage() {
                         <table className="w-full">
                             <thead className="bg-gray-700">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-gray-300 text-sm">İşletme</th>
+                                    <th className="px-4 py-3 text-left text-gray-300 text-sm">{t('i_sletme')}</th>
                                     <th className="px-4 py-3 text-left text-gray-300 text-sm">Plan</th>
                                     <th className="px-4 py-3 text-right text-gray-300 text-sm">Sipariş</th>
                                     <th className="px-4 py-3 text-right text-gray-300 text-sm">Ciro</th>
                                     <th className="px-4 py-3 text-right text-gray-300 text-sm">Provizyon</th>
                                     <th className="px-4 py-3 text-right text-gray-300 text-sm">Kart</th>
                                     <th className="px-4 py-3 text-right text-gray-300 text-sm">Nakit</th>
-                                    <th className="px-4 py-3 text-right text-gray-300 text-sm">Bekleyen</th>
+                                    <th className="px-4 py-3 text-right text-gray-300 text-sm">{t('bekleyen')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-700">
                                 {businessSummaries.length === 0 ? (
                                     <tr>
                                         <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
-                                            Bu dönemde provizyon kaydı bulunmuyor
+                                            {t('bu_donemde_provizyon_kaydi_bulunmuyor')}
                                         </td>
                                     </tr>
                                 ) : (
@@ -444,22 +447,22 @@ export default function CommissionsPage() {
                             <thead className="bg-gray-700">
                                 <tr>
                                     <th className="px-3 py-3 text-left text-gray-300 text-xs">Sipariş</th>
-                                    <th className="px-3 py-3 text-left text-gray-300 text-xs">İşletme</th>
+                                    <th className="px-3 py-3 text-left text-gray-300 text-xs">{t('i_sletme')}</th>
                                     <th className="px-3 py-3 text-center text-gray-300 text-xs">Teslimat</th>
                                     <th className="px-3 py-3 text-right text-gray-300 text-xs">Tutar</th>
                                     <th className="px-3 py-3 text-right text-gray-300 text-xs">Oran</th>
                                     <th className="px-3 py-3 text-right text-gray-300 text-xs">Provizyon</th>
                                     <th className="px-3 py-3 text-right text-gray-300 text-xs">Net + KDV</th>
-                                    <th className="px-3 py-3 text-center text-gray-300 text-xs">Ödeme</th>
-                                    <th className="px-3 py-3 text-center text-gray-300 text-xs">Durum</th>
-                                    <th className="px-3 py-3 text-center text-gray-300 text-xs">Tarih</th>
+                                    <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('odeme')}</th>
+                                    <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('durum')}</th>
+                                    <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('tarih')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-700">
                                 {filteredRecords.length === 0 ? (
                                     <tr>
                                         <td colSpan={10} className="px-4 py-12 text-center text-gray-500">
-                                            Provizyon kaydı bulunmuyor
+                                            {t('provizyon_kaydi_bulunmuyor')}
                                         </td>
                                     </tr>
                                 ) : (
@@ -480,7 +483,7 @@ export default function CommissionsPage() {
                                                 <div className="flex flex-col items-end">
                                                     <span className="text-amber-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
                                                     {r.perOrderFee > 0 && (
-                                                        <span className="text-[10px] text-yellow-400/70">+€{r.perOrderFee.toFixed(2)} ücret</span>
+                                                        <span className="text-[10px] text-yellow-400/70">+€{r.perOrderFee.toFixed(2)} {t('ucret')}</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -517,19 +520,19 @@ export default function CommissionsPage() {
                             {orderLoading ? (
                                 <div className="p-12 text-center">
                                     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500 mx-auto mb-4"></div>
-                                    <p className="text-gray-400">Sipariş detayları yükleniyor...</p>
+                                    <p className="text-gray-400">{t('siparis_detaylari_yukleniyor')}</p>
                                 </div>
                             ) : selectedOrder?.notFound ? (
                                 <div className="p-6">
                                     <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-bold text-white">📋 Sipariş #{selectedOrder.commission?.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
+                                        <h3 className="text-lg font-bold text-white">{t('siparis')}{selectedOrder.commission?.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
                                         <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-white text-xl">✕</button>
                                     </div>
-                                    <p className="text-gray-400">Sipariş detayı bulunamadı. Sadece provizyon bilgileri mevcut.</p>
+                                    <p className="text-gray-400">{t('siparis_detayi_bulunamadi_sadece_provizy')}</p>
                                     {selectedOrder.commission && (
                                         <div className="mt-4 bg-gray-900/50 rounded-lg p-4">
                                             <p className="text-gray-300 text-sm">💰 Provizyon: <span className="text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span></p>
-                                            <p className="text-gray-300 text-sm">📦 Tutar: €{selectedOrder.commission.orderTotal.toFixed(2)}</p>
+                                            <p className="text-gray-300 text-sm">{t('tutar')}{selectedOrder.commission.orderTotal.toFixed(2)}</p>
                                         </div>
                                     )}
                                 </div>
@@ -538,7 +541,7 @@ export default function CommissionsPage() {
                                     {/* Header */}
                                     <div className="flex justify-between items-start mb-5">
                                         <div>
-                                            <h3 className="text-lg font-bold text-white">📋 Sipariş #{selectedOrder.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
+                                            <h3 className="text-lg font-bold text-white">{t('siparis')}{selectedOrder.orderNumber || selectedOrder.id?.slice(0, 6)}</h3>
                                             <p className="text-gray-400 text-sm mt-0.5">{selectedOrder.butcherName || selectedOrder.businessName || selectedOrder.commission?.businessName}</p>
                                         </div>
                                         <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-white text-2xl leading-none">✕</button>
@@ -554,20 +557,20 @@ export default function CommissionsPage() {
                                             }`}>
                                             {selectedOrder.status === 'delivered' ? '✅ Teslim Edildi' :
                                                 selectedOrder.status === 'cancelled' ? '❌ İptal' :
-                                                    selectedOrder.status === 'ready' ? '📦 Hazır' :
-                                                        selectedOrder.status === 'preparing' ? '🍳 Hazırlanıyor' :
+                                                    selectedOrder.status === 'ready' ? t('hazir') :
+                                                        selectedOrder.status === 'preparing' ? t('hazirlaniyor') :
                                                             selectedOrder.status === 'pending' ? '⏳ Bekliyor' :
                                                                 selectedOrder.status}
                                         </span>
                                         <span className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${selectedOrder.deliveryMethod === 'delivery' ? 'bg-purple-600/30 text-purple-300' : 'bg-cyan-600/30 text-cyan-300'
                                             }`}>
-                                            {selectedOrder.deliveryMethod === 'delivery' ? '🚗 Kurye ile Teslimat' : '🛒 Gel-Al'}
+                                            {selectedOrder.deliveryMethod === 'delivery' ? t('kurye_ile_teslimat') : '🛒 Gel-Al'}
                                         </span>
                                     </div>
 
                                     {/* Customer Info */}
                                     <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
-                                        <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">👤 Müşteri Bilgileri</h4>
+                                        <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('musteri_bilgileri')}</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div>
                                                 <p className="text-gray-500 text-xs">Ad Soyad</p>
@@ -593,20 +596,20 @@ export default function CommissionsPage() {
                                     {/* Order Items */}
                                     {selectedOrder.items && selectedOrder.items.length > 0 && (
                                         <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">🛍️ Sipariş İçeriği</h4>
+                                            <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('siparis_i_cerigi')}</h4>
                                             <div className="space-y-2">
                                                 {selectedOrder.items.map((item: any, idx: number) => (
                                                     <div key={idx} className="flex justify-between items-center py-2 border-b border-gray-700/50 last:border-0">
                                                         <div className="flex-1">
                                                             <p className="text-white text-sm font-medium">{item.productName || item.name}</p>
-                                                            <p className="text-gray-400 text-xs">{item.quantity}x · €{(item.unitPrice || item.price || 0).toFixed(2)}/{item.unit || 'adet'}</p>
+                                                            <p className="text-gray-400 text-xs">{item.quantity}x · €{(item.unitPrice || item.price || 0).toFixed(2)}/{item.unit || t('adet')}</p>
                                                         </div>
                                                         <p className="text-amber-400 font-bold text-sm">€{(item.totalPrice || (item.quantity * (item.unitPrice || item.price || 0))).toFixed(2)}</p>
                                                     </div>
                                                 ))}
                                             </div>
                                             <div className="mt-3 pt-3 border-t border-gray-700 flex justify-between">
-                                                <span className="text-white font-bold">Toplam</span>
+                                                <span className="text-white font-bold">{t('toplam')}</span>
                                                 <span className="text-amber-400 font-bold text-lg">€{(selectedOrder.totalAmount || 0).toFixed(2)}</span>
                                             </div>
                                         </div>
@@ -615,22 +618,22 @@ export default function CommissionsPage() {
                                     {/* Courier Info */}
                                     {(selectedOrder.courierName || selectedOrder.courierId) && (
                                         <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">🚗 Kurye Bilgileri</h4>
+                                            <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('kurye_bilgileri')}</h4>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <p className="text-gray-500 text-xs">Kurye Adı</p>
+                                                    <p className="text-gray-500 text-xs">{t('kurye_adi')}</p>
                                                     <p className="text-white text-sm font-medium">{selectedOrder.courierName || '-'}</p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-gray-500 text-xs">Kurye Telefon</p>
+                                                    <p className="text-gray-500 text-xs">{t('kurye_telefon')}</p>
                                                     <p className="text-white text-sm">{selectedOrder.courierPhone || '-'}</p>
                                                 </div>
                                                 {selectedOrder.deliveryProof && (
                                                     <div className="col-span-2">
-                                                        <p className="text-gray-500 text-xs">Teslimat Kanıtı</p>
+                                                        <p className="text-gray-500 text-xs">{t('teslimat_kaniti')}</p>
                                                         <p className="text-white text-sm">
                                                             {selectedOrder.deliveryProof.type === 'personal_handoff' ? '🤝 Elden Teslim' :
-                                                                selectedOrder.deliveryProof.type === 'left_at_door' ? '🚪 Kapıda Bırakıldı' :
+                                                                selectedOrder.deliveryProof.type === 'left_at_door' ? t('kapida_birakildi') :
                                                                     selectedOrder.deliveryProof.type || '-'}
                                                             {selectedOrder.deliveryProof.distanceKm !== undefined && (
                                                                 <span className="text-gray-400 ml-2">({selectedOrder.deliveryProof.distanceKm.toFixed(1)} km)</span>
@@ -644,23 +647,23 @@ export default function CommissionsPage() {
 
                                     {/* Timestamps */}
                                     <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
-                                        <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">⏱️ Zaman Çizelgesi</h4>
+                                        <h4 className="text-gray-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('zaman_cizelgesi')}</h4>
                                         <div className="space-y-2">
                                             {selectedOrder.createdAt && (
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-400 text-sm">📝 Sipariş Oluşturuldu</span>
+                                                    <span className="text-gray-400 text-sm">{t('siparis_olusturuldu')}</span>
                                                     <span className="text-white text-sm">{selectedOrder.createdAt.toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.statusHistory?.ready && (
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-400 text-sm">📦 Hazır</span>
+                                                    <span className="text-gray-400 text-sm">{t('hazir')}</span>
                                                     <span className="text-white text-sm">{(selectedOrder.statusHistory.ready.toDate ? selectedOrder.statusHistory.ready.toDate() : new Date(selectedOrder.statusHistory.ready)).toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
                                             {selectedOrder.claimedAt && (
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-400 text-sm">🚗 Kurye Aldı</span>
+                                                    <span className="text-gray-400 text-sm">{t('kurye_aldi')}</span>
                                                     <span className="text-white text-sm">{selectedOrder.claimedAt.toLocaleString('de-DE')}</span>
                                                 </div>
                                             )}
@@ -672,7 +675,7 @@ export default function CommissionsPage() {
                                             )}
                                             {selectedOrder.createdAt && selectedOrder.deliveredAt && (
                                                 <div className="flex justify-between pt-2 border-t border-gray-700/50">
-                                                    <span className="text-gray-400 text-sm">⏱️ Toplam Süre</span>
+                                                    <span className="text-gray-400 text-sm">{t('toplam_sure')}</span>
                                                     <span className="text-amber-400 text-sm font-medium">
                                                         {Math.round((selectedOrder.deliveredAt.getTime() - selectedOrder.createdAt.getTime()) / 60000)} dk
                                                     </span>
@@ -684,14 +687,14 @@ export default function CommissionsPage() {
                                     {/* Commission & Payment */}
                                     {selectedOrder.commission && (
                                         <div className="bg-amber-900/20 border border-amber-600/30 rounded-xl p-4 mb-4">
-                                            <h4 className="text-amber-400 text-xs font-medium mb-3 uppercase tracking-wider">💰 Provizyon Detayı</h4>
+                                            <h4 className="text-amber-400 text-xs font-medium mb-3 uppercase tracking-wider">{t('provizyon_detayi')}</h4>
                                             <div className="space-y-2">
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-300 text-sm">Sipariş Tutarı</span>
+                                                    <span className="text-gray-300 text-sm">{t('siparis_tutari')}</span>
                                                     <span className="text-white text-sm">€{selectedOrder.commission.orderTotal.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-gray-300 text-sm">Oran ({selectedOrder.commission.courierType === 'click_collect' ? 'Gel-Al' : selectedOrder.commission.courierType === 'own_courier' ? 'Kendi Kurye' : 'LOKMA Kurye'})</span>
+                                                    <span className="text-gray-300 text-sm">Oran ({selectedOrder.commission.courierType === 'click_collect' ? 'Gel-Al' : selectedOrder.commission.courierType === 'own_courier' ? t('kendi_kurye') : t('lokma_kurye')})</span>
                                                     <span className="text-white text-sm">%{selectedOrder.commission.commissionRate}</span>
                                                 </div>
                                                 <div className="flex justify-between">
@@ -700,7 +703,7 @@ export default function CommissionsPage() {
                                                 </div>
                                                 {selectedOrder.commission.perOrderFee > 0 && (
                                                     <div className="flex justify-between">
-                                                        <span className="text-gray-300 text-sm">Sipariş Başı Ücret</span>
+                                                        <span className="text-gray-300 text-sm">{t('siparis_basi_ucret')}</span>
                                                         <span className="text-white text-sm">€{selectedOrder.commission.perOrderFee.toFixed(2)}</span>
                                                     </div>
                                                 )}
@@ -713,11 +716,11 @@ export default function CommissionsPage() {
                                                     <span className="text-white text-sm">€{selectedOrder.commission.vatAmount.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between pt-2 border-t border-amber-700/30">
-                                                    <span className="text-white text-sm font-bold">Toplam Provizyon</span>
+                                                    <span className="text-white text-sm font-bold">{t('toplam_provizyon')}</span>
                                                     <span className="text-amber-400 font-bold">€{selectedOrder.commission.totalCommission.toFixed(2)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center mt-2">
-                                                    <span className="text-gray-300 text-sm">Ödeme</span>
+                                                    <span className="text-gray-300 text-sm">{t('odeme')}</span>
                                                     <span className={`px-2 py-0.5 rounded text-xs ${selectedOrder.commission.paymentMethod === 'card' || selectedOrder.commission.paymentMethod === 'stripe' ? 'bg-blue-600/30 text-blue-300' : 'bg-purple-600/30 text-purple-300'}`}>
                                                         {selectedOrder.commission.paymentMethod === 'card' || selectedOrder.commission.paymentMethod === 'stripe' ? '💳 Kart' : '💵 Nakit'}
                                                     </span>
@@ -735,7 +738,7 @@ export default function CommissionsPage() {
                                     {/* Order Note */}
                                     {selectedOrder.notes && (
                                         <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
-                                            <h4 className="text-gray-400 text-xs font-medium mb-2 uppercase tracking-wider">📝 Sipariş Notu</h4>
+                                            <h4 className="text-gray-400 text-xs font-medium mb-2 uppercase tracking-wider">{t('siparis_notu')}</h4>
                                             <p className="text-white text-sm">{selectedOrder.notes}</p>
                                         </div>
                                     )}
@@ -745,7 +748,7 @@ export default function CommissionsPage() {
                                         onClick={() => setSelectedOrder(null)}
                                         className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors"
                                     >
-                                        Kapat
+                                        {t('kapat')}
                                     </button>
                                 </div>
                             )}

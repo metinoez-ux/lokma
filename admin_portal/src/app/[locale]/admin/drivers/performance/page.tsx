@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { collection, query, onSnapshot, where, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useTranslations } from 'next-intl';
 
 interface DeliveryRecord {
     id: string;
@@ -34,7 +35,9 @@ interface DriverStats {
 }
 
 export default function DriverPerformancePage() {
-    const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
+    
+  const t = useTranslations('AdminDriversPerformance');
+const [deliveries, setDeliveries] = useState<DeliveryRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<string>(
         new Date().toISOString().split('T')[0]
@@ -104,7 +107,7 @@ export default function DriverPerformancePage() {
             setLoading(false);
         }, (err) => {
             console.error('Error fetching deliveries:', err);
-            setError('Teslimat verileri yüklenemedi. Lütfen sayfayı yenileyin.');
+            setError(t('teslimat_verileri_yuklenemedi_lutfen_say'));
             setLoading(false);
         });
 
@@ -176,10 +179,10 @@ export default function DriverPerformancePage() {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold text-white">
-                        Sürücü Performans Raporu
+                        {t('surucu_performans_raporu')}
                     </h1>
                     <p className="text-gray-400 mt-1">
-                        Teslimat sayısı, km, nakit ve kart tahsilatları
+                        {t('teslimat_sayisi_km_nakit_ve_kart_tahsila')}
                     </p>
                 </div>
 
@@ -187,7 +190,7 @@ export default function DriverPerformancePage() {
                 <div className="bg-gray-800 rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-center border border-gray-700">
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">
-                            Tarih
+                            {t('tarih')}
                         </label>
                         <input
                             type="date"
@@ -198,7 +201,7 @@ export default function DriverPerformancePage() {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">
-                            Görünüm
+                            {t('gorunum')}
                         </label>
                         <div className="flex rounded-lg overflow-hidden border border-gray-600">
                             {(['daily', 'weekly', 'monthly'] as const).map((mode) => (
@@ -210,9 +213,9 @@ export default function DriverPerformancePage() {
                                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                 >
-                                    {mode === 'daily' && 'Günlük'}
-                                    {mode === 'weekly' && 'Haftalık'}
-                                    {mode === 'monthly' && 'Aylık'}
+                                    {mode === 'daily' && t('gunluk')}
+                                    {mode === 'weekly' && t('haftalik')}
+                                    {mode === 'monthly' && t('aylik')}
                                 </button>
                             ))}
                         </div>
@@ -230,13 +233,13 @@ export default function DriverPerformancePage() {
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-gray-800 rounded-lg shadow p-4 border border-gray-700">
-                        <div className="text-sm text-gray-400">Toplam Teslimat</div>
+                        <div className="text-sm text-gray-400">{t('toplam_teslimat')}</div>
                         <div className="text-2xl font-bold text-white">
                             {totals.deliveries}
                         </div>
                     </div>
                     <div className="bg-gray-800 rounded-lg shadow p-4 border border-gray-700">
-                        <div className="text-sm text-gray-400">Toplam KM</div>
+                        <div className="text-sm text-gray-400">{t('toplam_km')}</div>
                         <div className="text-2xl font-bold text-blue-600">
                             🛣️ {totals.km.toFixed(1)} km
                         </div>
@@ -261,7 +264,7 @@ export default function DriverPerformancePage() {
                         <thead className="bg-gray-700/50 border-b border-gray-600">
                             <tr>
                                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">
-                                    Sürücü
+                                    {t('surucu')}
                                 </th>
                                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-400 uppercase">
                                     Teslimat
@@ -284,13 +287,13 @@ export default function DriverPerformancePage() {
                             {loading ? (
                                 <tr>
                                     <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                                        Yükleniyor...
+                                        {t('yukleniyor')}
                                     </td>
                                 </tr>
                             ) : driverStats.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
-                                        Bu dönemde teslimat bulunamadı
+                                        {t('bu_donemde_teslimat_bulunamadi')}
                                     </td>
                                 </tr>
                             ) : (
@@ -333,7 +336,7 @@ export default function DriverPerformancePage() {
 
                 {/* Privacy Notice */}
                 <div className="mt-4 text-center text-xs text-gray-400">
-                    🔒 Gizlilik: Müşteri adres ve telefon bilgileri bu raporda gösterilmez
+                    {t('gizlilik_musteri_adres_ve_telefon_bilgil')}
                 </div>
             </div>
         </div>

@@ -5,6 +5,7 @@ import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/f
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useFcmToken } from '@/hooks/useFcmToken';
+import { useTranslations } from 'next-intl';
 
 /**
  * OrderListener — Global browser notification component
@@ -22,7 +23,9 @@ import { useFcmToken } from '@/hooks/useFcmToken';
  * Controlled by admin.smartNotifications settings from the Settings page.
  */
 export default function OrderListener() {
-    const { admin } = useAdmin();
+    
+  const t = useTranslations('AdminComponentOrderListener');
+const { admin } = useAdmin();
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const firstLoad = useRef(true);
     const notificationPermissionAsked = useRef(false);
@@ -70,11 +73,11 @@ export default function OrderListener() {
 
     // Trigger all alert mechanisms
     const triggerAlert = useCallback((orderData: any) => {
-        const orderNum = orderData.orderNumber || 'Yeni';
+        const orderNum = orderData.orderNumber || t('yeni');
         const total = orderData.totalPrice || orderData.totalAmount || orderData.total || 0;
         const customerName = orderData.customerName || orderData.userDisplayName || '';
 
-        console.log('🔔 YENİ SİPARİŞ!', { orderNum, total, customerName });
+        console.log(t('yeni_si_pari_s'), { orderNum, total, customerName });
 
         // 1. 🔔 GONG SOUND
         if (soundEnabled && audioRef.current) {
@@ -107,7 +110,7 @@ export default function OrderListener() {
         // 3. 📱 BROWSER NOTIFICATION
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
             try {
-                new Notification('🔔 Yeni Sipariş!', {
+                new Notification(t('yeni_siparis'), {
                     body: `${customerName ? customerName + ' — ' : ''}€${Number(total).toFixed(2)} • #${orderNum}`,
                     icon: '/lokma_logo.png',
                     tag: `order-${orderData.id || Date.now()}`, // Prevent duplicate notifications

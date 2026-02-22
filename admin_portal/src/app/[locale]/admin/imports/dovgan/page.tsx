@@ -8,6 +8,7 @@ import {
     serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useTranslations } from 'next-intl';
 
 // Product interface based on scraped data
 interface DovganProduct {
@@ -50,7 +51,9 @@ interface CategoryStats {
 }
 
 export default function DovganImportPage() {
-    const [products, setProducts] = useState<DovganProduct[]>([]);
+    
+  const t = useTranslations('AdminImportsDovgan');
+const [products, setProducts] = useState<DovganProduct[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [importing, setImporting] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -74,7 +77,7 @@ export default function DovganImportPage() {
                 // Calculate category stats
                 const stats: CategoryStats = {};
                 data.forEach(p => {
-                    const cat = p.lokmaCategory || 'Diğer';
+                    const cat = p.lokmaCategory || t('diger');
                     stats[cat] = (stats[cat] || 0) + 1;
                 });
                 setCategoryStats(stats);
@@ -105,7 +108,7 @@ export default function DovganImportPage() {
 
     const getTaxRate = (category: string): number => {
         const cat = category.toLowerCase();
-        if (cat.includes('getränke') || cat.includes('içecek')) return 19;
+        if (cat.includes('getränke') || cat.includes(t('icecek'))) return 19;
         if (cat.includes('kozmetik') || cat.includes('cosmetic')) return 19;
         return 7; // Reduced VAT for food
     };
@@ -129,13 +132,13 @@ export default function DovganImportPage() {
             };
         }
 
-        return { value: 1, unit: 'stück', display: '1 Stück' };
+        return { value: 1, unit: t('stuck'), display: t('1_stuck') };
     };
 
     const mapToFirestoreDoc = (product: DovganProduct, index: number) => {
         const unit = parseUnit(product);
         const sku = generateSKU(product, index);
-        const category = product.lokmaCategory || 'Diğer';
+        const category = product.lokmaCategory || t('diger');
 
         return {
             masterProductId: sku,
@@ -198,11 +201,11 @@ export default function DovganImportPage() {
         setResults({ success: 0, errors: 0, skipped: 0 });
         setLogs([]);
 
-        addLog('🚀 Dovgan import başlatılıyor...');
+        addLog(t('dovgan_import_baslatiliyor'));
         addLog(`📦 ${products.length} ürün yüklenecek`);
 
         const filteredProducts = products.filter(p =>
-            selectedCategories.has(p.lokmaCategory || 'Diğer')
+            selectedCategories.has(p.lokmaCategory || t('diger'))
         );
 
         addLog(`🔍 Seçilen kategoriler: ${filteredProducts.length} ürün`);
@@ -271,7 +274,7 @@ export default function DovganImportPage() {
                 <div className="flex items-center justify-center min-h-[400px]">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                        <p className="mt-4 text-gray-600">Ürünler yükleniyor...</p>
+                        <p className="mt-4 text-gray-600">{t('urunler_yukleniyor')}</p>
                     </div>
                 </div>
             </div>
@@ -283,10 +286,10 @@ export default function DovganImportPage() {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                     <span className="text-4xl">🇷🇺</span>
-                    DOVGAN Ürün Import
+                    {t('dovgan_urun_import')}
                 </h1>
                 <p className="text-gray-600 mt-2">
-                    Dovgan ürünlerini Master Katalog&apos;a aktarın
+                    {t('dovgan_urunlerini_master_katalog_a_aktar')}
                 </p>
             </div>
 
@@ -294,7 +297,7 @@ export default function DovganImportPage() {
             <div className="grid grid-cols-4 gap-4 mb-8">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="text-3xl font-bold text-blue-700">{products.length}</div>
-                    <div className="text-sm text-blue-600">Toplam Ürün</div>
+                    <div className="text-sm text-blue-600">{t('toplam_urun')}</div>
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <div className="text-3xl font-bold text-green-700">
@@ -306,13 +309,13 @@ export default function DovganImportPage() {
                     <div className="text-3xl font-bold text-purple-700">
                         {products.filter(p => p.nutrition?.raw).length}
                     </div>
-                    <div className="text-sm text-purple-600">Besin Değeri</div>
+                    <div className="text-sm text-purple-600">{t('besin_degeri')}</div>
                 </div>
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                     <div className="text-3xl font-bold text-amber-700">
                         {products.filter(p => p.ingredients).length}
                     </div>
-                    <div className="text-sm text-amber-600">İçerik Bilgisi</div>
+                    <div className="text-sm text-amber-600">{t('i_cerik_bilgisi')}</div>
                 </div>
             </div>
 
@@ -325,13 +328,13 @@ export default function DovganImportPage() {
                             onClick={selectAllCategories}
                             className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
                         >
-                            Tümünü Seç
+                            {t('tumunu_sec')}
                         </button>
                         <button
                             onClick={deselectAllCategories}
                             className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
                         >
-                            Tümünü Kaldır
+                            {t('tumunu_kaldir')}
                         </button>
                     </div>
                 </div>
@@ -363,7 +366,7 @@ export default function DovganImportPage() {
                     }
                 </div>
                 <div className="mt-4 text-sm text-gray-600">
-                    Seçili: <strong>{getSelectedProductCount()}</strong> ürün
+                    {t('secili')} <strong>{getSelectedProductCount()}</strong> {t('urun')}
                 </div>
             </div>
 
@@ -411,11 +414,11 @@ export default function DovganImportPage() {
                 <div className="grid grid-cols-3 gap-4 mb-8">
                     <div className="bg-green-100 border border-green-300 rounded-lg p-4 text-center">
                         <div className="text-3xl font-bold text-green-700">{results.success}</div>
-                        <div className="text-sm text-green-600">Başarılı</div>
+                        <div className="text-sm text-green-600">{t('basarili')}</div>
                     </div>
                     <div className="bg-red-100 border border-red-300 rounded-lg p-4 text-center">
                         <div className="text-3xl font-bold text-red-700">{results.errors}</div>
-                        <div className="text-sm text-red-600">Hata</div>
+                        <div className="text-sm text-red-600">{t('hata')}</div>
                     </div>
                     <div className="bg-gray-100 border border-gray-300 rounded-lg p-4 text-center">
                         <div className="text-3xl font-bold text-gray-700">{results.skipped}</div>
@@ -427,7 +430,7 @@ export default function DovganImportPage() {
             {/* Logs */}
             {logs.length > 0 && (
                 <div className="bg-gray-900 rounded-lg p-4 max-h-96 overflow-y-auto">
-                    <h3 className="text-white font-semibold mb-2">Import Log</h3>
+                    <h3 className="text-white font-semibold mb-2">{t('import_log')}</h3>
                     <div className="font-mono text-sm text-green-400 space-y-1">
                         {logs.map((log, i) => (
                             <div key={i}>{log}</div>

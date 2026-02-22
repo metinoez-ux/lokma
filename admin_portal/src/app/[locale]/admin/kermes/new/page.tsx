@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PlacesAutocomplete } from '@/components/PlacesAutocomplete';
 import OrganizationSearchModal from '@/components/OrganizationSearchModal';
+import { useTranslations } from 'next-intl';
 
 interface Organization {
     id: string;
@@ -52,10 +53,12 @@ const DEFAULT_FEATURES: KermesFeature[] = [
 ];
 
 export default function NewKermesPage() {
-    return (
+    
+  const t = useTranslations('AdminKermesNew');
+return (
         <Suspense fallback={
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-white text-lg">Yükleniyor...</div>
+                <div className="text-white text-lg">{t('yukleniyor')}</div>
             </div>
         }>
             <NewKermesContent />

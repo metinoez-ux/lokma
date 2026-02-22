@@ -2,9 +2,12 @@
 
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function BusinessCategoriesRedirect() {
-    const router = useRouter();
+    
+  const t = useTranslations('AdminBusiness[idCategories');
+const router = useRouter();
     const params = useParams();
     const businessId = params.id as string;
 
@@ -18,7 +21,7 @@ export default function BusinessCategoriesRedirect() {
         <div className="min-h-screen bg-gray-900 flex items-center justify-center">
             <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
-                <p className="text-gray-400 mt-4">Kategori yönetimine yönlendiriliyor...</p>
+                <p className="text-gray-400 mt-4">{t('kategori_yonetimine_yonlendiriliyor')}</p>
             </div>
         </div>
     );

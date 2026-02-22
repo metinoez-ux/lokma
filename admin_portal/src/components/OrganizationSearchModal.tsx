@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { normalizeTurkish } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface Organization {
     id: string;
@@ -49,7 +50,9 @@ export default function OrganizationSearchModal({
     onClose,
     onSelect,
 }: OrganizationSearchModalProps) {
-    const [organizations, setOrganizations] = useState<Organization[]>([]);
+    
+  const t = useTranslations('AdminComponentOrganizationSearchModal');
+const [organizations, setOrganizations] = useState<Organization[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -104,7 +107,7 @@ export default function OrganizationSearchModal({
                 <div className="px-6 py-4 border-b border-gray-700">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            🕌 Dernek Seç
+                            {t('dernek_sec')}
                         </h2>
                         <button
                             onClick={onClose}
@@ -117,7 +120,7 @@ export default function OrganizationSearchModal({
                     {/* Search Input */}
                     <input
                         type="text"
-                        placeholder="İsim, şehir veya posta kodu ile ara..."
+                        placeholder={t('i_sim_sehir_veya_posta_kodu_ile_ara')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition"
@@ -126,7 +129,7 @@ export default function OrganizationSearchModal({
 
                     {/* Result count */}
                     <p className="text-sm text-gray-400 mt-2">
-                        {loading ? 'Yükleniyor...' : `${filteredOrganizations.length} dernek bulundu`}
+                        {loading ? t('yukleniyor') : `${filteredOrganizations.length} dernek bulundu`}
                     </p>
                 </div>
 
@@ -138,9 +141,9 @@ export default function OrganizationSearchModal({
                         </div>
                     ) : filteredOrganizations.length === 0 ? (
                         <div className="text-center py-12">
-                            <p className="text-gray-400 text-lg">Sonuç bulunamadı</p>
+                            <p className="text-gray-400 text-lg">{t('sonuc_bulunamadi')}</p>
                             <p className="text-gray-500 text-sm mt-2">
-                                Farklı bir arama terimi deneyin
+                                {t('farkli_bir_arama_terimi_deneyin')}
                             </p>
                         </div>
                     ) : (

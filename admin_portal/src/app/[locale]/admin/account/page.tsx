@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { collection, query, orderBy, getDocs, where, doc, getDoc, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useTranslations } from 'next-intl';
 
 // Types
 interface CommissionRecord {
@@ -60,7 +61,9 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function HesabimPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminAccount');
+const { admin, loading: adminLoading } = useAdmin();
     const [records, setRecords] = useState<CommissionRecord[]>([]);
     const [businessData, setBusinessData] = useState<BusinessUsage | null>(null);
     const [loading, setLoading] = useState(true);
@@ -199,7 +202,7 @@ export default function HesabimPage() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white">💼 Hesabım</h1>
-                        <p className="text-gray-400 text-sm">{businessName} — Provizyon ve bakiye takibi</p>
+                        <p className="text-gray-400 text-sm">{businessName} {t('provizyon_ve_bakiye_takibi')}</p>
                     </div>
                     <button
                         onClick={() => { loadRecords(); loadBusinessData(); }}
@@ -257,7 +260,7 @@ export default function HesabimPage() {
                             </div>
                         </div>
                         <p className="text-gray-400 text-xs">
-                            Toplam provizyon: €{monthlyCommission.toFixed(2)}
+                            {t('toplam_provizyon')}{monthlyCommission.toFixed(2)}
                         </p>
                     </div>
                 </div>
@@ -289,7 +292,7 @@ export default function HesabimPage() {
                         </div>
                         <div className="bg-gray-700/50 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-white">€{stats.totalOrderAmount.toFixed(0)}</p>
-                            <p className="text-gray-400 text-xs">Toplam Ciro</p>
+                            <p className="text-gray-400 text-xs">{t('toplam_ciro')}</p>
                         </div>
                         <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
@@ -301,7 +304,7 @@ export default function HesabimPage() {
                         </div>
                         <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-yellow-400">€{stats.pendingAmount.toFixed(2)}</p>
-                            <p className="text-gray-400 text-xs">Bekleyen</p>
+                            <p className="text-gray-400 text-xs">{t('bekleyen')}</p>
                         </div>
                         <div className="bg-gray-700/50 rounded-xl p-4 text-center">
                             <p className="text-2xl font-bold text-gray-300">€{stats.vatTotal.toFixed(2)}</p>
@@ -343,13 +346,13 @@ export default function HesabimPage() {
                                     <tr>
                                         <th className="px-3 py-3 text-left text-gray-300 text-xs">Sipariş</th>
                                         <th className="px-3 py-3 text-center text-gray-300 text-xs">Teslimat</th>
-                                        <th className="px-3 py-3 text-right text-gray-300 text-xs">Tutar</th>
+                                        <th className="px-3 py-3 text-right text-gray-300 text-xs">{t('tutar')}</th>
                                         <th className="px-3 py-3 text-right text-gray-300 text-xs">Oran</th>
                                         <th className="px-3 py-3 text-right text-gray-300 text-xs">Provizyon</th>
                                         <th className="px-3 py-3 text-right text-gray-300 text-xs">Net + KDV</th>
                                         <th className="px-3 py-3 text-center text-gray-300 text-xs">Ödeme</th>
                                         <th className="px-3 py-3 text-center text-gray-300 text-xs">Durum</th>
-                                        <th className="px-3 py-3 text-center text-gray-300 text-xs">Tarih</th>
+                                        <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('tarih')}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-700">
@@ -400,7 +403,7 @@ export default function HesabimPage() {
                             {filteredRecords.length > 0 && (
                                 <div className="bg-gray-900 border-t-2 border-gray-600 px-4 py-3 flex items-center justify-between">
                                     <span className="text-white font-bold text-sm">
-                                        TOPLAM: {filteredRecords.length} sipariş
+                                        {t('toplam')} {filteredRecords.length} sipariş
                                     </span>
                                     <div className="flex gap-6">
                                         <span className="text-white text-sm">Ciro: <strong>€{stats.totalOrderAmount.toFixed(2)}</strong></span>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, doc, addDoc, updateDoc, deleteDoc, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 interface Admin {
     id: string;
@@ -39,7 +40,9 @@ const ROLE_COLORS: Record<string, string> = {
 };
 
 export default function AdminManagementPage() {
-    const [admins, setAdmins] = useState<Admin[]>([]);
+    
+  const t = useTranslations('AdminAdmins');
+const [admins, setAdmins] = useState<Admin[]>([]);
     const [businesses, setBusinesses] = useState<Business[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -240,15 +243,15 @@ export default function AdminManagementPage() {
         <div className="min-h-screen bg-gray-900 text-white p-6">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-2xl font-bold">👥 Admin Yönetimi</h1>
-                <p className="text-gray-400 text-sm">Her bölüm için admin ekle ve yönet</p>
+                <h1 className="text-2xl font-bold">{t('admin_yonetimi')}</h1>
+                <p className="text-gray-400 text-sm">{t('her_bolum_icin_admin_ekle_ve_yonet')}</p>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-4 gap-4 mb-6">
                 <div className="bg-gray-800 rounded-lg p-4">
                     <div className="text-2xl font-bold">{stats.total}</div>
-                    <div className="text-sm text-gray-400">Toplam Admin</div>
+                    <div className="text-sm text-gray-400">{t('toplam_admin')}</div>
                 </div>
                 <div className="bg-red-900/30 rounded-lg p-4 border-l-4 border-red-500">
                     <div className="text-2xl font-bold text-red-400">{stats.butcher}</div>
@@ -256,7 +259,7 @@ export default function AdminManagementPage() {
                 </div>
                 <div className="bg-amber-900/30 rounded-lg p-4 border-l-4 border-amber-500">
                     <div className="text-2xl font-bold text-amber-400">{stats.restaurant}</div>
-                    <div className="text-sm text-amber-300">🍽️ Restoran</div>
+                    <div className="text-sm text-amber-300">{t('restoran')}</div>
                 </div>
                 <div className="bg-green-900/30 rounded-lg p-4 border-l-4 border-green-500">
                     <div className="text-2xl font-bold text-green-400">{stats.kermes}</div>
@@ -276,7 +279,7 @@ export default function AdminManagementPage() {
                                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                 }`}
                         >
-                            {role === 'all' ? 'Tümü' : ROLE_LABELS[role]}
+                            {role === 'all' ? t('tumu') : ROLE_LABELS[role]}
                         </button>
                     ))}
                 </div>
@@ -284,7 +287,7 @@ export default function AdminManagementPage() {
                     onClick={() => { resetForm(); setShowAddModal(true); }}
                     className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center gap-2"
                 >
-                    ➕ Yeni Admin Ekle
+                    {t('yeni_admin_ekle')}
                 </button>
             </div>
 
@@ -295,8 +298,8 @@ export default function AdminManagementPage() {
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Admin</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Rol</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Atandığı Yer</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Durum</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">{t('atandigi_yer')}</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">{t('durum')}</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Aksiyon</th>
                         </tr>
                     </thead>
@@ -304,7 +307,7 @@ export default function AdminManagementPage() {
                         {filteredAdmins.length === 0 ? (
                             <tr>
                                 <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
-                                    Henüz admin eklenmemiş
+                                    {t('henuz_admin_eklenmemis')}
                                 </td>
                             </tr>
                         ) : (
@@ -330,7 +333,7 @@ export default function AdminManagementPage() {
                                                 : 'bg-gray-700 text-gray-400'
                                                 }`}
                                         >
-                                            {admin.isActive ? '✓ Aktif' : 'Pasif'}
+                                            {admin.isActive ? t('aktif') : t('pasif')}
                                         </button>
                                     </td>
                                     <td className="px-6 py-4">
@@ -362,7 +365,7 @@ export default function AdminManagementPage() {
                     <div className="bg-gray-800 rounded-lg shadow-xl max-w-md w-full m-4">
                         <div className="p-6">
                             <h2 className="text-lg font-bold mb-4">
-                                {editingAdmin ? '✏️ Admin Düzenle' : '➕ Yeni Admin Ekle'}
+                                {editingAdmin ? t('admin_duzenle') : t('yeni_admin_ekle')}
                             </h2>
 
                             <div className="space-y-4">
@@ -374,7 +377,7 @@ export default function AdminManagementPage() {
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                         className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500"
-                                        placeholder="Ahmet Yılmaz"
+                                        placeholder={t('ahmet_yilmaz')}
                                     />
                                 </div>
 
@@ -399,7 +402,7 @@ export default function AdminManagementPage() {
                                         className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500"
                                     >
                                         <option value="butcher_admin">🥩 Kasap Admin</option>
-                                        <option value="restaurant_admin">🍽️ Restoran Admin</option>
+                                        <option value="restaurant_admin">{t('restoran_admin')}</option>
                                         <option value="kermes_admin">🎪 Kermes Admin</option>
                                     </select>
                                 </div>
@@ -413,7 +416,7 @@ export default function AdminManagementPage() {
                                             onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
                                             className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-purple-500"
                                         >
-                                            <option value="">Seçiniz...</option>
+                                            <option value="">{t('seciniz')}</option>
                                             {getBusinessesForRole(formData.role).map(business => (
                                                 <option key={business.id} value={business.id}>
                                                     {business.name}
@@ -441,7 +444,7 @@ export default function AdminManagementPage() {
                                                     }}
                                                     className="rounded"
                                                 />
-                                                <span className="text-sm capitalize">{perm === 'orders' ? 'Siparişler' : perm === 'products' ? 'Ürünler' : perm === 'customers' ? 'Müşteriler' : 'Raporlar'}</span>
+                                                <span className="text-sm capitalize">{perm === 'orders' ? t('siparisler') : perm === 'products' ? t('urunler') : perm === 'customers' ? t('musteriler') : 'Raporlar'}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -460,7 +463,7 @@ export default function AdminManagementPage() {
                                     disabled={!formData.name || !formData.email}
                                     className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
                                 >
-                                    {editingAdmin ? '✓ Güncelle' : '➕ Ekle'}
+                                    {editingAdmin ? t('guncelle') : t('ekle')}
                                 </button>
                             </div>
                         </div>
@@ -473,11 +476,11 @@ export default function AdminManagementPage() {
                 isOpen={!!confirmDeleteAdmin}
                 onClose={() => setConfirmDeleteAdmin(null)}
                 onConfirm={handleDeleteAdminConfirm}
-                title="Admin'i Sil"
-                message="Bu admin'i kalıcı olarak silmek istediğinizden emin misiniz?"
+                title={t('admin_i_sil')}
+                message={t('bu_admin_i_kalici_olarak_silmek_istedigi')}
                 itemName={confirmDeleteAdmin?.name}
                 variant="danger"
-                confirmText="Evet, Sil"
+                confirmText={t('evet_sil')}
                 loadingText="Siliniyor..."
             />
         </div>

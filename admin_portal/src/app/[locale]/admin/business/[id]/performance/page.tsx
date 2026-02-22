@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { collection, query, where, orderBy, onSnapshot, doc, getDoc, limit, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 interface DeliveryPauseLog {
     id: string;
@@ -29,7 +30,9 @@ interface BusinessInfo {
 }
 
 export default function BusinessPerformancePage() {
-    const params = useParams();
+    
+  const t = useTranslations('AdminBusiness[idPerformance');
+const params = useParams();
     const businessId = params.id as string;
 
     const [business, setBusiness] = useState<BusinessInfo | null>(null);
@@ -52,7 +55,7 @@ export default function BusinessPerformancePage() {
                 if (docSnap.exists()) {
                     setBusiness({
                         id: docSnap.id,
-                        companyName: docSnap.data().companyName || 'İşletme',
+                        companyName: docSnap.data().companyName || t('i_sletme'),
                         brand: docSnap.data().brand || '',
                         temporaryDeliveryPaused: docSnap.data().temporaryDeliveryPaused || false,
                     });
@@ -222,15 +225,15 @@ export default function BusinessPerformancePage() {
             <header className="bg-purple-700 text-white shadow-lg">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                        <Link href={`/admin/business/${businessId}`} className="text-purple-200 hover:text-white text-sm">← İşletmeye Dön</Link>
+                        <Link href={`/admin/business/${businessId}`} className="text-purple-200 hover:text-white text-sm">{t('i_sletmeye_don')}</Link>
                         <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
                             <span className="text-2xl">📊</span>
                         </div>
                         <div>
-                            <h1 className="font-bold">{business?.companyName || 'İşletme'} - Performans</h1>
+                            <h1 className="font-bold">{business?.companyName || t('i_sletme')} - Performans</h1>
                             <p className="text-xs text-purple-200">
                                 {business?.brand === 'tuna' && <span className="bg-purple-600 px-2 py-0.5 rounded text-xs mr-2">TUNA</span>}
-                                Kurye & Sipariş İstatistikleri
+                                {t('kurye_siparis_i_statistikleri')}
                             </p>
                         </div>
                     </div>
@@ -241,9 +244,9 @@ export default function BusinessPerformancePage() {
                             onChange={(e) => setDateRange(e.target.value as '7d' | '30d' | '90d')}
                             className="bg-purple-600 text-white rounded-lg px-3 py-2 text-sm border-none"
                         >
-                            <option value="7d">Son 7 Gün</option>
-                            <option value="30d">Son 30 Gün</option>
-                            <option value="90d">Son 90 Gün</option>
+                            <option value="7d">{t('son_7_gun')}</option>
+                            <option value="30d">{t('son_30_gun')}</option>
+                            <option value="90d">{t('son_90_gun')}</option>
                         </select>
                     </div>
                 </div>
@@ -256,8 +259,8 @@ export default function BusinessPerformancePage() {
                         <div className="flex items-center gap-3">
                             <span className="text-2xl">⏸️</span>
                             <div>
-                                <p className="font-bold">Kurye Hizmeti Şu An Durdurulmuş</p>
-                                <p className="text-sm text-amber-200">Admin Portal'dan aktifleştirilebilir</p>
+                                <p className="font-bold">{t('kurye_hizmeti_su_an_durdurulmus')}</p>
+                                <p className="text-sm text-amber-200">{t('admin_portal_dan_aktiflestirilebilir')}</p>
                             </div>
                         </div>
                     </div>
@@ -268,7 +271,7 @@ export default function BusinessPerformancePage() {
                     {/* Sipariş Sayısı */}
                     <div className="bg-gray-800 rounded-lg p-4">
                         <div className="text-3xl font-bold text-white">{orderStats.totalOrders}</div>
-                        <div className="text-sm text-gray-400">Toplam Sipariş</div>
+                        <div className="text-sm text-gray-400">{t('toplam_siparis')}</div>
                     </div>
                     {/* Tamamlanan */}
                     <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
@@ -278,7 +281,7 @@ export default function BusinessPerformancePage() {
                     {/* Ortalama Hazırlama */}
                     <div className="bg-blue-600/20 rounded-lg p-4 border-l-4 border-blue-500">
                         <div className="text-3xl font-bold text-blue-400">{orderStats.avgPreparationTime}<span className="text-lg">dk</span></div>
-                        <div className="text-sm text-blue-300">Ort. Hazırlama</div>
+                        <div className="text-sm text-blue-300">{t('ort_hazirlama')}</div>
                     </div>
                     {/* 🆕 Ortalama Teslim Süresi */}
                     <div className="bg-purple-600/20 rounded-lg p-4 border-l-4 border-purple-500">
@@ -288,7 +291,7 @@ export default function BusinessPerformancePage() {
                     {/* Kurye Duraklama */}
                     <div className="bg-amber-600/20 rounded-lg p-4 border-l-4 border-amber-500">
                         <div className="text-3xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
-                        <div className="text-sm text-amber-300">Kurye Durdurma</div>
+                        <div className="text-sm text-amber-300">{t('kurye_durdurma')}</div>
                     </div>
                 </div>
 
@@ -297,7 +300,7 @@ export default function BusinessPerformancePage() {
                     <div className="bg-gray-800 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-xl">⏸️</span>
-                            <span className="text-gray-400">Durdurma Sayısı</span>
+                            <span className="text-gray-400">{t('durdurma_sayisi')}</span>
                         </div>
                         <div className="text-2xl font-bold text-amber-400">{pauseStats.pauseCount}</div>
                     </div>
@@ -311,9 +314,9 @@ export default function BusinessPerformancePage() {
                     <div className="bg-gray-800 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                             <span className="text-xl">⏱️</span>
-                            <span className="text-gray-400">Toplam Durdurma Süresi</span>
+                            <span className="text-gray-400">{t('toplam_durdurma_suresi')}</span>
                         </div>
-                        <div className="text-2xl font-bold text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">saat</span></div>
+                        <div className="text-2xl font-bold text-yellow-400">{pauseStats.totalPausedHours} <span className="text-lg">{t('saat')}</span></div>
                     </div>
                 </div>
 
@@ -321,15 +324,15 @@ export default function BusinessPerformancePage() {
                 <div className="bg-gray-800 rounded-lg overflow-hidden">
                     <div className="px-4 py-3 bg-gray-750 border-b border-gray-700">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                            <span>🛵</span> Kurye Açma/Kapama Geçmişi
+                            <span>🛵</span> {t('kurye_acma_kapama_gecmisi')}
                         </h2>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-700">
                             <thead className="bg-gray-750">
                                 <tr>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Tarih</th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">İşlem</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">{t('tarih')}</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">{t('i_slem')}</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Admin</th>
                                 </tr>
                             </thead>
@@ -337,7 +340,7 @@ export default function BusinessPerformancePage() {
                                 {pauseLogs.length === 0 ? (
                                     <tr>
                                         <td colSpan={3} className="px-4 py-8 text-center text-gray-400">
-                                            Henüz kurye açma/kapama kaydı yok
+                                            {t('henuz_kurye_acma_kapama_kaydi_yok')}
                                         </td>
                                     </tr>
                                 ) : (

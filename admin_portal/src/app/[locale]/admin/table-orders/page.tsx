@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { collection, getDocs, doc, updateDoc, query, orderBy, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
+import { useTranslations } from 'next-intl';
 
 const sessionStatuses = {
     active: { label: 'Aktif', icon: '🟢', badge: 'bg-green-600/20 text-green-400 border-green-500/30', cardBorder: 'border-green-500/40 hover:border-green-400', headerBg: 'bg-green-600/10' },
@@ -58,7 +59,9 @@ interface TableGroupSession {
 }
 
 export default function TableOrdersPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminTableorders');
+const { admin, loading: adminLoading } = useAdmin();
     const [sessions, setSessions] = useState<TableGroupSession[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
@@ -203,7 +206,7 @@ export default function TableOrdersPage() {
             showToast(`Masa ${session.tableNumber} oturumu kapatıldı ✅`, 'success');
         } catch (error) {
             console.error('Error closing session:', error);
-            showToast('Oturum kapatılırken hata oluştu', 'error');
+            showToast(t('oturum_kapatilirken_hata_olustu'), 'error');
         }
     };
 
@@ -217,7 +220,7 @@ export default function TableOrdersPage() {
                 status: 'cancelled',
                 cancelledAt: Timestamp.now(),
                 cancelledBy: adminName,
-                cancelReason: cancelConfirm.reason.trim() || 'Admin tarafından iptal edildi',
+                cancelReason: cancelConfirm.reason.trim() || t('admin_tarafindan_iptal_edildi'),
                 closedAt: Timestamp.now(),
             });
             setSelectedSession(null);
@@ -225,7 +228,7 @@ export default function TableOrdersPage() {
             showToast(`Masa ${cancelConfirm.session.tableNumber} oturumu iptal edildi ✅`, 'success');
         } catch (error) {
             console.error('Error cancelling session:', error);
-            showToast('Oturum iptal edilirken hata oluştu', 'error');
+            showToast(t('oturum_iptal_edilirken_hata_olustu'), 'error');
         } finally {
             setCancelLoading(false);
         }
@@ -300,12 +303,12 @@ export default function TableOrdersPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            🪑 Masa Grup Siparişleri
+                            {t('masa_grup_siparisleri')}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
                             {admin?.adminType === 'super'
-                                ? 'Tüm işletmelerin grup masa oturumlarını yönetin'
-                                : 'İşletmenizin masa oturumlarını takip edin'}
+                                ? t('tum_isletmelerin_grup_masa_oturumlarini_')
+                                : t('i_sletmenizin_masa_oturumlarini_takip_ed')}
                         </p>
                     </div>
 
@@ -341,7 +344,7 @@ export default function TableOrdersPage() {
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
                         >
-                            <option value="all">Tüm Durumlar</option>
+                            <option value="all">{t('tum_durumlar')}</option>
                             {Object.entries(sessionStatuses).map(([key, value]) => (
                                 <option key={key} value={key}>{value.icon} {value.label}</option>
                             ))}
@@ -360,7 +363,7 @@ export default function TableOrdersPage() {
                                             setShowBusinessDropdown(true);
                                         }}
                                         onFocus={() => setShowBusinessDropdown(true)}
-                                        placeholder="🔍 İşletme Ara..."
+                                        placeholder={t('i_sletme_ara')}
                                         className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 w-64"
                                     />
                                     {businessFilter !== 'all' && (
@@ -385,7 +388,7 @@ export default function TableOrdersPage() {
                                                 setShowBusinessDropdown(false);
                                             }}
                                         >
-                                            ✓ Tüm İşletmeler
+                                            {t('tum_i_sletmeler')}
                                         </div>
                                         {filteredBusinesses.slice(0, 15).map(([id, name]) => (
                                             <div
@@ -402,7 +405,7 @@ export default function TableOrdersPage() {
                                         ))}
                                         {filteredBusinesses.length === 0 && businessSearch && (
                                             <div className="px-4 py-2 text-gray-500">
-                                                Sonuç bulunamadı
+                                                {t('sonuc_bulunamadi')}
                                             </div>
                                         )}
                                     </div>
@@ -422,7 +425,7 @@ export default function TableOrdersPage() {
                             onClick={() => setStatusFilter(statusFilter === 'active' ? 'all' : 'active')}
                         >
                             <p className={`text-green-400 text-3xl font-bold ${stats.active > 0 ? 'animate-bounce' : ''}`}>{stats.active}</p>
-                            <p className="text-green-300 text-sm font-medium">🟢 Aktif</p>
+                            <p className="text-green-300 text-sm font-medium">{t('aktif')}</p>
                         </div>
                         <div className="text-gray-500 text-xl">→</div>
                         <div
@@ -430,7 +433,7 @@ export default function TableOrdersPage() {
                             onClick={() => setStatusFilter(statusFilter === 'ordering' ? 'all' : 'ordering')}
                         >
                             <p className="text-blue-400 text-3xl font-bold">{stats.ordering}</p>
-                            <p className="text-gray-400 text-sm">🔵 Sipariş</p>
+                            <p className="text-gray-400 text-sm">{t('siparis')}</p>
                         </div>
                         <div className="text-gray-500 text-xl">→</div>
                         <div
@@ -438,7 +441,7 @@ export default function TableOrdersPage() {
                             onClick={() => setStatusFilter(statusFilter === 'paying' ? 'all' : 'paying')}
                         >
                             <p className="text-yellow-400 text-3xl font-bold">{stats.paying}</p>
-                            <p className="text-gray-400 text-sm">🟡 Ödeme</p>
+                            <p className="text-gray-400 text-sm">{t('odeme')}</p>
                         </div>
                         <div className="text-gray-500 text-xl">→</div>
                         <div
@@ -446,7 +449,7 @@ export default function TableOrdersPage() {
                             onClick={() => setStatusFilter(statusFilter === 'closed' ? 'all' : 'closed')}
                         >
                             <p className="text-gray-400 text-3xl font-bold">{sessions.filter(s => s.status === 'closed').length}</p>
-                            <p className="text-gray-500 text-sm">⚫ Kapandı</p>
+                            <p className="text-gray-500 text-sm">{t('kapandi')}</p>
                         </div>
                     </div>
                 </div>
@@ -457,13 +460,13 @@ export default function TableOrdersPage() {
                 {loading ? (
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto"></div>
-                        <p className="text-gray-400 mt-4">Masa oturumları yükleniyor...</p>
+                        <p className="text-gray-400 mt-4">{t('masa_oturumlari_yukleniyor')}</p>
                     </div>
                 ) : sessions.length === 0 ? (
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
                         <p className="text-4xl mb-4">🪑</p>
-                        <p className="text-gray-400">Oturum bulunamadı</p>
-                        <p className="text-gray-500 text-sm mt-1">Filtreleri değiştirmeyi deneyin</p>
+                        <p className="text-gray-400">{t('oturum_bulunamadi')}</p>
+                        <p className="text-gray-500 text-sm mt-1">{t('filtreleri_degistirmeyi_deneyin')}</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -502,9 +505,9 @@ export default function TableOrdersPage() {
                                     {/* Participants */}
                                     <div className="px-4 py-3 border-b border-gray-700/50">
                                         <div className="flex items-center gap-1 mb-2">
-                                            <span className="text-gray-400 text-xs">👥 Katılımcılar ({session.participants.length})</span>
+                                            <span className="text-gray-400 text-xs">{t('katilimcilar')}{session.participants.length})</span>
                                             <span className="text-gray-600 text-xs ml-auto">
-                                                {paidCount}/{session.participants.length} ödedi
+                                                {paidCount}/{session.participants.length} {t('odedi')}
                                             </span>
                                         </div>
                                         <div className="flex flex-wrap gap-1">
@@ -537,7 +540,7 @@ export default function TableOrdersPage() {
                                                 ))}
                                                 {aggregatedItems.length > 4 && (
                                                     <p className="text-gray-500 text-xs">
-                                                        +{aggregatedItems.length - 4} ürün daha
+                                                        +{aggregatedItems.length - 4} {t('urun_daha')}
                                                     </p>
                                                 )}
                                             </div>
@@ -552,7 +555,7 @@ export default function TableOrdersPage() {
                                         </div>
                                         {session.paidTotal > 0 && (
                                             <div className="text-right">
-                                                <span className="text-green-400 text-xs">Ödenen</span>
+                                                <span className="text-green-400 text-xs">{t('odenen')}</span>
                                                 <p className="text-green-400 font-bold">{formatCurrency(session.paidTotal)}</p>
                                             </div>
                                         )}
@@ -608,14 +611,14 @@ export default function TableOrdersPage() {
                                     <p className="text-white font-medium">👑 {selectedSession.hostName}</p>
                                 </div>
                                 <div className="bg-gray-700/30 rounded-lg p-3">
-                                    <span className="text-gray-400 text-xs">Açılış</span>
+                                    <span className="text-gray-400 text-xs">{t('acilis')}</span>
                                     <p className="text-white font-medium">{formatDate(selectedSession.createdAt)}</p>
                                 </div>
                             </div>
 
                             {/* Financial Summary */}
                             <div className="bg-gray-700/20 border border-gray-600/30 rounded-xl p-4">
-                                <h3 className="text-white font-bold text-sm mb-3">💰 Hesap Özeti</h3>
+                                <h3 className="text-white font-bold text-sm mb-3">{t('hesap_ozeti')}</h3>
                                 <div className="grid grid-cols-3 gap-4 text-center">
                                     <div>
                                         <p className="text-2xl font-bold text-white">{formatCurrency(selectedSession.grandTotal)}</p>
@@ -623,7 +626,7 @@ export default function TableOrdersPage() {
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold text-green-400">{formatCurrency(selectedSession.paidTotal)}</p>
-                                        <p className="text-green-400/70 text-xs">Ödenen</p>
+                                        <p className="text-green-400/70 text-xs">{t('odenen')}</p>
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold text-amber-400">{formatCurrency(selectedSession.grandTotal - selectedSession.paidTotal)}</p>
@@ -647,11 +650,11 @@ export default function TableOrdersPage() {
                                 if (items.length === 0) return null;
                                 return (
                                     <div>
-                                        <h3 className="text-white font-bold text-sm mb-3">🛒 Sipariş Özeti ({items.length} ürün)</h3>
+                                        <h3 className="text-white font-bold text-sm mb-3">{t('siparis_ozeti')}{items.length} ürün)</h3>
                                         <div className="bg-gray-700/20 rounded-xl overflow-hidden">
                                             <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-700/40 text-gray-400 text-xs font-medium">
-                                                <div className="col-span-6">Ürün</div>
-                                                <div className="col-span-2 text-center">Adet</div>
+                                                <div className="col-span-6">{t('urun')}</div>
+                                                <div className="col-span-2 text-center">{t('adet')}</div>
                                                 <div className="col-span-2 text-right">Birim Fiy.</div>
                                                 <div className="col-span-2 text-right">Toplam</div>
                                             </div>
@@ -676,7 +679,7 @@ export default function TableOrdersPage() {
 
                             {/* Participants Breakdown */}
                             <div>
-                                <h3 className="text-white font-bold text-sm mb-3">👥 Katılımcılar ({selectedSession.participants.length})</h3>
+                                <h3 className="text-white font-bold text-sm mb-3">{t('katilimcilar')}{selectedSession.participants.length})</h3>
                                 <div className="space-y-3">
                                     {selectedSession.participants.map((p) => (
                                         <div key={p.participantId} className={`bg-gray-700/20 rounded-xl p-4 border ${p.paymentStatus === 'paid' ? 'border-green-500/30' : 'border-gray-600/30'
@@ -695,7 +698,7 @@ export default function TableOrdersPage() {
                                                         ? 'bg-green-600/20 text-green-400'
                                                         : 'bg-yellow-600/20 text-yellow-400'
                                                         }`}>
-                                                        {p.paymentStatus === 'paid' ? '✅ Ödendi' : '⏳ Bekliyor'}
+                                                        {p.paymentStatus === 'paid' ? t('odendi') : '⏳ Bekliyor'}
                                                     </span>
                                                     {p.paymentMethod && (
                                                         <span className="text-gray-500 text-xs">
@@ -737,7 +740,7 @@ export default function TableOrdersPage() {
                                             {selectedSession.cancelReason || '-'}
                                         </p>
                                         <p className="text-gray-300">
-                                            <span className="text-gray-500">Tarih:</span>{' '}
+                                            <span className="text-gray-500">{t('tarih')}</span>{' '}
                                             {formatDate(selectedSession.cancelledAt)}
                                         </p>
                                     </div>
@@ -764,7 +767,7 @@ export default function TableOrdersPage() {
 
                             {selectedSession.closedAt && (
                                 <div className="text-gray-500 text-xs text-center">
-                                    Kapatılma: {formatDate(selectedSession.closedAt)}
+                                    {t('kapatilma')} {formatDate(selectedSession.closedAt)}
                                 </div>
                             )}
                         </div>
@@ -785,7 +788,7 @@ export default function TableOrdersPage() {
                                 Masa {cancelConfirm.session.tableNumber} — {cancelConfirm.session.businessName || ''}
                             </p>
                             <p className="text-gray-500 text-xs mt-1">
-                                {cancelConfirm.session.participants.length} katılımcı · {formatCurrency(cancelConfirm.session.grandTotal)} toplam
+                                {cancelConfirm.session.participants.length} {t('katilimci')} {formatCurrency(cancelConfirm.session.grandTotal)} {t('toplam')}
                             </p>
                         </div>
 
@@ -796,7 +799,7 @@ export default function TableOrdersPage() {
                             <textarea
                                 value={cancelConfirm.reason}
                                 onChange={(e) => setCancelConfirm({ ...cancelConfirm, reason: e.target.value })}
-                                placeholder="Örn: Host restoranı terk etti, sipariş yarıda kaldı..."
+                                placeholder={t('orn_host_restorani_terk_etti_siparis_yar')}
                                 className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-red-500 focus:outline-none resize-none"
                                 rows={3}
                                 disabled={cancelLoading}
@@ -809,7 +812,7 @@ export default function TableOrdersPage() {
                                 disabled={cancelLoading}
                                 className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg font-medium transition disabled:opacity-50"
                             >
-                                Vazgeç
+                                {t('vazgec')}
                             </button>
                             <button
                                 onClick={handleCancelSession}

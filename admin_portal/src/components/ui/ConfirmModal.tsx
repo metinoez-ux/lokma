@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 export interface ConfirmModalProps {
     isOpen: boolean;
@@ -25,11 +26,16 @@ export default function ConfirmModal({
     message,
     itemName,
     variant = 'danger',
-    confirmText = 'Evet, Sil',
+    confirmText,
     cancelText = 'İptal',
-    loadingText = 'İşleniyor...',
+    loadingText,
 }: ConfirmModalProps) {
+
+    const t = useTranslations('AdminComponentConfirmModal');
     const [loading, setLoading] = useState(false);
+
+    const actualConfirmText = confirmText || t('evet_sil');
+    const actualLoadingText = loadingText || t('i_sleniyor');
 
     if (!isOpen) return null;
 
@@ -53,7 +59,7 @@ export default function ConfirmModal({
             <div
                 className="bg-gray-900 rounded-2xl w-full max-w-sm border border-gray-700/80 shadow-2xl transform transition-all duration-200 scale-100 animate-in fade-in"
                 onClick={e => e.stopPropagation()}
-                style={{ animation: 'modalIn 0.2s ease-out' }}
+                style={{ animation: t('modalin_0_2s_ease_out') }}
             >
                 {/* Top accent bar */}
                 <div className={`h-1 rounded-t-2xl ${isDanger ? 'bg-gradient-to-r from-red-500 via-red-600 to-red-500' : 'bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500'}`} />
@@ -112,9 +118,9 @@ export default function ConfirmModal({
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
-                                    {loadingText}
+                                    {actualLoadingText}
                                 </>
-                            ) : confirmText}
+                            ) : actualConfirmText}
                         </button>
                     </div>
                 </div>

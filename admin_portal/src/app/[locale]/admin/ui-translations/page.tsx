@@ -60,7 +60,7 @@ function unflattenObject(flatObj: Record<string, string>): any {
 }
 
 export default function TranslationsPage() {
-    const t = useTranslations('AdminNav');
+    const t = useTranslations('AdminUitranslations');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [translationKeys, setTranslationKeys] = useState<TranslationKey[]>([]);
@@ -135,7 +135,7 @@ export default function TranslationsPage() {
             setTranslationKeys(keysArray);
         } catch (error) {
             console.error('Error fetching translations:', error);
-            alert('Çeviriler yüklenirken bir hata oluştu.');
+            alert(t('ceviriler_yuklenirken_bir_hata_olustu'));
         } finally {
             setLoading(false);
         }
@@ -170,19 +170,19 @@ export default function TranslationsPage() {
             });
 
             await Promise.all(promises);
-            alert('Çeviriler başarıyla güncellendi!');
+            alert(t('ceviriler_basariyla_guncellendi'));
         } catch (error) {
             console.error('Error saving translations:', error);
-            alert('Kaydetme sırasında bir hata oluştu!');
+            alert(t('kaydetme_sirasinda_bir_hata_olustu'));
         } finally {
             setSaving(false);
         }
     };
 
     const addTranslationKey = () => {
-        const namespace = prompt("Ana kategori girin (örn: App, AdminPortal, Global):");
+        const namespace = prompt(t('ana_kategori_girin_orn_app_adminportal_g'));
         if (!namespace) return;
-        const key = prompt("Alt kırılımları nokta ile ayırarak girin (örn: Auth.loginButton, Orders.emptyState):");
+        const key = prompt(t('alt_kirilimlari_nokta_ile_ayirarak_girin'));
         if (!key) return;
 
         const mapKey = `${namespace}.${key}`;
@@ -283,7 +283,7 @@ export default function TranslationsPage() {
             },
             error: (error) => {
                 console.error("CSV parse error:", error);
-                alert("CSV dosyası okunurken bir hata oluştu.");
+                alert(t('csv_dosyasi_okunurken_bir_hata_olustu'));
             }
         });
     };
@@ -319,7 +319,7 @@ export default function TranslationsPage() {
         return (
             <div className="p-8 text-center max-w-7xl mx-auto">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                <p className="text-gray-400">Çeviriler Yükleniyor...</p>
+                <p className="text-gray-400">{t('ceviriler_yukleniyor')}</p>
             </div>
         );
     }
@@ -328,16 +328,16 @@ export default function TranslationsPage() {
         <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">Arayüz Çevirileri (CMS)</h1>
+                    <h1 className="text-2xl font-bold text-white">{t('arayuz_cevirileri_cms')}</h1>
                     <p className="text-gray-400 text-sm mt-1">
-                        Uygulama genelindeki tüm sabit metinleri (UI) dinamik olarak yönetin.
+                        {t('uygulama_genelindeki_tum_sabit_metinleri')}
                     </p>
                 </div>
                 <div className="flex gap-3">
                     {/* CSV Upload Data input implicitly handles click events on label wrap */}
                     <label className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors font-medium border border-slate-600 shadow-sm flex items-center gap-2 cursor-pointer">
                         <span>📥</span>
-                        <span className="hidden sm:inline">CSV İçe Aktar</span>
+                        <span className="hidden sm:inline">{t('csv_i_ce_aktar')}</span>
                         <input type="file" accept=".csv" onChange={importFromCsv} className="hidden" />
                     </label>
                     <button
@@ -345,7 +345,7 @@ export default function TranslationsPage() {
                         className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors font-medium border border-slate-600 shadow-sm flex items-center gap-2"
                     >
                         <span>📤</span>
-                        <span className="hidden sm:inline">CSV Dışa Aktar</span>
+                        <span className="hidden sm:inline">{t('csv_disa_aktar')}</span>
                     </button>
                     <div className="w-px h-10 bg-slate-700 mx-1"></div>
                     <button
@@ -353,7 +353,7 @@ export default function TranslationsPage() {
                         className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-medium border border-slate-600 shadow-sm flex items-center gap-2"
                     >
                         <span>+</span>
-                        <span className="hidden sm:inline">Yeni Ekle</span>
+                        <span className="hidden sm:inline">{t('yeni_ekle')}</span>
                     </button>
                     <button
                         onClick={saveTranslations}
@@ -368,7 +368,7 @@ export default function TranslationsPage() {
                         ) : (
                             <>
                                 <span>💾</span>
-                                <span>Tümünü Kaydet</span>
+                                <span>{t('tumunu_kaydet')}</span>
                             </>
                         )}
                     </button>
@@ -383,7 +383,7 @@ export default function TranslationsPage() {
                             <span className="absolute left-3 top-2.5 text-slate-400">🔍</span>
                             <input
                                 type="text"
-                                placeholder="Anahtar (key) veya metin içinde ara..."
+                                placeholder={t('anahtar_key_veya_metin_icinde_ara')}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors"
@@ -396,7 +396,7 @@ export default function TranslationsPage() {
                             onChange={(e) => setSelectedNamespace(e.target.value)}
                             className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
                         >
-                            <option value="All">Tüm Alanlar (Namespaces)</option>
+                            <option value="All">{t('tum_alanlar_namespaces')}</option>
                             <optgroup label="Admin Panel (Web)">
                                 {namespaces.filter(ns => ['Navigation', 'AdminNav', 'Landing', 'AdminPortal', 'Global'].includes(ns) && ns !== 'All').map(ns => (
                                     <option key={ns} value={ns}>{ns}</option>
@@ -417,7 +417,7 @@ export default function TranslationsPage() {
                                 onChange={(e) => setFilterMissingOnly(e.target.checked)}
                                 className="w-4 h-4 rounded bg-slate-800 border-slate-600 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-900"
                             />
-                            <span className="text-sm text-slate-300 font-medium select-none">Sadece Eksik Çeviriler</span>
+                            <span className="text-sm text-slate-300 font-medium select-none">{t('sadece_eksik_ceviriler')}</span>
                         </label>
                     </div>
                 </div>
@@ -427,7 +427,7 @@ export default function TranslationsPage() {
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead className="bg-slate-900/50 text-slate-400 border-b border-slate-700">
                             <tr>
-                                <th className="px-4 py-3 font-semibold uppercase text-xs w-64 min-w-[250px]">Key (Arahtarı)</th>
+                                <th className="px-4 py-3 font-semibold uppercase text-xs w-64 min-w-[250px]">{t('key_arahtari')}</th>
                                 {LANGUAGES.map(lang => (
                                     <th key={lang} className="px-4 py-3 font-semibold uppercase text-xs text-center min-w-[160px]">
                                         {lang}
@@ -445,7 +445,7 @@ export default function TranslationsPage() {
                             {paginatedKeys.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
-                                        Bu kriterlere uygun çeviri bulunamadı.
+                                        {t('bu_kriterlere_uygun_ceviri_bulunamadi')}
                                     </td>
                                 </tr>
                             ) : (
@@ -483,7 +483,7 @@ export default function TranslationsPage() {
                 {totalPages > 1 && (
                     <div className="bg-slate-900/80 px-4 py-3 border-t border-slate-700 flex items-center justify-between">
                         <div className="text-sm text-slate-400 select-none">
-                            Toplam <span className="font-semibold text-white">{filteredKeys.length}</span> kayıttan <span className="font-semibold text-white">{(currentPage - 1) * ROWS_PER_PAGE + 1} - {Math.min(currentPage * ROWS_PER_PAGE, filteredKeys.length)}</span> arası gösteriliyor.
+                            {t('toplam')} <span className="font-semibold text-white">{filteredKeys.length}</span> {t('kayittan')} <span className="font-semibold text-white">{(currentPage - 1) * ROWS_PER_PAGE + 1} - {Math.min(currentPage * ROWS_PER_PAGE, filteredKeys.length)}</span> {t('arasi_gosteriliyor')}
                         </div>
                         <div className="flex gap-2">
                             <button
@@ -491,7 +491,7 @@ export default function TranslationsPage() {
                                 disabled={currentPage === 1}
                                 className="px-3 py-1.5 rounded bg-slate-800 border border-slate-600 text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-700 transition-colors"
                             >
-                                Önceki
+                                {t('onceki')}
                             </button>
                             <div className="px-3 py-1.5 rounded bg-slate-800 border border-slate-600 text-white font-medium select-none text-sm flex items-center">
                                 {currentPage} / {totalPages}

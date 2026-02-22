@@ -7,6 +7,7 @@ import {
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -103,7 +104,9 @@ function isThisMonth(date: Date): boolean {
 // ─── Page Component ─────────────────────────────────────────────────────────
 
 export default function StaffDashboardPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminStaffdashboard');
+const { admin, loading: adminLoading } = useAdmin();
 
     // State
     const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -528,7 +531,7 @@ export default function StaffDashboardPage() {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
                     <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-4 border border-slate-700">
                         <div className="text-3xl font-bold text-white">{stats.totalStaff}</div>
-                        <div className="text-xs text-gray-400 mt-1">👥 Toplam Personel</div>
+                        <div className="text-xs text-gray-400 mt-1">{t('toplam_personel')}</div>
                     </div>
                     <div className="bg-gradient-to-br from-emerald-900/40 to-emerald-950/40 rounded-xl p-4 border border-emerald-700/30">
                         <div className="text-3xl font-bold text-emerald-400">{stats.onShiftNow}</div>
@@ -557,7 +560,7 @@ export default function StaffDashboardPage() {
                             : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'
                             }`}
                     >
-                        🟢 Aktif Personel ({staffWithActivity.filter(s => s.activityStatus !== 'offline' || s.todayDeliveries.length > 0 || s.isOnShift).length})
+                        {t('aktif_personel')}{staffWithActivity.filter(s => s.activityStatus !== 'offline' || s.todayDeliveries.length > 0 || s.isOnShift).length})
                     </button>
                     <button
                         onClick={() => setViewMode('all')}
@@ -729,7 +732,7 @@ export default function StaffDashboardPage() {
                                                 )}
                                                 {member.activityStatus === 'active' && (
                                                     <div>
-                                                        <div className="text-emerald-400 font-bold text-sm">✅ Aktif</div>
+                                                        <div className="text-emerald-400 font-bold text-sm">{t('aktif')}</div>
                                                         <div className="text-emerald-300/70 text-xs">
                                                             {member.todayDeliveries.length} teslimat
                                                         </div>
@@ -739,7 +742,7 @@ export default function StaffDashboardPage() {
                                                     <div className="text-gray-400 text-sm">⏸️ Boşta</div>
                                                 )}
                                                 {member.activityStatus === 'offline' && (
-                                                    <div className="text-gray-500 text-sm">⚫ Pasif</div>
+                                                    <div className="text-gray-500 text-sm">{t('pasif')}</div>
                                                 )}
 
                                                 {/* Tables */}
@@ -776,7 +779,7 @@ export default function StaffDashboardPage() {
                                                     <span className="text-white font-medium">{formatDuration(member.monthHours)}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1.5 text-xs">
-                                                    <span className="text-gray-500">📊 Toplam:</span>
+                                                    <span className="text-gray-500">{t('toplam')}</span>
                                                     <span className="text-white font-medium">{member.totalDeliveries} teslimat</span>
                                                 </div>
                                             </div>
@@ -801,7 +804,7 @@ export default function StaffDashboardPage() {
                                                                     <th className="pb-2 pr-4">Alış</th>
                                                                     <th className="pb-2 pr-4">Çıkış</th>
                                                                     <th className="pb-2 pr-4">Süre</th>
-                                                                    <th className="pb-2">Tutar</th>
+                                                                    <th className="pb-2">{t('tutar')}</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -882,7 +885,7 @@ export default function StaffDashboardPage() {
                                                     {member.isActive ? '✅ Aktif Hesap' : '❌ Pasif Hesap'}
                                                 </span>
                                                 {member.fcmToken && (
-                                                    <span className="text-emerald-500">📱 Bildirim Aktif</span>
+                                                    <span className="text-emerald-500">{t('bildirim_aktif')}</span>
                                                 )}
                                             </div>
                                         </div>

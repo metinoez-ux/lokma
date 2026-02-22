@@ -5,6 +5,7 @@ import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp } fr
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 interface ProductToEnrich {
     id: string;
@@ -14,7 +15,9 @@ interface ProductToEnrich {
 }
 
 export default function EANEnrichmentPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminImportsEanenrichment');
+const { admin, loading: adminLoading } = useAdmin();
     const [products, setProducts] = useState<ProductToEnrich[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [enriching, setEnriching] = useState(false);
@@ -143,8 +146,8 @@ export default function EANEnrichmentPage() {
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
                 <div className="bg-gray-800 rounded-xl p-8 text-center max-w-md border border-gray-700">
                     <span className="text-5xl">🔒</span>
-                    <h2 className="text-xl font-bold text-white mt-4">Erişim Yok</h2>
-                    <p className="text-gray-400 mt-2">Bu sayfa sadece Süper Admin'ler için.</p>
+                    <h2 className="text-xl font-bold text-white mt-4">{t('erisim_yok')}</h2>
+                    <p className="text-gray-400 mt-2">{t('bu_sayfa_sadece_super_admin_ler_icin')}</p>
                     <Link href="/admin/dashboard" className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg">
                         Dashboard'a Git
                     </Link>
@@ -164,17 +167,16 @@ export default function EANEnrichmentPage() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-white">EAN Enrichment</h1>
-                            <p className="text-purple-200">{products.length} ürün EAN bekliyor</p>
+                            <p className="text-purple-200">{products.length} {t('urun_ean_bekliyor')}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Info */}
                 <div className="bg-gray-800 rounded-xl p-6 mb-6 border border-gray-700">
-                    <h2 className="text-lg font-medium text-white mb-4">ℹ️ Bilgi</h2>
+                    <h2 className="text-lg font-medium text-white mb-4">{t('bilgi')}</h2>
                     <p className="text-gray-400 text-sm">
-                        Bu işlem, Foodpaket ürün sayfalarını ziyaret ederek EAN (barkod) kodlarını çeker.
-                        EAN kodları, farklı toptancılardan yapılan importların eşleşmesi için kritik öneme sahiptir.
+                        {t('bu_islem_foodpaket_urun_sayfalarini_ziya')}
                     </p>
                 </div>
 
@@ -215,18 +217,18 @@ export default function EANEnrichmentPage() {
                         disabled={enriching || products.length === 0}
                         className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold rounded-xl text-lg"
                     >
-                        {enriching ? '⏳ EAN çekiliyor...' : `🏷️ ${products.length} Ürüne EAN Ekle`}
+                        {enriching ? t('ean_cekiliyor') : `🏷️ ${products.length} Ürüne EAN Ekle`}
                     </button>
 
                     <p className="text-gray-500 text-sm mt-4 text-center">
-                        ⚠️ Bu işlem her ürün sayfasını ziyaret eder. Tahmini süre: {Math.ceil(products.length * 0.3 / 60)} dakika
+                        {t('bu_islem_her_urun_sayfasini_ziyaret_eder')} {Math.ceil(products.length * 0.3 / 60)} dakika
                     </p>
                 </div>
 
                 {/* Back Link */}
                 <div className="mt-6 text-center">
                     <Link href="/admin/imports/foodpaket" className="text-purple-400 hover:text-purple-300">
-                        ← Foodpaket Import'a Dön
+                        {t('foodpaket_import_a_don')}
                     </Link>
                 </div>
             </div>

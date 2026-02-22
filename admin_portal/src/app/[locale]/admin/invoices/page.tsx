@@ -9,6 +9,7 @@ import { auth, db } from '@/lib/firebase';
 import { Invoice } from '@/types';
 import { getNextInvoiceNumber, stornoInvoice, logAuditEntry, VAT_RATES } from '@/lib/erp-utils';
 import InvoicePreviewModal from '@/components/invoices/InvoicePreviewModal';
+import { useTranslations } from 'next-intl';
 
 // Plan fiyatları
 const PLAN_PRICES: Record<string, number> = {
@@ -41,7 +42,9 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function InvoicesPage() {
-    const router = useRouter();
+    
+  const t = useTranslations('AdminInvoices');
+const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [currentUser, setCurrentUser] = useState<{ uid: string; email: string; displayName?: string } | null>(null);
@@ -211,7 +214,7 @@ export default function InvoicesPage() {
             setNewInvoice({ butcherName: '', butcherAddress: '', description: '', netAmount: 0, vatRate: 'REDUCED' });
             await loadInvoices();
         } catch (error) {
-            console.error('Invoice creation error:', error);
+            console.error(t('invoice_creation_error'), error);
             alert('Fatura oluşturulurken hata oluştu.');
         } finally {
             setCreating(false);
@@ -330,7 +333,7 @@ export default function InvoicesPage() {
                             onClick={() => setShowCreateModal(true)}
                             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500"
                         >
-                            + Manuel Fatura
+                            {t('manuel_fatura')}
                         </button>
                     </div>
                 </div>
@@ -374,7 +377,7 @@ export default function InvoicesPage() {
                     </div>
                     <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
                         <p className="text-3xl font-bold text-yellow-400">{stats.pending}</p>
-                        <p className="text-gray-400 text-sm">Bekleyen</p>
+                        <p className="text-gray-400 text-sm">{t('bekleyen')}</p>
                     </div>
                     <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
                         <p className="text-3xl font-bold text-green-400">{stats.paid}</p>
@@ -386,7 +389,7 @@ export default function InvoicesPage() {
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-white">€{stats.totalAmount.toFixed(2)}</p>
-                        <p className="text-gray-400 text-sm">Toplam Tutar</p>
+                        <p className="text-gray-400 text-sm">{t('toplam_tutar')}</p>
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-green-400">€{stats.paidAmount.toFixed(2)}</p>
@@ -406,7 +409,7 @@ export default function InvoicesPage() {
                                 title="Durum Filtresi"
                             >
                                 <option value="all">Tümü</option>
-                                <option value="pending">Bekleyen</option>
+                                <option value="pending">{t('bekleyen')}</option>
                                 <option value="paid">Ödenen</option>
                                 <option value="failed">Başarısız</option>
                                 <option value="overdue">Gecikmiş</option>
@@ -436,10 +439,10 @@ export default function InvoicesPage() {
                     <table className="w-full">
                         <thead className="bg-gray-700">
                             <tr>
-                                <th className="px-4 py-3 text-left text-gray-300 text-sm">Fatura No</th>
+                                <th className="px-4 py-3 text-left text-gray-300 text-sm">{t('fatura_no')}</th>
                                 <th className="px-4 py-3 text-left text-gray-300 text-sm">Müşteri</th>
                                 <th className="px-4 py-3 text-left text-gray-300 text-sm">Dönem</th>
-                                <th className="px-4 py-3 text-right text-gray-300 text-sm">Tutar</th>
+                                <th className="px-4 py-3 text-right text-gray-300 text-sm">{t('tutar')}</th>
                                 <th className="px-4 py-3 text-center text-gray-300 text-sm">Durum</th>
                                 <th className="px-4 py-3 text-center text-gray-300 text-sm">Son Ödeme</th>
                                 <th className="px-4 py-3 text-center text-gray-300 text-sm">İşlemler</th>
@@ -629,7 +632,7 @@ export default function InvoicesPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-gray-300 text-sm mb-1">Net Tutar (€) *</label>
+                                    <label className="block text-gray-300 text-sm mb-1">{t('net_tutar')}</label>
                                     <input
                                         type="number"
                                         value={newInvoice.netAmount || ''}
@@ -657,7 +660,7 @@ export default function InvoicesPage() {
                                 <div className="bg-gray-900 rounded-lg p-3 text-sm">
                                     <div className="flex justify-between text-gray-400"><span>Net:</span><span>€{newInvoice.netAmount.toFixed(2)}</span></div>
                                     <div className="flex justify-between text-gray-400"><span>KDV ({newInvoice.vatRate === 'REDUCED' ? '7%' : '19%'}):</span><span>€{(newInvoice.netAmount * VAT_RATES[newInvoice.vatRate]).toFixed(2)}</span></div>
-                                    <div className="flex justify-between text-white font-bold border-t border-gray-700 mt-2 pt-2"><span>Toplam:</span><span>€{(newInvoice.netAmount * (1 + VAT_RATES[newInvoice.vatRate])).toFixed(2)}</span></div>
+                                    <div className="flex justify-between text-white font-bold border-t border-gray-700 mt-2 pt-2"><span>{t('toplam')}</span><span>€{(newInvoice.netAmount * (1 + VAT_RATES[newInvoice.vatRate])).toFixed(2)}</span></div>
                                 </div>
                             )}
                         </div>

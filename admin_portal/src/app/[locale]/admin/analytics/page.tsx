@@ -5,6 +5,7 @@ import { collection, getDocs, query, where, orderBy, Timestamp, onSnapshot } fro
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 type DateFilter = 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'lastYear' | 'all';
 
@@ -44,7 +45,9 @@ interface BusinessStats {
 }
 
 export default function UnifiedAnalyticsPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminAnalytics');
+const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
 
     // Filters
@@ -98,14 +101,14 @@ export default function UnifiedAnalyticsPage() {
 
     const getDateLabel = () => {
         switch (dateFilter) {
-            case 'today': return 'Bugün';
-            case 'yesterday': return 'Dün';
-            case 'week': return 'Son 7 Gün';
-            case 'month': return 'Son 30 Gün';
+            case 'today': return t('bugun');
+            case 'yesterday': return t('dun');
+            case 'week': return t('son_7_gun');
+            case 'month': return t('son_30_gun');
             case 'year': return `Bu Yıl (${new Date().getFullYear()})`;
             case 'lastYear': return `Geçen Yıl (${new Date().getFullYear() - 1})`;
-            case 'all': return 'Tüm Zamanlar';
-            default: return 'Son 30 Gün';
+            case 'all': return t('tum_zamanlar');
+            default: return t('son_30_gun');
         }
     };
 
@@ -244,7 +247,7 @@ export default function UnifiedAnalyticsPage() {
             count: filteredOrders.filter(o => o.createdAt?.toDate().getHours() === hour).length,
         }));
 
-        const dailyDistribution = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'].map((day, idx) => ({
+        const dailyDistribution = ['Paz', 'Pzt', 'Sal', t('car'), 'Per', 'Cum', 'Cmt'].map((day, idx) => ({
             day,
             count: filteredOrders.filter(o => o.createdAt?.toDate().getDay() === idx).length,
         }));
@@ -269,7 +272,7 @@ export default function UnifiedAnalyticsPage() {
             });
         });
         const topProducts = Object.values(productCounts)
-            .filter(p => p.name && p.name !== 'Ürün')
+            .filter(p => p.name && p.name !== t('urun'))
             .sort((a, b) => b.quantity - a.quantity)
             .slice(0, 5);
 
@@ -342,12 +345,12 @@ export default function UnifiedAnalyticsPage() {
                         {/* Date Filters */}
                         <div className="flex flex-wrap gap-2">
                             {[
-                                { value: 'today', label: 'Bugün' },
-                                { value: 'yesterday', label: 'Dün' },
-                                { value: 'week', label: '7 Gün' },
-                                { value: 'month', label: '30 Gün' },
-                                { value: 'year', label: 'Bu Yıl' },
-                                { value: 'all', label: 'Tümü' },
+                                { value: 'today', label: t('bugun') },
+                                { value: 'yesterday', label: t('dun') },
+                                { value: 'week', label: t('7_gun') },
+                                { value: 'month', label: t('30_gun') },
+                                { value: 'year', label: t('bu_yil') },
+                                { value: 'all', label: t('tumu') },
                             ].map((item) => (
                                 <button
                                     key={item.value}
@@ -368,7 +371,7 @@ export default function UnifiedAnalyticsPage() {
                             onChange={(e) => setBusinessFilter(e.target.value)}
                             className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg border border-emerald-500 text-sm"
                         >
-                            <option value="all">🏪 Tüm İşletmeler</option>
+                            <option value="all">{t('tum_i_sletmeler')}</option>
                             {Object.entries(businesses).map(([id, name]) => (
                                 <option key={id} value={id}>{name}</option>
                             ))}
@@ -380,15 +383,15 @@ export default function UnifiedAnalyticsPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
                     <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 rounded-xl p-3 border border-blue-700/50">
                         <p className="text-2xl font-bold text-blue-400">{userStats?.total || 0}</p>
-                        <p className="text-xs text-gray-400">Kullanıcı</p>
+                        <p className="text-xs text-gray-400">{t('kullanici')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-green-900/50 to-green-800/30 rounded-xl p-3 border border-green-700/50">
                         <p className="text-2xl font-bold text-green-400">+{userStats?.new || 0}</p>
-                        <p className="text-xs text-gray-400">Yeni Kayıt</p>
+                        <p className="text-xs text-gray-400">{t('yeni_kayit')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 rounded-xl p-3 border border-purple-700/50">
                         <p className="text-2xl font-bold text-purple-400">{businessStats?.total || 0}</p>
-                        <p className="text-xs text-gray-400">İşletme</p>
+                        <p className="text-xs text-gray-400">{t('i_sletme')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-amber-900/50 to-amber-800/30 rounded-xl p-3 border border-amber-700/50">
                         <p className="text-2xl font-bold text-amber-400">{stats.total}</p>
@@ -400,11 +403,11 @@ export default function UnifiedAnalyticsPage() {
                     </div>
                     <div className="bg-gradient-to-br from-cyan-900/50 to-cyan-800/30 rounded-xl p-3 border border-cyan-700/50">
                         <p className="text-2xl font-bold text-cyan-400">{formatCurrency(stats.avgOrderValue)}</p>
-                        <p className="text-xs text-gray-400">Ort. Sipariş</p>
+                        <p className="text-xs text-gray-400">{t('ort_siparis')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-pink-900/50 to-pink-800/30 rounded-xl p-3 border border-pink-700/50">
                         <p className="text-2xl font-bold text-pink-400">{masterProductCount}</p>
-                        <p className="text-xs text-gray-400">Ürün</p>
+                        <p className="text-xs text-gray-400">{t('urun')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-red-900/50 to-red-800/30 rounded-xl p-3 border border-red-700/50">
                         <p className="text-2xl font-bold text-red-400">{stats.cancelled}</p>
@@ -415,20 +418,20 @@ export default function UnifiedAnalyticsPage() {
                 {/* Insights Row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                     <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border border-green-700/30 rounded-xl p-3">
-                        <p className="text-green-400 text-xs font-medium mb-1">🔥 En Yoğun Gün</p>
+                        <p className="text-green-400 text-xs font-medium mb-1">{t('en_yogun_gun')}</p>
                         <p className="text-white text-lg font-bold">{analytics.busiestDay}</p>
                     </div>
                     <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-700/30 rounded-xl p-3">
-                        <p className="text-blue-400 text-xs font-medium mb-1">😴 En Durgun Gün</p>
+                        <p className="text-blue-400 text-xs font-medium mb-1">{t('en_durgun_gun')}</p>
                         <p className="text-white text-lg font-bold">{analytics.slowestDay}</p>
                     </div>
                     <div className="bg-gradient-to-br from-amber-900/30 to-amber-800/20 border border-amber-700/30 rounded-xl p-3">
-                        <p className="text-amber-400 text-xs font-medium mb-1">⏰ En Yoğun Saat</p>
+                        <p className="text-amber-400 text-xs font-medium mb-1">{t('en_yogun_saat')}</p>
                         <p className="text-white text-lg font-bold">{analytics.peakHour}:00</p>
                     </div>
                     <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/30 rounded-xl p-3">
-                        <p className="text-purple-400 text-xs font-medium mb-1">📊 Sipariş Oranı</p>
-                        <p className="text-white text-sm font-bold">🚚 {analytics.deliveryRate}% Kurye 🍽️ {analytics.dineInRate}% Masa 🏪 {analytics.pickupRate}% Gel Al</p>
+                        <p className="text-purple-400 text-xs font-medium mb-1">{t('siparis_orani')}</p>
+                        <p className="text-white text-sm font-bold">🚚 {analytics.deliveryRate}{t('kurye')} {analytics.dineInRate}% Masa 🏪 {analytics.pickupRate}% Gel Al</p>
                     </div>
                 </div>
 
@@ -436,7 +439,7 @@ export default function UnifiedAnalyticsPage() {
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
                     {/* Hourly Distribution */}
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-                        <h3 className="text-white font-bold mb-3 text-sm">🕐 Saatlik Dağılım</h3>
+                        <h3 className="text-white font-bold mb-3 text-sm">{t('saatlik_dagilim')}</h3>
                         {(() => {
                             const hourData = analytics.hourlyDistribution.slice(8, 22);
                             const maxCount = Math.max(...hourData.map(h => h.count), 1);
@@ -474,7 +477,7 @@ export default function UnifiedAnalyticsPage() {
 
                     {/* Daily Distribution */}
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-                        <h3 className="text-white font-bold mb-3 text-sm">📅 Günlük Dağılım</h3>
+                        <h3 className="text-white font-bold mb-3 text-sm">{t('gunluk_dagilim')}</h3>
                         <div className="space-y-1.5">
                             {analytics.dailyDistribution.map((d) => {
                                 const maxCount = Math.max(...analytics.dailyDistribution.map(d => d.count), 1);
@@ -497,12 +500,12 @@ export default function UnifiedAnalyticsPage() {
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     {/* User Breakdown */}
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-                        <h3 className="text-white font-bold mb-3 text-sm">👥 Kullanıcı Dağılımı</h3>
+                        <h3 className="text-white font-bold mb-3 text-sm">{t('kullanici_dagilimi')}</h3>
                         <div className="space-y-2 text-sm">
-                            <div className="flex justify-between"><span className="text-gray-400">Müşteriler</span><span className="text-blue-400 font-bold">{userStats?.customers}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-400">{t('musteriler')}</span><span className="text-blue-400 font-bold">{userStats?.customers}</span></div>
                             <div className="border-t border-gray-700 pt-2">
                                 <div className="flex justify-between"><span className="text-gray-400">👑 Super Admin</span><span className="text-red-400 font-bold">{userStats?.superAdmins}</span></div>
-                                <div className="flex justify-between"><span className="text-gray-400">🏪 İşletme Sahibi</span><span className="text-amber-400 font-bold">{userStats?.owners}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-400">{t('i_sletme_sahibi')}</span><span className="text-amber-400 font-bold">{userStats?.owners}</span></div>
                                 <div className="flex justify-between"><span className="text-gray-400">👤 Personel</span><span className="text-purple-400 font-bold">{userStats?.staff}</span></div>
                             </div>
                         </div>
@@ -510,7 +513,7 @@ export default function UnifiedAnalyticsPage() {
 
                     {/* Business Types */}
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-                        <h3 className="text-white font-bold mb-3 text-sm">🏪 İşletme Türleri</h3>
+                        <h3 className="text-white font-bold mb-3 text-sm">{t('i_sletme_turleri')}</h3>
                         <div className="space-y-2 text-sm">
                             {businessStats && Object.entries(businessStats.byType).slice(0, 5).map(([type, count]) => (
                                 <div key={type} className="flex justify-between">
@@ -519,17 +522,17 @@ export default function UnifiedAnalyticsPage() {
                                 </div>
                             ))}
                             <div className="border-t border-gray-700 pt-2">
-                                <div className="flex justify-between"><span className="text-gray-300">Aktif</span><span className="text-green-400 font-bold">{businessStats?.active}</span></div>
+                                <div className="flex justify-between"><span className="text-gray-300">{t('aktif')}</span><span className="text-green-400 font-bold">{businessStats?.active}</span></div>
                             </div>
                         </div>
                     </div>
 
                     {/* Top Products */}
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-                        <h3 className="text-white font-bold mb-3 text-sm">🏆 En Çok Satan</h3>
+                        <h3 className="text-white font-bold mb-3 text-sm">{t('en_cok_satan')}</h3>
                         <div className="space-y-2 text-sm">
                             {analytics.topProducts.length === 0 ? (
-                                <p className="text-gray-500 text-center py-4">Veri yok</p>
+                                <p className="text-gray-500 text-center py-4">{t('veri_yok')}</p>
                             ) : analytics.topProducts.slice(0, 4).map((p, idx) => (
                                 <div key={p.name} className="flex justify-between items-center">
                                     <span className="text-gray-400 truncate max-w-[60%]">
@@ -543,15 +546,15 @@ export default function UnifiedAnalyticsPage() {
 
                     {/* Business Performance */}
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
-                        <h3 className="text-white font-bold mb-3 text-sm">📈 İşletme Performansı</h3>
+                        <h3 className="text-white font-bold mb-3 text-sm">{t('i_sletme_performansi')}</h3>
                         <div className="space-y-2 text-sm">
                             {analytics.businessPerformance.length === 0 ? (
-                                <p className="text-gray-500 text-center py-4">Veri yok</p>
+                                <p className="text-gray-500 text-center py-4">{t('veri_yok')}</p>
                             ) : analytics.businessPerformance.slice(0, 4).map((b) => (
                                 <div key={b.id} className="flex justify-between items-center">
                                     <div className="truncate max-w-[60%]">
                                         <p className="text-gray-300 truncate">{b.name}</p>
-                                        <p className="text-xs text-gray-500">{b.orders} sipariş</p>
+                                        <p className="text-xs text-gray-500">{b.orders} {t('siparis')}</p>
                                     </div>
                                     <span className="text-emerald-400 font-bold">{formatCurrency(b.revenue)}</span>
                                 </div>
@@ -571,31 +574,31 @@ export default function UnifiedAnalyticsPage() {
                     const uniqueBusinesses = new Set(filteredOrders.map(o => o.businessId)).size;
                     return (
                         <div className="mb-6">
-                            <h2 className="text-lg font-bold text-white mb-4">📈 Platform Özeti</h2>
+                            <h2 className="text-lg font-bold text-white mb-4">{t('platform_ozeti')}</h2>
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                                 <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
                                     <p className="text-xl font-bold text-white">{orders.length.toLocaleString()}</p>
-                                    <p className="text-xs text-gray-400">Toplam Sipariş (Tüm)</p>
+                                    <p className="text-xs text-gray-400">{t('toplam_siparis_tum')}</p>
                                 </div>
                                 <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
                                     <p className="text-xl font-bold text-green-400">{completionRate}%</p>
-                                    <p className="text-xs text-gray-400">Tamamlanma Oranı</p>
+                                    <p className="text-xs text-gray-400">{t('tamamlanma_orani')}</p>
                                 </div>
                                 <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
                                     <p className="text-xl font-bold text-emerald-400">€{Number(avgRevenuePerDay).toLocaleString()}</p>
-                                    <p className="text-xs text-gray-400">Günlük Ort. Ciro</p>
+                                    <p className="text-xs text-gray-400">{t('gunluk_ort_ciro')}</p>
                                 </div>
                                 <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
                                     <p className="text-xl font-bold text-cyan-400">{avgPerDay}</p>
-                                    <p className="text-xs text-gray-400">Günlük Ort. Sipariş</p>
+                                    <p className="text-xs text-gray-400">{t('gunluk_ort_siparis')}</p>
                                 </div>
                                 <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
                                     <p className="text-xl font-bold text-purple-400">{uniqueBusinesses}</p>
-                                    <p className="text-xs text-gray-400">Aktif İşletme</p>
+                                    <p className="text-xs text-gray-400">{t('aktif_i_sletme')}</p>
                                 </div>
                                 <div className="bg-gray-800 rounded-xl p-3 border border-gray-700">
                                     <p className="text-xl font-bold text-blue-400">{userStats?.total || 0}</p>
-                                    <p className="text-xs text-gray-400">Toplam Kullanıcı</p>
+                                    <p className="text-xs text-gray-400">{t('toplam_kullanici')}</p>
                                 </div>
                             </div>
                         </div>
@@ -605,8 +608,7 @@ export default function UnifiedAnalyticsPage() {
                 {/* Info */}
                 <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-xl p-3">
                     <p className="text-yellow-400 text-xs">
-                        💡 Gösterilen dönem: <strong>{getDateLabel()}</strong> |
-                        Veriler Firestore'dan gerçek zamanlı çekilmektedir.
+                        {t('gosterilen_donem')} <strong>{getDateLabel()}</strong> {t('veriler_firestore_dan_gercek_zamanli_cek')}
                     </p>
                 </div>
             </main>

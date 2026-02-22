@@ -8,9 +8,12 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 export default function SuppliersPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminOrdersSuppliers');
+const { admin, loading: adminLoading } = useAdmin();
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -35,7 +38,7 @@ export default function SuppliersPage() {
         vegetable: '🥦 Sebze',
         packaging: '📦 Ambalaj',
         spices: '🧂 Baharat',
-        other: '🔧 Diğer'
+        other: t('diger')
     };
 
     // Super admins can access global suppliers, others need butcherId
@@ -59,7 +62,7 @@ export default function SuppliersPage() {
             setSuppliers(data);
         } catch (err) {
             console.error(err);
-            setError('Tedarikçiler yüklenirken hata oluştu.');
+            setError(t('tedarikciler_yuklenirken_hata_olustu'));
         } finally {
             setLoading(false);
         }
@@ -108,7 +111,7 @@ export default function SuppliersPage() {
             loadSuppliers();
         } catch (err) {
             console.error(err);
-            alert('Kaydetme başarısız');
+            alert(t('kaydetme_basarisiz'));
         } finally {
             setSaving(false);
         }
@@ -122,21 +125,21 @@ export default function SuppliersPage() {
             loadSuppliers();
         } catch (err) {
             console.error(err);
-            alert('Silme başarısız');
+            alert(t('silme_basarisiz'));
         }
     };
 
-    if (adminLoading) return <div className="p-8 text-white">Yükleniyor...</div>;
+    if (adminLoading) return <div className="p-8 text-white">{t('yukleniyor')}</div>;
 
     if (!hasAccess) {
         return (
             <div className="p-8 text-white text-center">
-                <h2 className="text-2xl font-bold mb-4">Yetki Yok</h2>
-                <p>Bu sayfayı görüntülemek için yetkiniz bulunmamaktadır.</p>
+                <h2 className="text-2xl font-bold mb-4">{t('yetki_yok')}</h2>
+                <p>{t('bu_sayfayi_goruntulemek_icin_yetkiniz_bu')}</p>
                 <div className="mt-4 p-4 bg-gray-800 rounded inline-block text-left text-sm text-gray-400">
-                    <p>Debug Info:</p>
+                    <p>{t('debug_info')}</p>
                     <p>Admin Type: {admin?.adminType}</p>
-                    <p>Butcher ID: {admin?.butcherId || 'Yok'}</p>
+                    <p>{t('butcher_id')} {admin?.butcherId || t('yok')}</p>
                 </div>
             </div>
         );
@@ -148,27 +151,27 @@ export default function SuppliersPage() {
                 {/* Header */}
                 <div className="flex justify-between items-center mb-8">
                     <div>
-                        <Link href="/admin/orders" className="text-gray-400 text-sm hover:text-white mb-2 inline-block">← Sipariş Paneline Dön</Link>
-                        <h1 className="text-3xl font-bold text-white tracking-tight">Tedarikçilerim</h1>
-                        <p className="text-gray-400">Toptancı listenizi yönetin</p>
+                        <Link href="/admin/orders" className="text-gray-400 text-sm hover:text-white mb-2 inline-block">{t('siparis_paneline_don')}</Link>
+                        <h1 className="text-3xl font-bold text-white tracking-tight">{t('tedarikcilerim')}</h1>
+                        <p className="text-gray-400">{t('toptanci_listenizi_yonetin')}</p>
                     </div>
                     <button
                         onClick={() => handleOpenModal()}
                         className="bg-green-600 hover:bg-green-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-green-500/20 flex items-center gap-2"
                     >
-                        <span>+</span> Yeni Tedarikçi
+                        <span>+</span> {t('yeni_tedarikci')}
                     </button>
                 </div>
 
                 {/* List */}
                 {loading ? (
-                    <div className="text-center py-12 text-gray-500">Yükleniyor...</div>
+                    <div className="text-center py-12 text-gray-500">{t('yukleniyor')}</div>
                 ) : suppliers.length === 0 ? (
                     <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-12 text-center">
                         <div className="text-4xl mb-4">🚛</div>
-                        <h3 className="text-xl font-bold text-white mb-2">Henüz Tedarikçi Yok</h3>
-                        <p className="text-gray-400 mb-6">İlk toptancınızı ekleyerek başlayın.</p>
-                        <button onClick={() => handleOpenModal()} className="text-green-400 hover:text-green-300 underline">Şimdi Ekle</button>
+                        <h3 className="text-xl font-bold text-white mb-2">{t('henuz_tedarikci_yok')}</h3>
+                        <p className="text-gray-400 mb-6">{t('i_lk_toptancinizi_ekleyerek_baslayin')}</p>
+                        <button onClick={() => handleOpenModal()} className="text-green-400 hover:text-green-300 underline">{t('simdi_ekle')}</button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -216,25 +219,25 @@ export default function SuppliersPage() {
                     <div className="bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl border border-gray-700">
                         <div className="p-6 border-b border-gray-700 flex justify-between items-center">
                             <h2 className="text-xl font-bold text-white">
-                                {editingId ? 'Tedarikçiyi Düzenle' : 'Yeni Tedarikçi Ekle'}
+                                {editingId ? t('tedarikciyi_duzenle') : t('yeni_tedarikci_ekle')}
                             </h2>
                             <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">✕</button>
                         </div>
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="block text-gray-400 text-xs mb-1">Tedarikçi Adı (Örn: Ahmet Et)</label>
+                                <label className="block text-gray-400 text-xs mb-1">{t('tedarikci_adi_orn_ahmet_et')}</label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-green-500 outline-none"
-                                    placeholder="Firma veya Kişi Adı"
+                                    placeholder={t('firma_veya_kisi_adi')}
                                 />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-gray-400 text-xs mb-1">Kategori</label>
+                                    <label className="block text-gray-400 text-xs mb-1">{t('kategori')}</label>
                                     <select
                                         value={formData.category}
                                         onChange={e => setFormData({ ...formData, category: e.target.value as SupplierCategory })}
@@ -259,7 +262,7 @@ export default function SuppliersPage() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-gray-400 text-xs mb-1">Yetkili Kişi (Opsiyonel)</label>
+                                    <label className="block text-gray-400 text-xs mb-1">{t('yetkili_kisi_opsiyonel')}</label>
                                     <input
                                         type="text"
                                         value={formData.contactName}
@@ -285,7 +288,7 @@ export default function SuppliersPage() {
                                     value={formData.notes}
                                     onChange={e => setFormData({ ...formData, notes: e.target.value })}
                                     className="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white outline-none"
-                                    placeholder="Adres, banka bilgileri veya özel notlar..."
+                                    placeholder={t('adres_banka_bilgileri_veya_ozel_notlar')}
                                 />
                             </div>
                         </div>
@@ -296,7 +299,7 @@ export default function SuppliersPage() {
                                 disabled={saving || !formData.name}
                                 className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-6 py-2 rounded-lg font-bold"
                             >
-                                {saving ? 'Kaydediliyor...' : 'Kaydet'}
+                                {saving ? 'Kaydediliyor...' : t('kaydet')}
                             </button>
                         </div>
                     </div>
@@ -308,11 +311,11 @@ export default function SuppliersPage() {
                 isOpen={!!confirmDeleteSupplier}
                 onClose={() => setConfirmDeleteSupplier(null)}
                 onConfirm={handleDeleteConfirm}
-                title="Tedarikçiyi Sil"
-                message="Bu tedarikçiyi kalıcı olarak silmek istediğinizden emin misiniz?"
+                title={t('tedarikciyi_sil')}
+                message={t('bu_tedarikciyi_kalici_olarak_silmek_iste')}
                 itemName={confirmDeleteSupplier?.name}
                 variant="danger"
-                confirmText="Evet, Sil"
+                confirmText={t('evet_sil')}
                 loadingText="Siliniyor..."
             />
         </div>

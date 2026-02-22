@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { useTranslations } from 'next-intl';
 
 interface StockImage {
     id: string;
@@ -31,7 +32,9 @@ const CATEGORIES = [
 ];
 
 export default function KermesStockImagesPage() {
-    const { admin, loading: adminLoading } = useAdmin();
+    
+  const t = useTranslations('AdminSettingsKermesstockimages');
+const { admin, loading: adminLoading } = useAdmin();
     const [loading, setLoading] = useState(true);
     const [images, setImages] = useState<StockImage[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -110,7 +113,7 @@ export default function KermesStockImagesPage() {
             loadImages();
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Görsel yüklenirken hata oluştu!');
+            alert(t('gorsel_yuklenirken_hata_olustu'));
         } finally {
             setUploading(false);
         }
@@ -136,7 +139,7 @@ export default function KermesStockImagesPage() {
             loadImages();
         } catch (error) {
             console.error('Error deleting image:', error);
-            alert('Görsel silinirken hata oluştu!');
+            alert(t('gorsel_silinirken_hata_olustu'));
         }
         setConfirmDeleteImage(null);
     };
@@ -156,7 +159,7 @@ export default function KermesStockImagesPage() {
     if (!admin || admin.role !== 'super_admin') {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-white">Bu sayfaya erişim yetkiniz yok</div>
+                <div className="text-white">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>
             </div>
         );
     }
@@ -166,15 +169,15 @@ export default function KermesStockImagesPage() {
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-6">
                 <Link href="/admin/kermes" className="text-gray-400 hover:text-white mb-4 inline-flex items-center gap-2">
-                    ← Kermes Yönetimi
+                    {t('kermes_yonetimi')}
                 </Link>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            🖼️ Stok Görsel Yönetimi
+                            {t('stok_gorsel_yonetimi')}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            Kermes başlık resimleri için stok görseller • {images.length} görsel
+                            {t('kermes_baslik_resimleri_icin_stok_gorsel')} {images.length} {t('gorsel')}
                         </p>
                     </div>
                     <button
@@ -197,7 +200,7 @@ export default function KermesStockImagesPage() {
                             : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                             }`}
                     >
-                        📋 Tümü ({images.length})
+                        {t('tumu')}{images.length})
                     </button>
                     {CATEGORIES.map(cat => {
                         const count = images.filter(img => img.category === cat.id).length;
@@ -223,16 +226,16 @@ export default function KermesStockImagesPage() {
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
                         <div className="text-6xl mb-4">🖼️</div>
                         <h2 className="text-xl font-bold text-white mb-2">
-                            {images.length === 0 ? 'Henüz Stok Görsel Yok' : 'Bu kategoride görsel yok'}
+                            {images.length === 0 ? t('henuz_stok_gorsel_yok') : t('bu_kategoride_gorsel_yok')}
                         </h2>
                         <p className="text-gray-400 mb-6">
-                            AI ile oluşturduğunuz başlık görsellerini buraya yükleyin.
+                            {t('ai_ile_olusturdugunuz_baslik_gorsellerin')}
                         </p>
                         <button
                             onClick={() => setShowUploadModal(true)}
                             className="inline-block bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-3 rounded-lg font-semibold"
                         >
-                            🖼️ İlk Görseli Yükle
+                            {t('i_lk_gorseli_yukle')}
                         </button>
                     </div>
                 ) : (
@@ -259,7 +262,7 @@ export default function KermesStockImagesPage() {
                                                 onClick={() => handleDelete(image)}
                                                 className="px-3 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-500"
                                             >
-                                                🗑️ Sil
+                                                {t('sil')}
                                             </button>
                                         </div>
                                     </div>
@@ -272,7 +275,7 @@ export default function KermesStockImagesPage() {
                                                 {category?.emoji} {category?.label}
                                             </span>
                                             <span className="text-xs text-gray-500">
-                                                {image.usageCount} kullanım
+                                                {image.usageCount} {t('kullanim')}
                                             </span>
                                         </div>
                                         {image.tags && image.tags.length > 0 && (
@@ -300,7 +303,7 @@ export default function KermesStockImagesPage() {
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-gray-800 rounded-2xl w-full max-w-lg p-6">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-bold text-white">🖼️ Yeni Görsel Yükle</h2>
+                            <h2 className="text-xl font-bold text-white">{t('yeni_gorsel_yukle')}</h2>
                             <button
                                 onClick={() => setShowUploadModal(false)}
                                 className="text-gray-400 hover:text-white text-2xl"
@@ -312,7 +315,7 @@ export default function KermesStockImagesPage() {
                         {/* File Input */}
                         <div className="mb-4">
                             <label className="block text-gray-300 text-sm font-medium mb-2">
-                                Görsel Dosyası *
+                                {t('gorsel_dosyasi')}
                             </label>
                             <input
                                 ref={fileInputRef}
@@ -336,20 +339,20 @@ export default function KermesStockImagesPage() {
                                 ) : (
                                     <>
                                         <span className="text-4xl">📁</span>
-                                        <span className="text-gray-400">Görsel seçmek için tıklayın</span>
+                                        <span className="text-gray-400">{t('gorsel_secmek_icin_tiklayin')}</span>
                                     </>
                                 )}
                             </button>
                             {/* Boyut ve Format Kılavuzu */}
                             <div className="mt-3 p-3 bg-cyan-900/20 border border-cyan-700/50 rounded-lg">
-                                <h4 className="text-cyan-400 text-sm font-medium mb-2">📐 Görsel Boyut Kılavuzu</h4>
+                                <h4 className="text-cyan-400 text-sm font-medium mb-2">{t('gorsel_boyut_kilavuzu')}</h4>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                     <div>
-                                        <span className="text-gray-400">Önerilen Boyut:</span>
+                                        <span className="text-gray-400">{t('onerilen_boyut')}</span>
                                         <p className="text-white font-mono">1200 × 675 px</p>
                                     </div>
                                     <div>
-                                        <span className="text-gray-400">En-Boy Oranı:</span>
+                                        <span className="text-gray-400">{t('en_boy_orani')}</span>
                                         <p className="text-white font-mono">16:9</p>
                                     </div>
                                     <div>
@@ -362,7 +365,7 @@ export default function KermesStockImagesPage() {
                                     </div>
                                 </div>
                                 <p className="text-gray-500 text-xs mt-2">
-                                    💡 Kermes kartlarında başlık görseli olarak kullanılacaktır.
+                                    {t('kermes_kartlarinda_baslik_gorseli_olarak')}
                                 </p>
                             </div>
                         </div>
@@ -370,13 +373,13 @@ export default function KermesStockImagesPage() {
                         {/* Title */}
                         <div className="mb-4">
                             <label className="block text-gray-300 text-sm font-medium mb-2">
-                                Başlık *
+                                {t('baslik')}
                             </label>
                             <input
                                 type="text"
                                 value={newImage.title}
                                 onChange={(e) => setNewImage(prev => ({ ...prev, title: e.target.value }))}
-                                placeholder="Örn: Renkli Festival Afişi"
+                                placeholder={t('orn_renkli_festival_afisi')}
                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                             />
                         </div>
@@ -384,7 +387,7 @@ export default function KermesStockImagesPage() {
                         {/* Category */}
                         <div className="mb-4">
                             <label className="block text-gray-300 text-sm font-medium mb-2">
-                                Kategori
+                                {t('kategori')}
                             </label>
                             <select
                                 value={newImage.category}
@@ -402,13 +405,13 @@ export default function KermesStockImagesPage() {
                         {/* Tags */}
                         <div className="mb-6">
                             <label className="block text-gray-300 text-sm font-medium mb-2">
-                                Etiketler (virgülle ayırın)
+                                {t('etiketler_virgulle_ayirin')}
                             </label>
                             <input
                                 type="text"
                                 value={newImage.tags}
                                 onChange={(e) => setNewImage(prev => ({ ...prev, tags: e.target.value }))}
-                                placeholder="Örn: renkli, festival, yaz"
+                                placeholder={t('orn_renkli_festival_yaz')}
                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                             />
                         </div>
@@ -426,7 +429,7 @@ export default function KermesStockImagesPage() {
                                 disabled={uploading || !newImage.file || !newImage.title}
                                 className="flex-1 px-4 py-3 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:from-cyan-500 hover:to-teal-500 transition"
                             >
-                                {uploading ? '⏳ Yükleniyor...' : '📤 Yükle'}
+                                {uploading ? t('yukleniyor') : t('yukle')}
                             </button>
                         </div>
                     </div>
@@ -438,11 +441,11 @@ export default function KermesStockImagesPage() {
                 isOpen={!!confirmDeleteImage}
                 onClose={() => setConfirmDeleteImage(null)}
                 onConfirm={handleDeleteConfirm}
-                title="Görsel Sil"
-                message="Bu görseli silmek istediğinize emin misiniz?"
+                title={t('gorsel_sil')}
+                message={t('bu_gorseli_silmek_istediginize_emin_misi')}
                 itemName={confirmDeleteImage?.title}
                 variant="danger"
-                confirmText="Evet, Sil"
+                confirmText={t('evet_sil')}
                 loadingText="Siliniyor..."
             />
         </div>
