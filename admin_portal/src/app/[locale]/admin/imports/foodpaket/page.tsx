@@ -129,9 +129,9 @@ interface FoodpaketProduct {
 }
 
 export default function FoodpaketImportPage() {
-    
-  const t = useTranslations('AdminImportsFoodpaket');
-const { admin, loading: adminLoading } = useAdmin();
+
+    const t = useTranslations('AdminImportsFoodpaket');
+    const { admin, loading: adminLoading } = useAdmin();
     const [products, setProducts] = useState<FoodpaketProduct[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [importing, setImporting] = useState(false);

@@ -648,10 +648,10 @@ export default function AdminHeader() {
                                                 href="/admin/delivery-settings"
                                                 className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/delivery-settings') ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
                                             >
-                                                Teslimat Ayarları
+                                                {t('teslimat_ayarlari')}
                                             </Link>
                                             {/* Add AI Menu here for regular admins as well if it's available for them */}
-                                            {admin?.adminType === 'restoran' && (
+                                            {admin?.adminType === t('restoran') && (
                                                 <Link
                                                     href="/admin/ai-menu"
                                                     className={`flex items-center gap-2 px-4 py-2.5 text-xs transition-colors ${isActiveNav('/admin/ai-menu') ? 'bg-slate-700 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}

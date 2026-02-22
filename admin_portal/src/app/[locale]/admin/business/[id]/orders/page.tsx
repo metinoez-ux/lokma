@@ -276,7 +276,7 @@ const params = useParams();
     // Reject order with reason
     const handleRejectOrder = async () => {
         if (!rejectingOrder) return;
-        await updateOrderStatus(rejectingOrder.id, 'rejected', rejectReason || 'İstediğiniz ürün şu an mevcut değil');
+        await updateOrderStatus(rejectingOrder.id, 'rejected', rejectReason || t('i_stediginiz_urun_su_an_mevcut_degil'));
         setRejectingOrder(null);
         setRejectReason('');
     };
@@ -331,8 +331,8 @@ const params = useParams();
         const labels: Record<string, string> = {
             pending: t('hazirlanmayi_bekliyor'),
             preparing: t('hazirlaniyor'),
-            ready: 'Hazır',
-            completed: 'Tamamlandı',
+            ready: t('hazir'),
+            completed: t('tamamlandi'),
             cancelled: 'İptal',
         };
         return (
@@ -411,7 +411,7 @@ const params = useParams();
                     </div>
                     <div className="bg-green-600/20 rounded-lg p-4 border-l-4 border-green-500">
                         <div className="text-2xl font-bold text-green-400">{stats.ready}</div>
-                        <div className="text-sm text-green-300">Hazır</div>
+                        <div className="text-sm text-green-300">{t('hazir')}</div>
                     </div>
                     {/* Completed card with toggle for hidden orders */}
                     <button
@@ -459,8 +459,8 @@ const params = useParams();
                                 <option value="all">{t('tumu')}</option>
                                 <option value="pending">Bekliyor</option>
                                 <option value="preparing">{t('hazirlaniyor')}</option>
-                                <option value="ready">Hazır</option>
-                                <option value="completed">Tamamlandı</option>
+                                <option value="ready">{t('hazir')}</option>
+                                <option value="completed">{t('tamamlandi')}</option>
                                 <option value="cancelled">İptal</option>
                             </select>
                         </div>
@@ -487,7 +487,7 @@ const params = useParams();
 
                         {/* Amount Range */}
                         <div>
-                            <label className="block text-xs text-gray-500 mb-1">Tutar (€)</label>
+                            <label className="block text-xs text-gray-500 mb-1">{t('tutar')}</label>
                             <div className="flex gap-1">
                                 <input
                                     type="number"
@@ -518,7 +518,7 @@ const params = useParams();
                                         No
                                     </th>
                                     <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                                        Müşteri
+                                        {t('musteri')}
                                     </th>
                                     <th className="px-2 md:px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider hidden md:table-cell">
                                         {t('tarih')}

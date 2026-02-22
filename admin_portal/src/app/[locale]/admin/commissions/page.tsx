@@ -286,7 +286,7 @@ const router = useRouter();
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
                     <div className="bg-gray-800 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-white">{stats.totalOrders}</p>
-                        <p className="text-gray-400 text-xs">Sipariş</p>
+                        <p className="text-gray-400 text-xs">{t('siparis')}</p>
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-white">€{stats.totalOrderAmount.toFixed(0)}</p>
@@ -374,7 +374,7 @@ const router = useRouter();
                                 <tr>
                                     <th className="px-4 py-3 text-left text-gray-300 text-sm">{t('i_sletme')}</th>
                                     <th className="px-4 py-3 text-left text-gray-300 text-sm">Plan</th>
-                                    <th className="px-4 py-3 text-right text-gray-300 text-sm">Sipariş</th>
+                                    <th className="px-4 py-3 text-right text-gray-300 text-sm">{t('siparis')}</th>
                                     <th className="px-4 py-3 text-right text-gray-300 text-sm">Ciro</th>
                                     <th className="px-4 py-3 text-right text-gray-300 text-sm">Provizyon</th>
                                     <th className="px-4 py-3 text-right text-gray-300 text-sm">Kart</th>
@@ -428,7 +428,7 @@ const router = useRouter();
                             {businessSummaries.length > 0 && (
                                 <tfoot className="bg-gray-900 border-t-2 border-gray-600">
                                     <tr>
-                                        <td className="px-4 py-3 text-white font-bold" colSpan={2}>TOPLAM</td>
+                                        <td className="px-4 py-3 text-white font-bold" colSpan={2}>{t('toplam')}</td>
                                         <td className="px-4 py-3 text-right text-white font-bold">{stats.totalOrders}</td>
                                         <td className="px-4 py-3 text-right text-white font-bold">€{stats.totalOrderAmount.toFixed(2)}</td>
                                         <td className="px-4 py-3 text-right text-amber-400 font-bold">€{stats.totalCommission.toFixed(2)}</td>
@@ -446,10 +446,10 @@ const router = useRouter();
                         <table className="w-full">
                             <thead className="bg-gray-700">
                                 <tr>
-                                    <th className="px-3 py-3 text-left text-gray-300 text-xs">Sipariş</th>
+                                    <th className="px-3 py-3 text-left text-gray-300 text-xs">{t('siparis')}</th>
                                     <th className="px-3 py-3 text-left text-gray-300 text-xs">{t('i_sletme')}</th>
                                     <th className="px-3 py-3 text-center text-gray-300 text-xs">Teslimat</th>
-                                    <th className="px-3 py-3 text-right text-gray-300 text-xs">Tutar</th>
+                                    <th className="px-3 py-3 text-right text-gray-300 text-xs">{t('tutar')}</th>
                                     <th className="px-3 py-3 text-right text-gray-300 text-xs">Oran</th>
                                     <th className="px-3 py-3 text-right text-gray-300 text-xs">Provizyon</th>
                                     <th className="px-3 py-3 text-right text-gray-300 text-xs">Net + KDV</th>

@@ -45,9 +45,9 @@ interface PendingAdmin {
 }
 
 export default function InvitationsPage() {
-    
-  const t = useTranslations('AdminInvitations');
-const [loading, setLoading] = useState(true);
+
+    const t = useTranslations('AdminInvitations');
+    const [loading, setLoading] = useState(true);
     const [invitations, setInvitations] = useState<Invitation[]>([]);
     const [pendingApprovals, setPendingApprovals] = useState<Invitation[]>([]);
     const [newEmail, setNewEmail] = useState('');

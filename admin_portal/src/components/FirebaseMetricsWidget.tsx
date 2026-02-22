@@ -84,7 +84,7 @@ const [metrics, setMetrics] = useState<FirebaseMetrics | null>(null);
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Metrikler yüklenemedi');
+                throw new Error(errorData.error || t('metrikler_yuklenemedi'));
             }
 
             const data = await response.json();

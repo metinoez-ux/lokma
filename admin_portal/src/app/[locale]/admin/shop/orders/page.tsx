@@ -201,7 +201,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         <Link href="/admin/shop" className="text-gray-400 hover:text-white">← E-Ticaret</Link>
                         <div>
                             <h1 className="text-2xl font-bold text-white flex items-center gap-2">{t('siparis_yonetimi')}</h1>
-                            <p className="text-gray-400 text-sm mt-1">{filteredOrders.length} sipariş</p>
+                            <p className="text-gray-400 text-sm mt-1">{filteredOrders.length} {t('siparis')}</p>
                         </div>
                     </div>
                     <div className="flex gap-2">

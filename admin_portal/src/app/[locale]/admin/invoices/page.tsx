@@ -42,9 +42,9 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function InvoicesPage() {
-    
-  const t = useTranslations('AdminInvoices');
-const router = useRouter();
+
+    const t = useTranslations('AdminInvoices');
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [invoices, setInvoices] = useState<Invoice[]>([]);
     const [currentUser, setCurrentUser] = useState<{ uid: string; email: string; displayName?: string } | null>(null);
@@ -141,7 +141,7 @@ const router = useRouter();
             setInvoices(invoiceList);
             if (loadAll) setIsLoadedAll(true);
         } catch (error) {
-            console.error('Fatura yükleme hatası:', error);
+            console.error(t('fatura_yukleme_hatasi'), error);
         } finally {
             setLoadingAll(false);
         }
@@ -162,7 +162,7 @@ const router = useRouter();
     const handleCreateInvoice = async () => {
         if (!currentUser) return;
         if (!newInvoice.butcherName || newInvoice.netAmount <= 0) {
-            alert('Lütfen müşteri adı ve tutar girin.');
+            alert(t('lutfen_musteri_adi_ve_tutar_girin'));
             return;
         }
 
@@ -184,7 +184,7 @@ const router = useRouter();
                 invoiceNumber,
                 butcherName: newInvoice.butcherName,
                 butcherAddress: newInvoice.butcherAddress,
-                description: newInvoice.description || 'Manuel Fatura',
+                description: newInvoice.description || t('manuel_fatura'),
                 period,
                 subtotal: newInvoice.netAmount,
                 taxRate: vatRate * 100, // Store as percentage
@@ -215,7 +215,7 @@ const router = useRouter();
             await loadInvoices();
         } catch (error) {
             console.error(t('invoice_creation_error'), error);
-            alert('Fatura oluşturulurken hata oluştu.');
+            alert(t('fatura_olusturulurken_hata_olustu'));
         } finally {
             setCreating(false);
         }
@@ -225,7 +225,7 @@ const router = useRouter();
     const handleStorno = async () => {
         if (!currentUser || !stornoInvoiceId) return;
         if (stornoReason.trim().length < 10) {
-            alert('Storno sebebi en az 10 karakter olmalıdır (GoBD zorunluluğu)');
+            alert(t('storno_sebebi_en_az_10_karakter_olmalidi'));
             return;
         }
 
@@ -244,7 +244,7 @@ const router = useRouter();
             }
         } catch (error) {
             console.error('Storno error:', error);
-            alert('Storno işlemi sırasında hata oluştu.');
+            alert(t('storno_islemi_sirasinda_hata_olustu'));
         } finally {
             setProcessingStorno(false);
         }
@@ -260,7 +260,7 @@ const router = useRouter();
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-white">Yükleniyor...</div>
+                <div className="text-white">{t('yukleniyor')}</div>
             </div>
         );
     }
@@ -272,7 +272,7 @@ const router = useRouter();
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-white">📄 Faturalar</h1>
-                        <p className="text-gray-400 text-sm">B2B Abonelik Faturaları</p>
+                        <p className="text-gray-400 text-sm">{t('b2b_abonelik_faturalari')}</p>
                     </div>
                     <div className="flex gap-2">
                         <button
@@ -288,7 +288,7 @@ const router = useRouter();
                                         seller: {
                                             name: 'LOKMA GmbH',
                                             address: 'Schulte-Braucks-Str. 1',
-                                            city: 'Hückelhoven',
+                                            city: t('huckelhoven'),
                                             postalCode: '41836',
                                             country: 'Deutschland'
                                         },
@@ -347,8 +347,8 @@ const router = useRouter();
                         <div className="flex items-center gap-3">
                             <span className="text-2xl">⚡</span>
                             <div>
-                                <h3 className="text-blue-200 font-bold">Hızlı Yükleme Modu</h3>
-                                <p className="text-blue-300/60 text-sm">Performans için sadece son 50 fatura gösteriliyor.</p>
+                                <h3 className="text-blue-200 font-bold">{t('hizli_yukleme_modu')}</h3>
+                                <p className="text-blue-300/60 text-sm">{t('performans_icin_sadece_son_50_fatura_gos')}</p>
                             </div>
                         </div>
                         <button
@@ -359,11 +359,11 @@ const router = useRouter();
                             {loadingAll ? (
                                 <>
                                     <div className="animate-spin h-4 w-4 border-2 border-white/50 border-t-white rounded-full"></div>
-                                    <span>Yükleniyor...</span>
+                                    <span>{t('yukleniyor')}</span>
                                 </>
                             ) : (
                                 <>
-                                    <span>📥 Tümünü Yükle</span>
+                                    <span>{t('tumunu_yukle')}</span>
                                 </>
                             )}
                         </button>
@@ -373,7 +373,7 @@ const router = useRouter();
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
                     <div className="bg-gray-800 rounded-xl p-4 text-center">
                         <p className="text-3xl font-bold text-white">{stats.total}</p>
-                        <p className="text-gray-400 text-sm">Toplam</p>
+                        <p className="text-gray-400 text-sm">{t('toplam')}</p>
                     </div>
                     <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
                         <p className="text-3xl font-bold text-yellow-400">{stats.pending}</p>
@@ -381,11 +381,11 @@ const router = useRouter();
                     </div>
                     <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
                         <p className="text-3xl font-bold text-green-400">{stats.paid}</p>
-                        <p className="text-gray-400 text-sm">Ödenen</p>
+                        <p className="text-gray-400 text-sm">{t('odenen')}</p>
                     </div>
                     <div className="bg-red-600/20 border border-red-600/30 rounded-xl p-4 text-center">
                         <p className="text-3xl font-bold text-red-400">{stats.failed}</p>
-                        <p className="text-gray-400 text-sm">Başarısız</p>
+                        <p className="text-gray-400 text-sm">{t('basarisiz')}</p>
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 text-center">
                         <p className="text-2xl font-bold text-white">€{stats.totalAmount.toFixed(2)}</p>
@@ -401,22 +401,22 @@ const router = useRouter();
                 <div className="bg-gray-800 rounded-xl p-4 mb-6">
                     <div className="flex flex-wrap gap-4 items-center">
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">Durum</label>
+                            <label className="block text-gray-400 text-xs mb-1">{t('durum')}</label>
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
                                 className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                                title="Durum Filtresi"
+                                title={t('durum_filtresi')}
                             >
-                                <option value="all">Tümü</option>
+                                <option value="all">{t('tumu')}</option>
                                 <option value="pending">{t('bekleyen')}</option>
-                                <option value="paid">Ödenen</option>
-                                <option value="failed">Başarısız</option>
-                                <option value="overdue">Gecikmiş</option>
+                                <option value="paid">{t('odenen')}</option>
+                                <option value="failed">{t('basarisiz')}</option>
+                                <option value="overdue">{t('gecikmis')}</option>
                             </select>
                         </div>
                         <div>
-                            <label className="block text-gray-400 text-xs mb-1">Dönem</label>
+                            <label className="block text-gray-400 text-xs mb-1">{t('donem')}</label>
                             <input
                                 type="month"
                                 value={filterMonth}
@@ -440,19 +440,19 @@ const router = useRouter();
                         <thead className="bg-gray-700">
                             <tr>
                                 <th className="px-4 py-3 text-left text-gray-300 text-sm">{t('fatura_no')}</th>
-                                <th className="px-4 py-3 text-left text-gray-300 text-sm">Müşteri</th>
-                                <th className="px-4 py-3 text-left text-gray-300 text-sm">Dönem</th>
+                                <th className="px-4 py-3 text-left text-gray-300 text-sm">{t('musteri')}</th>
+                                <th className="px-4 py-3 text-left text-gray-300 text-sm">{t('donem')}</th>
                                 <th className="px-4 py-3 text-right text-gray-300 text-sm">{t('tutar')}</th>
-                                <th className="px-4 py-3 text-center text-gray-300 text-sm">Durum</th>
-                                <th className="px-4 py-3 text-center text-gray-300 text-sm">Son Ödeme</th>
-                                <th className="px-4 py-3 text-center text-gray-300 text-sm">İşlemler</th>
+                                <th className="px-4 py-3 text-center text-gray-300 text-sm">{t('durum')}</th>
+                                <th className="px-4 py-3 text-center text-gray-300 text-sm">{t('son_odeme')}</th>
+                                <th className="px-4 py-3 text-center text-gray-300 text-sm">{t('i_slemler')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-700">
                             {filteredInvoices.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
-                                        Henüz fatura bulunmuyor
+                                        {t('henuz_fatura_bulunmuyor')}
                                     </td>
                                 </tr>
                             ) : (
@@ -506,9 +506,9 @@ const router = useRouter();
                                                         setShowPreviewModal(true);
                                                     }}
                                                     className="px-3 py-1 bg-teal-600 text-white text-xs rounded hover:bg-teal-500"
-                                                    title="Fatura Önizleme"
+                                                    title={t('fatura_onizleme')}
                                                 >
-                                                    👁️ Önizle
+                                                    {t('onizle')}
                                                 </button>
                                                 {invoice.status !== 'cancelled' && !invoice.isStorno && (
                                                     <button
@@ -517,7 +517,7 @@ const router = useRouter();
                                                             setShowStornoModal(true);
                                                         }}
                                                         className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-500"
-                                                        title="Faturayı İptal Et (Storno)"
+                                                        title={t('faturayi_i_ptal_et_storno')}
                                                     >
                                                         Storno
                                                     </button>
@@ -535,7 +535,7 @@ const router = useRouter();
                                                                 seller: {
                                                                     name: 'LOKMA GmbH',
                                                                     address: 'Schulte-Braucks-Str. 1',
-                                                                    city: 'Hückelhoven',
+                                                                    city: t('huckelhoven'),
                                                                     postalCode: '41836',
                                                                     country: 'Deutschland',
                                                                     vatId: 'DEMO-UST-DE123456',
@@ -578,7 +578,7 @@ const router = useRouter();
                                                         });
                                                     }}
                                                     className="px-3 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-500"
-                                                    title="XRechnung XML İndir (B2B E-Fatura)"
+                                                    title={t('xrechnung_xml_i_ndir_b2b_e_fatura')}
                                                 >
                                                     XML
                                                 </button>
@@ -596,18 +596,18 @@ const router = useRouter();
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                     <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
-                        <h2 className="text-xl font-bold text-white mb-4">📄 Manuel Fatura Oluştur</h2>
-                        <p className="text-gray-400 text-sm mb-4">GoBD uyumlu ardışık fatura numarası otomatik atanır.</p>
+                        <h2 className="text-xl font-bold text-white mb-4">{t('manuel_fatura_olustur')}</h2>
+                        <p className="text-gray-400 text-sm mb-4">{t('gobd_uyumlu_ardisik_fatura_numarasi_otom')}</p>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-gray-300 text-sm mb-1">Müşteri Adı *</label>
+                                <label className="block text-gray-300 text-sm mb-1">{t('musteri_adi')}</label>
                                 <input
                                     type="text"
                                     value={newInvoice.butcherName}
                                     onChange={(e) => setNewInvoice({ ...newInvoice, butcherName: e.target.value })}
                                     className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                                    placeholder="Örn: TUNA Kasap"
+                                    placeholder={t('orn_tuna_kasap')}
                                 />
                             </div>
                             <div>
@@ -617,17 +617,17 @@ const router = useRouter();
                                     value={newInvoice.butcherAddress}
                                     onChange={(e) => setNewInvoice({ ...newInvoice, butcherAddress: e.target.value })}
                                     className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                                    placeholder="Örn: Hauptstr. 1, 50667 Köln"
+                                    placeholder={t('orn_hauptstr_1_50667_koln')}
                                 />
                             </div>
                             <div>
-                                <label className="block text-gray-300 text-sm mb-1">Açıklama</label>
+                                <label className="block text-gray-300 text-sm mb-1">{t('aciklama')}</label>
                                 <input
                                     type="text"
                                     value={newInvoice.description}
                                     onChange={(e) => setNewInvoice({ ...newInvoice, description: e.target.value })}
                                     className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                                    placeholder="Örn: Ocak 2026 Abonelik"
+                                    placeholder={t('orn_ocak_2026_abonelik')}
                                 />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
@@ -643,13 +643,13 @@ const router = useRouter();
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-gray-300 text-sm mb-1">KDV Oranı</label>
+                                    <label className="block text-gray-300 text-sm mb-1">{t('kdv_orani')}</label>
                                     <select
                                         value={newInvoice.vatRate}
                                         onChange={(e) => setNewInvoice({ ...newInvoice, vatRate: e.target.value as 'STANDARD' | 'REDUCED' })}
                                         className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
                                     >
-                                        <option value="REDUCED">%7 (Gıda)</option>
+                                        <option value="REDUCED">{t('7_gida')}</option>
                                         <option value="STANDARD">%19 (Standart)</option>
                                     </select>
                                 </div>
@@ -677,7 +677,7 @@ const router = useRouter();
                                 disabled={creating || !newInvoice.butcherName || newInvoice.netAmount <= 0}
                                 className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 disabled:opacity-50"
                             >
-                                {creating ? 'Oluşturuluyor...' : 'Fatura Oluştur'}
+                                {creating ? t('olusturuluyor') : t('fatura_olustur')}
                             </button>
                         </div>
                     </div>
@@ -688,11 +688,10 @@ const router = useRouter();
             {showStornoModal && (
                 <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                     <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md mx-4">
-                        <h2 className="text-xl font-bold text-red-400 mb-4">⚠️ Fatura Storno (İptal)</h2>
+                        <h2 className="text-xl font-bold text-red-400 mb-4">{t('fatura_storno_i_ptal')}</h2>
                         <div className="bg-red-900/30 border border-red-500/30 rounded-lg p-3 mb-4">
                             <p className="text-red-200 text-sm">
-                                <strong>GoBD Uyarısı:</strong> Almanya mali mevzuatına göre faturalar silinemez.
-                                Storno işlemi eksi tutarlı yeni bir fatura oluşturur ve orijinal faturayı iptal olarak işaretler.
+                                <strong>{t('gobd_uyarisi')}</strong> {t('almanya_mali_mevzuatina_gore_faturalar_s')}
                             </p>
                         </div>
 
@@ -702,7 +701,7 @@ const router = useRouter();
                                 value={stornoReason}
                                 onChange={(e) => setStornoReason(e.target.value)}
                                 className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                                placeholder="Örn: Müşteri siparişi iptal etti, yanlış tutar girildi..."
+                                placeholder={t('orn_musteri_siparisi_iptal_etti_yanlis_t')}
                                 rows={3}
                             />
                             <p className="text-gray-500 text-xs mt-1">{stornoReason.length}/10 karakter</p>
@@ -713,14 +712,14 @@ const router = useRouter();
                                 onClick={() => { setShowStornoModal(false); setStornoInvoiceId(null); setStornoReason(''); }}
                                 className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500"
                             >
-                                Vazgeç
+                                {t('vazgec')}
                             </button>
                             <button
                                 onClick={handleStorno}
                                 disabled={processingStorno || stornoReason.trim().length < 10}
                                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 disabled:opacity-50"
                             >
-                                {processingStorno ? 'İşleniyor...' : 'Storno Yap'}
+                                {processingStorno ? t('i_sleniyor') : 'Storno Yap'}
                             </button>
                         </div>
                     </div>

@@ -85,7 +85,7 @@ const { admin, loading: adminLoading } = useAdmin();
             setShifts(records);
         } catch (error) {
             console.error('Shift loading error:', error);
-            toast.error('Vardiya verileri yüklenirken hata oluştu.');
+            toast.error(t('vardiya_verileri_yuklenirken_hata_olustu'));
         } finally {
             setLoading(false);
         }
@@ -118,7 +118,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
     const monthLabel = useMemo(() => {
         const [y, m] = selectedMonth.split('-').map(Number);
-        const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+        const months = ['Ocak', t('subat'), 'Mart', 'Nisan', t('mayis'), 'Haziran', 'Temmuz', t('agustos'), t('eylul'), 'Ekim', t('kasim'), t('aralik')];
         return `${months[m - 1]} ${y}`;
     }, [selectedMonth]);
 
@@ -126,7 +126,7 @@ const { admin, loading: adminLoading } = useAdmin();
     const exportCSV = () => {
         setExporting(true);
         try {
-            const headers = ['Personel', t('tarih'), 'Başlangıç', 'Bitiş', t('toplam_dk'), 'Mola (dk)', 'Net (dk)', 'Masalar', 'Kurye', 'Durum'];
+            const headers = ['Personel', t('tarih'), t('baslangic'), t('bitis'), t('toplam_dk'), 'Mola (dk)', 'Net (dk)', 'Masalar', 'Kurye', t('durum')];
             const rows = shifts.map(s => [
                 s.staffName,
                 s.date,
@@ -142,8 +142,8 @@ const { admin, loading: adminLoading } = useAdmin();
 
             // Add summary section
             rows.push([]);
-            rows.push(['=== ÖZET ===']);
-            rows.push(['Personel', t('toplam_vardiya'), 'Toplam Süre', t('toplam_mola'), 'Net Çalışma', 'Kurye Vardiya']);
+            rows.push([t('ozet')]);
+            rows.push(['Personel', t('toplam_vardiya'), t('toplam_sure'), t('toplam_mola'), t('net_calisma'), t('kurye_vardiya')]);
             staffSummary.forEach(s => {
                 rows.push([
                     s.name,
@@ -166,7 +166,7 @@ const { admin, loading: adminLoading } = useAdmin();
             URL.revokeObjectURL(url);
             toast.success('CSV raporu indirildi.');
         } catch (error) {
-            toast.error('Export hatası.');
+            toast.error(t('export_hatasi'));
         } finally {
             setExporting(false);
         }
@@ -235,8 +235,8 @@ const { admin, loading: adminLoading } = useAdmin();
                 <td>${formatMinutes(s.pauseMinutes)}</td>
                 <td>${formatMinutes(s.totalMinutes - s.pauseMinutes)}</td>
                 <td>${s.assignedTables.length > 0 ? s.assignedTables.join(', ') : '-'}</td>
-                <td>${s.isDeliveryDriver ? '<span class="badge badge-driver">Kurye</span>' : (s.isOtherRole ? '<span class="badge badge-other">Diğer</span>' : '-')}</td>
-                <td><span class="badge ${s.status === 'active' ? 'badge-active' : 'badge-ended'}">${s.status === 'active' ? 'Aktif' : 'Tamamlandı'}</span></td>
+                <td>${s.isDeliveryDriver ? t('span_class_badge_badge_driver_kurye_span') : (s.isOtherRole ? t('span_class_badge_badge_other_diger_span') : '-')}</td>
+                <td><span class="badge ${s.status === 'active' ? 'badge-active' : 'badge-ended'}">${s.status === 'active' ? t('aktif') : t('tamamlandi')}</span></td>
             </tr>`).join('')}
         </tbody>
     </table>
@@ -254,17 +254,17 @@ const { admin, loading: adminLoading } = useAdmin();
                 setTimeout(() => {
                     printWindow.print();
                 }, 500);
-                toast.success('PDF raporu hazırlandı.');
+                toast.success(t('pdf_raporu_hazirlandi'));
             }
         } catch (error) {
-            toast.error('PDF export hatası.');
+            toast.error(t('pdf_export_hatasi'));
         } finally {
             setExporting(false);
         }
     };
 
-    if (adminLoading) return <div className="p-8 text-white">Yükleniyor...</div>;
-    if (!admin?.butcherId) return <div className="p-8 text-white">Bu sayfaya erişim yetkiniz yok.</div>;
+    if (adminLoading) return <div className="p-8 text-white">{t('yukleniyor')}</div>;
+    if (!admin?.butcherId) return <div className="p-8 text-white">{t('bu_sayfaya_erisim_yetkiniz_yok')}</div>;
 
     return (
         <div className="flex flex-col min-h-screen bg-gray-900 text-white">
@@ -275,14 +275,14 @@ const { admin, loading: adminLoading } = useAdmin();
                     className="flex items-center text-gray-400 hover:text-white mb-6 transition-colors group"
                 >
                     <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
-                    Panela Geri Dön
+                    {t('panela_geri_don')}
                 </button>
 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                            ⏱️ Çalışma Saatleri
+                            {t('calisma_saatleri')}
                         </h1>
                         <p className="text-gray-400 mt-1">{t('personel_vardiya_takibi_ve_raporlama')}</p>
                     </div>
@@ -319,11 +319,11 @@ const { admin, loading: adminLoading } = useAdmin();
                         <p className="text-3xl font-black text-white mt-1">{shifts.length}</p>
                     </div>
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-5">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Personel Sayısı</p>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('personel_sayisi')}</p>
                         <p className="text-3xl font-black text-cyan-400 mt-1">{staffSummary.length}</p>
                     </div>
                     <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-5">
-                        <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Toplam Çalışma</p>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">{t('toplam_calisma')}</p>
                         <p className="text-3xl font-black text-green-400 mt-1">
                             {formatMinutes(staffSummary.reduce((t, s) => t + s.totalMinutes, 0))}
                         </p>
@@ -341,7 +341,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     <div className="mb-8">
                         <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                             <span className="w-1 h-5 bg-cyan-500 rounded-full"></span>
-                            Personel Özeti — {monthLabel}
+                            {t('personel_ozeti')} {monthLabel}
                         </h2>
                         <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
                             <table className="w-full">
@@ -351,7 +351,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                         <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Vardiya</th>
                                         <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('toplam')}</th>
                                         <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Mola</th>
-                                        <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Net Çalışma</th>
+                                        <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">{t('net_calisma')}</th>
                                         <th className="text-center px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Kurye</th>
                                     </tr>
                                 </thead>
@@ -384,18 +384,18 @@ const { admin, loading: adminLoading } = useAdmin();
                 <div>
                     <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                         <span className="w-1 h-5 bg-purple-500 rounded-full"></span>
-                        Detaylı Vardiya Kayıtları
+                        {t('detayli_vardiya_kayitlari')}
                     </h2>
                     {loading ? (
                         <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
                             <div className="animate-spin w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-                            <p className="text-gray-400">Yükleniyor...</p>
+                            <p className="text-gray-400">{t('yukleniyor')}</p>
                         </div>
                     ) : shifts.length === 0 ? (
                         <div className="bg-gray-800 rounded-xl border border-gray-700 p-12 text-center">
                             <p className="text-4xl mb-3">📭</p>
-                            <p className="text-gray-400 text-lg font-medium">{monthLabel} için kayıt bulunamadı.</p>
-                            <p className="text-gray-500 text-sm mt-1">Farklı bir ay seçmeyi deneyin.</p>
+                            <p className="text-gray-400 text-lg font-medium">{monthLabel} {t('icin_kayit_bulunamadi')}</p>
+                            <p className="text-gray-500 text-sm mt-1">{t('farkli_bir_ay_secmeyi_deneyin')}</p>
                         </div>
                     ) : (
                         <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden overflow-x-auto">
@@ -404,14 +404,14 @@ const { admin, loading: adminLoading } = useAdmin();
                                     <tr className="border-b border-gray-700">
                                         <th className="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase">Personel</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('tarih')}</th>
-                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Başlangıç</th>
-                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Bitiş</th>
+                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('baslangic')}</th>
+                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('bitis')}</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('toplam')}</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Mola</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Net</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Masalar</th>
                                         <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Rol</th>
-                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">Durum</th>
+                                        <th className="text-center px-3 py-3 text-xs font-bold text-gray-400 uppercase">{t('durum')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -429,9 +429,9 @@ const { admin, loading: adminLoading } = useAdmin();
                                             </td>
                                             <td className="px-3 py-2.5 text-center">
                                                 {s.isDeliveryDriver ? (
-                                                    <span className="bg-blue-900/40 text-blue-400 border border-blue-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">🛵 Kurye</span>
+                                                    <span className="bg-blue-900/40 text-blue-400 border border-blue-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">{t('kurye')}</span>
                                                 ) : s.isOtherRole ? (
-                                                    <span className="bg-purple-900/40 text-purple-400 border border-purple-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">💼 Diğer</span>
+                                                    <span className="bg-purple-900/40 text-purple-400 border border-purple-700/40 px-2 py-0.5 rounded-full text-[10px] font-medium">{t('diger')}</span>
                                                 ) : (
                                                     <span className="bg-gray-700/40 text-gray-400 border border-gray-600/40 px-2 py-0.5 rounded-full text-[10px] font-medium">🍽 Servis</span>
                                                 )}

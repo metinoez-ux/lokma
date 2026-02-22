@@ -254,7 +254,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
         const typeBreakdown = {
             pickup: filteredOrders.filter(o => o.type === 'pickup' || o.type === 'gelAl').length,
-            delivery: filteredOrders.filter(o => o.type === 'delivery' || o.type === 'kurye').length,
+            delivery: filteredOrders.filter(o => o.type === 'delivery' || o.type === t('kurye')).length,
             dineIn: filteredOrders.filter(o => o.type === 'dineIn' || o.type === 'masa').length,
         };
 
@@ -395,7 +395,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     </div>
                     <div className="bg-gradient-to-br from-amber-900/50 to-amber-800/30 rounded-xl p-3 border border-amber-700/50">
                         <p className="text-2xl font-bold text-amber-400">{stats.total}</p>
-                        <p className="text-xs text-gray-400">Sipariş</p>
+                        <p className="text-xs text-gray-400">{t('siparis')}</p>
                     </div>
                     <div className="bg-gradient-to-br from-emerald-900/50 to-emerald-800/30 rounded-xl p-3 border border-emerald-700/50">
                         <p className="text-2xl font-bold text-emerald-400">{formatCurrency(stats.revenue)}</p>
@@ -431,7 +431,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     </div>
                     <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/30 rounded-xl p-3">
                         <p className="text-purple-400 text-xs font-medium mb-1">{t('siparis_orani')}</p>
-                        <p className="text-white text-sm font-bold">🚚 {analytics.deliveryRate}{t('kurye')} {analytics.dineInRate}% Masa 🏪 {analytics.pickupRate}% Gel Al</p>
+                        <p className="text-white text-sm font-bold">🚚 {analytics.deliveryRate}{t(t('kurye'))} {analytics.dineInRate}% Masa 🏪 {analytics.pickupRate}% Gel Al</p>
                     </div>
                 </div>
 

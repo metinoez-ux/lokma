@@ -240,7 +240,7 @@ const [sectors, setSectors] = useState<Sector[]>([]);
                             onClick={openNewSectorModal}
                             className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium flex items-center gap-2"
                         >
-                            <span>➕</span> Yeni Sektör Ekle
+                            <span>➕</span> {t('yeni_sektor_ekle')}
                         </button>
                     </div>
                 </div>

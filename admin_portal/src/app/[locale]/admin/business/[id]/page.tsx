@@ -143,7 +143,7 @@ export default function BusinessDetailsPage() {
       }
     } catch (e) {
       console.error("Status checking error", e);
-      return { isOpen: false, text: "Hata" };
+      return { isOpen: false, text: t('hata') };
     }
   }
 
@@ -881,7 +881,7 @@ export default function BusinessDetailsPage() {
       show: true,
       title: t('urunSil'),
       message: t('buUrunuSilmekIstediginizeEminMisiniz'),
-      confirmText: 'Evet, Sil',
+      confirmText: t('evet_sil'),
       confirmColor: 'bg-red-600 hover:bg-red-500',
       onConfirm: async () => {
         setConfirmModal(prev => ({ ...prev, show: false }));
@@ -1527,7 +1527,7 @@ export default function BusinessDetailsPage() {
       show: true,
       title: newStatus ? t('hesabiAktifEt') : t('hesabiDeaktifEt'),
       message: `${t('buKasabi')} ${action} ${t('yapmakIstediginizeEminMisiniz')}`,
-      confirmText: newStatus ? "Aktif Et" : "Deaktif Et",
+      confirmText: newStatus ? t('aktif_et') : "Deaktif Et",
       confirmColor: newStatus
         ? "bg-green-600 hover:bg-green-500"
         : "bg-red-600 hover:bg-red-500",
@@ -1793,7 +1793,7 @@ export default function BusinessDetailsPage() {
             <div className="bg-gray-800 rounded-xl p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-white font-bold">
-                  👥 Aktif Personel & Kuryeler
+                  {t('aktif_personel_kuryeler')}
                 </h3>
                 <span className="text-green-400 text-sm flex items-center gap-1">
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
@@ -2127,7 +2127,7 @@ export default function BusinessDetailsPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-gray-400 text-sm">Durum</p>
+                      <p className="text-gray-400 text-sm">{t('durum')}</p>
                       <span
                         className={`inline-block mt-1 px-2 py-1 rounded text-xs ${business?.isActive ? "bg-green-600/20 text-green-400" : "bg-red-600/20 text-red-400"}`}
                       >
@@ -2297,7 +2297,7 @@ export default function BusinessDetailsPage() {
                     disabled={addingProduct}
                     className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 disabled:opacity-50"
                   >
-                    {addingProduct ? "Kaydediliyor..." : "Kaydet"}
+                    {addingProduct ? "Kaydediliyor..." : t('kaydet')}
                   </button>
                 </div>
               </div>
@@ -2330,7 +2330,7 @@ export default function BusinessDetailsPage() {
                       <th className="px-4 py-3">{t('siparisNo')}</th>
                       <th className="px-4 py-3">{t('musteri')}</th>
                       <th className="px-4 py-3">{t('tutar')}</th>
-                      <th className="px-4 py-3">Durum</th>
+                      <th className="px-4 py-3">{t('durum')}</th>
                       <th className="px-4 py-3">{t('tarih')}</th>
                     </tr>
                   </thead>
@@ -2406,7 +2406,7 @@ export default function BusinessDetailsPage() {
                             adminName: (admin as any)?.name || (admin as any)?.displayName || admin?.email || "unknown",
                           });
                           setFormData({ ...formData, temporaryDeliveryPaused: newValue });
-                          showToast(newValue ? "🚫 Kurye hizmeti durduruldu" : "✅ Kurye hizmeti aktif", "success");
+                          showToast(newValue ? t('kurye_hizmeti_durduruldu') : t('kurye_hizmeti_aktif'), "success");
                         } catch (e) {
                           showToast(t('hataOlustu1'), "error");
                         }
@@ -2416,7 +2416,7 @@ export default function BusinessDetailsPage() {
                         : "bg-blue-600 hover:bg-blue-500 text-white"
                         }`}
                     >
-                      {formData.temporaryDeliveryPaused ? "⏸️ Kurye Durduruldu" : "🛵 Kurye Aktif"}
+                      {formData.temporaryDeliveryPaused ? t('kurye_durduruldu') : t('kurye_aktif')}
                     </button>
                   )}
                   {/* Active/Deactive Toggle */}
@@ -2462,7 +2462,7 @@ export default function BusinessDetailsPage() {
                   <div className="flex gap-2 border-b border-gray-700 pb-3 mb-6 flex-wrap">
                     {[
                       { id: "bilgiler" as const, label: t('isletmeBilgileri') },
-                      { id: "fatura" as const, label: "🧾 Fatura Adresi" },
+                      { id: "fatura" as const, label: t('fatura_adresi') },
                       { id: "zertifikalar" as const, label: "🏷️ Zertifikalar" },
                       { id: "gorseller" as const, label: t('gorseller') },
                       { id: "saatler" as const, label: t('acilisSaatleri') },
@@ -2628,7 +2628,7 @@ export default function BusinessDetailsPage() {
                   )}
 
                   {/* ═══════ Tab 2: Fatura Adresi ═══════ */}
-                  {isletmeInternalTab === t('fatura') && (
+                  {isletmeInternalTab === t(t('fatura')) && (
                     <div className="space-y-6">
                       <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
                         <label className="flex items-center gap-3 cursor-pointer mb-4">
@@ -2907,7 +2907,7 @@ export default function BusinessDetailsPage() {
                                 <div className="flex-1 min-w-0">
                                   <h5 className="text-white font-bold text-sm">{cat.name}</h5>
                                   <p className="text-gray-500 text-xs">
-                                    {inlineProducts.filter((p: any) => p.category === cat.name || p.categoryId === cat.id).length} {t('urun')} {cat.isActive ? '✅ Aktif' : '🔴 Pasif'}
+                                    {inlineProducts.filter((p: any) => p.category === cat.name || p.categoryId === cat.id).length} {t('urun')} {cat.isActive ? '✅ Aktif' : t('pasif')}
                                   </p>
                                 </div>
 
@@ -2925,7 +2925,7 @@ export default function BusinessDetailsPage() {
                                   <button
                                     onClick={() => setDeletingCategoryId(cat.id)}
                                     className="p-1.5 bg-red-600/80 hover:bg-red-500 rounded-lg transition text-white text-xs"
-                                    title="Sil"
+                                    title={t('sil')}
                                   >🗑️</button>
                                 </div>
                               </div>
@@ -2938,7 +2938,7 @@ export default function BusinessDetailsPage() {
                           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                             <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md">
                               <h2 className="text-xl font-bold text-white mb-4">
-                                {editingCategory ? t('kategoriDuzenle') : 'Yeni Kategori'}
+                                {editingCategory ? t('kategoriDuzenle') : t('yeni_kategori')}
                               </h2>
 
                               {/* Icon Selection */}
@@ -2994,7 +2994,7 @@ export default function BusinessDetailsPage() {
                                   disabled={savingCategory || !categoryForm.name.trim()}
                                   className="flex-1 px-4 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition disabled:opacity-50"
                                 >
-                                  {savingCategory ? 'Kaydediliyor...' : 'Kaydet'}
+                                  {savingCategory ? 'Kaydediliyor...' : t('kaydet')}
                                 </button>
                               </div>
                             </div>
@@ -3006,7 +3006,7 @@ export default function BusinessDetailsPage() {
                           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                             <div className="bg-gray-800 rounded-xl p-6 w-full max-w-sm text-center">
                               <span className="text-4xl">⚠️</span>
-                              <h3 className="text-lg font-bold text-white mt-3">Kategoriyi Sil</h3>
+                              <h3 className="text-lg font-bold text-white mt-3">{t('kategoriyi_sil')}</h3>
                               <p className="text-gray-400 text-sm mt-2">
                                 {t('buKategoriyiKaliciOlarakSilmekIstediginizden')}
                               </p>
@@ -3018,7 +3018,7 @@ export default function BusinessDetailsPage() {
                                 <button
                                   onClick={() => handleDeleteCategory(deletingCategoryId)}
                                   className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-500"
-                                >Evet, Sil</button>
+                                >{t('evet_sil')}</button>
                               </div>
                             </div>
                           </div>
@@ -3164,7 +3164,7 @@ export default function BusinessDetailsPage() {
                                 <th className="pb-2 pr-3">{t('sure')}</th>
                                 <th className="pb-2 pr-3">📍 Konum</th>
                                 <th className="pb-2 pr-3">📋 Masalar</th>
-                                <th className="pb-2">Durum</th>
+                                <th className="pb-2">{t('durum')}</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -3223,7 +3223,7 @@ export default function BusinessDetailsPage() {
                           : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                           }`}
                       >
-                        ✅ Aktif ({staffList.filter(s => s.isActive !== false).length})
+                        {t('aktif')}{staffList.filter(s => s.isActive !== false).length})
                       </button>
                       <button
                         onClick={() => setStaffStatusFilter('archived')}
@@ -3272,7 +3272,7 @@ export default function BusinessDetailsPage() {
                             <tr>
                               <th className="pb-3 py-2">{t('kullanici')}</th>
                               <th className="pb-3 py-2">Rol</th>
-                              <th className="pb-3 py-2">Durum</th>
+                              <th className="pb-3 py-2">{t('durum')}</th>
                               <th className="pb-3 py-2">{t('islemler')}</th>
                             </tr>
                           </thead>
@@ -3415,7 +3415,7 @@ export default function BusinessDetailsPage() {
                     {/* Invite New Staff */}
                     <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-700">
                       <h3 className="text-white font-bold text-lg mb-4">
-                        ➕ Yeni Personel Ekle
+                        {t('yeni_personel_ekle')}
                       </h3>
                       <div className="grid grid-cols-2 gap-3">
                         <input
@@ -3506,7 +3506,7 @@ export default function BusinessDetailsPage() {
                             onClick={() => setInviteResult(null)}
                             className="text-xs text-gray-400 hover:text-white"
                           >
-                            Kapat
+                            {t('kapat')}
                           </button>
                         </div>
                       )}
@@ -3773,7 +3773,7 @@ export default function BusinessDetailsPage() {
                             className="w-5 h-5 accent-amber-500"
                           />
                           <div>
-                            <span className="text-white">Masa Rezervasyonu Aktif</span>
+                            <span className="text-white">{t('masa_rezervasyonu_aktif')}</span>
                             <p className="text-xs text-gray-400">
                               {t('musterilerMobilUygulamadanMasaRezervasyonuYapabilir')}
                             </p>
@@ -3968,7 +3968,7 @@ export default function BusinessDetailsPage() {
                         </h4>
                         <div>
                           <label className="text-gray-400 text-sm">
-                            Hesap Sahibi
+                            {t('hesap_sahibi')}
                           </label>
                           <input
                             type="text"
@@ -4159,7 +4159,7 @@ export default function BusinessDetailsPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
                   <p className="text-2xl font-bold text-amber-400">{formData.maxReservationTables || 0}</p>
-                  <p className="text-xs text-gray-400 mt-1">Toplam Masa</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('toplam_masa')}</p>
                 </div>
                 <div className="bg-gray-900 rounded-xl p-4 border border-gray-700 text-center">
                   <p className="text-2xl font-bold text-teal-400">{formData.tableCapacity || 0}</p>
@@ -4184,7 +4184,7 @@ export default function BusinessDetailsPage() {
                 {/* Quick setup row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div>
-                    <label className="text-gray-400 text-sm block mb-1">Toplam Masa Adedi</label>
+                    <label className="text-gray-400 text-sm block mb-1">{t('toplam_masa_adedi')}</label>
                     <input
                       type="number"
                       value={formData.maxReservationTables}
@@ -4247,7 +4247,7 @@ export default function BusinessDetailsPage() {
                       }}
                       className="w-full px-4 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-sm font-medium transition"
                     >
-                      ➕ Tek Masa Ekle
+                      {t('tek_masa_ekle')}
                     </button>
                   </div>
                 </div>

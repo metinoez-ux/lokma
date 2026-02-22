@@ -1489,7 +1489,7 @@ export default function SuperAdminDashboard() {
                 await reloadAdmins();
 
                 setEditingAdmin(null);
-                showToast('✅ Admin rolü kaldırıldı - Kullanıcıya indirgendi', 'success');
+                showToast(tNav('admin_rolu_kaldirildi_kullaniciya_indirg'), 'success');
                 setSaving(false);
                 return;
             }
@@ -2022,7 +2022,7 @@ export default function SuperAdminDashboard() {
 
                             {!showAllUsers && (
                                 <p className="text-gray-400 text-sm mt-2">
-                                    {tNav('i_sim_soyisim_e_posta_veya_telefon_ile_k')}{t('allUsers')}" butonunu kullanın.
+                                    {tNav('i_sim_soyisim_e_posta_veya_telefon_ile_k')}{t('allUsers')}{tNav('butonunu_kullanin')}
                                 </p>
                             )}
                         </div>
@@ -2218,7 +2218,7 @@ export default function SuperAdminDashboard() {
                                                         ) : (
                                                             // 🔵 USER/KULLANICI - Blue
                                                             <span className="px-2 py-0.5 bg-blue-600 text-white rounded-full text-xs font-medium">
-                                                                Kullanıcı
+                                                                {tNav('kullanici')}
                                                             </span>
                                                         )}
                                                         {/* 🚚 Driver Type Badge */}
@@ -2258,7 +2258,7 @@ export default function SuperAdminDashboard() {
                                                     {/* Edit Button */}
                                                     <button
                                                         className="p-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600 hover:text-white transition"
-                                                        title="Düzenle"
+                                                        title={tNav('duzenle')}
                                                     >
                                                         ✏️
                                                     </button>
@@ -2305,7 +2305,7 @@ export default function SuperAdminDashboard() {
                                                         className={`p-2 rounded-lg transition ${(user as any).isActive !== false
                                                             ? 'bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white'
                                                             : 'bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white'}`}
-                                                        title={(user as any).isActive !== false ? 'Arşivle' : 'Aktifleştir'}
+                                                        title={(user as any).isActive !== false ? tNav('arsivle') : tNav('aktiflestir')}
                                                     >
                                                         {(user as any).isActive !== false ? '📦' : '✅'}
                                                     </button>
@@ -2440,7 +2440,7 @@ export default function SuperAdminDashboard() {
                             <table className="w-full text-left">
                                 <thead className="text-gray-400 border-b border-gray-700">
                                     <tr>
-                                        <th className="pb-3 py-2">Kullanıcı</th>
+                                        <th className="pb-3 py-2">{tNav('kullanici')}</th>
                                         <th className="pb-3 py-2">Rol</th>
                                         <th className="pb-3 py-2">Konum</th>
                                         <th className="pb-3 py-2">{tNav('durum')}</th>
@@ -2520,7 +2520,7 @@ export default function SuperAdminDashboard() {
                                             </td>
                                             <td className="py-4">
                                                 <span className={`px-2 py-1 rounded text-xs ${a.isActive ? 'bg-green-600' : 'bg-red-600'}`}>
-                                                    {a.isActive ? 'Aktif' : tNav('devre_disi')}
+                                                    {a.isActive ? tNav('aktif') : tNav('devre_disi')}
                                                 </span>
                                             </td>
                                             <td className="py-4">
@@ -2687,7 +2687,7 @@ export default function SuperAdminDashboard() {
                                         )}
                                         <input
                                             type="text"
-                                            placeholder="İşletme ara..."
+                                            placeholder={tNav('i_sletme_ara')}
                                             value={assignLocation}
                                             onChange={(e) => setAssignLocation(e.target.value)}
                                             className="w-full px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600"
@@ -2968,7 +2968,7 @@ export default function SuperAdminDashboard() {
                                     {creating ? (
                                         <>{tNav('gonderiliyor')}</>
                                     ) : (
-                                        <>📱 Davetiye Gönder</>
+                                        <>{tNav('davetiye_gonder')}</>
                                     )}
                                 </button>
                             </div>
@@ -3319,7 +3319,7 @@ export default function SuperAdminDashboard() {
                                                     }
                                                 }}
                                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                                                title="Rol seçin"
+                                                title={tNav('rol_secin')}
                                             >
                                                 {admin?.adminType === 'super' ? (
                                                     // Super Admin: Tüm roller
@@ -3361,7 +3361,7 @@ export default function SuperAdminDashboard() {
                                         {admin?.adminType === 'super' && editRole !== 'super' && (
                                             <div>
                                                 <label className="block text-gray-400 text-sm mb-1">
-                                                    🏢 İşletme Seçimi
+                                                    {tNav('i_sletme_secimi')}
                                                 </label>
                                                 {loadingButchers ? (
                                                     <div className="text-gray-400 text-sm py-2">{t('loading')}</div>
@@ -3378,7 +3378,7 @@ export default function SuperAdminDashboard() {
                                                             value={editButcherId}
                                                             onChange={(e) => setEditButcherId(e.target.value)}
                                                             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
-                                                            title="İşletme seçin"
+                                                            title={tNav('i_sletme_secin')}
                                                             size={Math.min(butcherList.filter(b => {
                                                                 if (!businessSearchFilter.trim()) return true;
                                                                 const search = businessSearchFilter.toLowerCase();
@@ -3576,7 +3576,7 @@ export default function SuperAdminDashboard() {
                                                         setTimeout(() => setShowAddressSuggestions(false), 200);
                                                     }}
                                                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                    placeholder="En az 3 karakter yazın..."
+                                                    placeholder={tNav('en_az_3_karakter_yazin')}
                                                     autoComplete="off"
                                                 />
                                                 {/* Custom Autocomplete Dropdown */}
@@ -3953,7 +3953,7 @@ export default function SuperAdminDashboard() {
                                         )}
                                         {/* Upload Overlay */}
                                         <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer backdrop-blur-[2px]">
-                                            <span className="text-white text-[10px] font-bold uppercase tracking-wider mb-1">Değiştir</span>
+                                            <span className="text-white text-[10px] font-bold uppercase tracking-wider mb-1">{tNav('degistir')}</span>
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -4196,7 +4196,7 @@ export default function SuperAdminDashboard() {
                                                                 setTimeout(() => setShowAddressSuggestions(false), 200);
                                                             }}
                                                             className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-blue-500"
-                                                            placeholder="En az 3 karakter yazın..."
+                                                            placeholder={tNav('en_az_3_karakter_yazin')}
                                                             autoComplete="off"
                                                         />
                                                         {/* Custom Autocomplete Dropdown */}
@@ -4452,7 +4452,7 @@ export default function SuperAdminDashboard() {
 
                                                         {!editingUserProfile.butcherId && (
                                                             <p className="text-red-400 text-xs mt-1">
-                                                                ⚠️ Admin rolü için işletme seçimi zorunludur!
+                                                                {tNav('admin_rolu_icin_isletme_secimi_zorunludu')}
                                                             </p>
                                                         )}
                                                     </div>
@@ -4914,7 +4914,7 @@ export default function SuperAdminDashboard() {
                                                     : tNav('bu_kullaniciyi_silmek_istediginizden_emi'),
                                                 itemName: `${editingUserProfile.firstName} ${editingUserProfile.lastName}`.trim() || editingUserProfile.email,
                                                 variant: isAdmin ? 'warning' : 'danger',
-                                                confirmText: isAdmin ? tNav('evet_arsivle') : 'Evet, Sil',
+                                                confirmText: isAdmin ? tNav('evet_arsivle') : tNav('evet_sil'),
                                                 onConfirm: async () => {
                                                     setConfirmState(prev => ({ ...prev, isOpen: false }));
                                                     try {

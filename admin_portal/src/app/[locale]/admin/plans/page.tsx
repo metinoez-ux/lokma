@@ -600,7 +600,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
                                                     {/* Sipariş Başı Ücret */}
                                                     <div className="col-span-2">
-                                                        <label className="block text-xs font-medium text-amber-400 mb-2">💵 Sipariş Başı Ücret</label>
+                                                        <label className="block text-xs font-medium text-amber-400 mb-2">{t('siparis_basi_ucret')}</label>
                                                         <div className="flex gap-2">
                                                             <div className="flex bg-gray-900 rounded-lg border border-gray-700 overflow-hidden">
                                                                 {(['none', 'percentage', 'fixed'] as const).map(type => (

@@ -139,7 +139,7 @@ export default function CustomerServicePage() {
                                                         {user.displayName || 'No Name'}
                                                     </h3>
                                                     <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 uppercase tracking-wider">
-                                                        ID: {user.id.substring(0, 8)}...
+                                                        {t('id')} {user.id.substring(0, 8)}...
                                                     </span>
                                                 </div>
                                             </div>

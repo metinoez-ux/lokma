@@ -6,6 +6,7 @@ import { collection, getDocs, addDoc, setDoc, doc, query, orderBy } from 'fireba
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 // Gemini is called via server-side API route (/api/ai-menu/parse)
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1063,10 +1064,12 @@ function AIMenuPageContent() {
 
 // Wrapper with Suspense for useSearchParams (Next.js 16+)
 export default function AIMenuPage() {
-    return (
+    
+  const t = useTranslations('AdminAimenu');
+return (
         <Suspense fallback={
             <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-                <div className="text-xl">Yükleniyor...</div>
+                <div className="text-xl">{t('yukleniyor')}</div>
             </div>
         }>
             <AIMenuPageContent />

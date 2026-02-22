@@ -48,9 +48,9 @@ interface ImportStats {
 }
 
 export default function AsiaExpressImportPage() {
-    
-  const t = useTranslations('AdminImportsAsiaexpress');
-const [selectedCategories, setSelectedCategories] = useState<string[]>(CATEGORIES.map(c => c.id));
+
+    const t = useTranslations('AdminImportsAsiaExpress');
+    const [selectedCategories, setSelectedCategories] = useState<string[]>(CATEGORIES.map(c => c.id));
     const [isImporting, setIsImporting] = useState(false);
     const [isScraping, setIsScraping] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -312,8 +312,8 @@ console.log('✅ ' + products.length + ' ürün kopyalandı!');`}
                             onClick={importToFirestore}
                             disabled={isImporting || scrapedProducts.length === 0}
                             className={`w-full py-3 rounded-lg font-bold ${isImporting || scrapedProducts.length === 0
-                                    ? 'bg-gray-600 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-700 hover:to-red-700'
+                                ? 'bg-gray-600 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-amber-600 to-red-600 hover:from-amber-700 hover:to-red-700'
                                 } text-white`}
                         >
                             {isImporting ? '⏳ İmport ediliyor...' : `🚀 ${scrapedProducts.length} Ürünü İmport Et`}

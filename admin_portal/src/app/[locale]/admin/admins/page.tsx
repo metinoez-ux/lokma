@@ -98,7 +98,7 @@ const [admins, setAdmins] = useState<Admin[]>([]);
             restaurantsSnap.docs.forEach(doc => {
                 allBusinesses.push({
                     id: doc.id,
-                    name: doc.data().name || 'Restoran',
+                    name: doc.data().name || t('restoran'),
                     type: 'restaurant',
                 });
             });

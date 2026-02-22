@@ -316,19 +316,19 @@ const { admin, loading: adminLoading } = useAdmin();
                     <div className="flex gap-3">
                         <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-4 py-2 text-center">
                             <p className="text-2xl font-bold text-green-400">{stats.active}</p>
-                            <p className="text-xs text-green-300">Aktif</p>
+                            <p className="text-xs text-green-300">{t('aktif')}</p>
                         </div>
                         <div className={`bg-blue-600/20 border border-blue-500/30 rounded-xl px-4 py-2 text-center ${stats.ordering > 0 ? 'animate-pulse' : ''}`}>
                             <p className="text-2xl font-bold text-blue-400">{stats.ordering}</p>
-                            <p className="text-xs text-blue-300">Sipariş</p>
+                            <p className="text-xs text-blue-300">{t('siparis')}</p>
                         </div>
                         <div className={`bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-4 py-2 text-center ${stats.paying > 0 ? 'animate-pulse' : ''}`}>
                             <p className="text-2xl font-bold text-yellow-400">{stats.paying}</p>
-                            <p className="text-xs text-yellow-300">Ödeme</p>
+                            <p className="text-xs text-yellow-300">{t('odeme')}</p>
                         </div>
                         <div className="bg-amber-600/20 border border-amber-500/30 rounded-xl px-4 py-2 text-center">
                             <p className="text-lg font-bold text-amber-400">{formatCurrency(stats.totalRevenue)}</p>
-                            <p className="text-xs text-amber-300">Toplam</p>
+                            <p className="text-xs text-amber-300">{t('toplam')}</p>
                         </div>
                     </div>
                 </div>
@@ -550,7 +550,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     {/* Totals */}
                                     <div className="px-4 py-3 flex items-center justify-between">
                                         <div>
-                                            <span className="text-gray-400 text-xs">Toplam</span>
+                                            <span className="text-gray-400 text-xs">{t('toplam')}</span>
                                             <p className="text-white font-bold text-lg">{formatCurrency(session.grandTotal)}</p>
                                         </div>
                                         {session.paidTotal > 0 && (
@@ -622,7 +622,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 <div className="grid grid-cols-3 gap-4 text-center">
                                     <div>
                                         <p className="text-2xl font-bold text-white">{formatCurrency(selectedSession.grandTotal)}</p>
-                                        <p className="text-gray-400 text-xs">Toplam</p>
+                                        <p className="text-gray-400 text-xs">{t('toplam')}</p>
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold text-green-400">{formatCurrency(selectedSession.paidTotal)}</p>
@@ -650,13 +650,13 @@ const { admin, loading: adminLoading } = useAdmin();
                                 if (items.length === 0) return null;
                                 return (
                                     <div>
-                                        <h3 className="text-white font-bold text-sm mb-3">{t('siparis_ozeti')}{items.length} ürün)</h3>
+                                        <h3 className="text-white font-bold text-sm mb-3">{t('siparis_ozeti')}{items.length} {t('urun')}</h3>
                                         <div className="bg-gray-700/20 rounded-xl overflow-hidden">
                                             <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-gray-700/40 text-gray-400 text-xs font-medium">
                                                 <div className="col-span-6">{t('urun')}</div>
                                                 <div className="col-span-2 text-center">{t('adet')}</div>
                                                 <div className="col-span-2 text-right">Birim Fiy.</div>
-                                                <div className="col-span-2 text-right">Toplam</div>
+                                                <div className="col-span-2 text-right">{t('toplam')}</div>
                                             </div>
                                             <div className="divide-y divide-gray-700/50">
                                                 {items.map((item, idx) => (

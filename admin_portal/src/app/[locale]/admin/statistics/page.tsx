@@ -571,7 +571,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 {t('karsilastirma_donemi')} {comparisonRange.startDate.toLocaleDateString('tr-TR')} - {comparisonRange.endDate.toLocaleDateString('tr-TR')}
                             </span>
                             <span className="text-gray-400 text-sm">
-                                ({comparisonOrders.length} sipariş)
+                                ({comparisonOrders.length} {t('siparis')}
                             </span>
                         </div>
                     )}
@@ -898,7 +898,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         {/* Business Performance - ONLY for Super Admin when viewing all businesses */}
                         {admin?.adminType === 'super' && (
                             <div className="bg-gray-800 rounded-xl p-6">
-                                <h3 className="text-white font-bold mb-4">🏪 İşletme Performansı</h3>
+                                <h3 className="text-white font-bold mb-4">{t('i_sletme_performansi')}</h3>
                                 {analytics.businessPerformance.length === 0 ? (
                                     <p className="text-gray-500 text-center py-8">{t('i_sletme_verisi_bulunamadi')}</p>
                                 ) : (

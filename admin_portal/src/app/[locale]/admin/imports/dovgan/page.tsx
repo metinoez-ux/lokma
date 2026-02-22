@@ -51,9 +51,9 @@ interface CategoryStats {
 }
 
 export default function DovganImportPage() {
-    
-  const t = useTranslations('AdminImportsDovgan');
-const [products, setProducts] = useState<DovganProduct[]>([]);
+
+    const t = useTranslations('AdminImportsDovgan');
+    const [products, setProducts] = useState<DovganProduct[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [importing, setImporting] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -345,8 +345,8 @@ const [products, setProducts] = useState<DovganProduct[]>([]);
                             <label
                                 key={category}
                                 className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${selectedCategories.has(category)
-                                        ? 'bg-blue-50 border-blue-300'
-                                        : 'bg-gray-50 border-gray-200'
+                                    ? 'bg-blue-50 border-blue-300'
+                                    : 'bg-gray-50 border-gray-200'
                                     }`}
                             >
                                 <div className="flex items-center gap-2">
@@ -376,8 +376,8 @@ const [products, setProducts] = useState<DovganProduct[]>([]);
                     onClick={handleImport}
                     disabled={importing || getSelectedProductCount() === 0}
                     className={`w-full py-4 rounded-lg text-white font-semibold text-lg transition-colors ${importing || getSelectedProductCount() === 0
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-blue-600 hover:bg-blue-700'
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
                         }`}
                 >
                     {importing ? (

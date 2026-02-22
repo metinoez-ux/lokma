@@ -185,7 +185,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl font-medium hover:from-cyan-500 hover:to-teal-500 transition shadow-lg flex items-center gap-2"
                     >
                         <span>➕</span>
-                        Yeni Görsel Yükle
+                        {t('yeni_gorsel_yukle')}
                     </button>
                 </div>
             </div>

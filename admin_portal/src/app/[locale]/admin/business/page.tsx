@@ -847,12 +847,12 @@ export default function BusinessesPage() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            {isKermesMode ? t('kermesYonetimi') : t('isletmeYonetimi')}
+                            {isKermesMode ? t('kermesyonetimi') : t('isletme_yonetimi')}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
                             {isKermesMode
-                                ? `${t('aktifKermesleriYonetin')} ${filteredKermesEvents.length} kermes`
-                                : `${t('tumKayitliIsletmeleriYonetin')} ${filteredBusinesses.length} ${t('isletme1')}`}
+                                ? `${t('aktifkermesleriyonetin')} ${filteredKermesEvents.length} kermes`
+                                : `${t('tum_kayitli_isletmeleri_yonetin')} ${filteredBusinesses.length} ${t('isletme1')}`}
                         </p>
                     </div>
                     {isKermesMode ? (
@@ -861,7 +861,7 @@ export default function BusinessesPage() {
                             className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-medium hover:from-pink-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
                         >
                             <span>🎪</span>
-                            Yeni Kermes Ekle
+                            {t('yeni_kermes_ekle')}
                         </button>
                     ) : (
                         <Link
@@ -869,7 +869,7 @@ export default function BusinessesPage() {
                             className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium hover:from-blue-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
                         >
                             <span>➕</span>
-                            {t('yeniIsletmeEkle')}
+                            {t('yeni_isletme_ekle')}
                         </Link>
                     )}
                 </div>
@@ -878,7 +878,7 @@ export default function BusinessesPage() {
             {/* Sector Modules */}
             <div className="max-w-7xl mx-auto mb-6">
                 <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-                    {t('sektorModulleri')}
+                    {t('sektor_modulleri')}
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
                     {businessTypes.map(type => {
@@ -1003,7 +1003,7 @@ export default function BusinessesPage() {
                             className="px-4 py-3 bg-gray-700 text-white rounded-xl border border-gray-600"
                         >
                             <option value="all">{t('tumDurumlar')}</option>
-                            <option value="active">✅ Aktif</option>
+                            <option value="active">{t('aktif')}</option>
                             <option value="inactive">{t('pasif')}</option>
                             <option value="archived">{t('arsiv')}</option>
                         </select>
@@ -1098,7 +1098,7 @@ export default function BusinessesPage() {
                                                                 ? 'bg-green-900/30 text-green-400 border border-green-500/30'
                                                                 : 'bg-red-900/30 text-red-400 border border-red-500/30'
                                                                 }`}>
-                                                                {event.isActive !== false ? '✅ Aktif' : '⏸️ Bitti'}
+                                                                {event.isActive !== false ? t('aktif') : '⏸️ Bitti'}
                                                             </span>
                                                         </td>
                                                         <td className="px-4 py-4 text-center">
@@ -1160,7 +1160,7 @@ export default function BusinessesPage() {
                                                                             }}
                                                                             className="px-3 py-1.5 bg-red-600/20 text-red-400 rounded-lg hover:bg-red-600/40 transition text-sm"
                                                                         >
-                                                                            🗑️ Sil
+                                                                            {t('sil')}
                                                                         </button>
                                                                     </>
                                                                 ) : (
@@ -1252,7 +1252,7 @@ export default function BusinessesPage() {
                                                 <th className="px-4 py-3">Konum</th>
                                                 <th className="px-4 py-3">Puan</th>
                                                 <th className="px-4 py-3">Hizmetler</th>
-                                                <th className="px-4 py-3">Durum</th>
+                                                <th className="px-4 py-3">{t('durum')}</th>
                                                 <th className="px-4 py-3 text-center">{t('islemler')}</th>
 
                                             </tr>
@@ -1336,7 +1336,7 @@ export default function BusinessesPage() {
                                                                     : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
                                                                     } transition`}
                                                             >
-                                                                {business.isActive !== false ? '✅ Aktif' : t('pasif')}
+                                                                {business.isActive !== false ? t('aktif') : t('pasif')}
                                                             </button>
                                                         </td>
                                                         {/* Actions Column */}
@@ -1350,7 +1350,7 @@ export default function BusinessesPage() {
                                                                 disabled={(business as any).isArchived}
                                                                 title={(business as any).isArchived ? t('arsivde') : t('silArsivle')}
                                                             >
-                                                                {(business as any).isArchived ? t('arsivde1') : '🗑️ Sil'}
+                                                                {(business as any).isArchived ? t('arsivde1') : t('sil')}
                                                             </button>
                                                         </td>
 
@@ -1789,7 +1789,7 @@ export default function BusinessesPage() {
                                     <h4 className="text-gray-400 text-sm font-medium mb-2">🏦 Banka Bilgileri</h4>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-gray-500 text-xs mb-1">Hesap Sahibi</label>
+                                            <label className="block text-gray-500 text-xs mb-1">{t('hesap_sahibi')}</label>
                                             <input
                                                 type="text"
                                                 value={formData.bankAccountHolder}
@@ -1849,7 +1849,7 @@ export default function BusinessesPage() {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-gray-500 text-xs mb-1">Durum</label>
+                                            <label className="block text-gray-500 text-xs mb-1">{t('durum')}</label>
                                             <select
                                                 value={formData.subscriptionStatus}
                                                 onChange={(e) => setFormData({ ...formData, subscriptionStatus: e.target.value as any })}
@@ -1918,7 +1918,7 @@ export default function BusinessesPage() {
                                 {/* Billing Summary - Only show when editing */}
                                 {editingBusiness && (
                                     <div className="bg-gray-800/50 rounded-lg p-3">
-                                        <h4 className="text-gray-400 text-sm font-medium mb-2">🧾 Fatura Durumu</h4>
+                                        <h4 className="text-gray-400 text-sm font-medium mb-2">{t('fatura_durumu')}</h4>
                                         <div className="grid grid-cols-4 gap-3">
                                             <div className="text-center">
                                                 <p className="text-sm text-gray-300">

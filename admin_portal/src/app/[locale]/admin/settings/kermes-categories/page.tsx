@@ -278,7 +278,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-medium hover:from-pink-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
                     >
                         <span>➕</span>
-                        Yeni Kategori
+                        {t('yeni_kategori')}
                     </button>
                 </div>
 

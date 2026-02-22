@@ -15,9 +15,9 @@ interface ProductToEnrich {
 }
 
 export default function EANEnrichmentPage() {
-    
-  const t = useTranslations('AdminImportsEanenrichment');
-const { admin, loading: adminLoading } = useAdmin();
+
+    const t = useTranslations('AdminImportsEanEnrichment');
+    const { admin, loading: adminLoading } = useAdmin();
     const [products, setProducts] = useState<ProductToEnrich[]>([]);
     const [loadingProducts, setLoadingProducts] = useState(true);
     const [enriching, setEnriching] = useState(false);

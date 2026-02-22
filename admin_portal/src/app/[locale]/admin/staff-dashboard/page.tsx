@@ -503,7 +503,7 @@ const { admin, loading: adminLoading } = useAdmin();
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-3xl mb-2">🔒</p>
-                    <p className="text-gray-400">Bu sayfaya erişim yetkiniz yok</p>
+                    <p className="text-gray-400">{t('bu_sayfaya_erisim_yetkiniz_yok')}</p>
                 </div>
             </div>
         );
@@ -522,7 +522,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             👷 Personel Durumu
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            İşletmenize atanmış personelin aktüel durumu ve istatistikleri
+                            {t('i_sletmenize_atanmis_personelin_aktuel_d')}
                         </p>
                     </div>
                 </div>
@@ -543,11 +543,11 @@ const { admin, loading: adminLoading } = useAdmin();
                     </div>
                     <div className="bg-gradient-to-br from-blue-900/40 to-blue-950/40 rounded-xl p-4 border border-blue-700/30">
                         <div className="text-3xl font-bold text-blue-400">{stats.activeDrivers}</div>
-                        <div className="text-xs text-blue-400/60 mt-1">🚗 Aktif Sürücü</div>
+                        <div className="text-xs text-blue-400/60 mt-1">{t('aktif_surucu')}</div>
                     </div>
                     <div className="bg-gradient-to-br from-amber-900/40 to-amber-950/40 rounded-xl p-4 border border-amber-700/30">
                         <div className="text-3xl font-bold text-amber-400">{stats.deliveringNow}</div>
-                        <div className="text-xs text-amber-400/60 mt-1">🛣️ Yolda Şu An</div>
+                        <div className="text-xs text-amber-400/60 mt-1">{t('yolda_su_an')}</div>
                     </div>
                 </div>
 
@@ -569,7 +569,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-700'
                             }`}
                     >
-                        📋 Tüm Personel ({staff.length})
+                        {t('tum_personel')}{staff.length})
                     </button>
                 </div>
 
@@ -577,15 +577,15 @@ const { admin, loading: adminLoading } = useAdmin();
                 {(loadingStaff || loadingOrders) ? (
                     <div className="flex items-center justify-center py-16">
                         <div className="animate-spin h-10 w-10 border-4 border-cyan-500 border-t-transparent rounded-full"></div>
-                        <span className="ml-4 text-gray-400">Personel bilgileri yükleniyor...</span>
+                        <span className="ml-4 text-gray-400">{t('personel_bilgileri_yukleniyor')}</span>
                     </div>
                 ) : filteredStaff.length === 0 ? (
                     <div className="text-center py-16 bg-gray-800/30 rounded-xl border border-dashed border-gray-700">
                         <p className="text-4xl mb-3">📭</p>
                         <p className="text-gray-400">
                             {viewMode === 'active'
-                                ? 'Bugün aktif personel bulunamadı'
-                                : 'Bu işletmeye atanmış personel bulunamadı'
+                                ? t('bugun_aktif_personel_bulunamadi')
+                                : t('bu_isletmeye_atanmis_personel_bulunamadi')
                             }
                         </p>
                         {viewMode === 'active' && (
@@ -593,7 +593,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 onClick={() => setViewMode('all')}
                                 className="mt-3 text-cyan-400 hover:text-cyan-300 text-sm underline"
                             >
-                                Tüm personeli görüntüle →
+                                {t('tum_personeli_goruntule')}
                             </button>
                         )}
                     </div>
@@ -675,13 +675,13 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     {/* Driver Badge */}
                                                     {member.isDriver && (
                                                         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                                                            🚗 Sürücü
+                                                            {t('surucu')}
                                                         </span>
                                                     )}
                                                     {/* Primary Admin Badge */}
                                                     {member.isPrimaryAdmin && (
                                                         <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                                                            👑 İşletme Sahibi
+                                                            {t('i_sletme_sahibi')}
                                                         </span>
                                                     )}
                                                 </div>
@@ -739,7 +739,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     </div>
                                                 )}
                                                 {member.activityStatus === 'idle' && (
-                                                    <div className="text-gray-400 text-sm">⏸️ Boşta</div>
+                                                    <div className="text-gray-400 text-sm">{t('bosta')}</div>
                                                 )}
                                                 {member.activityStatus === 'offline' && (
                                                     <div className="text-gray-500 text-sm">{t('pasif')}</div>
@@ -793,17 +793,17 @@ const { admin, loading: adminLoading } = useAdmin();
                                             {member.deliveryOrders.length > 0 ? (
                                                 <div>
                                                     <h4 className="text-sm font-semibold text-gray-300 mb-3">
-                                                        📦 Teslimat Geçmişi ({dateRange === 'today' ? 'Bugün' : dateRange === 'week' ? 'Bu Hafta' : 'Bu Ay'})
+                                                        {t('teslimat_gecmisi')}{dateRange === 'today' ? t('bugun') : dateRange === 'week' ? 'Bu Hafta' : 'Bu Ay'})
                                                     </h4>
                                                     <div className="overflow-x-auto">
                                                         <table className="w-full text-sm">
                                                             <thead>
                                                                 <tr className="text-left text-gray-500 border-b border-gray-700">
-                                                                    <th className="pb-2 pr-4">Sipariş</th>
-                                                                    <th className="pb-2 pr-4">Durum</th>
-                                                                    <th className="pb-2 pr-4">Alış</th>
-                                                                    <th className="pb-2 pr-4">Çıkış</th>
-                                                                    <th className="pb-2 pr-4">Süre</th>
+                                                                    <th className="pb-2 pr-4">{t('siparis')}</th>
+                                                                    <th className="pb-2 pr-4">{t('durum')}</th>
+                                                                    <th className="pb-2 pr-4">{t('alis')}</th>
+                                                                    <th className="pb-2 pr-4">{t('cikis')}</th>
+                                                                    <th className="pb-2 pr-4">{t('sure')}</th>
                                                                     <th className="pb-2">{t('tutar')}</th>
                                                                 </tr>
                                                             </thead>
@@ -851,7 +851,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             ) : (
                                                 <div className="text-center py-6">
                                                     <p className="text-gray-500 text-sm">
-                                                        {dateRange === 'today' ? 'Bugün' : dateRange === 'week' ? 'Bu hafta' : 'Bu ay'} teslimat kaydı yok
+                                                        {dateRange === 'today' ? t('bugun') : dateRange === 'week' ? 'Bu hafta' : 'Bu ay'} {t('teslimat_kaydi_yok')}
                                                     </p>
                                                 </div>
                                             )}
@@ -860,7 +860,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             {member.tablesServedToday.length > 0 && (
                                                 <div className="mt-4 pt-4 border-t border-gray-700/50">
                                                     <h4 className="text-sm font-semibold text-gray-300 mb-2">
-                                                        🪑 Bugün Servis Edilen Masalar
+                                                        {t('bugun_servis_edilen_masalar')}
                                                     </h4>
                                                     <div className="flex flex-wrap gap-2">
                                                         {member.tablesServedToday.map((table, i) => (
@@ -879,10 +879,10 @@ const { admin, loading: adminLoading } = useAdmin();
                                             <div className="mt-4 pt-4 border-t border-gray-700/50 flex flex-wrap items-center gap-4 text-xs text-gray-500">
                                                 <span>🆔 {member.id.slice(0, 8)}...</span>
                                                 {member.createdAt && (
-                                                    <span>📅 Kayıt: {member.createdAt.toLocaleDateString('tr-TR')}</span>
+                                                    <span>{t('kayit')} {member.createdAt.toLocaleDateString('tr-TR')}</span>
                                                 )}
                                                 <span className={member.isActive ? 'text-emerald-400' : 'text-red-400'}>
-                                                    {member.isActive ? '✅ Aktif Hesap' : '❌ Pasif Hesap'}
+                                                    {member.isActive ? t('aktif_hesap') : t('pasif_hesap')}
                                                 </span>
                                                 {member.fcmToken && (
                                                     <span className="text-emerald-500">{t('bildirim_aktif')}</span>

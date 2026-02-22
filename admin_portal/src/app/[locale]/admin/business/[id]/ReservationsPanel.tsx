@@ -424,7 +424,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                                 disabled={actionLoading === res.id}
                                                 className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
                                             >
-                                                {actionLoading === res.id ? "..." : "✅ Onayla"}
+                                                {actionLoading === res.id ? "..." : t('onayla')}
                                             </button>
                                             <button
                                                 onClick={() => handleStatusChange(res.id, "rejected")}

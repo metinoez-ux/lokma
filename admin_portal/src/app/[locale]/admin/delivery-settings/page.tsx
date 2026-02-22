@@ -363,7 +363,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     <li key={i} className="flex justify-between items-center border-b border-gray-700/50 pb-1.5 last:border-0">
                                         <span className="font-medium text-gray-400 text-sm w-24">{dayName}</span>
                                         <span className={`font-mono text-sm ${isClosed ? 'text-red-400' : 'text-gray-300'}`}>
-                                            {isClosed ? '🔴 Kapalı' : content || '-'}
+                                            {isClosed ? t('kapali') : content || '-'}
                                         </span>
                                     </li>
                                 );

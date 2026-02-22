@@ -386,7 +386,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         </div>
                         <div className={`bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-4 py-2 text-center ${stats.pending > 0 ? 'animate-pulse' : ''}`}>
                             <p className="text-2xl font-bold text-yellow-400">{stats.pending}</p>
-                            <p className="text-xs text-yellow-300">Bekleyen</p>
+                            <p className="text-xs text-yellow-300">{t('bekleyen')}</p>
                         </div>
                         <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-4 py-2 text-center">
                             <p className="text-2xl font-bold text-green-400">{stats.confirmed}</p>

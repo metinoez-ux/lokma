@@ -188,8 +188,8 @@ const { admin, loading: adminLoading } = useAdmin();
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
                 <div className="bg-gray-800 rounded-2xl p-8 max-w-md text-center">
                     <span className="text-5xl mb-4 block">🏪</span>
-                    <h2 className="text-xl font-bold text-white mb-2">İşletme Bulunamadı</h2>
-                    <p className="text-gray-400">Hesabınıza bağlı bir işletme bulunmuyor. Lütfen yöneticinize başvurun.</p>
+                    <h2 className="text-xl font-bold text-white mb-2">{t('i_sletme_bulunamadi')}</h2>
+                    <p className="text-gray-400">{t('hesabiniza_bagli_bir_isletme_bulunmuyor_')}</p>
                 </div>
             </div>
         );
@@ -201,7 +201,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 {/* Page Header */}
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h1 className="text-2xl font-bold text-white">💼 Hesabım</h1>
+                        <h1 className="text-2xl font-bold text-white">{t('hesabim')}</h1>
                         <p className="text-gray-400 text-sm">{businessName} {t('provizyon_ve_bakiye_takibi')}</p>
                     </div>
                     <button
@@ -219,7 +219,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         <div className="flex items-center gap-3 mb-3">
                             <span className="text-3xl">💰</span>
                             <div>
-                                <p className="text-gray-400 text-xs uppercase tracking-wider">Açık Bakiye</p>
+                                <p className="text-gray-400 text-xs uppercase tracking-wider">{t('acik_bakiye')}</p>
                                 <p className={`text-3xl font-bold ${(businessData?.accountBalance || 0) > 0 ? 'text-amber-400' : 'text-green-400'}`}>
                                     €{(businessData?.accountBalance || 0).toFixed(2)}
                                 </p>
@@ -227,7 +227,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         </div>
                         <p className="text-gray-400 text-xs">
                             {(businessData?.accountBalance || 0) > 0
-                                ? '⚠️ Ödenmesi gereken nakit provizyon bakiyeniz'
+                                ? t('odenmesi_gereken_nakit_provizyon_bakiyen')
                                 : '✅ Bakiyeniz temiz'}
                         </p>
                     </div>
@@ -244,7 +244,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             </div>
                         </div>
                         <p className="text-gray-400 text-xs">
-                            Aylık ücret: €{(businessData?.monthlyFee || 0).toFixed(2)}
+                            {t('aylik_ucret')}{(businessData?.monthlyFee || 0).toFixed(2)}
                         </p>
                     </div>
 
@@ -255,7 +255,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             <div>
                                 <p className="text-gray-400 text-xs uppercase tracking-wider">Bu Ay</p>
                                 <p className="text-2xl font-bold text-cyan-400">
-                                    {monthlyOrders} sipariş
+                                    {monthlyOrders} {t('siparis')}
                                 </p>
                             </div>
                         </div>
@@ -268,7 +268,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 {/* Commission Stats */}
                 <div className="bg-gray-800 rounded-2xl p-6 mb-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold text-white">📈 Provizyon Özeti</h2>
+                        <h2 className="text-lg font-bold text-white">{t('provizyon_ozeti')}</h2>
                         <div className="flex items-center gap-3">
                             <input
                                 type="month"
@@ -280,7 +280,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 onClick={() => setFilterPeriod('')}
                                 className="px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-500 text-xs"
                             >
-                                Tümü
+                                {t('tumu')}
                             </button>
                         </div>
                     </div>
@@ -333,7 +333,7 @@ const { admin, loading: adminLoading } = useAdmin();
                         onClick={() => setShowDetail(!showDetail)}
                         className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-700/50 transition"
                     >
-                        <h2 className="text-lg font-bold text-white">📋 Sipariş Bazlı Detay</h2>
+                        <h2 className="text-lg font-bold text-white">{t('siparis_bazli_detay')}</h2>
                         <span className={`text-gray-400 text-2xl transition-transform ${showDetail ? 'rotate-180' : ''}`}>
                             ▼
                         </span>
@@ -350,8 +350,8 @@ const { admin, loading: adminLoading } = useAdmin();
                                         <th className="px-3 py-3 text-right text-gray-300 text-xs">Oran</th>
                                         <th className="px-3 py-3 text-right text-gray-300 text-xs">Provizyon</th>
                                         <th className="px-3 py-3 text-right text-gray-300 text-xs">Net + KDV</th>
-                                        <th className="px-3 py-3 text-center text-gray-300 text-xs">Ödeme</th>
-                                        <th className="px-3 py-3 text-center text-gray-300 text-xs">Durum</th>
+                                        <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('odeme')}</th>
+                                        <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('durum')}</th>
                                         <th className="px-3 py-3 text-center text-gray-300 text-xs">{t('tarih')}</th>
                                     </tr>
                                 </thead>
@@ -359,7 +359,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     {filteredRecords.length === 0 ? (
                                         <tr>
                                             <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
-                                                Bu dönemde provizyon kaydı bulunmuyor
+                                                {t('bu_donemde_provizyon_kaydi_bulunmuyor')}
                                             </td>
                                         </tr>
                                     ) : (
@@ -403,7 +403,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             {filteredRecords.length > 0 && (
                                 <div className="bg-gray-900 border-t-2 border-gray-600 px-4 py-3 flex items-center justify-between">
                                     <span className="text-white font-bold text-sm">
-                                        {t('toplam')} {filteredRecords.length} sipariş
+                                        {t('toplam')} {filteredRecords.length} {t('siparis')}
                                     </span>
                                     <div className="flex gap-6">
                                         <span className="text-white text-sm">Ciro: <strong>€{stats.totalOrderAmount.toFixed(2)}</strong></span>
@@ -418,9 +418,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 {/* Info Note */}
                 <div className="mt-6 bg-gray-800/50 border border-gray-700 rounded-xl p-4">
                     <p className="text-gray-400 text-xs leading-relaxed">
-                        ℹ️ Kart ile yapılan ödemelerde provizyon otomatik olarak tahsil edilir.
-                        Nakit ödemelerde provizyon bakiyenize eklenir ve aylık fatura ile tahsil edilir.
-                        Sorularınız için <span className="text-blue-400">info@lokma.shop</span> adresine yazabilirsiniz.
+                        {t('kart_ile_yapilan_odemelerde_provizyon_ot')} <span className="text-blue-400">info@lokma.shop</span> adresine yazabilirsiniz.
                     </p>
                 </div>
             </div>

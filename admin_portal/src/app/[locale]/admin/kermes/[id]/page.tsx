@@ -601,7 +601,7 @@ export default function KermesDetailPage() {
                 price: editProduct.price,
                 costPrice: editProduct.costPrice || null,
                 category: editProduct.category,
-                unit: editProduct.unit || 'adet',
+                unit: editProduct.unit || t('adet'),
                 secondaryName: editProduct.secondaryName || null,
                 description: editProduct.description || null,
                 detailedDescription: editProduct.detailedDescription || null,
@@ -778,7 +778,7 @@ export default function KermesDetailPage() {
                 </div>
 
                 {/* Tab Content - Bilgi */}
-                {activeTab === t('bilgi') && (
+                {activeTab === t(t('bilgi')) && (
                     <div className="space-y-6">
                         {/* Main Info Card */}
                         <div className="bg-gray-800 rounded-xl p-6">
@@ -830,7 +830,7 @@ export default function KermesDetailPage() {
                                     <div className="flex gap-2">
                                         <button onClick={() => setIsEditing(false)} className="px-3 py-1 bg-gray-600 text-white rounded-lg text-sm">İptal</button>
                                         <button onClick={handleSaveEdits} disabled={saving} className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm disabled:opacity-50">
-                                            {saving ? '...' : '✓ Kaydet'}
+                                            {saving ? '...' : t('kaydet')}
                                         </button>
                                     </div>
                                 )}
@@ -932,7 +932,7 @@ export default function KermesDetailPage() {
 
                                     {/* Header Image Selection */}
                                     <div className="mt-4">
-                                        <label className="text-gray-400 text-xs block mb-2">🖼️ Başlık Görseli</label>
+                                        <label className="text-gray-400 text-xs block mb-2">{t('baslik_gorseli')}</label>
                                         <div className="bg-gray-700/50 rounded-lg p-4">
                                             {editForm.headerImage ? (
                                                 <div className="relative">
@@ -946,7 +946,7 @@ export default function KermesDetailPage() {
                                                         onClick={() => setEditForm({ ...editForm, headerImage: '', headerImageId: '' })}
                                                         className="absolute top-2 right-2 px-2 py-1 bg-red-600 text-white rounded text-xs"
                                                     >
-                                                        ✕ Kaldır
+                                                        {t('kaldir')}
                                                     </button>
                                                 </div>
                                             ) : (
@@ -956,7 +956,7 @@ export default function KermesDetailPage() {
                                                     className="w-full h-32 border-2 border-dashed border-gray-500 rounded-lg hover:border-cyan-500 transition flex flex-col items-center justify-center gap-2 text-gray-400 hover:text-cyan-400"
                                                 >
                                                     <span className="text-3xl">🖼️</span>
-                                                    <span className="text-sm">Stok Görsel Seç</span>
+                                                    <span className="text-sm">{t('stok_gorsel_sec')}</span>
                                                 </button>
                                             )}
                                             <p className="text-gray-500 text-xs mt-2 text-center">
@@ -1256,7 +1256,7 @@ export default function KermesDetailPage() {
                                     {/* Yetkili Kişi */}
                                     {(kermes.contactFirstName || kermes.contactName) && (
                                         <div className="pt-4 border-t border-gray-700">
-                                            <span className="text-gray-500 text-sm block mb-2">👤 Yetkili Kişi:</span>
+                                            <span className="text-gray-500 text-sm block mb-2">{t('yetkili_kisi')}</span>
                                             <div className="flex justify-between items-center text-sm">
                                                 <div className="text-white">
                                                     {kermes.contactFirstName ? `${kermes.contactFirstName} ${kermes.contactLastName}` : kermes.contactName}
@@ -1299,7 +1299,7 @@ export default function KermesDetailPage() {
                                                 {kermes.hasDelivery && (
                                                     <div className="flex items-center gap-2 text-sm text-amber-300 bg-gray-800 p-2 rounded border border-gray-600">
                                                         <span>{t('eve_teslimat_var')}</span>
-                                                        <span className="text-xs text-gray-400">({kermes.deliveryFee}€, Min Sipariş: {kermes.minOrderAmount}€)</span>
+                                                        <span className="text-xs text-gray-400">({kermes.deliveryFee}{t('min_siparis')} {kermes.minOrderAmount}€)</span>
                                                     </div>
                                                 )}
                                                 {kermes.parkingLocations && kermes.parkingLocations.length > 0 && (
@@ -1386,7 +1386,7 @@ export default function KermesDetailPage() {
                                     {editForm.hasDelivery && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-8">
                                             <div>
-                                                <label className="text-gray-400 text-xs block mb-1">Nakliyat Ücreti (€)</label>
+                                                <label className="text-gray-400 text-xs block mb-1">{t('nakliyat_ucreti')}</label>
                                                 <input type="number" step="0.50" min="0" value={editForm.deliveryFee || ''}
                                                     onChange={(e) => setEditForm({ ...editForm, deliveryFee: parseFloat(e.target.value) || 0 })}
                                                     className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600" placeholder="3.00" />
@@ -1669,7 +1669,7 @@ export default function KermesDetailPage() {
                                 </button>
                                 <button onClick={() => { setShowAddModal(true); setModalView('select'); }}
                                     className="px-4 py-2 bg-pink-600 hover:bg-pink-500 text-white rounded-lg text-sm font-medium">
-                                    ➕ Ürün Ekle
+                                    {t('urun_ekle')}
                                 </button>
                             </div>
                         </div>
@@ -1682,7 +1682,7 @@ export default function KermesDetailPage() {
                                     ? 'bg-pink-600 text-white'
                                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                     }`}>
-                                🍽️ Tümü ({products.length})
+                                {t('tumu')}{products.length})
                             </button>
                             {categories.map(category => {
                                 const count = productsByCategory[category]?.length || 0;
@@ -1726,7 +1726,7 @@ export default function KermesDetailPage() {
                                                             price: product.price,
                                                             costPrice: product.costPrice || 0,
                                                             category: product.category,
-                                                            unit: product.unit || 'adet',
+                                                            unit: product.unit || t('adet'),
                                                             secondaryName: product.secondaryName || '',
                                                             description: product.description || '',
                                                             detailedDescription: product.detailedDescription || '',
@@ -1741,7 +1741,7 @@ export default function KermesDetailPage() {
                                                             {product.isCustom && <span className="px-2 py-0.5 bg-purple-600/30 text-purple-400 rounded text-xs">{t('ozel')}</span>}
                                                             {product.sourceType === 'master' && <span className="px-2 py-0.5 bg-blue-600/30 text-blue-400 rounded text-xs">Barkod</span>}
                                                             <span className="text-green-400 font-bold">{product.price.toFixed(2)} €</span>
-                                                            <span className="text-gray-500 text-xs">✏️ düzenle</span>
+                                                            <span className="text-gray-500 text-xs">{t('duzenle')}</span>
                                                         </div>
                                                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                                             <button onClick={() => handleToggleAvailability(product)}
@@ -1776,7 +1776,7 @@ export default function KermesDetailPage() {
                         />
                         <div className="flex gap-2">
                             <button onClick={() => setShowCategoryModal(false)} className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg">İptal</button>
-                            <button onClick={handleAddCategory} disabled={!newCategoryName.trim()} className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg disabled:opacity-50">Ekle</button>
+                            <button onClick={handleAddCategory} disabled={!newCategoryName.trim()} className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg disabled:opacity-50">{t('ekle')}</button>
                         </div>
                     </div>
                 </div>
@@ -1790,10 +1790,10 @@ export default function KermesDetailPage() {
                             <div className="flex items-center gap-3">
                                 {modalView !== 'select' && <button onClick={() => setModalView('select')} className="text-gray-400 hover:text-white">←</button>}
                                 <h2 className="text-lg font-bold text-white">
-                                    {modalView === 'select' && '➕ Ürün Ekle'}
-                                    {modalView === 'catalog' && '🎪 Kermes Kataloğu'}
+                                    {modalView === 'select' && t('urun_ekle')}
+                                    {modalView === 'catalog' && t('kermes_katalogu')}
                                     {modalView === 'master' && '📦 Master Katalog (Barkodlu)'}
-                                    {modalView === 'custom' && '✨ Özel Ürün'}
+                                    {modalView === 'custom' && t('ozel_urun')}
                                 </h2>
                             </div>
                             <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
@@ -1844,7 +1844,7 @@ export default function KermesDetailPage() {
                                                         <span className="text-green-400 font-bold">{item.defaultPrice.toFixed(2)} €</span>
                                                         {isAdded ? <span className="text-gray-400 text-xs">✓</span> : (
                                                             <button onClick={() => handleSelectFromCatalog(item)} disabled={saving}
-                                                                className="px-3 py-1 bg-pink-600 hover:bg-pink-500 text-white rounded text-sm disabled:opacity-50">Ekle</button>
+                                                                className="px-3 py-1 bg-pink-600 hover:bg-pink-500 text-white rounded text-sm disabled:opacity-50">{t('ekle')}</button>
                                                         )}
                                                     </div>
                                                 </div>
@@ -1880,7 +1880,7 @@ export default function KermesDetailPage() {
                                                             {item.defaultPrice && <span className="text-green-400 font-bold">{item.defaultPrice.toFixed(2)} €</span>}
                                                             {isAdded ? <span className="text-gray-400 text-xs">✓</span> : (
                                                                 <button onClick={() => handleSelectFromMaster(item)} disabled={saving}
-                                                                    className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm disabled:opacity-50">Ekle</button>
+                                                                    className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm disabled:opacity-50">{t('ekle')}</button>
                                                             )}
                                                         </div>
                                                     </div>
@@ -2011,7 +2011,7 @@ export default function KermesDetailPage() {
                                     <label className="text-gray-400 text-xs block mb-1">Birim</label>
                                     <select value={editProduct.unit} onChange={(e) => setEditProduct({ ...editProduct, unit: e.target.value })}
                                         className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600">
-                                        <option value="adet">{t('adet')}</option>
+                                        <option value={t('adet')}>{t(t('adet'))}</option>
                                         <option value="porsiyon">Porsiyon</option>
                                         <option value="bardak">Bardak</option>
                                         <option value="kase">Kase</option>

@@ -316,7 +316,7 @@ const { admin, loading: adminLoading } = useAdmin();
     if (!admin) {
         return (
             <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-white">Erişim reddedildi</div>
+                <div className="text-white">{t('erisim_reddedildi')}</div>
             </div>
         );
     }
@@ -331,10 +331,10 @@ const { admin, loading: adminLoading } = useAdmin();
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            🎪 Kermes Yönetimi
+                            {t('kermes_yonetimi')}
                         </h1>
                         <p className="text-gray-400 text-sm mt-1">
-                            Tüm kermesleri yönetin • {filteredEvents.length} kermes
+                            {t('tum_kermesleri_yonetin')} {filteredEvents.length} kermes
                         </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -346,28 +346,28 @@ const { admin, loading: adminLoading } = useAdmin();
                                     className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
                                 >
                                     <span>🍽️</span>
-                                    Kermes Menüleri
+                                    {t('kermes_menuleri')}
                                 </Link>
                                 <Link
                                     href="/admin/settings/kermes-categories"
                                     className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
                                 >
                                     <span>📂</span>
-                                    Menü Kategorileri
+                                    {t('menu_kategorileri')}
                                 </Link>
                                 <Link
                                     href="/admin/settings/kermes-features"
                                     className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-gray-600"
                                 >
                                     <span>⭐</span>
-                                    Kermes Özellikleri
+                                    {t('kermes_ozellikleri')}
                                 </Link>
                                 <Link
                                     href="/admin/settings/kermes-stock-images"
                                     className="px-4 py-2.5 bg-gradient-to-r from-cyan-700 to-teal-700 hover:from-cyan-600 hover:to-teal-600 text-white rounded-lg font-medium transition flex items-center gap-2 text-sm border border-cyan-600"
                                 >
                                     <span>🖼️</span>
-                                    Stok Görseller
+                                    {t('stok_gorseller')}
                                 </Link>
                             </>
                         )}
@@ -378,7 +378,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 className="px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl font-medium hover:from-pink-500 hover:to-purple-500 transition shadow-lg flex items-center gap-2"
                             >
                                 <span>➕</span>
-                                Yeni Kermes Ekle
+                                {t('yeni_kermes_ekle')}
                             </Link>
                         )}
                     </div>
@@ -394,7 +394,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
                             <input
                                 type="text"
-                                placeholder="İsim, posta kodu, şehir veya yetkili kişi ara..."
+                                placeholder={t('i_sim_posta_kodu_sehir_veya_yetkili_kisi')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
@@ -407,12 +407,12 @@ const { admin, loading: adminLoading } = useAdmin();
                             onChange={(e) => setTimeStatusFilter(e.target.value as 'all' | 'past' | 'active' | 'future' | 'archived')}
                             className="px-4 py-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-pink-500 min-w-[180px]"
                         >
-                            <option value="all">📋 Tüm Kermesler</option>
+                            <option value="all">{t('tum_kermesler')}</option>
                             <option value="active">{t('aktif_devam_eden')}</option>
-                            <option value="future">🔵 Yaklaşan</option>
-                            <option value="past">⚫ Geçmiş</option>
+                            <option value="future">{t('yaklasan')}</option>
+                            <option value="past">{t('gecmis')}</option>
                             {admin.role === 'super_admin' && (
-                                <option value="archived">📦 Arşivlenmiş</option>
+                                <option value="archived">{t('arsivlenmis')}</option>
                             )}
                         </select>
                     </div>
@@ -425,17 +425,17 @@ const { admin, loading: adminLoading } = useAdmin();
                     <div className="bg-gray-800 rounded-xl p-12 text-center">
                         <div className="text-6xl mb-4">🎪</div>
                         <h2 className="text-xl font-bold text-white mb-2">
-                            {events.length === 0 ? 'Henüz Kermes Yok' : 'Sonuç Bulunamadı'}
+                            {events.length === 0 ? t('henuz_kermes_yok') : t('sonuc_bulunamadi')}
                         </h2>
                         <p className="text-gray-400 mb-6">
-                            {events.length === 0 ? 'İlk kermes etkinliğinizi oluşturun!' : 'Arama kriterlerinize uygun kermes bulunamadı.'}
+                            {events.length === 0 ? t('i_lk_kermes_etkinliginizi_olusturun') : t('arama_kriterlerinize_uygun_kermes_buluna')}
                         </p>
                         {events.length === 0 && (admin.role === 'super_admin' || (admin.role as string) === 'admin_kermes') && (
                             <Link
                                 href="/admin/kermes/new"
                                 className="inline-block bg-pink-600 hover:bg-pink-500 text-white px-6 py-3 rounded-lg font-semibold"
                             >
-                                🎪 Kermes Oluştur
+                                {t('kermes_olustur')}
                             </Link>
                         )}
                     </div>
@@ -506,8 +506,8 @@ const { admin, loading: adminLoading } = useAdmin();
 
                                             {/* Menu Count */}
                                             <div className="hidden md:block">
-                                                <span className="text-gray-500 text-xs">🍽️ Menü</span>
-                                                <p className="text-cyan-400 text-sm">{event.productCount || 0} ürün</p>
+                                                <span className="text-gray-500 text-xs">{t('menu')}</span>
+                                                <p className="text-cyan-400 text-sm">{event.productCount || 0} {t('urun')}</p>
                                             </div>
                                         </div>
 
@@ -539,7 +539,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                         <div><span className="text-gray-500">📅</span> {formatDateRange(event)}</div>
                                         <div><span className="text-gray-500">📍</span> {getLocationDisplay(event)}</div>
                                         <div><span className="text-gray-500">📞</span> {contactPhone || '-'}</div>
-                                        <div><span className="text-gray-500">🍽️</span> {event.productCount || 0} ürün</div>
+                                        <div><span className="text-gray-500">🍽️</span> {event.productCount || 0} {t('urun')}</div>
                                     </div>
                                 </div>
                             );
@@ -553,12 +553,12 @@ const { admin, loading: adminLoading } = useAdmin();
                 isOpen={!!confirmArchiveId}
                 onClose={() => setConfirmArchiveId(null)}
                 onConfirm={handleArchiveConfirm}
-                title="Kermes Arşivle"
-                message="Bu kermesi arşivlemek istediğinize emin misiniz?"
+                title={t('kermes_arsivle')}
+                message={t('bu_kermesi_arsivlemek_istediginize_emin_')}
                 itemName={events.find(e => e.id === confirmArchiveId)?.title}
                 variant="warning"
-                confirmText="Evet, Arşivle"
-                loadingText="Arşivleniyor..."
+                confirmText={t('evet_arsivle')}
+                loadingText={t('arsivleniyor')}
             />
         </div>
     );

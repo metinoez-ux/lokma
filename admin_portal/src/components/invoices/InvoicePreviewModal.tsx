@@ -26,9 +26,9 @@ interface InvoicePreviewModalProps {
 }
 
 export default function InvoicePreviewModal({ invoice, onClose }: InvoicePreviewModalProps) {
-    
-  const t = useTranslations('AdminComponentInvoicePreviewModal');
-const [printing, setPrinting] = useState(false);
+
+    const t = useTranslations('AdminComponentInvoicepreviewmodal');
+    const [printing, setPrinting] = useState(false);
 
     const handlePrint = () => {
         setPrinting(true);
@@ -167,9 +167,9 @@ const [printing, setPrinting] = useState(false);
                     {/* Status Badge */}
                     <div className="mt-6 flex justify-center">
                         <span className={`px-4 py-2 rounded-full text-sm font-bold uppercase ${invoice.status === 'paid' ? 'bg-green-100 text-green-700' :
-                                invoice.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                    invoice.status === 'overdue' ? 'bg-red-100 text-red-700' :
-                                        'bg-gray-100 text-gray-700'
+                            invoice.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                invoice.status === 'overdue' ? 'bg-red-100 text-red-700' :
+                                    'bg-gray-100 text-gray-700'
                             }`}>
                             {invoice.status === 'paid' ? '✅ BEZAHLT' :
                                 invoice.status === 'pending' ? '⏳ OFFEN' :

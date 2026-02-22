@@ -77,7 +77,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                 const address = data.address || {};
                 allBusinesses.push({
                     id: doc.id,
-                    name: data.companyName || data.name || 'İşletme',
+                    name: data.companyName || data.name || t('i_sletme'),
                     type: data.businessType || 'business',
                     plz: address.postalCode || address.plz || data.postalCode || '',
                     city: address.city || data.city || '',
@@ -227,7 +227,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                 <div className="grid grid-cols-4 gap-4 mb-6">
                     <div className="bg-gray-800 rounded-lg p-4">
                         <div className="text-2xl font-bold">{stats.totalDrivers}</div>
-                        <div className="text-sm text-gray-400">Sürücü</div>
+                        <div className="text-sm text-gray-400">{t('surucu')}</div>
                     </div>
                     <div className="bg-green-900/30 rounded-lg p-4 border-l-4 border-green-500">
                         <div className="text-2xl font-bold text-green-400">{stats.activeDrivers}</div>
@@ -348,7 +348,7 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                                                 onClick={() => setConfirmRemoveDriver(person)}
                                                 className="flex-1 text-sm text-red-400 hover:text-red-300 py-1"
                                             >
-                                                🗑️ Sürücü Yetkisini Kaldır
+                                                {t('surucu_yetkisini_kaldir')}
                                             </button>
                                         </>
                                     ) : (
