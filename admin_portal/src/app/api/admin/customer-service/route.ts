@@ -1,6 +1,63 @@
 import { NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase-admin';
 
+function getPhoneVariations(query: string): string[] {
+    const variations = new Set<string>();
+    const phoneQuery = query.replace(/[^\d+]/g, '');
+    if (!phoneQuery) return [];
+
+    variations.add(phoneQuery);
+
+    if (phoneQuery.startsWith('00')) {
+        variations.add('+' + phoneQuery.substring(2));
+    } else if (phoneQuery.startsWith('0')) {
+        variations.add('+49' + phoneQuery.substring(1));
+    } else if (phoneQuery.startsWith('49') && phoneQuery.length > 8) {
+        variations.add('+' + phoneQuery);
+        variations.add('00' + phoneQuery);
+        variations.add('0' + phoneQuery.substring(2));
+    } else if (phoneQuery.startsWith('+')) {
+        variations.add('00' + phoneQuery.substring(1));
+        if (phoneQuery.startsWith('+49')) {
+            variations.add('0' + phoneQuery.substring(3));
+            variations.add(phoneQuery.substring(1));
+        }
+    }
+    return Array.from(variations);
+}
+
+function getTextVariations(text: string): { titleCased: string[], lowerCased: string[] } {
+    const baseTitle = text.toLowerCase().split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const baseLower = text.toLowerCase();
+
+    const variationsTitle = new Set<string>();
+    const variationsLower = new Set<string>();
+
+    variationsTitle.add(baseTitle);
+    variationsLower.add(baseLower);
+
+    const charMapLower: Record<string, string> = { 's': 'ş', 'c': 'ç', 'o': 'ö', 'u': 'ü', 'g': 'ğ', 'i': 'ı', 'e': 'é' };
+    const charMapUpper: Record<string, string> = { 'S': 'Ş', 'C': 'Ç', 'O': 'Ö', 'U': 'Ü', 'G': 'Ğ', 'I': 'İ', 'E': 'É' };
+
+    let mappedLower = '';
+    let mappedTitle = '';
+    for (let i = 0; i < text.length; i++) {
+        mappedLower += charMapLower[baseLower[i]] || baseLower[i];
+        mappedTitle += charMapUpper[baseTitle[i]] || charMapLower[baseTitle[i]] || baseTitle[i];
+    }
+
+    if (mappedTitle !== baseTitle) variationsTitle.add(mappedTitle);
+    if (mappedLower !== baseLower) variationsLower.add(mappedLower);
+
+    if (baseTitle.length > 0 && charMapUpper[baseTitle.charAt(0)]) {
+        variationsTitle.add(charMapUpper[baseTitle.charAt(0)] + baseTitle.slice(1));
+    }
+    if (baseLower.length > 0 && charMapLower[baseLower.charAt(0)]) {
+        variationsLower.add(charMapLower[baseLower.charAt(0)] + baseLower.slice(1));
+    }
+    return { titleCased: Array.from(variationsTitle), lowerCased: Array.from(variationsLower) };
+}
+
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -19,6 +76,7 @@ export async function GET(request: Request) {
 
         let users = [];
         let orders = [];
+        let businesses = [];
 
         // Date Filtering Logic
         let startDate: Date | null = null;
@@ -58,38 +116,29 @@ export async function GET(request: Request) {
             }
 
             if (isPhone) {
-                let phoneQuery = query.replace(/[^\d+]/g, '');
-                userPromises.push(db.collection('users').where('phoneNumber', '==', phoneQuery).limit(5).get());
-                if (phoneQuery.startsWith('0')) {
-                    const international = '+49' + phoneQuery.substring(1);
-                    userPromises.push(db.collection('users').where('phoneNumber', '==', international).limit(5).get());
-                } else if (phoneQuery.startsWith('+49')) {
-                    const local = '0' + phoneQuery.substring(3);
-                    userPromises.push(db.collection('users').where('phoneNumber', '==', local).limit(5).get());
-                } else {
-                    const deCode = '+49' + phoneQuery;
-                    userPromises.push(db.collection('users').where('phoneNumber', '==', deCode).limit(5).get());
-                }
+                const phoneVars = getPhoneVariations(query);
+                phoneVars.forEach(v => {
+                    userPromises.push(db.collection('users').where('phoneNumber', '==', v).limit(5).get());
+                });
             }
 
             // Text search for users
             if (!isEmail) {
-                const titleCased = query.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                const upperCased = query.toUpperCase();
+                const { titleCased: titles, lowerCased: lowers } = getTextVariations(query);
 
-                // Name Search (First Name / Full Name)
-                userPromises.push(db.collection('users').where('displayName', '>=', titleCased).where('displayName', '<=', titleCased + '\uf8ff').limit(10).get());
-                userPromises.push(db.collection('users').where('displayName', '>=', lowerQuery).where('displayName', '<=', lowerQuery + '\uf8ff').limit(10).get());
+                titles.forEach(tc => {
+                    userPromises.push(db.collection('users').where('displayName', '>=', tc).where('displayName', '<=', tc + '\uf8ff').limit(10).get());
+                    userPromises.push(db.collection('users').where('lastName', '>=', tc).where('lastName', '<=', tc + '\uf8ff').limit(10).get());
+                    if (query.length >= 3 && !/^\d+$/.test(query)) {
+                        userPromises.push(db.collection('users').where('address.city', '>=', tc).where('address.city', '<=', tc + '\uf8ff').limit(5).get());
+                        userPromises.push(db.collection('users').where('city', '>=', tc).where('city', '<=', tc + '\uf8ff').limit(5).get());
+                    }
+                });
 
-                // Last Name Search (Soyisim)
-                userPromises.push(db.collection('users').where('lastName', '>=', titleCased).where('lastName', '<=', titleCased + '\uf8ff').limit(10).get());
-                userPromises.push(db.collection('users').where('lastName', '>=', lowerQuery).where('lastName', '<=', lowerQuery + '\uf8ff').limit(10).get());
-
-                // City Search for Users (Şehir)
-                if (query.length >= 3 && !/^\d+$/.test(query)) {
-                    userPromises.push(db.collection('users').where('address.city', '>=', titleCased).where('address.city', '<=', titleCased + '\uf8ff').limit(5).get());
-                    userPromises.push(db.collection('users').where('city', '>=', titleCased).where('city', '<=', titleCased + '\uf8ff').limit(5).get());
-                }
+                lowers.forEach(lc => {
+                    userPromises.push(db.collection('users').where('displayName', '>=', lc).where('displayName', '<=', lc + '\uf8ff').limit(10).get());
+                    userPromises.push(db.collection('users').where('lastName', '>=', lc).where('lastName', '<=', lc + '\uf8ff').limit(10).get());
+                });
             }
         }
 
@@ -125,67 +174,92 @@ export async function GET(request: Request) {
             }
 
             if (isPhone) {
-                let phoneQuery = query.replace(/[^\d+]/g, '');
-                orderPromises.push(db.collection('meat_orders').where('customerPhone', '==', phoneQuery).limit(10).get());
-                orderPromises.push(db.collection('meat_orders').where('userPhone', '==', phoneQuery).limit(10).get());
-                if (phoneQuery.startsWith('0')) {
-                    const international = '+49' + phoneQuery.substring(1);
-                    orderPromises.push(db.collection('meat_orders').where('customerPhone', '==', international).limit(5).get());
-                } else if (phoneQuery.startsWith('+49')) {
-                    const local = '0' + phoneQuery.substring(3);
-                    orderPromises.push(db.collection('meat_orders').where('customerPhone', '==', local).limit(5).get());
-                }
+                const phoneVars = getPhoneVariations(query);
+                phoneVars.forEach(v => {
+                    orderPromises.push(db.collection('meat_orders').where('customerPhone', '==', v).limit(10).get());
+                    orderPromises.push(db.collection('meat_orders').where('userPhone', '==', v).limit(10).get());
+                });
             }
 
             if (!isEmail && !isLikelyOrderId) {
-                const titleCased = query.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                const { titleCased: titles } = getTextVariations(query);
 
-                orderPromises.push(
-                    db.collection('meat_orders')
-                        .where('customerName', '>=', titleCased)
-                        .where('customerName', '<=', titleCased + '\uf8ff')
-                        .limit(10)
-                        .get()
-                );
+                titles.forEach(tc => {
+                    orderPromises.push(
+                        db.collection('meat_orders')
+                            .where('customerName', '>=', tc)
+                            .where('customerName', '<=', tc + '\uf8ff')
+                            .limit(10)
+                            .get()
+                    );
+                });
 
                 if (/^\d{5}$/.test(query)) {
                     // Query orders by postal code object
-                    orderPromises.push(
-                        db.collection('meat_orders')
-                            .where('deliveryAddress.postalCode', '==', query)
-                            .limit(10)
-                            .get()
-                    );
+                    orderPromises.push(db.collection('meat_orders').where('deliveryAddress.postalCode', '==', query).limit(10).get());
+                    orderPromises.push(db.collection('meat_orders').where('address.postalCode', '==', query).limit(10).get());
+
                     // Query users by address object
-                    userPromises.push(
-                        db.collection('users')
-                            .where('address.postalCode', '==', query)
-                            .limit(10)
-                            .get()
-                    );
+                    userPromises.push(db.collection('users').where('address.postalCode', '==', query).limit(10).get());
                     // Query users by root attribute
-                    userPromises.push(
-                        db.collection('users')
-                            .where('postalCode', '==', query)
-                            .limit(10)
-                            .get()
-                    );
-                } else {
-                    orderPromises.push(
-                        db.collection('meat_orders')
-                            .where('deliveryAddress.city', '>=', titleCased)
-                            .where('deliveryAddress.city', '<=', titleCased + '\uf8ff')
-                            .limit(10)
-                            .get()
-                    );
+                    userPromises.push(db.collection('users').where('postalCode', '==', query).limit(10).get());
+                } else if (query.length >= 3 && !/^\d+$/.test(query)) {
+                    titles.forEach(tc => {
+                        // City search
+                        orderPromises.push(db.collection('meat_orders').where('deliveryAddress.city', '>=', tc).where('deliveryAddress.city', '<=', tc + '\uf8ff').limit(10).get());
+                        orderPromises.push(db.collection('meat_orders').where('address.city', '>=', tc).where('address.city', '<=', tc + '\uf8ff').limit(10).get());
+
+                        // Street search
+                        orderPromises.push(db.collection('meat_orders').where('deliveryAddress.street', '>=', tc).where('deliveryAddress.street', '<=', tc + '\uf8ff').limit(10).get());
+                        orderPromises.push(db.collection('meat_orders').where('address.street', '>=', tc).where('address.street', '<=', tc + '\uf8ff').limit(10).get());
+                    });
+                }
+            }
+        }
+
+        // 3. Search Businesses
+        const businessPromises = [];
+
+        if (query.length >= 2) {
+            if (isEmail) {
+                businessPromises.push(db.collection('businesses').where('shopEmail', '==', lowerQuery).limit(5).get());
+                businessPromises.push(db.collection('businesses').where('contactPerson.email', '==', lowerQuery).limit(5).get());
+            }
+
+            if (isPhone) {
+                const phoneVars = getPhoneVariations(query);
+                phoneVars.forEach(v => {
+                    businessPromises.push(db.collection('businesses').where('shopPhone', '==', v).limit(5).get());
+                    businessPromises.push(db.collection('businesses').where('contactPerson.phone', '==', v).limit(5).get());
+                });
+            }
+
+            if (!isEmail) {
+                const { titleCased: titles, lowerCased: lowers } = getTextVariations(query);
+
+                titles.forEach(tc => {
+                    businessPromises.push(db.collection('businesses').where('companyName', '>=', tc).where('companyName', '<=', tc + '\uf8ff').limit(10).get());
+                });
+
+                lowers.forEach(lc => {
+                    businessPromises.push(db.collection('businesses').where('companyName', '>=', lc).where('companyName', '<=', lc + '\uf8ff').limit(10).get());
+                });
+
+                if (/^\d{5}$/.test(query)) {
+                    businessPromises.push(db.collection('businesses').where('address.postalCode', '==', query).limit(10).get());
+                } else if (query.length >= 3 && !/^\d+$/.test(query)) {
+                    titles.forEach(tc => {
+                        businessPromises.push(db.collection('businesses').where('address.city', '>=', tc).where('address.city', '<=', tc + '\uf8ff').limit(10).get());
+                    });
                 }
             }
         }
 
         // Await all and map
-        const [userSnaps, orderSnaps] = await Promise.all([
+        const [userSnaps, orderSnaps, businessSnaps] = await Promise.all([
             Promise.all(userPromises),
-            Promise.all(orderPromises)
+            Promise.all(orderPromises),
+            Promise.all(businessPromises)
         ]);
 
         const uniqueUsers = new Map();
@@ -202,6 +276,8 @@ export async function GET(request: Request) {
                     photoURL: data.photoURL || '',
                     createdAt: typeof data.createdAt?.toDate === 'function' ? data.createdAt.toDate() : (data.createdAt || null),
                     role: data.role || 'user',
+                    adminType: data.adminType || null,
+                    isVirtualKermesUser: !!data.isVirtualKermesUser,
                     fcmToken: !!data.fcmToken, // Just a boolean indicator
                     appLanguage: data.appLanguage || 'tr',
                     status: data.status || 'active',
@@ -230,13 +306,38 @@ export async function GET(request: Request) {
                 if (user && result.docs && result.docs.length > 0) {
                     user.recentOrders = result.docs.map((doc: any) => {
                         const data = doc.data();
+                        const orderData = { ...data, id: doc.id };
+
+                        // Hydrate chronological timestamps from statusHistory if missing from root
+                        if (orderData.statusHistory) {
+                            orderData.acceptedAt = orderData.acceptedAt || orderData.statusHistory.accepted;
+                            orderData.preparingAt = orderData.preparingAt || orderData.statusHistory.preparing;
+                            orderData.readyAt = orderData.readyAt || orderData.statusHistory.ready;
+                            orderData.assignedAt = orderData.assignedAt || orderData.statusHistory.assigned || orderData.statusHistory.in_transit;
+                            orderData.pickedUpAt = orderData.pickedUpAt || orderData.statusHistory.picked_up;
+                            orderData.deliveredAt = orderData.deliveredAt || orderData.statusHistory.delivered || orderData.statusHistory.served || orderData.servedAt;
+                        }
+
+                        const dateFields = ['createdAt', 'acceptedAt', 'preparingAt', 'readyAt', 'assignedAt', 'pickedUpAt', 'deliveredAt'];
+                        dateFields.forEach(field => {
+                            if (orderData[field]) {
+                                if (typeof orderData[field].toDate === 'function') {
+                                    orderData[field] = orderData[field].toDate();
+                                } else {
+                                    const parsed = new Date(orderData[field]);
+                                    if (!isNaN(parsed.getTime())) {
+                                        orderData[field] = parsed;
+                                    }
+                                }
+                            }
+                        });
+
                         return {
-                            id: doc.id,
+                            ...orderData,
                             orderNumber: data.orderNumber || doc.id.substring(0, 6).toUpperCase(),
                             totalPrice: data.totalPrice || data.totalAmount || data.total || 0,
                             status: data.status || 'pending',
                             type: data.orderType || data.deliveryMethod || data.deliveryType || 'pickup',
-                            createdAt: typeof data.createdAt?.toDate === 'function' ? data.createdAt.toDate() : (data.createdAt || null),
                             businessName: data.businessName || data.butcherName || '',
                         };
                     });
@@ -252,23 +353,46 @@ export async function GET(request: Request) {
             if (!snap || !snap.docs) return;
             snap.docs.forEach((doc: any) => {
                 const data = doc.data();
-                const orderCreatedAt = typeof data.createdAt?.toDate === 'function' ? data.createdAt.toDate() : (data.createdAt || null);
+                const orderData = { ...data, id: doc.id };
+
+                // Hydrate chronological timestamps from statusHistory if missing from root
+                if (orderData.statusHistory) {
+                    orderData.acceptedAt = orderData.acceptedAt || orderData.statusHistory.accepted;
+                    orderData.preparingAt = orderData.preparingAt || orderData.statusHistory.preparing;
+                    orderData.readyAt = orderData.readyAt || orderData.statusHistory.ready;
+                    orderData.assignedAt = orderData.assignedAt || orderData.statusHistory.assigned || orderData.statusHistory.in_transit;
+                    orderData.pickedUpAt = orderData.pickedUpAt || orderData.statusHistory.picked_up;
+                    orderData.deliveredAt = orderData.deliveredAt || orderData.statusHistory.delivered || orderData.statusHistory.served || orderData.servedAt;
+                }
+
+                const dateFields = ['createdAt', 'acceptedAt', 'preparingAt', 'readyAt', 'assignedAt', 'pickedUpAt', 'deliveredAt'];
+                dateFields.forEach(field => {
+                    if (orderData[field]) {
+                        if (typeof orderData[field].toDate === 'function') {
+                            orderData[field] = orderData[field].toDate();
+                        } else {
+                            const parsed = new Date(orderData[field]);
+                            if (!isNaN(parsed.getTime())) {
+                                orderData[field] = parsed;
+                            }
+                        }
+                    }
+                });
 
                 // IF we have a dateFilter AND a query, we need to manually filter orders here
                 if (query.length >= 2 && startDate && endDate) {
-                    if (!orderCreatedAt) return; // Cannot match date
-                    if (orderCreatedAt < startDate || orderCreatedAt >= endDate) {
+                    if (!orderData.createdAt) return; // Cannot match date
+                    if (orderData.createdAt.getTime() < startDate.getTime() || orderData.createdAt.getTime() >= endDate.getTime()) {
                         return; // Outside date range
                     }
                 }
 
                 uniqueOrders.set(doc.id, {
-                    id: doc.id,
+                    ...orderData,
                     orderNumber: data.orderNumber || doc.id.substring(0, 6).toUpperCase(),
                     totalPrice: data.totalPrice || data.totalAmount || data.total || 0,
                     status: data.status || 'pending',
                     type: data.orderType || data.deliveryMethod || data.deliveryType || 'pickup',
-                    createdAt: orderCreatedAt,
                     customerName: data.customerName || data.userDisplayName || '',
                     customerPhone: data.customerPhone || data.userPhone || '',
                     address: data.deliveryAddress || data.address || null,
@@ -278,6 +402,26 @@ export async function GET(request: Request) {
             });
         });
 
+        const uniqueBusinesses = new Map();
+        if (businessSnaps) {
+            businessSnaps.forEach((snap: any) => {
+                if (!snap || !snap.docs) return;
+                snap.docs.forEach((doc: any) => {
+                    const data = doc.data();
+                    uniqueBusinesses.set(doc.id, {
+                        id: doc.id,
+                        companyName: data.companyName || '',
+                        email: data.shopEmail || data.contactPerson?.email || '',
+                        phoneNumber: data.shopPhone || data.contactPerson?.phone || '',
+                        address: data.address || null,
+                        isActive: data.isActive ?? true,
+                        subscriptionPlan: data.subscriptionPlan || 'free',
+                        createdAt: typeof data.createdAt?.toDate === 'function' ? data.createdAt.toDate() : (data.createdAt || null),
+                    });
+                });
+            });
+        }
+
         return NextResponse.json({
             users: Array.from(uniqueUsers.values()),
             orders: Array.from(uniqueOrders.values()).sort((a: any, b: any) => {
@@ -285,7 +429,8 @@ export async function GET(request: Request) {
                 if (!a.createdAt) return 1;
                 if (!b.createdAt) return -1;
                 return b.createdAt.getTime() - a.createdAt.getTime();
-            })
+            }),
+            businesses: Array.from(uniqueBusinesses.values())
         });
 
     } catch (error: any) {
