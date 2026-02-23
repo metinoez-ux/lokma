@@ -85,7 +85,7 @@ interface Order {
 }
 
 export default function OrdersPage() {
-    const t = useTranslations('AdminPortal.Orders');
+    const t = useTranslations('AdminOrders');
     const { admin, loading: adminLoading } = useAdmin();
     const [orders, setOrders] = useState<Order[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
