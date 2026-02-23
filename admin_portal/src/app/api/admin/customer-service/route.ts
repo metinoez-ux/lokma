@@ -235,22 +235,48 @@ export async function GET(request: Request) {
             }
 
             if (!isEmail) {
-                const { titleCased: titles, lowerCased: lowers } = getTextVariations(query);
+                const zipMatch = query.match(/\b\d{5}\b/);
+                const textPart = query.replace(/\b\d{5}\b/, '').trim();
 
-                titles.forEach(tc => {
-                    businessPromises.push(db.collection('businesses').where('companyName', '>=', tc).where('companyName', '<=', tc + '\uf8ff').limit(10).get());
-                });
+                if (zipMatch && textPart.length >= 2) {
+                    // Query has both postal code and text (e.g., "don 41836")
+                    const zipCode = zipMatch[0];
+                    const textLower = textPart.toLowerCase();
 
-                lowers.forEach(lc => {
-                    businessPromises.push(db.collection('businesses').where('companyName', '>=', lc).where('companyName', '<=', lc + '\uf8ff').limit(10).get());
-                });
+                    // Fetch by postal code and filter by text in-memory to avoid composite index requirement
+                    businessPromises.push(
+                        db.collection('businesses')
+                            .where('address.postalCode', '==', zipCode)
+                            .limit(50)
+                            .get()
+                            .then((snap: any) => {
+                                const filteredDocs = snap.docs.filter((doc: any) => {
+                                    const data = doc.data();
+                                    const name = (data.companyName || '').toLowerCase();
+                                    return name.includes(textLower);
+                                });
+                                return { docs: filteredDocs };
+                            })
+                    );
+                } else {
+                    // Standard text search
+                    const { titleCased: titles, lowerCased: lowers } = getTextVariations(query);
 
-                if (/^\d{5}$/.test(query)) {
-                    businessPromises.push(db.collection('businesses').where('address.postalCode', '==', query).limit(10).get());
-                } else if (query.length >= 3 && !/^\d+$/.test(query)) {
                     titles.forEach(tc => {
-                        businessPromises.push(db.collection('businesses').where('address.city', '>=', tc).where('address.city', '<=', tc + '\uf8ff').limit(10).get());
+                        businessPromises.push(db.collection('businesses').where('companyName', '>=', tc).where('companyName', '<=', tc + '\uf8ff').limit(10).get());
                     });
+
+                    lowers.forEach(lc => {
+                        businessPromises.push(db.collection('businesses').where('companyName', '>=', lc).where('companyName', '<=', lc + '\uf8ff').limit(10).get());
+                    });
+
+                    if (/^\d{5}$/.test(query)) {
+                        businessPromises.push(db.collection('businesses').where('address.postalCode', '==', query).limit(10).get());
+                    } else if (query.length >= 3 && !/^\d+$/.test(query)) {
+                        titles.forEach(tc => {
+                            businessPromises.push(db.collection('businesses').where('address.city', '>=', tc).where('address.city', '<=', tc + '\uf8ff').limit(10).get());
+                        });
+                    }
                 }
             }
         }

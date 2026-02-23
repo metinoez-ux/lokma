@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { auth } from '@/lib/firebase'
+import Link from 'next/link'
 
 export default function CustomerServicePage() {
     const t = useTranslations('AdminCustomerService')
+    const locale = useLocale()
     const [query, setQuery] = useState('')
     const [dateFilter, setDateFilter] = useState('last7days')
     const [loading, setLoading] = useState(false)
@@ -178,54 +180,56 @@ export default function CustomerServicePage() {
                                     </h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {results.businesses.map((business: any) => (
-                                            <div key={business.id} className="bg-gray-800 rounded-xl p-5 border border-gray-700 hover:border-amber-500/50 transition-all shadow-lg group">
-                                                <div className="flex justify-between items-start mb-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-12 h-12 rounded-full bg-amber-900/50 flex items-center justify-center text-amber-300 font-bold text-xl border border-amber-500/30">
-                                                            {business.companyName?.charAt(0) || '?'}
-                                                        </div>
-                                                        <div>
-                                                            <h3 className="text-lg font-bold text-white group-hover:text-amber-400 transition-colors">
-                                                                {business.companyName}
-                                                            </h3>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/30 text-gray-400 font-mono tracking-wider">
-                                                                    ID: {business.id.substring(0, 8)}...
-                                                                </span>
+                                            <Link href={`/${locale}/admin/business/${business.id}`} key={business.id} className="block">
+                                                <div className="bg-gray-800 rounded-xl p-5 border border-gray-700 hover:border-amber-500/50 transition-all shadow-lg group h-full">
+                                                    <div className="flex justify-between items-start mb-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-12 h-12 rounded-full bg-amber-900/50 flex items-center justify-center text-amber-300 font-bold text-xl border border-amber-500/30 shrink-0">
+                                                                {business.companyName?.charAt(0) || '?'}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <h3 className="text-lg font-bold text-white group-hover:text-amber-400 transition-colors truncate">
+                                                                    {business.companyName}
+                                                                </h3>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/30 text-gray-400 font-mono tracking-wider shrink-0">
+                                                                        ID: {business.id.substring(0, 8)}...
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${business.isActive ? 'bg-green-900/50 text-green-300 border-green-500/30' : 'bg-red-900/50 text-red-300 border-red-500/30'}`}>
-                                                        {business.isActive ? 'AKTİF' : 'PASİF'}
-                                                    </span>
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4 text-sm mt-4 bg-gray-900/50 p-4 rounded-lg border-l-2 border-l-amber-500/50">
-                                                    <div>
-                                                        <p className="text-gray-500 text-xs uppercase">{t('user_card.email')}</p>
-                                                        <p className="text-gray-200 font-medium truncate" title={business.email}>{business.email || '-'}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-gray-500 text-xs uppercase">{t('user_card.phone')}</p>
-                                                        <p className="text-gray-200 font-medium">{business.phoneNumber || '-'}</p>
-                                                    </div>
-                                                    <div className="sm:col-span-2">
-                                                        <p className="text-gray-500 text-xs uppercase">{t('order_card.address')}</p>
-                                                        <p className="text-gray-300 leading-snug">
-                                                            {business.address
-                                                                ? `${business.address.street || ''}, ${business.address.postalCode || ''} ${business.address.city || ''}`.trim()
-                                                                : '-'}
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center justify-between sm:col-span-2 pt-2 mt-1 border-t border-gray-700/50">
-                                                        <span className="text-sm text-gray-400">
-                                                            {business.createdAt ? new Date(business.createdAt).toLocaleString() : '-'}
-                                                        </span>
-                                                        <span className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-300 border border-gray-600 uppercase">
-                                                            {business.subscriptionPlan || 'FREE'}
+                                                        <span className={`px-3 py-1 rounded-full text-xs font-medium border shrink-0 ${business.isActive ? 'bg-green-900/50 text-green-300 border-green-500/30' : 'bg-red-900/50 text-red-300 border-red-500/30'}`}>
+                                                            {business.isActive ? 'AKTİF' : 'PASİF'}
                                                         </span>
                                                     </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4 text-sm mt-4 bg-gray-900/50 p-4 rounded-lg border-l-2 border-l-amber-500/50">
+                                                        <div>
+                                                            <p className="text-gray-500 text-xs uppercase hover:text-gray-400 transition-colors">{t('user_card.email')}</p>
+                                                            <p className="text-gray-200 font-medium truncate" title={business.email}>{business.email || '-'}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-gray-500 text-xs uppercase hover:text-gray-400 transition-colors">{t('user_card.phone')}</p>
+                                                            <p className="text-gray-200 font-medium">{business.phoneNumber || '-'}</p>
+                                                        </div>
+                                                        <div className="sm:col-span-2">
+                                                            <p className="text-gray-500 text-xs uppercase hover:text-gray-400 transition-colors">{t('order_card.address')}</p>
+                                                            <p className="text-gray-300 leading-snug">
+                                                                {business.address
+                                                                    ? `${business.address.street || ''}, ${business.address.postalCode || ''} ${business.address.city || ''}`.trim()
+                                                                    : '-'}
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex items-center justify-between sm:col-span-2 pt-2 mt-1 border-t border-gray-700/50">
+                                                            <span className="text-sm text-gray-400 font-medium">
+                                                                {business.createdAt ? new Date(business.createdAt).toLocaleString(locale) : '-'}
+                                                            </span>
+                                                            <span className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-300 border border-gray-600 uppercase font-mono tracking-wider shadow-sm">
+                                                                {business.subscriptionPlan || 'FREE'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            </Link>
                                         ))}
                                     </div>
                                 </div>
