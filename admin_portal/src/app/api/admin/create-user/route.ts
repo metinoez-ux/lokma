@@ -164,6 +164,45 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // 🛑 PERSONNEL LIMIT ENFORCEMENT
+        if (businessId && role === 'admin' && adminType !== 'super') {
+            const businessDoc = await db.collection('businesses').doc(businessId).get();
+            if (businessDoc.exists) {
+                const businessData = businessDoc.data();
+                const planId = businessData?.subscriptionPlan || businessData?.plan || 'free';
+
+                let personnelLimit: number | null = null;
+                let personnelOverageFee = 0;
+
+                const planDoc = await db.collection('plans').doc(planId).get();
+                if (planDoc.exists) {
+                    const planData = planDoc.data();
+                    personnelLimit = planData?.personnelLimit ?? null;
+                    personnelOverageFee = planData?.personnelOverageFee ?? 0;
+                } else {
+                    if (planId === 'free') { personnelLimit = 1; personnelOverageFee = 5; }
+                    else if (planId === 'basic') { personnelLimit = 3; personnelOverageFee = 5; }
+                    else if (planId === 'premium') { personnelLimit = null; personnelOverageFee = 0; }
+                }
+
+                if (personnelLimit !== null) {
+                    const adminsSnapshot = await db.collection('admins')
+                        .where('businessId', '==', businessId)
+                        .where('isActive', '==', true)
+                        .get();
+
+                    const currentCount = adminsSnapshot.size;
+
+                    if (currentCount >= personnelLimit && personnelOverageFee <= 0) {
+                        return NextResponse.json(
+                            { error: `Maksimum personel limitine (${personnelLimit}) ulaştınız. Yeni personel eklemek için paketinizi yükseltin veya aşım ücretine izin verin.` },
+                            { status: 403 }
+                        );
+                    }
+                }
+            }
+        }
+
         // auth and db are already initialized above
 
         // Prepare phone number in E.164 format if provided

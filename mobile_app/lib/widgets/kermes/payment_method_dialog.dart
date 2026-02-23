@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../utils/currency_utils.dart';
 
 /// Ödeme yöntemi enum
 enum PaymentMethodType {
@@ -79,7 +80,7 @@ class PaymentMethodDialog extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '${totalAmount.toStringAsFixed(2)} €',
+                      '${totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,

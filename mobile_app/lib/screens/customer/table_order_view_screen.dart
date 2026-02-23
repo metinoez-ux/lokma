@@ -10,6 +10,7 @@ import '../../services/table_session_service.dart';
 import '../../services/order_service.dart';
 import '../../models/butcher_product.dart';
 import '../../data/product_catalog_data.dart';
+import '../../utils/currency_utils.dart';
 
 /// Müşteri Masa Sipariş Ekranı
 /// Customer can:
@@ -722,7 +723,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '€${product.price.toStringAsFixed(2)} / ${product.unitType}',
+                  '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)} / ${product.unitType}',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -867,7 +868,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                     ),
                   ),
                   Text(
-                    '€${total.toStringAsFixed(2)}',
+                    '${CurrencyUtils.getCurrencySymbol()}${total.toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -938,7 +939,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                                     ),
                                   ),
                                   Text(
-                                    '€${((item['price'] ?? 0) * (item['quantity'] ?? 1)).toStringAsFixed(2)}',
+                                    '${CurrencyUtils.getCurrencySymbol()}${((item['price'] ?? 0) * (item['quantity'] ?? 1)).toStringAsFixed(2)}',
                                     style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                                   ),
                                 ],
@@ -948,7 +949,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                         Align(
                           alignment: Alignment.centerRight,
                           child: Text(
-                            '€${(data['totalAmount'] ?? 0).toStringAsFixed(2)}',
+                            '${CurrencyUtils.getCurrencySymbol()}${(data['totalAmount'] ?? 0).toStringAsFixed(2)}',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
@@ -1066,7 +1067,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
               const Icon(Icons.send, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Sipariş Ver • $_cartItemCount ürün • €${_cartTotal.toStringAsFixed(2)}',
+                'Sipariş Ver • $_cartItemCount ürün • ${CurrencyUtils.getCurrencySymbol()}${_cartTotal.toStringAsFixed(2)}',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
             ],

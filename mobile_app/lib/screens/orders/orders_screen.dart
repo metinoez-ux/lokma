@@ -13,6 +13,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'rating_screen.dart';
 import 'courier_tracking_screen.dart';
 import 'group_order_history_card.dart';
+import '../../utils/currency_utils.dart';
 
 
 class OrdersScreen extends ConsumerStatefulWidget {
@@ -587,7 +588,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                                 )
                               else
                                 Text(
-                                  '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                                  '${CurrencyUtils.getCurrencySymbol()}${(item.price * item.quantity).toStringAsFixed(2)}',
                                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                                 ),
                             ],
@@ -616,7 +617,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                           children: [
                             Text('orders.total'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                             Text(
-                              '€${order.totalAmount.toStringAsFixed(2)}',
+                              '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                           ],
@@ -696,7 +697,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              Text('${'orders.subtotal'.tr()} €${participantTotal.toStringAsFixed(2)}', style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
+                              Text('${'orders.subtotal'.tr()} ${CurrencyUtils.getCurrencySymbol()}${participantTotal.toStringAsFixed(2)}', style: TextStyle(fontSize: 12, color: Colors.grey[600], fontStyle: FontStyle.italic)),
                             ],
                           ),
                         )
@@ -713,7 +714,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       children: [
                         Text('orders.total_my_share'.tr(), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal)),
                         Text(
-                          '€${myTotal.toStringAsFixed(2)}', 
+                          '${CurrencyUtils.getCurrencySymbol()}${myTotal.toStringAsFixed(2)}', 
                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.normal),
                         ),
                       ],
@@ -726,7 +727,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       children: [
                         Text('orders.total_group'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFF8000))),
                         Text(
-                          '€${(myTotal < order.totalAmount ? order.totalAmount : myTotal).toStringAsFixed(2)}', // Fallback for total
+                          '${CurrencyUtils.getCurrencySymbol()}${(myTotal < order.totalAmount ? order.totalAmount : myTotal).toStringAsFixed(2)}', // Fallback for total
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFF8000)),
                         ),
                       ],
@@ -1041,7 +1042,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       const SizedBox(height: 4),
                       // Items and price
                       Text(
-                        '${order.items.length} ürün • €${order.totalAmount.toStringAsFixed(2)}',
+                        '${order.items.length} ürün • ${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                         style: TextStyle(color: subtitleColor, fontSize: 13),
                       ),
                     ],

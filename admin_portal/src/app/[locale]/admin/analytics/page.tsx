@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 
 type DateFilter = 'today' | 'yesterday' | 'week' | 'month' | 'year' | 'lastYear' | 'all';
 
@@ -26,6 +27,7 @@ interface Order {
     status: string;
     type: string;
     createdAt: Timestamp;
+    currency?: string;
 }
 
 interface UserStats {
@@ -45,9 +47,9 @@ interface BusinessStats {
 }
 
 export default function UnifiedAnalyticsPage() {
-    
-  const t = useTranslations('AdminAnalytics');
-const { admin, loading: adminLoading } = useAdmin();
+
+    const t = useTranslations('AdminAnalytics');
+    const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
 
     // Filters
@@ -202,6 +204,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     status: d.status || 'pending',
                     type: d.orderType || d.deliveryMethod || d.deliveryType || d.fulfillmentType || 'pickup',
                     createdAt: d.createdAt,
+                    currency: d.currency,
                 };
             }) as Order[];
             setOrders(data);
@@ -318,7 +321,7 @@ const { admin, loading: adminLoading } = useAdmin();
 
     if (!admin || admin.adminType !== 'super') return null;
 
-    const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+    const formatCurrency = (amount: number, currencyCode?: string) => globalFormatCurrency(amount, currencyCode);
 
     return (
         <div className="min-h-screen bg-gray-900">

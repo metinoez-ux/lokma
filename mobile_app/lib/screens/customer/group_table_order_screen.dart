@@ -13,6 +13,7 @@ import '../../models/butcher_product.dart';
 import '../../providers/table_group_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/product_catalog_data.dart';
+import '../../utils/currency_utils.dart';
 
 /// Grup Masa Sipariş Ekranı
 /// 3-tab layout: Menü · Benim Siparişim · Masa Toplam
@@ -539,13 +540,13 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 ),
                 children: [
                   TextSpan(
-                    text: 'Toplam: €${session.grandTotal.toStringAsFixed(2)}',
+                    text: 'Toplam: ${CurrencyUtils.getCurrencySymbol()}${session.grandTotal.toStringAsFixed(2)}',
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   if (session.paidTotal > 0) ...[
                     const TextSpan(text: '  ·  '),
                     TextSpan(
-                      text: 'Ödenen: €${session.paidTotal.toStringAsFixed(2)}',
+                      text: 'Ödenen: ${CurrencyUtils.getCurrencySymbol()}${session.paidTotal.toStringAsFixed(2)}',
                       style: TextStyle(color: Colors.green.shade700),
                     ),
                   ],
@@ -560,7 +561,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              'Kalan: €${session.remainingBalance.toStringAsFixed(2)}',
+              'Kalan: ${CurrencyUtils.getCurrencySymbol()}${session.remainingBalance.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -772,7 +773,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '€${product.price.toStringAsFixed(2)} / ${product.unitType}',
+                  '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)} / ${product.unitType}',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -890,7 +891,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               ),
             ),
             Text(
-              '€${myParticipant!.subtotal.toStringAsFixed(2)}',
+              '${CurrencyUtils.getCurrencySymbol()}${myParticipant!.subtotal.toStringAsFixed(2)}',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
@@ -971,7 +972,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  '€${item.unitPrice.toStringAsFixed(2)} × ${item.quantity}',
+                  '${CurrencyUtils.getCurrencySymbol()}${item.unitPrice.toStringAsFixed(2)} × ${item.quantity}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                 ),
               ],
@@ -984,7 +985,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                '€${item.totalPrice.toStringAsFixed(2)}',
+                '${CurrencyUtils.getCurrencySymbol()}${item.totalPrice.toStringAsFixed(2)}',
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
               ),
               const SizedBox(height: 4),
@@ -1139,7 +1140,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     ),
                   ),
                   Text(
-                    '€${session.grandTotal.toStringAsFixed(2)}',
+                    '${CurrencyUtils.getCurrencySymbol()}${session.grandTotal.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -1155,7 +1156,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   children: [
                     Text(tr('customer.odenen'), style: TextStyle(color: Colors.green.shade700)),
                     Text(
-                      '-€${session.paidTotal.toStringAsFixed(2)}',
+                      '-${CurrencyUtils.getCurrencySymbol()}${session.paidTotal.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: Colors.green.shade700,
@@ -1172,7 +1173,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                       style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                     ),
                     Text(
-                      '€${session.remainingBalance.toStringAsFixed(2)}',
+                      '${CurrencyUtils.getCurrencySymbol()}${session.remainingBalance.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 18,
@@ -1320,7 +1321,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     ),
                   ),
                   Text(
-                    '€${(data['totalPrice'] as double).toStringAsFixed(2)}',
+                    '${CurrencyUtils.getCurrencySymbol()}${(data['totalPrice'] as double).toStringAsFixed(2)}',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ],
@@ -1475,7 +1476,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           ],
         ),
         subtitle: Text(
-          '${participant.totalItemCount} ürün · €${participant.subtotal.toStringAsFixed(2)}',
+          '${participant.totalItemCount} ürün · ${CurrencyUtils.getCurrencySymbol()}${participant.subtotal.toStringAsFixed(2)}',
           style: TextStyle(fontSize: 12, color: Colors.grey[500]),
         ),
         children: participant.items.map((item) {
@@ -1516,7 +1517,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     style: TextStyle(fontSize: 12, color: _accent, fontWeight: FontWeight.w700)),
                 const SizedBox(width: 8),
                 Expanded(child: Text(item.productName, style: const TextStyle(fontSize: 13))),
-                Text('€${item.totalPrice.toStringAsFixed(2)}',
+                Text('${CurrencyUtils.getCurrencySymbol()}${item.totalPrice.toStringAsFixed(2)}',
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
               ],
             ),
@@ -1579,7 +1580,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   ],
                 ),
                 Text(
-                  '€${session.grandTotal.toStringAsFixed(2)}',
+                  '${CurrencyUtils.getCurrencySymbol()}${session.grandTotal.toStringAsFixed(2)}',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
               ],
@@ -1766,7 +1767,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   label: Text(
                     hasIncompleteItems
                         ? tr('customer.siparisiniz_bekleniyor')
-                        : 'Sadece Hesabımı Öde (€${groupState.myParticipant!.subtotal.toStringAsFixed(2)})',
+                        : 'Sadece Hesabımı Öde (${CurrencyUtils.getCurrencySymbol()}${groupState.myParticipant!.subtotal.toStringAsFixed(2)})',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: hasIncompleteItems ? Colors.white70 : Colors.white,
@@ -1792,7 +1793,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   label: Text(
                     hasIncompleteItems
                         ? tr('customer.grupla_odeme_bekleniyor')
-                        : 'Masa Hesabını Öde (€${session.remainingBalance.toStringAsFixed(2)})',
+                        : 'Masa Hesabını Öde (${CurrencyUtils.getCurrencySymbol()}${session.remainingBalance.toStringAsFixed(2)})',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: hasIncompleteItems ? Colors.grey.shade600 : null,
@@ -1923,7 +1924,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Kendi hesabınız olan €${groupState.myParticipant!.subtotal.toStringAsFixed(2)} tutarını ödemek için lütfen bir yöntem seçin.',
+                'Kendi hesabınız olan ${CurrencyUtils.getCurrencySymbol()}${groupState.myParticipant!.subtotal.toStringAsFixed(2)} tutarını ödemek için lütfen bir yöntem seçin.',
                 style: TextStyle(
                   fontSize: 15, 
                   color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
@@ -2082,7 +2083,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                'Kalan €${session.remainingBalance.toStringAsFixed(2)} tutarı (${session.unpaidCount} kişi) ödemek üzeresiniz. Lütfen ödeme yöntemini seçin.',
+                'Kalan ${CurrencyUtils.getCurrencySymbol()}${session.remainingBalance.toStringAsFixed(2)} tutarı (${session.unpaidCount} kişi) ödemek üzeresiniz. Lütfen ödeme yöntemini seçin.',
                 style: TextStyle(
                   fontSize: 15, 
                   color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,

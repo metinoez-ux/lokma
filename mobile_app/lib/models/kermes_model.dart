@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/currency_utils.dart';
 
 // Sponsor enum for kermes events
 enum KermesSponsor {
@@ -43,7 +44,7 @@ class KermesEvent {
   
   // Pfand/Depozito Sistemi
   final bool hasPfandSystem;  // Kermes geneli toggle
-  final double pfandAmount;   // Varsayılan 0.25€
+  final double pfandAmount;   // Varsayılan 0.25${CurrencyUtils.getCurrencySymbol()}
   
   // KDV/VAT Sistemi
   final bool showKdv;           // KDV göster toggle

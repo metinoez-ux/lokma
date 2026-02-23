@@ -19,6 +19,7 @@ import 'package:lokma_app/providers/table_group_provider.dart';
 import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
 import 'package:lokma_app/screens/marketplace/kasap/reservation_booking_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
+import '../../../utils/currency_utils.dart';
 
 /// Business type labels for display
 const Map<String, String> BUSINESS_TYPE_LABELS = {
@@ -1972,7 +1973,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Text(
-                                          deliveryFee > 0 ? '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}€' : 'Ücretsiz',
+                                          deliveryFee > 0 ? '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}${CurrencyUtils.getCurrencySymbol()}' : 'Ücretsiz',
                                           style: TextStyle(
                                             color: deliveryFee > 0 ? Colors.grey[700] : const Color(0xFF2E7D32),
                                             fontSize: 12,
@@ -1982,7 +1983,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                       )
                                     else
                                       Text(
-                                        '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}€',
+                                        '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}${CurrencyUtils.getCurrencySymbol()}',
                                         style: TextStyle(
                                           color: Colors.grey[700],
                                           fontSize: 13,
@@ -1996,7 +1997,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     Icon(Icons.shopping_basket_outlined, color: Colors.grey[600], size: 14),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Min. ${minOrderAmount.toStringAsFixed(0)}€',
+                                      'Min. ${minOrderAmount.toStringAsFixed(0)}${CurrencyUtils.getCurrencySymbol()}',
                                       style: TextStyle(
                                         color: Colors.grey[700],
                                         fontSize: 13,

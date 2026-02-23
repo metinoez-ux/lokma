@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../services/order_service.dart';
+import '../../utils/currency_utils.dart';
 
 /// Courier Tracking Screen - Customer views courier location on map
 class CourierTrackingScreen extends StatefulWidget {
@@ -630,7 +631,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                   ),
                   const Spacer(),
                   Text(
-                    '${order.totalAmount.toStringAsFixed(2)}€',
+                    '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -690,7 +691,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                           ),
                         ),
                         Text(
-                          '${(item.price * item.quantity).toStringAsFixed(2)}€',
+                          '${(item.price * item.quantity).toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,

@@ -137,6 +137,33 @@ export const generateMonthlyInvoice = async (
             }
         }
 
+        // 5. Personel Aşım Ücreti
+        if (plan.personnelLimit !== null && plan.personnelLimit !== undefined) {
+            // Count active personnel directly from the admins collection 
+            // This reads real-time count at invoice generation time (usually end of month)
+            const getActivePersonnelCount = async () => {
+                const adminsSnapshot = await getDocs(
+                    query(collection(db, 'admins'), where('businessId', '==', businessId), where('isActive', '==', true))
+                );
+                return adminsSnapshot.size;
+            };
+            const currentCount = await getActivePersonnelCount();
+
+            if (currentCount > plan.personnelLimit) {
+                const overagePersonnel = currentCount - plan.personnelLimit;
+                const overageTotal = overagePersonnel * (plan.personnelOverageFee || 0);
+                if (overageTotal > 0) {
+                    lineItems.push({
+                        description: `Ek Personel Ücreti (${overagePersonnel} hesap)`,
+                        quantity: overagePersonnel,
+                        unitPrice: plan.personnelOverageFee || 0,
+                        total: overageTotal,
+                        type: 'overage'
+                    });
+                }
+            }
+        }
+
         // Toplamları hesapla
         const subtotal = lineItems.reduce((sum, item) => sum + item.total, 0);
         const taxRate = 19; // Almanya KDV

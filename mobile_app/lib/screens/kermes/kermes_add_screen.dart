@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lokma_app/widgets/gradient_app_bar.dart';
 import 'package:lokma_app/widgets/organization_search_sheet.dart';
+import '../../utils/currency_utils.dart';
 
 class KermesAddScreen extends StatefulWidget {
   const KermesAddScreen({super.key});
@@ -145,7 +146,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
                 TextField(
                   controller: priceController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Fiyat (€)*'),
+                  decoration: InputDecoration(labelText: 'Fiyat (${CurrencyUtils.getCurrencySymbol()})*'),
                 ),
                 TextField(
                   controller: descController,
@@ -614,7 +615,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
               ...List.generate(_menuItems.length, (i) => Card(
                 child: ListTile(
                   title: Text(_menuItems[i]['name']),
-                  subtitle: Text('${_menuItems[i]['price']}€'),
+                  subtitle: Text('${_menuItems[i]['price']}${CurrencyUtils.getCurrencySymbol()}'),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () => setState(() => _menuItems.removeAt(i)),

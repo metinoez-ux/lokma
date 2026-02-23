@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lokma_app/models/kermes_model.dart';
+import '../../utils/currency_utils.dart';
 
 const Color lokmaPink = Color(0xFFFB335B);
 Color _darkBg(bool isDark) => isDark ? const Color(0xFF121212) : const Color(0xFFE8E8EC);
@@ -118,7 +119,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                   
                   // Fiyat
                   Text(
-                    '${item.price.toStringAsFixed(2)} €',
+                    '${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                     style: const TextStyle(
                       color: Colors.greenAccent,
                       fontSize: 28,
@@ -279,7 +280,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                             Text(
                               cartQuantity > 0 
                                 ? 'Bir Tane Daha Ekle' 
-                                : 'Sepete Ekle • ${item.price.toStringAsFixed(2)} €',
+                                : 'Sepete Ekle • ${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,

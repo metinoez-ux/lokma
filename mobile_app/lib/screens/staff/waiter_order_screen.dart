@@ -9,6 +9,7 @@ import '../../services/table_session_service.dart';
 import '../../services/order_service.dart';
 import '../../models/butcher_product.dart';
 import '../../data/product_catalog_data.dart';
+import '../../utils/currency_utils.dart';
 
 /// Garson Sipariş Ekranı
 /// Waiter selects table → opens/joins session → browses menu → adds items → sends to kitchen
@@ -373,7 +374,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                     ),
                                   ),
                                   Text(
-                                    '€${grandTotal.toStringAsFixed(2)}',
+                                    '${CurrencyUtils.getCurrencySymbol()}${grandTotal.toStringAsFixed(2)}',
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w900,
@@ -439,7 +440,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                           Icon(Icons.circle_outlined, size: 14, color: Colors.red.shade400),
                                         const SizedBox(width: 6),
                                         Text(
-                                          '€${order.totalAmount.toStringAsFixed(2)}',
+                                          '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: brandColor),
                                         ),
                                       ],
@@ -1262,7 +1263,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '€${product.price.toStringAsFixed(2)} / ${product.unitType}',
+                  '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)} / ${product.unitType}',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -1347,7 +1348,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
               const Icon(Icons.send, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Mutfağa Gönder • $_cartItemCount ürün • €${_cartTotal.toStringAsFixed(2)}',
+                'Mutfağa Gönder • $_cartItemCount ürün • ${CurrencyUtils.getCurrencySymbol()}${_cartTotal.toStringAsFixed(2)}',
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
             ],
@@ -1467,7 +1468,7 @@ class _TableBillView extends StatelessWidget {
                     Column(
                       children: [
                         Text(
-                          '€${grandTotal.toStringAsFixed(2)}',
+                          '${CurrencyUtils.getCurrencySymbol()}${grandTotal.toStringAsFixed(2)}',
                           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: allPaid ? Colors.green.shade800 : Colors.amber.shade800),
                         ),
                         Text(
@@ -1551,7 +1552,7 @@ class _TableBillView extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                                  '${CurrencyUtils.getCurrencySymbol()}${(item.price * item.quantity).toStringAsFixed(2)}',
                                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                                 ),
                               ],
@@ -1561,7 +1562,7 @@ class _TableBillView extends StatelessWidget {
                           Align(
                             alignment: Alignment.centerRight,
                             child: Text(
-                              '€${order.totalAmount.toStringAsFixed(2)}',
+                              '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,

@@ -171,6 +171,7 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
                 amount: totalAmount,
                 items: order.items?.length || 0,
                 language: smartConfig.alexaLanguage || "de-DE",
+                currency: businessDoc.data()?.currency || "EUR",
                 alexaEnabled: smartConfig.alexaEnabled !== false,
                 ledEnabled: smartConfig.ledEnabled !== false,
                 hueEnabled: smartConfig.hueEnabled === true,
@@ -335,6 +336,7 @@ async function createCommissionRecord(orderId, orderData) {
             invoiceId: null,
             isFreeOrder,
             sponsoredFee: 0, // Will be updated below if applicable
+            currency: businessData.currency || "EUR",
             period: currentMonth,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
         };
@@ -818,7 +820,7 @@ async function getNextInvoiceNumber() {
  * Syncs a Firestore invoice to Stripe for automatic collection
  * Creates a Stripe Invoice and sends it to the customer
  */
-async function syncInvoiceToStripe(invoiceId, businessId, invoiceNumber, description, grossAmount, dueDate, stripeKey) {
+async function syncInvoiceToStripe(invoiceId, businessId, invoiceNumber, description, grossAmount, currency, dueDate, stripeKey) {
     try {
         // Get business Stripe customer ID
         const businessDoc = await db.collection("butcher_partners").doc(businessId).get();
@@ -852,7 +854,7 @@ async function syncInvoiceToStripe(invoiceId, businessId, invoiceNumber, descrip
             customer: business.stripeCustomerId,
             invoice: stripeInvoice.id,
             amount: Math.round(grossAmount * 100), // Cents
-            currency: "eur",
+            currency: currency.toLowerCase(),
             description: description
         });
         // Finalize the invoice (this triggers auto-charge in 1-2 days)
@@ -1023,7 +1025,7 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
                     taxRate: vatRate,
                     taxAmount,
                     grandTotal,
-                    currency: "EUR",
+                    currency: plan?.currency || business.currency || "EUR",
                     // Dates
                     issueDate: admin.firestore.FieldValue.serverTimestamp(),
                     dueDate: admin.firestore.Timestamp.fromDate(dueDate),
@@ -1036,7 +1038,7 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
                 const invoiceRef = await db.collection("invoices").add(invoiceData);
                 const invoiceId = invoiceRef.id;
                 // Sync to Stripe for automatic collection
-                const stripeResult = await syncInvoiceToStripe(invoiceId, businessId, invoiceNumber, `LOKMA ${plan?.name || "Abonnement"} - ${periodString}`, grandTotal, dueDate, stripeSecretKey.value());
+                const stripeResult = await syncInvoiceToStripe(invoiceId, businessId, invoiceNumber, `LOKMA ${plan?.name || "Abonnement"} - ${periodString}`, grandTotal, plan?.currency || business.currency || "EUR", dueDate, stripeSecretKey.value());
                 stats.subscriptionGenerated++;
                 stats.totalAmount += grandTotal;
                 console.log(`[Monthly Invoicing] Created subscription invoice ${invoiceNumber} for ${business.companyName} - €${grandTotal.toFixed(2)}${stripeResult.stripeInvoiceId ? " (Stripe: " + stripeResult.stripeInvoiceId + ")" : ""}`);
@@ -1073,6 +1075,7 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
                     cashCommission: 0,
                     orderCount: 0,
                     businessName: rec.businessName || "Unbekannt",
+                    currency: rec.currency || "EUR",
                     recordIds: [],
                 };
             }
@@ -1149,7 +1152,7 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
                     taxRate: 19,
                     taxAmount: vatWithSponsored,
                     grandTotal: grandTotalWithSponsored,
-                    currency: "EUR",
+                    currency: commData.currency,
                     orderCount: commData.orderCount,
                     cardCommission: commData.cardCommission,
                     cashCommission: commData.cashCommission,
@@ -1176,10 +1179,10 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
                 }
                 await batch.commit();
                 // Sync commission invoice to Stripe for automatic collection
-                const commStripeResult = await syncInvoiceToStripe(commInvoiceId, businessId, invoiceNumber, `LOKMA Provision - ${commData.orderCount} Bestellungen - ${periodString}`, commData.totalCommission, dueDate, stripeSecretKey.value());
+                const stripeResult = await syncInvoiceToStripe(commInvoiceId, businessId, invoiceNumber, commissionInvoiceData.description, grandTotalWithSponsored, commData.currency, dueDate, stripeSecretKey.value());
                 stats.commissionGenerated++;
                 stats.totalAmount += commData.totalCommission;
-                console.log(`[Monthly Invoicing] Created commission invoice ${invoiceNumber} for ${commData.businessName} - €${commData.totalCommission.toFixed(2)} (${commData.orderCount} orders, Card: €${commData.cardCommission.toFixed(2)}, Cash: €${commData.cashCommission.toFixed(2)})${commStripeResult.stripeInvoiceId ? " (Stripe: " + commStripeResult.stripeInvoiceId + ")" : ""}`);
+                console.log(`[Monthly Invoicing] Created commission invoice ${invoiceNumber} for ${commData.businessName} - €${commData.totalCommission.toFixed(2)} (${commData.orderCount} orders, Card: €${commData.cardCommission.toFixed(2)}, Cash: €${commData.cashCommission.toFixed(2)})${stripeResult.stripeInvoiceId ? " (Stripe: " + stripeResult.stripeInvoiceId + ")" : ""}`);
                 // Send commission invoice email with PDF
                 const businessDoc = await db.collection("butcher_partners").doc(businessId).get();
                 const biz = businessDoc.exists ? businessDoc.data() : null;

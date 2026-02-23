@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/table_group_session_model.dart';
+import '../../utils/currency_utils.dart';
 
 /// Card widget to display a closed group order session in the order history.
 class GroupOrderHistoryCard extends StatelessWidget {
@@ -119,7 +120,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '€${myParticipant.subtotal.toStringAsFixed(2)}',
+                    '${CurrencyUtils.getCurrencySymbol()}${myParticipant.subtotal.toStringAsFixed(2)}',
                     style: const TextStyle(
                       color: _accent,
                       fontSize: 16,
@@ -167,7 +168,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
                               ],
                             ),
                             Text(
-                              '€${p.subtotal.toStringAsFixed(2)}',
+                              '${CurrencyUtils.getCurrencySymbol()}${p.subtotal.toStringAsFixed(2)}',
                               style: TextStyle(
                                 color: subtitleColor,
                                 fontSize: 13,
@@ -196,7 +197,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '€${session.grandTotal.toStringAsFixed(2)}',
+                      '${CurrencyUtils.getCurrencySymbol()}${session.grandTotal.toStringAsFixed(2)}',
                       style: const TextStyle(
                         color: _accent,
                         fontSize: 16,
@@ -249,7 +250,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
             ),
           ),
           Text(
-            '€${item.totalPrice.toStringAsFixed(2)}',
+            '${CurrencyUtils.getCurrencySymbol()}${item.totalPrice.toStringAsFixed(2)}',
             style: TextStyle(
               color: subtitleColor,
               fontSize: 13,

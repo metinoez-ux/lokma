@@ -10,6 +10,7 @@ import 'package:lokma_app/services/kermes_feature_service.dart';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../utils/currency_utils.dart';
 
 class KermesCard extends StatefulWidget {
   final KermesEvent event;
@@ -411,7 +412,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                             const Icon(Icons.local_shipping, size: 14, color: Colors.green),
                             const SizedBox(width: 6),
                             Text(
-                              'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}€' : 'Bedava'}',
+                              'Kurye: ${widget.event.deliveryFee > 0 ? '${widget.event.deliveryFee}${CurrencyUtils.getCurrencySymbol()}' : 'Bedava'}',
                               style: TextStyle(
                                 color: isDark ? Colors.green[400] : const Color(0xFF059669),
                                 fontSize: 11,

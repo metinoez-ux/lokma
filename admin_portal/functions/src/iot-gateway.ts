@@ -22,6 +22,7 @@ interface NotifyPayload {
     event: "new_order" | "order_ready" | "order_cancelled";
     orderNumber?: string;
     amount?: number;
+    currency?: string;
     items?: number;
     language?: "de-DE" | "tr-TR";
     alexaEnabled?: boolean;
@@ -200,8 +201,29 @@ async function flashHue(bridgeIp: string, username: string, lightIds: string[], 
 }
 
 // ─── Order Message Builder ───────────────────────────────────────────────────
-function buildOrderMessage(event: string, orderNumber?: string, amount?: number, items?: number, language = "de-DE"): string {
-    const amountStr = amount ? amount.toFixed(2).replace(".", " Euro ") + " Cent" : "";
+function buildOrderMessage(event: string, orderNumber?: string, amount?: number, items?: number, language = "de-DE", currency = "EUR"): string {
+    let currencyName = "Euro";
+    let fractionName = "Cent";
+    if (currency === "TRY") {
+        currencyName = "Lira"; fractionName = "Kuruş";
+    } else if (currency === "USD") {
+        currencyName = "Dolar"; fractionName = "Cent";
+    } else if (currency === "GBP") {
+        currencyName = "Pound"; fractionName = "Pence";
+    } else if (currency === "CHF") {
+        currencyName = "Frank"; fractionName = "Rappen";
+    }
+
+    // Format amount into integers: X Lira Y Kurus
+    let amountStr = "";
+    if (amount) {
+        const primary = Math.floor(amount);
+        const fraction = Math.round((amount - primary) * 100);
+        amountStr = `${primary} ${currencyName}`;
+        if (fraction > 0) {
+            amountStr += ` ${fraction} ${fractionName}`;
+        }
+    }
     if (language === "tr-TR") {
         switch (event) {
             case "new_order": return `Yeni sipariş geldi! ${orderNumber ? "Sipariş numarası " + orderNumber + "." : ""} ${items ? items + " ürün," : ""} ${amountStr ? "toplam " + amountStr : ""}`.trim();
@@ -251,7 +273,7 @@ iotApp.post("/notify", async (req, res) => {
     if (payload.alexaEnabled !== false) {
         const ready = await ensureAlexaReady(payload.businessId);
         if (ready) {
-            const message = buildOrderMessage(event, payload.orderNumber, payload.amount, payload.items, payload.language || "de-DE");
+            const message = buildOrderMessage(event, payload.orderNumber, payload.amount, payload.items, payload.language || "de-DE", payload.currency || "EUR");
             const soundOk = await playAlexaSound(payload.businessId);
             await new Promise(r => setTimeout(r, 1500));
             const ttsOk = await sendAlexaTTS(payload.businessId, message);
@@ -286,7 +308,7 @@ iotApp.post("/test", async (req, res) => {
     if (businessId) {
         const ready = await ensureAlexaReady(businessId);
         if (ready) {
-            const msg = buildOrderMessage("new_order", "TEST-001", 15.50, 2, language);
+            const msg = buildOrderMessage("new_order", "TEST-001", 15.50, 2, language, "EUR");
             await playAlexaSound(businessId);
             await new Promise(r => setTimeout(r, 1500));
             await sendAlexaTTS(businessId, msg);

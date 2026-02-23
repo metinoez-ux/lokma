@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/currency_utils.dart';
 
 // Search result types
 enum SearchResultType {
@@ -646,7 +647,7 @@ class SearchNotifier extends Notifier<SearchState> {
               
               // Format price
               final price = productData['price'] ?? productData['fiyat'];
-              final priceStr = price != null ? '${price.toStringAsFixed(2)} €' : '';
+              final priceStr = price != null ? '${price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}' : '';
               
               results.add(SearchResult(
                 id: productDoc.id,
@@ -706,7 +707,7 @@ class SearchNotifier extends Notifier<SearchState> {
               
               // Format price  
               final price = item['price'] ?? item['fiyat'];
-              final priceStr = price != null ? '${price.toStringAsFixed(2)} €' : '';
+              final priceStr = price != null ? '${price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}' : '';
               
               results.add(SearchResult(
                 id: item['id'] ?? '${kermesDoc.id}_${itemName}',
@@ -741,7 +742,7 @@ class SearchNotifier extends Notifier<SearchState> {
 
             if (productName.contains(query) || productCategory.contains(query)) {
               final price = productData['price'] ?? productData['fiyat'];
-              final priceStr = price != null ? '${price.toStringAsFixed(2)} €' : '';
+              final priceStr = price != null ? '${price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}' : '';
               
               results.add(SearchResult(
                 id: productDoc.id,

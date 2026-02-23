@@ -20,6 +20,7 @@ import 'reservation_booking_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/providers/theme_provider.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
+import '../../../utils/currency_utils.dart';
 
 class BusinessDetailScreen extends ConsumerStatefulWidget {
   final String businessId;
@@ -1817,7 +1818,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            if ((data?['minDeliveryOrder'] ?? 0) > 0) ...[
                              Text('·', style: TextStyle(color: Colors.grey[500], fontSize: 14)),
                              Text(
-                               'Min. ${data!['minDeliveryOrder']}€',
+                               'Min. ${data!['minDeliveryOrder']}${CurrencyUtils.getCurrencySymbol()}',
                                style: TextStyle(
                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                                  fontSize: 13,
@@ -2174,7 +2175,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        '${product.price.toStringAsFixed(0)} €',
+                        '${product.price.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
                         style: const TextStyle(
                           color: Color(0xFFFB335B), // Red Price
                           fontWeight: FontWeight.w800, 
@@ -2363,7 +2364,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              '${displayPrice.toStringAsFixed(0)} €',
+                              '${displayPrice.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
                               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -2435,7 +2436,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
              crossAxisAlignment: CrossAxisAlignment.start,
              children: [
                Text('${cart.items.length} Ürün', style: TextStyle(color: subtitleColor, fontSize: 12)),
-               Text('€${cart.totalAmount.toStringAsFixed(2)}', style: TextStyle(color: priceColor, fontSize: 18, fontWeight: FontWeight.bold)),
+               Text('${CurrencyUtils.getCurrencySymbol()}${cart.totalAmount.toStringAsFixed(2)}', style: TextStyle(color: priceColor, fontSize: 18, fontWeight: FontWeight.bold)),
              ],
            ),
            const Spacer(),
@@ -2562,7 +2563,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '€${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
+                              '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -2725,8 +2726,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ),
                       child: Text(
                         isEditing
-                          ? 'Güncelle - €${(product.price * selectedQty).toStringAsFixed(2)}'
-                          : 'Sepete Ekle - €${(product.price * selectedQty).toStringAsFixed(2)}',
+                          ? 'Güncelle - ${CurrencyUtils.getCurrencySymbol()}${(product.price * selectedQty).toStringAsFixed(2)}'
+                          : 'Sepete Ekle - ${CurrencyUtils.getCurrencySymbol()}${(product.price * selectedQty).toStringAsFixed(2)}',
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -2844,7 +2845,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           const SizedBox(width: 8),
                           if (isAvailable)
                             Text(
-                              '€${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
+                              '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
                               style: TextStyle(
                                 color: accent,
                                 fontSize: 16,
@@ -2930,7 +2931,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       ),
                                       SizedBox(width: 6),
                                       Text(
-                                        '€${ci.unitPrice.toStringAsFixed(2)}',
+                                        '${CurrencyUtils.getCurrencySymbol()}${ci.unitPrice.toStringAsFixed(2)}',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: accent,
@@ -3557,7 +3558,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '€${product.price.toStringAsFixed(2)}',
+                        '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,

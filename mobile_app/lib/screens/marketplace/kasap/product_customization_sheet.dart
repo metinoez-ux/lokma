@@ -4,6 +4,7 @@ import '../../../models/butcher_product.dart';
 import '../../../models/product_option.dart';
 import '../../../providers/cart_provider.dart';
 import '../../../utils/i18n_utils.dart';
+import '../../../utils/currency_utils.dart';
 
 /// Lieferando-style product customization bottom sheet.
 ///
@@ -332,7 +333,7 @@ class _ProductCustomizationSheetState
                             elevation: 0,
                           ),
                           child: Text(
-                            '${widget.existingItem != null ? 'Güncelle' : 'Hinzufügen'}  €${_totalPrice.toStringAsFixed(2)}',
+                            '${widget.existingItem != null ? 'Güncelle' : 'Hinzufügen'}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2)}',
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -383,7 +384,7 @@ class _ProductCustomizationSheetState
 
         // Price
         Text(
-          'ab €${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
+          'ab ${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
           style: TextStyle(
             fontSize: 14,
             color: textSecondary,
@@ -532,8 +533,8 @@ class _ProductCustomizationSheetState
                   if (option.priceModifier != 0)
                     Text(
                       option.priceModifier > 0
-                          ? '+€${option.priceModifier.toStringAsFixed(2)}'
-                          : '−€${option.priceModifier.abs().toStringAsFixed(2)}',
+                          ? '+${CurrencyUtils.getCurrencySymbol()}${option.priceModifier.toStringAsFixed(2)}'
+                          : '−${CurrencyUtils.getCurrencySymbol()}${option.priceModifier.abs().toStringAsFixed(2)}',
                       style: TextStyle(
                         fontSize: 14,
                         color: textSecondary,

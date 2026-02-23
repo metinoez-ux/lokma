@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../services/order_service.dart';
 import '../../services/shift_service.dart';
 import '../../services/location_tracking_service.dart';
+import '../../utils/currency_utils.dart';
 
 /// Staff Delivery Screen - Shows pending deliveries for staff to claim
 class StaffDeliveryScreen extends StatefulWidget {
@@ -129,7 +130,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
         content: Text(
           'Bu siparişi üstlenmek istediğinize emin misiniz?\n\n'
           '📍 ${order.deliveryAddress ?? "Adres yok"}\n'
-          '💰 ${order.totalAmount.toStringAsFixed(2)}€',
+          '💰 ${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
         ),
         actions: [
           TextButton(
@@ -327,7 +328,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '💰 ${cashTotal.toStringAsFixed(2)}€',
+                      '💰 ${cashTotal.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -411,7 +412,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              '${order.totalAmount.toStringAsFixed(2)}€',
+              '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
               style: TextStyle(
                 color: isCash ? Colors.green[700] : Colors.grey[600],
                 fontWeight: FontWeight.bold,
@@ -525,7 +526,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                 ),
                 const Spacer(),
                 Text(
-                  '${order.totalAmount.toStringAsFixed(2)}€',
+                  '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -712,7 +713,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                     const Icon(Icons.payments, color: Color(0xFFFB335B), size: 32),
                     const SizedBox(width: 12),
                     Text(
-                      '$amount€',
+                      '$amount${CurrencyUtils.getCurrencySymbol()}',
                       style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFB335B)),
                     ),
                   ],
@@ -1279,7 +1280,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                 ),
                               ),
                               Text(
-                                '${order.totalAmount.toStringAsFixed(2)}€',
+                                '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isPaid ? Colors.green : Colors.amber),
                               ),
                             ],
@@ -1330,7 +1331,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                 Text('${item.quantity}x', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber)),
                                 const SizedBox(width: 8),
                                 Expanded(child: Text(item.name, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface))),
-                                Text('${(item.price * item.quantity).toStringAsFixed(2)}€', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
+                                Text('${(item.price * item.quantity).toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
                               ],
                             ),
                           )).toList(),

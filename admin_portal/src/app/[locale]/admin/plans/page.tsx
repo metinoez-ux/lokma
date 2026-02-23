@@ -9,11 +9,12 @@ import { toast } from 'react-hot-toast';
 import { useSectors } from '@/hooks/useSectors';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useTranslations } from 'next-intl';
+import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 
 export default function PlansPage() {
-    
-  const t = useTranslations('AdminPlans');
-const { admin, loading: adminLoading } = useAdmin();
+
+    const t = useTranslations('AdminPlans');
+    const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
     const { sectors, loading: sectorsLoading } = useSectors();
 
@@ -55,6 +56,7 @@ const { admin, loading: adminLoading } = useAdmin();
         order: 99,
         isActive: true,
         businessType: selectedBusinessType || 'yemek',
+        currency: 'EUR',
         features: {} as any,
         miraAppConnected: false,
         commissionClickCollect: 5,
@@ -66,6 +68,8 @@ const { admin, loading: adminLoading } = useAdmin();
         freeOrderCount: 0,
         tableReservationLimit: null,
         tableReservationOverageFee: 0,
+        personnelLimit: null,
+        personnelOverageFee: 0,
         sponsoredFeePerConversion: 0.40,
         sponsoredMaxProducts: 5,
     });
@@ -135,6 +139,7 @@ const { admin, loading: adminLoading } = useAdmin();
             order: plans.length + 1,
             isActive: true,
             businessType: selectedBusinessType,
+            currency: 'EUR',
             features: {} as any // Features editing not implemented in simple form yet
         });
         setIsModalOpen(true);
@@ -152,6 +157,8 @@ const { admin, loading: adminLoading } = useAdmin();
                 campaignLimit: formData.campaignLimit === undefined ? null : formData.campaignLimit,
                 productLimit: formData.productLimit === undefined ? null : formData.productLimit,
                 orderLimit: formData.orderLimit === undefined ? null : formData.orderLimit,
+                personnelLimit: formData.personnelLimit === undefined ? null : formData.personnelLimit,
+                personnelOverageFee: formData.personnelOverageFee === undefined ? 0 : formData.personnelOverageFee,
                 // Kurye bazlı provizyon
                 commissionClickCollect: (formData as any).commissionClickCollect ?? 5,
                 commissionOwnCourier: (formData as any).commissionOwnCourier ?? 4,
@@ -186,7 +193,7 @@ const { admin, loading: adminLoading } = useAdmin();
                 const newPlan: ButcherSubscriptionPlan = {
                     ...(commonData as ButcherSubscriptionPlan),
                     id: formData.code!, // Use code as ID for simplicity
-                    currency: 'EUR',
+                    currency: formData.currency || 'EUR',
                     billingCycle: 'monthly',
                     trialDays: 30, // Default
                     orderOverageFee: formData.orderOverageFee || 0,
@@ -271,77 +278,29 @@ const { admin, loading: adminLoading } = useAdmin();
                     }
                 </div>
 
-                {/* Plan Rows */}
-                <div className="space-y-3">
+                {/* Plan Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {
                         plans.map(plan => (
-                            <div key={plan.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-gray-500 transition-all group shadow-lg">
-                                <div className="flex items-stretch">
-                                    {/* Color Bar (vertical left) */}
-                                    <div className={`w-1.5 shrink-0 ${plan.color}`}></div>
+                            <div key={plan.id} className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden hover:border-gray-500 transition-all group shadow-lg flex flex-col relative">
+                                {/* Top Color Bar */}
+                                <div className={`h-1.5 w-full ${plan.color}`}></div>
 
-                                    {/* Main Content */}
-                                    <div className="flex-1 px-5 py-4 flex items-center gap-6 min-w-0">
-                                        {/* Name & Code */}
-                                        <div className="w-36 shrink-0">
+                                <div className="p-5 flex-1 flex flex-col">
+                                    {/* Header & Actions */}
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
                                             <div className="flex items-center gap-2">
-                                                <h3 className="font-bold text-white text-base truncate">{plan.name}</h3>
-                                                <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${plan.isActive ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`}></div>
+                                                <h3 className="font-bold text-white text-lg tracking-tight">{plan.name}</h3>
+                                                <div className={`w-2 h-2 rounded-full shrink-0 ${plan.isActive ? 'bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`}></div>
                                             </div>
-                                            <p className="text-xs text-gray-500 font-mono mt-0.5">{plan.code}</p>
+                                            <p className="text-xs text-gray-400 font-mono mt-1 bg-gray-900/50 inline-block px-1.5 py-0.5 rounded-md">{plan.code}</p>
                                         </div>
 
-                                        {/* Price */}
-                                        <div className="w-28 shrink-0 text-center">
-                                            <span className="text-xl font-bold text-white">€{plan.monthlyFee.toFixed(2)}</span>
-                                            <span className="text-xs text-gray-500 ml-1">/ay</span>
-                                        </div>
-
-                                        {/* Features Chips */}
-                                        <div className="flex-1 flex flex-wrap gap-1.5 min-w-0">
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${plan.features?.clickAndCollect ? 'bg-green-900/40 text-green-400 border border-green-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {plan.features?.clickAndCollect ? '✓' : '·'} Gel-Al
-                                            </span>
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${plan.features?.delivery ? 'bg-blue-900/40 text-blue-400 border border-blue-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {plan.features?.delivery ? '✓' : '·'} Teslimat
-                                            </span>
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${plan.features?.campaigns ? 'bg-purple-900/40 text-purple-400 border border-purple-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {plan.features?.campaigns ? '✓' : '·'} Kampanya
-                                            </span>
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${plan.features?.onlinePayment ? 'bg-amber-900/40 text-amber-400 border border-amber-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {plan.features?.onlinePayment ? '✓' : '·'} {t('odeme')}
-                                            </span>
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.dineInQR ? 'bg-amber-900/40 text-amber-400 border border-amber-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {(plan.features as any)?.dineInQR ? '✓' : '·'} {t('qr_siparis')}
-                                            </span>
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.waiterOrder ? 'bg-teal-900/40 text-teal-400 border border-teal-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {(plan.features as any)?.waiterOrder ? '✓' : '·'} Garson
-                                            </span>
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.staffShiftTracking ? 'bg-cyan-900/40 text-cyan-400 border border-cyan-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {(plan.features as any)?.staffShiftTracking ? '✓' : '·'} Vardiya
-                                            </span>
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${(plan.features as any)?.sponsoredProducts ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-700/40' : 'bg-gray-700/30 text-gray-600 border border-gray-700/30'}`}>
-                                                {(plan.features as any)?.sponsoredProducts ? '✓' : '·'} {t('one_cikan')} {(plan.features as any)?.sponsoredProducts && <span className="opacity-70">€{((plan as any).sponsoredFeePerConversion ?? 0.40).toFixed(2)}</span>}
-                                            </span>
-                                        </div>
-
-                                        {/* Limits */}
-                                        <div className="w-24 shrink-0 text-center">
-                                            <p className="text-xs text-gray-500">{t('siparis')}</p>
-                                            <p className="text-sm font-bold text-gray-300">{plan.orderLimit === null ? '∞' : plan.orderLimit}/ay</p>
-                                        </div>
-
-                                        {/* Commission */}
-                                        <div className="w-20 shrink-0 text-center">
-                                            <p className="text-xs text-gray-500">Prov.</p>
-                                            <p className="text-sm font-bold text-amber-400">%{plan.commissionClickCollect || 5}</p>
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex gap-1.5 shrink-0">
+                                        <div className="flex gap-0.5 -mt-1 -mr-2 bg-gray-900/60 p-1 rounded-lg border border-gray-700/50 opacity-80 group-hover:opacity-100 transition-opacity">
                                             <button
                                                 onClick={() => handleEdit(plan)}
-                                                className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-colors"
+                                                className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-md transition-colors"
                                                 title={t('duzenle')}
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -350,7 +309,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             </button>
                                             <button
                                                 onClick={() => setConfirmDelete({ id: plan.id, name: plan.name })}
-                                                className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-md transition-colors"
                                                 title={t('sil')}
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -359,20 +318,87 @@ const { admin, loading: adminLoading } = useAdmin();
                                             </button>
                                         </div>
                                     </div>
+
+                                    {/* Price */}
+                                    <div className="mb-6 flex items-baseline gap-1">
+                                        <span className="text-3xl font-extrabold text-white">{globalFormatCurrency(plan.monthlyFee, plan.currency || 'EUR')}</span>
+                                        <span className="text-base font-medium text-gray-500">/ay</span>
+                                    </div>
+
+                                    {/* Features Chips */}
+                                    <div className="flex flex-wrap gap-1.5 mb-8 flex-1 content-start">
+                                        {plan.features?.clickAndCollect && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-green-900/20 text-green-400 border border-green-700/30">
+                                                ✓ Gel-Al
+                                            </span>
+                                        )}
+                                        {plan.features?.delivery && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-blue-900/20 text-blue-400 border border-blue-700/30">
+                                                ✓ Teslimat
+                                            </span>
+                                        )}
+                                        {plan.features?.campaigns && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-900/20 text-purple-400 border border-purple-700/30">
+                                                ✓ Kampanya
+                                            </span>
+                                        )}
+                                        {plan.features?.onlinePayment && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-900/20 text-amber-400 border border-amber-700/30">
+                                                ✓ {t('odeme')}
+                                            </span>
+                                        )}
+                                        {(plan.features as any)?.dineInQR && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-900/20 text-amber-500 border border-amber-700/30">
+                                                ✓ {t('qr_siparis')}
+                                            </span>
+                                        )}
+                                        {(plan.features as any)?.waiterOrder && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-teal-900/20 text-teal-400 border border-teal-700/30">
+                                                ✓ Garson
+                                            </span>
+                                        )}
+                                        {(plan.features as any)?.staffShiftTracking && (
+                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-cyan-900/20 text-cyan-400 border border-cyan-700/30">
+                                                ✓ Vardiya
+                                            </span>
+                                        )}
+                                        {(plan.features as any)?.sponsoredProducts && (
+                                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-yellow-900/20 text-yellow-400 border border-yellow-700/30">
+                                                <span>✓ {t('one_cikan')}</span>
+                                                <span className="opacity-70 px-1 py-0.5 bg-yellow-400/10 rounded">{globalFormatCurrency((plan as any).sponsoredFeePerConversion ?? 0.40, plan.currency || 'EUR')}</span>
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Limits Info Box */}
+                                    <div className="grid grid-cols-3 gap-0 bg-gray-900/40 rounded-xl border border-gray-700/50 p-1">
+                                        <div className="text-center py-2">
+                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">{t('siparis')}</p>
+                                            <p className="text-sm font-bold text-gray-300">{plan.orderLimit === null || plan.orderLimit === undefined ? '∞' : plan.orderLimit}</p>
+                                        </div>
+                                        <div className="text-center py-2 border-l border-r border-gray-700/50">
+                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Personel</p>
+                                            <p className="text-sm font-bold text-gray-300">{plan.personnelLimit === null || plan.personnelLimit === undefined ? '∞' : plan.personnelLimit}</p>
+                                        </div>
+                                        <div className="text-center py-2">
+                                            <p className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">Prov.</p>
+                                            <p className="text-sm font-bold text-amber-500">%{plan.commissionClickCollect || 5}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ))
                     }
 
-                    {/* 'New Plan' Ghost Row */}
+                    {/* 'New Plan' Ghost Card */}
                     <button
                         onClick={handleCreate}
-                        className="w-full border-2 border-dashed border-gray-700 hover:border-gray-500 rounded-xl px-5 py-4 flex items-center justify-center gap-3 text-gray-500 hover:text-gray-300 transition-all group"
+                        className="min-h-[300px] border-2 border-dashed border-gray-700 hover:border-gray-500 hover:text-white rounded-xl flex flex-col items-center justify-center gap-4 text-gray-500 transition-all group bg-gray-800/10 hover:bg-gray-800/40"
                     >
-                        <div className="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-gray-700 flex items-center justify-center transition-colors">
-                            <span className="text-lg font-light">+</span>
+                        <div className="w-12 h-12 rounded-full bg-gray-800 group-hover:bg-gray-700 group-hover:scale-110 flex items-center justify-center transition-all shadow-sm">
+                            <span className="text-xl font-medium">+</span>
                         </div>
-                        <span className="font-medium text-sm">{t('yeni_paket_ekle')}</span>
+                        <span className="font-semibold text-sm transition-colors">{t('yeni_paket_ekle')}</span>
                     </button>
                 </div>
 
@@ -465,10 +491,25 @@ const { admin, loading: adminLoading } = useAdmin();
                                                             type="number"
                                                             step="0.01"
                                                             value={formData.monthlyFee}
-                                                            onChange={e => setFormData({ ...formData, monthlyFee: parseFloat(e.target.value) })}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm font-bold"
-                                                            placeholder="0.00"
+                                                            onChange={(e) => setFormData({ ...formData, monthlyFee: parseFloat(e.target.value) || 0 })}
+                                                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+                                                            placeholder="29.00"
+                                                            min="0"
                                                         />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Para Birimi</label>
+                                                        <select
+                                                            value={formData.currency || 'EUR'}
+                                                            onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                                                            className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+                                                        >
+                                                            <option value="EUR">Euro (€)</option>
+                                                            <option value="TRY">Türk Lirası (₺)</option>
+                                                            <option value="USD">Dolar ($)</option>
+                                                            <option value="GBP">Sterlin (£)</option>
+                                                            <option value="CHF">Frank (CHF)</option>
+                                                        </select>
                                                     </div>
                                                     <div>
                                                         <label className="block text-xs font-medium text-gray-400 mb-1.5">{t('yillik_ucret')}</label>
@@ -541,6 +582,37 @@ const { admin, loading: adminLoading } = useAdmin();
                                                             </button>
                                                         </div>
                                                     </div>
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Personel Limiti</label>
+                                                        <div className="flex gap-2">
+                                                            <input
+                                                                type="number"
+                                                                value={formData.personnelLimit === null ? '' : formData.personnelLimit}
+                                                                onChange={e => setFormData({ ...formData, personnelLimit: e.target.value ? parseInt(e.target.value) : null })}
+                                                                placeholder={t('sinirsiz')}
+                                                                disabled={formData.personnelLimit === null}
+                                                                className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm disabled:opacity-50"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setFormData(p => ({ ...p, personnelLimit: p.personnelLimit === null ? 3 : null }))}
+                                                                className={`px-3 rounded-lg border text-sm font-bold transition-colors ${formData.personnelLimit === null ? 'bg-green-600 border-green-500 text-white' : 'bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700'}`}
+                                                            >
+                                                                ∞
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-400 mb-1.5">Personel Aşım Ücreti ({globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')})</label>
+                                                        <input
+                                                            type="number"
+                                                            step="0.01"
+                                                            value={formData.personnelOverageFee ?? 0}
+                                                            onChange={e => setFormData({ ...formData, personnelOverageFee: parseFloat(e.target.value) || 0 })}
+                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
+                                                            placeholder="Opsiyonel"
+                                                        />
+                                                    </div>
                                                     {/* Kurye Provizyon Sistemi */}
                                                     <div className="col-span-2">
                                                         <label className="block text-xs font-medium text-amber-400 mb-2">{t('kurye_bazli_provizyon_oranlari')}</label>
@@ -602,7 +674,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                     <div className="col-span-2">
                                                         <label className="block text-xs font-medium text-amber-400 mb-2">{t('siparis_basi_ucret')}</label>
                                                         <div className="flex gap-2">
-                                                            <div className="flex bg-gray-900 rounded-lg border border-gray-700 overflow-hidden">
+                                                            <div className="relative flex bg-gray-900 rounded-lg border border-gray-700 overflow-hidden">
                                                                 {(['none', 'percentage', 'fixed'] as const).map(type => (
                                                                     <button
                                                                         key={type}
@@ -610,7 +682,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                         onClick={() => setFormData({ ...formData, perOrderFeeType: type } as any)}
                                                                         className={`px-3 py-2 text-xs font-medium transition-colors ${(formData as any).perOrderFeeType === type ? 'bg-amber-600 text-white' : 'text-gray-400 hover:bg-gray-800'}`}
                                                                     >
-                                                                        {type === 'none' ? t('yok') : type === 'percentage' ? '%' : '€'}
+                                                                        {type === 'none' ? t('yok') : type === 'percentage' ? '%' : globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')}
                                                                     </button>
                                                                 ))}
                                                             </div>
@@ -620,8 +692,8 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                     step={(formData as any).perOrderFeeType === 'percentage' ? '0.1' : '0.01'}
                                                                     value={(formData as any).perOrderFeeAmount ?? 0}
                                                                     onChange={e => setFormData({ ...formData, perOrderFeeAmount: parseFloat(e.target.value) } as any)}
-                                                                    className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
-                                                                    placeholder={(formData as any).perOrderFeeType === 'percentage' ? '5%' : '1.00€'}
+                                                                    className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"
+                                                                    placeholder={(formData as any).perOrderFeeType === 'percentage' ? '5%' : `1.00 ${globalFormatCurrency(0, formData.currency || 'EUR').replace(/[\d.,]/g, '')}`}
                                                                 />
                                                             )}
                                                         </div>
@@ -785,7 +857,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                             <p className="text-xs text-yellow-300/80">
                                                                 {t('bu_plandaki_isletmeler_max')} <strong>{(formData as any).sponsoredMaxProducts ?? 5}</strong> {t('urun_secebilir')}
                                                                 {((formData as any).sponsoredFeePerConversion ?? 0.40) > 0
-                                                                    ? <> {t('her_siparis_basi')} <strong>€{((formData as any).sponsoredFeePerConversion ?? 0.40).toFixed(2)}</strong> {t('ucretlendirilir')}</>
+                                                                    ? <> {t('her_siparis_basi')} <strong>{globalFormatCurrency((formData as any).sponsoredFeePerConversion ?? 0.40, formData.currency || 'EUR')}</strong> {t('ucretlendirilir')}</>
                                                                     : <> {t('sponsored_urunler')} <strong className="text-green-400">{t('ucretsiz')}</strong> olarak sunulur.</>
                                                                 }
                                                             </p>

@@ -9,6 +9,7 @@ import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
+import '../../../utils/currency_utils.dart';
 
 /// Business type labels for display
 const Map<String, String> MARKET_TYPE_LABELS = {
@@ -1625,7 +1626,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
-                                    deliveryFee > 0 ? '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}€' : 'Ücretsiz',
+                                    deliveryFee > 0 ? '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}${CurrencyUtils.getCurrencySymbol()}' : 'Ücretsiz',
                                     style: TextStyle(
                                       color: deliveryFee > 0 ? Colors.grey[700] : const Color(0xFF2E7D32),
                                       fontSize: 12,
@@ -1635,7 +1636,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                 )
                               else
                                 Text(
-                                  '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}€',
+                                  '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}${CurrencyUtils.getCurrencySymbol()}',
                                   style: TextStyle(
                                     color: Colors.grey[700],
                                     fontSize: 13,
@@ -1649,7 +1650,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                               Icon(Icons.shopping_basket_outlined, color: Colors.grey[600], size: 14),
                               const SizedBox(width: 4),
                               Text(
-                                'Min. ${minOrderAmount.toStringAsFixed(0)}€',
+                                'Min. ${minOrderAmount.toStringAsFixed(0)}${CurrencyUtils.getCurrencySymbol()}',
                                 style: TextStyle(
                                   color: Colors.grey[700],
                                   fontSize: 13,

@@ -11,6 +11,7 @@ import '../../providers/driver_provider.dart';
 import '../../services/table_session_service.dart';
 import '../../services/order_service.dart';
 import '../../services/shift_service.dart';
+import '../../utils/currency_utils.dart';
 
 /// Unified Staff Hub — Personel Girişi
 /// Shows available staff functions based on the user's role:
@@ -2939,7 +2940,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       Text(
-                                        '€${total.toStringAsFixed(2)}',
+                                        '${CurrencyUtils.getCurrencySymbol()}${total.toStringAsFixed(2)}',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w800,
@@ -3727,7 +3728,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                '€${grandTotal.toStringAsFixed(2)}',
+                                '${CurrencyUtils.getCurrencySymbol()}${grandTotal.toStringAsFixed(2)}',
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w900,
@@ -3834,7 +3835,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           ),
                                         ),
                                         Text(
-                                          '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                                          '${CurrencyUtils.getCurrencySymbol()}${(item.price * item.quantity).toStringAsFixed(2)}',
                                           style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
@@ -3851,7 +3852,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                     children: [
                                       Text('Ara Toplam: ', style: TextStyle(fontSize: 12, color: subtleText)),
                                       Text(
-                                        '€${order.totalAmount.toStringAsFixed(2)}',
+                                        '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w800,
@@ -3894,7 +3895,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                   ),
                                   const Spacer(),
                                   Text(
-                                    '€${grandTotal.toStringAsFixed(2)}',
+                                    '${CurrencyUtils.getCurrencySymbol()}${grandTotal.toStringAsFixed(2)}',
                                     style: TextStyle(
                                       fontSize: 26,
                                       fontWeight: FontWeight.w900,
@@ -3934,7 +3935,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           Navigator.of(ctx).pop();
                                           ScaffoldMessenger.of(parentContext).showSnackBar(
                                             SnackBar(
-                                              content: Text('✅ ${unpaidOrders.length} sipariş nakit olarak toptan ödendi! (€${grandTotal.toStringAsFixed(2)})'),
+                                              content: Text('✅ ${unpaidOrders.length} sipariş nakit olarak toptan ödendi! (${CurrencyUtils.getCurrencySymbol()}${grandTotal.toStringAsFixed(2)})'),
                                               backgroundColor: Colors.green.shade700,
                                               behavior: SnackBarBehavior.floating,
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -3980,7 +3981,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           Navigator.of(ctx).pop();
                                           ScaffoldMessenger.of(parentContext).showSnackBar(
                                             SnackBar(
-                                              content: Text('✅ ${unpaidOrders.length} sipariş kart ile toptan ödendi! (€${grandTotal.toStringAsFixed(2)})'),
+                                              content: Text('✅ ${unpaidOrders.length} sipariş kart ile toptan ödendi! (${CurrencyUtils.getCurrencySymbol()}${grandTotal.toStringAsFixed(2)})'),
                                               backgroundColor: Colors.blue.shade700,
                                               behavior: SnackBarBehavior.floating,
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -4148,7 +4149,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                     ),
                                   ),
                                   Text(
-                                    '€${grandTotal.toStringAsFixed(2)}',
+                                    '${CurrencyUtils.getCurrencySymbol()}${grandTotal.toStringAsFixed(2)}',
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w900,
@@ -4223,7 +4224,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                 borderRadius: BorderRadius.circular(12),
                                               ),
                                               child: Text(
-                                                '€${unpaidTotal.toStringAsFixed(2)}',
+                                                '${CurrencyUtils.getCurrencySymbol()}${unpaidTotal.toStringAsFixed(2)}',
                                                 style: TextStyle(
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.w900,
@@ -4296,7 +4297,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           Icon(Icons.circle_outlined, size: 14, color: Colors.red.shade400),
                                         const SizedBox(width: 6),
                                         Text(
-                                          '€${order.totalAmount.toStringAsFixed(2)}',
+                                          '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                                           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: brandColor),
                                         ),
                                       ],

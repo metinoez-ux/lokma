@@ -12,6 +12,7 @@ import 'package:lokma_app/screens/orders/rating_screen.dart';
 import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/models/product_option.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
+import '../../utils/currency_utils.dart';
 
 
 class FavoritesScreen extends ConsumerStatefulWidget {
@@ -362,7 +363,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                           const SizedBox(height: 4),
                           // Items and price
                           Text(
-                            '${items.length} ürün • €${totalAmount.toStringAsFixed(2)}',
+                            '${items.length} ürün • ${CurrencyUtils.getCurrencySymbol()}${totalAmount.toStringAsFixed(2)}',
                             style: TextStyle(color: textSubtle, fontSize: 13),
                           ),
                         ],
@@ -763,7 +764,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                   Row(
                     children: [
                       Text(
-                        '€${price.toStringAsFixed(2)}',
+                        '${CurrencyUtils.getCurrencySymbol()}${price.toStringAsFixed(2)}',
                         style: const TextStyle(color: lokmaRed, fontWeight: FontWeight.bold, fontSize: 14),
                       ),
                       if (butcherName.isNotEmpty) ...[

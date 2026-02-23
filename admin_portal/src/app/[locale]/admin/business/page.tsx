@@ -56,6 +56,7 @@ interface Business {
         lat?: number;
         lng?: number;
     };
+    currency?: string;
     contact?: {
         phone?: string;
         email?: string;
@@ -228,6 +229,7 @@ export default function BusinessesPage() {
         city: '',
         postalCode: '',
         country: 'DE',
+        currency: 'EUR',
         phone: '',
         email: '',
         website: '',
@@ -443,6 +445,7 @@ export default function BusinessesPage() {
             city: '',
             postalCode: '',
             country: 'DE',
+            currency: 'EUR',
             phone: '',
             email: '',
             website: '',
@@ -490,6 +493,7 @@ export default function BusinessesPage() {
             city: business.address?.city || '',
             postalCode: business.address?.postalCode || '',
             country: business.address?.country || 'DE',
+            currency: business.currency || 'EUR',
             phone: business.contact?.phone || '',
             email: business.contact?.email || '',
             website: business.contact?.website || '',
@@ -569,6 +573,7 @@ export default function BusinessesPage() {
                 postalCode: data.address?.postalCode || prev.postalCode,
                 city: data.address?.city || prev.city,
                 country: data.address?.country || 'DE',
+                currency: prev.currency || 'EUR',
                 phone: data.shopPhone || prev.phone,
                 website: data.website || prev.website,
                 imageUrl: data.photoUrl || prev.imageUrl,
@@ -642,6 +647,7 @@ export default function BusinessesPage() {
                     lat: formData.lat || null,
                     lng: formData.lng || null,
                 },
+                currency: formData.currency,
                 contact: {
                     phone: formData.phone || null,
                     email: formData.email || null,
@@ -1602,6 +1608,23 @@ export default function BusinessesPage() {
                                             <option value="BE">{t('belcika')}</option>
                                             <option value="FR">🇫🇷 Fransa</option>
                                             <option value="AT">🇦🇹 Avusturya</option>
+                                            <option value="CH">🇨🇭 İsviçre</option>
+                                            <option value="GB">🇬🇧 Birleşik Krallık</option>
+                                            <option value="US">🇺🇸 ABD</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-gray-400 text-sm mb-1">Para Birimi</label>
+                                        <select
+                                            value={formData.currency}
+                                            onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                                            className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
+                                        >
+                                            <option value="EUR">Euro (€)</option>
+                                            <option value="TRY">Türk Lirası (₺)</option>
+                                            <option value="USD">Dolar ($)</option>
+                                            <option value="GBP">Sterlin (£)</option>
+                                            <option value="CHF">Frank (CHF)</option>
                                         </select>
                                     </div>
                                 </div>

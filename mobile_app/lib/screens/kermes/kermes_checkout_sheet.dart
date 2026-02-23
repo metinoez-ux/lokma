@@ -11,6 +11,7 @@ import 'package:lokma_app/services/guest_profile_service.dart';
 import 'package:lokma_app/widgets/kermes/order_qr_dialog.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
 import 'package:lokma_app/widgets/kermes/payment_method_dialog.dart';
+import '../../utils/currency_utils.dart';
 
 /// Unified Checkout Sheet - Tüm sipariş akışı tek bir tam ekran bottom sheet'te
 class KermesCheckoutSheet extends ConsumerStatefulWidget {
@@ -482,7 +483,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           style: TextStyle(color: subtleTextColor, fontSize: 14),
                         ),
                         Text(
-                          '${cartState.totalAmount.toStringAsFixed(2)} €',
+                          '${cartState.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                           style: TextStyle(
                             color: isDark ? Colors.white70 : Colors.black54,
                             fontSize: 16,
@@ -509,7 +510,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                             ],
                           ),
                           Text(
-                            '+${pfandTotal.toStringAsFixed(2)} €',
+                            '+${pfandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                             style: TextStyle(
                               color: Colors.green[400],
                               fontSize: 14,
@@ -542,7 +543,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           ),
                         ),
                         Text(
-                          '${grandTotal.toStringAsFixed(2)} €',
+                          '${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                           style: const TextStyle(
                             color: Colors.greenAccent,
                             fontSize: 28,
@@ -584,7 +585,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${item.price.toStringAsFixed(2)} € x $quantity = ${subtotal.toStringAsFixed(2)} €',
+                          '${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} x $quantity = ${subtotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                           style: TextStyle(color: subtleTextColor, fontSize: 13),
                         ),
                       ],
@@ -1066,7 +1067,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   children: [
                     Text('${cartState.totalItems} ürün', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600])),
                     Text(
-                      '${cartState.totalAmount.toStringAsFixed(2)} €',
+                      '${cartState.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                       style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontSize: 16),
                     ),
                   ],
@@ -1086,7 +1087,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                         ],
                       ),
                       Text(
-                        '+${pfandTotal.toStringAsFixed(2)} €',
+                        '+${pfandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                         style: TextStyle(color: Colors.green[400], fontSize: 14),
                       ),
                     ],
@@ -1101,7 +1102,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   children: [
                     Text('Toplam', style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600)),
                     Text(
-                      '${grandTotal.toStringAsFixed(2)} €',
+                      '${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                       style: const TextStyle(
                         color: Colors.greenAccent,
                         fontSize: 24,
@@ -1335,7 +1336,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600], fontSize: 11),
                 ),
                 Text(
-                  '${cartState.totalAmount.toStringAsFixed(2)} €',
+                  '${cartState.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black87,
                     fontSize: 16,

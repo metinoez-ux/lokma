@@ -29,6 +29,7 @@ import 'package:lokma_app/screens/orders/rating_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/screens/marketplace/kasap/product_customization_sheet.dart';
 import 'package:lokma_app/models/product_option.dart';
+import '../../../utils/currency_utils.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
@@ -918,7 +919,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         SizedBox(height: 4),
                         // Items and price
                         Text(
-                          '${order.items.length} ${'cart.items'.tr()} • €${order.totalAmount.toStringAsFixed(2)}',
+                          '${order.items.length} ${'cart.items'.tr()} • ${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                           style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6), fontSize: 13),
                         ),
                       ],
@@ -1256,7 +1257,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 ),
                               ),
                               Text(
-                                '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                                '${CurrencyUtils.getCurrencySymbol()}${(item.price * item.quantity).toStringAsFixed(2)}',
                                 style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
                               ),
                             ],
@@ -1281,7 +1282,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               ),
                             ),
                             Text(
-                              '€${order.totalAmount.toStringAsFixed(2)}',
+                              '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                               style: TextStyle(
                                 color: colorScheme.onSurface,
                                 fontSize: 15,
@@ -1677,7 +1678,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             SizedBox(
                               width: 60,
                               child: Text(
-                                '€${(item.price * item.quantity).toStringAsFixed(2)}',
+                                '${CurrencyUtils.getCurrencySymbol()}${(item.price * item.quantity).toStringAsFixed(2)}',
                                 style: TextStyle(
                                   fontFamily: 'Courier',
                                   fontSize: 11,
@@ -1708,7 +1709,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                           ),
                           Text(
-                            '€${order.totalAmount.toStringAsFixed(2)}',
+                            '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                             style: TextStyle(
                               fontFamily: 'Courier',
                               fontSize: 16,
@@ -2074,7 +2075,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   ),
                 ),
                 Text(
-                  '${item.totalPrice.toStringAsFixed(2)} €',
+                  '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                 ),
               ],
@@ -2121,7 +2122,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               const Spacer(),
               // Toplam
               Text(
-                '${order.totalAmount.toStringAsFixed(2)} €',
+                '${order.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                 style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 16,
@@ -2353,7 +2354,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Min. ${minOrder.toStringAsFixed(0)} € ✓ Teslimat için yeterli',
+                'Min. ${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()} ✓ Teslimat için yeterli',
                 style: TextStyle(
                   color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32),
                   fontSize: 14,
@@ -2389,12 +2390,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 style: TextStyle(color: textColor, fontSize: 14),
                 children: [
                   TextSpan(
-                    text: '${remaining.toStringAsFixed(2).replaceAll('.', ',')} €',
+                    text: '${remaining.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const TextSpan(text: ' daha ekle, min. sipariş '),
                   TextSpan(
-                    text: '${minOrder.toStringAsFixed(0)} €',
+                    text: '${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -2451,7 +2452,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       ),
                     ),
                     Text(
-                      '${item.totalPrice.toStringAsFixed(2)} €',
+                      '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                       style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w500,
@@ -2593,7 +2594,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      '${item.product.price.toStringAsFixed(2)} €/kg',
+                      '${item.product.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}/kg',
                       style: TextStyle(color: Colors.grey[600], fontSize: 13),
                     ),
                   ),
@@ -2637,7 +2638,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             children: [
               // Price
               Text(
-                '${totalPrice.toStringAsFixed(2)} €',
+                '${totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                 style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.w500,
@@ -2899,7 +2900,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             Row(
                               children: [
                                 Text(
-                                  '${price.toStringAsFixed(2)} €',
+                                  '${price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
@@ -3000,7 +3001,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
             ),
             Text(
-              '${grandTotal.toStringAsFixed(2)} €',
+              '${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
             ),
           ],
@@ -3016,7 +3017,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               Text(
-                '${(_butcherData!['deliveryFee'] as num).toStringAsFixed(2)} €',
+                '${(_butcherData!['deliveryFee'] as num).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
             ],
@@ -3042,7 +3043,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           if (total < minOrder) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Kurye için minimum sipariş tutarı: ${minOrder.toStringAsFixed(0)} €'),
+                content: Text('Kurye için minimum sipariş tutarı: ${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}'),
                 backgroundColor: Colors.amber,
               ),
             );
@@ -3075,8 +3076,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ],
               Text(
                 (_isDineIn && _scannedTableNumber == null)
-                    ? 'Masa QR Kodunu Tara · ${total.toStringAsFixed(2)} €'
-                    : 'Siparişi Onayla · ${total.toStringAsFixed(2)} €',
+                    ? 'Masa QR Kodunu Tara · ${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'
+                    : 'Siparişi Onayla · ${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.surface,
                   fontSize: 16,
@@ -3888,7 +3889,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ),
                 // Fiyat
                 Text(
-                  '€${item.totalPrice.toStringAsFixed(2)}',
+                  '${CurrencyUtils.getCurrencySymbol()}${item.totalPrice.toStringAsFixed(2)}',
                   style: TextStyle(
                     color: Color(0xFF4CAF50),
                     fontWeight: FontWeight.bold,
@@ -3909,7 +3910,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold),
               ),
               Text(
-                '€${kermesCart.totalAmount.toStringAsFixed(2)}',
+                '${CurrencyUtils.getCurrencySymbol()}${kermesCart.totalAmount.toStringAsFixed(2)}',
                 style: TextStyle(
                   color: Color(0xFF4CAF50),
                   fontSize: 18,
@@ -4021,7 +4022,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             child: Text(
                               isReached
                                   ? 'Minimum sipariş tutarına ulaşıldı ✓'
-                                  : 'Noch ${remaining.toStringAsFixed(2)} € bis der Mindestbestellwert erreicht ist',
+                                  : 'Noch ${remaining.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} bis der Mindestbestellwert erreicht ist',
                               style: TextStyle(
                                 color: isReached ? const Color(0xFF2E7D32) : const Color(0xFF5D4037),
                                 fontWeight: FontWeight.w600,
@@ -4046,7 +4047,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         SizedBox(height: 6),
                         // Progress text
                         Text(
-                          '${currentTotal.toStringAsFixed(2)} € / ${minOrder.toStringAsFixed(2)} €',
+                          '${currentTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} / ${minOrder.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 11,
@@ -4106,7 +4107,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 children: [
                   Text('Toplam', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16)),
                   Text(
-                    '€${cart.totalAmount.toStringAsFixed(2)}',
+                    '${CurrencyUtils.getCurrencySymbol()}${cart.totalAmount.toStringAsFixed(2)}',
                     style: TextStyle(color: Color(0xFF4CAF50), fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -4646,7 +4647,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                         ),
                                       ),
                                       Text(
-                                        '${item.totalPrice.toStringAsFixed(2)} €',
+                                        '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                                         style: TextStyle(
                                           color: Theme.of(context).colorScheme.onSurface,
                                           fontWeight: FontWeight.w600,
@@ -4661,7 +4662,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text('Ara Toplam', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                                    Text('${total.toStringAsFixed(2)} €', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                                    Text('${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
                                   ],
                                 ),
                                 if (!_isPickUp && !_isDineIn) ...[
@@ -4670,7 +4671,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text('Teslimat Ücreti', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                                      Text('${deliveryFee.toStringAsFixed(2)} €', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                                      Text('${deliveryFee.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
                                     ],
                                   ),
                                 ],
@@ -4679,7 +4680,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text('Toplam', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
-                                    Text('${grandTotal.toStringAsFixed(2)} €', style: TextStyle(color: _accentColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                                    Text('${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: _accentColor, fontWeight: FontWeight.bold, fontSize: 16)),
                                   ],
                                 ),
                               ],
@@ -4777,7 +4778,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               : Text(
                                   _isDineIn && _scannedTableNumber != null
                                     ? 'Siparişi Gönder · Masa $_scannedTableNumber'
-                                    : 'Siparişi Gönder · ${grandTotal.toStringAsFixed(2)} €',
+                                    : 'Siparişi Gönder · ${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                                   style: TextStyle(
                                     color: Theme.of(context).colorScheme.surface,
                                     fontSize: 16,
@@ -4868,7 +4869,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             const Spacer(),
             if (!_isPickUp && !_isDineIn && deliveryFee != null)
               Text(
-                '+${deliveryFee.toStringAsFixed(2)} €',
+                '+${deliveryFee.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 13,
@@ -5060,7 +5061,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      '${quantity.toInt()}g x ${unitPrice.toStringAsFixed(2)} €/kg',
+                      '${quantity.toInt()}g x ${unitPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}/kg',
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 13,
@@ -5125,7 +5126,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               SizedBox(
                 width: 64,
                 child: Text(
-                  '${totalPrice.toStringAsFixed(2)} €',
+                  '${totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w600,

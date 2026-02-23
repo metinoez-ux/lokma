@@ -6,6 +6,7 @@ import 'package:screen_brightness/screen_brightness.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lokma_app/services/stripe_payment_service.dart';
 import 'package:lokma_app/services/kermes_order_service.dart';
+import '../../utils/currency_utils.dart';
 
 /// Sipariş QR Kod Fullscreen Dialog
 /// Tezgahta göstermek için parlak ekran ile QR kodu gösterir
@@ -180,7 +181,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
             ),
             const SizedBox(height: 8),
             Text(
-              '${widget.totalAmount.toStringAsFixed(2)} €',
+              '${widget.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
               style: const TextStyle(
                 color: Colors.greenAccent,
                 fontSize: 28,
@@ -754,7 +755,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${widget.totalAmount.toStringAsFixed(2)} €',
+                        '${widget.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                         style: const TextStyle(
                           color: Colors.greenAccent,
                           fontSize: 24,

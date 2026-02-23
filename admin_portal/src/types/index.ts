@@ -122,16 +122,20 @@ export const MODULE_PRICING: Record<string, { name: string; monthly: number; yea
 // ✅ Baştan net, sürprizsiz
 // =============================================================================
 
-export type MiraPlanTier = 'free' | 'basic' | 'premium';
+export type LokmaPlanTier = 'free' | 'basic' | 'premium';
 
-export interface MiraPlanConfig {
-    id: MiraPlanTier;
+export interface LokmaPlanConfig {
+    id: LokmaPlanTier;
     name: string;
     monthlyFee: number; // EUR
 
     // Sipariş Limitleri (Soft Limit - Asla Bloke Edilmez)
     orderLimit: number | null; // null = sınırsız
     orderOverageFee: number; // EUR per order over limit
+
+    // Personel Limitleri
+    personnelLimit: number | null; // null = sınırsız
+    personnelOverageFee: number; // EUR per ekstra personel
 
     // Özellikler
     features: {
@@ -366,7 +370,7 @@ export const LOKMA_COMPANY_INFO: InvoiceParty = {
 // KASAP PLANLARI (Almanya)
 // =============================================================================
 
-export const BUTCHER_PLANS_V2: Record<MiraPlanTier, MiraPlanConfig> = {
+export const BUTCHER_PLANS_V2: Record<LokmaPlanTier, LokmaPlanConfig> = {
     // -------------------------------------------------------------------------
     // FREE - Deneme / Vitrin / Mikro İşletme
     // -------------------------------------------------------------------------
@@ -376,6 +380,8 @@ export const BUTCHER_PLANS_V2: Record<MiraPlanTier, MiraPlanConfig> = {
         monthlyFee: 0,
         orderLimit: 30, // Aylık 30 sipariş dahil
         orderOverageFee: 0.50, // Aşım: 0,50 € / sipariş
+        personnelLimit: 1, // Sadece 1 kullanıcı
+        personnelOverageFee: 5, // Aşım: 5 € / ekstra kullanıcı
         features: {
             profile: true,
             productListing: true,
@@ -404,6 +410,8 @@ export const BUTCHER_PLANS_V2: Record<MiraPlanTier, MiraPlanConfig> = {
         monthlyFee: 29,
         orderLimit: 100, // Aylık 100 sipariş dahil
         orderOverageFee: 0.50, // Aşım: 0,50 € / sipariş
+        personnelLimit: 3, // 3 kullanıcı dahil
+        personnelOverageFee: 5, // Aşım: 5 € / ekstra kullanıcı
         features: {
             profile: true,
             productListing: true,
@@ -433,6 +441,8 @@ export const BUTCHER_PLANS_V2: Record<MiraPlanTier, MiraPlanConfig> = {
         monthlyFee: 59,
         orderLimit: null, // Sınırsız
         orderOverageFee: 0, // Aşım ücreti yok
+        personnelLimit: null, // Sınırsız personel
+        personnelOverageFee: 0, // Aşım ücreti yok
         features: {
             profile: true,
             productListing: true,
@@ -519,6 +529,9 @@ export interface ButcherSubscriptionPlan {
     productLimit: number | null; // null for unlimited, e.g. 30
     campaignLimit: number | null; // null for unlimited, e.g. 0 or 3
     freeOrderCount: number;       // İlk X sipariş ücretsiz
+
+    personnelLimit?: number | null; // null for unlimited
+    personnelOverageFee?: number; // Fee per extra personnel
     tableReservationLimit: number | null; // Dahil masa sayısı (null = sınırsız)
     tableReservationOverageFee: number;   // Limit aşım ücreti (€/rezervasyon)
 
@@ -571,7 +584,7 @@ export const ADDON_MODULES = {
             'Trafiğe göre güncelleme',
             'Müşteriye "sipariş yolda" bildirimi',
         ],
-        requiredPlan: ['basic', 'premium'] as MiraPlanTier[],
+        requiredPlan: ['basic', 'premium'] as LokmaPlanTier[],
     },
 
     // WhatsApp Paketi
@@ -585,7 +598,7 @@ export const ADDON_MODULES = {
             'Kampanya mesajları',
             'Aşım: 0,10 €/mesaj',
         ],
-        requiredPlan: ['basic', 'premium'] as MiraPlanTier[],
+        requiredPlan: ['basic', 'premium'] as LokmaPlanTier[],
     },
 };
 
@@ -595,7 +608,7 @@ export const ADDON_MODULES = {
 
 export const TRIAL_CONFIG = {
     durationDays: 90, // 3 ay ücretsiz
-    planDuringTrial: 'basic' as MiraPlanTier,
+    planDuringTrial: 'basic' as LokmaPlanTier,
     etaModuleFree: true, // ETA modülü de deneme süresinde ücretsiz
 };
 
@@ -620,10 +633,15 @@ export const STRIPE_CONNECT_CONFIG = {
 // =============================================================================
 
 export interface BusinessPlanState {
-    plan: MiraPlanTier;
+    plan: LokmaPlanTier;
     monthlyOrderLimit: number | null;
     orderPrice: number; // Aşım ücreti
     currentMonthOrders: number;
+
+    // Personnel tracking
+    maxPersonnel: number | null;
+    personnelOverageFee: number;
+    currentPersonnelCount?: number;
     campaignLimit: number | 'unlimited';
     courierEnabled: boolean;
     onlinePaymentEnabled: boolean;
@@ -784,6 +802,7 @@ export interface ButcherPartner {
         city: string;
         country: string;
     };
+    currency?: string; // Optional for backward compatibility, but required going forward
 
     // Dükkan İletişim
     shopPhone?: string;

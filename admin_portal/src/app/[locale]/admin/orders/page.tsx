@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useTranslations } from 'next-intl';
+import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 
 // Canonical Order Status Set (7 statuses)
 // Synchronized with Mobile App OrderStatus enum
@@ -57,6 +58,7 @@ interface Order {
     createdAt: Timestamp;
     scheduledAt?: Timestamp;
     eta?: Timestamp;
+    currency?: string;
     courier?: {
         id: string;
         name: string;
@@ -616,9 +618,9 @@ export default function OrdersPage() {
         });
     };
 
-    // Format currency
-    const formatCurrency = (amount: number) => {
-        return `€${amount.toFixed(2)}`;
+    // Use global formatCurrency
+    const formatCurrency = (amount: number, currencyCode?: string) => {
+        return globalFormatCurrency(amount, currencyCode);
     };
 
     // Calculate basic stats
@@ -785,7 +787,7 @@ export default function OrdersPage() {
                             <p className="text-[10px] text-amber-300">{t('hazirlanan')}</p>
                         </div>
                         <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-3 py-1.5 text-center">
-                            <p className="text-xl font-bold text-green-400">{formatCurrency(stats.revenue)}</p>
+                            <p className="text-xl font-bold text-green-400">{formatCurrency(stats.revenue, filteredOrders[0]?.currency)}</p>
                             <p className="text-[10px] text-green-300">Ciro</p>
                         </div>
                     </div>
@@ -1138,7 +1140,7 @@ export default function OrdersPage() {
                                                             {item.quantity}x {item.productName || item.name}
                                                         </span>
                                                         <span className={`${isChecked ? 'text-green-400 opacity-70' : 'text-white'}`}>
-                                                            {formatCurrency(item.totalPrice ?? ((item.unitPrice || item.price || 0) * (item.quantity || 1)))}
+                                                            {formatCurrency(item.totalPrice ?? ((item.unitPrice || item.price || 0) * (item.quantity || 1)), selectedOrder?.currency)}
                                                         </span>
                                                     </div>
                                                     {/* Show selected options */}
@@ -1148,7 +1150,7 @@ export default function OrdersPage() {
                                                                 <div key={optIdx} className="flex justify-between text-xs">
                                                                     <span className={`${isChecked ? 'text-green-300/50 line-through' : 'text-purple-300'}`}>↳ {opt.optionName || opt.name}</span>
                                                                     {(opt.priceModifier || opt.price) ? (
-                                                                        <span className={`${isChecked ? 'text-green-400/50' : 'text-purple-400'}`}>+{formatCurrency(opt.priceModifier || opt.price)}</span>
+                                                                        <span className={`${isChecked ? 'text-green-400/50' : 'text-purple-400'}`}>+{formatCurrency(opt.priceModifier || opt.price, selectedOrder?.currency)}</span>
                                                                     ) : null}
                                                                 </div>
                                                             ))}
@@ -1226,17 +1228,17 @@ export default function OrdersPage() {
                             <div className="border-t border-gray-700 pt-4 space-y-2">
                                 <div className="flex justify-between">
                                     <span className="text-gray-400">{t('modal.subtotal')}</span>
-                                    <span className="text-white">{formatCurrency(selectedOrder.subtotal || 0)}</span>
+                                    <span className="text-white">{formatCurrency(selectedOrder.subtotal || 0, selectedOrder.currency)}</span>
                                 </div>
                                 {selectedOrder.deliveryFee && (
                                     <div className="flex justify-between">
                                         <span className="text-gray-400">{t('modal.deliveryFee')}</span>
-                                        <span className="text-white">{formatCurrency(selectedOrder.deliveryFee)}</span>
+                                        <span className="text-white">{formatCurrency(selectedOrder.deliveryFee, selectedOrder.currency)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-lg font-bold">
                                     <span className="text-white">{t('modal.total')}</span>
-                                    <span className="text-green-400">{formatCurrency(selectedOrder.total || 0)}</span>
+                                    <span className="text-green-400">{formatCurrency(selectedOrder.total || 0, selectedOrder.currency)}</span>
                                 </div>
                             </div>
 

@@ -148,6 +148,7 @@ export const onNewOrder = onDocumentCreated(
                     amount: totalAmount,
                     items: order.items?.length || 0,
                     language: smartConfig.alexaLanguage || "de-DE",
+                    currency: businessDoc.data()?.currency || "EUR",
                     alexaEnabled: smartConfig.alexaEnabled !== false,
                     ledEnabled: smartConfig.ledEnabled !== false,
                     hueEnabled: smartConfig.hueEnabled === true,
@@ -322,6 +323,7 @@ async function createCommissionRecord(orderId: string, orderData: any) {
             invoiceId: null,
             isFreeOrder,
             sponsoredFee: 0, // Will be updated below if applicable
+            currency: businessData.currency || "EUR",
             period: currentMonth,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
         };
@@ -853,6 +855,7 @@ async function syncInvoiceToStripe(
     invoiceNumber: string,
     description: string,
     grossAmount: number,
+    currency: string,
     dueDate: Date,
     stripeKey: string
 ): Promise<{ stripeInvoiceId: string | null; stripeInvoiceUrl: string | null }> {
@@ -893,7 +896,7 @@ async function syncInvoiceToStripe(
             customer: business.stripeCustomerId,
             invoice: stripeInvoice.id,
             amount: Math.round(grossAmount * 100), // Cents
-            currency: "eur",
+            currency: currency.toLowerCase(),
             description: description
         });
 
@@ -1093,7 +1096,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                         taxRate: vatRate,
                         taxAmount,
                         grandTotal,
-                        currency: "EUR",
+                        currency: plan?.currency || business.currency || "EUR",
 
                         // Dates
                         issueDate: admin.firestore.FieldValue.serverTimestamp(),
@@ -1116,6 +1119,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                         invoiceNumber,
                         `LOKMA ${plan?.name || "Abonnement"} - ${periodString}`,
                         grandTotal,
+                        plan?.currency || business.currency || "EUR",
                         dueDate,
                         stripeSecretKey.value()
                     );
@@ -1153,6 +1157,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                 cashCommission: number;
                 orderCount: number;
                 businessName: string;
+                currency: string;
                 recordIds: string[];
             }> = {};
 
@@ -1170,6 +1175,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                         cashCommission: 0,
                         orderCount: 0,
                         businessName: rec.businessName || "Unbekannt",
+                        currency: rec.currency || "EUR",
                         recordIds: [],
                     };
                 }
@@ -1257,7 +1263,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                         taxRate: 19,
                         taxAmount: vatWithSponsored,
                         grandTotal: grandTotalWithSponsored,
-                        currency: "EUR",
+                        currency: commData.currency,
                         orderCount: commData.orderCount,
                         cardCommission: commData.cardCommission,
                         cashCommission: commData.cashCommission,
@@ -1289,12 +1295,13 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                     await batch.commit();
 
                     // Sync commission invoice to Stripe for automatic collection
-                    const commStripeResult = await syncInvoiceToStripe(
+                    const stripeResult = await syncInvoiceToStripe(
                         commInvoiceId,
                         businessId,
                         invoiceNumber,
-                        `LOKMA Provision - ${commData.orderCount} Bestellungen - ${periodString}`,
-                        commData.totalCommission,
+                        commissionInvoiceData.description,
+                        grandTotalWithSponsored,
+                        commData.currency,
                         dueDate,
                         stripeSecretKey.value()
                     );
@@ -1302,7 +1309,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                     stats.commissionGenerated++;
                     stats.totalAmount += commData.totalCommission;
 
-                    console.log(`[Monthly Invoicing] Created commission invoice ${invoiceNumber} for ${commData.businessName} - €${commData.totalCommission.toFixed(2)} (${commData.orderCount} orders, Card: €${commData.cardCommission.toFixed(2)}, Cash: €${commData.cashCommission.toFixed(2)})${commStripeResult.stripeInvoiceId ? " (Stripe: " + commStripeResult.stripeInvoiceId + ")" : ""}`);
+                    console.log(`[Monthly Invoicing] Created commission invoice ${invoiceNumber} for ${commData.businessName} - €${commData.totalCommission.toFixed(2)} (${commData.orderCount} orders, Card: €${commData.cardCommission.toFixed(2)}, Cash: €${commData.cashCommission.toFixed(2)})${stripeResult.stripeInvoiceId ? " (Stripe: " + stripeResult.stripeInvoiceId + ")" : ""}`);
 
                     // Send commission invoice email with PDF
                     const businessDoc = await db.collection("butcher_partners").doc(businessId).get();

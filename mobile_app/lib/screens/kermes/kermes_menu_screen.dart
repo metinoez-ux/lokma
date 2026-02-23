@@ -17,6 +17,7 @@ import 'package:lokma_app/services/kermes_order_service.dart';
 import 'package:lokma_app/services/guest_profile_service.dart';
 import 'package:lokma_app/screens/kermes/kermes_checkout_sheet.dart';
 import 'package:lokma_app/screens/kermes/kermes_product_detail_sheet.dart';
+import '../../utils/currency_utils.dart';
 
 const Color lokmaPink = Color(0xFFFB335B);
 
@@ -605,7 +606,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                               ),
                             ),
                             Text(
-                              '${_totalPrice.toStringAsFixed(2)} €',
+                              '${_totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.surface,
                                 fontSize: 22,
@@ -784,7 +785,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                     Row(
                       children: [
                         Text(
-                          '${item.price.toStringAsFixed(2)} €',
+                          '${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                           style: const TextStyle(
                             color: Colors.greenAccent,
                             fontSize: 17,
@@ -1381,7 +1382,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                      style: TextStyle(color: dialogTextColor, fontSize: 16, fontWeight: FontWeight.w600),
                    ),
                   Text(
-                    '${order.totalAmount.toStringAsFixed(2)} €',
+                    '${order.totalAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                     style: const TextStyle(
                       color: Colors.greenAccent,
                       fontSize: 20,

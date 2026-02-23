@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 import 'package:lokma_app/config/app_secrets.dart';
+import '../utils/currency_utils.dart';
 
 /// Stripe Payment Service for LOKMA
 /// Handles payment sheet initialization and processing
@@ -52,7 +53,7 @@ class StripePaymentService {
     }
     
     try {
-      debugPrint('💳 Creating payment intent for €$amount...');
+      debugPrint('💳 Creating payment intent for ${CurrencyUtils.getCurrencySymbol()}$amount...');
       
       // 1. Create Payment Intent on backend
       final response = await http.post(
@@ -101,7 +102,7 @@ class StripePaymentService {
           commissionRate: (fb['commissionRate'] as num).toDouble(),
           vatRate: (fb['vatRate'] as num).toDouble(),
         );
-        debugPrint('📊 Fee breakdown: Stripe €${feeBreakdown.stripeFee.toStringAsFixed(2)}, Commission €${feeBreakdown.commissionGross.toStringAsFixed(2)}, Merchant €${feeBreakdown.merchantTransfer.toStringAsFixed(2)}');
+        debugPrint('📊 Fee breakdown: Stripe ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.stripeFee.toStringAsFixed(2)}, Commission ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.commissionGross.toStringAsFixed(2)}, Merchant ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.merchantTransfer.toStringAsFixed(2)}');
       }
 
       // 2. Initialize Payment Sheet

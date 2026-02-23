@@ -5,6 +5,7 @@ import { collection, getDocs, doc, updateDoc, query, orderBy, where, onSnapshot,
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useTranslations } from 'next-intl';
+import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 
 const sessionStatuses = {
     active: { label: 'Aktif', icon: '🟢', badge: 'bg-green-600/20 text-green-400 border-green-500/30', cardBorder: 'border-green-500/40 hover:border-green-400', headerBg: 'bg-green-600/10' },
@@ -56,12 +57,13 @@ interface TableGroupSession {
     cancelledAt?: Timestamp;
     cancelledBy?: string;
     cancelReason?: string;
+    currency?: string;
 }
 
 export default function TableOrdersPage() {
-    
-  const t = useTranslations('AdminTableorders');
-const { admin, loading: adminLoading } = useAdmin();
+
+    const t = useTranslations('AdminTableorders');
+    const { admin, loading: adminLoading } = useAdmin();
     const [sessions, setSessions] = useState<TableGroupSession[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
@@ -183,6 +185,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     cancelledAt: raw.cancelledAt,
                     cancelledBy: raw.cancelledBy,
                     cancelReason: raw.cancelReason,
+                    currency: raw.currency,
                 } as TableGroupSession;
             });
             setSessions(data);
@@ -266,7 +269,7 @@ const { admin, loading: adminLoading } = useAdmin();
         return Object.values(result);
     };
 
-    const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+    const formatCurrency = (amount: number, currencyCode?: string) => globalFormatCurrency(amount, currencyCode);
 
     const formatDate = (timestamp: Timestamp | undefined) => {
         if (!timestamp) return '-';
@@ -327,7 +330,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             <p className="text-xs text-yellow-300">{t('odeme')}</p>
                         </div>
                         <div className="bg-amber-600/20 border border-amber-500/30 rounded-xl px-4 py-2 text-center">
-                            <p className="text-lg font-bold text-amber-400">{formatCurrency(stats.totalRevenue)}</p>
+                            <p className="text-lg font-bold text-amber-400">{formatCurrency(stats.totalRevenue, sessions[0]?.currency)}</p>
                             <p className="text-xs text-amber-300">{t('toplam')}</p>
                         </div>
                     </div>
@@ -535,7 +538,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                         <span className="text-gray-300 truncate max-w-[60%]">
                                                             {item.productName} <span className="text-gray-500">×{item.quantity}</span>
                                                         </span>
-                                                        <span className="text-gray-400 font-medium">{formatCurrency(item.totalPrice)}</span>
+                                                        <span className="text-gray-400 font-medium">{formatCurrency(item.totalPrice, session.currency)}</span>
                                                     </div>
                                                 ))}
                                                 {aggregatedItems.length > 4 && (
@@ -551,18 +554,18 @@ const { admin, loading: adminLoading } = useAdmin();
                                     <div className="px-4 py-3 flex items-center justify-between">
                                         <div>
                                             <span className="text-gray-400 text-xs">{t('toplam')}</span>
-                                            <p className="text-white font-bold text-lg">{formatCurrency(session.grandTotal)}</p>
+                                            <p className="text-white font-bold text-lg">{formatCurrency(session.grandTotal, session.currency)}</p>
                                         </div>
                                         {session.paidTotal > 0 && (
                                             <div className="text-right">
                                                 <span className="text-green-400 text-xs">{t('odenen')}</span>
-                                                <p className="text-green-400 font-bold">{formatCurrency(session.paidTotal)}</p>
+                                                <p className="text-green-400 font-bold">{formatCurrency(session.paidTotal, session.currency)}</p>
                                             </div>
                                         )}
                                         {remaining > 0 && session.grandTotal > 0 && (
                                             <div className="text-right">
                                                 <span className="text-amber-400 text-xs">Kalan</span>
-                                                <p className="text-amber-400 font-bold">{formatCurrency(remaining)}</p>
+                                                <p className="text-amber-400 font-bold">{formatCurrency(remaining, session.currency)}</p>
                                             </div>
                                         )}
                                     </div>
@@ -621,15 +624,15 @@ const { admin, loading: adminLoading } = useAdmin();
                                 <h3 className="text-white font-bold text-sm mb-3">{t('hesap_ozeti')}</h3>
                                 <div className="grid grid-cols-3 gap-4 text-center">
                                     <div>
-                                        <p className="text-2xl font-bold text-white">{formatCurrency(selectedSession.grandTotal)}</p>
+                                        <p className="text-2xl font-bold text-white">{formatCurrency(selectedSession.grandTotal, selectedSession.currency)}</p>
                                         <p className="text-gray-400 text-xs">{t('toplam')}</p>
                                     </div>
                                     <div>
-                                        <p className="text-2xl font-bold text-green-400">{formatCurrency(selectedSession.paidTotal)}</p>
+                                        <p className="text-2xl font-bold text-green-400">{formatCurrency(selectedSession.paidTotal, selectedSession.currency)}</p>
                                         <p className="text-green-400/70 text-xs">{t('odenen')}</p>
                                     </div>
                                     <div>
-                                        <p className="text-2xl font-bold text-amber-400">{formatCurrency(selectedSession.grandTotal - selectedSession.paidTotal)}</p>
+                                        <p className="text-2xl font-bold text-amber-400">{formatCurrency(selectedSession.grandTotal - selectedSession.paidTotal, selectedSession.currency)}</p>
                                         <p className="text-amber-400/70 text-xs">Kalan</p>
                                     </div>
                                 </div>
@@ -667,8 +670,8 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                 ×{item.quantity}
                                                             </span>
                                                         </div>
-                                                        <div className="col-span-2 text-right text-gray-400 text-sm">{formatCurrency(item.unitPrice)}</div>
-                                                        <div className="col-span-2 text-right text-white font-medium text-sm">{formatCurrency(item.totalPrice)}</div>
+                                                        <div className="col-span-2 text-right text-gray-400 text-sm">{formatCurrency(item.unitPrice, selectedSession.currency)}</div>
+                                                        <div className="col-span-2 text-right text-white font-medium text-sm">{formatCurrency(item.totalPrice, selectedSession.currency)}</div>
                                                     </div>
                                                 ))}
                                             </div>
@@ -705,7 +708,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                             {p.paymentMethod === 'cash' ? '💵' : '💳'} {p.paymentMethod}
                                                         </span>
                                                     )}
-                                                    <span className="text-white font-bold">{formatCurrency(p.subtotal)}</span>
+                                                    <span className="text-white font-bold">{formatCurrency(p.subtotal, selectedSession.currency)}</span>
                                                 </div>
                                             </div>
                                             {p.items.length > 0 && (
@@ -716,7 +719,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                                                 {item.productName} <span className="text-gray-500">×{item.quantity}</span>
                                                                 {item.itemNote && <span className="text-yellow-400 ml-1">📝 {item.itemNote}</span>}
                                                             </span>
-                                                            <span className="text-gray-300">{formatCurrency(item.totalPrice)}</span>
+                                                            <span className="text-gray-300">{formatCurrency(item.totalPrice, selectedSession.currency)}</span>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -788,7 +791,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                 Masa {cancelConfirm.session.tableNumber} — {cancelConfirm.session.businessName || ''}
                             </p>
                             <p className="text-gray-500 text-xs mt-1">
-                                {cancelConfirm.session.participants.length} {t('katilimci')} {formatCurrency(cancelConfirm.session.grandTotal)} {t('toplam')}
+                                {cancelConfirm.session.participants.length} {t('katilimci')} {formatCurrency(cancelConfirm.session.grandTotal, cancelConfirm.session.currency)} {t('toplam')}
                             </p>
                         </div>
 

@@ -5,6 +5,7 @@ import { collection, getDocs, query, orderBy, where, onSnapshot, Timestamp, doc,
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useTranslations } from 'next-intl';
+import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 
 interface OrderItem {
     productId: string;
@@ -24,6 +25,7 @@ interface Order {
     status: string;
     type: string;
     createdAt: Timestamp;
+    currency?: string;
 }
 
 type CompareMode = 'none' | 'lastWeek' | 'lastMonth' | 'lastYear';
@@ -45,9 +47,9 @@ interface PerfOrderStats {
 }
 
 export default function StatisticsPage() {
-    
-  const t = useTranslations('AdminStatistics');
-const { admin, loading: adminLoading } = useAdmin();
+
+    const t = useTranslations('AdminStatistics');
+    const { admin, loading: adminLoading } = useAdmin();
     const [orders, setOrders] = useState<Order[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
@@ -196,6 +198,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     status: d.status || 'pending',
                     type: d.orderType || d.deliveryMethod || d.deliveryType || d.fulfillmentType || 'pickup',
                     createdAt: d.createdAt,
+                    currency: d.currency,
                 };
             }) as Order[];
             setOrders(data);
@@ -317,7 +320,7 @@ const { admin, loading: adminLoading } = useAdmin();
     }, [orders, comparisonRange, compareMode, businessFilter]);
 
     // Format currency
-    const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+    const formatCurrency = (amount: number, currencyCode?: string) => globalFormatCurrency(amount, currencyCode);
 
     // Calculate stats helper
     const calculateStats = (orderList: Order[]) => {

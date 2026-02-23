@@ -8,6 +8,7 @@ import '../../providers/driver_provider.dart';
 import '../../services/order_service.dart';
 import '../../services/shift_service.dart';
 import '../staff/staff_delivery_screen.dart';
+import '../../utils/currency_utils.dart';
 
 /// Driver Delivery Screen - Shows pending deliveries from ALL assigned businesses
 /// This screen is for couriers (drivers) who are assigned to multiple businesses
@@ -109,7 +110,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           '${tr('driver.bu_siparisi_ustlenmek_istedigi')}\n'
           '🏪 ${order.butcherName}\n'
           '📍 ${order.deliveryAddress ?? "Adres yok"}\n'
-          '💰 ${order.totalAmount.toStringAsFixed(2)}€',
+          '💰 ${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
         ),
         actions: [
           TextButton(
@@ -589,7 +590,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               ),
               const SizedBox(width: 16),
               Text(
-                '${order.totalAmount.toStringAsFixed(2)}€',
+                '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.green),
               ),
               const Spacer(),
@@ -730,7 +731,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '💵 ${cashTotal.toStringAsFixed(2)}€',
+                      '💵 ${cashTotal.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -749,7 +750,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '💳 ${cardTotal.toStringAsFixed(2)}€',
+                      '💳 ${cardTotal.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -877,7 +878,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           ),
           // Price
           Text(
-            '${order.totalAmount.toStringAsFixed(2)}€',
+            '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
@@ -1039,7 +1040,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   Row(
                     children: [
                       Text(
-                        '${order.totalAmount.toStringAsFixed(2)}€',
+                        '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,

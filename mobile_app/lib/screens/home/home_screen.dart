@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import '../../utils/currency_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -278,8 +279,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildReorderSection() {
     // TODO: Replace with actual Firebase data from butcher_orders
     final recentOrders = [
-      {'vendor': 'Tuna Kasap', 'items': '2x Kuşbaşı, 1x Kıyma', 'total': '€45.90', 'date': 'Bugün'},
-      {'vendor': 'Akdeniz Imbiss', 'items': 'Döner Teller, Ayran', 'total': '€12.50', 'date': 'Dün'},
+      {'vendor': 'Tuna Kasap', 'items': '2x Kuşbaşı, 1x Kıyma', 'total': '${CurrencyUtils.getCurrencySymbol()}45.90', 'date': 'Bugün'},
+      {'vendor': 'Akdeniz Imbiss', 'items': 'Döner Teller, Ayran', 'total': '${CurrencyUtils.getCurrencySymbol()}12.50', 'date': 'Dün'},
     ];
 
     if (recentOrders.isEmpty) return const SizedBox.shrink();
