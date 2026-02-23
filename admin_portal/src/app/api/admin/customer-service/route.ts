@@ -277,6 +277,35 @@ export async function GET(request: Request) {
                             businessPromises.push(db.collection('businesses').where('address.city', '>=', tc).where('address.city', '<=', tc + '\uf8ff').limit(10).get());
                         });
                     }
+
+                    // Multi-word composite matches (Name + City)
+                    const words = query.split(/\s+/).filter(w => w.length > 0);
+                    if (words.length > 1 && !/^\d+$/.test(query)) {
+                        const allWordsLower = words.map(w => w.toLowerCase());
+
+                        const multiWordMatch = (snap: any) => {
+                            if (!snap || !snap.docs) return { docs: [] };
+                            const filteredDocs = snap.docs.filter((doc: any) => {
+                                const data = doc.data();
+                                const searchString = `${data.companyName || ''} ${data.address?.city || ''} ${data.address?.postalCode || ''}`.toLowerCase();
+                                return allWordsLower.every(w => searchString.includes(w));
+                            });
+                            return { docs: filteredDocs };
+                        };
+
+                        words.forEach(word => {
+                            if (word.length >= 3) {
+                                const { titleCased, lowerCased } = getTextVariations(word);
+                                titleCased.forEach(tc => {
+                                    businessPromises.push(db.collection('businesses').where('companyName', '>=', tc).where('companyName', '<=', tc + '\uf8ff').limit(30).get().then(multiWordMatch));
+                                    businessPromises.push(db.collection('businesses').where('address.city', '>=', tc).where('address.city', '<=', tc + '\uf8ff').limit(30).get().then(multiWordMatch));
+                                });
+                                lowerCased.forEach(lc => {
+                                    businessPromises.push(db.collection('businesses').where('companyName', '>=', lc).where('companyName', '<=', lc + '\uf8ff').limit(30).get().then(multiWordMatch));
+                                });
+                            }
+                        });
+                    }
                 }
             }
         }
