@@ -402,8 +402,13 @@ export default function TranslationsPage() {
                                     <option key={ns} value={ns}>{ns}</option>
                                 ))}
                             </optgroup>
+                            <optgroup label="Bildirimler (Push & Ses)">
+                                {namespaces.filter(ns => ['PushNotifications', 'AlexaNotifications'].includes(ns) && ns !== 'All').map(ns => (
+                                    <option key={ns} value={ns}>{ns}</option>
+                                ))}
+                            </optgroup>
                             <optgroup label="Mobil Uygulama (App)">
-                                {namespaces.filter(ns => !['Navigation', 'AdminNav', 'Landing', 'AdminPortal', 'Global', 'All'].includes(ns)).map(ns => (
+                                {namespaces.filter(ns => !['Navigation', 'AdminNav', 'Landing', 'AdminPortal', 'Global', 'PushNotifications', 'AlexaNotifications', 'All'].includes(ns)).map(ns => (
                                     <option key={ns} value={ns}>{ns}</option>
                                 ))}
                             </optgroup>

@@ -51,6 +51,13 @@ export default function AdminHeader() {
     const [showPendingModal, setShowPendingModal] = useState(false);
     const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
 
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
     // Check if a nav item is active (simplified - pathname only)
     const isActiveNav = (href: string) => {
         // Extract base path (remove query params)
@@ -75,19 +82,7 @@ export default function AdminHeader() {
         imageUrl?: string;
     } | null>(null);
 
-    // Stats counts
-    const [statsLoaded, setStatsLoaded] = useState(false);
-    const [totalUsers, setTotalUsers] = useState(0);
-    const [totalAdmins, setTotalAdmins] = useState(0);
-    const [totalSubAdmins, setTotalSubAdmins] = useState(0);
-    const [totalSuperAdmins, setTotalSuperAdmins] = useState(0);
-    const [totalBusinesses, setTotalBusinesses] = useState(0);
-    const [showStatsList, setShowStatsList] = useState<'users' | 'admins' | 'subadmins' | 'superadmins' | null>(null);
-
-    // Lists for dropdown display
-    const [usersList, setUsersList] = useState<any[]>([]);
-    const [adminsList, setAdminsList] = useState<any[]>([]);
-    const [listsLoading, setListsLoading] = useState(false);
+    // Stats counts and lists removed (handled in Analytics page)
 
     // Load pending invitations - TEMPORARILY DISABLED to fix page loading
     useEffect(() => {
@@ -124,97 +119,9 @@ export default function AdminHeader() {
         loadBusinessInfo();
     }, [admin?.butcherId, admin?.adminType]);
 
-    // Load stats counts for Super Admin
-    useEffect(() => {
-        if (admin?.adminType === 'super' && !statsLoaded) {
-            const loadStats = async () => {
-                try {
-                    // Count users
-                    const usersSnap = await getDocs(collection(db, 'users'));
-                    const totalUsersCount = usersSnap.size;
+    // Stats loading removed
 
-                    // Count admins by type
-                    const adminsSnap = await getDocs(collection(db, 'admins'));
-                    let adminCount = 0;
-                    let subAdminCount = 0;
-                    let superAdminCount = 0;
-
-                    // Build admin UID set for customer calculation
-                    const adminUids = new Set<string>();
-                    adminsSnap.docs.forEach(doc => {
-                        const data = doc.data();
-                        // Collect admin UIDs for filtering
-                        adminUids.add(doc.id);
-                        if (data.firebaseUid) adminUids.add(data.firebaseUid);
-
-                        if (data.adminType === 'super') {
-                            superAdminCount++;
-                        } else if (data.adminType?.includes('_staff')) {
-                            subAdminCount++;
-                        } else {
-                            adminCount++;
-                        }
-                    });
-
-                    // CRITICAL FIX: Calculate ACTUAL customer count
-                    // Customers = users who are NOT admins
-                    let customerCount = 0;
-                    usersSnap.docs.forEach(userDoc => {
-                        if (!adminUids.has(userDoc.id)) {
-                            customerCount++;
-                        }
-                    });
-
-                    // Show customer count (not total users) in the header
-                    setTotalUsers(customerCount);
-                    setTotalAdmins(adminCount);
-                    setTotalSubAdmins(subAdminCount);
-                    setTotalSuperAdmins(superAdminCount);
-
-                    // Count businesses
-                    const businessesSnap = await getDocs(collection(db, 'businesses'));
-                    setTotalBusinesses(businessesSnap.size);
-
-                    setStatsLoaded(true);
-                } catch (error) {
-                    console.error('Error loading stats:', error);
-                }
-            };
-            loadStats();
-        }
-    }, [admin, statsLoaded]);
-
-    // Load lists for dropdown display
-    const handleChipClick = async (type: 'users' | 'admins' | 'subadmins' | 'superadmins') => {
-        if (showStatsList === type) {
-            setShowStatsList(null);
-            return;
-        }
-
-        setShowStatsList(type);
-        setListsLoading(true);
-
-        try {
-            if (type === 'users') {
-                const snapshot = await getDocs(query(collection(db, 'users'), limit(50)));
-                setUsersList(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            } else {
-                const snapshot = await getDocs(collection(db, 'admins'));
-                const allAdmins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
-
-                if (type === 'admins') {
-                    setAdminsList(allAdmins.filter((a: any) => !a.adminType?.includes('_staff') && a.adminType !== 'super'));
-                } else if (type === 'subadmins') {
-                    setAdminsList(allAdmins.filter((a: any) => a.adminType?.includes('_staff')));
-                } else if (type === 'superadmins') {
-                    setAdminsList(allAdmins.filter((a: any) => a.adminType === 'super'));
-                }
-            }
-        } catch (error) {
-            console.error('Error loading list:', error);
-        }
-        setListsLoading(false);
-    };
+    // handleChipClick removed
 
     const handleLogout = async () => {
         await auth.signOut();
@@ -227,301 +134,146 @@ export default function AdminHeader() {
                 SUPER ADMIN TOOLBAR - Kırmızı bar (sadece super admin görür)
             ═══════════════════════════════════════════════════════════════════ */}
             {admin?.adminType === 'super' && (
-                <div className="bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 border-b border-indigo-700">
-                    <div className="max-w-7xl mx-auto px-4 py-3">
-                        <div className="flex items-center justify-between">
-                            {/* Stats Chips - Left Side - Consistent pill style */}
-                            <div className="flex items-center gap-2">
-                                <Link
-                                    href="/admin/dashboard?filter=users"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-blue-600/80 hover:bg-blue-500 border border-blue-400/50"
-                                    title={t('allUsers')}
-                                >
-                                    👥 <span className="font-bold">{totalUsers}</span>
-                                </Link>
-                                <Link
-                                    href="/admin/dashboard?filter=admins"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-green-600/80 hover:bg-green-500 border border-green-400/50"
-                                    title={t('businessAdmins')}
-                                >
-                                    🎫 <span className="font-bold">{totalAdmins}</span>
-                                </Link>
-                                <Link
-                                    href="/admin/dashboard?filter=subadmins"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-amber-600/80 hover:bg-amber-500 border border-amber-400/50"
-                                    title={t('subAdmins')}
-                                >
-                                    👷 <span className="font-bold">{totalSubAdmins}</span>
-                                </Link>
-                                <Link
-                                    href="/admin/dashboard?filter=superadmins"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-purple-600/80 hover:bg-purple-500 border border-purple-400/50"
-                                    title={t('superAdmins')}
-                                >
-                                    👑 <span className="font-bold">{totalSuperAdmins}</span>
-                                </Link>
-                                <Link
-                                    href="/admin/business"
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all text-white text-xs bg-cyan-600/80 hover:bg-cyan-500 border border-cyan-400/50"
-                                    title={`${totalBusinesses} ${t('businessLabel')}`}
-                                >
-                                    🏪 <span className="font-bold">{totalBusinesses}</span>
-                                </Link>
-                            </div>
-
-                            {/* Right Side - Super Admin Profile Dropdown */}
-                            <div className="flex items-center gap-4">
-                                <LanguageSwitcher />
-                                <div className="relative group">
-                                    <button className="flex items-center gap-2 hover:bg-white/10 rounded-lg px-3 py-1.5 transition">
-                                        <span className="text-indigo-200 text-sm font-medium hidden md:block">👑 Super Admin</span>
-                                        {/* Profile Picture */}
-                                        <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-indigo-400/50 flex items-center justify-center bg-indigo-700/50">
-                                            {(admin as any).photoURL ? (
-                                                <img
-                                                    src={(admin as any).photoURL}
-                                                    alt={admin.displayName || t('profile')}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <span className="text-white font-bold text-sm">
-                                                    {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <span className="text-indigo-300 text-xs">▼</span>
-                                    </button>
-
-                                    {/* Dropdown Menu */}
-                                    <div className="absolute right-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[180px]">
-                                        <div className="px-4 py-3 border-b border-gray-700">
-                                            <p className="text-white text-sm font-medium truncate">
-                                                {admin.displayName || 'Super Admin'}
-                                            </p>
-                                            <p className="text-gray-400 text-xs truncate">
-                                                {admin.email || (admin as any).phoneNumber || ''}
-                                            </p>
-                                            <p className="text-violet-400 text-xs mt-1">👑 Super Admin</p>
-                                        </div>
-                                        <button
-                                            onClick={handleLogout}
-                                            className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition text-sm"
-                                        >
-                                            🚪 {t('logout')}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                <div className="bg-gradient-to-r from-red-800 via-rose-700 to-red-800 border-b border-red-900 shadow-sm relative z-40">
+                    <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-4">
+                        {/* Clock */}
+                        <div className="flex items-center gap-2 shrink-0 text-red-100">
+                            <span className="text-xl font-light tabular-nums tracking-wider text-white">
+                                {currentTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                         </div>
-                        <div className="flex flex-wrap gap-2 mt-2 items-center">
-                            {/* İşletmeler Dropdown */}
+
+                        {/* Separator */}
+                        <div className="w-px h-6 bg-red-700/50 shrink-0 mx-2" />
+
+                        {/* Navigation Chips — uniform minimal style, no icons, no borders */}
+                        <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                            {/* Accounting Nav */}
                             <div className="relative group">
-                                <button
-                                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${isActiveNav('/admin/business') ||
-                                        isActiveNav('/admin/sectors') ||
-                                        isActiveNav('/admin/kermes')
-                                        ? 'bg-white/20 border-white/40 text-white'
-                                        : 'bg-indigo-800/50 hover:bg-indigo-700 border-indigo-600 text-indigo-100'
+                                <Link
+                                    href="/admin/invoices"
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans')
+                                        ? 'bg-white/15 text-white'
+                                        : 'text-red-100 hover:text-white hover:bg-white/10'
                                         }`}
                                 >
-                                    <span className="text-lg">🏪</span>
-                                    <span className="text-sm font-medium">{t('businesses')}</span>
-                                    <span className="text-[10px] ml-1">▼</span>
-
-                                    {(isActiveNav('/admin/business') || isActiveNav('/admin/sectors') || isActiveNav('/admin/kermes')) && (
-                                        <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full" />
-                                    )}
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                <div className="absolute left-0 top-full mt-2 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
+                                    {t('accounting')}
+                                    <span className="text-[10px]">▼</span>
+                                </Link>
+                                {/* Dropdown */}
+                                <div className="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
                                     <div className="py-1">
-                                        <Link
-                                            href="/admin/business"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/business') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
-                                        >
-                                            <span className="text-lg">🏪</span> {t('businesses')}
+                                        <Link href="/admin/invoices" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            {t('invoices')}
                                         </Link>
-                                        <Link
-                                            href="/admin/sectors"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/sectors') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
-                                        >
-                                            <span className="text-lg">🏭</span> {t('sectors')}
+                                        <Link href="/admin/commissions" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            {t('commissions')}
                                         </Link>
-                                        <Link
-                                            href="/admin/kermes"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/kermes') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
-                                        >
-                                            <span className="text-lg">🎪</span> {t('kermes')}
+                                        <Link href="/admin/plans" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            {t('plans')}
                                         </Link>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Muhasebe Dropdown */}
-                            <div className="relative group">
-                                <button
-                                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${isActiveNav('/admin/invoices') ||
-                                        isActiveNav('/admin/commissions') ||
-                                        isActiveNav('/admin/plans')
-                                        ? 'bg-white/20 border-white/40 text-white'
-                                        : 'bg-indigo-800/50 hover:bg-indigo-700 border-indigo-600 text-indigo-100'
-                                        }`}
-                                >
-                                    <span className="text-lg">🧾</span>
-                                    <span className="text-sm font-medium">{t('accounting')}</span>
-                                    <span className="text-[10px] ml-1">▼</span>
-
-                                    {(isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans')) && (
-                                        <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full" />
-                                    )}
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                <div className="absolute left-0 top-full mt-2 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
-                                    <div className="py-1">
-                                        <Link
-                                            href="/admin/invoices"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/invoices') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
-                                        >
-                                            <span className="text-lg">📄</span> {t('invoices')}
-                                        </Link>
-                                        <Link
-                                            href="/admin/commissions"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/commissions') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
-                                        >
-                                            <span className="text-lg">💰</span> {t('commissions')}
-                                        </Link>
-                                        <Link
-                                            href="/admin/plans"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/plans') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
-                                        >
-                                            <span className="text-lg">📅</span> {t('plans')}
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Navigation Chips - Consistent styling with active underline */}
+                            {/* Main Nav Links */}
                             {[
-                                { href: '/admin/orders', icon: '📦', label: t('orders') },
-                                { href: '/admin/products', icon: '📋', label: t('productsCategories') },
-                                { href: '/admin/activity-logs', icon: '🎧', label: t('activityLogs') },
-                                { href: '/admin/analytics', icon: '📊', label: t('analytics') },
-                                { href: '/admin/reservations', icon: '🍽️', label: t('reservations') },
+                                { href: '/admin/orders', label: t('orders') },
+                                { href: '/admin/products', label: t('productsCategories') },
+                                { href: '/admin/activity-logs', label: t('activityLogs') },
+                                { href: '/admin/analytics', label: t('analytics') },
+                                { href: '/admin/reservations', label: t('reservations') },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);
                                 return (
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${active
-                                            ? 'bg-white/20 border-white/40 text-white'
-                                            : 'bg-indigo-800/50 hover:bg-indigo-700 border-indigo-600 text-indigo-100'
+                                        className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${active
+                                            ? 'bg-white/15 text-white'
+                                            : 'text-red-100 hover:text-white hover:bg-white/10'
                                             }`}
                                     >
-                                        <span className="text-lg">{item.icon}</span>
-                                        <span className="text-sm font-medium">{item.label}</span>
-                                        {/* Active indicator - colored bar at bottom */}
-                                        {active && (
-                                            <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full" />
-                                        )}
+                                        {item.label}
                                     </Link>
                                 );
                             })}
+                        </div>
 
-                            {/* Kullanıcı & Personel Dropdown */}
-                            <div className="relative group">
-                                <button
-                                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${isActiveNav('/admin/dashboard') ||
-                                        isActiveNav('/admin/drivers') ||
-                                        isActiveNav('/admin/staff-dashboard')
-                                        ? 'bg-white/20 border-white/40 text-white'
-                                        : 'bg-indigo-800/50 hover:bg-indigo-700 border-indigo-600 text-indigo-100'
-                                        }`}
-                                >
-                                    <span className="text-lg">👥</span>
-                                    <span className="text-sm font-medium">{t('usersAndStaff')}</span>
-                                    <span className="text-[10px] ml-1">▼</span>
-
-                                    {(isActiveNav('/admin/dashboard') || isActiveNav('/admin/drivers') || isActiveNav('/admin/staff-dashboard')) && (
-                                        <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full" />
-                                    )}
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                <div className="absolute right-0 top-full mt-2 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
-                                    <div className="py-1">
-                                        <Link
-                                            href="/admin/drivers"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/drivers') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
-                                        >
-                                            <span className="text-lg">🚗</span> {t('drivers')}
-                                        </Link>
-                                        <Link
-                                            href="/admin/staff-dashboard"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/staff-dashboard') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
-                                        >
-                                            <span className="text-lg">👔</span> {t('staff')}
-                                        </Link>
-                                        <Link
-                                            href="/admin/dashboard"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/dashboard') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
-                                        >
-                                            <span className="text-lg">👥</span> {t('userManagement')}
-                                        </Link>
+                        {/* Right Side - Settings, Locale, Profile */}
+                        <div className="flex items-center shrink-0 gap-2">
+                            <LanguageSwitcher />
+                            <div className="relative group ml-2">
+                                <button className="flex items-center gap-1.5 hover:bg-white/10 rounded-lg px-2 py-1 transition">
+                                    <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 flex items-center justify-center bg-white/10 shadow-sm">
+                                        {(admin as any).photoURL ? (
+                                            <img
+                                                src={(admin as any).photoURL}
+                                                alt={admin.displayName || t('profile')}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-white font-bold text-sm">
+                                                {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
+                                            </span>
+                                        )}
                                     </div>
-                                </div>
-                            </div>
-
-                            {/* Settings Dropdown */}
-                            <div className="relative group">
-                                <button
-                                    className={`relative flex items-center gap-2 px-4 py-2 rounded-lg transition-all border ${isActiveNav('/admin/settings') ||
-                                        isActiveNav('/admin/image-generator') ||
-                                        isActiveNav('/admin/ai-menu') ||
-                                        isActiveNav('/admin/ui-translations')
-                                        ? 'bg-white/20 border-white/40 text-white'
-                                        : 'bg-indigo-800/50 hover:bg-indigo-700 border-indigo-600 text-indigo-100'
-                                        }`}
-                                >
-                                    <span className="text-lg">⚙️</span>
-                                    <span className="text-sm font-medium">{t('settings')}</span>
-                                    <span className="text-[10px] ml-1">▼</span>
-
-                                    {(isActiveNav('/admin/settings') || isActiveNav('/admin/image-generator') || isActiveNav('/admin/ai-menu') || isActiveNav('/admin/ui-translations')) && (
-                                        <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-full" />
-                                    )}
+                                    <div className="hidden md:flex flex-col items-start ml-1">
+                                        <span className="text-white text-xs font-medium max-w-[100px] truncate leading-tight">
+                                            {admin.displayName || 'Super Admin'}
+                                        </span>
+                                        <span className="text-red-200 text-[10px] leading-tight font-medium">
+                                            Süper Admin
+                                        </span>
+                                    </div>
+                                    <span className="text-red-200 text-[10px] ml-1">▼</span>
                                 </button>
 
-                                {/* Dropdown Menu */}
-                                <div className="absolute right-0 top-full mt-2 bg-indigo-900 rounded-lg shadow-xl border border-indigo-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
-                                    <div className="py-1">
+                                {/* Dropdown Menu (including Settings) */}
+                                <div className="absolute right-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px]">
+                                    <div className="px-4 py-3 border-b border-gray-700">
+                                        <p className="text-white text-sm font-medium truncate">
+                                            {admin.displayName || 'Super Admin'}
+                                        </p>
+                                        <p className="text-gray-400 text-xs truncate">
+                                            {admin.email || (admin as any).phoneNumber || ''}
+                                        </p>
+                                    </div>
+
+                                    <div className="py-2 border-b border-gray-700">
+                                        <p className="px-4 py-1 text-[10px] uppercase font-bold text-gray-500">{t('settings')}</p>
                                         <Link
                                             href="/admin/settings"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/settings') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                            className="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-xs"
                                         >
-                                            <span>⚙️</span> {t('settings')}
+                                            {t('settings')}
                                         </Link>
                                         <Link
                                             href="/admin/ui-translations"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/ui-translations') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                            className="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-xs"
                                         >
-                                            <span>🌍</span> {t('uiTranslations')}
+                                            {t('uiTranslations')}
                                         </Link>
                                         <Link
                                             href="/admin/image-generator"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/image-generator') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                            className="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-xs"
                                         >
-                                            <span>🎨</span> {t('imageGen')}
+                                            {t('imageGen')}
                                         </Link>
                                         <Link
                                             href="/admin/ai-menu"
-                                            className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${isActiveNav('/admin/ai-menu') ? 'bg-indigo-800 text-white' : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'}`}
+                                            className="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-xs"
                                         >
-                                            <span>🤖</span> {t('aiMenu')}
+                                            {t('aiMenu')}
                                         </Link>
                                     </div>
+
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center gap-2 px-4 py-3 text-red-500 hover:bg-red-900/40 hover:text-red-400 transition text-xs font-medium rounded-b-lg"
+                                    >
+                                        🚪 {t('logout')}
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -716,99 +468,6 @@ export default function AdminHeader() {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Stats Modal Panel */}
-            {showStatsList && (
-                <div className="fixed inset-0 bg-black/70 flex items-start justify-center z-50 pt-20" onClick={() => setShowStatsList(null)}>
-                    <div className="bg-gray-800 rounded-xl w-full max-w-2xl max-h-[70vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-                            <h3 className="text-white font-bold">
-                                {showStatsList === 'users' && `👥 {t('allUsers')} (${usersList.length})`}
-                                {showStatsList === 'admins' && `🎫 İşletme Adminleri (${adminsList.length})`}
-                                {showStatsList === 'subadmins' && `👷 Sub Adminler (${adminsList.length})`}
-                                {showStatsList === 'superadmins' && `👑 {t('superAdmins')} (${adminsList.length})`}
-                            </h3>
-                            <button
-                                onClick={() => setShowStatsList(null)}
-                                className="text-gray-400 hover:text-white text-2xl px-2"
-                            >
-                                ×
-                            </button>
-                        </div>
-
-                        <div className="overflow-y-auto max-h-[calc(70vh-60px)]">
-                            {listsLoading ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <div className="animate-spin h-8 w-8 border-3 border-blue-500 border-t-transparent rounded-full"></div>
-                                    <span className="ml-3 text-gray-400">{t('loading')}</span>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-gray-700">
-                                    {showStatsList === 'users' ? (
-                                        usersList.length === 0 ? (
-                                            <p className="text-gray-400 text-center py-8">{t('noUsersFound')}</p>
-                                        ) : (
-                                            usersList.map((user, index) => (
-                                                <div
-                                                    key={user.id}
-                                                    className="flex items-center gap-3 p-3 hover:bg-gray-700/50 transition"
-                                                >
-                                                    <span className="text-gray-500 text-xs w-6">{index + 1}</span>
-                                                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                                                        {(user.firstName || user.displayName || user.email || '?').charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-white font-medium">
-                                                            {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.displayName || t('unnamed')}
-                                                        </p>
-                                                        <p className="text-gray-400 text-sm">{user.email || user.phoneNumber || '-'}</p>
-                                                    </div>
-                                                    {/* Platform indicator */}
-                                                    {(user.appSource || user.platform) && (
-                                                        <span className={`px-2 py-1 rounded text-xs font-medium ${(user.appSource || user.platform)?.toLowerCase()?.includes('lokma')
-                                                            ? 'bg-red-600/30 text-red-300'
-                                                            : 'bg-purple-600/30 text-purple-300'
-                                                            }`}>
-                                                            {(user.appSource || user.platform)?.toLowerCase()?.includes('lokma') ? '🍖 LOKMA' : t('mira')}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            ))
-                                        )
-                                    ) : (
-                                        adminsList.length === 0 ? (
-                                            <p className="text-gray-400 text-center py-8">{t('noAdminsFound')}</p>
-                                        ) : (
-                                            adminsList.map((admin, index) => (
-                                                <div
-                                                    key={admin.id}
-                                                    className="flex items-center gap-3 p-3 hover:bg-gray-700/50 transition"
-                                                >
-                                                    <span className="text-gray-500 text-xs w-6">{index + 1}</span>
-                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${admin.adminType === 'super' ? 'bg-purple-600' :
-                                                        admin.adminType?.includes('_staff') ? 'bg-amber-600' : 'bg-green-600'
-                                                        }`}>
-                                                        {(admin.displayName || admin.email || '?').charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-white font-medium">{admin.displayName || t('unnamed')}</p>
-                                                        <p className="text-gray-400 text-sm">{admin.email || admin.phoneNumber || '-'}</p>
-                                                    </div>
-                                                    <span className={`px-2 py-1 rounded text-xs font-medium ${admin.adminType === 'super' ? 'bg-purple-600/30 text-purple-300' :
-                                                        admin.adminType?.includes('_staff') ? 'bg-amber-600/30 text-amber-300' : 'bg-green-600/30 text-green-300'
-                                                        }`}>
-                                                        {adminTypeLabels[admin.adminType as AdminType] || admin.adminType}
-                                                    </span>
-                                                </div>
-                                            ))
-                                        )
-                                    )}
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>

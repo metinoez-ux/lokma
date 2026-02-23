@@ -46,6 +46,7 @@ const stripe_1 = __importDefault(require("stripe"));
 const resend_1 = require("resend");
 const invoicePdf_1 = require("./invoicePdf");
 const iot_gateway_1 = require("./iot-gateway");
+const translation_1 = require("./utils/translation");
 // Define secrets for secure key management
 const stripeSecretKey = (0, params_1.defineSecret)("STRIPE_SECRET_KEY");
 const resendApiKey = (0, params_1.defineSecret)("RESEND_API_KEY");
@@ -438,36 +439,45 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
     const totalAmount = after.totalAmount || 0;
     const businessName = after.butcherName || after.businessName || "İşletme";
     const newStatus = after.status;
+    // Fetch user language and translation mappings
+    let lang = "tr";
+    if (hasCustomerToken && after.userId) {
+        lang = await (0, translation_1.getUserLanguage)(after.userId);
+    }
+    else if (hasCustomerToken && after.customerId) {
+        lang = await (0, translation_1.getUserLanguage)(after.customerId);
+    }
+    const trans = await (0, translation_1.getPushTranslations)(lang);
     let title = "";
     let body = "";
     switch (newStatus) {
         case "accepted":
-            title = `✅ Siparişiniz Onaylandı${orderTag}`;
-            body = `${orderNumber} - ${businessName} siparişinizi onayladı`;
+            title = `${trans.orderAcceptedTitle}${orderTag}`;
+            body = `${orderNumber} - ${businessName} ${trans.orderAcceptedBody.toLowerCase()}`;
             break;
         case "preparing":
-            title = `👨‍🍳 Siparişiniz Hazırlanıyor${orderTag}`;
-            body = `${orderNumber} - ${businessName} siparişinizi hazırlıyor`;
+            title = `${trans.orderPreparingTitle}${orderTag}`;
+            body = `${orderNumber} - ${trans.orderPreparingBody}`;
             break;
         case "ready":
             // Check if delivery order or pickup
             const isDeliveryOrder = after.orderType === "delivery" || after.deliveryType === "delivery" || after.deliveryMethod === "delivery";
             if (isDeliveryOrder) {
                 // Delivery order: ready but waiting for courier to claim
-                title = `📦 Siparişiniz Hazır!${orderTag}`;
-                body = `${orderNumber} - Kuryenin alması bekleniyor. Toplam: ${totalAmount.toFixed(2)}€`;
+                title = `${trans.orderReadyDeliveryTitle}${orderTag}`;
+                body = `${orderNumber} - ${trans.orderReadyDeliveryBody}`;
             }
             else {
                 // Check if dine-in
                 const isDineInReady = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
                 if (isDineInReady && after.tableNumber != null) {
-                    title = `✅ Siparişiniz Hazır!${orderTag}`;
-                    body = `${orderNumber} - Masa ${after.tableNumber}: Siparişiniz hazır, masanıza servis edilecek!`;
+                    title = `${trans.orderReadyDineInTitle}${orderTag}`;
+                    body = `${orderNumber} - Masa ${after.tableNumber}: ${trans.orderReadyDineInBody}`;
                 }
                 else {
                     // Pickup order: customer should come pick it up
-                    title = `✅ Siparişiniz Hazır!${orderTag}`;
-                    body = `${orderNumber} - Alabilirsiniz! Toplam: ${totalAmount.toFixed(2)}€`;
+                    title = `${trans.orderReadyPickupTitle}${orderTag}`;
+                    body = `${orderNumber} - ${trans.orderReadyPickupBody}`;
                 }
             }
             // If delivery order, also notify staff about pending delivery
@@ -632,11 +642,11 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
             const isDineInServed = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
             const servedByName = after.servedByName || "Garson";
             if (isDineInServed && after.tableNumber != null) {
-                title = `🍽️ Afiyet Olsun!${orderTag}`;
+                title = `${trans.orderDeliveredTitle}${orderTag}`;
                 body = `${orderNumber} - Siparişiniz masanıza servis edildi. Afiyet olsun! 😊`;
             }
             else {
-                title = `🍽️ Siparişiniz Servis Edildi${orderTag}`;
+                title = `${trans.orderDeliveredTitle}${orderTag}`;
                 body = `${orderNumber} - ${servedByName} tarafından servis edildi. Afiyet olsun!`;
             }
             // Schedule feedback request for dine-in served orders
@@ -650,12 +660,12 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
         case "onTheWay":
             // Courier has claimed and started delivery
             const courierName = after.courierName || "Kurye";
-            title = `🚚 Kurye Yola Çıktı!${orderTag}`;
-            body = `${orderNumber} - ${courierName} siparişinizi getiriyor`;
+            title = `${trans.deliveryPickedUpTitle}${orderTag}`;
+            body = `${orderNumber} - ${courierName} ${trans.deliveryPickedUpBody.toLowerCase()}`;
             break;
         case "delivered":
-            title = `🎉 Siparişiniz Teslim Edildi${orderTag}`;
-            body = `${orderNumber} - Afiyet olsun!`;
+            title = `${trans.orderDeliveredTitle}${orderTag}`;
+            body = `${orderNumber} - ${trans.orderDeliveredBody}`;
             // Schedule feedback request for 24 hours later
             const feedbackSendAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
             await db.collection("meat_orders").doc(event.params.orderId).update({
@@ -667,8 +677,8 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
             await createCommissionRecord(event.params.orderId, after);
             break;
         case "completed":
-            title = `🎉 Sipariş Tamamlandı${orderTag}`;
-            body = `${orderNumber} - Afiyet olsun!`;
+            title = `${trans.orderDeliveredTitle}${orderTag}`;
+            body = `${orderNumber} - ${trans.orderDeliveredBody}`;
             // Also create commission record for completed orders (if not already created at delivered)
             await createCommissionRecord(event.params.orderId, after);
             break;
@@ -682,7 +692,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
             const cancellationReason = after.cancellationReason || "İşletme tarafından iptal edildi";
             const paymentStatus = after.paymentStatus;
             const paymentMethod = after.paymentMethod;
-            title = `❌ Sipariş İptal Edildi${orderTag}`;
+            title = `${trans.orderCancelledTitle}${orderTag}`;
             // Build message with reason and refund info
             let cancelMsg = `${orderNumber} - Sebep: ${cancellationReason}`;
             // If payment was made (paid/completed), mention refund
@@ -1466,11 +1476,13 @@ exports.onScheduledFeedbackRequests = (0, scheduler_1.onSchedule)({
                 continue;
             }
             const butcherName = order.butcherName || "İşletme";
+            const lang = await (0, translation_1.getUserLanguage)(order.userId || order.customerId); // Try to get user language, defaulting to Turkish
+            const trans = await (0, translation_1.getPushTranslations)(lang);
             try {
                 await messaging.send({
                     notification: {
-                        title: "⭐ Siparişinizi Değerlendirir misiniz?",
-                        body: `${butcherName}'den aldığınız siparişten memnun kaldınız mı?`,
+                        title: trans.feedbackRequestTitle,
+                        body: `${butcherName} ${trans.feedbackRequestBody.toLowerCase()}`,
                     },
                     data: {
                         type: "feedback_request",

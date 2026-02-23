@@ -4714,6 +4714,27 @@
   "Navigation": {
     "dashboard": "Panel"
   },
+  "PushNotifications": {
+    "deliveryPendingTitle": "🚚 ¡Entrega en espera!",
+    "deliveryPickedUpBody": "Nuestro mensajero ha enviado su pedido en camino.",
+    "deliveryPickedUpTitle": "🛵 ¡Tu pedido está en camino!",
+    "feedbackRequestBody": "¿Cómo estuvo tu pedido? Por favor califica.",
+    "feedbackRequestTitle": "⭐ Evalúa tu pedido",
+    "orderAcceptedBody": "Tu pedido ha sido confirmado y comenzará a prepararse.",
+    "orderAcceptedTitle": "✅ Tu pedido ha sido confirmado",
+    "orderCancelledBody": "Su pedido ha sido cancelado.",
+    "orderCancelledTitle": "❌ Su pedido ha sido cancelado",
+    "orderDeliveredBody": "Su pedido ha sido entregado.",
+    "orderDeliveredTitle": "🍽️ ¡Buen provecho!",
+    "orderPreparingBody": "Su pedido está siendo preparado actualmente por el maestro.",
+    "orderPreparingTitle": "👨‍🍳 Tu pedido se está preparando",
+    "orderReadyDeliveryBody": "Se espera que el mensajero lo recoja.",
+    "orderReadyDeliveryTitle": "📦 ¡Tu pedido está listo!",
+    "orderReadyDineInBody": "¡Tu pedido está listo, pronto será servido en tu mesa!",
+    "orderReadyDineInTitle": "✅ ¡Tu pedido está listo!",
+    "orderReadyPickupBody": "¡Tu pedido está listo, puedes venir a recogerlo!",
+    "orderReadyPickupTitle": "✅ ¡Tu pedido está listo!"
+  },
   "function toLocaleString() { [native code] }": {
     "de-DE": "De-DE",
     "tr-TR": "TR-TR"

@@ -4714,6 +4714,27 @@
   "Navigation": {
     "dashboard": "Tableau de bord"
   },
+  "PushNotifications": {
+    "deliveryPendingTitle": "🚚 Livraison en attente !",
+    "deliveryPickedUpBody": "Notre coursier a envoyé votre commande en route.",
+    "deliveryPickedUpTitle": "🛵 Votre commande est en route !",
+    "feedbackRequestBody": "Comment s'est passée votre commande ? Veuillez noter.",
+    "feedbackRequestTitle": "⭐ Évaluez votre commande",
+    "orderAcceptedBody": "Votre commande a été confirmée et va commencer à être préparée.",
+    "orderAcceptedTitle": "✅ Votre commande a été confirmée",
+    "orderCancelledBody": "Votre commande a été annulée.",
+    "orderCancelledTitle": "❌ Votre commande a été annulée",
+    "orderDeliveredBody": "Votre commande a été livrée.",
+    "orderDeliveredTitle": "🍽️ Bon Appétit !",
+    "orderPreparingBody": "Votre commande est actuellement en cours de préparation par le maître.",
+    "orderPreparingTitle": "👨‍🍳 Votre commande est en cours de préparation",
+    "orderReadyDeliveryBody": "Le coursier devrait le récupérer.",
+    "orderReadyDeliveryTitle": "📦Votre commande est prête !",
+    "orderReadyDineInBody": "Votre commande est prête, elle sera bientôt servie à votre table !",
+    "orderReadyDineInTitle": "✅Votre commande est prête !",
+    "orderReadyPickupBody": "Votre commande est prête, vous pouvez venir la récupérer !",
+    "orderReadyPickupTitle": "✅Votre commande est prête !"
+  },
   "function toLocaleString() { [native code] }": {
     "de-DE": "De-DE",
     "tr-TR": "Tr-TR"

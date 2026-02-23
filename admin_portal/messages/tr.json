@@ -4725,5 +4725,26 @@
   "function toLocaleString() { [native code] }": {
     "de-DE": "De-DE",
     "tr-TR": "Tr-TR"
+  },
+  "PushNotifications": {
+    "orderAcceptedTitle": "✅ Siparişiniz Onaylandı",
+    "orderAcceptedBody": "Siparişiniz onaylandı ve hazırlanmaya başlanacak.",
+    "orderPreparingTitle": "👨‍🍳 Siparişiniz Hazırlanıyor",
+    "orderPreparingBody": "Siparişiniz şu anda usta tarafından hazırlanıyor.",
+    "orderReadyDeliveryTitle": "📦 Siparişiniz Hazır!",
+    "orderReadyDeliveryBody": "Kuryenin alması bekleniyor.",
+    "orderReadyDineInTitle": "✅ Siparişiniz Hazır!",
+    "orderReadyDineInBody": "Siparişiniz hazır, birazdan masanıza servis edilecek!",
+    "orderReadyPickupTitle": "✅ Siparişiniz Hazır!",
+    "orderReadyPickupBody": "Siparişiniz hazır, gelip alabilirsiniz!",
+    "deliveryPendingTitle": "🚚 Teslimat Bekliyor!",
+    "deliveryPickedUpTitle": "🛵 Siparişiniz Yolda!",
+    "deliveryPickedUpBody": "Kuryemiz siparişinizi yola çıkardı.",
+    "orderDeliveredTitle": "🍽️ Afiyet Olsun!",
+    "orderDeliveredBody": "Siparişiniz teslim edildi.",
+    "orderCancelledTitle": "❌ Siparişiniz İptal Edildi",
+    "orderCancelledBody": "Siparişiniz iptal edilmiştir.",
+    "feedbackRequestTitle": "⭐ Siparişinizi Değerlendirin",
+    "feedbackRequestBody": "Siparişiniz nasıldı? Lütfen değerlendirin."
   }
 }
