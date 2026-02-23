@@ -847,7 +847,7 @@ export default function BusinessesPage() {
                     className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-4 transition"
                 >
                     <span>←</span>
-                    <span>Admin Paneli</span>
+                    <span>{t('admin_paneli')}</span>
                 </Link>
 
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1253,11 +1253,11 @@ export default function BusinessesPage() {
                                             <tr>
                                                 <th className="px-4 py-3 w-20">{t('id')}</th>
                                                 <th className="px-4 py-3">{t('isletme')}</th>
-                                                <th className="px-4 py-3">Marka</th>
+                                                <th className="px-4 py-3">{t('marka')}</th>
                                                 <th className="px-4 py-3">{t('tur')}</th>
-                                                <th className="px-4 py-3">Konum</th>
-                                                <th className="px-4 py-3">Puan</th>
-                                                <th className="px-4 py-3">Hizmetler</th>
+                                                <th className="px-4 py-3">{t('konum')}</th>
+                                                <th className="px-4 py-3">{t('puan')}</th>
+                                                <th className="px-4 py-3">{t('hizmetler')}</th>
                                                 <th className="px-4 py-3">{t('durum')}</th>
                                                 <th className="px-4 py-3 text-center">{t('islemler')}</th>
 
@@ -1513,7 +1513,7 @@ export default function BusinessesPage() {
 
                             {/* Manual Form - Basic Info */}
                             <div>
-                                <h3 className="text-white font-medium mb-3">📋 Temel Bilgiler</h3>
+                                <h3 className="text-white font-medium mb-3">📋 {t('temel_bilgiler', { defaultValue: 'Temel Bilgiler' })}</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-gray-400 text-sm mb-1">{t('isletmeAdi')}</label>
@@ -1566,10 +1566,10 @@ export default function BusinessesPage() {
 
                             {/* Address */}
                             <div>
-                                <h3 className="text-white font-medium mb-3">📍 Adres Bilgileri</h3>
+                                <h3 className="text-white font-medium mb-3">📍 {t('adresBilgileri', { defaultValue: 'Adres Bilgileri' })}</h3>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="col-span-2">
-                                        <label className="block text-gray-400 text-sm mb-1">Sokak/Cadde</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{t('sokakCadde', { defaultValue: 'Sokak/Cadde' })}</label>
                                         <input
                                             type="text"
                                             value={formData.street}
@@ -1587,7 +1587,7 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">Posta Kodu</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{t('postaKodu')}</label>
                                         <input
                                             type="text"
                                             value={formData.postalCode}
@@ -1614,7 +1614,7 @@ export default function BusinessesPage() {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">Para Birimi</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{t('paraBirimi', { defaultValue: 'Para Birimi' })}</label>
                                         <select
                                             value={formData.currency}
                                             onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
@@ -1635,7 +1635,7 @@ export default function BusinessesPage() {
                                 <h3 className="text-white font-medium mb-3">{t('iletisim')}</h3>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">Telefon</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{t('telefon')}</label>
                                         <input
                                             type="tel"
                                             value={formData.phone}
@@ -1645,7 +1645,7 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">E-posta</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{t('eposta')}</label>
                                         <input
                                             type="email"
                                             value={formData.email}
@@ -1654,7 +1654,7 @@ export default function BusinessesPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-gray-400 text-sm mb-1">Website</label>
+                                        <label className="block text-gray-400 text-sm mb-1">{t('website')}</label>
                                         <input
                                             type="url"
                                             value={formData.website}
@@ -1667,13 +1667,13 @@ export default function BusinessesPage() {
 
                             {/* Services */}
                             <div>
-                                <h3 className="text-white font-medium mb-3">🛎️ Hizmetler</h3>
+                                <h3 className="text-white font-medium mb-3">🛎️ {t('hizmetler')}</h3>
                                 <div className="flex flex-wrap gap-3">
                                     {[
-                                        { key: 'delivery', label: '🛵 Teslimat', desc: t('kuryeIleGonderim') },
-                                        { key: 'pickup', label: '🏃 Gel Al', desc: t('musteriAlir') },
-                                        { key: 'dineIn', label: '🍽️ Yerinde', desc: 'Masa servisi' },
-                                        { key: 'reservation', label: '📅 Rezervasyon', desc: t('masaAyirtma') },
+                                        { key: 'delivery', label: `🛵 ${t('teslimat')}`, desc: t('kuryeIleGonderim') },
+                                        { key: 'pickup', label: `🏃 ${t('gelAl', { defaultValue: 'Gel Al' })}`, desc: t('musteriAlir') },
+                                        { key: 'dineIn', label: `🍽️ ${t('yerinde', { defaultValue: 'Yerinde' })}`, desc: t('masaServisi', { defaultValue: 'Masa servisi' }) },
+                                        { key: 'reservation', label: `📅 ${t('rezervasyon', { defaultValue: 'Rezervasyon' })}`, desc: t('masaAyirtma') },
                                     ].map(service => (
                                         <button
                                             key={service.key}
@@ -1809,7 +1809,7 @@ export default function BusinessesPage() {
 
                                 {/* Bank Info - EDITABLE */}
                                 <div className="bg-gray-800/50 rounded-lg p-3">
-                                    <h4 className="text-gray-400 text-sm font-medium mb-2">🏦 Banka Bilgileri</h4>
+                                    <h4 className="text-gray-400 text-sm font-medium mb-2">🏦 {t('bankaBilgileri', { defaultValue: 'Banka Bilgileri' })}</h4>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
                                             <label className="block text-gray-500 text-xs mb-1">{t('hesap_sahibi')}</label>
@@ -1822,7 +1822,7 @@ export default function BusinessesPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-gray-500 text-xs mb-1">Banka</label>
+                                            <label className="block text-gray-500 text-xs mb-1">{t('banka', { defaultValue: 'Banka' })}</label>
                                             <input
                                                 type="text"
                                                 value={formData.bankName}
@@ -1856,10 +1856,10 @@ export default function BusinessesPage() {
 
                                 {/* Subscription Info - EDITABLE */}
                                 <div className="bg-gray-800/50 rounded-lg p-3">
-                                    <h4 className="text-gray-400 text-sm font-medium mb-2">📋 Abonelik Bilgileri</h4>
+                                    <h4 className="text-gray-400 text-sm font-medium mb-2">📋 {t('abonelikBilgileri', { defaultValue: 'Abonelik Bilgileri' })}</h4>
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className="block text-gray-500 text-xs mb-1">Plan</label>
+                                            <label className="block text-gray-500 text-xs mb-1">{t('plan', { defaultValue: 'Plan' })}</label>
                                             <select
                                                 value={formData.subscriptionPlan}
                                                 onChange={(e) => setFormData({ ...formData, subscriptionPlan: e.target.value })}
@@ -1879,8 +1879,8 @@ export default function BusinessesPage() {
                                                 className="w-full bg-gray-900/50 px-3 py-2 rounded-lg text-white border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                                             >
                                                 <option value="active">{t('aktif')}</option>
-                                                <option value="trial">🎁 Deneme</option>
-                                                <option value="paused">⏸ Durduruldu</option>
+                                                <option value="trial">🎁 {t('deneme', { defaultValue: 'Deneme' })}</option>
+                                                <option value="paused">⏸ {t('durduruldu', { defaultValue: 'Durduruldu' })}</option>
                                                 <option value="cancelled">{t('iptal')}</option>
                                             </select>
                                         </div>
@@ -2036,7 +2036,7 @@ export default function BusinessesPage() {
                                 {(reviewModal.business as any).reviews.slice(0, 10).map((review: any, idx: number) => (
                                     <div key={idx} className="bg-gray-700/50 rounded-lg p-3">
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="text-white font-medium">{review.author_name || 'Anonim'}</span>
+                                            <span className="text-white font-medium">{review.author_name || t('anonim', { defaultValue: 'Anonim' })}</span>
                                             <span className="text-yellow-400 text-sm">{'⭐'.repeat(review.rating || 0)}</span>
                                         </div>
                                         <p className="text-gray-300 text-sm">{review.text || '-'}</p>

@@ -798,7 +798,22 @@
     "yeni_isletme_ekle": "Yeni İşletme Ekle",
     "isletme_yonetimi": "İşletme Yönetimi",
     "tum_kayitli_isletmeleri_yonetin": "Tüm kayıtlı işletmeleri yönetin:",
-    "sektor_modulleri": "Sektör Modülleri"
+    "sektor_modulleri": "Sektör Modülleri",
+    "temel_bilgiler": "Temel Bilgiler",
+    "adresBilgileri": "Adres Bilgileri",
+    "sokakCadde": "Sokak/Cadde",
+    "postaKodu": "Posta Kodu",
+    "paraBirimi": "Para Birimi",
+    "eposta": "E-posta",
+    "teslimat": "Teslimat",
+    "gelAl": "Gel Al",
+    "yerinde": "Yerinde",
+    "rezervasyon": "Rezervasyon",
+    "bankaBilgileri": "Banka Bilgileri",
+    "abonelikBilgileri": "Abonelik Bilgileri",
+    "deneme": "Deneme",
+    "durduruldu": "Durduruldu",
+    "anonim": "Anonim"
   },
   "AdminBusiness[id": {
     "adet": "Adet",
@@ -1178,7 +1193,29 @@
       "registered": "Kayıt",
       "app_lang": "Uygulama Dili"
     },
-    "users_found": "Kullanıcılar Bulundu"
+    "users_found": "Kullanıcılar Bulundu",
+    "businesses_found": "İşletmeler Bulundu",
+    "order_details": "Sipariş Detayı",
+    "timeline": "Zaman Çizelgesi",
+    "payment": "Ödeme",
+    "courier": "Kurye",
+    "pod_photo": "Teslimat Kaydı (PoD)",
+    "cancel_order": "İptal Et & İade",
+    "cancel_order_confirm": "Bu siparişi iptal etmek istediğinize emin misiniz? İşletmeden alınan komisyon iptal edilecektir.",
+    "cancel_reason_prompt": "Lütfen iptal nedenini girin (Zorunlu):",
+    "cancel_success": "Sipariş başarıyla iptal edildi ve komisyon sıfırlandı.",
+    "cancel_error": "Sipariş iptal edilirken bir hata oluştu.",
+    "payment_method": "Ödeme Yöntemi",
+    "payment_status": "Ödeme Durumu",
+    "fields": {
+      "createdAt": "Oluşturuldu",
+      "acceptedAt": "Onaylandı",
+      "preparingAt": "Hazırlanıyor",
+      "readyAt": "Hazır",
+      "assignedAt": "Kurye Atandı",
+      "pickedUpAt": "Yola Çıktı",
+      "deliveredAt": "Teslim Edildi"
+    }
   },
   "AdminDashboard": {
     "activateUser": "Kullanıcıyı Aktifleştir",
