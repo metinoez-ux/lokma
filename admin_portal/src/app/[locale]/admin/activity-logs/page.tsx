@@ -2,14 +2,62 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { auth } from '@/lib/firebase'
 
 export default function CustomerServicePage() {
     const t = useTranslations('AdminCustomerService')
     const [query, setQuery] = useState('')
-    const [dateFilter, setDateFilter] = useState('all')
+    const [dateFilter, setDateFilter] = useState('last7days')
     const [loading, setLoading] = useState(false)
-    const [results, setResults] = useState<{ users: any[], orders: any[] } | null>(null)
+    const [results, setResults] = useState<{ users: any[], orders: any[], businesses?: any[] } | null>(null)
     const [error, setError] = useState('')
+
+    // Modal state
+    const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
+    const [isCancelling, setIsCancelling] = useState(false)
+    const [cancelReason, setCancelReason] = useState('')
+
+    const handleCancelOrder = async () => {
+        if (!cancelReason) {
+            alert(t('cancel_reason_prompt'))
+            return
+        }
+
+        const confirmCancel = window.confirm(t('cancel_order_confirm'))
+        if (!confirmCancel) return
+
+        setIsCancelling(true)
+        try {
+            const token = await auth.currentUser?.getIdToken()
+            const res = await fetch('/api/admin/orders/cancel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ orderId: selectedOrder.id, cancelReason })
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Failed to cancel order')
+
+            // Update local state to reflect cancellation
+            const updatedOrders = results?.orders.map(o => o.id === selectedOrder.id ? { ...o, status: 'cancelled' } : o) || []
+            setResults(prev => prev ? { ...prev, orders: updatedOrders } : null)
+            setSelectedOrder(null)
+
+            // Wait slightly for setState to clear
+            setTimeout(() => {
+                alert(t('cancel_success'))
+            }, 100);
+
+        } catch (err: any) {
+            console.error(err)
+            alert(t('cancel_error') + ': ' + err.message)
+        } finally {
+            setIsCancelling(false)
+            setCancelReason('')
+        }
+    }
 
     // Generate years dynamically starting from 2026 up to current year
     const currentYear = new Date().getFullYear();
@@ -114,13 +162,74 @@ export default function CustomerServicePage() {
             {/* Results Section */}
             {!loading && results && (
                 <div className="space-y-8 animate-fade-in">
-                    {results.users.length === 0 && results.orders.length === 0 ? (
+                    {results.users.length === 0 && results.orders.length === 0 && (!results.businesses || results.businesses.length === 0) ? (
                         <div className="text-center py-16 bg-gray-800/50 rounded-2xl border border-gray-700/50">
                             <span className="text-5xl opacity-50 block mb-4">📭</span>
                             <h3 className="text-xl text-gray-300 font-medium">{t('no_results')}</h3>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                            {/* Businesses Row (Full Width) */}
+                            {results.businesses && results.businesses.length > 0 && (
+                                <div className="col-span-1 lg:col-span-2 space-y-4 text-left">
+                                    <h2 className="text-xl font-semibold text-white flex items-center gap-2 border-b border-gray-700 pb-2">
+                                        <span>🏢</span> {t('businesses_found')} ({results.businesses.length})
+                                    </h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {results.businesses.map((business: any) => (
+                                            <div key={business.id} className="bg-gray-800 rounded-xl p-5 border border-gray-700 hover:border-amber-500/50 transition-all shadow-lg group">
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-12 h-12 rounded-full bg-amber-900/50 flex items-center justify-center text-amber-300 font-bold text-xl border border-amber-500/30">
+                                                            {business.companyName?.charAt(0) || '?'}
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-lg font-bold text-white group-hover:text-amber-400 transition-colors">
+                                                                {business.companyName}
+                                                            </h3>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/30 text-gray-400 font-mono tracking-wider">
+                                                                    ID: {business.id.substring(0, 8)}...
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${business.isActive ? 'bg-green-900/50 text-green-300 border-green-500/30' : 'bg-red-900/50 text-red-300 border-red-500/30'}`}>
+                                                        {business.isActive ? 'AKTİF' : 'PASİF'}
+                                                    </span>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4 text-sm mt-4 bg-gray-900/50 p-4 rounded-lg border-l-2 border-l-amber-500/50">
+                                                    <div>
+                                                        <p className="text-gray-500 text-xs uppercase">{t('user_card.email')}</p>
+                                                        <p className="text-gray-200 font-medium truncate" title={business.email}>{business.email || '-'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-gray-500 text-xs uppercase">{t('user_card.phone')}</p>
+                                                        <p className="text-gray-200 font-medium">{business.phoneNumber || '-'}</p>
+                                                    </div>
+                                                    <div className="sm:col-span-2">
+                                                        <p className="text-gray-500 text-xs uppercase">{t('order_card.address')}</p>
+                                                        <p className="text-gray-300 leading-snug">
+                                                            {business.address
+                                                                ? `${business.address.street || ''}, ${business.address.postalCode || ''} ${business.address.city || ''}`.trim()
+                                                                : '-'}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center justify-between sm:col-span-2 pt-2 mt-1 border-t border-gray-700/50">
+                                                        <span className="text-sm text-gray-400">
+                                                            {business.createdAt ? new Date(business.createdAt).toLocaleString() : '-'}
+                                                        </span>
+                                                        <span className="text-xs px-2 py-1 rounded bg-gray-800 text-gray-300 border border-gray-600 uppercase">
+                                                            {business.subscriptionPlan || 'FREE'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Users Column */}
                             <div className="space-y-4 text-left">
@@ -138,9 +247,28 @@ export default function CustomerServicePage() {
                                                     <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors">
                                                         {user.displayName || 'No Name'}
                                                     </h3>
-                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 uppercase tracking-wider">
-                                                        {t('id')} {user.id.substring(0, 8)}...
-                                                    </span>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        {(user.adminType === 'restoran_admin' || user.adminType === 'market_admin') ? (
+                                                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase tracking-widest font-semibold flex items-center gap-1">
+                                                                <span className="text-[10px]">🏢</span> B2B İşletme
+                                                            </span>
+                                                        ) : user.adminType === 'restoran_staff' ? (
+                                                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-widest font-semibold flex items-center gap-1">
+                                                                <span className="text-[10px]">🧑‍🍳</span> Personel
+                                                            </span>
+                                                        ) : user.isVirtualKermesUser ? (
+                                                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 uppercase tracking-widest font-semibold flex items-center gap-1">
+                                                                <span className="text-[10px]">🏕️</span> Topluluk User
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-gray-700 text-gray-300 uppercase tracking-wider">
+                                                                <span className="text-[10px]">👤</span> B2C Müşteri
+                                                            </span>
+                                                        )}
+                                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/30 text-gray-400 font-mono tracking-wider ml-1">
+                                                            ID: {user.id.substring(0, 8)}...
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium border ${user.role === 'admin' ? 'bg-purple-900/50 text-purple-300 border-purple-500/30' :
@@ -229,7 +357,10 @@ export default function CustomerServicePage() {
                                     <span>📦</span> {t('orders_found')} ({results.orders.length})
                                 </h2>
                                 {results.orders.map((order: any) => (
-                                    <div key={order.id} className="bg-gray-800 rounded-xl p-5 border border-gray-700 hover:border-blue-500/50 transition-all shadow-lg group">
+                                    <div key={order.id} onClick={() => setSelectedOrder(order)} className="bg-gray-800 rounded-xl p-5 border border-gray-700 hover:border-blue-500/50 transition-all shadow-lg group cursor-pointer relative">
+                                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="text-xl">🔍</span>
+                                        </div>
                                         <div className="flex justify-between items-start mb-3">
                                             <div>
                                                 <h3 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors flex items-center gap-2">
@@ -301,6 +432,167 @@ export default function CustomerServicePage() {
                     </div>
                 )
             }
+
+            {/* Order Details Modal */}
+            {selectedOrder && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-gray-900 rounded-2xl w-full max-w-2xl border border-gray-700 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        {/* Header */}
+                        <div className="flex justify-between items-center p-6 border-b border-gray-800 bg-gray-900">
+                            <div>
+                                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                                    {t('order_details')} <span className="text-gray-400 font-mono text-lg">#{selectedOrder.orderNumber}</span>
+                                </h2>
+                                <p className="text-sm text-gray-500 mt-1">ID: {selectedOrder.id}</p>
+                            </div>
+                            <button
+                                onClick={() => { setSelectedOrder(null); setCancelReason(''); }}
+                                className="w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+                            {/* Basics */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+                                    <p className="text-xs text-gray-500 uppercase">{t('order_card.customer')}</p>
+                                    <p className="text-lg text-white font-medium">{selectedOrder.customerName || selectedOrder.userDisplayName || '-'}</p>
+                                    <p className="text-sm text-gray-400 mt-1">{selectedOrder.customerPhone || selectedOrder.userPhone || '-'}</p>
+                                </div>
+                                <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+                                    <p className="text-xs text-gray-500 uppercase">{t('order_card.business')}</p>
+                                    <p className="text-lg text-white font-medium">{selectedOrder.businessName || '-'}</p>
+                                    <div className="flex justify-between items-center mt-1">
+                                        <p className="text-sm text-gray-400">{selectedOrder.type.toUpperCase()}</p>
+                                        <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${selectedOrder.status === 'completed' || selectedOrder.status === 'delivered' ? 'bg-green-900/40 text-green-400' :
+                                            selectedOrder.status === 'cancelled' || selectedOrder.status === 'rejected' ? 'bg-red-900/40 text-red-400' :
+                                                'bg-blue-900/40 text-blue-400'
+                                            }`}>
+                                            {selectedOrder.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Payment Section */}
+                            <div className="bg-gray-800/30 p-5 rounded-xl border border-gray-700/50">
+                                <h3 className="text-sm font-semibold text-gray-400 uppercase mb-3 flex items-center gap-2">
+                                    <span>💳</span> {t('payment')}
+                                </h3>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <p className="text-xs text-gray-600 mb-1">{t('order_card.total')}</p>
+                                        <p className="text-xl font-bold text-emerald-400">€{selectedOrder.totalPrice?.toFixed(2)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-600 mb-1">{t('payment_method')}</p>
+                                        <p className="text-white capitalize">{selectedOrder.paymentMethod || '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-600 mb-1">{t('payment_status')}</p>
+                                        <p className="text-white capitalize">{selectedOrder.paymentStatus || '-'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Timeline */}
+                            <div className="bg-gray-800/30 p-5 rounded-xl border border-gray-700/50">
+                                <h3 className="text-sm font-semibold text-gray-400 uppercase mb-3 flex items-center gap-2">
+                                    <span>⏱️</span> {t('timeline')}
+                                </h3>
+                                <div className="space-y-3">
+                                    {['createdAt', 'acceptedAt', 'preparingAt', 'readyAt', 'assignedAt', 'pickedUpAt', 'deliveredAt'].map((fieldKey) => (
+                                        selectedOrder[fieldKey] && (
+                                            <div key={fieldKey} className="flex justify-between items-center text-sm border-b border-gray-700/30 pb-2 last:border-0 last:pb-0">
+                                                <span className="text-gray-300">{t(`fields.${fieldKey}`)}</span>
+                                                <span className="text-gray-400 font-mono">
+                                                    {new Date(selectedOrder[fieldKey]).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        )
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Courier & PoD */}
+                            {(selectedOrder.courierName || selectedOrder.photoUrl) && (
+                                <div className="bg-gray-800/30 p-5 rounded-xl border border-gray-700/50">
+                                    <h3 className="text-sm font-semibold text-gray-400 uppercase mb-3 flex items-center gap-2">
+                                        <span>🛵</span> {t('courier')} & {t('pod_photo')}
+                                    </h3>
+                                    {selectedOrder.courierName && (
+                                        <div className="mb-4">
+                                            <p className="text-xs text-gray-500 mb-1">Kurye Adı</p>
+                                            <p className="text-white">{selectedOrder.courierName}</p>
+                                        </div>
+                                    )}
+                                    {selectedOrder.photoUrl && (
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-2">{t('pod_photo')}</p>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={selectedOrder.photoUrl} alt="PoD" className="w-full h-auto rounded-lg border border-gray-700 max-h-64 object-cover" />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Footer (Admin Cancel Actions) */}
+                        <div className="p-6 border-t border-gray-800 bg-gray-900 flex justify-between items-center">
+                            {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'rejected' && (
+                                <div className="flex-1 flex flex-col gap-3 mr-4">
+                                    <div className="flex flex-wrap gap-2">
+                                        {[
+                                            t('cancelModal.reasons.outOfStock'),
+                                            t('cancelModal.reasons.closed'),
+                                            t('cancelModal.reasons.noDelivery'),
+                                            t('cancelModal.reasons.duplicate'),
+                                            t('cancelModal.reasons.customerRequest'),
+                                        ].map((reason) => (
+                                            <button
+                                                key={reason}
+                                                onClick={() => setCancelReason(reason)}
+                                                className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${cancelReason === reason
+                                                    ? 'bg-red-900/50 text-red-200 border-red-500/50'
+                                                    : 'bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700 hover:text-gray-300'
+                                                    }`}
+                                            >
+                                                {reason}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="flex gap-3 items-center">
+                                        <input
+                                            type="text"
+                                            placeholder={t('cancelModal.customReason')}
+                                            value={cancelReason}
+                                            onChange={(e) => setCancelReason(e.target.value)}
+                                            className="bg-gray-800 border border-red-900/50 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-red-500 flex-1 placeholder:text-gray-600"
+                                        />
+                                        <button
+                                            onClick={handleCancelOrder}
+                                            disabled={isCancelling || !cancelReason.trim()}
+                                            className="bg-red-900/50 hover:bg-red-600 text-red-200 hover:text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex items-center gap-2 whitespace-nowrap border border-red-500/30 hover:border-red-500"
+                                        >
+                                            {isCancelling ? 'İşleniyor...' : t('cancelModal.confirm')}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            <button
+                                onClick={() => { setSelectedOrder(null); setCancelReason(''); }}
+                                className="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors ml-auto"
+                            >
+                                Kapat
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style jsx global>{`
                 .animate-fade-in {
