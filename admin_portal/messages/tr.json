@@ -4745,6 +4745,7 @@
     "orderCancelledTitle": "❌ Siparişiniz İptal Edildi",
     "orderCancelledBody": "Siparişiniz iptal edilmiştir.",
     "feedbackRequestTitle": "⭐ Siparişinizi Değerlendirin",
-    "feedbackRequestBody": "Siparişiniz nasıldı? Lütfen değerlendirin."
+    "feedbackRequestBody": "Siparişiniz nasıldı? Lütfen değerlendirin.",
+    "orderPrefix": "Sipariş"
   }
 }

@@ -50,6 +50,7 @@ export async function getPushTranslations(langCode: string = 'tr'): Promise<Reco
  */
 function getFallbackTranslations(): Record<string, string> {
     return {
+        "orderPrefix": "Sipariş",
         "orderAcceptedTitle": "✅ Siparişiniz Onaylandı",
         "orderAcceptedBody": "Siparişiniz onaylandı ve hazırlanmaya başlanacak.",
         "orderPreparingTitle": "👨‍🍳 Siparişiniz Hazırlanıyor",

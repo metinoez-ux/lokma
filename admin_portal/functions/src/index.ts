@@ -29,7 +29,17 @@ export const onNewOrder = onDocumentCreated(
 
         const butcherId = order.butcherId;
         const rawOrderNum = order.orderNumber;
-        const orderNumber = rawOrderNum ? `Sipariş #${rawOrderNum}` : "Yeni Sipariş";
+
+        let lang = "tr";
+        if (order.userId) {
+            lang = await getUserLanguage(order.userId);
+        } else if (order.customerId) {
+            lang = await getUserLanguage(order.customerId);
+        }
+
+        const trans = await getPushTranslations(lang);
+        const orderPrefix = trans.orderPrefix || "Sipariş";
+        const orderNumber = rawOrderNum ? `${orderPrefix} #${rawOrderNum}` : "Yeni Sipariş";
         const totalAmount = order.totalAmount || 0;
         const customerName = order.customerName || "Müşteri";
 
@@ -433,14 +443,8 @@ export const onOrderStatusChange = onDocumentUpdated(
             console.log("No customer FCM token found, will skip customer notification but continue for driver notifications");
         }
 
-
         // UOIP: Fallback to First-6-Digit standard from doc ID if orderNumber not on document
         const rawOrderNumber = after.orderNumber || event.params.orderId.substring(0, 6).toUpperCase();
-        const orderNumber = rawOrderNumber ? `Sipariş #${rawOrderNumber}` : "Sipariş";
-        const orderTag = rawOrderNumber ? ` (#${rawOrderNumber})` : "";
-        const totalAmount = after.totalAmount || 0;
-        const businessName = after.butcherName || after.businessName || "İşletme";
-        const newStatus = after.status;
 
         // Fetch user language and translation mappings
         let lang = "tr";
@@ -450,6 +454,12 @@ export const onOrderStatusChange = onDocumentUpdated(
             lang = await getUserLanguage(after.customerId);
         }
         const trans = await getPushTranslations(lang);
+        const orderPrefix = trans.orderPrefix || "Sipariş";
+        const orderNumber = rawOrderNumber ? `${orderPrefix} #${rawOrderNumber}` : orderPrefix;
+        const orderTag = rawOrderNumber ? ` (#${rawOrderNumber})` : "";
+        const totalAmount = after.totalAmount || 0;
+        const businessName = after.butcherName || after.businessName || "İşletme";
+        const newStatus = after.status;
 
         let title = "";
         let body = "";

@@ -4733,7 +4733,8 @@
     "orderReadyDineInBody": "Your order is ready, it will be served to your table soon!",
     "orderReadyDineInTitle": "✅ Your Order is Ready!",
     "orderReadyPickupBody": "Your order is ready, you can come and pick it up!",
-    "orderReadyPickupTitle": "✅ Your Order is Ready!"
+    "orderReadyPickupTitle": "✅ Your Order is Ready!",
+    "orderPrefix": "Order"
   },
   "function toLocaleString() { [native code] }": {
     "de-DE": "De-DE",

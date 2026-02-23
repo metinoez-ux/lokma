@@ -4733,7 +4733,8 @@
     "orderReadyDineInBody": "Votre commande est prête, elle sera bientôt servie à votre table !",
     "orderReadyDineInTitle": "✅Votre commande est prête !",
     "orderReadyPickupBody": "Votre commande est prête, vous pouvez venir la récupérer !",
-    "orderReadyPickupTitle": "✅Votre commande est prête !"
+    "orderReadyPickupTitle": "✅Votre commande est prête !",
+    "orderPrefix": "Commande"
   },
   "function toLocaleString() { [native code] }": {
     "de-DE": "De-DE",

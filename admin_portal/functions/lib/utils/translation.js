@@ -79,6 +79,7 @@ async function getPushTranslations(langCode = 'tr') {
  */
 function getFallbackTranslations() {
     return {
+        "orderPrefix": "Sipariş",
         "orderAcceptedTitle": "✅ Siparişiniz Onaylandı",
         "orderAcceptedBody": "Siparişiniz onaylandı ve hazırlanmaya başlanacak.",
         "orderPreparingTitle": "👨‍🍳 Siparişiniz Hazırlanıyor",
