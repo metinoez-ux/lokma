@@ -26,6 +26,7 @@ export interface UserProfile {
     // Preferences
     language: 'de' | 'tr' | 'en';
     timezone?: string;
+    selectedCountry?: string; // e.g. 'DE', 'TR'
 
     // Metadata
     createdAt: Date;
@@ -684,6 +685,7 @@ export interface Admin {
     role: AdminRole;
     adminType: AdminType;
     parentAdminId?: string; // For sub-admins
+    currency?: string;
 
     // 🔑 UNIVERSAL BUSINESS ASSIGNMENT (Sector-agnostic)
     // This is the PRIMARY field for linking admin to their business
@@ -802,7 +804,8 @@ export interface ButcherPartner {
         city: string;
         country: string;
     };
-    currency?: string; // Optional for backward compatibility, but required going forward
+    country?: string; // ISO 3166-1 alpha-2 (e.g. 'DE', 'TR')
+    currency?: string; // ISO 4217 (e.g. 'EUR', 'TRY')
 
     // Dükkan İletişim
     shopPhone?: string;
@@ -991,6 +994,7 @@ export interface Invoice {
     surchargeRate?: number; // 2.5
     surchargeAmount?: number;
     grandTotal: number;
+    currency?: string;
 
     // Durum
     status: 'draft' | 'pending' | 'paid' | 'failed' | 'cancelled' | 'overdue' | 'storno';

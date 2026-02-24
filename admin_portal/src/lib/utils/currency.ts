@@ -4,7 +4,7 @@ import { getCountryConfig, DEFAULT_COUNTRY_CODE, DEFAULT_CURRENCY, SUPPORTED_COU
  * Helper to find the best locale for a given currency code.
  */
 function getLocaleForCurrency(currencyCode: string): string {
-    const country = Object.values(SUPPORTED_COUNTRIES).find(c => c.currencyCode === currencyCode);
+    const country = Object.values(SUPPORTED_COUNTRIES).find(c => c.currency === currencyCode);
     return country ? country.locale : 'de-DE'; // Default to German locale if not found
 }
 
@@ -29,7 +29,7 @@ export function formatCurrency(amount: number, currencyCode: string = DEFAULT_CU
  * @returns The currency symbol (e.g., '€', '₺').
  */
 export function getCurrencySymbol(countryCode: string = DEFAULT_COUNTRY_CODE): string {
-    return getCountryConfig(countryCode).currencySymbol;
+    return getCountryConfig(countryCode).symbol;
 }
 
 /**
@@ -38,5 +38,5 @@ export function getCurrencySymbol(countryCode: string = DEFAULT_COUNTRY_CODE): s
  * @returns The currency code (e.g., 'EUR', 'TRY').
  */
 export function getCurrencyCode(countryCode: string = DEFAULT_COUNTRY_CODE): string {
-    return getCountryConfig(countryCode).currencyCode;
+    return getCountryConfig(countryCode).currency;
 }

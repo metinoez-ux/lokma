@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { formatCurrency } from '@/lib/utils/currency';
 
 interface ShopStats {
     totalProducts: number;
@@ -25,9 +26,9 @@ interface RecentOrder {
 }
 
 export default function ShopDashboard() {
-    
-  const t = useTranslations('AdminShop');
-const { admin, loading: adminLoading } = useAdmin();
+
+    const t = useTranslations('AdminShop');
+    const { admin, loading: adminLoading } = useAdmin();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<ShopStats>({
         totalProducts: 0,
@@ -175,7 +176,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
                         <div className="text-3xl mb-2">💰</div>
-                        <div className="text-2xl font-bold text-emerald-400">€{stats.totalRevenue.toFixed(2)}</div>
+                        <div className="text-2xl font-bold text-emerald-400">{formatCurrency(stats.totalRevenue, 'EUR')}</div>
                         <div className="text-gray-400 text-sm">Ciro</div>
                     </div>
                 </div>
@@ -236,7 +237,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                         <div className="text-gray-400 text-sm">{order.customerName}</div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-emerald-400 font-medium">€{order.total?.toFixed(2) || '0.00'}</div>
+                                        <div className="text-emerald-400 font-medium">{formatCurrency(order.total, 'EUR')}</div>
                                         <span className={`text-xs px-2 py-0.5 rounded ${statusColors[order.status] || 'bg-gray-600 text-gray-300'}`}>
                                             {statusLabels[order.status] || order.status}
                                         </span>

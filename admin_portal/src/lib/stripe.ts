@@ -1,11 +1,25 @@
 import Stripe from 'stripe';
 
+// Determine if we are in test mode based on the environment variable
+const isTestMode = process.env.NEXT_PUBLIC_USE_STRIPE_TEST_MODE === 'true';
+
+// Select the appropriate secret key
+const secretKey = isTestMode
+    ? process.env.STRIPE_TEST_SECRET_KEY!
+    : process.env.STRIPE_SECRET_KEY!;
+
 // Server-side Stripe instance
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+export const stripe = new Stripe(secretKey, {
     apiVersion: '2025-12-15.clover',
 });
 
-export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
+export const STRIPE_WEBHOOK_SECRET = isTestMode
+    ? process.env.STRIPE_TEST_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET!
+    : process.env.STRIPE_WEBHOOK_SECRET!;
+
+export const STRIPE_PUBLISHABLE_KEY = isTestMode
+    ? process.env.NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY!
+    : process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!;
 
 // =============================================================================
 // SEPA DIRECT DEBIT FUNCTIONS

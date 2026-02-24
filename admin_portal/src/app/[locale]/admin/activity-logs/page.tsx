@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
 import { auth } from '@/lib/firebase'
 import Link from 'next/link'
+import { formatCurrency } from '@/lib/utils/currency'
 
 export default function CustomerServicePage() {
     const t = useTranslations('AdminCustomerService')
@@ -337,7 +338,7 @@ export default function CustomerServicePage() {
                                                                     </div>
                                                                     <div className="flex justify-between items-center text-xs mt-1.5 pt-1.5 border-t border-gray-700/30">
                                                                         <span className="px-2 py-0.5 rounded bg-gray-700 text-gray-300 uppercase shrink-0 text-[10px]">{ro.type}</span>
-                                                                        <span className="text-emerald-400 font-bold shrink-0">€{ro.totalPrice?.toFixed(2)}</span>
+                                                                        <span className="text-emerald-400 font-bold shrink-0">{formatCurrency(ro.totalPrice, ro.currency)}</span>
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -383,7 +384,7 @@ export default function CustomerServicePage() {
                                                     }`}>
                                                     {order.status.toUpperCase()}
                                                 </span>
-                                                <p className="text-lg font-bold text-emerald-400">€{order.totalPrice?.toFixed(2)}</p>
+                                                <p className="text-lg font-bold text-emerald-400">{formatCurrency(order.totalPrice, order.currency)}</p>
                                             </div>
                                         </div>
 
@@ -489,7 +490,7 @@ export default function CustomerServicePage() {
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
                                         <p className="text-xs text-gray-600 mb-1">{t('order_card.total')}</p>
-                                        <p className="text-xl font-bold text-emerald-400">€{selectedOrder.totalPrice?.toFixed(2)}</p>
+                                        <p className="text-xl font-bold text-emerald-400">{formatCurrency(selectedOrder.totalPrice, selectedOrder.currency)}</p>
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-600 mb-1">{t('payment_method')}</p>

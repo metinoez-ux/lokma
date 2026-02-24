@@ -10,6 +10,7 @@ import { Invoice } from '@/types';
 import { getNextInvoiceNumber, stornoInvoice, logAuditEntry, VAT_RATES } from '@/lib/erp-utils';
 import InvoicePreviewModal from '@/components/invoices/InvoicePreviewModal';
 import { useTranslations } from 'next-intl';
+import { formatCurrency } from '@/utils/currency';
 
 // Plan fiyatları
 const PLAN_PRICES: Record<string, number> = {
@@ -388,11 +389,11 @@ export default function InvoicesPage() {
                         <p className="text-gray-400 text-sm">{t('basarisiz')}</p>
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-white">€{stats.totalAmount.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-white">{formatCurrency(stats.totalAmount)}</p>
                         <p className="text-gray-400 text-sm">{t('toplam_tutar')}</p>
                     </div>
                     <div className="bg-gray-800 rounded-xl p-4 text-center">
-                        <p className="text-2xl font-bold text-green-400">€{stats.paidAmount.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-green-400">{formatCurrency(stats.paidAmount)}</p>
                         <p className="text-gray-400 text-sm">Tahsil Edilen</p>
                     </div>
                 </div>
@@ -469,7 +470,7 @@ export default function InvoicesPage() {
                                         </td>
                                         <td className="px-4 py-3 text-gray-300">{invoice.period}</td>
                                         <td className="px-4 py-3 text-right">
-                                            <span className="text-white font-bold">€{invoice.grandTotal.toFixed(2)}</span>
+                                            <span className="text-white font-bold">{formatCurrency(invoice.grandTotal, invoice.currency)}</span>
                                             {invoice.surchargeAmount && invoice.surchargeAmount > 0 && (
                                                 <span className="text-amber-400 text-xs ml-1">(+{invoice.surchargeRate}%)</span>
                                             )}
@@ -658,9 +659,9 @@ export default function InvoicesPage() {
                             {/* Preview */}
                             {newInvoice.netAmount > 0 && (
                                 <div className="bg-gray-900 rounded-lg p-3 text-sm">
-                                    <div className="flex justify-between text-gray-400"><span>Net:</span><span>€{newInvoice.netAmount.toFixed(2)}</span></div>
-                                    <div className="flex justify-between text-gray-400"><span>KDV ({newInvoice.vatRate === 'REDUCED' ? '7%' : '19%'}):</span><span>€{(newInvoice.netAmount * VAT_RATES[newInvoice.vatRate]).toFixed(2)}</span></div>
-                                    <div className="flex justify-between text-white font-bold border-t border-gray-700 mt-2 pt-2"><span>{t('toplam')}</span><span>€{(newInvoice.netAmount * (1 + VAT_RATES[newInvoice.vatRate])).toFixed(2)}</span></div>
+                                    <div className="flex justify-between text-gray-400"><span>Net:</span><span>{formatCurrency(newInvoice.netAmount)}</span></div>
+                                    <div className="flex justify-between text-gray-400"><span>KDV ({newInvoice.vatRate === 'REDUCED' ? '7%' : '19%'}):</span><span>{formatCurrency(newInvoice.netAmount * VAT_RATES[newInvoice.vatRate])}</span></div>
+                                    <div className="flex justify-between text-white font-bold border-t border-gray-700 mt-2 pt-2"><span>{t('toplam')}</span><span>{formatCurrency(newInvoice.netAmount * (1 + VAT_RATES[newInvoice.vatRate]))}</span></div>
                                 </div>
                             )}
                         </div>

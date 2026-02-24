@@ -85,7 +85,7 @@ interface Order {
 }
 
 export default function OrdersPage() {
-    const t = useTranslations('AdminOrders');
+    const t = useTranslations('AdminPortal.Orders');
     const { admin, loading: adminLoading } = useAdmin();
     const [orders, setOrders] = useState<Order[]>([]);
     const [businesses, setBusinesses] = useState<Record<string, string>>({});
@@ -467,7 +467,7 @@ export default function OrdersPage() {
                             if (refundData.refunded) {
                                 refundAmount = refundData.refundAmount;
                                 refundSucceeded = true;
-                                showToast(`€${refundAmount.toFixed(2)} kısmi iade işlendi`, 'success');
+                                showToast(`${formatCurrency(refundAmount, order?.currency)} kısmi iade işlendi`, 'success');
                             }
                         } catch (refundError) {
                             console.error('Error processing partial refund:', refundError);
@@ -1402,33 +1402,34 @@ export default function OrdersPage() {
                         </div>
 
                         <div className="p-6 space-y-4">
-                            <p className="text-gray-400 text-sm">
-                                {t('missingModal.subtitle')}
-                            </p>
-
-                            {/* Unavailable items list */}
-                            <div className="space-y-2">
-                                {unavailableItems.map((item, idx) => (
-                                    <div key={idx} className="flex items-center gap-3 bg-red-600/10 border border-red-500/30 rounded-lg px-3 py-2">
-                                        <span className="text-red-400 font-bold">❌</span>
-                                        <span className="text-white flex-1">{item.quantity}x {item.name}</span>
-                                        <span className="text-gray-400 text-sm">€{((item.price || 0) * item.quantity).toFixed(2)}</span>
-                                        <span className="bg-red-500/20 text-red-300 text-xs px-2 py-0.5 rounded-full">{t('missingModal.unavailable')}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Refund info for card payments */}
                             {(() => {
                                 const order = unavailableOrderId ? orders.find(o => o.id === unavailableOrderId) : null;
                                 const refundTotal = unavailableItems.reduce((sum, i) => sum + ((i.price || 0) * i.quantity), 0);
                                 const isCardPaid = order?.paymentMethod === 'card' && order?.paymentStatus === 'paid';
+
                                 return (
                                     <>
+                                        <p className="text-gray-400 text-sm">
+                                            {t('missingModal.subtitle')}
+                                        </p>
+
+                                        {/* Unavailable items list */}
+                                        <div className="space-y-2">
+                                            {unavailableItems.map((item, idx) => (
+                                                <div key={idx} className="flex items-center gap-3 bg-red-600/10 border border-red-500/30 rounded-lg px-3 py-2">
+                                                    <span className="text-red-400 font-bold">❌</span>
+                                                    <span className="text-white flex-1">{item.quantity}x {item.name}</span>
+                                                    <span className="text-gray-400 text-sm">{formatCurrency(((item.price || 0) * item.quantity), order?.currency)}</span>
+                                                    <span className="bg-red-500/20 text-red-300 text-xs px-2 py-0.5 rounded-full">{t('missingModal.unavailable')}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Refund info for card payments */}
                                         {isCardPaid && refundTotal > 0 && (
                                             <div className="bg-blue-600/20 border border-blue-500/50 rounded-lg p-3">
                                                 <p className="text-blue-400 text-sm">
-                                                    💳 {t('missingModal.cardPaid')} <strong className="text-blue-300">€{refundTotal.toFixed(2)}</strong> {t('missingModal.partialRefund')}
+                                                    💳 {t('missingModal.cardPaid')} <strong className="text-blue-300">{formatCurrency(refundTotal, order.currency)}</strong> {t('missingModal.partialRefund')}
                                                 </p>
                                             </div>
                                         )}
@@ -1540,7 +1541,7 @@ function OrderCard({
                 </div>
             )}
             <div className="flex items-center justify-between">
-                <span className="text-green-400 font-bold">€{order.total?.toFixed(2)}</span>
+                <span className="text-green-400 font-bold">{globalFormatCurrency(order.total || 0, order.currency)}</span>
                 <div className="flex items-center gap-2">
                     {itemCount > 0 && (order.status === 'preparing' || order.status === 'accepted') && (
                         <span className={`text-xs px-1.5 py-0.5 rounded ${checkedCount >= itemCount ? 'bg-green-600/30 text-green-400' : 'bg-gray-600 text-gray-400'}`}>

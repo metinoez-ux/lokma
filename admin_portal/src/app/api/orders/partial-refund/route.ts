@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
+import { formatCurrency } from '@/lib/utils/currency';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, updateDoc, addDoc, collection } from 'firebase/firestore';
 
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
         // Convert to cents for Stripe
         const refundAmountCents = Math.round(refundAmount * 100);
 
-        console.log(`[Partial Refund] Processing €${refundAmount.toFixed(2)} refund for order ${orderId}, PI: ${piId}`);
+        console.log(`[Partial Refund] Processing ${formatCurrency(refundAmount, orderData.currency)} refund for order ${orderId}, PI: ${piId}`);
 
         // Create partial refund via Stripe
         const refund = await stripe.refunds.create({
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        console.log(`[Partial Refund] Created refund: ${refund.id}, status: ${refund.status}, amount: €${(refund.amount / 100).toFixed(2)}`);
+        console.log(`[Partial Refund] Created refund: ${refund.id}, status: ${refund.status}, amount: ${formatCurrency(refund.amount / 100, orderData.currency)}`);
 
         // Update order with refund info
         await updateDoc(doc(db, 'meat_orders', orderId), {
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
             refundId: refund.id,
             refundStatus: refund.status,
             refundAmount: refund.amount / 100,
-            message: `€${(refund.amount / 100).toFixed(2)} kısmi iade başarıyla işlendi.`,
+            message: `${formatCurrency(refund.amount / 100, orderData.currency)} kısmi iade başarıyla işlendi.`,
         });
 
     } catch (error: any) {

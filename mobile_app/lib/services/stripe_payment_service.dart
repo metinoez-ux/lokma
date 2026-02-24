@@ -22,6 +22,7 @@ class StripePaymentService {
     
     try {
       Stripe.publishableKey = AppSecrets.stripePublishableKey;
+      Stripe.merchantIdentifier = 'merchant.com.tuna.lokma';
       await Stripe.instance.applySettings();
       _isInitialized = true;
       debugPrint('✅ Stripe SDK initialized');
@@ -65,7 +66,7 @@ class StripePaymentService {
           'orderId': orderId,
           'customerEmail': customerEmail,
         }),
-      );
+      ).timeout(const Duration(seconds: 25));
 
       if (response.statusCode != 200) {
         debugPrint('❌ Payment intent creation failed: ${response.body}');
@@ -105,6 +106,24 @@ class StripePaymentService {
         debugPrint('📊 Fee breakdown: Stripe ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.stripeFee.toStringAsFixed(2)}, Commission ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.commissionGross.toStringAsFixed(2)}, Merchant ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.merchantTransfer.toStringAsFixed(2)}');
       }
 
+      // Check if Apple Pay is supported to avoid generic init errors
+      bool isApplePaySupported = false;
+      try {
+        isApplePaySupported = await Stripe.instance.isPlatformPaySupported();
+        debugPrint('🍎 Apple Pay supported on this device: $isApplePaySupported');
+      } catch (e) {
+        debugPrint('⚠️ Error checking Apple Pay support: $e');
+      }
+
+      // Explicitly override the global Stripe Publishable Key with the one 
+      // returned by the backend to guarantee matching with the Payment Intent!
+      // This prevents the "No such payment intent" error if the app booted with a cached key.
+      if (data['publishableKey'] != null && data['publishableKey'].toString().isNotEmpty) {
+        debugPrint('🔑 Overriding Stripe.publishableKey dynamically per transaction');
+        Stripe.publishableKey = data['publishableKey'];
+        await Stripe.instance.applySettings();
+      }
+
       // 2. Initialize Payment Sheet
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
@@ -128,6 +147,9 @@ class StripePaymentService {
           billingDetails: BillingDetails(
             email: customerEmail,
           ),
+          applePay: isApplePaySupported 
+            ? const PaymentSheetApplePay(merchantCountryCode: 'DE')
+            : null,
         ),
       );
 
@@ -145,7 +167,11 @@ class StripePaymentService {
       );
 
     } on StripeException catch (e) {
-      debugPrint('❌ Stripe error: ${e.error.localizedMessage}');
+      debugPrint('❌ STRIPE INIT EXCEPTION [RAW DIAGNOSTIC]:');
+      debugPrint('  - Code: ${e.error.code}');
+      debugPrint('  - Message: ${e.error.message}');
+      debugPrint('  - Localized: ${e.error.localizedMessage}');
+      debugPrint('  - Full dump: ${e.toString()}');
       
       if (e.error.code == FailureCode.Canceled) {
         return PaymentResult(
@@ -157,13 +183,13 @@ class StripePaymentService {
       
       return PaymentResult(
         success: false,
-        error: e.error.localizedMessage ?? 'Ödeme hatası',
+        error: 'DIAGNOSTIC - Code: ${e.error.code.name} | Msg: ${e.error.message ?? "null"} | Loc: ${e.error.localizedMessage ?? "null"}',
       );
     } catch (e) {
       debugPrint('❌ Payment error: $e');
       return PaymentResult(
         success: false,
-        error: 'Beklenmeyen hata: $e',
+        error: 'DIAGNOSTIC CATCH: $e',
       );
     }
   }

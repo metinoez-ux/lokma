@@ -5,14 +5,15 @@ class CurrencyUtils {
   /// Formats an amount into the appropriate currency string.
   /// Uses Intl to properly format the number and append/prepend the correct symbol.
   static String formatCurrency(double amount, {String? countryCode, String? currencyCode}) {
-    final config = currencyCode != null 
-        ? CountryRegistry.getConfigByCurrency(currencyCode)
-        : CountryRegistry.getConfig(countryCode);
+    // If currencyCode is provided, we format based on it, else we format based on countryCode
+    final currency = currencyCode ?? SupportedCountries.getCurrencyForCountry(countryCode);
+    final symbol = SupportedCountries.getSymbolForCurrency(currency);
     
+    // For now we assume a standard locale, but this could be enhanced based on country
     final formatter = NumberFormat.currency(
-      locale: config.locale,
-      name: config.currencyCode,
-      symbol: config.currencySymbol,
+      locale: 'de_DE', // Standard locale for numbers, can be dynamic later
+      name: currency,
+      symbol: symbol,
       decimalDigits: 2,
     );
     
@@ -22,13 +23,14 @@ class CurrencyUtils {
   /// Returns the currency symbol for a given country code or currency code.
   static String getCurrencySymbol({String? countryCode, String? currencyCode}) {
     if (currencyCode != null) {
-      return CountryRegistry.getConfigByCurrency(currencyCode).currencySymbol;
+      return SupportedCountries.getSymbolForCurrency(currencyCode);
     }
-    return CountryRegistry.getCurrencySymbol(countryCode);
+    final currency = SupportedCountries.getCurrencyForCountry(countryCode);
+    return SupportedCountries.getSymbolForCurrency(currency);
   }
 
   /// Returns the ISO 4217 currency code for a given country.
   static String getCurrencyCode({String? countryCode}) {
-    return CountryRegistry.getCurrencyCode(countryCode);
+    return SupportedCountries.getCurrencyForCountry(countryCode);
   }
 }

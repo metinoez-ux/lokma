@@ -702,6 +702,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
         tableSessionId: _activeSession!.id,
         items: items,
         totalAmount: _cartTotal,
+        currency: CurrencyUtils.getCurrencyCode(),
         notes: _notes,
       );
       

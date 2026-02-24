@@ -10,6 +10,7 @@ import { limitService } from '@/services/limitService';
 import { invoiceService } from '@/services/invoiceService';
 import { subscriptionService } from '@/services/subscriptionService';
 import { ButcherSubscriptionPlan } from '@/types';
+import { formatCurrency } from '@/utils/currency';
 
 // Helper: Generate display features list from a Firestore plan
 function getPlanFeatures(plan: ButcherSubscriptionPlan): string[] {
@@ -330,7 +331,7 @@ export default function AccountPage() {
                         <div className="text-right">
                             <p className="text-gray-400 text-sm">Aylık Ücret</p>
                             <p className="text-4xl font-bold text-white">
-                                €{planPrice.toFixed(2)}
+                                {formatCurrency(planPrice, livePlan?.currency || business?.currency)}
                             </p>
                             <button
                                 onClick={() => setShowPlanModal(true)}
@@ -390,11 +391,11 @@ export default function AccountPage() {
                     </div>
                     <div className="bg-gray-800 rounded-xl p-5">
                         <p className="text-gray-400 text-sm">Bu Ay Ciro</p>
-                        <p className="text-3xl font-bold text-green-400">€{stats.monthlyRevenue.toFixed(2)}</p>
+                        <p className="text-3xl font-bold text-green-400">{formatCurrency(stats.monthlyRevenue, business?.currency)}</p>
                     </div>
                     <div className="bg-gray-800 rounded-xl p-5">
                         <p className="text-gray-400 text-sm">Toplam Ciro</p>
-                        <p className="text-3xl font-bold text-green-400">€{stats.totalRevenue.toFixed(2)}</p>
+                        <p className="text-3xl font-bold text-green-400">{formatCurrency(stats.totalRevenue, business?.currency)}</p>
                     </div>
                 </div>
 
@@ -431,7 +432,7 @@ export default function AccountPage() {
                                     )}
                                     {livePlan.perOrderFeeType && livePlan.perOrderFeeType !== 'none' && livePlan.perOrderFeeAmount > 0 && (
                                         <div className="flex items-center gap-2 text-sm text-amber-400">
-                                            💵 Sipariş başı: {livePlan.perOrderFeeType === 'percentage' ? `%${livePlan.perOrderFeeAmount}` : `€${livePlan.perOrderFeeAmount}`}
+                                            💵 Sipariş başı: {livePlan.perOrderFeeType === 'percentage' ? `%${livePlan.perOrderFeeAmount}` : formatCurrency(livePlan.perOrderFeeAmount, livePlan.currency || business?.currency)}
                                         </div>
                                     )}
                                 </>
@@ -451,16 +452,16 @@ export default function AccountPage() {
                                     <>
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-300">Bu Ay Komisyon ({commOrderCount} sipariş)</span>
-                                            <span className="text-xl font-bold text-amber-400">€{commTotal.toFixed(2)}</span>
+                                            <span className="text-xl font-bold text-amber-400">{formatCurrency(commTotal, business?.currency)}</span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 text-sm">
                                             <div className="flex justify-between">
                                                 <span className="text-gray-400">💳 Kart</span>
-                                                <span className="text-blue-400">€{commissionSummary.cardCommission.toFixed(2)}</span>
+                                                <span className="text-blue-400">{formatCurrency(commissionSummary.cardCommission, business?.currency)}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-400">💵 Nakit</span>
-                                                <span className="text-purple-400">€{commissionSummary.cashCommission.toFixed(2)}</span>
+                                                <span className="text-purple-400">{formatCurrency(commissionSummary.cashCommission, business?.currency)}</span>
                                             </div>
                                         </div>
                                     </>
@@ -469,7 +470,7 @@ export default function AccountPage() {
                             {(business?.accountBalance || 0) > 0 && (
                                 <div className="bg-red-900/40 border border-red-600/40 rounded-lg p-3 flex justify-between items-center">
                                     <span className="text-red-300 text-sm">📌 Açık Bakiye (Nakit Komisyon)</span>
-                                    <span className="text-xl font-bold text-red-400">€{(business?.accountBalance || 0).toFixed(2)}</span>
+                                    <span className="text-xl font-bold text-red-400">{formatCurrency((business?.accountBalance || 0), business?.currency)}</span>
                                 </div>
                             )}
                         </div>
@@ -485,27 +486,27 @@ export default function AccountPage() {
                                 {estimatedInvoice.lineItems?.map((item: any, i: number) => (
                                     <div key={i} className="flex justify-between text-sm">
                                         <span className="text-gray-300">{item.description}</span>
-                                        <span className="text-white font-medium">€{item.total.toFixed(2)}</span>
+                                        <span className="text-white font-medium">{formatCurrency(item.total, estimatedInvoice.currency || business?.currency)}</span>
                                     </div>
                                 ))}
                                 <hr className="border-indigo-700/50" />
                                 <div className="flex justify-between">
                                     <span className="text-gray-300">Ara Toplam</span>
-                                    <span className="text-white font-bold">€{estimatedInvoice.subtotal?.toFixed(2)}</span>
+                                    <span className="text-white font-bold">{formatCurrency(estimatedInvoice.subtotal, estimatedInvoice.currency || business?.currency)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-400">KDV (%{estimatedInvoice.taxRate})</span>
-                                    <span className="text-gray-300">€{estimatedInvoice.tax?.toFixed(2)}</span>
+                                    <span className="text-gray-300">{formatCurrency(estimatedInvoice.tax, estimatedInvoice.currency || business?.currency)}</span>
                                 </div>
                                 <div className="flex justify-between pt-2 border-t border-indigo-700/50">
                                     <span className="text-lg font-bold text-white">TOPLAM</span>
-                                    <span className="text-2xl font-bold text-indigo-400">€{estimatedInvoice.total?.toFixed(2)}</span>
+                                    <span className="text-2xl font-bold text-indigo-400">{formatCurrency(estimatedInvoice.total, estimatedInvoice.currency || business?.currency)}</span>
                                 </div>
                             </div>
                         ) : (
                             <div className="text-center py-4">
                                 <p className="text-gray-400">Bu ay henüz işlem yok</p>
-                                <p className="text-3xl font-bold text-indigo-400 mt-2">€0.00</p>
+                                <p className="text-3xl font-bold text-indigo-400 mt-2">{formatCurrency(0, business?.currency)}</p>
                             </div>
                         )}
                     </div>
@@ -652,7 +653,7 @@ export default function AccountPage() {
                                         <tr key={inv.id} className="hover:bg-gray-700/30">
                                             <td className="py-3 text-white font-mono">{inv.invoiceNumber || inv.id.slice(0, 8)}</td>
                                             <td className="py-3 text-gray-300">{inv.period || '-'}</td>
-                                            <td className="py-3 text-right text-white font-bold">€{(inv.grandTotal || 0).toFixed(2)}</td>
+                                            <td className="py-3 text-right text-white font-bold">{formatCurrency(inv.grandTotal || 0, inv.currency || business?.currency)}</td>
                                             <td className="py-3 text-center">
                                                 <span className={`px-3 py-1 rounded-full text-xs ${inv.status === 'paid' ? 'bg-green-600/30 text-green-400' :
                                                     inv.status === 'pending' ? 'bg-yellow-600/30 text-yellow-400' :
@@ -775,7 +776,7 @@ export default function AccountPage() {
                                             <span className="text-3xl">{icon}</span>
                                             <h3 className="text-xl font-bold text-white mt-2">{plan.name}</h3>
                                             <p className="text-3xl font-bold text-white mt-2">
-                                                €{plan.monthlyFee.toFixed(2)}
+                                                {formatCurrency(plan.monthlyFee, plan.currency || business?.currency)}
                                                 <span className="text-sm text-gray-400">/ay</span>
                                             </p>
                                         </div>

@@ -1298,6 +1298,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     final favorites = ref.watch(butcherFavoritesProvider);
     final isFavorite = favorites.contains(id);
     
+    // Availability state
+    final isOpen = _isBusinessOpenNow(data);
+    
     // Review count text
     String reviewText = '';
     if (reviewCount > 0) {
@@ -1336,24 +1339,64 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 // Main image - Lieferando style (tall)
                 AspectRatio(
                   aspectRatio: 16 / 10, // Taller like Lieferando
-                  child: imageUrl != null && imageUrl.isNotEmpty
-                      ? Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
+                  child: ColorFiltered(
+                    colorFilter: isOpen
+                        ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
+                        : const ColorFilter.matrix(<double>[
+                            0.2126, 0.7152, 0.0722, 0, 0,
+                            0.2126, 0.7152, 0.0722, 0, 0,
+                            0.2126, 0.7152, 0.0722, 0, 0,
+                            0,      0,      0,      1, 0,
+                          ]),
+                    child: imageUrl != null && imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: Icon(Icons.store, color: tunaGreen, size: 48),
+                              ),
+                            ),
+                          )
+                        : Container(
                             color: Colors.grey[200],
                             child: const Center(
                               child: Icon(Icons.store, color: tunaGreen, size: 48),
                             ),
                           ),
-                        )
-                      : Container(
-                          color: Colors.grey[200],
-                          child: const Center(
-                            child: Icon(Icons.store, color: tunaGreen, size: 48),
-                          ),
-                        ),
+                  ),
                 ),
+                
+                // 🆕 "Sipariş Alınmıyor" Banner and Dark overlay for unavailable businesses
+                if (!isOpen) ...[
+                  Positioned.fill(
+                    child: Container(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.85),
+                      ),
+                      child: const Text(
+                        'Sipariş Alınmıyor',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 
                 // Business logo (bottom left, overlapping) - only show if logo exists
                 if (logoUrl != null && logoUrl.isNotEmpty)

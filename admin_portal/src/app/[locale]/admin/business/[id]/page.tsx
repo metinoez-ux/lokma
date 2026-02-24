@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { formatCurrency } from "@/utils/currency";
 // Removing onAuthStateChanged import as it is no longer needed in this file
 import {
   doc,
@@ -60,7 +61,8 @@ interface MeatOrder {
   | "delivered"
   | "completed"
   | "cancelled";
-  createdAt?: { toDate: () => Date };
+  createdAt?: { toDate: () => Date } | any;
+  currency?: string;
 }
 
 
@@ -1966,10 +1968,8 @@ export default function BusinessDetailsPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <p className="text-green-400 text-2xl font-bold">
-                    €
-                    {orders
-                      .reduce((sum, o) => sum + (o.totalPrice || 0), 0)
-                      .toFixed(2)}
+                    {formatCurrency(orders
+                      .reduce((sum, o) => sum + (o.totalPrice || 0), 0), business?.currency)}
                   </p>
                   <p className="text-gray-400 text-sm">{t('toplam_ciro')}</p>
                 </div>
@@ -1981,15 +1981,14 @@ export default function BusinessDetailsPage() {
                 </div>
                 <div className="bg-gray-700/50 rounded-lg p-4 text-center">
                   <p className="text-purple-400 text-2xl font-bold">
-                    €
-                    {orders.length > 0
+                    {formatCurrency(orders.length > 0
                       ? (
                         orders.reduce(
                           (sum, o) => sum + (o.totalPrice || 0),
                           0,
                         ) / orders.length
-                      ).toFixed(2)
-                      : "0"}
+                      )
+                      : 0, business?.currency)}
                   </p>
                   <p className="text-gray-400 text-sm">{t('ortalamaSiparis')}</p>
                 </div>
@@ -2122,7 +2121,7 @@ export default function BusinessDetailsPage() {
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
                         {(business?.monthlyFee ?? 0) > 0
-                          ? `€${business?.monthlyFee}/ay`
+                          ? `${formatCurrency(business?.monthlyFee || 0, business?.currency)}/ay`
                           : t('ucretsiz')}
                       </p>
                     </div>
@@ -2350,7 +2349,7 @@ export default function BusinessDetailsPage() {
                           </p>
                         </td>
                         <td className="px-4 py-3">
-                          €{(order.totalPrice || 0).toFixed(2)}
+                          {formatCurrency(order.totalPrice || 0, order.currency)}
                         </td>
                         <td className="px-4 py-3">
                           <span
@@ -3119,7 +3118,7 @@ export default function BusinessDetailsPage() {
                                           <div className="text-right">
                                             {product.price != null && (
                                               <span className="text-green-400 font-bold text-sm">
-                                                €{typeof product.price === 'number' ? product.price.toFixed(2) : product.price}
+                                                {formatCurrency(typeof product.price === 'number' ? product.price : parseFloat(product.price || '0'), business?.currency)}
                                               </span>
                                             )}
                                             {product.isActive === false && (

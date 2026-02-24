@@ -17,11 +17,8 @@ if (!getApps().length) {
     }
 }
 
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-// Webhook endpoint secret
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+// Initialize Stripe from our central lib (which handles test/live mode)
+import { stripe, STRIPE_WEBHOOK_SECRET as endpointSecret } from '@/lib/stripe';
 
 // Super Admin email for payment failure notifications
 const SUPER_ADMIN_EMAIL = 'info@lokma.shop';

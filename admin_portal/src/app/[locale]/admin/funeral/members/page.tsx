@@ -8,11 +8,12 @@ import { collection, query, orderBy, limit, getDocs, startAfter, where, addDoc }
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { formatCurrency } from '@/lib/utils/currency';
 
 export default function FuneralMembersPage() {
-    
-  const t = useTranslations('AdminFuneralMembers');
-const { admin, loading: adminLoading } = useAdmin();
+
+    const t = useTranslations('AdminFuneralMembers');
+    const { admin, loading: adminLoading } = useAdmin();
     const router = useRouter();
 
     const [members, setMembers] = useState<FuneralMember[]>([]);
@@ -182,7 +183,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={m.balance < 0 ? 'text-red-400' : 'text-green-400'}>
-                                            {m.balance} €
+                                            {formatCurrency(m.balance, m.subscription?.currency)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">

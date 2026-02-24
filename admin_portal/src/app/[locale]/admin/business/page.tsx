@@ -11,6 +11,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import { BUSINESS_TYPES, getBusinessType, getBusinessTypeIcon, getBusinessTypeLabel } from '@/lib/business-types';
 import { useSectors } from '@/hooks/useSectors';
 import { subscriptionService } from '@/services/subscriptionService';
+import { formatCurrency } from '@/utils/currency';
 // OpeningHoursEditor disabled - causing crashes
 
 // Counter for unique business IDs (starts at 100001, never reused)
@@ -1924,7 +1925,7 @@ export default function BusinessesPage() {
                                                 <p className="text-gray-500 text-xs">{t('gunlukOrtalama')}</p>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-2xl font-bold text-green-400">€{editingBusiness.orderStats?.totalRevenue?.toFixed(0) || '0'}</p>
+                                                <p className="text-2xl font-bold text-green-400">{formatCurrency(editingBusiness.orderStats?.totalRevenue || 0, editingBusiness.currency)}</p>
                                                 <p className="text-gray-500 text-xs">{t('toplam_ciro')}</p>
                                             </div>
                                             <div className="text-center">
@@ -1950,12 +1951,12 @@ export default function BusinessesPage() {
                                                 <p className="text-gray-500 text-xs">{t('sonOdeme')}</p>
                                             </div>
                                             <div className="text-center">
-                                                <p className="text-xl font-bold text-white">€{editingBusiness.billing?.lastPaymentAmount?.toFixed(2) || '0.00'}</p>
+                                                <p className="text-xl font-bold text-white">{formatCurrency(editingBusiness.billing?.lastPaymentAmount || 0, editingBusiness.currency)}</p>
                                                 <p className="text-gray-500 text-xs">{t('son_tutar')}</p>
                                             </div>
                                             <div className="text-center">
                                                 <p className={`text-xl font-bold ${(editingBusiness.billing?.openBalance || 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>
-                                                    €{editingBusiness.billing?.openBalance?.toFixed(2) || '0.00'}
+                                                    {formatCurrency(editingBusiness.billing?.openBalance || 0, editingBusiness.currency)}
                                                 </p>
                                                 <p className="text-gray-500 text-xs">{t('acikBakiye')}</p>
                                             </div>

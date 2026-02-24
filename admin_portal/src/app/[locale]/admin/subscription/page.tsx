@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { formatCurrency } from '@/utils/currency';
 
 export default function SubscriptionPage() {
-    
-  const t = useTranslations('AdminSubscription');
-const { admin, loading } = useAdmin();
+
+    const t = useTranslations('AdminSubscription');
+    const { admin, loading } = useAdmin();
 
     if (loading) return <div className="p-8 text-white">{t('yukleniyor')}</div>;
 
@@ -48,7 +49,7 @@ const { admin, loading } = useAdmin();
                         </div>
 
                         <div className="flex items-baseline gap-1 mb-6">
-                            <span className="text-3xl font-bold">€{monthlyFee}</span>
+                            <span className="text-3xl font-bold">{formatCurrency(monthlyFee, admin?.currency)}</span>
                             <span className="text-gray-400">/ay</span>
                         </div>
 
@@ -92,7 +93,7 @@ const { admin, loading } = useAdmin();
                                         </div>
                                         <div className="bg-gray-900 p-4 rounded-xl border border-gray-700">
                                             <p className="text-xs text-gray-500 mb-1">{t('aylik')}</p>
-                                            <p className="text-2xl font-bold">€{eslTotal}</p>
+                                            <p className="text-2xl font-bold">{formatCurrency(eslTotal, admin?.currency)}</p>
                                         </div>
                                     </div>
 
@@ -149,7 +150,7 @@ const { admin, loading } = useAdmin();
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-bold text-sm">€{monthlyFee + eslTotal}</p>
+                                            <p className="font-bold text-sm">{formatCurrency(monthlyFee + eslTotal, admin?.currency)}</p>
                                             <p className="text-xs text-green-400">{t('odendi')}</p>
                                         </div>
                                     </div>

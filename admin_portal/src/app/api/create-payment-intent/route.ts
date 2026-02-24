@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { stripe, STRIPE_PUBLISHABLE_KEY } from '@/lib/stripe';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
 
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
                 success: true,
                 paymentIntentId: paymentIntent.id,
                 clientSecret: paymentIntent.client_secret,
-                publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+                publishableKey: STRIPE_PUBLISHABLE_KEY,
                 paymentType: 'platform_only',
                 // Return fee breakdown for order record
                 feeBreakdown: {
@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
             success: true,
             paymentIntentId: paymentIntent.id,
             clientSecret: paymentIntent.client_secret,
-            publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+            publishableKey: STRIPE_PUBLISHABLE_KEY,
             paymentType: 'destination_charge',
             connectedAccountId,
             // Return complete fee breakdown for order record

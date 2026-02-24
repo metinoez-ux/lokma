@@ -268,6 +268,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
         tableSessionId: sessionId,
         items: items,
         totalAmount: _cartTotal,
+        currency: CurrencyUtils.getCurrencyCode(),
         notes: _notes,
       );
 

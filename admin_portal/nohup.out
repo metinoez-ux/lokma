@@ -770,3 +770,25 @@ i  hosting[lokma]: releasing new version...
 
 Project Console: https://console.firebase.google.com/project/aylar-a45af/overview
 Hosting URL: https://lokma.web.app
+
+> lokmaportal@0.1.0 build
+> next build
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/metinoz/.gemini/antigravity/scratch/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/metinoz/.gemini/antigravity/scratch/LOKMA_2026/admin_portal/package-lock.json
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local, .env.production
+   - Experiments (use with caution):
+     · serverActions
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 11.1s
+   Running TypeScript ...

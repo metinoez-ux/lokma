@@ -45,7 +45,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
   Timer? _idleTimer;
 
   // LOKMA brand accent (Rose-500)
-  static const Color _accent = Color(0xFFFF8000);
+  static const Color _accent = Color(0xFFFB335B);
 
   @override
   void initState() {

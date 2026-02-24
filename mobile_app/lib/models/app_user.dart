@@ -23,6 +23,8 @@ class AppUser {
   final bool notifyOrderPush;  // Sipariş bildirimleri push
   final String? fcmToken;      // Firebase Cloud Messaging token
 
+  final String? selectedCountry; // Kullanıcının seçtiği/gezindiği ülke (Aksi halde default)
+
   AppUser({
     required this.uid,
     required this.customId,
@@ -43,6 +45,7 @@ class AppUser {
     this.notifyOrderEmail = true, // Default: açık
     this.notifyOrderPush = true,  // Default: açık
     this.fcmToken,
+    this.selectedCountry,
   });
 
   Map<String, dynamic> toMap() {
@@ -66,6 +69,7 @@ class AppUser {
       'notifyOrderEmail': notifyOrderEmail,
       'notifyOrderPush': notifyOrderPush,
       'fcmToken': fcmToken,
+      'selectedCountry': selectedCountry,
     };
   }
 
@@ -94,6 +98,7 @@ class AppUser {
       notifyOrderEmail: map['notifyOrderEmail'] ?? true,
       notifyOrderPush: map['notifyOrderPush'] ?? true,
       fcmToken: map['fcmToken'],
+      selectedCountry: map['selectedCountry'],
     );
   }
   
@@ -103,6 +108,7 @@ class AppUser {
     bool? notifyOrderEmail,
     bool? notifyOrderPush,
     String? fcmToken,
+    String? selectedCountry,
   }) {
     return AppUser(
       uid: uid,
@@ -124,6 +130,7 @@ class AppUser {
       notifyOrderEmail: notifyOrderEmail ?? this.notifyOrderEmail,
       notifyOrderPush: notifyOrderPush ?? this.notifyOrderPush,
       fcmToken: fcmToken ?? this.fcmToken,
+      selectedCountry: selectedCountry ?? this.selectedCountry,
     );
   }
   

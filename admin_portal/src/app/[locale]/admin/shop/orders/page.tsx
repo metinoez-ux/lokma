@@ -6,6 +6,7 @@ import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { formatCurrency } from '@/lib/utils/currency';
 
 interface ShopOrder {
     id: string;
@@ -62,9 +63,9 @@ const CARRIER_OPTIONS = [
 ];
 
 export default function ShopOrdersPage() {
-    
-  const t = useTranslations('AdminShopOrders');
-const { admin, loading: adminLoading } = useAdmin();
+
+    const t = useTranslations('AdminShopOrders');
+    const { admin, loading: adminLoading } = useAdmin();
 
     const [loading, setLoading] = useState(true);
     const [orders, setOrders] = useState<ShopOrder[]>([]);
@@ -268,7 +269,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             {getStatusLabel(order.status)}
                                         </span>
                                     </div>
-                                    <div className="text-emerald-400 font-bold text-lg">€{order.total?.toFixed(2) || '0.00'}</div>
+                                    <div className="text-emerald-400 font-bold text-lg">{formatCurrency(order.total, 'EUR')}</div>
                                 </div>
 
                                 {/* Order Content */}
@@ -298,7 +299,7 @@ const { admin, loading: adminLoading } = useAdmin();
                                             {order.items?.slice(0, 3).map((item, i) => (
                                                 <div key={i} className="text-white flex justify-between">
                                                     <span>{item.quantity}x {item.name}</span>
-                                                    <span className="text-gray-400">€{(item.price * item.quantity).toFixed(2)}</span>
+                                                    <span className="text-gray-400">{formatCurrency(item.price * item.quantity, 'EUR')}</span>
                                                 </div>
                                             ))}
                                             {(order.items?.length || 0) > 3 && (

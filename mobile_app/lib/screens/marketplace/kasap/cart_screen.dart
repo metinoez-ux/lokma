@@ -30,6 +30,7 @@ import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/screens/marketplace/kasap/product_customization_sheet.dart';
 import 'package:lokma_app/models/product_option.dart';
 import '../../../utils/currency_utils.dart';
+import '../../../services/stripe_payment_service.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
@@ -74,7 +75,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       return Color(int.parse('FF$hex', radix: 16));
     }
     // Fallback to LOKMA Rose-500
-    return const Color(0xFFFF8000);
+    return const Color(0xFFFB335B);
   }
 
   @override
@@ -318,6 +319,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         debugPrint('FCM token error: $e');
       }
 
+      final double deliveryFee = (!_isPickUp && !_isDineIn ? (_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50 : 0.0);
+      final double grandTotal = cart.totalAmount + deliveryFee;
+
       // Build order data
       final pickupDateTime = DateTime(
         _selectedDate.year,
@@ -435,7 +439,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         'pickupTime': (_isPickUp || _isDineIn) ? Timestamp.fromDate(pickupDateTime) : null,
         'deliveryAddress': (!_isPickUp && !_isDineIn) ? userAddress : null,
         'paymentMethod': _paymentMethod,
-        'paymentStatus': _paymentMethod == 'payLater' ? 'payLater' : 'paid',
+        'paymentStatus': _paymentMethod == 'payLater' ? 'payLater' : (_paymentMethod == 'card' ? 'pending' : 'paid'),
         'status': 'pending',
         if (_orderNote.trim().isNotEmpty) 'orderNote': _orderNote.trim(),
         if (_isDineIn && (_scannedTableNumber ?? _tableNumberController.text.trim()).isNotEmpty)
@@ -455,7 +459,36 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final orderNumber = orderRef.id.substring(0, 6).toUpperCase();
       await orderRef.update({'orderNumber': orderNumber});
       
-      Navigator.pop(context); // Close loading
+      if (_paymentMethod == 'card') {
+        if (mounted) Navigator.pop(context); // Close initial loading dialog before Stripe sheet
+
+        final paymentResult = await StripePaymentService.processPayment(
+          amount: grandTotal,
+          businessId: cart.butcherId!,
+          orderId: orderRef.id,
+          customerEmail: userEmail.isNotEmpty ? userEmail : null,
+        );
+
+        if (!paymentResult.success) {
+          if (!paymentResult.wasCancelled && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Ödeme hatası: ${paymentResult.error}')),
+            );
+          }
+          await orderRef.update({'status': 'payment_failed', 'paymentStatus': 'failed'});
+          if (mounted) setState(() => _isSubmitting = false);
+          return; // Stop checkout flow
+        }
+
+        // Update payment success
+        await orderRef.update({
+          'paymentStatus': 'paid',
+          if (paymentResult.paymentIntentId != null) 'paymentIntentId': paymentResult.paymentIntentId,
+          if (paymentResult.feeBreakdown != null) 'feeBreakdown': paymentResult.feeBreakdown!.toMap(),
+        });
+      } else {
+        if (mounted) Navigator.pop(context); // Close loading for non-card
+      }
 
       // Clear cart
       ref.read(cartProvider.notifier).clearCart();
@@ -533,7 +566,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         centerTitle: true,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFFFF8000),
+          indicatorColor: const Color(0xFFFB335B),
           indicatorWeight: 3,
           labelColor: colorScheme.onSurface,
           unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
@@ -606,7 +639,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         }
         
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFFF8000)));
+          return const Center(child: CircularProgressIndicator(color: Color(0xFFFB335B)));
         }
         
         final allOrders = snapshot.data ?? [];
@@ -712,7 +745,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           SizedBox(height: 24),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF8000),
+              backgroundColor: const Color(0xFFFB335B),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -842,7 +875,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFF8000),
+                                        color: const Color(0xFFFB335B),
                                         borderRadius: const BorderRadius.only(
                                           bottomLeft: Radius.circular(12),
                                           bottomRight: Radius.circular(12),
@@ -1376,7 +1409,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   
   /// Fetch brand color from Firestore
   Future<Color> _fetchBrandColor(String businessId) async {
-    if (businessId.isEmpty) return const Color(0xFFFF8000);
+    // Provide a default color during initialization or if missing
+    if (businessId.isEmpty) return const Color(0xFFFB335B);
     try {
       final doc = await FirebaseFirestore.instance
           .collection('businesses')
@@ -1393,7 +1427,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     } catch (e) {
       debugPrint('Error fetching brand color: $e');
     }
-    return const Color(0xFFFF8000); // Default LOKMA red
+    // Fallback if network icon doesn't contain a clear dominant color
+    return const Color(0xFFFB335B); // Default LOKMA red
   }
   
   /// Open maps for business location
@@ -2518,7 +2553,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             height: 28,
             margin: EdgeInsets.only(right: 10, top: 2),
             decoration: BoxDecoration(
-              color: Color(0xFFFF6B00),
+              color: Color(0xFFFB335B),
               borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.center,
@@ -2581,7 +2616,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           child: Text(
                             'Düzenle',
                             style: TextStyle(
-                              color: const Color(0xFFFF6B00),
+                              color: const Color(0xFFFB335B),
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -2608,14 +2643,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         Icon(
                           Icons.edit_note_rounded,
                           size: 16,
-                          color: item.note != null ? const Color(0xFFFF6B00) : Colors.grey[400],
+                          color: item.note != null ? const Color(0xFFFB335B) : Colors.grey[400],
                         ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             item.note ?? 'Not ekle...',
                             style: TextStyle(
-                              color: item.note != null ? const Color(0xFFFF6B00) : Colors.grey[400],
+                              color: item.note != null ? const Color(0xFFFB335B) : Colors.grey[400],
                               fontSize: 12,
                               fontStyle: item.note == null ? FontStyle.italic : FontStyle.normal,
                               fontWeight: item.note != null ? FontWeight.w500 : FontWeight.normal,
@@ -2763,7 +2798,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               Navigator.pop(ctx);
             },
             style: FilledButton.styleFrom(
-              backgroundColor: Color(0xFFFF6B00),
+              backgroundColor: Color(0xFFFB335B),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: Text('Kaydet', style: TextStyle(color: Theme.of(context).colorScheme.surface)),
@@ -3604,7 +3639,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               businessId: businessId,
               businessName: businessName,
               tableNumber: tableNum,
-              sessionId: sessionId,
+              sessionId: ref.read(tableGroupProvider).session?.id,
             ),
           ),
         );
@@ -4159,7 +4194,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             SizedBox(height: 16),
             Text(
               'Sepet yüklenirken hata oluştu',
-              style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18),
             ),
             SizedBox(height: 8),
             Text(
@@ -4982,11 +5017,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         setState(() {
           _paymentMethod = _paymentMethod == 'cash' ? 'card' : 'cash';
         });
-        if (_paymentMethod == 'card') {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Kart ödemesi yakında aktif olacak!')),
-          );
-        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

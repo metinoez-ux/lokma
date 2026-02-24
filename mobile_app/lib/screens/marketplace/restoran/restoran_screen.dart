@@ -1694,6 +1694,36 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       ),
                     ),
                     
+                    // 🆕 "Sipariş Alınmıyor" Banner and Dark overlay for unavailable businesses
+                    if (!isAvailable) ...[
+                      Positioned.fill(
+                        child: Container(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                        ),
+                      ),
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.85),
+                          ),
+                          child: const Text(
+                            'Sipariş Alınmıyor',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    
                     // 🆕 Dark overlay for unavailable businesses
                     if (!isAvailable)
                       Positioned.fill(

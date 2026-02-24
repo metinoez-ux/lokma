@@ -2,7 +2,7 @@ import * as admin from "firebase-admin";
 import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
+import { defineSecret, defineBoolean } from "firebase-functions/params";
 import Stripe from "stripe";
 import { Resend } from "resend";
 import { generateInvoicePDF } from "./invoicePdf";
@@ -11,6 +11,8 @@ import { getPushTranslations, getUserLanguage } from "./utils/translation";
 
 // Define secrets for secure key management
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
+const stripeTestSecretKey = defineSecret("STRIPE_TEST_SECRET_KEY");
+const useStripeTestMode = defineBoolean("NEXT_PUBLIC_USE_STRIPE_TEST_MODE", { default: false });
 const resendApiKey = defineSecret("RESEND_API_KEY");
 
 admin.initializeApp();
@@ -964,7 +966,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
         timeZone: "Europe/Berlin",
         memory: "1GiB",
         timeoutSeconds: 540, // 9 minutes
-        secrets: [stripeSecretKey, resendApiKey],
+        secrets: [stripeSecretKey, stripeTestSecretKey, resendApiKey],
     },
     async () => {
         console.log("[Monthly Invoicing] Starting monthly invoice generation...");
@@ -1141,7 +1143,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                         grandTotal,
                         plan?.currency || business.currency || "EUR",
                         dueDate,
-                        stripeSecretKey.value()
+                        useStripeTestMode.value() ? stripeTestSecretKey.value() : stripeSecretKey.value()
                     );
 
                     stats.subscriptionGenerated++;
@@ -1323,7 +1325,7 @@ export const onScheduledMonthlyInvoicing = onSchedule(
                         grandTotalWithSponsored,
                         commData.currency,
                         dueDate,
-                        stripeSecretKey.value()
+                        useStripeTestMode.value() ? stripeTestSecretKey.value() : stripeSecretKey.value()
                     );
 
                     stats.commissionGenerated++;

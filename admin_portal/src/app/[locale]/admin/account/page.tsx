@@ -5,6 +5,7 @@ import { collection, query, orderBy, getDocs, where, doc, getDoc, limit } from '
 import { db } from '@/lib/firebase';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { useTranslations } from 'next-intl';
+import { formatCurrency } from '@/utils/currency';
 
 // Types
 interface CommissionRecord {
@@ -34,6 +35,7 @@ interface BusinessUsage {
     accountBalance: number;
     subscriptionPlan: string;
     monthlyFee: number;
+    currency?: string;
     usage?: {
         orders?: Record<string, number>;
         totalCommission?: Record<string, number>;
@@ -61,9 +63,9 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function HesabimPage() {
-    
-  const t = useTranslations('AdminAccount');
-const { admin, loading: adminLoading } = useAdmin();
+
+    const t = useTranslations('AdminAccount');
+    const { admin, loading: adminLoading } = useAdmin();
     const [records, setRecords] = useState<CommissionRecord[]>([]);
     const [businessData, setBusinessData] = useState<BusinessUsage | null>(null);
     const [loading, setLoading] = useState(true);
@@ -111,6 +113,7 @@ const { admin, loading: adminLoading } = useAdmin();
                     accountBalance: data.accountBalance || 0,
                     subscriptionPlan: data.subscriptionPlan || data.plan || 'free',
                     monthlyFee: data.monthlyFee || 0,
+                    currency: data.currency || 'EUR',
                     usage: data.usage || {},
                 });
             }
@@ -221,7 +224,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             <div>
                                 <p className="text-gray-400 text-xs uppercase tracking-wider">{t('acik_bakiye')}</p>
                                 <p className={`text-3xl font-bold ${(businessData?.accountBalance || 0) > 0 ? 'text-amber-400' : 'text-green-400'}`}>
-                                    €{(businessData?.accountBalance || 0).toFixed(2)}
+                                    {formatCurrency((businessData?.accountBalance || 0), businessData?.currency)}
                                 </p>
                             </div>
                         </div>
@@ -244,7 +247,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             </div>
                         </div>
                         <p className="text-gray-400 text-xs">
-                            {t('aylik_ucret')}{(businessData?.monthlyFee || 0).toFixed(2)}
+                            {t('aylik_ucret')}{formatCurrency(businessData?.monthlyFee || 0, businessData?.currency)}
                         </p>
                     </div>
 
@@ -260,7 +263,7 @@ const { admin, loading: adminLoading } = useAdmin();
                             </div>
                         </div>
                         <p className="text-gray-400 text-xs">
-                            {t('toplam_provizyon')}{monthlyCommission.toFixed(2)}
+                            {t('toplam_provizyon')}{formatCurrency(monthlyCommission, businessData?.currency)}
                         </p>
                     </div>
                 </div>
@@ -291,23 +294,23 @@ const { admin, loading: adminLoading } = useAdmin();
                             <p className="text-gray-400 text-xs">Sipariş</p>
                         </div>
                         <div className="bg-gray-700/50 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-white">€{stats.totalOrderAmount.toFixed(0)}</p>
+                            <p className="text-2xl font-bold text-white">{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</p>
                             <p className="text-gray-400 text-xs">{t('toplam_ciro')}</p>
                         </div>
                         <div className="bg-amber-600/20 border border-amber-600/30 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-amber-400">€{stats.totalCommission.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-amber-400">{formatCurrency(stats.totalCommission, businessData?.currency)}</p>
                             <p className="text-gray-400 text-xs">Provizyon</p>
                         </div>
                         <div className="bg-green-600/20 border border-green-600/30 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-green-400">€{stats.collectedAmount.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-green-400">{formatCurrency(stats.collectedAmount, businessData?.currency)}</p>
                             <p className="text-gray-400 text-xs">Tahsil Edilen</p>
                         </div>
                         <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-yellow-400">€{stats.pendingAmount.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-yellow-400">{formatCurrency(stats.pendingAmount, businessData?.currency)}</p>
                             <p className="text-gray-400 text-xs">{t('bekleyen')}</p>
                         </div>
                         <div className="bg-gray-700/50 rounded-xl p-4 text-center">
-                            <p className="text-2xl font-bold text-gray-300">€{stats.vatTotal.toFixed(2)}</p>
+                            <p className="text-2xl font-bold text-gray-300">{formatCurrency(stats.vatTotal, businessData?.currency)}</p>
                             <p className="text-gray-400 text-xs">KDV</p>
                         </div>
                     </div>
@@ -317,12 +320,12 @@ const { admin, loading: adminLoading } = useAdmin();
                         <div className="flex items-center gap-2 bg-blue-600/10 border border-blue-600/20 rounded-lg px-4 py-2">
                             <span>💳</span>
                             <span className="text-blue-400 text-sm font-medium">{stats.cardOrders} kart</span>
-                            <span className="text-gray-500 text-sm">— €{stats.cardCommission.toFixed(2)}</span>
+                            <span className="text-gray-500 text-sm">— {formatCurrency(stats.cardCommission, businessData?.currency)}</span>
                         </div>
                         <div className="flex items-center gap-2 bg-purple-600/10 border border-purple-600/20 rounded-lg px-4 py-2">
                             <span>💵</span>
                             <span className="text-purple-400 text-sm font-medium">{stats.cashOrders} nakit</span>
-                            <span className="text-gray-500 text-sm">— €{stats.cashCommission.toFixed(2)}</span>
+                            <span className="text-gray-500 text-sm">— {formatCurrency(stats.cashCommission, businessData?.currency)}</span>
                         </div>
                     </div>
                 </div>
@@ -371,14 +374,14 @@ const { admin, loading: adminLoading } = useAdmin();
                                                 <td className="px-3 py-2 text-center">
                                                     <span className="text-gray-300 text-xs">{courierLabels[r.courierType] || r.courierType}</span>
                                                 </td>
-                                                <td className="px-3 py-2 text-right text-white">€{r.orderTotal.toFixed(2)}</td>
+                                                <td className="px-3 py-2 text-right text-white">{formatCurrency(r.orderTotal, businessData?.currency)}</td>
                                                 <td className="px-3 py-2 text-right text-gray-400">%{r.commissionRate}</td>
                                                 <td className="px-3 py-2 text-right">
-                                                    <span className="text-amber-400 font-bold">€{r.totalCommission.toFixed(2)}</span>
+                                                    <span className="text-amber-400 font-bold">{formatCurrency(r.totalCommission, businessData?.currency)}</span>
                                                 </td>
                                                 <td className="px-3 py-2 text-right">
                                                     <span className="text-gray-300 text-xs">
-                                                        €{r.netCommission.toFixed(2)} + €{r.vatAmount.toFixed(2)}
+                                                        {formatCurrency(r.netCommission, businessData?.currency)} + {formatCurrency(r.vatAmount, businessData?.currency)}
                                                     </span>
                                                 </td>
                                                 <td className="px-3 py-2 text-center">
@@ -406,8 +409,8 @@ const { admin, loading: adminLoading } = useAdmin();
                                         {t('toplam')} {filteredRecords.length} {t('siparis')}
                                     </span>
                                     <div className="flex gap-6">
-                                        <span className="text-white text-sm">Ciro: <strong>€{stats.totalOrderAmount.toFixed(2)}</strong></span>
-                                        <span className="text-amber-400 text-sm">Provizyon: <strong>€{stats.totalCommission.toFixed(2)}</strong></span>
+                                        <span className="text-white text-sm">Ciro: <strong>{formatCurrency(stats.totalOrderAmount, businessData?.currency)}</strong></span>
+                                        <span className="text-amber-400 text-sm">Provizyon: <strong>{formatCurrency(stats.totalCommission, businessData?.currency)}</strong></span>
                                     </div>
                                 </div>
                             )}

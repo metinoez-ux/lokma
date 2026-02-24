@@ -62,6 +62,7 @@ class LokmaOrder {
   final String userPhone;
   final List<OrderItem> items;
   final double totalAmount;
+  final String currency; // e.g. 'EUR', 'TRY'
   final OrderType orderType;
   final OrderStatus status;
   final String? deliveryAddress;
@@ -96,6 +97,7 @@ class LokmaOrder {
     required this.userPhone,
     required this.items,
     required this.totalAmount,
+    this.currency = 'EUR', // Default for legacy orders
     required this.orderType,
     required this.status,
     this.deliveryAddress,
@@ -146,6 +148,7 @@ class LokmaOrder {
           ?.map((i) => OrderItem.fromMap(i))
           .toList() ?? [],
       totalAmount: (data['totalAmount'] ?? 0).toDouble(),
+      currency: data['currency'] ?? 'EUR',
       orderType: OrderType.values.firstWhere(
         (e) => e.name == (data['orderType'] ?? data['deliveryMethod']),
         orElse: () => OrderType.pickup,
@@ -262,6 +265,7 @@ class OrderService {
     required String userPhone,
     required List<CartItem> cartItems,
     required double totalAmount,
+    required String currency,
     required OrderType orderType,
     String? deliveryAddress,
     DateTime? scheduledTime,
@@ -282,6 +286,7 @@ class OrderService {
       'userPhone': userPhone,
       'items': orderItems,
       'totalAmount': totalAmount,
+      'currency': currency,
       'orderType': orderType.name,
       'status': OrderStatus.pending.name,
       'deliveryAddress': deliveryAddress,
@@ -306,6 +311,7 @@ class OrderService {
     required String tableSessionId,
     required List<OrderItem> items,
     required double totalAmount,
+    required String currency,
     String? notes,
   }) async {
     final docRef = _db.collection(_collection).doc();
@@ -319,6 +325,7 @@ class OrderService {
       'userPhone': '',
       'items': items.map((item) => item.toMap()).toList(),
       'totalAmount': totalAmount,
+      'currency': currency,
       'orderType': OrderType.dineIn.name,
       'status': OrderStatus.pending.name,
       'tableNumber': tableNumber,
