@@ -148,6 +148,62 @@ export default function AdminHeader() {
 
                         {/* Navigation Chips — uniform minimal style, no icons, no borders */}
                         <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                            {/* Business Nav */}
+                            <div className="relative group">
+                                <Link
+                                    href="/admin/business"
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/business') || isActiveNav('/admin/sectors') || isActiveNav('/admin/kermes')
+                                        ? 'bg-white/15 text-white'
+                                        : 'text-red-100 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    {t('businesses')}
+                                    <span className="text-[10px]">▼</span>
+                                </Link>
+                                {/* Dropdown */}
+                                <div className="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
+                                    <div className="py-1">
+                                        <Link href="/admin/business" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            {t('businesses')}
+                                        </Link>
+                                        <Link href="/admin/sectors" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            {t('sectors')}
+                                        </Link>
+                                        <Link href="/admin/kermes" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            {t('kermes')}
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Users & Logisitics Nav */}
+                            <div className="relative group">
+                                <Link
+                                    href="/admin/dashboard"
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/dashboard') || isActiveNav('/admin/drivers') || isActiveNav('/admin/staff-shifts')
+                                        ? 'bg-white/15 text-white'
+                                        : 'text-red-100 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    {t('userManagement')}
+                                    <span className="text-[10px]">▼</span>
+                                </Link>
+                                {/* Dropdown */}
+                                <div className="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
+                                    <div className="py-1">
+                                        <Link href="/admin/dashboard" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            {t('userManagement')}
+                                        </Link>
+                                        <Link href="/admin/drivers" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            {t('drivers')}
+                                        </Link>
+                                        <Link href="/admin/staff-shifts" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            {t('shifts')}
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Accounting Nav */}
                             <div className="relative group">
                                 <Link
