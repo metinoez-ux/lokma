@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -213,46 +214,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   
   // 🆕 Check if business is currently open based on openingHours
   bool _isBusinessOpenNow(Map<String, dynamic> data) {
-    final openingHours = data['openingHours'];
-    if (openingHours == null) return true; // No info = assume open
-    
-    final now = DateTime.now();
-    final weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    final todayName = weekdays[now.weekday - 1];
-    
-    String? todayHours;
-    
-    if (openingHours is List) {
-      for (final entry in openingHours) {
-        if (entry is String && entry.startsWith(todayName)) {
-          todayHours = entry;
-          break;
-        }
-      }
-    } else if (openingHours is Map) {
-      todayHours = openingHours[todayName.toLowerCase()] as String?;
-    }
-    
-    if (todayHours == null || todayHours.toLowerCase().contains('closed') || todayHours.toLowerCase().contains('kapalı')) {
-      return false;
-    }
-    
-    final timeRegex = RegExp(r'(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})');
-    final match = timeRegex.firstMatch(todayHours);
-    
-    if (match != null) {
-      final openHour = int.parse(match.group(1)!);
-      final openMinute = int.parse(match.group(2)!);
-      final closeHour = int.parse(match.group(3)!);
-      final closeMinute = int.parse(match.group(4)!);
-      
-      final openTime = DateTime(now.year, now.month, now.day, openHour, openMinute);
-      final closeTime = DateTime(now.year, now.month, now.day, closeHour, closeMinute);
-      
-      return now.isAfter(openTime) && now.isBefore(closeTime);
-    }
-    
-    return true;
+    final openingHelper = OpeningHoursHelper(data['openingHours']);
+    return openingHelper.isOpenAt(DateTime.now());
   }
   
   // Filter businesses based on current filters
@@ -1385,7 +1348,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                         color: Colors.black.withOpacity(0.85),
                       ),
                       child: const Text(
-                        'Sipariş Alınmıyor',
+                        'Şu an kapalı',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white,

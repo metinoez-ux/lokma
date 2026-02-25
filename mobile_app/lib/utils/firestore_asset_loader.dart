@@ -29,9 +29,14 @@ class FirestoreAssetLoader extends AssetLoader {
       debugPrint('⚠️ Warning: Could not load local asset $assetPath/$langCode.json: $e');
     }
 
-    // 2. Fetch Live from Firestore
+    // 2. Fetch Live from Firestore with a strict 2-second timeout
+    // We cannot block the app startup for minutes waiting for translations.
     try {
-       final docSnap = await FirebaseFirestore.instance.collection('translations').doc(langCode).get();
+       final docSnap = await FirebaseFirestore.instance
+           .collection('translations')
+           .doc(langCode)
+           .get(const GetOptions(source: Source.serverAndCache))
+           .timeout(const Duration(seconds: 2));
        
        if (docSnap.exists && docSnap.data() != null) {
           final remoteTranslations = docSnap.data()!;
@@ -43,7 +48,8 @@ class FirestoreAssetLoader extends AssetLoader {
           debugPrint('⚠️ Warning: No remote translation document found for $langCode. Using local only.');
        }
     } catch (e) {
-       debugPrint('❌ Error fetching translations from Firestore for $langCode: $e');
+       debugPrint('❌ Error fetching translations from Firestore for $langCode (likely timeout): $e');
+       // Fall back to local translations silently
     }
 
     // Return whatever we managed to load (local or empty)

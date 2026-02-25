@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -360,15 +361,18 @@ class _KasapScreenState extends State<KasapScreen> {
             final sectorInfo = BUSINESS_SECTORS[businessType] ?? 
                 {'label': 'Mağaza', 'icon': '🏪', 'color': 0xFF9E9E9E};
             
-            return _BusinessCard(
-              id: doc.id,
-              name: data['companyName'] ?? data['businessName'] ?? data['name'] ?? 'İsimsiz Mağaza',
-              address: addressStr,
-              rating: (data['rating'] ?? 0).toDouble(),
-              imageUrl: data['imageUrl'],
-              logoUrl: data['logoUrl'] as String?,  // 🆕 Lieferando-style logo
-              cuisineType: data['cuisineType'] as String?,  // 🆕 Lieferando-style
-              isOpen: data['isActive'] ?? true,
+              final openingHelper = OpeningHoursHelper(data['openingHours']);
+              final isOpenNow = openingHelper.isOpenAt(DateTime.now());
+              
+              return _BusinessCard(
+                id: doc.id,
+                name: data['companyName'] ?? data['businessName'] ?? data['name'] ?? 'İsimsiz Mağaza',
+                address: addressStr,
+                rating: (data['rating'] ?? 0).toDouble(),
+                imageUrl: data['imageUrl'],
+                logoUrl: data['logoUrl'] as String?,  // 🆕 Lieferando-style logo
+                cuisineType: data['cuisineType'] as String?,  // 🆕 Lieferando-style
+                isOpen: (data['isActive'] ?? true) && isOpenNow,
               businessType: businessType,
               sectorIcon: sectorInfo['icon'] as String,
               sectorLabel: sectorInfo['label'] as String,

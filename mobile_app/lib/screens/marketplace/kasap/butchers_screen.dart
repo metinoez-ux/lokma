@@ -1091,7 +1091,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                               ),
                             ),
                             child: const Text(
-                              'Sipariş Alınmıyor',
+                              'Şu an kapalı',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.white,

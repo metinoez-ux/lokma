@@ -54,46 +54,9 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
 
-      // 2. Check GPS country as fallback
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.whileInUse ||
-          permission == LocationPermission.always) {
-        
-        final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.low,
-        ).timeout(const Duration(seconds: 3));
-        
-        final placemarks = await placemarkFromCoordinates(
-          position.latitude,
-          position.longitude,
-        );
-        
-        if (placemarks.isNotEmpty) {
-          final countryCode = placemarks.first.isoCountryCode?.toUpperCase();
-          if (countryCode != null) {
-            // Map common country ISO codes to our supported languages
-            final Map<String, String> countryToLang = {
-              'TR': 'tr',
-              'DE': 'de', 'AT': 'de', 'CH': 'de',
-              'GB': 'en', 'US': 'en',
-              'IT': 'it',
-              'FR': 'fr',
-              'ES': 'es',
-            };
-            
-            final detectedLang = countryToLang[countryCode];
-            // Only use fallback if system lang isn't explicitly better supported
-            if (detectedLang != null && _languages.any((l) => l['code'] == detectedLang)) {
-              if (mounted) {
-                setState(() {
-                  _selectedLangCode = detectedLang;
-                });
-                await context.setLocale(Locale(detectedLang));
-              }
-            }
-          }
-        }
-      }
+      // Removing GPS fallback for language detection as it can cause 2-3 minute load times if permissions
+      // are denied, not yet granted, or if the device struggles to get a GPS fix indoors.
+      // The system locale is already checked above and is the most reliable method.
     } catch (e) {
       debugPrint('Auto-detect language failed: $e');
     } finally {

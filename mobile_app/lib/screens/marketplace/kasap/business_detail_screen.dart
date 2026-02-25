@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -108,6 +110,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
   Map<String, dynamic>? _placeDetails;
   DocumentSnapshot? _butcherDoc;
+  StreamSubscription<DocumentSnapshot>? _businessSubscription;
+  bool _closedDialogShown = false;
 
   // 🆕 Plan features resolved from subscription_plans collection
   Map<String, dynamic> _planFeatures = {};
@@ -132,6 +136,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         setState(() => _showSearchBar = shouldShow);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _businessSubscription?.cancel();
+    super.dispose();
   }
   // 🔄 Real-time subscription for categories
   late final Stream<QuerySnapshot<Map<String, dynamic>>> _categoriesStream;
@@ -232,56 +242,62 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
 
 
-  Future<void> _loadButcherAndReviews() async {
+  void _loadButcherAndReviews() {
     try {
-      final doc = await FirebaseFirestore.instance
+      _businessSubscription = FirebaseFirestore.instance
           .collection('businesses')
           .doc(widget.businessId)
-          .get();
-      
-      if (!doc.exists) return;
+          .snapshots()
+          .listen((doc) async {
+        if (!doc.exists) return;
 
-      if (mounted) setState(() => _butcherDoc = doc);
+        if (mounted) setState(() => _butcherDoc = doc);
 
-      final data = doc.data();
-      if (data == null) return;
+        final data = doc.data();
+        if (data == null) return;
 
-      // 🆕 Kapalı işletme kontrolü
-      final openingHelper = OpeningHoursHelper(data['openingHours']);
-      final isOpen = openingHelper.isOpenAt(DateTime.now());
-      final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
-      
-      if (!isOpen) {
-        _showClosedBusinessDialog(preOrderEnabled: preOrderEnabled);
-      }
-
-      final googlePlaceId = data['googlePlaceId'] as String?;
-      if (googlePlaceId != null && googlePlaceId.isNotEmpty) {
-        try {
-          final details = await GooglePlacesService.getPlaceDetails(googlePlaceId);
-          if (mounted) setState(() => _placeDetails = details);
-        } catch (e) {
-          debugPrint('Google Places Error: $e');
+        // 🆕 Kapalı işletme kontrolü
+        final openingHelper = OpeningHoursHelper(data['openingHours']);
+        final isOpen = openingHelper.isOpenAt(DateTime.now());
+        final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
+        
+        if (!isOpen && !_closedDialogShown) {
+          _closedDialogShown = true;
+          _showClosedBusinessDialog(preOrderEnabled: preOrderEnabled);
         }
-      } 
 
-      // 🆕 Resolve plan features from subscription_plans collection
-      final planCode = data['subscriptionPlan'] as String? ?? 'basic';
-      try {
-        final planSnap = await FirebaseFirestore.instance
-            .collection('subscription_plans')
-            .where('code', isEqualTo: planCode)
-            .limit(1)
-            .get();
-        if (planSnap.docs.isNotEmpty) {
-          final planData = planSnap.docs.first.data();
-          if (mounted) {
-            setState(() => _planFeatures = (planData['features'] as Map<String, dynamic>?) ?? {});
+        final googlePlaceId = data['googlePlaceId'] as String?;
+        if (googlePlaceId != null && googlePlaceId.isNotEmpty && _placeDetails == null) {
+          try {
+            final details = await GooglePlacesService.getPlaceDetails(googlePlaceId);
+            if (mounted) setState(() => _placeDetails = details);
+          } catch (e) {
+            debugPrint('Google Places Error: $e');
+          }
+        } 
+
+        // 🆕 Resolve plan features from subscription_plans collection
+        final planCode = data['subscriptionPlan'] as String? ?? 'basic';
+        if (_planFeatures.isEmpty) {
+          try {
+            final planSnap = await FirebaseFirestore.instance
+                .collection('subscription_plans')
+                .where('code', isEqualTo: planCode)
+                .limit(1)
+                .get();
+            if (planSnap.docs.isNotEmpty) {
+              final planData = planSnap.docs.first.data();
+              if (mounted) {
+                setState(() => _planFeatures = (planData['features'] as Map<String, dynamic>?) ?? {});
+              }
+            }
+          } catch (e) {
+            debugPrint('Error loading plan features: $e');
           }
         }
-      } catch (e) {
-        debugPrint('Error loading plan features: $e');
-      }
+      }, onError: (e) {
+        debugPrint('Error loading data: $e');
+      });
     } catch (e) {
       debugPrint('Error loading data: $e');
     }

@@ -49,11 +49,8 @@ void main() async {
       await initializeDateFormatting('tr');
       // Future: add more locales here (de, en, ar, etc.)
       
-      // Request location permission
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        await Geolocator.requestPermission();
-      }
+      // Removed blocking Geolocator request from main() to prevent white screen delay
+      // Permissions should be requested asynchronously in the UI (e.g. SplashScreen)
       
       final prefs = await SharedPreferences.getInstance();
       final hasSeenSplash = prefs.getBool('has_seen_splash') ?? false;

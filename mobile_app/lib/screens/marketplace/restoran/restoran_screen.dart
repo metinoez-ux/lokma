@@ -1694,11 +1694,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       ),
                     ),
                     
-                    // 🆕 "Sipariş Alınmıyor" Banner and Dark overlay for unavailable businesses
+                    // 🆕 Subtle gray veil + thin "Sipariş Alınmıyor" banner (Lieferando style)
                     if (!isAvailable) ...[
+                      // Very light overlay — keeps colors visible, just slightly dimmed
                       Positioned.fill(
                         child: Container(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                          color: Colors.grey.withOpacity(0.15),
                         ),
                       ),
                       Positioned(
@@ -1706,31 +1707,20 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         left: 0,
                         right: 0,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.85),
-                          ),
-                          child: const Text(
-                            'Sipariş Alınmıyor',
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          color: Colors.black.withOpacity(0.55),
+                          child: Text(
+                            unavailableReason ?? 'Sipariş Alınmıyor',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
                       ),
                     ],
-                    
-                    // 🆕 Dark overlay for unavailable businesses
-                    if (!isAvailable)
-                      Positioned.fill(
-                        child: Container(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
-                        ),
-                      ),
                     
                     // 🆕 Business logo (BOTTOM LEFT - Lieferando style)
                     if (logoUrl != null && logoUrl.isNotEmpty)
