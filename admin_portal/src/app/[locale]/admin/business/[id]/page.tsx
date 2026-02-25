@@ -112,37 +112,62 @@ export default function BusinessDetailsPage() {
       if (!hoursStr) return { isOpen: false, text: t('kapali'), isClosed: true };
 
       const now = new Date();
-      const dayNames = ["Pazar", "Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi"];
-      const currentDay = dayNames[now.getDay()];
 
-      const todayLine = hoursStr.split("\n").find((l: string) =>
-        l.startsWith(currentDay + ":") || l.startsWith(currentDay + " ")
-      );
+      // Support both Turkish and English day names similar to the mobile app
+      const dayNamesTr = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+      const dayNamesEng = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+      const dayIndex = now.getDay();
+      const currentDayTr = dayNamesTr[dayIndex];
+      const currentDayEng = dayNamesEng[dayIndex];
+      // Also fallback to translated ones just in case
+      const currentDayTransTr = ["Pazar", "Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi"][dayIndex];
+
+      const todayLine = hoursStr.split("\n").find((l: string) => {
+        const lowerLine = l.toLowerCase();
+        return lowerLine.startsWith(currentDayTr.toLowerCase() + ":") ||
+          lowerLine.startsWith(currentDayTr.toLowerCase() + " ") ||
+          lowerLine.startsWith(currentDayEng.toLowerCase() + ":") ||
+          lowerLine.startsWith(currentDayEng.toLowerCase() + " ") ||
+          lowerLine.startsWith(currentDayTransTr.toLowerCase() + ":") ||
+          lowerLine.startsWith(currentDayTransTr.toLowerCase() + " ");
+      });
 
       if (!todayLine) return { isOpen: false, text: t('kapali'), isClosed: true };
 
       const lowerLine = todayLine.toLowerCase();
-      if (lowerLine.includes(t('kapali1')) || lowerLine.includes("closed")) {
+      if (lowerLine.includes(t('kapali1').toLowerCase()) || lowerLine.includes("kapalı") || lowerLine.includes("closed")) {
         return { isOpen: false, text: t('bugunKapali'), isClosed: true };
       }
 
       const timePart = todayLine.split(": ").slice(1).join(": ").trim();
-      if (!timePart) return { isOpen: false, text: t('saat_bilgisi_yok'), isClosed: false };
+      if (!timePart || timePart === '-') return { isOpen: false, text: t('saat_bilgisi_yok'), isClosed: false };
+      if (lowerLine.includes('24 saat') || lowerLine.includes('open 24')) return { isOpen: true, text: t('suAnAcik') };
 
-      const ranges = timePart.includes("–") ? timePart.split("–") : timePart.includes("-") ? timePart.split("-") : [];
+      const ranges = timePart.includes(",") ? timePart.split(",") : [timePart];
 
-      if (ranges.length < 2) return { isOpen: false, text: t('saatFormatiHatali'), isClosed: false };
+      for (let range of ranges) {
+        range = range.replace('–', '-').replace('.', ':').trim();
+        if (!range || range === '-') continue;
 
-      const start = parseTime(ranges[0]);
-      const end = parseTime(ranges[1]);
+        const parts = range.split("-");
+        if (parts.length < 2) continue;
 
-      if (!start || !end) return { isOpen: false, text: t('saatParseHatasi') };
+        const start = parseTime(parts[0].trim());
+        let end = parseTime(parts[1].trim());
 
-      if (now >= start && now <= end) {
-        return { isOpen: true, text: t('suAnAcik') };
-      } else {
-        return { isOpen: false, text: t('suAnKapali') };
+        if (!start || !end) continue;
+
+        // Overnight handling
+        if (end <= start) {
+          end.setDate(end.getDate() + 1);
+        }
+
+        if (now >= start && now <= end) {
+          return { isOpen: true, text: t('suAnAcik') };
+        }
       }
+      return { isOpen: false, text: t('suAnKapali') };
     } catch (e) {
       console.error("Status checking error", e);
       return { isOpen: false, text: t('hata') };

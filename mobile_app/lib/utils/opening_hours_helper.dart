@@ -54,13 +54,15 @@ class OpeningHoursHelper {
        // Support for Google Places List<String> format: "Monday: 09:00 - 18:00"
        for (var item in openingHours) {
           if (item is! String) continue;
-          final lower = item.toLowerCase();
           
-          if (lower.startsWith(dayTr.toLowerCase()) || lower.startsWith(dayEng.toLowerCase())) {
-             // Found match. Strip "Day: "
-             final parts = item.split(': ');
+          final parts = item.split(':');
+          if (parts.isEmpty) continue;
+          
+          final dayPart = parts[0].trim().toLowerCase();
+          if (dayPart == dayTr.toLowerCase() || dayPart == dayEng.toLowerCase()) {
+             // Found match. Strip "Day:"
              if (parts.length > 1) {
-                 return parts.sublist(1).join(': ').trim(); 
+                 return parts.sublist(1).join(':').trim(); 
              }
              return item;
           }
@@ -74,12 +76,34 @@ class OpeningHoursHelper {
     return _getHoursStringForDate(date);
   }
 
-  bool isOpenAt(DateTime time) {
-    final hoursStr = _getHoursStringForDate(time);
+  // Robust time parser handling "HH:MM", "HH:MM AM/PM", and "HH"
+  ({int hour, int minute})? _parseTime(String timeStr) {
+    if (timeStr.isEmpty) return null;
+    try {
+      final normalized = timeStr.toUpperCase().replaceAll('.', ':').trim();
+      final isPM = normalized.contains('PM');
+      final isAM = normalized.contains('AM');
+      
+      final cleanStr = normalized.replaceAll(RegExp(r'[A-Za-z\s]'), '');
+      if (cleanStr.isEmpty) return null;
+      
+      final parts = cleanStr.split(':');
+      int hour = int.parse(parts[0].trim());
+      int minute = parts.length > 1 ? int.parse(parts[1].trim()) : 0;
+      
+      if (isPM && hour < 12) hour += 12;
+      if (isAM && hour == 12) hour = 0;
+      
+      return (hour: hour, minute: minute);
+    } catch (e) {
+      debugPrint('Error parsing time string $timeStr: $e');
+      return null;
+    }
+  }
+
+  bool _isTimeInScheduleDay(DateTime time, DateTime scheduleDate) {
+    final hoursStr = _getHoursStringForDate(scheduleDate);
     if (hoursStr == null) {
-       // Safety fallback: If data structure is totally weird or missing, assume OPEN to prevent blocking sales.
-       if (openingHours == null) return true; 
-       // If data exists effectively but not for this day (e.g. key missing), likely closed.
        return false; 
     }
     
@@ -92,7 +116,7 @@ class OpeningHoursHelper {
     if (lower.contains('24 saat') || lower.contains('open 24')) return true;
 
     try {
-      final now = DateTime(time.year, time.month, time.day); // Base date for parsing logic
+      final now = DateTime(scheduleDate.year, scheduleDate.month, scheduleDate.day); // Base date for parsing logic
       
       // Support multiple ranges: "09:00 - 12:00, 13:00 - 18:00"
       final ranges = formatted.split(',');
@@ -105,14 +129,14 @@ class OpeningHoursHelper {
           final parts = cleaned.split('-');
           if (parts.length != 2) continue;
 
-          final startParts = parts[0].trim().split(':');
-          final endParts = parts[1].trim().split(':');
+          // Parse start/end relative to the schedule date
+          final parsedStart = _parseTime(parts[0]);
+          final parsedEnd = _parseTime(parts[1]);
           
-          if (startParts.length < 2 || endParts.length < 2) continue;
+          if (parsedStart == null || parsedEnd == null) continue;
 
-          // Parse start/end relative to the query date
-          final start = DateTime(now.year, now.month, now.day, int.parse(startParts[0]), int.parse(startParts[1]));
-          var end = DateTime(now.year, now.month, now.day, int.parse(endParts[0]), int.parse(endParts[1]));
+          final start = DateTime(now.year, now.month, now.day, parsedStart.hour, parsedStart.minute);
+          var end = DateTime(now.year, now.month, now.day, parsedEnd.hour, parsedEnd.minute);
           
           // Overnight handling
           if (end.isBefore(start) || end.isAtSameMomentAs(start)) {
@@ -133,6 +157,19 @@ class OpeningHoursHelper {
     return false;
   }
 
+  bool isOpenAt(DateTime time) {
+    if (openingHours == null) return true;
+
+    // Check if it's currently open based on TODAY's schedule
+    if (_isTimeInScheduleDay(time, time)) return true;
+
+    // Check if it's currently open based on YESTERDAY'S schedule (overnight shift)
+    if (_isTimeInScheduleDay(time, time.subtract(const Duration(days: 1)))) return true;
+
+    // If data exists effectively but not for this day (e.g. key missing), likely closed.
+    return false;
+  }
+
   // Find next open time
   DateTime? getNextOpenDateTime(DateTime from) {
     // Check next 7 days (scan efficiently)
@@ -147,8 +184,10 @@ class OpeningHoursHelper {
          final parts = cleaned.split('-');
          if (parts.length < 2) continue;
          
-         final startParts = parts[0].trim().split(':');
-         final start = TimeOfDay(hour: int.parse(startParts[0]), minute: int.parse(startParts[1]));
+         final parsedStart = _parseTime(parts[0]);
+         if (parsedStart == null) continue;
+         
+         final start = TimeOfDay(hour: parsedStart.hour, minute: parsedStart.minute);
          
          final candidate = DateTime(date.year, date.month, date.day, start.hour, start.minute);
          
