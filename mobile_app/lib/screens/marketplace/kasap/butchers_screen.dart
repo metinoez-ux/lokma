@@ -694,51 +694,52 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                           const SizedBox(height: 16),
                           
                           // Row 3: Mesafe Slider
-                          Row(
-                            children: [
-                              Icon(Icons.near_me, color: accent, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Mesafe:',
-                                style: TextStyle(color: Colors.grey[400], fontSize: 14),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: SliderTheme(
-                                  data: SliderTheme.of(context).copyWith(
-                                    activeTrackColor: accent,
-                                    inactiveTrackColor: Colors.grey[700],
-                                    thumbColor: accent,
-                                    overlayColor: accent.withOpacity(0.2),
-                                    trackHeight: 4,
-                                    thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                                  ),
-                                  child: Slider(
-                                    value: _maxDistance,
-                                    min: 5,
-                                    max: 100,
-                                    divisions: 19,
-                                    onChanged: (val) => setState(() => _maxDistance = val),
-                                  ),
+                          if (_deliveryMode == 'teslimat')
+                            Row(
+                              children: [
+                                Icon(Icons.near_me, color: accent, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Mesafe:',
+                                  style: TextStyle(color: Colors.grey[400], fontSize: 14),
                                 ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: accent,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '${_maxDistance.toInt()} km',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: SliderTheme(
+                                    data: SliderTheme.of(context).copyWith(
+                                      activeTrackColor: accent,
+                                      inactiveTrackColor: Colors.grey[700],
+                                      thumbColor: accent,
+                                      overlayColor: accent.withOpacity(0.2),
+                                      trackHeight: 4,
+                                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+                                    ),
+                                    child: Slider(
+                                      value: _maxDistance,
+                                      min: 5,
+                                      max: 100,
+                                      divisions: 19,
+                                      onChanged: (val) => setState(() => _maxDistance = val),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: accent,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '${_maxDistance.toInt()} km',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                         ],
                       ),
                     ),
@@ -823,6 +824,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                   'rating': (data['rating'] is num) ? data['rating'].toDouble() : 0.0,
                   'reviews': (data['reviewCount'] is num) ? data['reviewCount'].toInt() : 0,
                   'distance': distance,
+                  'deliveryRadius': (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0,
                   'phone': data['contactPerson']?['phone'] ?? '',
                   'isFavorite': favoriteIds.contains(id),
                 };
@@ -839,7 +841,13 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                  // 1. TUNA Filter
                  var filtered = allButchers.where((b) {
                     if (_showOnlyTuna && b['badgeText'] != 'TUNA') return false;
-                    return b['distance'] <= _maxDistance;
+                    
+                    if (_deliveryMode == 'teslimat') {
+                      final deliveryRadius = b['deliveryRadius'] as double;
+                      if ((b['distance'] as double) > deliveryRadius) return false;
+                    }
+                    
+                    return (b['distance'] as double) <= _maxDistance;
                  }).toList();
                  
                  // 2. Sort: Favorites Top, then Distance
@@ -873,6 +881,11 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                  // 1. Matches Search
                  var matches = allButchers.where((b) {
                     if (_showOnlyTuna && b['badgeText'] != 'TUNA') return false;
+                    
+                    if (_deliveryMode == 'teslimat') {
+                      final deliveryRadius = b['deliveryRadius'] as double;
+                      if ((b['distance'] as double) > deliveryRadius) return false;
+                    }
                     
                     final q = queryText.toLowerCase();
                     final name = (b['name'] as String).toLowerCase();
@@ -1032,77 +1045,60 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                   ),
                   child: Stack(
                     children: [
-                      // Image layer with ColorFiltered
+                      // Image layer
                       Positioned.fill(
-                        child: ColorFiltered(
-                          colorFilter: isOpen
-                              ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
-                              : const ColorFilter.matrix(<double>[
-                                  0.2126, 0.7152, 0.0722, 0, 0,
-                                  0.2126, 0.7152, 0.0722, 0, 0,
-                                  0.2126, 0.7152, 0.0722, 0, 0,
-                                  0,      0,      0,      1, 0,
-                                ]),
-                          child: (butcher['imageUrl'] != null && (butcher['imageUrl'] as String).isNotEmpty)
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: CachedNetworkImage(
-                                    imageUrl: butcher['imageUrl'],
-                                    fit: BoxFit.cover,
-                                    placeholder: (context, url) => Container(
-                                      color: Colors.grey.shade900,
-                                      child: const Center(
-                                        child: CircularProgressIndicator(strokeWidth: 2, color: accent),
-                                      ),
+                        child: (butcher['imageUrl'] != null && (butcher['imageUrl'] as String).isNotEmpty)
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: CachedNetworkImage(
+                                  imageUrl: butcher['imageUrl'],
+                                  fit: BoxFit.cover,
+                                  placeholder: (context, url) => Container(
+                                    color: Colors.grey.shade900,
+                                    child: const Center(
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: accent),
                                     ),
-                                    errorWidget: (context, url, error) => Icon(
-                                      Icons.storefront, 
-                                      color: Colors.grey.shade700, 
-                                      size: 48
-                                    ),
-                                    // Optional: optimize connection count?
                                   ),
-                                )
-                              : Icon(Icons.storefront, color: Colors.grey.shade700, size: 48),
-                        ),
+                                  errorWidget: (context, url, error) => Icon(
+                                    Icons.storefront, 
+                                    color: Colors.grey.shade700, 
+                                    size: 48
+                                  ),
+                                  // Optional: optimize connection count?
+                                ),
+                              )
+                            : Icon(Icons.storefront, color: Colors.grey.shade700, size: 48),
                       ),
                       
-                      // 🆕 "Sipariş Alınmıyor" Banner and Dark overlay for unavailable businesses
-                      if (!isOpen) ...[
+                      // 🆕 Centered badge and darker overlay for unavailable businesses
+                      if (!isOpen)
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
+                              color: Colors.black.withOpacity(0.5), // Dark overlay
                               borderRadius: BorderRadius.circular(16),
                             ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.85),
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(16),
-                                topRight: Radius.circular(16),
-                              ),
-                            ),
-                            child: const Text(
-                              'Şu an kapalı',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.7),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.white24, width: 1),
+                                ),
+                                child: const Text(
+                                  'Şu an kapalı',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ],
                     ],
                   ),
                 ),

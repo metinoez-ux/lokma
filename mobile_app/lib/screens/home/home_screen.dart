@@ -20,8 +20,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: darkBg,
+      backgroundColor: isDark ? darkBg : Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -41,17 +43,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       letterSpacing: 1,
                     ),
                   ),
-                  // Profile
                   GestureDetector(
                     onTap: () => context.go('/profile'),
                     child: Container(
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: cardBg,
+                        color: isDark ? cardBg : Colors.grey[100],
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.person_rounded, color: Colors.white.withOpacity(0.7), size: 22),
+                      child: Icon(Icons.person_rounded, color: isDark ? Colors.white.withOpacity(0.7) : Colors.black87, size: 22),
                     ),
                   ),
                 ],
@@ -84,15 +85,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Container(
                   height: 60,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : Colors.grey[100],
                     borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
+                    boxShadow: isDark ? [
                       BoxShadow(
                         color: accent.withOpacity(0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
-                    ],
+                    ] : null,
                   ),
                   child: Row(
                     children: [
@@ -138,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         'Kategoriler',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: isDark ? Colors.white.withOpacity(0.9) : Colors.black87,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
@@ -169,32 +170,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: cardBg,
+                          color: isDark ? cardBg : Colors.grey[100],
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white.withOpacity(0.05)),
+                          border: isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
                         ),
                         child: Row(
                           children: [
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: accent.withOpacity(0.15),
+                                color: accent.withOpacity(isDark ? 0.15 : 0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(Icons.receipt_long_rounded, color: accent, size: 22),
                             ),
                             const SizedBox(width: 14),
-                            const Expanded(
+                            Expanded(
                               child: Text(
                                 'Siparişlerim',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: isDark ? Colors.white : Colors.black87,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
-                            Icon(Icons.arrow_forward_ios_rounded, color: Colors.white.withOpacity(0.3), size: 16),
+                            Icon(Icons.arrow_forward_ios_rounded, color: isDark ? Colors.white.withOpacity(0.3) : Colors.grey[400], size: 16),
                           ],
                         ),
                       ),
@@ -212,6 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFulfillmentPill(int index, String label) {
     final isSelected = _selectedFulfillmentType == index;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Expanded(
       child: GestureDetector(
@@ -223,17 +225,17 @@ class _HomeScreenState extends State<HomeScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? accent : cardBg,
+            color: isSelected ? accent : (isDark ? cardBg : Colors.grey[100]),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? accent : Colors.white.withOpacity(0.08),
+              color: isSelected ? accent : (isDark ? Colors.white.withOpacity(0.08) : Colors.transparent),
             ),
           ),
           child: Center(
             child: Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                color: isSelected ? Colors.white : (isDark ? Colors.white.withOpacity(0.6) : Colors.black87),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -245,6 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategoryTile(String emoji, String title, String route) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -252,9 +255,9 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: cardBg,
+          color: isDark ? cardBg : Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: isDark ? Border.all(color: Colors.white.withOpacity(0.05)) : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -263,8 +266,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 8),
             Text(
               title,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -297,10 +300,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Icon(Icons.replay_rounded, color: accent, size: 20),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Tekrar Sipariş Ver',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
@@ -343,6 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildReorderCard(String vendor, String items, String total, String date) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         HapticFeedback.mediumImpact();
@@ -364,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: cardBg,
+          color: isDark ? cardBg : Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: accent.withOpacity(0.2)),
         ),
@@ -381,8 +385,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: Text(
                         vendor,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
@@ -392,7 +396,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       date,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
+                        color: isDark ? Colors.white.withOpacity(0.4) : Colors.grey[600],
                         fontSize: 11,
                       ),
                     ),
@@ -402,7 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text(
                   items,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: isDark ? Colors.white.withOpacity(0.6) : Colors.grey[700],
                     fontSize: 12,
                   ),
                   maxLines: 2,

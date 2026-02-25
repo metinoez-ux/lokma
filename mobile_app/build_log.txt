@@ -1,7 +1,7 @@
-Building shop.lokma.app for device (ios)...
+Building shop.lokma.app for device (ios-release)...
 Automatically signing iOS for device deployment using specified development team in Xcode project: Y834B2NJY9
 Running Xcode build...                                          
-Xcode build done.                                           26,7s
+Xcode build done.                                           27,3s
 Failed to build iOS app
 Error output from Xcode build:
 ↳
@@ -11,84 +11,82 @@ Error output from Xcode build:
 Xcode's output:
 ↳
     Writing result bundle at path:
-    	/var/folders/3m/_vsz9j7512jdbkyjyt7bqj9m0000gn/T/flutter_tools.rZbfHQ/flutter_ios_build_temp_dirkJECP3/temporary_xcresult_bundle
+    	/var/folders/3m/_vsz9j7512jdbkyjyt7bqj9m0000gn/T/flutter_tools.HMaORk/flutter_ios_build_temp_dirScdwZN/temporary_xcresult_bundle
 
-    Failed to parse TARGET_DEVICE_OS_VERSION: 
-    Error: Couldn't resolve the package 'google_fonts' in 'package:google_fonts/google_fonts.dart'.
-    lib/screens/marketplace/kasap/business_detail_screen.dart:7:8: Error: Not found: 'package:google_fonts/google_fonts.dart'
-    import 'package:google_fonts/google_fonts.dart';
+    lib/screens/marketplace/market/market_screen.dart:1301:25: Error: Can't find ']' to match '['.
+                  children: [
+                            ^
+    lib/screens/marketplace/restoran/restoran_screen.dart:1649:29: Error: Can't find ']' to match '['.
+                      children: [
+                                ^
+    lib/screens/marketplace/market/market_screen.dart:1685:11: Error: Expected an identifier, but got ']'.
+    Try inserting an identifier before ']'.
+              ],
+              ^
+    lib/screens/marketplace/market/market_screen.dart:1685:11: Error: Expected ')' before this.
+              ],
+              ^
+    lib/screens/marketplace/market/market_screen.dart:1282:23: Error: Too many positional arguments: 0 allowed, but 2 found.
+    Try removing the extra positional arguments.
+          child: Container(
+                          ^
+    /opt/homebrew/share/flutter/packages/flutter/lib/src/widgets/container.dart:255:3: Context: Found this candidate, but the arguments don't match.
+      Container({
+      ^^^^^^^^^
+    lib/screens/marketplace/market/market_screen.dart:1687:7: Error: Expected ';' after this.
+          ),
+          ^
+    lib/screens/marketplace/market/market_screen.dart:1687:8: Error: Expected an identifier, but got ','.
+    Try inserting an identifier before ','.
+          ),
            ^
-    lib/screens/marketplace/kasap/business_detail_screen.dart:358:29: Error: The method 'pop' isn't defined for the type 'BuildContext'.
-     - 'BuildContext' is from 'package:flutter/src/widgets/framework.dart' ('/opt/homebrew/share/flutter/packages/flutter/lib/src/widgets/framework.dart').
-    Try correcting the name to the name of an existing method, or defining a method named 'pop'.
-                        context.pop(); // Go back to list
-                                ^^^
-    lib/screens/marketplace/kasap/business_detail_screen.dart:1522:37: Error: The method 'canPop' isn't defined for the type 'BuildContext'.
-     - 'BuildContext' is from 'package:flutter/src/widgets/framework.dart' ('/opt/homebrew/share/flutter/packages/flutter/lib/src/widgets/framework.dart').
-    Try correcting the name to the name of an existing method, or defining a method named 'canPop'.
-                            if (context.canPop()) {
-                                        ^^^^^^
-    lib/screens/marketplace/kasap/business_detail_screen.dart:1523:35: Error: The method 'pop' isn't defined for the type 'BuildContext'.
-     - 'BuildContext' is from 'package:flutter/src/widgets/framework.dart' ('/opt/homebrew/share/flutter/packages/flutter/lib/src/widgets/framework.dart').
-    Try correcting the name to the name of an existing method, or defining a method named 'pop'.
-                              context.pop();
-                                      ^^^
-    lib/screens/marketplace/kasap/business_detail_screen.dart:1525:35: Error: The method 'go' isn't defined for the type 'BuildContext'.
-     - 'BuildContext' is from 'package:flutter/src/widgets/framework.dart' ('/opt/homebrew/share/flutter/packages/flutter/lib/src/widgets/framework.dart').
-    Try correcting the name to the name of an existing method, or defining a method named 'go'.
-                              context.go('/restoran');
-                                      ^^
-    lib/screens/marketplace/kasap/business_detail_screen.dart:1626:33: Error: The method 'CachedNetworkImage' isn't defined for the type '_BusinessDetailScreenState'.
-     - '_BusinessDetailScreenState' is from 'package:lokma_app/screens/marketplace/kasap/business_detail_screen.dart' ('lib/screens/marketplace/kasap/business_detail_screen.dart').
-    Try correcting the name to the name of an existing method, or defining a method named 'CachedNetworkImage'.
-                                  ? CachedNetworkImage(
-                                    ^^^^^^^^^^^^^^^^^^
-    lib/screens/marketplace/kasap/business_detail_screen.dart:1647:42: Error: The method 'CachedNetworkImage' isn't defined for the type '_BusinessDetailScreenState'.
-     - '_BusinessDetailScreenState' is from 'package:lokma_app/screens/marketplace/kasap/business_detail_screen.dart' ('lib/screens/marketplace/kasap/business_detail_screen.dart').
-    Try correcting the name to the name of an existing method, or defining a method named 'CachedNetworkImage'.
-                                      child: CachedNetworkImage(
-                                             ^^^^^^^^^^^^^^^^^^
-    lib/screens/marketplace/kasap/cart_screen.dart:2496:25: Error: The getter 'I18nUtils' isn't defined for the type '_CartScreenState'.
-     - '_CartScreenState' is from 'package:lokma_app/screens/marketplace/kasap/cart_screen.dart' ('lib/screens/marketplace/kasap/cart_screen.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'I18nUtils'.
-        final productName = I18nUtils.getLocalizedText(context, item.product.nameData);
-                            ^^^^^^^^^
-    lib/screens/marketplace/kasap/cart_screen.dart:4637:43: Error: The getter 'I18nUtils' isn't defined for the type '_CartScreenState'.
-     - '_CartScreenState' is from 'package:lokma_app/screens/marketplace/kasap/cart_screen.dart' ('lib/screens/marketplace/kasap/cart_screen.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'I18nUtils'.
-                                              I18nUtils.getLocalizedText(context, item.product.nameData),
-                                              ^^^^^^^^^
-    lib/screens/marketplace/kasap/cart_screen.dart:5023:25: Error: The getter 'I18nUtils' isn't defined for the type '_CartScreenState'.
-     - '_CartScreenState' is from 'package:lokma_app/screens/marketplace/kasap/cart_screen.dart' ('lib/screens/marketplace/kasap/cart_screen.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'I18nUtils'.
-        final productName = I18nUtils.getLocalizedText(context, item.product.nameData).isNotEmpty ? I18nUtils.getLocalizedText(context, item.product.nameData) : 'Ürün';
-                            ^^^^^^^^^
-    lib/screens/marketplace/kasap/cart_screen.dart:5023:97: Error: The getter 'I18nUtils' isn't defined for the type '_CartScreenState'.
-     - '_CartScreenState' is from 'package:lokma_app/screens/marketplace/kasap/cart_screen.dart' ('lib/screens/marketplace/kasap/cart_screen.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'I18nUtils'.
-        final productName = I18nUtils.getLocalizedText(context, item.product.nameData).isNotEmpty ? I18nUtils.getLocalizedText(context, item.product.nameData) : 'Ürün';
-                                                                                          ^^^^^^^^^
-    lib/screens/customer/table_order_view_screen.dart:714:19: Error: The getter 'I18nUtils' isn't defined for the type '_TableOrderViewScreenState'.
-     - '_TableOrderViewScreenState' is from 'package:lokma_app/screens/customer/table_order_view_screen.dart' ('lib/screens/customer/table_order_view_screen.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'I18nUtils'.
-                      I18nUtils.getLocalizedText(context, product.nameData),
-                      ^^^^^^^^^
-    lib/models/kermes_model.dart:188:13: Error: The argument type 'String?' can't be assigned to the parameter type 'String'.
-          name: _extractString(json['name']),
-                ^
-    Unhandled exception:
-    FileSystemException(uri=org-dartlang-untranslatable-uri:package%3Agoogle_fonts%2Fgoogle_fonts.dart; message=StandardFileSystem only supports file:* and data:* URIs)
-    #0      StandardFileSystem.entityForUri (package:front_end/src/api_prototype/standard_file_system.dart:45)
-    #1      asFileUri (package:vm/kernel_front_end.dart:1008)
-    #2      writeDepfile (package:vm/kernel_front_end.dart:1171)
-    <asynchronous suspension>
-    #3      FrontendCompiler.compile (package:frontend_server/frontend_server.dart:738)
-    <asynchronous suspension>
-    #4      starter (package:frontend_server/starter.dart:102)
-    <asynchronous suspension>
-    #5      main (file:///Volumes/Work/s/w/ir/x/w/sdk/pkg/frontend_server/bin/frontend_server_starter.dart:13)
-    <asynchronous suspension>
-
+    lib/screens/marketplace/market/market_screen.dart:1687:8: Error: Unexpected token ';'.
+          ),
+           ^
+    lib/screens/marketplace/market/market_screen.dart:1688:5: Error: Expected an identifier, but got ')'.
+    Try inserting an identifier before ')'.
+        );
+        ^
+    lib/screens/marketplace/market/market_screen.dart:1687:8: Error: Expected ';' after this.
+          ),
+           ^
+    lib/screens/marketplace/market/market_screen.dart:1688:5: Error: Unexpected token ';'.
+        );
+        ^
+    lib/screens/marketplace/restoran/restoran_screen.dart:2049:11: Error: Expected an identifier, but got ']'.
+    Try inserting an identifier before ']'.
+              ],
+              ^
+    lib/screens/marketplace/restoran/restoran_screen.dart:2049:11: Error: Expected ')' before this.
+              ],
+              ^
+    lib/screens/marketplace/restoran/restoran_screen.dart:1627:23: Error: Too many positional arguments: 0 allowed, but 1 found.
+    Try removing the extra positional arguments.
+          child: Container(
+                          ^
+    /opt/homebrew/share/flutter/packages/flutter/lib/src/widgets/container.dart:255:3: Context: Found this candidate, but the arguments don't match.
+      Container({
+      ^^^^^^^^^
+    lib/screens/marketplace/restoran/restoran_screen.dart:2051:7: Error: Expected ';' after this.
+          ),
+          ^
+    lib/screens/marketplace/restoran/restoran_screen.dart:2051:8: Error: Expected an identifier, but got ','.
+    Try inserting an identifier before ','.
+          ),
+           ^
+    lib/screens/marketplace/restoran/restoran_screen.dart:2051:8: Error: Unexpected token ';'.
+          ),
+           ^
+    lib/screens/marketplace/restoran/restoran_screen.dart:2052:5: Error: Expected an identifier, but got ')'.
+    Try inserting an identifier before ')'.
+        );
+        ^
+    lib/screens/marketplace/restoran/restoran_screen.dart:2051:8: Error: Expected ';' after this.
+          ),
+           ^
+    lib/screens/marketplace/restoran/restoran_screen.dart:2052:5: Error: Unexpected token ';'.
+        );
+        ^
     Target kernel_snapshot_program failed: Exception
     Failed to package /Users/metinoz/.gemini/antigravity/scratch/LOKMA_2026/mobile_app.
     Command PhaseScriptExecution failed with a nonzero exit code

@@ -283,6 +283,14 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             debugPrint('❌ ${data['companyName']} filtered out: ${distanceKm.toStringAsFixed(1)}km > $_maxDistance');
             return false;
           }
+
+          if (_deliveryMode == 'teslimat') {
+            final double deliveryRadius = (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
+            if (distanceKm > deliveryRadius) {
+              debugPrint('🛑 ${data['companyName']} out of delivery radius: ${distanceKm.toStringAsFixed(1)}km > ${deliveryRadius}km');
+              return false;
+            }
+          }
         } else {
           // No lat/lng - HIDE this business when distance filter is active
           debugPrint('⚠️ ${data['companyName']}: No lat/lng found, HIDING');
@@ -465,6 +473,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           final distanceMeters = Geolocator.distanceBetween(_userLat!, _userLng!, lat, lng);
           final distanceKm = distanceMeters / 1000;
           if (distanceKm > _maxDistance) continue;
+
+          if (_deliveryMode == 'teslimat') {
+            final double deliveryRadius = (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
+            if (distanceKm > deliveryRadius) continue;
+          }
         }
       }
       
@@ -524,8 +537,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                     // Search bar (teslimat/gel al altında)
                                     _buildSearchBar(),
                                     
-                                    // Distance slider - Tüm modlarda göster
-                                    _buildDistanceSliderWithTuna(),
+                                    // Sadece teslimat modunda göster
+                                    if (_deliveryMode == 'teslimat')
+                                      _buildDistanceSliderWithTuna(),
                                   ],
                                 ),
                               ),
@@ -1302,17 +1316,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 // Main image - Lieferando style (tall)
                 AspectRatio(
                   aspectRatio: 16 / 10, // Taller like Lieferando
-                  child: ColorFiltered(
-                    colorFilter: isOpen
-                        ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
-                        : const ColorFilter.matrix(<double>[
-                            0.2126, 0.7152, 0.0722, 0, 0,
-                            0.2126, 0.7152, 0.0722, 0, 0,
-                            0.2126, 0.7152, 0.0722, 0, 0,
-                            0,      0,      0,      1, 0,
-                          ]),
-                    child: imageUrl != null && imageUrl.isNotEmpty
-                        ? Image.network(
+                  child: imageUrl != null && imageUrl.isNotEmpty
+                      ? Image.network(
                             imageUrl,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) => Container(
@@ -1329,37 +1334,39 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             ),
                           ),
                   ),
-                ),
                 
-                // 🆕 "Sipariş Alınmıyor" Banner and Dark overlay for unavailable businesses
-                if (!isOpen) ...[
+                // 🆕 Centered badge and darker overlay for unavailable businesses
+                if (!isOpen)
                   Positioned.fill(
                     child: Container(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.35),
-                    ),
-                  ),
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.85),
+                        color: Colors.black.withOpacity(0.5), // Dark overlay
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                        ),
                       ),
-                      child: const Text(
-                        'Şu an kapalı',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white24, width: 1),
+                          ),
+                          child: const Text(
+                            'Şu an kapalı',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ],
                 
                 // Business logo (bottom left, overlapping) - only show if logo exists
                 if (logoUrl != null && logoUrl.isNotEmpty)

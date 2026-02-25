@@ -74,17 +74,74 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   
   String _selectedCategory = 'Tümü';
 
-  /// Select a category without causing scroll jumps
+  final Map<String, GlobalKey> _categoryKeys = {};
+  final Map<String, GlobalKey> _tabKeys = {};
+  bool _isUserScrolling = true;
+
+  /// Select a category and scroll to its section
   void _selectCategory(String category) {
     if (_selectedCategory == category) return;
-    final savedOffset = _scrollController.hasClients ? _scrollController.offset : 0.0;
     setState(() => _selectedCategory = category);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _isUserScrolling = false;
+    
+    if (category == 'Tümü') {
       if (_scrollController.hasClients) {
-        final maxScroll = _scrollController.position.maxScrollExtent;
-        _scrollController.jumpTo(savedOffset.clamp(0.0, maxScroll));
+        _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
       }
+    } else {
+      final key = _categoryKeys[category];
+      if (key != null && key.currentContext != null) {
+        Scrollable.ensureVisible(
+          key.currentContext!, 
+          duration: const Duration(milliseconds: 300), 
+          curve: Curves.easeInOut,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+          alignment: 0.0, // Default to top of viewport
+        );
+      }
+    }
+    
+    Future.delayed(const Duration(milliseconds: 350), () {
+      if (mounted) _isUserScrolling = true;
     });
+  }
+
+  void _onMenuScroll() {
+    if (!_isUserScrolling || _menuSearchQuery.isNotEmpty) return;
+
+    String? visibleCategory;
+
+    for (var entry in _categoryKeys.entries) {
+      final key = entry.value;
+      if (key.currentContext != null) {
+        final RenderBox? box = key.currentContext!.findRenderObject() as RenderBox?;
+        if (box != null) {
+          final position = box.localToGlobal(Offset.zero, ancestor: context.findRenderObject());
+          // 200 to 400 is roughly where the sticky header is.
+          if (position.dy > 150 && position.dy < 400) {
+             visibleCategory = entry.key;
+             break;
+          }
+        }
+      }
+    }
+
+    if (visibleCategory != null && visibleCategory != _selectedCategory) {
+      setState(() {
+        _selectedCategory = visibleCategory!;
+      });
+      
+      final tabKey = _tabKeys[visibleCategory];
+      if (tabKey != null && tabKey.currentContext != null) {
+        Scrollable.ensureVisible(
+          tabKey.currentContext!,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+          alignment: 0.5,
+        );
+      }
+    }
   }
   
   // 🚀 Service Mode (Lieferando-style toggle)
@@ -135,6 +192,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       if (shouldShow != _showSearchBar) {
         setState(() => _showSearchBar = shouldShow);
       }
+      _onMenuScroll(); // Sync sticky headers
     });
   }
 
@@ -1430,7 +1488,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final isDark = theme.brightness == Brightness.dark;
     
     // Dynamic colors based on theme
-    final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF5F5F5);
+    final scaffoldBg = isDark ? const Color(0xFF121212) : Colors.white;
     final cardBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white70 : Colors.black54;
@@ -1502,15 +1560,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             _allProducts = products;
           }
 
-          // Filter by Category
-          var filteredProducts = _selectedCategory == 'Tümü' 
-              ? products 
-              : products.where((p) => p.category == _selectedCategory).toList();
-          
           // 🔍 Filter by Menu Search Query
-          if (_menuSearchQuery.isNotEmpty) {
+          final bool isSearching = _menuSearchQuery.isNotEmpty;
+          List<ButcherProduct> searchResults = [];
+          if (isSearching) {
             final query = _menuSearchQuery.toLowerCase();
-            filteredProducts = filteredProducts.where((p) => 
+            searchResults = products.where((p) => 
               p.name.toLowerCase().contains(query) ||
               (p.description?.toLowerCase().contains(query) ?? false)
             ).toList();
@@ -1560,14 +1615,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           decoration: BoxDecoration(
                             color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
                             borderRadius: BorderRadius.circular(22),
-                            border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
                           ),
                           child: Row(
                             children: [
@@ -1883,6 +1930,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       child: GestureDetector(
                                         onTap: () => _selectCategory(catName),
                                         child: Container(
+                                          key: _tabKeys.putIfAbsent(catName, () => GlobalKey()),
                                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                           decoration: BoxDecoration(
                                             color: isSelected 
@@ -1957,62 +2005,94 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 ),
               ),
 
-              // 4. Products List Header
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                sliver: SliverToBoxAdapter(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                       Text(
-                         _selectedCategory == 'Tümü' ? tr('business_details.all_products') : _selectedCategory, 
-                         style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
-                       ),
-                       Container(
-                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                         decoration: BoxDecoration(
-                           color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05),
-                           borderRadius: BorderRadius.circular(12),
-                         ),
-                         child: Text(
-                           tr('business_details.products_count', namedArgs: {'count': filteredProducts.length.toString()}), 
-                           style: TextStyle(color: textSecondary, fontSize: 12, fontWeight: FontWeight.w500),
-                         ),
-                       )
-                    ],
+              // 4. Products List Generation
+              if (isSearching) ...[
+                // Flat list for search results
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  sliver: SliverToBoxAdapter(
+                    child: Text(
+                      'Arama Sonuçları (${searchResults.length})', 
+                      style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
-              ),
-
-              // 5. LIEFERANDO STYLE: Vertical Product List
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: filteredProducts.isEmpty 
-                  ? SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(40.0),
-                        child: Center(
-                            child: Text(
-                              tr('business_details.no_products_in_category'), 
-                              style: TextStyle(color: textSecondary),
-                            )),
-                      ),
-                    )
-                  : SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildLieferandoProductCard(
-                          filteredProducts[index], 
-                          ref.watch(cartProvider),
-                          isDark: isDark,
-                          accent: accent,
-                          cardBg: cardBg,
-                          textPrimary: textPrimary,
-                          textSecondary: textSecondary,
+                SliverPadding(
+                  padding: EdgeInsets.zero,
+                  sliver: searchResults.isEmpty 
+                    ? SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(40.0),
+                          child: Center(
+                              child: Text(
+                                'Sonuç bulunamadı', 
+                                style: TextStyle(color: textSecondary),
+                              )),
                         ),
-                        childCount: filteredProducts.length,
+                      )
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _buildLieferandoProductCard(
+                            searchResults[index], 
+                            ref.watch(cartProvider),
+                            isDark: isDark,
+                            accent: accent,
+                            cardBg: cardBg,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                          ),
+                          childCount: searchResults.length,
+                        ),
+                      ),
+                ),
+              ] else ...[
+                // Category Grouped List
+                ..._categories.where((c) => c['name'] != 'Tümü').expand((cat) {
+                  final catName = cat['name'] as String;
+                  final catProducts = products.where((p) => p.category == catName).toList();
+                  
+                  if (catProducts.isEmpty) return <Widget>[];
+
+                  return <Widget>[
+                    // Category Header
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                      sliver: SliverToBoxAdapter(
+                        child: Container(
+                          key: _categoryKeys.putIfAbsent(catName, () => GlobalKey()),
+                          child: Text(
+                            catName,
+                            style: TextStyle(
+                              color: textPrimary,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-              ),
+                    // Products List
+                    SliverPadding(
+                      padding: EdgeInsets.zero,
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _buildLieferandoProductCard(
+                            catProducts[index], 
+                            ref.watch(cartProvider),
+                            isDark: isDark,
+                            accent: accent,
+                            cardBg: cardBg,
+                            textPrimary: textPrimary,
+                            textSecondary: textSecondary,
+                          ),
+                          childCount: catProducts.length,
+                        ),
+                      ),
+                    ),
+                  ];
+                }),
+              ],
 
               // Bottom Spacer
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -2775,221 +2855,218 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final totalQtyInCart = productCartItems.fold(0.0, (sum, item) => sum + item.quantity);
     
     final isAvailable = product.inStock || product.allowBackorder;
+    final hasImage = product.imageUrl?.isNotEmpty == true;
 
-    return Opacity(
-      opacity: isAvailable ? 1.0 : 0.55,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(16),
-          border: inCart && isAvailable ? Border.all(color: accent.withOpacity(0.5), width: 2) : null,
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(isDark ? 0.3 : 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: InkWell(
-          onTap: isAvailable
-              ? () => _showProductBottomSheet(product)
-              : () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(tr('marketplace.item_not_available_de')),
-                      duration: const Duration(seconds: 2),
-                      behavior: SnackBarBehavior.floating,
-                      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[700],
-                    ),
-                  );
-                },
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Product Image
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    color: isDark ? Colors.white10 : Colors.grey[100],
-                    child: (product.imageUrl?.isNotEmpty == true)
-                      ? Image.network(
-                          product.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Icon(
-                            Icons.restaurant_menu,
-                            size: 40,
-                            color: isDark ? Colors.white24 : Colors.grey[400],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Opacity(
+          opacity: isAvailable ? 1.0 : 0.55,
+          child: InkWell(
+            onTap: isAvailable
+                ? () => _showProductBottomSheet(product)
+                : () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(tr('marketplace.item_not_available_de')),
+                        duration: const Duration(seconds: 2),
+                        behavior: SnackBarBehavior.floating,
+                        backgroundColor: isDark ? Colors.grey[800] : Colors.grey[700],
+                      ),
+                    );
+                  },
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+              // Highlight background slightly if in cart
+              color: (inCart && isAvailable) 
+                  ? accent.withOpacity(isDark ? 0.08 : 0.04) 
+                  : Colors.transparent,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product Info (Left)
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        Text(
+                          product.name,
+                          style: TextStyle(
+                            color: isAvailable ? textPrimary : textSecondary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            height: 1.2,
                           ),
-                        )
-                      : Icon(
-                          Icons.restaurant_menu,
-                          size: 40,
-                          color: isDark ? Colors.white24 : Colors.grey[400],
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                // Product Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Name + Price
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
+                        // "Nicht verfügbar" label (Lieferando-style)
+                        if (!isAvailable) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Nicht verfügbar',
+                            style: TextStyle(
+                              color: textSecondary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 6),
+                        // Description (Ingredients)
+                        if (product.description.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
                             child: Text(
-                              product.name,
+                              product.description,
                               style: TextStyle(
-                                color: isAvailable ? textPrimary : textSecondary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                height: 1.2,
+                                color: textSecondary,
+                                fontSize: 13,
+                                height: 1.3,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          if (isAvailable)
-                            Text(
-                              '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
-                              style: TextStyle(
-                                color: accent,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                        ],
-                      ),
-                      // "Nicht verfügbar" label for out-of-stock products (Lieferando-style)
-                      if (!isAvailable) ...[
-                        const SizedBox(height: 4),
+                        // Price
                         Text(
-                          'Nicht verfügbar',
+                          '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
                           style: TextStyle(
-                            color: textSecondary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                            color: isAvailable ? textPrimary : textSecondary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
-                      const SizedBox(height: 6),
-                      // Description
-                      if (product.description.isNotEmpty)
-                        Text(
-                          product.description,
-                          style: TextStyle(
-                            color: textSecondary,
-                            fontSize: 13,
-                            height: 1.3,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      // Selected extras inline (Lieferando-style)
-                      if (isAvailable && inCart && productCartItems.any((ci) => ci.selectedOptions.isNotEmpty))
-                        ...productCartItems.where((ci) => ci.selectedOptions.isNotEmpty).map((ci) =>
-                          Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                                  final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
-                                  showModalBottomSheet(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (ctx) => ProductCustomizationSheet(
-                                      product: product,
-                                      businessId: widget.businessId,
-                                      businessName: butcherName,
-                                      existingItem: ci,
+                        
+                        // Selected extras inline
+                        if (isAvailable && inCart && productCartItems.any((ci) => ci.selectedOptions.isNotEmpty))
+                          ...productCartItems.where((ci) => ci.selectedOptions.isNotEmpty).map((ci) =>
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+                                    final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (ctx) => ProductCustomizationSheet(
+                                        product: product,
+                                        businessId: widget.businessId,
+                                        businessName: butcherName,
+                                        existingItem: ci,
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[50],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
+                                        width: 0.5,
+                                      ),
                                     ),
-                                  );
-                                },
-                                borderRadius: BorderRadius.circular(8),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[50],
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
-                                      width: 0.5,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit_outlined, size: 12, color: textSecondary.withOpacity(0.5)),
-                                      const SizedBox(width: 6),
-                                      Expanded(
-                                        child: Text(
-                                          ci.selectedOptions.map((o) => o.optionName).join(', '),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.edit_outlined, size: 12, color: textSecondary.withOpacity(0.5)),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            ci.selectedOptions.map((o) => o.optionName).join(', '),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: textSecondary,
+                                              height: 1.2,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '${CurrencyUtils.getCurrencySymbol()}${ci.unitPrice.toStringAsFixed(2)}',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: textSecondary,
-                                            height: 1.2,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      SizedBox(width: 6),
-                                      Text(
-                                        '${CurrencyUtils.getCurrencySymbol()}${ci.unitPrice.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: accent,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      if (ci.quantity > 1) ...[
-                                        SizedBox(width: 4),
-                                        Container(
-                                          width: 20,
-                                          height: 20,
-                                          decoration: BoxDecoration(
                                             color: accent,
-                                            shape: BoxShape.circle,
+                                            fontWeight: FontWeight.w600,
                                           ),
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            '${ci.quantity.toInt()}',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              color: Theme.of(context).colorScheme.surface,
+                                        ),
+                                        if (ci.quantity > 1) ...[
+                                          const SizedBox(width: 4),
+                                          Container(
+                                            width: 20,
+                                            height: 20,
+                                            decoration: BoxDecoration(
+                                              color: accent,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              '${ci.quantity.toInt()}',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: Theme.of(context).colorScheme.surface,
+                                              ),
                                             ),
                                           ),
-                                        ),
+                                        ],
                                       ],
-                                    ],
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // Image & Add Button (Right)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Product Image (if any)
+                      if (hasImage)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            color: isDark ? Colors.white10 : Colors.grey[100],
+                            child: Image.network(
+                              product.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Icon(
+                                Icons.restaurant_menu,
+                                size: 40,
+                                color: isDark ? Colors.white24 : Colors.grey[400],
+                              ),
+                            ),
+                          ),
                         ),
-                      const SizedBox(height: 10),
-                      // Stock Status + Add Button
+                        
+                      if (hasImage) const SizedBox(height: 12),
+                      
+                      // Action Button (+ / Edit / Qty Badge)
                       if (isAvailable)
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Cart badge
-                            if (inCart)
+                            // Cart Badge (Left of add button)
+                            if (inCart) ...[
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                 decoration: BoxDecoration(
                                   color: accent.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(6),
@@ -3004,54 +3081,56 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                         ? '${productCartItems.length} çeşit'
                                         : isByWeight 
                                           ? '${cartItem.quantity.toStringAsFixed(0)}g'
-                                          : '${cartItem.quantity.toInt()} adet',
-                                      style: TextStyle(color: accent, fontSize: 11, fontWeight: FontWeight.w600),
+                                          : '${cartItem.quantity.toInt()}x',
+                                      style: TextStyle(color: accent, fontSize: 12, fontWeight: FontWeight.w700),
                                     ),
                                   ],
                                 ),
                               ),
-                            const Spacer(),
-                            // Add Button
-                            Material(
-                              color: accent,
-                              borderRadius: BorderRadius.circular(10),
-                              child: InkWell(
-                                onTap: () => _showProductBottomSheet(product),
-                                borderRadius: BorderRadius.circular(10),
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        // Option products always show add, simple products show edit when in cart
-                                        (inCart && product.optionGroups.isEmpty) ? Icons.edit : Icons.add, 
-                                        color: Theme.of(context).colorScheme.surface, size: 16,
-                                      ),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        (inCart && product.optionGroups.isEmpty) ? 'Düzenle' : '+ Ekle',
-                                        style: TextStyle(
-                                          color: Theme.of(context).colorScheme.surface,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              const SizedBox(width: 8),
+                            ],
+                            
+                            // + / Edit Button
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(
+                                  color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                                  width: 1,
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  )
+                                ],
+                              ),
+                              child: Icon(
+                                (inCart && product.optionGroups.isEmpty) ? Icons.edit : Icons.add,
+                                color: accent,
+                                size: 24,
                               ),
                             ),
                           ],
                         ),
                     ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
+        // Separator Line
+        Divider(
+          height: 1,
+          thickness: 0.5,
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.withOpacity(0.2),
+        ),
+      ],
     );
   }
 
@@ -3362,7 +3441,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldBg = isDark ? const Color(0xFF121212) : const Color(0xFFF8F8F8);
+    final scaffoldBg = isDark ? const Color(0xFF121212) : Colors.white;
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.grey[400] : Colors.grey[600];
     final accent = const Color(0xFFFB335B); // Brand color
@@ -3390,13 +3469,6 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
             ),
             decoration: BoxDecoration(
               color: scaffoldBg,
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
               children: [
@@ -3407,7 +3479,6 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
                     ),
                     child: Row(
                       children: [

@@ -3565,7 +3565,7 @@ export default function BusinessDetailsPage() {
                           <span className="text-white">{t('kuryeDestegiVar')}</span>
                         </div>
                         {formData.supportsDelivery && (
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                             <div>
                               <label className="text-gray-400 text-sm">
                                 {t('minSiparis')}
@@ -3594,6 +3594,23 @@ export default function BusinessDetailsPage() {
                                   setFormData({
                                     ...formData,
                                     deliveryFee: parseFloat(e.target.value) || 0,
+                                  })
+                                }
+                                disabled={!isEditing}
+                                className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-gray-400 text-sm">
+                                Maks. Mesafe (km)
+                              </label>
+                              <input
+                                type="number"
+                                value={formData.deliveryRadius || 5}
+                                onChange={(e) =>
+                                  setFormData({
+                                    ...formData,
+                                    deliveryRadius: parseFloat(e.target.value) || 0,
                                   })
                                 }
                                 disabled={!isEditing}

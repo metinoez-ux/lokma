@@ -415,6 +415,15 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           final distanceKm = distanceMeters / 1000;
           debugPrint('📍 ${data['companyName']}: lat=$lat, lng=$lng, distance=${distanceKm.toStringAsFixed(1)}km, maxDist=$_maxDistance');
           if (distanceKm > _maxDistance) return false;
+
+          // Check against merchant's custom delivery radius
+          if (_deliveryMode == 'teslimat') {
+            final double deliveryRadius = (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
+            if (distanceKm > deliveryRadius) {
+              debugPrint('🛑 ${data['companyName']} out of delivery radius: ${distanceKm.toStringAsFixed(1)}km > ${deliveryRadius}km');
+              return false;
+            }
+          }
         } else {
           // No lat/lng - HIDE this business when distance filter is active
           debugPrint('⚠️ ${data['companyName']}: No lat/lng found - HIDING');
@@ -615,8 +624,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     // Arama çubuğu (teslimat/gel al altında)
                                     _buildSearchBar(),
                                     
-                                    // Distance slider - Tüm modlarda göster
-                                    _buildDistanceSlider(),
+                                    // Sadece teslimat modunda göster
+                                    if (_deliveryMode == 'teslimat')
+                                      _buildDistanceSlider(),
                                   ],
                                 ),
                               ),
@@ -1228,6 +1238,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           );
           final distanceKm = distanceMeters / 1000;
           if (distanceKm > _maxDistance) continue;
+
+          if (_deliveryMode == 'teslimat') {
+            final double deliveryRadius = (data['deliveryRadius'] as num?)?.toDouble() ?? 5.0;
+            if (distanceKm > deliveryRadius) continue;
+          }
         }
       }
       
@@ -1648,21 +1663,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 Stack(
                   children: [
                     // Main image - Lieferando style (230px fixed height)
-                    // 🆕 Apply ColorFiltered for grayscale when unavailable
-                    ColorFiltered(
-                      colorFilter: isAvailable 
-                          ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
-                          : const ColorFilter.matrix(<double>[
-                              0.2126, 0.7152, 0.0722, 0, 0,
-                              0.2126, 0.7152, 0.0722, 0, 0,
-                              0.2126, 0.7152, 0.0722, 0, 0,
-                              0,      0,      0,      1, 0,
-                            ]),
-                      child: SizedBox(
-                        height: 230,
-                        width: double.infinity,
-                        child: imageUrl != null && imageUrl.isNotEmpty
-                            ? CachedNetworkImage(
+                    SizedBox(
+                      height: 230,
+                      width: double.infinity,
+                      child: imageUrl != null && imageUrl.isNotEmpty
+                          ? CachedNetworkImage(
                                 imageUrl: imageUrl,
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => Container(
@@ -1692,35 +1697,39 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 ),
                               ),
                       ),
-                    ),
                     
-                    // 🆕 Subtle gray veil + thin "Sipariş Alınmıyor" banner (Lieferando style)
-                    if (!isAvailable) ...[
-                      // Very light overlay — keeps colors visible, just slightly dimmed
+                    // 🆕 Centered badge and darker overlay for unavailable businesses
+                    if (!isAvailable)
                       Positioned.fill(
                         child: Container(
-                          color: Colors.grey.withOpacity(0.15),
-                        ),
-                      ),
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          color: Colors.black.withOpacity(0.55),
-                          child: Text(
-                            unavailableReason ?? 'Sipariş Alınmıyor',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5), // Dark overlay
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              topRight: Radius.circular(16),
+                            ),
+                          ),
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.7),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.white24, width: 1),
+                              ),
+                              child: Text(
+                                unavailableReason ?? 'Sipariş Alınmıyor',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ],
                     
                     // 🆕 Business logo (BOTTOM LEFT - Lieferando style)
                     if (logoUrl != null && logoUrl.isNotEmpty)

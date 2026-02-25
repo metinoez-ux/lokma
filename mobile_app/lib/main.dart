@@ -141,7 +141,7 @@ class LokmaApp extends ConsumerWidget {
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFE8E8EC), // Hafif gri - kontrastlı arka plan
+        scaffoldBackgroundColor: Colors.white, // Pure white background for modern aesthetic
         colorScheme: ColorScheme.light(
           primary: const Color(0xFFFB335B), // LOKMA Brand Color
           secondary: const Color(0xFFFFB347),
