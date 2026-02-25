@@ -473,7 +473,7 @@ export default function AdminHeader() {
                             </div>
 
                             {/* Profile & Role */}
-                            <div className="flex items-center shrink-0 gap-4">
+                            <div className="flex items-center shrink-0 gap-4 z-50">
                                 <LanguageSwitcher />
                                 <div className="relative group">
                                     <button className="flex items-center gap-1.5 hover:bg-white/5 rounded-lg px-2 py-1 transition">
