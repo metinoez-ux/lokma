@@ -636,45 +636,41 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge, // Overflow'u kesin gizle
-              expandedHeight: 220, // Genişletilmiş yükseklik
+              expandedHeight: 280, // Genişletilmiş yükseklik
               collapsedHeight:
                   110, // Daraltılmış yükseklik (sadece konum + arama)
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
-                  // Scroll oranını hesapla (0 = tamamen açık, 1 = tamamen kapalı)
-                  final expandedHeight = 220.0;
+                  final expandedHeight = 280.0;
                   final collapsedHeight = 110.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /
                           (expandedHeight - collapsedHeight))
                       .clamp(0.0, 1.0);
 
-                  return Container(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    alignment: Alignment.bottomCenter,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Kompakt Konum Başlığı (her zaman görünür)
-                        _buildCompactLocationHeader(),
+                  return ClipRect(
+                    child: Container(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      child: SingleChildScrollView(
+                        physics: const NeverScrollableScrollPhysics(),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Location header (her zaman görünür)
+                            _buildCompactLocationHeader(),
 
-                        // Aşağıdaki filtreler scroll ile kaybolur
-                        if (expandRatio > 0.05) ...[
-                          Opacity(
-                            opacity: expandRatio,
-                            child: SizedBox(
-                              height: (expandedHeight - collapsedHeight) * expandRatio,
-                              child: SingleChildScrollView(
-                                physics: const NeverScrollableScrollPhysics(),
+                            // Scroll ile kaybolan elementler
+                            if (expandRatio > 0.05) ...[
+                              Opacity(
+                                opacity: expandRatio,
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     // Delivery mode tabs
                                     _buildDeliveryModeTabs(),
 
-                                    // Arama çubuğu (teslimat/gel al altında)
+                                    // Arama Çubuğu
                                     _buildSearchBar(),
 
                                     // Mesafe aralığını Gel Al ve Masa modlarında göster
@@ -682,20 +678,20 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                         _deliveryMode == 'masa')
                                       _buildDistanceSlider()
                                     else if (_deliveryMode == 'teslimat')
-                                      _buildTunaToggleOnly(), // Sadece Teslimat modunda göster
+                                      _buildTunaToggleOnly(), // Teslimatta sadece Tuna
 
                                     // Kategoriler Yatay Liste
                                     _buildDynamicCategoryChips(),
                                   ],
                                 ),
                               ),
-                            ),
-                          ),
-                        ] else ...[
-                          // Collapsed state: sadece arama çubuğu
-                          _buildSearchBar(),
-                        ],
-                      ],
+                            ] else ...[
+                              // Collapsed state: sadece arama çubuğu görünür, mesafe ve tabs gizli
+                              _buildSearchBar(),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
                   );
                 },

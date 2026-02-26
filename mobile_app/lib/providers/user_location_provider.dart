@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
@@ -54,8 +55,8 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
 
   @override
   AsyncValue<UserLocation> build() {
-    // Auto-fetch on first access
-    fetchLocation();
+    // Auto-fetch on first access, but don't await it here to prevent blocking
+    Future.microtask(() => fetchLocation());
     return const AsyncValue.loading();
   }
 
@@ -68,7 +69,11 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
     }
 
     debugPrint('📍 Fetching user location (first time or refresh)...');
-    state = const AsyncValue.loading();
+    
+    // SADECE forceRefresh ise loading state'e geçir (ilk açılışta zaten loading olarak başlıyor)
+    if (forceRefresh) {
+      state = const AsyncValue.loading();
+    }
 
     try {
       // Check permission
@@ -88,10 +93,27 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
         return;
       }
 
-      // Get current position
+      // Check if location services are enabled (often missed and blocks FOREVER)
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        debugPrint('📍 Location services are disabled!');
+        _hasFetched = true;
+        state = AsyncValue.data(UserLocation(
+            latitude: 0,
+            longitude: 0,
+            address: 'Konum servisleri kapalı',
+            street: '',
+            city: '',
+            hasPermission: false,
+            error: 'Konum servisleri kapalı'));
+        return;
+      }
+
+      // Get current position - Added timeout to prevent hanging forever
       debugPrint('📍 Getting current position...');
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15), // 15 SECOND TIMEOUT ADDED
       );
       debugPrint('📍 Got position: lat=${position.latitude}, lng=${position.longitude}');
 
@@ -100,7 +122,7 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
       final placemarks = await placemarkFromCoordinates(
         position.latitude,
         position.longitude,
-      );
+      ).timeout(const Duration(seconds: 10)); // 10 SECOND TIMEOUT ADDED
 
       String address = '';
       String street = '';
@@ -140,7 +162,19 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
     } catch (e, st) {
       debugPrint('❌ Error fetching location: $e');
       _hasFetched = true;
-      state = AsyncValue.error(e, st);
+      // Timeout ve benzeri hatalar için fallback
+      if (e is TimeoutException) {
+         state = AsyncValue.data(UserLocation(
+            latitude: 0,
+            longitude: 0,
+            address: 'Konum alınamadı (Zaman aşımı)',
+            street: '',
+            city: '',
+            hasPermission: true, // Izin var ama alamadi
+            error: 'Konum zaman aşımı'));
+      } else {
+         state = AsyncValue.error(e, st);
+      }
     }
   }
 
