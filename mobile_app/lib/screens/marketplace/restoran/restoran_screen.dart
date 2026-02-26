@@ -679,7 +679,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                       _buildDistanceSlider()
                                     else if (_deliveryMode == 'teslimat')
                                       _buildTunaToggleOnly(), // Teslimatta sadece Tuna
-
                                   ],
                                 ),
                               ),
