@@ -38,13 +38,13 @@ class GroupOrderHistoryCard extends StatelessWidget {
         color: cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey.withOpacity(0.15),
+          color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.withValues(alpha: 0.15),
         ),
         boxShadow: isDark
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -60,7 +60,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: _accent.withOpacity(0.12),
+              color: _accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.groups_rounded, color: _accent, size: 24),
@@ -142,7 +142,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
             // Other participants summary
             if (session.participants.length > 1) ...[
               const SizedBox(height: 12),
-              Divider(color: subtitleColor.withOpacity(0.3)),
+              Divider(color: subtitleColor.withValues(alpha: 0.3)),
               const SizedBox(height: 8),
               _sectionHeader('Diğer Katılımcılar', textColor),
               const SizedBox(height: 6),
@@ -182,7 +182,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: _accent.withOpacity(0.08),
+                  color: _accent.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(

@@ -233,7 +233,7 @@ class _ProductCustomizationSheetState
                         hintStyle: TextStyle(color: textSecondary, fontSize: 13),
                         prefixIcon: Icon(Icons.edit_note_rounded, color: accent, size: 20),
                         filled: true,
-                        fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                        fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -482,7 +482,7 @@ class _ProductCustomizationSheetState
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: group.required
-                    ? accent.withOpacity(0.12)
+                    ? accent.withValues(alpha: 0.12)
                     : (isDark ? Colors.white10 : Colors.grey[100]),
                 borderRadius: BorderRadius.circular(6),
               ),

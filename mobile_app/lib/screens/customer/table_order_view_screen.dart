@@ -687,7 +687,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
         borderRadius: BorderRadius.circular(14),
         border: inCart
             ? Border.all(color: Colors.amber.shade300, width: 1.5)
-            : Border.all(color: Colors.grey.withOpacity(0.1)),
+            : Border.all(color: Colors.grey.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -863,7 +863,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                         ),
                         Text(
                           '${filtered.length} sipariş',
-                          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
                         ),
                       ],
                     ),
@@ -1018,9 +1018,9 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         '$emoji $label',

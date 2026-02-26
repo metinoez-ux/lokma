@@ -199,7 +199,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         title: Container(
           margin: const EdgeInsets.only(left: 4),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -265,7 +265,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -441,9 +441,9 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.08),
+                color: Colors.amber.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.withOpacity(0.2)),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
               ),
               child: Row(
                 children: [
@@ -483,7 +483,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           margin: const EdgeInsets.only(left: 6),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: entry.value.$2.withOpacity(0.15),
+            color: entry.value.$2.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -512,13 +512,13 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isMyOrder 
-              ? Colors.blue.withOpacity(0.4)
-              : Colors.grey.withOpacity(0.15),
+              ? Colors.blue.withValues(alpha: 0.4)
+              : Colors.grey.withValues(alpha: 0.15),
           width: isMyOrder ? 2 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -533,7 +533,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusConfig.$2.withOpacity(0.15),
+                  color: statusConfig.$2.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -549,7 +549,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
+                  color: Colors.amber.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -599,7 +599,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: isMyOrder ? Colors.blue.withOpacity(0.1) : Colors.purple.withOpacity(0.1),
+                    color: isMyOrder ? Colors.blue.withValues(alpha: 0.1) : Colors.purple.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -956,7 +956,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -968,7 +968,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               ),
               child: Row(
@@ -1067,8 +1067,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.1),
-                        border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                        color: Colors.amber.withValues(alpha: 0.1),
+                        border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
@@ -1453,9 +1453,9 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
       margin: const EdgeInsets.only(right: 6),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

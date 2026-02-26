@@ -61,7 +61,7 @@ class _DistanceSliderState extends State<DistanceSlider> {
               activeTrackColor: Colors.grey.shade900,
               inactiveTrackColor: Colors.grey.shade800,
               thumbColor: widget.accentColor,
-              overlayColor: widget.accentColor.withOpacity(0.2),
+              overlayColor: widget.accentColor.withValues(alpha: 0.2),
               trackHeight: 4,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
             ),
@@ -88,7 +88,7 @@ class _DistanceSliderState extends State<DistanceSlider> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: widget.accentColor.withOpacity(0.4),
+                color: widget.accentColor.withValues(alpha: 0.4),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),

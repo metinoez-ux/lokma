@@ -26,7 +26,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
   // Courier-specific ratings
   int _foodFreshnessRating = 0;
   int _courierProfessionalismRating = 0;
-  bool _wasDeliveryOrder = true; // Assume delivery by default
+  final bool _wasDeliveryOrder = true; // Assume delivery by default
 
   final TextEditingController _noteController = TextEditingController();
   bool _isSubmitting = false;

@@ -64,9 +64,9 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF0A0E14) : Colors.grey[50]!;
     final textColor = isDark ? Colors.white : Colors.black87;
-    final subtextColor = isDark ? Colors.white.withOpacity(0.7) : Colors.black54;
-    final surfaceColor = isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
-    final borderColor = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
+    final subtextColor = isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black54;
+    final surfaceColor = isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05);
+    final borderColor = isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -84,7 +84,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      accent.withOpacity(0.3),
+                      accent.withValues(alpha: 0.3),
                       bgColor,
                     ],
                   ),
@@ -130,12 +130,12 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.amber.withOpacity(0.2),
-                      Colors.amber.withOpacity(0.2),
+                      Colors.amber.withValues(alpha: 0.2),
+                      Colors.amber.withValues(alpha: 0.2),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -221,7 +221,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                             const SizedBox(height: 8),
                             Text(
                               'Catering hizmeti veren işletmeler henüz eklenmedi',
-                              style: TextStyle(color: isDark ? Colors.white.withOpacity(0.5) : Colors.black45),
+                              style: TextStyle(color: isDark ? Colors.white.withValues(alpha: 0.5) : Colors.black45),
                             ),
                           ],
                         ),
@@ -295,12 +295,12 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              accent.withOpacity(0.15),
+              accent.withValues(alpha: 0.15),
               Colors.transparent,
             ],
           ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accent.withOpacity(0.3)),
+          border: Border.all(color: accent.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -309,7 +309,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: accent.withOpacity(0.2),
+                color: accent.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: logoUrl != null
@@ -349,7 +349,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                     Text(
                       '💰 Fiyat teklifi için iletişime geçin',
                       style: TextStyle(
-                        color: accent.withOpacity(0.8),
+                        color: accent.withValues(alpha: 0.8),
                         fontSize: 11,
                       ),
                     )
@@ -357,7 +357,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                     Text(
                       '🔒 Giriş yapın ve fiyatları görün',
                       style: TextStyle(
-                        color: Colors.amber.withOpacity(0.8),
+                        color: Colors.amber.withValues(alpha: 0.8),
                         fontSize: 11,
                       ),
                     ),
@@ -368,7 +368,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.2),
+                color: Colors.green.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.phone, color: Colors.green, size: 20),
@@ -398,7 +398,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.3) : Colors.black.withOpacity(0.2),
+              color: isDark ? Colors.white.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -414,7 +414,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
           const SizedBox(height: 8),
           Text(
             '🎉 Catering Hizmeti',
-            style: TextStyle(color: isDark ? Colors.white.withOpacity(0.6) : Colors.black54),
+            style: TextStyle(color: isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black54),
           ),
           const SizedBox(height: 24),
           if (phone.isNotEmpty)
@@ -445,9 +445,9 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -458,7 +458,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-                  Text(value, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withOpacity(0.7) : Colors.black54, fontSize: 12)),
+                  Text(value, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.7) : Colors.black54, fontSize: 12)),
                 ],
               ),
             ),

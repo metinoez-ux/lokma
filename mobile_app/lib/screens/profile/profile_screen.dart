@@ -7,14 +7,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 import '../../providers/theme_provider.dart';
 import '../../providers/driver_provider.dart';
 import '../../services/staff_role_service.dart';
-import '../staff/staff_delivery_screen.dart';
-import '../driver/driver_delivery_screen.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -55,7 +52,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -72,7 +69,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.camera_alt,
@@ -89,7 +86,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 leading: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.photo_library,
@@ -220,7 +217,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const Text(
               'LOKMA',
               style: TextStyle(
-                color: const Color(0xFFFB335B),
+                color: Color(0xFFFB335B),
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
@@ -256,7 +253,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFB335B).withOpacity(0.3),
+                      color: const Color(0xFFFB335B).withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -323,7 +320,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         decoration: BoxDecoration(
           color: isApple ? Colors.black : cardBg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
         ),
         child: Center(
           child: Text(
@@ -407,7 +404,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               color: Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? const Color(0xFF2C2C2E)
-                                  : Colors.white.withOpacity(0.1),
+                                  : Colors.white.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.notifications_outlined,
@@ -485,8 +482,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             final hasReservation = snapshot.data == true;
 
                             // If neither driver nor reservation staff, hide
-                            if (!isDriver && !hasReservation)
+                            if (!isDriver && !hasReservation) {
                               return const SizedBox.shrink();
+                            }
 
                             return Column(
                               children: [
@@ -504,9 +502,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                       gradient: LinearGradient(
                                         colors: [
                                           const Color(0xFFFB335B)
-                                              .withOpacity(0.08),
+                                              .withValues(alpha: 0.08),
                                           const Color(0xFFFB335B)
-                                              .withOpacity(0.03),
+                                              .withValues(alpha: 0.03),
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(12),
@@ -520,7 +518,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFFB335B)
-                                                .withOpacity(0.1),
+                                                .withValues(alpha: 0.1),
                                             borderRadius:
                                                 BorderRadius.circular(10),
                                           ),
@@ -559,7 +557,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                         Icon(Icons.arrow_forward_ios,
                                             size: 16,
                                             color: const Color(0xFFFB335B)
-                                                .withOpacity(0.5)),
+                                                .withValues(alpha: 0.5)),
                                       ],
                                     ),
                                   ),

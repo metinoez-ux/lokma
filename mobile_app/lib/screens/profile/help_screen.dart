@@ -124,7 +124,7 @@ class HelpScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: lokmaRed.withOpacity(0.1),
+                      color: lokmaRed.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Row(
@@ -176,7 +176,7 @@ class _FAQItemState extends State<_FAQItem> {
       decoration: BoxDecoration(
         color: surfaceCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _isExpanded ? lokmaRed.withOpacity(0.5) : borderSubtle),
+        border: Border.all(color: _isExpanded ? lokmaRed.withValues(alpha: 0.5) : borderSubtle),
       ),
       child: Column(
         children: [

@@ -503,7 +503,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: isSelected ? primaryRose.withOpacity(0.1) : (Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[50]),
+          color: isSelected ? primaryRose.withValues(alpha: 0.1) : (Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[50]),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? primaryRose : (Theme.of(context).brightness == Brightness.dark ? Colors.grey[700]! : Colors.grey[200]!),
@@ -563,7 +563,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             slivers: [
               // ===== STICKY HEADER =====
               SliverAppBar(
-                backgroundColor: bgColor.withOpacity(0.95),
+                backgroundColor: bgColor.withValues(alpha: 0.95),
                 surfaceTintColor: Colors.transparent,
                 pinned: true,
                 floating: false,
@@ -581,7 +581,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                     
                     return ClipRect(
                       child: Container(
-                        color: bgColor.withOpacity(0.95),
+                        color: bgColor.withValues(alpha: 0.95),
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: SingleChildScrollView(
                           physics: const NeverScrollableScrollPhysics(),
@@ -708,7 +708,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isDark ? primaryRose.withOpacity(0.2) : roseLight,
+                    color: isDark ? primaryRose.withValues(alpha: 0.2) : roseLight,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.location_on, color: primaryRose, size: 20),
@@ -810,7 +810,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -898,7 +898,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: primaryRose.withOpacity(0.1),
+            color: primaryRose.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -924,12 +924,12 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
               activeTrackColor: primaryRose,
               inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[400],
               thumbColor: primaryRose,
-              overlayColor: primaryRose.withOpacity(0.2),
+              overlayColor: primaryRose.withValues(alpha: 0.2),
               trackHeight: 4,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
               // Tick marks for visibility
               tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 3),
-              activeTickMarkColor: Colors.white.withOpacity(0.8),
+              activeTickMarkColor: Colors.white.withValues(alpha: 0.8),
               inactiveTickMarkColor: isDark ? Colors.grey[400] : Colors.grey[600],
             ),
             child: Slider(

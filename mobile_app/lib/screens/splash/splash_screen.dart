@@ -4,8 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -101,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     ),
@@ -186,7 +184,7 @@ class _SplashScreenState extends State<SplashScreen> {
                                       duration: const Duration(milliseconds: 200),
                                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                                       decoration: BoxDecoration(
-                                        color: isSelected ? lokmaRed.withOpacity(0.1) : Colors.grey[100],
+                                        color: isSelected ? lokmaRed.withValues(alpha: 0.1) : Colors.grey[100],
                                         borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
                                           color: isSelected ? lokmaRed : Colors.transparent,

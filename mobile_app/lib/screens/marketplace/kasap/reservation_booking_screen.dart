@@ -385,9 +385,9 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(isDark ? 0.15 : 0.1),
+                color: Colors.amber.withValues(alpha: isDark ? 0.15 : 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -531,7 +531,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
-                                          color: _accent.withOpacity(0.3),
+                                          color: _accent.withValues(alpha: 0.3),
                                           blurRadius: 8,
                                           offset: const Offset(0, 3),
                                         )
@@ -619,7 +619,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
-                                          color: _accent.withOpacity(0.3),
+                                          color: _accent.withValues(alpha: 0.3),
                                           blurRadius: 8,
                                           offset: const Offset(0, 3),
                                         )
@@ -767,7 +767,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             decoration: BoxDecoration(
                               color: isFull
-                                  ? (isDark ? Colors.red[900]!.withOpacity(0.3) : Colors.red[50])
+                                  ? (isDark ? Colors.red[900]!.withValues(alpha: 0.3) : Colors.red[50])
                                   : isPast
                                       ? (isDark ? Colors.grey[800] : Colors.grey[300])
                                       : isSelected
@@ -775,7 +775,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                           : (isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]),
                               borderRadius: BorderRadius.circular(10),
                               border: isFull
-                                  ? Border.all(color: Colors.red.withOpacity(0.3))
+                                  ? Border.all(color: Colors.red.withValues(alpha: 0.3))
                                   : isSelected || isPast
                                       ? null
                                       : Border.all(
@@ -784,7 +784,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                               boxShadow: isSelected && !isDisabled
                                   ? [
                                       BoxShadow(
-                                        color: _accent.withOpacity(0.3),
+                                        color: _accent.withValues(alpha: 0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3),
                                       )
@@ -988,7 +988,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

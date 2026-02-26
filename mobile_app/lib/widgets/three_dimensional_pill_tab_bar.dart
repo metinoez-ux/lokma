@@ -31,7 +31,7 @@ class ThreeDimensionalPillTabBar extends StatelessWidget {
     
     // Dark mode: koyu gri track, Light mode: açık gri track
     final trackColor = isDark ? const Color(0xFF2A2A2A) : Colors.grey[200]!;
-    final shadowColor = isDark ? Colors.black.withOpacity(0.4) : Colors.black.withOpacity(0.08);
+    final shadowColor = isDark ? Colors.black.withValues(alpha: 0.4) : Colors.black.withValues(alpha: 0.08);
     final unselectedTextColor = isDark ? Colors.grey[400] : Colors.grey[700];
     
     return Container(
@@ -52,7 +52,7 @@ class ThreeDimensionalPillTabBar extends StatelessWidget {
         ],
         // Inner shadow effect for inset look
         border: isDark 
-            ? Border.all(color: Colors.white.withOpacity(0.05), width: 0.5)
+            ? Border.all(color: Colors.white.withValues(alpha: 0.05), width: 0.5)
             : null,
       ),
       child: Stack(
@@ -105,15 +105,15 @@ class ThreeDimensionalPillTabBar extends StatelessWidget {
                     // Drop shadow for 3D lift - stronger in dark mode
                     BoxShadow(
                       color: isDark 
-                          ? Colors.black.withOpacity(0.5) 
-                          : Colors.black.withOpacity(0.2),
+                          ? Colors.black.withValues(alpha: 0.5) 
+                          : Colors.black.withValues(alpha: 0.2),
                       blurRadius: isDark ? 6 : 4,
                       offset: const Offset(0, 2),
                     ),
                     // Glow effect in dark mode
                     if (isDark)
                       BoxShadow(
-                        color: lokmaPink.withOpacity(0.3),
+                        color: lokmaPink.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 0),
                       ),

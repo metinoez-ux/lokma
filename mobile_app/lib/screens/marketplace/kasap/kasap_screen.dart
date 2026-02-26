@@ -42,7 +42,7 @@ class _KasapScreenState extends State<KasapScreen> {
   static const Color accent = Color(0xFFFF6B35);
   
   // Selected sector filters - empty means all
-  Set<String> _selectedSectors = {};
+  final Set<String> _selectedSectors = {};
 
   @override
   Widget build(BuildContext context) {
@@ -189,8 +189,8 @@ class _KasapScreenState extends State<KasapScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
                               color: isSelected 
-                                  ? Color(sector['color'] as int).withOpacity(0.2)
-                                  : Colors.white.withOpacity(0.05),
+                                  ? Color(sector['color'] as int).withValues(alpha: 0.2)
+                                  : Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: isSelected 
                                   ? Border.all(color: Color(sector['color'] as int), width: 2)
@@ -433,7 +433,7 @@ class _BusinessCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,7 +466,7 @@ class _BusinessCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: sectorColor.withOpacity(0.9),
+                        color: sectorColor.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -585,7 +585,7 @@ class _BusinessCard extends StatelessWidget {
               child: Builder(
                 builder: (context) {
                   final isDark = Theme.of(context).brightness == Brightness.dark;
-                  final textColor = isDark ? Colors.white.withOpacity(0.9) : Colors.black87;
+                  final textColor = isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87;
                   final starColor = isDark ? Color(0xFFFF9529) : Color(0xFFFF9529);
                   
                   return Column(
@@ -608,7 +608,7 @@ class _BusinessCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: isOpen ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                              color: isOpen ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(

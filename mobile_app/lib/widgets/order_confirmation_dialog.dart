@@ -24,7 +24,7 @@ class OrderConfirmationDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final cardColor = isDark ? Colors.white.withOpacity(0.06) : Colors.grey.shade50;
+    final cardColor = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.shade50;
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
     final subtextColor = isDark ? Colors.white70 : Colors.grey.shade600;
     final borderColor = isDark ? Colors.white10 : Colors.grey.shade200;
@@ -43,7 +43,7 @@ class OrderConfirmationDialog extends StatelessWidget {
             border: Border.all(color: borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.5 : 0.15),
+                color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.15),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -61,8 +61,8 @@ class OrderConfirmationDialog extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      Colors.green.withOpacity(0.15),
-                      Colors.green.withOpacity(0.05),
+                      Colors.green.withValues(alpha: 0.15),
+                      Colors.green.withValues(alpha: 0.05),
                     ],
                   ),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -151,9 +151,9 @@ class OrderConfirmationDialog extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(isDark ? 0.12 : 0.08),
+                  color: Colors.amber.withValues(alpha: isDark ? 0.12 : 0.08),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   isDineIn

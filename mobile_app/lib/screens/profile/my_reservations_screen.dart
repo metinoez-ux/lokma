@@ -1,10 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -193,10 +191,10 @@ class MyReservationsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: statusInfo.borderColor.withOpacity(0.3)),
+        border: Border.all(color: statusInfo.borderColor.withValues(alpha: 0.3)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -208,7 +206,7 @@ class MyReservationsScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: statusInfo.bgColor.withOpacity(isDark ? 0.15 : 0.06),
+              color: statusInfo.bgColor.withValues(alpha: isDark ? 0.15 : 0.06),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
             ),
             child: Row(
@@ -274,9 +272,9 @@ class MyReservationsScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(isDark ? 0.15 : 0.08),
+                      color: Colors.green.withValues(alpha: isDark ? 0.15 : 0.08),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [

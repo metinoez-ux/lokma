@@ -497,14 +497,14 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFB335B).withOpacity(0.1),
+                    color: const Color(0xFFFB335B).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFFFB335B),
+                      color: Color(0xFFFB335B),
                     ),
                   ),
                 ),
@@ -512,7 +512,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
+                    color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(

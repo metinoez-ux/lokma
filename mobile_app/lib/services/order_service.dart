@@ -629,7 +629,7 @@ class OrderService {
   }) async {
     // Fetch order to get claimLocation for km calculation
     final orderDoc = await _db.collection(_collection).doc(orderId).get();
-    final orderData = orderDoc.data() as Map<String, dynamic>?;
+    final orderData = orderDoc.data();
     final claimLocation = orderData?['claimLocation'] as Map<String, dynamic>?;
 
     // Get current GPS location with fallback to last known position

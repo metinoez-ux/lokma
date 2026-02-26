@@ -455,7 +455,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE30A17))),
         filled: true,
         fillColor: cardBg,
-        labelStyle: TextStyle(color: isOptional ? hintColor.withOpacity(0.5) : hintColor, fontSize: 13),
+        labelStyle: TextStyle(color: isOptional ? hintColor.withValues(alpha: 0.5) : hintColor, fontSize: 13),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         isDense: true,
       );
@@ -554,7 +554,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                     icon: const Icon(Icons.my_location, color: Color(0xFFE30A17)),
                     label: const Text('Konum Bul', style: TextStyle(color: Color(0xFFE30A17))),
                     style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFE30A17).withOpacity(0.1),
+                      backgroundColor: const Color(0xFFE30A17).withValues(alpha: 0.1),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     ),

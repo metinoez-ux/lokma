@@ -18,9 +18,6 @@ import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/utils/i18n_utils.dart';
 import 'cart_screen.dart';
 import 'product_customization_sheet.dart';
-import 'reservation_booking_screen.dart';
-import 'package:lokma_app/utils/opening_hours_helper.dart';
-import 'package:lokma_app/providers/theme_provider.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import '../../../utils/currency_utils.dart';
 
@@ -152,7 +149,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   
   // 🔍 Menu Search
   String _menuSearchQuery = '';
-  bool _isSearching = false;
+  final bool _isSearching = false;
   
   // 📜 Scroll Controller for Lieferando-style search bar
   final ScrollController _scrollController = ScrollController();
@@ -393,16 +390,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   preOrderEnabled
                       ? 'Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Sipariş verirseniz işletme açıldığında hazırlanacaktır.'
                       : 'Bu işletme şu an sipariş kabul etmiyor. Çalışma saatlerinde tekrar deneyebilir veya açık işletmeleri görebilirsiniz.',
-                  style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7), fontSize: 14, height: 1.4),
+                  style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7), fontSize: 14, height: 1.4),
                 ),
                 if (preOrderEnabled) ...[
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: Colors.green.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                     ),
                     child: const Row(
                       children: [
@@ -425,7 +422,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 onPressed: () => Navigator.pop(dialogContext),
                 child: Text(
                   preOrderEnabled ? 'Ön Sipariş Ver' : 'Göz At',
-                  style: TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.5)),
+                  style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
                 ),
               ),
               if (!preOrderEnabled)
@@ -703,7 +700,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   ),
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                                    decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
                                     child: Row(
                                       children: [
                                         Text('${review['rating']}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 12)),
@@ -972,9 +969,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
-            border: Border.all(color: color.withOpacity(0.3), width: 2),
+            border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
           ),
           child: Icon(icon, color: color, size: 28),
         ),
@@ -1343,9 +1340,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
           decoration: BoxDecoration(
-            color: isToday ? Colors.green.withOpacity(0.1) : Colors.transparent,
+            color: isToday ? Colors.green.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
-            border: isToday ? Border.all(color: Colors.green.withOpacity(0.3)) : null,
+            border: isToday ? Border.all(color: Colors.green.withValues(alpha: 0.3)) : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1433,9 +1430,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1567,7 +1564,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             final query = _menuSearchQuery.toLowerCase();
             searchResults = products.where((p) => 
               p.name.toLowerCase().contains(query) ||
-              (p.description?.toLowerCase().contains(query) ?? false)
+              (p.description.toLowerCase().contains(query) ?? false)
             ).toList();
           }
 
@@ -1706,12 +1703,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 decoration: BoxDecoration(
                                   color: Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(8),
-                                  boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), blurRadius: 8)],
+                                  boxShadow: [BoxShadow(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2), blurRadius: 8)],
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
                                   child: CachedNetworkImage(
-                                    imageUrl: data!['logoUrl'],
+                                    imageUrl: data['logoUrl'],
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -1748,8 +1745,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             top: 12,
                             child: Material(
                               color: isFavorite 
-                                  ? accent.withOpacity(0.9) 
-                                  : Colors.black.withOpacity(0.4),
+                                  ? accent.withValues(alpha: 0.9) 
+                                  : Colors.black.withValues(alpha: 0.4),
                               borderRadius: BorderRadius.circular(20),
                               child: InkWell(
                                 onTap: () {
@@ -1809,7 +1806,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  padding: const EdgeInsets.all(8),
                                  child: Icon(
                                    Icons.info_outline,
-                                   color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                    size: 20,
                                  ),
                                ),
@@ -1839,7 +1836,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                    Text(
                                      '${_placeDetails!['rating']} (${_placeDetails!['user_ratings_total']}+)',
                                      style: TextStyle(
-                                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                                        fontSize: 13,
                                        fontWeight: FontWeight.w500,
                                      ),
@@ -1883,7 +1880,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              Text(
                                'Min. ${data!['minDeliveryOrder']}${CurrencyUtils.getCurrencySymbol()}',
                                style: TextStyle(
-                                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                  fontSize: 13,
                                ),
                              ),
@@ -2130,7 +2127,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -2183,7 +2180,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         : Color(0xFFFB335B), // Red Pill if truly out
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
-                         BoxShadow(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), blurRadius: 4, offset:Offset(0,2))
+                         BoxShadow(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4), blurRadius: 4, offset:Offset(0,2))
                       ],
                     ),
                     child: Text(
@@ -2232,7 +2229,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       margin: const EdgeInsets.only(top: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.blue[900]?.withOpacity(0.3),
+                        color: Colors.blue[900]?.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.blue[800]!, width: 1),
                       ),
@@ -2688,7 +2685,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
                       prefixIcon: Icon(Icons.edit_note_rounded, color: accent, size: 20),
                       filled: true,
-                      fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -2703,7 +2700,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey[100],
+                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -2712,7 +2709,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         // Decrease / Delete
                         Material(
                           color: (isEditing && selectedQty <= product.minQuantity)
-                            ? Colors.red.withOpacity(0.15)
+                            ? Colors.red.withValues(alpha: 0.15)
                             : (isDark ? Colors.white12 : Colors.grey[300]),
                           borderRadius: BorderRadius.circular(8),
                           child: InkWell(
@@ -2883,7 +2880,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
               // Highlight background slightly if in cart
               color: (inCart && isAvailable) 
-                  ? accent.withOpacity(isDark ? 0.08 : 0.04) 
+                  ? accent.withValues(alpha: isDark ? 0.08 : 0.04) 
                   : Colors.transparent,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2970,16 +2967,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                     decoration: BoxDecoration(
-                                      color: isDark ? Colors.white.withOpacity(0.06) : Colors.grey[50],
+                                      color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey[50],
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                        color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[200]!,
+                                        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[200]!,
                                         width: 0.5,
                                       ),
                                     ),
                                     child: Row(
                                       children: [
-                                        Icon(Icons.edit_outlined, size: 12, color: textSecondary.withOpacity(0.5)),
+                                        Icon(Icons.edit_outlined, size: 12, color: textSecondary.withValues(alpha: 0.5)),
                                         const SizedBox(width: 6),
                                         Expanded(
                                           child: Text(
@@ -3071,7 +3068,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: accent.withOpacity(0.15),
+                                  color: accent.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Row(
@@ -3106,7 +3103,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
+                                    color: Colors.black.withValues(alpha: 0.05),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   )
@@ -3131,7 +3128,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         Divider(
           height: 1,
           thickness: 0.5,
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.withOpacity(0.2),
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.2),
         ),
       ],
     );
@@ -3158,12 +3155,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
+              colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.05)],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withOpacity(0.3)),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
@@ -3171,7 +3168,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: color, size: 22),
@@ -3238,9 +3235,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.1),
+                color: Colors.amber.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
@@ -3436,7 +3433,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
     final query = _normalizeTurkish(_localQuery);
     return widget.products.where((p) => 
       _normalizeTurkish(p.name).contains(query) ||
-      (p.description != null && _normalizeTurkish(p.description!).contains(query)) ||
+      (_normalizeTurkish(p.description).contains(query)) ||
       _normalizeTurkish(p.category).contains(query)
     ).toList();
   }
@@ -3655,10 +3652,10 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                           color: textSecondary,
                         ),
                       ),
-                      if (product.description != null && product.description!.isNotEmpty) ...[
+                      if (product.description.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
-                          product.description!,
+                          product.description,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(

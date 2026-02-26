@@ -47,7 +47,7 @@ class KermesDetailSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.7),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
       builder: (context) => KermesDetailSheet(
         event: event,
         currentPosition: currentPosition,
@@ -322,7 +322,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
+                      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -357,7 +357,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.black,
-                  Colors.black.withOpacity(0.6),
+                  Colors.black.withValues(alpha: 0.6),
                   Colors.transparent,
                 ],
                 stops: const [0.0, 0.4, 1.0],
@@ -367,10 +367,10 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                 imageUrl: displayImage,
                 fit: BoxFit.cover,
                 colorBlendMode: BlendMode.colorBurn,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                 placeholder: (context, url) => Container(color: Theme.of(context).colorScheme.onSurface),
                 errorWidget: (context, url, error) => Container(
-                  color: primaryRuby.withOpacity(0.3),
+                  color: primaryRuby.withValues(alpha: 0.3),
                   child: const Center(
                     child: Icon(Icons.festival, color: primaryRuby, size: 64),
                   ),
@@ -387,7 +387,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.2),
+                    Colors.black.withValues(alpha: 0.2),
                     Colors.transparent,
                     bgDark,
                   ],
@@ -470,7 +470,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                     Text(
                       '${widget.event.country} ${_getCountryFlag(widget.event.country)}',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.surface.withOpacity(0.6),
+                        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 1,
@@ -518,9 +518,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+            border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -534,7 +534,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: primaryRuby.withOpacity(0.6),
+                      color: primaryRuby.withValues(alpha: 0.6),
                       blurRadius: 8,
                       spreadRadius: 2,
                     ),
@@ -576,12 +576,12 @@ Gel, birlikte güzel vakit geçirelim! 🤝
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+        border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             blurRadius: 50,
             offset: Offset(0, 20),
           ),
@@ -597,9 +597,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+                    border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05)),
                   ),
                   child: Icon(Icons.calendar_month, color: Theme.of(context).colorScheme.surface, size: 14),
                 ),
@@ -638,7 +638,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
           Container(
             height: 32,
             width: 1,
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
             margin: EdgeInsets.symmetric(horizontal: 8),
           ),
           
@@ -675,9 +675,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+                    border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05)),
                   ),
                   child: Icon(Icons.schedule, color: Theme.of(context).colorScheme.surface, size: 14),
                 ),
@@ -701,12 +701,12 @@ Gel, birlikte güzel vakit geçirelim! 🤝
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+          border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1)),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               blurRadius: 50,
               offset: const Offset(0, 20),
             ),
@@ -737,10 +737,10 @@ Gel, birlikte güzel vakit geçirelim! 🤝
         decoration: BoxDecoration(
           color: surfaceObsidian,
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+          border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05)),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               blurRadius: 50,
               offset: const Offset(0, 20),
             ),
@@ -766,9 +766,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.2),
-                      Colors.black.withOpacity(0.4),
-                      bgDark.withOpacity(0.8),
+                      Colors.black.withValues(alpha: 0.2),
+                      Colors.black.withValues(alpha: 0.4),
+                      bgDark.withValues(alpha: 0.8),
                       bgDark,
                     ],
                     stops: const [0.0, 0.4, 0.7, 1.0],
@@ -788,7 +788,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: primaryRuby.withOpacity(0.3),
+                      color: primaryRuby.withValues(alpha: 0.3),
                       blurRadius: 30,
                       offset: Offset(0, 10),
                     ),
@@ -814,12 +814,12 @@ Gel, birlikte güzel vakit geçirelim! 🤝
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: surfaceObsidian.withOpacity(0.8),
+                  color: surfaceObsidian.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+                  border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1)),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                       blurRadius: 20,
                     ),
                   ],
@@ -864,7 +864,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: primaryRuby.withOpacity(0.3),
+                            color: primaryRuby.withValues(alpha: 0.3),
                             blurRadius: 30,
                             offset: Offset(0, 10),
                           ),
@@ -965,9 +965,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.25),
+        color: color.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -993,18 +993,18 @@ Gel, birlikte güzel vakit geçirelim! 🤝
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: surfaceObsidian.withOpacity(0.4),
+        color: surfaceObsidian.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+        border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             blurRadius: 50,
             offset: const Offset(0, 20),
           ),
           // Inner sheen
           BoxShadow(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.03),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.03),
             blurRadius: 1,
             spreadRadius: 0,
             offset: const Offset(0, 1),
@@ -1025,9 +1025,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: primaryRuby.withOpacity(0.1),
+                        color: primaryRuby.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: primaryRuby.withOpacity(0.2)),
+                        border: Border.all(color: primaryRuby.withValues(alpha: 0.2)),
                       ),
                       child: Icon(Icons.location_on, color: primaryRuby, size: 18),
                     ),
@@ -1098,7 +1098,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryRuby.withOpacity(0.3),
+                    color: primaryRuby.withValues(alpha: 0.3),
                     blurRadius: 30,
                     offset: Offset(0, 10),
                   ),
@@ -1131,9 +1131,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+        border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1171,10 +1171,10 @@ Gel, birlikte güzel vakit geçirelim! 🤝
         height: 144,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+          border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05)),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               blurRadius: 50,
               offset: const Offset(0, 20),
             ),
@@ -1188,7 +1188,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
               child: Image.network(
                 parkingImageUrl,
                 fit: BoxFit.cover,
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
                 colorBlendMode: BlendMode.overlay,
                 errorBuilder: (_, __, ___) => Container(color: surfaceObsidian),
               ),
@@ -1203,7 +1203,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                     end: Alignment.centerRight,
                     colors: [
                       bgDark,
-                      surfaceObsidian.withOpacity(0.9),
+                      surfaceObsidian.withValues(alpha: 0.9),
                       Colors.transparent,
                     ],
                   ),
@@ -1225,7 +1225,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Color(0xFF2563EB).withOpacity(0.4),
+                          color: Color(0xFF2563EB).withValues(alpha: 0.4),
                           blurRadius: 20,
                           offset: Offset(0, 8),
                         ),
@@ -1268,7 +1268,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF34D399).withOpacity(0.6),
+                                    color: const Color(0xFF34D399).withValues(alpha: 0.6),
                                     blurRadius: 8,
                                     spreadRadius: 2,
                                   ),
@@ -1292,7 +1292,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                   // Sağ ok ikonu
                   Icon(
                     Icons.arrow_forward_ios,
-                    color: mutedGray.withOpacity(0.5),
+                    color: mutedGray.withValues(alpha: 0.5),
                     size: 16,
                   ),
                 ],
@@ -1311,7 +1311,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: surfaceObsidian.withOpacity(0.4),
+          color: surfaceObsidian.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(32),
         ),
         child: const Center(
@@ -1340,7 +1340,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF22C55E).withOpacity(0.2),
+                  color: const Color(0xFF22C55E).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Row(
@@ -1364,7 +1364,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
               Text(
                 '${widget.event.city.toUpperCase()} HAVA DURUMU',
                 style: TextStyle(
-                  color: mutedGray.withOpacity(0.6),
+                  color: mutedGray.withValues(alpha: 0.6),
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2,
@@ -1403,20 +1403,20 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                       end: Alignment.bottomRight,
                       colors: isSelected
                           ? [const Color(0xFF2563EB), const Color(0xFF1D4ED8)]
-                          : [surfaceObsidian.withOpacity(0.6), surfaceObsidian.withOpacity(0.4)],
+                          : [surfaceObsidian.withValues(alpha: 0.6), surfaceObsidian.withValues(alpha: 0.4)],
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected 
-                          ? const Color(0xFF60A5FA).withOpacity(0.5)
-                          : Colors.white.withOpacity(0.05),
+                          ? const Color(0xFF60A5FA).withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.05),
                       width: isSelected ? 2 : 1,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: isSelected 
-                            ? const Color(0xFF2563EB).withOpacity(0.3)
-                            : Colors.black.withOpacity(0.3),
+                            ? const Color(0xFF2563EB).withValues(alpha: 0.3)
+                            : Colors.black.withValues(alpha: 0.3),
                         blurRadius: 20,
                       ),
                     ],
@@ -1428,7 +1428,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                       Text(
                         dayName.toUpperCase(),
                         style: TextStyle(
-                          color: isSelected ? Colors.blue.shade100.withOpacity(0.8) : mutedGray,
+                          color: isSelected ? Colors.blue.shade100.withValues(alpha: 0.8) : mutedGray,
                           fontSize: 9,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.5,
@@ -1437,7 +1437,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                       Text(
                         '${day.date.day}.${day.date.month}',
                         style: TextStyle(
-                          color: isSelected ? Colors.white.withOpacity(0.6) : mutedGray.withOpacity(0.6),
+                          color: isSelected ? Colors.white.withValues(alpha: 0.6) : mutedGray.withValues(alpha: 0.6),
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1478,7 +1478,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                         decoration: BoxDecoration(
                           border: Border(
                             top: BorderSide(
-                              color: Theme.of(context).colorScheme.surface.withOpacity(0.08),
+                              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.08),
                             ),
                           ),
                         ),
@@ -1532,7 +1532,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
             child: Text(
               'SAATLİK TAHMİN',
               style: TextStyle(
-                color: mutedGray.withOpacity(0.5),
+                color: mutedGray.withValues(alpha: 0.5),
                 fontSize: 9,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.5,
@@ -1551,9 +1551,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                   width: 60,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: surfaceObsidian.withOpacity(0.4),
+                    color: surfaceObsidian.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+                    border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05)),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1613,7 +1613,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
           child: Text(
             '${widget.event.city.toUpperCase()} KERMES GÜNLERİ\nTAHMİNİ HAVA DURUMU',
             style: TextStyle(
-              color: mutedGray.withOpacity(0.6),
+              color: mutedGray.withValues(alpha: 0.6),
               fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 2,
@@ -1641,7 +1641,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                     colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
                   ),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF60A5FA).withOpacity(0.3)),
+                  border: Border.all(color: const Color(0xFF60A5FA).withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1649,7 +1649,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                     Text(
                       '$dayNumber. KERMES GÜNÜ',
                       style: TextStyle(
-                        color: Colors.blue.shade100.withOpacity(0.8),
+                        color: Colors.blue.shade100.withValues(alpha: 0.8),
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                       ),
@@ -1702,12 +1702,12 @@ Gel, birlikte güzel vakit geçirelim! 🤝
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: surfaceObsidian.withOpacity(0.4),
+        color: surfaceObsidian.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+        border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05)),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
             blurRadius: 50,
             offset: const Offset(0, 20),
           ),
@@ -1720,9 +1720,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.05)),
+              border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05)),
             ),
             child: const Icon(Icons.person, color: primaryRuby, size: 24),
           ),
@@ -1772,9 +1772,9 @@ Gel, birlikte güzel vakit geçirelim! 🤝
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withOpacity(0.1),
+                color: const Color(0xFF10B981).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF10B981).withOpacity(0.2)),
+                border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.2)),
               ),
               child: const Icon(Icons.call, color: Color(0xFF10B981), size: 24),
             ),

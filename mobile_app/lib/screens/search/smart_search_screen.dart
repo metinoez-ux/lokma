@@ -26,7 +26,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
   final Set<String> _expandedGroups = {};
   
   // 🆕 Sort type local selection (synced to provider on apply)
-  String _selectedSort = 'En Yakın';
+  final String _selectedSort = 'En Yakın';
 
   @override
   void initState() {
@@ -167,7 +167,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                     color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
                     borderRadius: BorderRadius.circular(22), // Full pill shape
                     border: Border.all(
-                      color: isDark ? Colors.white.withOpacity(0.08) : Colors.grey[300]!,
+                      color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[300]!,
                     ),
                   ),
                   child: Row(
@@ -305,7 +305,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
           color: isActive ? lokmaPink : (isDark ? const Color(0xFF1A1A1A) : Colors.white),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isActive ? lokmaPink : (isDark ? Colors.white.withOpacity(0.15) : Colors.grey[300]!),
+            color: isActive ? lokmaPink : (isDark ? Colors.white.withValues(alpha: 0.15) : Colors.grey[300]!),
           ),
         ),
         child: Row(
@@ -363,7 +363,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     border: Border(
-                      bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                      bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
                     ),
                   ),
                   child: Row(
@@ -514,7 +514,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
+            bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
           ),
         ),
         child: Row(
@@ -598,7 +598,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
 
   Widget _buildLoadingState(bool isDark) {
     final accent = isDark ? lokmaPink : lokmaPink;
-    final textColor = isDark ? Colors.white.withOpacity(0.5) : Colors.black54;
+    final textColor = isDark ? Colors.white.withValues(alpha: 0.5) : Colors.black54;
     
     return Center(
       child: Column(
@@ -631,12 +631,12 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
           const SizedBox(height: 16),
           Text(
             tr('search.sonuc_bulunamadi'),
-            style: TextStyle(color: textColor.withOpacity(0.6), fontSize: 16),
+            style: TextStyle(color: textColor.withValues(alpha: 0.6), fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
             'Farklı bir arama terimi deneyin',
-            style: TextStyle(color: textColor.withOpacity(0.4), fontSize: 13),
+            style: TextStyle(color: textColor.withValues(alpha: 0.4), fontSize: 13),
           ),
         ],
       ),
@@ -746,7 +746,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
         decoration: BoxDecoration(
           color: cardColor,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: textColor.withOpacity(0.05)),
+          border: Border.all(color: textColor.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [
@@ -755,7 +755,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: lokmaPink.withOpacity(0.1),
+                color: lokmaPink.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: result.imageUrl != null
@@ -788,7 +788,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                   Text(
                     result.subtitle,
                     style: TextStyle(
-                      color: textColor.withOpacity(0.5),
+                      color: textColor.withValues(alpha: 0.5),
                       fontSize: 12,
                     ),
                   ),

@@ -147,13 +147,13 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                   border: Border.all(
                     color: isRead 
                         ? (isDark ? Colors.grey[800]! : Colors.grey[200]!)
-                        : const Color(0xFFFB335B).withOpacity(0.3),
+                        : const Color(0xFFFB335B).withValues(alpha: 0.3),
                     width: isRead ? 1 : 1.5,
                   ),
                   boxShadow: [
                     if (!isRead)
                       BoxShadow(
-                        color: const Color(0xFFFB335B).withOpacity(0.05),
+                        color: const Color(0xFFFB335B).withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -167,7 +167,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFB335B).withOpacity(0.1),
+                          color: const Color(0xFFFB335B).withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(

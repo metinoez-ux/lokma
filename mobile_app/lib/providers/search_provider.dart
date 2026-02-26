@@ -710,7 +710,7 @@ class SearchNotifier extends Notifier<SearchState> {
               final priceStr = price != null ? '${price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}' : '';
               
               results.add(SearchResult(
-                id: item['id'] ?? '${kermesDoc.id}_${itemName}',
+                id: item['id'] ?? '${kermesDoc.id}_$itemName',
                 title: item['name'] ?? item['ad'] ?? 'Ürün',
                 subtitle: '$kermesName${priceStr.isNotEmpty ? ' • $priceStr' : ''}',
                 imageUrl: item['imageUrl'] ?? item['image'],

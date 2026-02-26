@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/currency_utils.dart';
 
 // Sponsor enum for kermes events
 enum KermesSponsor {

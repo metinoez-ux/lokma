@@ -199,7 +199,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
               });
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.withOpacity(0.8),
+              backgroundColor: Colors.red.withValues(alpha: 0.8),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: const Text('Kapat', style: TextStyle(color: Colors.white)),
@@ -379,8 +379,8 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: lokmaRed,
-            activeTrackColor: lokmaRed.withOpacity(0.4),
+            activeThumbColor: lokmaRed,
+            activeTrackColor: lokmaRed.withValues(alpha: 0.4),
           ),
         ],
       ),

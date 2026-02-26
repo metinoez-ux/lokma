@@ -37,7 +37,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
   late Animation<double> _flashAnimation;
   
   // Collapsible state - hangi kartlar açık
-  Set<int> _expandedCards = {};
+  final Set<int> _expandedCards = {};
   
   // Admin/Personel kontrolü
   bool _isAdmin = false;
@@ -152,7 +152,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
             Container(
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.2),
+                color: Colors.red.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(Icons.campaign, color: Colors.red, size: 24),
@@ -340,7 +340,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
         decoration: BoxDecoration(
           color: _cardBg(isDark),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+          border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
@@ -348,7 +348,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.2),
+                color: iconColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: iconColor, size: 24),
@@ -367,7 +367,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text('Varsayılan', style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.w600)),
@@ -424,9 +424,9 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               child: Container(
                 margin: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.1)),
+                  border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1)),
                 ),
                 child: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.surface, size: 20),
               ),
@@ -440,9 +440,9 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     margin: const EdgeInsets.all(8),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.2),
+                      color: Colors.red.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.withOpacity(0.5)),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
@@ -461,7 +461,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      const Color(0xFF2563EB).withOpacity(0.3),
+                      const Color(0xFF2563EB).withValues(alpha: 0.3),
                       _darkBg(isDark),
                     ],
                   ),
@@ -484,7 +484,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                 border: Border.all(color: Theme.of(context).colorScheme.surface, width: 2),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Color(0xFF2563EB).withOpacity(0.4),
+                                    color: Color(0xFF2563EB).withValues(alpha: 0.4),
                                     blurRadius: 8,
                                     spreadRadius: 1,
                                   ),
@@ -523,9 +523,9 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+                            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Theme.of(context).colorScheme.surface.withOpacity(0.2)),
+                            border: Border.all(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.2)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -559,10 +559,10 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.amber.withOpacity(0.15), Colors.amber.withOpacity(0.08)],
+                    colors: [Colors.amber.withValues(alpha: 0.15), Colors.amber.withValues(alpha: 0.08)],
                   ),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -652,7 +652,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
       decoration: BoxDecoration(
         color: _surfaceDark(isDark),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isExpanded ? const Color(0xFF2563EB).withOpacity(0.5) : Colors.white.withOpacity(0.05)),
+        border: Border.all(color: isExpanded ? const Color(0xFF2563EB).withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.05)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -673,7 +673,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: isExpanded ? LinearGradient(
-                  colors: [Color(0xFF2563EB).withOpacity(0.2), Color(0xFF1E40AF).withOpacity(0.1)],
+                  colors: [Color(0xFF2563EB).withValues(alpha: 0.2), Color(0xFF1E40AF).withValues(alpha: 0.1)],
                 ) : null,
               ),
               child: Row(
@@ -757,9 +757,9 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 12),
               decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.1),
+                color: Colors.amber.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -1131,7 +1131,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                 decoration: BoxDecoration(
                                   color: Color(0xFF1E3A5F),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Color(0xFF2563EB).withOpacity(0.5)),
+                                  border: Border.all(color: Color(0xFF2563EB).withValues(alpha: 0.5)),
                                 ),
                                 child: Column(
                                   children: [
@@ -1196,7 +1196,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                                 decoration: BoxDecoration(
                                   color: Color(0xFF1E3A5F),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Color(0xFF2563EB).withOpacity(0.5)),
+                                  border: Border.all(color: Color(0xFF2563EB).withValues(alpha: 0.5)),
                                 ),
                                 child: Column(
                                   children: [

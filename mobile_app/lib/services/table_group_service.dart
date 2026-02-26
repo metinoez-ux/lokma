@@ -322,7 +322,7 @@ class TableGroupService {
 
       // Collect FCM tokens for all participants in the session
       final Set<String> participantFcmTokens = {};
-      if (fcmToken != null) participantFcmTokens.add(fcmToken!); // Ensure caller's token is included
+      if (fcmToken != null) participantFcmTokens.add(fcmToken); // Ensure caller's token is included
       for (final p in session.participants) {
         if (p.fcmToken != null && p.fcmToken!.isNotEmpty) {
           participantFcmTokens.add(p.fcmToken!);

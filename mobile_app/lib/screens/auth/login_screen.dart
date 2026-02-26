@@ -367,7 +367,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -433,7 +433,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           height: 56,
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.15),
+            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(28),
           ),
           child: Row(
@@ -461,9 +461,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _buildAuthButton(
           icon: Icons.email_outlined,
           label: _authMode == 0 ? tr('auth.e_posta_ile_giris_yap') : 'E-posta ile Kayıt Ol',
-          color: Theme.of(context).colorScheme.surface.withOpacity(0.15),
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.15),
           textColor: Colors.white,
-          borderColor: Colors.white.withOpacity(0.3),
+          borderColor: Colors.white.withValues(alpha: 0.3),
           onTap: () => setState(() => _loginMode = 'email'),
         ),
         
@@ -472,15 +472,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Divider
         Row(
           children: [
-            Expanded(child: Divider(color: Theme.of(context).colorScheme.surface.withOpacity(0.3))),
+            Expanded(child: Divider(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3))),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 'veya',
-                style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.6), fontSize: 14),
+                style: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6), fontSize: 14),
               ),
             ),
-            Expanded(child: Divider(color: Theme.of(context).colorScheme.surface.withOpacity(0.3))),
+            Expanded(child: Divider(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3))),
           ],
         ),
         
@@ -509,10 +509,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Text(
             'Misafir olarak devam et',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
               fontSize: 14,
               decoration: TextDecoration.underline,
-              decorationColor: Colors.white.withOpacity(0.5),
+              decorationColor: Colors.white.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -535,7 +535,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: isSelected ? [
               BoxShadow(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -614,7 +614,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -644,7 +644,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -793,7 +793,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           // Phone input with country code prefix
           Container(
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white24),
             ),
@@ -805,7 +805,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+                      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(16),
                         bottomLeft: Radius.circular(16),
@@ -836,7 +836,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16),
                     decoration: InputDecoration(
                       hintText: _exampleNumber,
-                      hintStyle: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.4)),
+                      hintStyle: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.4)),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
@@ -850,7 +850,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           
           Text(
             tr('auth.sms_ile_dogrulama_kodu_gonderi'),
-            style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.7), fontSize: 13),
+            style: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7), fontSize: 13),
           ),
           
           SizedBox(height: 24),
@@ -862,7 +862,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ] else ...[
           Text(
             tr('auth.6_haneli_dogrulama_kodunu_giri'),
-            style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.7), fontSize: 14),
+            style: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7), fontSize: 14),
           ),
           
           SizedBox(height: 24),
@@ -919,7 +919,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: _passwordStrength / 5.0,
-                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation<Color>(_passwordStrengthColor),
                   minHeight: 6,
                 ),
@@ -941,7 +941,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (_passwordStrength < 3) ...[
           Text(
             tr('auth.guclu_sifre_icin'),
-            style: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.7), fontSize: 11),
+            style: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7), fontSize: 11),
           ),
           const SizedBox(height: 4),
           _buildRequirementRow('En az 6 karakter', _passwordController.text.length >= 6),
@@ -999,12 +999,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         labelText: label.isNotEmpty ? label : null,
         hintText: hint,
         labelStyle: TextStyle(color: Colors.white70),
-        hintStyle: TextStyle(color: Theme.of(context).colorScheme.surface.withOpacity(0.4)),
+        hintStyle: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.4)),
         prefixIcon: Icon(icon, color: Colors.white70),
         suffixIcon: suffixIcon,
         counterText: '',
         filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
+        fillColor: Colors.white.withValues(alpha: 0.1),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -1034,7 +1034,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),

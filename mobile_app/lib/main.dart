@@ -1,16 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase/config.dart';
 import 'router/app_router.dart';
 import 'services/stripe_payment_service.dart';
 import 'services/fcm_service.dart';
-import 'package:geolocator/geolocator.dart';
 import 'providers/theme_provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'utils/firestore_asset_loader.dart';

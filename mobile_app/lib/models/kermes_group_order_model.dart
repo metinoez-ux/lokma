@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'kermes_model.dart';
 import 'package:lokma_app/widgets/kermes/delivery_type_dialog.dart';
 
 /// Grup siparişi durumu

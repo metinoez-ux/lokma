@@ -55,7 +55,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   bool _onlyTuna = false;
   
   // Location
-  String _userAddress = 'Konum alınıyor...';
+  final String _userAddress = 'Konum alınıyor...';
   bool _isLoadingLocation = true;
   double? _userLat;
   double? _userLng;
@@ -731,7 +731,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -896,12 +896,12 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ? Colors.grey[600] 
                     : Colors.grey[400],
                 thumbColor: lokmaPink,
-                overlayColor: lokmaPink.withOpacity(0.2),
+                overlayColor: lokmaPink.withValues(alpha: 0.2),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                 // Her km adımını göster - daha büyük ve görünür
                 tickMarkShape: const RoundSliderTickMarkShape(tickMarkRadius: 3),
-                activeTickMarkColor: Colors.white.withOpacity(0.8),
+                activeTickMarkColor: Colors.white.withValues(alpha: 0.8),
                 inactiveTickMarkColor: Theme.of(context).brightness == Brightness.dark 
                     ? Colors.grey[400] 
                     : Colors.grey[600],
@@ -937,7 +937,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: hasBusinessAtCurrent ? lokmaPink.withOpacity(0.3) : cardBg,
+              color: hasBusinessAtCurrent ? lokmaPink.withValues(alpha: 0.3) : cardBg,
               borderRadius: BorderRadius.circular(8),
               border: hasBusinessAtCurrent ? Border.all(color: lokmaPink, width: 1) : Border.all(color: Colors.grey.shade300),
             ),
@@ -1304,7 +1304,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1344,7 +1344,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.4), // Slightly lighter dark overlay
+                        color: Colors.black.withValues(alpha: 0.4), // Slightly lighter dark overlay
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(12),  // Match main card radius
                           topRight: Radius.circular(12), // Match main card radius
@@ -1364,7 +1364,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark 
                             ? const Color(0xFF5A5A5C) 
-                            : Colors.grey.shade100.withOpacity(0.9), // lighter background
+                            : Colors.grey.shade100.withValues(alpha: 0.9), // lighter background
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(12),  // Match main card radius
                           topRight: Radius.circular(12), // Match main card radius
@@ -1399,7 +1399,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -1430,7 +1430,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                         borderRadius: BorderRadius.circular(16), // Pill shape
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -1458,7 +1458,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.85),
+                        color: Colors.black.withValues(alpha: 0.85),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1536,7 +1536,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -1574,7 +1574,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   Builder(
                     builder: (context) {
                       final isDark = Theme.of(context).brightness == Brightness.dark;
-                      final textColor = isDark ? Colors.white.withOpacity(0.9) : Colors.black87;
+                      final textColor = isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87;
                       final starColor = isDark ? Color(0xFFFF9529) : Color(0xFFFF9529);
 
                       return Column(
@@ -1987,7 +1987,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       color: cardBg,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, -2),
                         ),
@@ -2062,7 +2062,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: tunaGreen.withOpacity(0.2),
+                            color: tunaGreen.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Text(
@@ -2139,9 +2139,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                Container(
                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                  decoration: BoxDecoration(
-                   color: tunaGreen.withOpacity(0.2),
+                   color: tunaGreen.withValues(alpha: 0.2),
                    borderRadius: BorderRadius.circular(4),
-                   border: Border.all(color: tunaGreen.withOpacity(0.5)),
+                   border: Border.all(color: tunaGreen.withValues(alpha: 0.5)),
                  ),
                  child: const Text('Önerilen', style: TextStyle(color: lokmaPink, fontSize: 10)),
                ),

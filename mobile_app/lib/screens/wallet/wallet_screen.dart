@@ -103,7 +103,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: lokmaRed.withOpacity(0.4),
+                  color: lokmaRed.withValues(alpha: 0.4),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -165,17 +165,17 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                 ],
               ),
               border: Border.all(
-                color: cardGold.withOpacity(0.3),
+                color: cardGold.withValues(alpha: 0.3),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: lokmaRed.withOpacity(0.2),
+                  color: lokmaRed.withValues(alpha: 0.2),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
                 ),
                 BoxShadow(
-                  color: cardGold.withOpacity(0.1),
+                  color: cardGold.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, -5),
                 ),
@@ -229,10 +229,10 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [cardGold.withOpacity(0.3), cardGold.withOpacity(0.1)],
+                                colors: [cardGold.withValues(alpha: 0.3), cardGold.withValues(alpha: 0.1)],
                               ),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: cardGold.withOpacity(0.5)),
+                              border: Border.all(color: cardGold.withValues(alpha: 0.5)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -265,7 +265,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
+                                color: Colors.black.withValues(alpha: 0.3),
                                 blurRadius: 20,
                                 offset: const Offset(0, 8),
                               ),
@@ -333,9 +333,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: lokmaRed.withOpacity(0.2),
+                                  color: lokmaRed.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: lokmaRed.withOpacity(0.5)),
+                                  border: Border.all(color: lokmaRed.withValues(alpha: 0.5)),
                                 ),
                                 child: Text(
                                   '#$customerId',
@@ -405,9 +405,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.15),
+            color: color.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.3)),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Column(
             children: [
@@ -441,7 +441,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
             ],
           ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,7 +451,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: cardGold.withOpacity(0.2),
+                    color: cardGold.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.local_offer, color: cardGold, size: 24),
@@ -482,9 +482,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                     ),
                     child: TextField(
                       onChanged: (value) => setState(() => _promoCode = value),
@@ -517,7 +517,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                       color: _promoCode.isEmpty ? Colors.grey[800] : null,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: _promoCode.isNotEmpty
-                          ? [BoxShadow(color: lokmaRed.withOpacity(0.4), blurRadius: 12)]
+                          ? [BoxShadow(color: lokmaRed.withValues(alpha: 0.4), blurRadius: 12)]
                           : null,
                     ),
                     child: _isActivating
@@ -588,14 +588,14 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
@@ -673,7 +673,7 @@ class _CardPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.03)
+      ..color = Colors.white.withValues(alpha: 0.03)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 

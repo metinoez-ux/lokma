@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -441,7 +440,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
             const SizedBox(height: 12),
             
             DropdownButtonFormField<String>(
-              value: _selectedCountry,
+              initialValue: _selectedCountry,
               decoration: const InputDecoration(
                 labelText: 'Ülke*',
                 prefixIcon: Icon(Icons.flag),
@@ -585,7 +584,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
             
             // Sponsor Seçimi
             DropdownButtonFormField<String>(
-              value: _selectedSponsor,
+              initialValue: _selectedSponsor,
               decoration: InputDecoration(
                 labelText: 'Sponsor',
                 prefixIcon: Icon(Icons.store),
@@ -691,7 +690,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF1976D2).withOpacity(0.1),
+            color: const Color(0xFF1976D2).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: const Color(0xFF1976D2), size: 20),

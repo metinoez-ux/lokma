@@ -122,9 +122,9 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: lokmaRed.withOpacity(0.1),
+                    color: lokmaRed.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: lokmaRed.withOpacity(0.3)),
+                    border: Border.all(color: lokmaRed.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -133,7 +133,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                       Expanded(
                         child: Text(
                           'Sipariş verirken hangi ödeme yöntemlerini kullanmak istediğinizi seçin.',
-                          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13),
                         ),
                       ),
                     ],
@@ -185,7 +185,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      color: _isSaving ? lokmaRed.withOpacity(0.5) : lokmaRed,
+                      color: _isSaving ? lokmaRed.withValues(alpha: 0.5) : lokmaRed,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Center(
@@ -250,7 +250,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isEnabled ? lokmaRed.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+                  color: isEnabled ? lokmaRed.withValues(alpha: 0.2) : Colors.grey.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: isEnabled ? lokmaRed : Colors.grey, size: 24),
@@ -279,8 +279,8 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
               Switch(
                 value: isEnabled,
                 onChanged: onToggle,
-                activeColor: lokmaRed,
-                activeTrackColor: lokmaRed.withOpacity(0.4),
+                activeThumbColor: lokmaRed,
+                activeTrackColor: lokmaRed.withValues(alpha: 0.4),
               ),
             ],
           ),
@@ -291,7 +291,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isDefault ? lokmaRed.withOpacity(0.2) : Colors.transparent,
+                  color: isDefault ? lokmaRed.withValues(alpha: 0.2) : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isDefault ? lokmaRed : borderSubtle,

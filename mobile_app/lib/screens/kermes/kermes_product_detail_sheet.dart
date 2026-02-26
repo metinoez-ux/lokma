@@ -153,9 +153,9 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                       children: item.allergens.map((allergen) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.amber.withOpacity(0.2),
+                          color: Colors.amber.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                          border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -207,7 +207,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                 color: _darkBg(isDark),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, -4),
                   ),
@@ -220,9 +220,9 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                       // Quantity controls
                       Container(
                         decoration: BoxDecoration(
-                          color: lokmaPink.withOpacity(0.15),
+                          color: lokmaPink.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: lokmaPink.withOpacity(0.3)),
+                          border: Border.all(color: lokmaPink.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
@@ -310,7 +310,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
         height: 120,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [lokmaPink.withOpacity(0.3), lokmaPink.withOpacity(0.1)],
+            colors: [lokmaPink.withValues(alpha: 0.3), lokmaPink.withValues(alpha: 0.1)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -335,7 +335,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 12,
                   offset: const Offset(0, 6),
                 ),
@@ -347,7 +347,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                 images[0],
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  color: lokmaPink.withOpacity(0.2),
+                  color: lokmaPink.withValues(alpha: 0.2),
                   child: const Icon(Icons.restaurant, size: 64, color: lokmaPink),
                 ),
               ),
@@ -366,7 +366,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
@@ -386,7 +386,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                     images[index],
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: lokmaPink.withOpacity(0.2),
+                      color: lokmaPink.withValues(alpha: 0.2),
                       child: const Icon(Icons.restaurant, size: 64, color: lokmaPink),
                     ),
                   ),
@@ -527,7 +527,7 @@ class _FullScreenImageViewer extends StatelessWidget {
                 child: Text(
                   'Yakınlaştırmak için sıkıştırın',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 13,
                   ),
                 ),

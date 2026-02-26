@@ -18,7 +18,6 @@ import 'package:lokma_app/services/table_group_service.dart';
 import 'package:lokma_app/providers/table_group_provider.dart';
 import 'package:lokma_app/providers/bottom_nav_provider.dart';
 import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
-import 'package:lokma_app/screens/marketplace/kasap/reservation_booking_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import '../../../utils/currency_utils.dart';
 
@@ -79,7 +78,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   bool _onlyTuna = false;
 
   // Location
-  String _userAddress = 'Konum alınıyor...';
+  final String _userAddress = 'Konum alınıyor...';
   bool _isLoadingLocation = true;
   double? _userLat;
   double? _userLng;
@@ -396,12 +395,16 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         if (!hasReservation &&
             tableCapacity <= 0 &&
             !hasDineInQR &&
-            !hasWaiterOrder) return false;
+            !hasWaiterOrder) {
+          return false;
+        }
       }
 
       // Category filter
       if (_categoryFilter != 'all' &&
-          businessType != _categoryFilter.toLowerCase()) return false;
+          businessType != _categoryFilter.toLowerCase()) {
+        return false;
+      }
 
       // Distance filter - only if user location is available AND slider is not at max
       if (_userLat != null && _userLng != null && _maxDistance < 200) {
@@ -426,10 +429,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         if (lat == null || lng == null) {
           final placeDetails = data['placeDetails'] as Map<String, dynamic>?;
           if (placeDetails != null) {
-            if (placeDetails['lat'] is num)
+            if (placeDetails['lat'] is num) {
               lat = (placeDetails['lat'] as num).toDouble();
-            if (placeDetails['lng'] is num)
+            }
+            if (placeDetails['lng'] is num) {
               lng = (placeDetails['lng'] as num).toDouble();
+            }
           }
         }
 
@@ -578,10 +583,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             if (dataA['lng'] is num) lngA = (dataA['lng'] as num).toDouble();
             if (latA == null || lngA == null) {
               final addr = dataA['address'] as Map<String, dynamic>?;
-              if (addr != null && addr['lat'] is num)
+              if (addr != null && addr['lat'] is num) {
                 latA = (addr['lat'] as num).toDouble();
-              if (addr != null && addr['lng'] is num)
+              }
+              if (addr != null && addr['lng'] is num) {
                 lngA = (addr['lng'] as num).toDouble();
+              }
             }
 
             // Get coordinates B
@@ -589,10 +596,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             if (dataB['lng'] is num) lngB = (dataB['lng'] as num).toDouble();
             if (latB == null || lngB == null) {
               final addr = dataB['address'] as Map<String, dynamic>?;
-              if (addr != null && addr['lat'] is num)
+              if (addr != null && addr['lat'] is num) {
                 latB = (addr['lat'] as num).toDouble();
-              if (addr != null && addr['lng'] is num)
+              }
+              if (addr != null && addr['lng'] is num) {
                 lngB = (addr['lng'] as num).toDouble();
+              }
             }
 
             if (latA == null || lngA == null) return 1;
@@ -641,22 +650,24 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           (expandedHeight - collapsedHeight))
                       .clamp(0.0, 1.0);
 
-                  return ClipRect(
-                    child: Container(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      // FX: Wrap in SingleChildScrollView to prevent overflow errors when header collapses
-                      child: SingleChildScrollView(
-                        physics: const NeverScrollableScrollPhysics(),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Kompakt Konum Başlığı (her zaman görünür)
-                            _buildCompactLocationHeader(),
+                  return Container(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    alignment: Alignment.bottomCenter,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Kompakt Konum Başlığı (her zaman görünür)
+                        _buildCompactLocationHeader(),
 
-                            // Aşağıdaki filtreler scroll ile kaybolur
-                            if (expandRatio > 0.05) ...[
-                              Opacity(
-                                opacity: expandRatio,
+                        // Aşağıdaki filtreler scroll ile kaybolur
+                        if (expandRatio > 0.05) ...[
+                          Opacity(
+                            opacity: expandRatio,
+                            child: SizedBox(
+                              height: (expandedHeight - collapsedHeight) * expandRatio,
+                              child: SingleChildScrollView(
+                                physics: const NeverScrollableScrollPhysics(),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
@@ -667,7 +678,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     _buildSearchBar(),
 
                                     // Mesafe aralığını Gel Al ve Masa modlarında göster
-                                    if (_deliveryMode == 'gelal' || _deliveryMode == 'masa')
+                                    if (_deliveryMode == 'gelal' ||
+                                        _deliveryMode == 'masa')
                                       _buildDistanceSlider()
                                     else if (_deliveryMode == 'teslimat')
                                       _buildTunaToggleOnly(), // Sadece Teslimat modunda göster
@@ -677,13 +689,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                   ],
                                 ),
                               ),
-                            ] else ...[
-                              // Collapsed state: sadece arama çubuğu
-                              _buildSearchBar(),
-                            ],
-                          ],
-                        ),
-                      ),
+                            ),
+                          ),
+                        ] else ...[
+                          // Collapsed state: sadece arama çubuğu
+                          _buildSearchBar(),
+                        ],
+                      ],
                     ),
                   );
                 },
@@ -908,7 +920,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             boxShadow: [
               BoxShadow(
                 color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -1027,7 +1039,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   }
 
   int _currentStepIndex = 9; // Varsayılan: 10 km (index 9)
-  double _lastSliderValue = 10.0;
+  final double _lastSliderValue = 10.0;
 
   /// Auto-snap slider to nearest business distance (respects delivery mode)
   void _autoSetSliderToNearestBusiness() {
@@ -1056,7 +1068,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         if (!hasReservation &&
             tableCapacity <= 0 &&
             !hasDineInQR &&
-            !hasWaiterOrder) continue;
+            !hasWaiterOrder) {
+          continue;
+        }
       }
 
       double? lat, lng;
@@ -1126,13 +1140,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         ? Colors.grey[600]
                         : Colors.grey[400],
                 thumbColor: lokmaPink,
-                overlayColor: lokmaPink.withOpacity(0.2),
+                overlayColor: lokmaPink.withValues(alpha: 0.2),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                 // Her km adımını göster - daha büyük ve görünür
                 tickMarkShape:
                     const RoundSliderTickMarkShape(tickMarkRadius: 3),
-                activeTickMarkColor: Colors.white.withOpacity(0.8),
+                activeTickMarkColor: Colors.white.withValues(alpha: 0.8),
                 inactiveTickMarkColor:
                     Theme.of(context).brightness == Brightness.dark
                         ? Colors.grey[400]
@@ -1172,7 +1186,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: hasBusinessAtCurrent ? lokmaPink.withOpacity(0.3) : cardBg,
+              color: hasBusinessAtCurrent ? lokmaPink.withValues(alpha: 0.3) : cardBg,
               borderRadius: BorderRadius.circular(8),
               border: hasBusinessAtCurrent
                   ? Border.all(color: lokmaPink, width: 1)
@@ -1345,10 +1359,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         if (lat == null || lng == null) {
           final placeDetails = data['placeDetails'] as Map<String, dynamic>?;
           if (placeDetails != null) {
-            if (placeDetails['lat'] is num)
+            if (placeDetails['lat'] is num) {
               lat = (placeDetails['lat'] as num).toDouble();
-            if (placeDetails['lng'] is num)
+            }
+            if (placeDetails['lng'] is num) {
               lng = (placeDetails['lng'] as num).toDouble();
+            }
           }
         }
 
@@ -1403,7 +1419,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 isSelected: _categoryFilter == typeKey,
                 onTap: () => setState(() => _categoryFilter = typeKey),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
@@ -1688,7 +1704,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
+                  color: Colors.amber.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -1825,7 +1841,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1884,7 +1900,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(
+                            color: Colors.black.withValues(alpha: 
                                 0.4), // Slightly lighter dark overlay
                             borderRadius: const BorderRadius.only(
                               topLeft:
@@ -1909,7 +1925,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 Theme.of(context).brightness == Brightness.dark
                                     ? const Color(0xFF5A5A5C)
                                     : Colors.grey.shade100
-                                        .withOpacity(0.9), // Lighter background
+                                        .withValues(alpha: 0.9), // Lighter background
                             borderRadius: const BorderRadius.only(
                               topLeft:
                                   Radius.circular(12), // Match main card radius
@@ -1952,7 +1968,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurface
-                                      .withOpacity(0.2),
+                                      .withValues(alpha: 0.2),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -1992,7 +2008,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurface
-                                      .withOpacity(0.3),
+                                      .withValues(alpha: 0.3),
                                   blurRadius: 4,
                                   offset: Offset(0, 2),
                                 ),
@@ -2028,7 +2044,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -2060,7 +2076,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withOpacity(0.2),
+                                          .withValues(alpha: 0.2),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -2150,7 +2166,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                       color: Theme.of(context)
                                           .colorScheme
                                           .onSurface
-                                          .withOpacity(0.9),
+                                          .withValues(alpha: 0.9),
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600, // Reduced from w700
                                     ),
@@ -2163,7 +2179,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.9),
+                                            .withValues(alpha: 0.9),
                                         fontSize: 15,
                                         fontWeight: FontWeight.w400,
                                       ),
@@ -2175,7 +2191,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.9),
+                                            .withValues(alpha: 0.9),
                                         fontSize: 15),
                                   ),
                                   Expanded(
@@ -2188,7 +2204,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withOpacity(0.9),
+                                            .withValues(alpha: 0.9),
                                         fontSize: 15,
                                         fontWeight: FontWeight.w400,
                                       ),
@@ -2226,7 +2242,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withOpacity(0.9),
+                                                .withValues(alpha: 0.9),
                                             size: 16),
                                         const SizedBox(width: 6),
                                         if (hasFreeDelivery && deliveryFee == 0)
@@ -2236,7 +2252,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .onSurface
-                                                    .withOpacity(0.9),
+                                                    .withValues(alpha: 0.9),
                                                 fontSize: 15),
                                           )
                                         else
@@ -2246,7 +2262,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withOpacity(0.9),
+                                                  .withValues(alpha: 0.9),
                                               fontSize: 15,
                                               fontWeight: FontWeight.w400,
                                             ),
@@ -2257,13 +2273,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                                   color: Theme.of(context)
                                                       .colorScheme
                                                       .onSurface
-                                                      .withOpacity(0.9),
+                                                      .withValues(alpha: 0.9),
                                                   fontSize: 15)),
                                           Icon(Icons.shopping_basket_outlined,
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withOpacity(0.9),
+                                                  .withValues(alpha: 0.9),
                                               size: 16),
                                           const SizedBox(width: 6),
                                           Text(
@@ -2272,7 +2288,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withOpacity(0.9),
+                                                  .withValues(alpha: 0.9),
                                               fontSize: 15,
                                               fontWeight: FontWeight.w400,
                                             ),
@@ -2287,7 +2303,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withOpacity(0.9),
+                                                .withValues(alpha: 0.9),
                                             size: 16),
                                         const SizedBox(width: 4),
                                         Text(
@@ -2298,7 +2314,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withOpacity(0.9),
+                                                .withValues(alpha: 0.9),
                                             fontSize: 15,
                                             fontWeight: FontWeight.w400,
                                           ),
@@ -2405,7 +2421,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.7),
+                                    .withValues(alpha: 0.7),
                                 fontSize: 15),
                           ),
                         ),
@@ -2442,7 +2458,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.7),
+                                    .withValues(alpha: 0.7),
                                 fontSize: 15),
                           ),
                         ),
@@ -2470,7 +2486,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.5),
+                                    .withValues(alpha: 0.5),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -2509,7 +2525,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.5),
+                                    .withValues(alpha: 0.5),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -2557,7 +2573,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurface
-                                    .withOpacity(0.5),
+                                    .withValues(alpha: 0.5),
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
@@ -2661,7 +2677,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           color: Theme.of(context)
                               .colorScheme
                               .onSurface
-                              .withOpacity(0.3),
+                              .withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: Offset(0, -2),
                         ),
@@ -2712,7 +2728,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       builder: (context) {
         final textColor = Theme.of(context).colorScheme.onSurface;
         final subtitleColor =
-            Theme.of(context).colorScheme.onSurface.withOpacity(0.5);
+            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
 
         return InkWell(
           onTap: () {
@@ -2743,7 +2759,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: tunaGreen.withOpacity(0.2),
+                                color: tunaGreen.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Text(
@@ -2828,9 +2844,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: tunaGreen.withOpacity(0.2),
+                  color: tunaGreen.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: tunaGreen.withOpacity(0.5)),
+                  border: Border.all(color: tunaGreen.withValues(alpha: 0.5)),
                 ),
                 child: const Text('Önerilen',
                     style: TextStyle(color: tunaGreen, fontSize: 10)),
@@ -2990,13 +3006,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: lokmaPink.withOpacity(0.35),
+                    color: lokmaPink.withValues(alpha: 0.35),
                     blurRadius: 24,
                     offset: Offset(0, 8),
                     spreadRadius: 0,
                   ),
                   BoxShadow(
-                    color: lokmaPink.withOpacity(0.15),
+                    color: lokmaPink.withValues(alpha: 0.15),
                     blurRadius: 48,
                     offset: Offset(0, 16),
                     spreadRadius: 0,
@@ -3012,7 +3028,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       color: Theme.of(context)
                           .colorScheme
                           .surface
-                          .withOpacity(0.2),
+                          .withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -3039,7 +3055,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       color: Theme.of(context)
                           .colorScheme
                           .surface
-                          .withOpacity(0.8),
+                          .withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -3066,19 +3082,19 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.green.withOpacity(isDark ? 0.2 : 0.12),
-              Colors.green.withOpacity(isDark ? 0.1 : 0.06),
+              Colors.green.withValues(alpha: isDark ? 0.2 : 0.12),
+              Colors.green.withValues(alpha: isDark ? 0.1 : 0.06),
             ],
           ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.green.withOpacity(0.3)),
+          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.15),
+                color: Colors.green.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(Icons.check_circle,
@@ -3117,7 +3133,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.15),
+                  color: Colors.green.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -3154,7 +3170,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                 blurRadius: 30,
                 offset: const Offset(0, -10),
               ),
@@ -3168,7 +3184,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -3204,10 +3220,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
                     border:
-                        Border.all(color: lokmaPink.withOpacity(0.4), width: 2),
+                        Border.all(color: lokmaPink.withValues(alpha: 0.4), width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: lokmaPink.withOpacity(0.1),
+                        color: lokmaPink.withValues(alpha: 0.1),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
@@ -3718,7 +3734,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   onPressed: () {
                     Navigator.pop(ctx);
                     _setScannedTable(tableNum, businessId, businessName);
-                    if (businessId != null && businessId.isNotEmpty) {
+                    if (businessId.isNotEmpty) {
                       context
                           .push('/kasap/$businessId?mode=masa&table=$tableNum');
                     }
@@ -3886,7 +3902,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 onPressed: () {
                   Navigator.pop(ctx);
                   _setScannedTable(tableNum, businessId, businessName);
-                  if (businessId != null && businessId.isNotEmpty) {
+                  if (businessId.isNotEmpty) {
                     context
                         .push('/kasap/$businessId?mode=masa&table=$tableNum');
                   } else {

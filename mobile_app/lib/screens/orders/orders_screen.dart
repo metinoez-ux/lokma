@@ -922,7 +922,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
         border: isDark ? null : Border.all(color: dividerColor),
         boxShadow: isDark ? null : [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1048,7 +1048,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(order.status).withOpacity(0.15),
+                    color: _getStatusColor(order.status).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1071,7 +1071,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.green.shade900.withOpacity(0.3) : Colors.green.shade50,
+                  color: isDark ? Colors.green.shade900.withValues(alpha: 0.3) : Colors.green.shade50,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.green.shade300, width: 1),
                 ),
@@ -1171,7 +1171,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(

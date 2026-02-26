@@ -340,7 +340,7 @@ class _RatingScreenState extends State<RatingScreen> {
                                 hintText: _isOrderCompleted 
                                     ? 'Yemek lezzetli miydi? İyi paketlendi mi? Bize bildirin...'
                                     : 'Sipariş tamamlandıktan sonra yorum yapabilirsiniz...',
-                                hintStyle: TextStyle(color: colorScheme.onSurface.withOpacity(0.4), fontSize: 14),
+                                hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 14),
                                 counterText: '',
                                 filled: true,
                                 fillColor: isDark ? Colors.grey.shade800 : const Color(0xFFF5F5F5),
@@ -429,7 +429,7 @@ class _RatingScreenState extends State<RatingScreen> {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
+              color: isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
               border: Border.all(
                 color: isSelected ? color : (isDark ? Colors.grey.shade600 : Colors.grey.shade300),
                 width: isSelected ? 2 : 1,

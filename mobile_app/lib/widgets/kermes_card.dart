@@ -175,13 +175,13 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 24,
             offset: const Offset(0, 8),
             spreadRadius: 0,
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -231,7 +231,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                     filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      color: isDark ? Colors.black.withOpacity(0.6) : Colors.white.withOpacity(0.9),
+                      color: isDark ? Colors.black.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.9),
                       child: Text(
                         dateRangeText,
                         style: TextStyle(
@@ -257,7 +257,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
                         padding: const EdgeInsets.all(8),
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         child: Icon(
                           _isFavorite ? Icons.favorite : Icons.favorite_outline,
                           color: _isFavorite ? primaryRose : Colors.white,
@@ -279,16 +279,16 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                     borderRadius: BorderRadius.circular(20),
                     gradient: LinearGradient(colors: badgeGradient),
                     boxShadow: [
-                       BoxShadow(color: badgeGradient.last.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4)),
+                       BoxShadow(color: badgeGradient.last.withValues(alpha: 0.4), blurRadius: 8, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (badgeIcon != null) ...[
-                        Icon(badgeIcon, color: Colors.white, size: 14),
-                        const SizedBox(width: 4),
-                      ],
+                      ...[
+                      Icon(badgeIcon, color: Colors.white, size: 14),
+                      const SizedBox(width: 4),
+                    ],
                       Text(
                         statusText,
                         style: const TextStyle(
@@ -392,9 +392,9 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                     if (widget.currentPosition != null)
                       Row(
                         children: [
-                          _buildIconText(Icons.near_me, '${_distanceKm} km', primaryRose, isDark),
+                          _buildIconText(Icons.near_me, '$_distanceKm km', primaryRose, isDark),
                           const SizedBox(width: 12),
-                          _buildIconText(Icons.directions_car, '~${_travelTime} dk', primaryRose, isDark),
+                          _buildIconText(Icons.directions_car, '~$_travelTime dk', primaryRose, isDark),
                         ],
                       )
                     else 
@@ -404,7 +404,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: (isDark ? Colors.green.withOpacity(0.2) : const Color(0xFFECFDF5)),
+                          color: (isDark ? Colors.green.withValues(alpha: 0.2) : const Color(0xFFECFDF5)),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -467,7 +467,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFE11D48).withOpacity(0.25),
+                        color: const Color(0xFFE11D48).withValues(alpha: 0.25),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -529,7 +529,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? surfaceObsidian.withOpacity(0.4) : Colors.grey[50],
+        color: isDark ? surfaceObsidian.withValues(alpha: 0.4) : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
       ),
@@ -604,7 +604,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isDark ? surfaceObsidian.withOpacity(0.4) : Colors.grey[50],
+          color: isDark ? surfaceObsidian.withValues(alpha: 0.4) : Colors.grey[50],
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
         ),
@@ -688,7 +688,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? surfaceObsidian.withOpacity(0.4) : Colors.grey[50],
+        color: isDark ? surfaceObsidian.withValues(alpha: 0.4) : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
       ),
@@ -752,7 +752,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark ? surfaceObsidian.withOpacity(0.4) : Colors.grey[50],
+        color: isDark ? surfaceObsidian.withValues(alpha: 0.4) : Colors.grey[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: isDark ? Colors.grey[700]! : Colors.grey[200]!),
       ),
@@ -812,7 +812,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withOpacity(0.1),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.call, color: Color(0xFF10B981), size: 20),
@@ -899,9 +899,9 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
   }
 
   Widget _buildDynamicColorTag(String emoji, String text, Color color, bool isDark) {
-    final bg = isDark ? color.withOpacity(0.2) : color.withOpacity(0.1);
-    final textColor = isDark ? color.withOpacity(0.9) : color;
-    final border = isDark ? color.withOpacity(0.3) : color.withOpacity(0.2);
+    final bg = isDark ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.1);
+    final textColor = isDark ? color.withValues(alpha: 0.9) : color;
+    final border = isDark ? color.withValues(alpha: 0.3) : color.withValues(alpha: 0.2);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

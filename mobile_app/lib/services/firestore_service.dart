@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/butcher_product.dart';
 
 /// Firestore service for LOKMA app
 /// Handles all Firestore CRUD operations for butchers, products, and orders

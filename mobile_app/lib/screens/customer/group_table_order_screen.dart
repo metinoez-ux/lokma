@@ -154,7 +154,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               height: 4,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.3),
+                color: Colors.grey.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -163,7 +163,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.12),
+                color: Colors.green.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 40),
@@ -369,7 +369,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: _accent.withOpacity(0.12),
+                color: _accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
@@ -523,9 +523,9 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [_accent.withOpacity(0.15), _accent.withOpacity(0.05)],
+          colors: [_accent.withValues(alpha: 0.15), _accent.withValues(alpha: 0.05)],
         ),
-        border: Border(bottom: BorderSide(color: _accent.withOpacity(0.2))),
+        border: Border(bottom: BorderSide(color: _accent.withValues(alpha: 0.2))),
       ),
       child: Row(
         children: [
@@ -641,7 +641,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               return ChoiceChip(
                 label: Text(cat),
                 selected: isSelected,
-                selectedColor: _accent.withOpacity(0.2),
+                selectedColor: _accent.withValues(alpha: 0.2),
                 onSelected: (_) => setState(() => _selectedCategory = cat),
               );
             },
@@ -735,8 +735,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         color: cardBg,
         borderRadius: BorderRadius.circular(14),
         border: inCart
-            ? Border.all(color: _accent.withOpacity(0.5), width: 1.5)
-            : Border.all(color: Colors.grey.withOpacity(0.1)),
+            ? Border.all(color: _accent.withValues(alpha: 0.5), width: 1.5)
+            : Border.all(color: Colors.grey.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -907,7 +907,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.1),
+              color: Colors.green.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.green.shade300),
             ),
@@ -994,39 +994,39 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   builder: (context) {
                     String statusText = tr('customer.sipariste');
                     Color statusColor = Colors.grey.shade700;
-                    Color statusBgColor = Colors.grey.withOpacity(0.1);
+                    Color statusBgColor = Colors.grey.withValues(alpha: 0.1);
 
                     switch (item.orderStatus) {
                       case 'pending':
                         statusText = '⏳ Bekliyor';
                         statusColor = Colors.orange.shade800;
-                        statusBgColor = Colors.orange.withOpacity(0.1);
+                        statusBgColor = Colors.orange.withValues(alpha: 0.1);
                         break;
                       case 'accepted':
                         statusText = tr('customer.onaylandi');
                         statusColor = Colors.blue.shade700;
-                        statusBgColor = Colors.blue.withOpacity(0.1);
+                        statusBgColor = Colors.blue.withValues(alpha: 0.1);
                         break;
                       case 'preparing':
                         statusText = '👨‍🍳 Hazırlanıyor';
                         statusColor = Colors.blue.shade700;
-                        statusBgColor = Colors.blue.withOpacity(0.1);
+                        statusBgColor = Colors.blue.withValues(alpha: 0.1);
                         break;
                       case 'ready':
                         statusText = '✅ Hazır';
                         statusColor = Colors.green.shade700;
-                        statusBgColor = Colors.green.withOpacity(0.1);
+                        statusBgColor = Colors.green.withValues(alpha: 0.1);
                         break;
                       case 'delivered':
                       case 'completed':
                         statusText = '✓ Teslim Edildi';
                         statusColor = Colors.teal.shade700;
-                        statusBgColor = Colors.teal.withOpacity(0.1);
+                        statusBgColor = Colors.teal.withValues(alpha: 0.1);
                         break;
                       case 'cancelled':
                         statusText = tr('customer.i_ptal');
                         statusColor = Colors.red.shade700;
-                        statusBgColor = Colors.red.withOpacity(0.1);
+                        statusBgColor = Colors.red.withValues(alpha: 0.1);
                         break;
                     }
 
@@ -1121,10 +1121,10 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [_accent.withOpacity(0.15), _accent.withOpacity(0.05)],
+              colors: [_accent.withValues(alpha: 0.15), _accent.withValues(alpha: 0.05)],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _accent.withOpacity(0.3)),
+            border: Border.all(color: _accent.withValues(alpha: 0.3)),
           ),
           child: Column(
             children: [
@@ -1200,14 +1200,14 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: session.allReady
-              ? [Colors.green.withOpacity(0.15), Colors.green.withOpacity(0.05)]
-              : [Colors.amber.withOpacity(0.12), Colors.amber.withOpacity(0.04)],
+              ? [Colors.green.withValues(alpha: 0.15), Colors.green.withValues(alpha: 0.05)]
+              : [Colors.amber.withValues(alpha: 0.12), Colors.amber.withValues(alpha: 0.04)],
         ),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: session.allReady
-              ? Colors.green.withOpacity(0.4)
-              : Colors.amber.withOpacity(0.3),
+              ? Colors.green.withValues(alpha: 0.4)
+              : Colors.amber.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -1227,8 +1227,8 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: session.allReady
-                      ? Colors.green.withOpacity(0.2)
-                      : Colors.amber.withOpacity(0.2),
+                      ? Colors.green.withValues(alpha: 0.2)
+                      : Colors.amber.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -1300,7 +1300,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: _accent.withOpacity(0.1),
+                      color: _accent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.center,
@@ -1346,7 +1346,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: isMe ? Border.all(color: _accent.withOpacity(0.4), width: 1.5) : null,
+        border: isMe ? Border.all(color: _accent.withValues(alpha: 0.4), width: 1.5) : null,
       ),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1412,7 +1412,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 margin: const EdgeInsets.only(right: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.15),
+                  color: Colors.green.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -1429,7 +1429,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 margin: const EdgeInsets.only(right: 4),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.15),
+                  color: Colors.amber.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -1445,7 +1445,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.15),
+                  color: Colors.green.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -1466,7 +1466,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
+                    color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Icon(Icons.person_remove, size: 16, color: Colors.red),
@@ -1503,7 +1503,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                     decoration: BoxDecoration(
-                      color: itemStatusColor.withOpacity(0.1),
+                      color: itemStatusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -1552,7 +1552,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -2))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -2))],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1751,7 +1751,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         decoration: BoxDecoration(
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -2))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -2))],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1886,7 +1886,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, -5),
               ),
@@ -1902,7 +1902,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 24),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1911,7 +1911,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _accent.withOpacity(0.1),
+                  color: _accent.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.person, size: 32, color: _accent),
@@ -1954,7 +1954,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.15),
+                          color: Colors.green.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.payments_rounded, color: Colors.green, size: 24),
@@ -1993,7 +1993,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: _accent.withOpacity(0.15),
+                          color: _accent.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(Icons.credit_card_rounded, color: _accent, size: 24),
@@ -2045,7 +2045,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withValues(alpha: 0.2),
                 blurRadius: 20,
                 offset: const Offset(0, -5),
               ),
@@ -2061,7 +2061,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 24),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -2070,7 +2070,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _accent.withOpacity(0.1),
+                  color: _accent.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.groups, size: 32, color: _accent),
@@ -2113,7 +2113,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.15),
+                          color: Colors.green.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.payments_rounded, color: Colors.green, size: 24),
@@ -2152,7 +2152,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: _accent.withOpacity(0.15),
+                          color: _accent.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(Icons.credit_card_rounded, color: _accent, size: 24),
@@ -2332,7 +2332,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: _accent.withOpacity(0.1),
+          color: _accent.withValues(alpha: 0.1),
         ),
         child: Icon(icon, size: 18, color: _accent),
       ),
@@ -2348,7 +2348,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
         height: 24,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: _accent.withOpacity(0.1),
+          color: _accent.withValues(alpha: 0.1),
         ),
         child: Icon(icon, size: 14, color: _accent),
       ),

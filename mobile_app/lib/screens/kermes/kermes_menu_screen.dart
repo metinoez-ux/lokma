@@ -376,7 +376,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: lokmaPink.withOpacity(0.2),
+                  color: lokmaPink.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -574,13 +574,13 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
           ? Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [lokmaPink.withOpacity(0.9), Color(0xFFFB335B)],
+                  colors: [lokmaPink.withValues(alpha: 0.9), Color(0xFFFB335B)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: lokmaPink.withOpacity(0.3),
+                    color: lokmaPink.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: Offset(0, -4),
                   ),
@@ -676,17 +676,17 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-             color: isSoldOut ? cardColor.withOpacity(0.6) : cardColor,
+             color: isSoldOut ? cardColor.withValues(alpha: 0.6) : cardColor,
             borderRadius: BorderRadius.circular(16),
             border: isSoldOut
-                ? Border.all(color: Colors.red.withOpacity(0.3), width: 1)
+                ? Border.all(color: Colors.red.withValues(alpha: 0.3), width: 1)
                 : (cartQuantity > 0
-                    ? Border.all(color: lokmaPink.withOpacity(0.5), width: 2)
+                    ? Border.all(color: lokmaPink.withValues(alpha: 0.5), width: 2)
                     : null),
             boxShadow: cartQuantity > 0 && !isSoldOut
                 ? [
                     BoxShadow(
-                      color: lokmaPink.withOpacity(0.2),
+                      color: lokmaPink.withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -706,7 +706,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                   decoration: BoxDecoration(
                     gradient: !hasImage
                         ? LinearGradient(
-                            colors: [lokmaPink.withOpacity(0.3), lokmaPink.withOpacity(0.1)],
+                            colors: [lokmaPink.withValues(alpha: 0.3), lokmaPink.withValues(alpha: 0.1)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           )
@@ -715,7 +715,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                     boxShadow: hasImage
                         ? [
                             BoxShadow(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -798,7 +798,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.2),
+                              color: Colors.amber.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
@@ -826,9 +826,9 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.15),
+                    color: Colors.red.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.withOpacity(0.4)),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
                   ),
                   child: const Text(
                     'Tükendi',
@@ -857,7 +857,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: lokmaPink.withOpacity(0.4),
+                            color: lokmaPink.withValues(alpha: 0.4),
                             blurRadius: 6,
                             offset: Offset(0, 3),
                           ),
@@ -875,9 +875,9 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 // Quantity Controls
                 Container(
                   decoration: BoxDecoration(
-                    color: lokmaPink.withOpacity(0.15),
+                    color: lokmaPink.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: lokmaPink.withOpacity(0.3)),
+                    border: Border.all(color: lokmaPink.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -1339,7 +1339,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: lokmaPink.withOpacity(0.2),
+                    color: lokmaPink.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -1350,7 +1350,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
+                    color: Colors.green.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -1370,9 +1370,9 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: lokmaPink.withOpacity(0.1),
+                color: lokmaPink.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: lokmaPink.withOpacity(0.3)),
+                border: Border.all(color: lokmaPink.withValues(alpha: 0.3)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
