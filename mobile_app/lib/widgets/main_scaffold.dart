@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../providers/cart_provider.dart';
 import '../providers/kermes_cart_provider.dart';
+import '../providers/bottom_nav_provider.dart';
 import '../services/order_service.dart';
 import '../screens/orders/courier_tracking_screen.dart';
 
@@ -122,6 +123,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
     
     final currentPath = GoRouterState.of(context).uri.path;
     final isCartPage = currentPath == '/cart';
+    final isBottomNavVisible = ref.watch(bottomNavVisibilityProvider);
     
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -151,7 +153,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
             ),
         ],
       ),
-      bottomNavigationBar: isCartPage 
+      bottomNavigationBar: (isCartPage || !isBottomNavVisible) 
         ? null 
         : GlassBottomBar(
             currentIndex: selectedIndex,

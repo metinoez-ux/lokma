@@ -2046,56 +2046,59 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ),
                 ),
               ] else ...[
-                // Category Grouped List
-                ..._categories.where((c) => c['name'] != 'Tümü').expand((cat) {
-                  final catName = cat['name'] as String;
-                  final catProducts = products.where((p) => p.category == catName).toList();
-                  
-                  if (catProducts.isEmpty) return <Widget>[];
+              // Category Grouped List
+              ..._categories.where((c) => c['name'] != 'Tümü').expand((cat) {
+                final catName = cat['name'] as String;
+                final catProducts = products.where((p) => p.category == catName).toList();
+                
+                if (catProducts.isEmpty) return <Widget>[];
 
-                  return <Widget>[
-                    // Category Header
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                      sliver: SliverToBoxAdapter(
-                        child: Container(
-                          key: _categoryKeys.putIfAbsent(catName, () => GlobalKey()),
-                          child: Text(
-                            catName,
-                            style: TextStyle(
-                              color: textPrimary,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -0.5,
+                return <Widget>[
+                  SliverToBoxAdapter(
+                    child: Container(
+                      key: _categoryKeys.putIfAbsent(catName, () => GlobalKey()),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Category Header
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                            child: Text(
+                              catName,
+                              style: TextStyle(
+                                color: textPrimary,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: -0.5,
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                    // Products List
-                    SliverPadding(
-                      padding: EdgeInsets.zero,
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => _buildLieferandoProductCard(
-                            catProducts[index], 
-                            ref.watch(cartProvider),
-                            isDark: isDark,
-                            accent: accent,
-                            cardBg: cardBg,
-                            textPrimary: textPrimary,
-                            textSecondary: textSecondary,
+                          // Products List
+                          ListView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            padding: EdgeInsets.zero,
+                            itemCount: catProducts.length,
+                            itemBuilder: (context, index) => _buildLieferandoProductCard(
+                              catProducts[index], 
+                              ref.watch(cartProvider),
+                              isDark: isDark,
+                              accent: accent,
+                              cardBg: cardBg,
+                              textPrimary: textPrimary,
+                              textSecondary: textSecondary,
+                            ),
                           ),
-                          childCount: catProducts.length,
-                        ),
+                        ],
                       ),
                     ),
-                  ];
-                }),
-              ],
+                  ),
+                ];
+              }),
+            ],
 
-              // Bottom Spacer
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            // Bottom Spacer
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           );
         },

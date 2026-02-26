@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname } from '../../i18n/routing';
 import Image from 'next/image';
+import PublicHeader from '@/components/ui/PublicHeader';
+import PublicFooter from '@/components/ui/PublicFooter';
 
 // Countries with their default languages and flags
 const countries = [
@@ -132,12 +134,6 @@ export default function LandingPage() {
     { name: t('farmer'), desc: t('farmerDesc'), href: '/ciftciden', img: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&h=300&fit=crop' },
   ];
 
-  const benefits = [
-    { icon: 'payments', title: t('fairCommission'), desc: t('fairCommissionDesc') },
-    { icon: 'bolt', title: t('fastPayment'), desc: t('fastPaymentDesc') },
-    { icon: 'groups', title: t('wideAudience'), desc: t('wideAudienceDesc') },
-    { icon: 'verified', title: t('easyManagement'), desc: t('easyManagementDesc') },
-  ];
 
   const faqs = [
     { q: t('faq1Q'), a: t('faq1A') },
@@ -162,129 +158,7 @@ export default function LandingPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col bg-[#120a0a] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
-      {/* Header */}
-      <header className="fixed top-0 z-50 w-full bg-[#120a0a]/80 backdrop-blur-xl border-b border-white/10 px-4 md:px-20 lg:px-40 py-4">
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <Image src="/lokma_logo_wide.png" alt="LOKMA" width={140} height={36} className="object-contain" />
-          </Link>
-
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/">{t('home')}</Link>
-            <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/about">{t('about')}</Link>
-            <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/vendor">{t('vendorPortal')}</Link>
-            <Link className="text-sm font-medium hover:text-[#fb335b] transition-colors" href="/support">{t('support')}</Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            {/* Unified Region & Language Selector */}
-            <div className="relative" ref={countryRef}>
-              <button
-                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-3 py-2 rounded-lg transition-all border border-white/10"
-                onClick={() => setCountryMenuOpen(!countryMenuOpen)}
-              >
-                <span className="text-lg">{currentCountryData.flag}</span>
-                <span className="text-sm font-medium hidden sm:block">{currentLangData.name}</span>
-                <span className="material-symbols-outlined text-[16px]">expand_more</span>
-              </button>
-              {countryMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-80 bg-[#1a1a1a] border border-white/10 rounded-2xl overflow-hidden z-50 shadow-2xl">
-                  {/* Header */}
-                  <div className="px-5 py-4 border-b border-white/10 bg-gradient-to-r from-[#fb335b]/10 to-transparent">
-                    <h3 className="font-bold text-base">Bölge & Dil Ayarları</h3>
-                    <p className="text-xs text-white/50 mt-1">Tercihlerinizi seçin</p>
-                  </div>
-
-                  <div className="p-4">
-                    {/* Language Section */}
-                    <div className="mb-5">
-                      <label className="text-xs text-white/50 uppercase tracking-wider font-semibold mb-3 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[14px]">language</span>
-                        Dil Seçin
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {languages.map((lang) => (
-                          <button
-                            key={lang.code}
-                            className={`flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left ${currentLang === lang.code
-                              ? 'bg-[#fb335b]/20 border border-[#fb335b]/50 text-white'
-                              : 'bg-white/5 hover:bg-white/10 border border-transparent'
-                              }`}
-                            onClick={() => handleLangChange(lang.code)}
-                          >
-                            <span className="text-base">{lang.flag}</span>
-                            <span className="font-medium">{lang.name}</span>
-                            {currentLang === lang.code && (
-                              <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px]">check_circle</span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Country/Region Section */}
-                    <div>
-                      <label className="text-xs text-white/50 uppercase tracking-wider font-semibold mb-3 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[14px]">public</span>
-                        Bölge / Ülke
-                      </label>
-                      <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                        {countries.map((country) => (
-                          <button
-                            key={country.code}
-                            className={`flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-lg transition-all text-left ${currentCountry === country.code
-                              ? 'bg-[#fb335b]/20 border border-[#fb335b]/50 text-white'
-                              : 'bg-white/5 hover:bg-white/10 border border-transparent'
-                              }`}
-                            onClick={() => handleCountryChange(country.code)}
-                          >
-                            <span className="text-base">{country.flag}</span>
-                            <span className="font-medium truncate">{country.name}</span>
-                            {currentCountry === country.code && (
-                              <span className="material-symbols-outlined text-[#fb335b] ml-auto text-[14px] flex-shrink-0">check_circle</span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="px-5 py-3 border-t border-white/10 bg-white/2">
-                    <p className="text-xs text-white/40 text-center">
-                      {currentCountryData.flag} {currentCountryData.name} • {currentLangData.name}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Link href="/login" className="hidden sm:flex bg-[#fb335b] hover:bg-red-600 px-5 py-2 rounded-lg text-sm font-bold transition-all">
-              {t('login')}
-            </Link>
-
-            {/* Mobile Menu Button */}
-            <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              <span className="material-symbols-outlined">menu</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-[#120a0a] border-b border-white/10 p-4">
-            <nav className="flex flex-col gap-4">
-              <Link className="text-sm font-medium py-2" href="/">{t('home')}</Link>
-              <Link className="text-sm font-medium py-2" href="/about">{t('about')}</Link>
-              <Link className="text-sm font-medium py-2" href="/vendor">{t('vendorPortal')}</Link>
-              <Link className="text-sm font-medium py-2" href="/support">{t('support')}</Link>
-              <Link className="bg-[#fb335b] text-center py-3 rounded-lg font-bold" href="/login">{t('login')}</Link>
-            </nav>
-          </div>
-        )}
-      </header>
+      <PublicHeader themeAware={true} />
 
       {/* Hero Section */}
       <section className="relative pt-24 min-h-[85vh] flex items-center justify-center overflow-hidden">
@@ -304,20 +178,23 @@ export default function LandingPage() {
             <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto font-medium">
               {t('heroSubtitle')}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-              <button
-                onClick={scrollToCategories}
-                className="bg-[#fb335b] hover:bg-red-600 text-white px-10 py-4 rounded-xl font-bold text-lg shadow-xl shadow-[#fb335b]/20 transition-all flex items-center justify-center gap-2"
-              >
-                {t('exploreBtn')}
-                <span className="material-symbols-outlined">arrow_forward</span>
-              </button>
-              <Link
-                href="/partner"
-                className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all text-center"
-              >
-                {t('partnerBtn')}
-              </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6 max-w-xl mx-auto relative text-left">
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <a href="https://apps.apple.com/app/lokma" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity transform hover:scale-105">
+                  <img
+                    src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+                    alt={t('appStoreButton')}
+                    className="h-14"
+                  />
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=com.lokma.app" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity transform hover:scale-105">
+                  <img
+                    src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+                    alt={t('playStoreButton')}
+                    className="h-14"
+                  />
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -354,47 +231,60 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* B2B Section */}
+        {/* Why Lokma Section */}
         <section className="max-w-[1200px] mx-auto py-20 px-4">
-          <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-[2rem] overflow-hidden flex flex-col lg:flex-row items-stretch">
-            <div className="flex-1 p-8 md:p-16 flex flex-col justify-center space-y-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight">{t('whyLokmaTitle')}</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] text-center hover:bg-white/10 transition-colors">
+              <div className="w-16 h-16 mx-auto bg-[#fb335b]/20 text-[#fb335b] rounded-2xl flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-3xl">handshake</span>
+              </div>
+              <h3 className="text-xl font-bold mb-4">{t('whyFairTitle')}</h3>
+              <p className="text-white/60">{t('whyFairDesc')}</p>
+            </div>
+            <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] text-center hover:bg-white/10 transition-colors">
+              <div className="w-16 h-16 mx-auto bg-[#fb335b]/20 text-[#fb335b] rounded-2xl flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-3xl">local_shipping</span>
+              </div>
+              <h3 className="text-xl font-bold mb-4">{t('whyFastTitle')}</h3>
+              <p className="text-white/60">{t('whyFastDesc')}</p>
+            </div>
+            <div className="bg-white/5 border border-white/10 p-8 rounded-[2rem] text-center hover:bg-white/10 transition-colors">
+              <div className="w-16 h-16 mx-auto bg-[#fb335b]/20 text-[#fb335b] rounded-2xl flex items-center justify-center mb-6">
+                <span className="material-symbols-outlined text-3xl">storefront</span>
+              </div>
+              <h3 className="text-xl font-bold mb-4">{t('whyWideTitle')}</h3>
+              <p className="text-white/60">{t('whyWideDesc')}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Split Section (Partners & Couriers) */}
+        <section className="max-w-[1200px] mx-auto py-10 px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gradient-to-br from-[#fb335b]/20 to-transparent border border-[#fb335b]/30 p-10 flex flex-col justify-between rounded-[2rem] min-h-[300px]">
               <div>
-                <span className="inline-block bg-[#fb335b]/20 text-[#fb335b] px-4 py-1 rounded-full text-sm font-bold mb-4 tracking-wider uppercase">{t('b2bBadge')}</span>
-                <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-tight">{t('b2bTitle')}</h2>
-                <p className="text-white/60 text-lg mt-6 max-w-lg">
-                  {t('b2bSubtitle')}
-                </p>
+                <h3 className="text-3xl font-black mb-4">{t('splitPartnerTitle')}</h3>
+                <p className="text-white/70 text-lg mb-8">{t('splitPartnerDesc')}</p>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {benefits.map((b) => (
-                  <div key={b.title} className="flex items-start gap-4">
-                    <div className="bg-[#fb335b]/20 p-2 rounded-lg text-[#fb335b]">
-                      <span className="material-symbols-outlined">{b.icon}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold">{b.title}</h4>
-                      <p className="text-sm text-white/50">{b.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-4">
-                <Link
-                  href="/partner/apply"
-                  className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-10 py-4 rounded-xl font-extrabold transition-all shadow-lg shadow-[#fb335b]/20"
-                >
-                  {t('applyNow')}
+              <div>
+                <Link href="/partner" className="inline-flex items-center gap-2 bg-[#fb335b] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-[#fb335b]/20">
+                  {t('splitPartnerBtn')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </Link>
               </div>
             </div>
-
-            <div className="flex-1 min-h-[400px] relative overflow-hidden">
-              <div
-                className="absolute inset-0 bg-cover bg-center grayscale hover:grayscale-0 transition-all duration-1000"
-                style={{ backgroundImage: `url('https://lh3.googleusercontent.com/aida-public/AB6AXuBwG1qu9yNk5CCFgEYc5ml_rZBG9Ou6Qi4r7WXK7qvpuS4qOearAQpUzF_D5jdrvJp1TvZLAE7-EO_jDKT-ccPj1bOOWMnCD649xi-fSk7S0BOLGk5mU804M2nZqlJY5Irlt5SEMoIf13Nfq3RIZzHflFPg9vZ6OREmPHJupw4Xwz0b6ta6QV807gp3w3F6fyk_RwVfCpM7f_Z57zCCl8cJ2untx8m_Sr68fvQPUtvlMALWNfgkwE39Aznvn1hFdAy0NipWx7Fn3Ew')` }}
-              />
+            <div className="bg-gradient-to-br from-emerald-500/20 to-transparent border border-emerald-500/30 p-10 flex flex-col justify-between rounded-[2rem] min-h-[300px]">
+              <div>
+                <h3 className="text-3xl font-black mb-4">{t('splitCourierTitle')}</h3>
+                <p className="text-white/70 text-lg mb-8">{t('splitCourierDesc')}</p>
+              </div>
+              <div>
+                <Link href="/kurye" className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20">
+                  {t('splitCourierBtn')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </Link>
+              </div>
             </div>
           </div>
         </section>
@@ -426,7 +316,7 @@ export default function LandingPage() {
       </main>
 
       {/* App Download CTA */}
-      <section className="py-16 px-4 md:px-20 lg:px-40 bg-gradient-to-b from-[#120a0a] to-[#0a0505]">
+      <section className="py-16 px-4 md:px-20 lg:px-40 bg-gradient-to-b from-gray-100 to-white dark:from-[#120a0a] dark:to-[#0a0505]">
         <div className="max-w-[800px] mx-auto bg-gradient-to-br from-white/10 to-transparent border border-white/20 rounded-3xl p-8 md:p-12 text-center">
           <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-400 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <span className="material-symbols-outlined text-[18px]">smartphone</span>
@@ -458,61 +348,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-[#0a0505] border-t border-white/5 py-12 px-4 md:px-20 lg:px-40">
-        <div className="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-          <div className="space-y-6">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/lokma_logo_wide.png" alt="LOKMA" width={120} height={30} className="object-contain" />
-            </Link>
-            <p className="text-sm text-white/40 leading-relaxed">
-              LOKMA, geleneksel ticaretin gücünü modern teknolojiyle birleştiren adil bir pazar yeridir.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="font-bold uppercase text-xs tracking-widest">{t('footerPlatform')}</h4>
-            <ul className="space-y-2 text-sm text-white/50">
-              <li><Link className="hover:text-[#fb335b]" href="/how-it-works">{t('howItWorks')}</Link></li>
-              <li><Link className="hover:text-[#fb335b]" href="/categories">{t('categories')}</Link></li>
-              <li><Link className="hover:text-[#fb335b]" href="/popular">{t('popularShops')}</Link></li>
-              <li><Link className="hover:text-[#fb335b]" href="/deals">{t('deals')}</Link></li>
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="font-bold uppercase text-xs tracking-widest">{t('footerCorporate')}</h4>
-            <ul className="space-y-2 text-sm text-white/50">
-              <li><Link className="hover:text-[#fb335b]" href="/about">{t('about')}</Link></li>
-              <li><Link className="hover:text-[#fb335b]" href="/careers">{t('career')}</Link></li>
-              <li><Link className="hover:text-[#fb335b]" href="/press">{t('press')}</Link></li>
-              <li><Link className="hover:text-[#fb335b]" href="/contact">{t('contact')}</Link></li>
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="font-bold uppercase text-xs tracking-widest">{t('footerLegal')}</h4>
-            <ul className="space-y-2 text-sm text-white/50">
-              <li><Link className="hover:text-[#fb335b]" href="/terms">{t('terms')}</Link></li>
-              <li><Link className="hover:text-[#fb335b]" href="/privacy">{t('privacy')}</Link></li>
-              <li><Link className="hover:text-[#fb335b]" href="/kvkk">{t('kvkk')}</Link></li>
-              <li><Link className="hover:text-[#fb335b]" href="/cookies">{t('cookies')}</Link></li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="max-w-[1200px] mx-auto mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/30">{t('copyright')}</p>
-          <div className="flex items-center gap-2 text-xs text-white/40">
-            <span className="material-symbols-outlined text-[14px]">language</span>
-            {languages.length} {t('langSupport')}
-          </div>
-        </div>
-      </footer>
-
-      {/* Material Symbols Font */}
-      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      <PublicFooter themeAware={true} />
     </div>
   );
 }

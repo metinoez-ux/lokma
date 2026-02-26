@@ -1,98 +1,111 @@
 'use client';
 
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import Link from 'next/link';
+import PublicHeader from '@/components/ui/PublicHeader';
+import PublicFooter from '@/components/ui/PublicFooter';
 
 export default function PartnerPage() {
-    return (
-        <div className="min-h-screen bg-[#120a0a] text-white font-['Plus_Jakarta_Sans',sans-serif]">
-            {/* Header */}
-            <header className="fixed top-0 z-50 w-full bg-[#120a0a]/80 backdrop-blur-xl border-b border-white/10 px-4 md:px-20 lg:px-40 py-4">
-                <div className="max-w-[1200px] mx-auto flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-3">
-                        <Image src="/lokma_logo_wide.png" alt="LOKMA" width={140} height={36} className="object-contain" />
-                    </Link>
-                    <Link href="/" className="text-sm text-white/60 hover:text-white">← Ana Sayfa</Link>
-                </div>
-            </header>
+    const t = useTranslations('Partner');
 
-            <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40">
+    const benefits = [
+        { icon: 'percent', title: t('benefitCommTitle'), desc: t('benefitCommDesc') },
+        { icon: 'speed', title: t('benefitPayTitle'), desc: t('benefitPayDesc') },
+        { icon: 'dashboard_customize', title: t('benefitControlTitle'), desc: t('benefitControlDesc') },
+        { icon: 'visibility', title: t('benefitVisTitle'), desc: t('benefitVisDesc') },
+    ];
+
+    const steps = [
+        { num: '1', title: t('step1Title'), desc: t('step1Desc') },
+        { num: '2', title: t('step2Title'), desc: t('step2Desc') },
+        { num: '3', title: t('step3Title'), desc: t('step3Desc') },
+    ];
+
+    return (
+        <div className="relative flex min-h-screen flex-col bg-white dark:bg-[#120a0a] text-gray-900 dark:text-white font-['Plus_Jakarta_Sans',sans-serif] pt-24 overflow-x-hidden">
+            <PublicHeader themeAware={true} />
+            {/* Hero Section */}
+            <section className="relative py-20 px-4 md:px-20 lg:px-40 overflow-hidden min-h-[60vh] flex items-center justify-center">
+                <div className="absolute inset-0 z-0 opacity-20">
+                    <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white dark:from-[#120a0a] dark:via-transparent dark:to-[#120a0a] z-10"></div>
+                    <div className="w-full h-full bg-[#fb335b]/20 blur-[100px] transform scale-150 rounded-full"></div>
+                </div>
+
+                <div className="relative z-10 max-w-4xl mx-auto text-center">
+                    <span className="inline-flex items-center gap-2 bg-[#fb335b]/10 text-[#fb335b] px-5 py-2 rounded-full text-sm font-bold mb-8 tracking-widest uppercase border border-[#fb335b]/30">
+                        <span className="material-symbols-outlined text-[18px]">storefront</span>
+                        {t('esnafMap')}
+                    </span>
+                    <h1 className="text-5xl md:text-7xl font-black leading-tight tracking-tight mb-6 drop-shadow-2xl">
+                        {t('title')}
+                    </h1>
+                    <p className="text-xl md:text-2xl text-gray-600 dark:text-white/70 max-w-3xl mx-auto mb-12 font-medium">
+                        {t('subtitle')}
+                    </p>
+                    <Link
+                        href="/partner/apply"
+                        className="inline-flex items-center justify-center gap-3 bg-[#fb335b] hover:bg-red-600 text-gray-900 dark:text-white px-12 py-5 rounded-2xl font-black text-xl shadow-2xl shadow-[#fb335b]/25 transition-all hover:scale-105 active:scale-95"
+                    >
+                        {t('applyNow')} <span className="material-symbols-outlined animate-bounce">rocket_launch</span>
+                    </Link>
+                    <p className="text-gray-400 dark:text-white/40 text-sm mt-6 font-medium tracking-wide">{t('ctaSubtext')}</p>
+                </div>
+            </section>
+
+            {/* Benefits Section */}
+            <section className="py-24 px-4 md:px-20 lg:px-40 bg-gray-50 dark:bg-white/[0.02] border-y border-gray-200 dark:border-white/5 relative">
+                <div className="max-w-[1200px] mx-auto text-center relative z-10">
+                    <h2 className="text-4xl md:text-5xl font-black mb-16 tracking-tight">{t('benefitsTitle')}</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {benefits.map((b, i) => (
+                            <div key={i} className="bg-white dark:bg-[#120a0a] p-8 rounded-[2rem] border border-gray-200 dark:border-white/10 hover:border-[#fb335b]/50 transition-colors text-center flex flex-col items-center group hover:-translate-y-2 duration-300 shadow-2xl shadow-black">
+                                <div className="w-16 h-16 bg-[#fb335b]/10 text-[#fb335b] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                                    <span className="material-symbols-outlined text-3xl">{b.icon}</span>
+                                </div>
+                                <h3 className="text-xl font-bold mb-3">{b.title}</h3>
+                                <p className="text-gray-500 dark:text-white/60 text-base leading-relaxed">{b.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* How It Works Layer */}
+            <section className="py-24 px-4 md:px-20 lg:px-40 bg-white dark:bg-[#120a0a]">
                 <div className="max-w-[1000px] mx-auto">
                     <div className="text-center mb-16">
-                        <span className="inline-block bg-[#fb335b]/20 text-[#fb335b] px-4 py-1 rounded-full text-sm font-bold mb-4 tracking-wider uppercase">Esnaf Ortaklığı</span>
-                        <h1 className="text-4xl md:text-6xl font-black mb-6">LOKMA Partneri Olun</h1>
-                        <p className="text-xl text-white/60 max-w-2xl mx-auto">
-                            Binlerce müşteriye ulaşın, satışlarınızı artırın. Adil komisyon, hızlı ödeme, kolay yönetim.
-                        </p>
+                        <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-4">{t('howItWorksTitle')}</h2>
+                        <div className="w-24 h-1 bg-[#fb335b] mx-auto rounded-full"></div>
                     </div>
 
-                    {/* Benefits */}
-                    <div className="grid md:grid-cols-3 gap-8 mb-16">
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-                            <div className="w-16 h-16 bg-[#fb335b]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <span className="material-symbols-outlined text-[#fb335b] text-3xl">payments</span>
-                            </div>
-                            <h3 className="text-xl font-bold mb-3">En Düşük Komisyon</h3>
-                            <p className="text-white/60">Sektörün en düşük komisyon oranları ile kazancınızı koruyun.</p>
-                        </div>
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-                            <div className="w-16 h-16 bg-[#fb335b]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <span className="material-symbols-outlined text-[#fb335b] text-3xl">bolt</span>
-                            </div>
-                            <h3 className="text-xl font-bold mb-3">Hızlı Ödeme</h3>
-                            <p className="text-white/60">Haftalık düzenli ödemeler veya anlık ödeme seçeneği.</p>
-                        </div>
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
-                            <div className="w-16 h-16 bg-[#fb335b]/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                                <span className="material-symbols-outlined text-[#fb335b] text-3xl">trending_up</span>
-                            </div>
-                            <h3 className="text-xl font-bold mb-3">Dijital Büyüme</h3>
-                            <p className="text-white/60">Bölgenizdeki binlerce müşteriye dijital reklam ile ulaşın.</p>
+                    <div className="relative">
+                        {/* Connecting line for desktop */}
+                        <div className="hidden md:block absolute top-[45px] left-[10%] right-[10%] h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent z-0"></div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
+                            {steps.map((step, i) => (
+                                <div key={i} className="text-center group">
+                                    <div className="w-24 h-24 bg-white dark:bg-[#120a0a] border-4 border-gray-200 dark:border-white/10 group-hover:border-[#fb335b] transition-colors rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-black">
+                                        <span className="text-4xl font-black text-gray-900 dark:text-white group-hover:text-[#fb335b] transition-colors">{step.num}</span>
+                                    </div>
+                                    <h3 className="text-2xl font-bold mb-3">{step.title}</h3>
+                                    <p className="text-gray-500 dark:text-white/60 text-lg">{step.desc}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* How It Works */}
-                    <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl p-8 md:p-12 mb-16">
-                        <h2 className="text-2xl font-bold mb-8 text-center">Nasıl Çalışır?</h2>
-                        <div className="grid md:grid-cols-4 gap-6">
-                            <div className="text-center">
-                                <div className="w-12 h-12 bg-[#fb335b] rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">1</div>
-                                <h4 className="font-bold mb-2">Başvuru</h4>
-                                <p className="text-sm text-white/60">Formu doldurun</p>
-                            </div>
-                            <div className="text-center">
-                                <div className="w-12 h-12 bg-[#fb335b] rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
-                                <h4 className="font-bold mb-2">Onay</h4>
-                                <p className="text-sm text-white/60">24 saat içinde geri dönüş</p>
-                            </div>
-                            <div className="text-center">
-                                <div className="w-12 h-12 bg-[#fb335b] rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">3</div>
-                                <h4 className="font-bold mb-2">Kurulum</h4>
-                                <p className="text-sm text-white/60">Ürünlerinizi ekleyin</p>
-                            </div>
-                            <div className="text-center">
-                                <div className="w-12 h-12 bg-[#fb335b] rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">4</div>
-                                <h4 className="font-bold mb-2">Satış</h4>
-                                <p className="text-sm text-white/60">Sipariş almaya başlayın!</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* CTA */}
-                    <div className="text-center">
+                    <div className="mt-20 text-center">
                         <Link
                             href="/partner/apply"
-                            className="inline-block bg-[#fb335b] hover:bg-red-600 text-white px-12 py-5 rounded-xl font-bold text-xl transition-all shadow-xl shadow-[#fb335b]/20"
+                            className="inline-block bg-gray-100 dark:bg-white/5 hover:bg-white/10 border border-gray-300 dark:border-white/20 text-gray-900 dark:text-white px-10 py-4 rounded-xl font-bold transition-all shadow-lg"
                         >
-                            Şimdi Başvuru Yap
+                            {t('applyNow')}
                         </Link>
-                        <p className="text-white/40 text-sm mt-4">Ücretsiz başvuru • 24 saat içinde geri dönüş</p>
                     </div>
                 </div>
-            </main>
-
-            <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-            <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-        </div>
+            </section>
+            <PublicFooter themeAware={true} /></div>
     );
 }

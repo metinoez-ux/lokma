@@ -1022,7 +1022,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
         context.push('/kasap/${butcher['id']}');
       },
       child: Container(
-        padding: const EdgeInsets.all(12),
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: const Color(0xFF1C1C1E), // Darker card bg
           borderRadius: BorderRadius.circular(20),
@@ -1030,10 +1030,12 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
             ? Border.all(color: accent.withOpacity(0.3), width: 1)
             : Border.all(color: Colors.white.withOpacity(0.05)),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Image & Badge Section (Left) - Larger Size
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Image & Badge Section (Left) - Larger Size
             Stack(
               children: [
                 Container(
@@ -1070,7 +1072,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                             : Icon(Icons.storefront, color: Colors.grey.shade700, size: 48),
                       ),
                       
-                      // 🆕 Centered badge and darker overlay for unavailable businesses
+                      // 🆕 Darker overlay for unavailable businesses (keep image dim)
                       if (!isOpen)
                         Positioned.fill(
                           child: Container(
@@ -1078,27 +1080,44 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                               color: Colors.black.withOpacity(0.5), // Dark overlay
                               borderRadius: BorderRadius.circular(16),
                             ),
+                          ),
+                        ),
+                        
+                      // 🆕 Thin top-aligned banner for unavailable businesses (Overlying the image)
+                      if (!isOpen)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness == Brightness.dark 
+                                  ? const Color(0xFF5A5A5C) 
+                                  : Colors.grey.shade300,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                topRight: Radius.circular(16),
+                              ),
+                            ),
                             child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.7),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: Colors.white24, width: 1),
-                                ),
-                                child: const Text(
-                                  'Şu an kapalı',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
+                              child: Text(
+                                'Şu an kapalı',
+                                style: TextStyle(
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.white 
+                                      : Colors.black87,
+                                  fontSize: 11, // Slightly smaller since the butcher image is smaller
+                                  fontWeight: FontWeight.w400, // Thinner font
+                                  letterSpacing: 0.3,
                                 ),
                               ),
                             ),
                           ),
                         ),
+                    ],
+                  ),
+                ),
                     ],
                   ),
                 ),
@@ -1253,6 +1272,9 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                 ],
               ),
             ),
+              ],
+            ),
+          ),
           ],
         ),
       ),

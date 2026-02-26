@@ -11,7 +11,24 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "LOKMA | Mahalleni Keşfet",
-  description: "Yerel esnaf ve müşterileri bir araya getiren dijital pazar yeri. Kasap, market, çiçekçi ve daha fazlası tek platformda.",
+  description: "Yerel esnaf ve müşterileri bir araya getiren dijital pazar yeri. Kasap, market, çiçekçi, restoran ve daha fazlası tek platformda.",
+  keywords: "yemek siparişi, yerel esnaf, taze ürünler, kurye, restoran kayıt, lokma, lokma uygulamsı, lokma shop, ciftciden",
+  openGraph: {
+    title: "LOKMA | Mahalleni Keşfet",
+    description: "Yerel esnaf ve müşterileri bir araya getiren dijital pazar yeri.",
+    url: "https://lokma.shop",
+    siteName: "LOKMA",
+    images: [
+      {
+        url: "https://lokma.shop/lokma_logo_wide.png",
+        width: 1200,
+        height: 630,
+        alt: "LOKMA Logo",
+      },
+    ],
+    locale: "tr_TR",
+    type: "website",
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '48x48' },
@@ -37,7 +54,13 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body
+            <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      </head>
+<body
         className={`${inter.variable} antialiased`}
       >
         <Script

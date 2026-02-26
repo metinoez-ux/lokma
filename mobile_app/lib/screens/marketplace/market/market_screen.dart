@@ -537,9 +537,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                     // Search bar (teslimat/gel al altında)
                                     _buildSearchBar(),
                                     
-                                    // Sadece teslimat modunda göster
-                                    if (_deliveryMode == 'teslimat')
-                                      _buildDistanceSliderWithTuna(),
+                                    // Sadece gel-al modunda Mesafe, diğerlerinde TUNA toggle
+                                    if (_deliveryMode == 'gelal')
+                                      _buildDistanceSliderWithTuna()
+                                    else if (_deliveryMode == 'teslimat' || _deliveryMode == 'masa')
+                                      _buildTunaToggleOnly(),
                                   ],
                                 ),
                               ),
@@ -723,7 +725,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           height: 48,
           padding: const EdgeInsets.only(left: 16, right: 8),
           decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
+            color: Theme.of(context).brightness == Brightness.dark 
+                ? Colors.grey[800] 
+                : Colors.grey[200],
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
@@ -989,10 +993,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     );
   }
   
-  // 🆕 TUNA Kasaplar toggle only (for Kurye mode - no distance slider)
+  // 🆕 TUNA Marketler toggle only (for Kurye mode - no distance slider)
   Widget _buildTunaToggleOnly() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -1021,7 +1025,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'TUNA Kasaplar',
+                    'TUNA Marketler',
                     style: TextStyle(
                       color: _onlyTuna ? Colors.white : Colors.grey[600],
                       fontSize: 13,
@@ -1335,33 +1339,47 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           ),
                   ),
                 
-                // 🆕 Centered badge and darker overlay for unavailable businesses
+                // 🆕 Darker overlay for unavailable businesses
                 if (!isOpen)
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5), // Dark overlay
+                        color: Colors.black.withOpacity(0.4), // Slightly lighter dark overlay
                         borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          topRight: Radius.circular(16),
+                          topLeft: Radius.circular(12),  // Match main card radius
+                          topRight: Radius.circular(12), // Match main card radius
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                // 🆕 Thin top-aligned banner for unavailable businesses (Overlying the image)
+                if (!isOpen)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? const Color(0xFF5A5A5C) 
+                            : Colors.grey.shade100.withOpacity(0.9), // lighter background
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(12),  // Match main card radius
+                          topRight: Radius.circular(12), // Match main card radius
                         ),
                       ),
                       child: Center(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.7),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white24, width: 1),
-                          ),
-                          child: const Text(
-                            'Şu an kapalı',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
+                        child: Text(
+                          'Şu an kapalı',
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark 
+                                ? Colors.white 
+                                : Colors.black87,
+                            fontSize: 12, // Thinner, smaller font
+                            fontWeight: FontWeight.w500, // Medium weight
+                            letterSpacing: 0.2, // Tighter letter spacing
                           ),
                         ),
                       ),
@@ -1533,8 +1551,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             ),
             
             // Info section (below image)
+            // Info section (below image)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 28, 12, 12), // Extra top padding for logo overlap
+              padding: const EdgeInsets.fromLTRB(16, 28, 16, 16), // Extra top padding for logo overlap
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1543,153 +1562,135 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     name,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600, // Reduced from w700
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   
-                  // Rating + Type (Lieferando style: ★ 4.5 (200+) · Market)
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        rating.toStringAsFixed(1),
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (reviewText.isNotEmpty) ...[
-                        const SizedBox(width: 2),
-                        Text(
-                          reviewText,
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                      Text(
-                        ' · $typeLabel',
-                        style: TextStyle(
-                          color: Colors.grey[700],
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  // 🆕 Lieferando-style info row - changes based on mode
-                  const SizedBox(height: 4),
+                  // Rating + Type (Lieferando style: ★ 4.7 (220+) · Market)
                   Builder(
                     builder: (context) {
-                      // Read business delivery settings
-                      final prepTimeMin = (data['prepTimeMin'] as num?)?.toInt() ?? 10;
-                      final prepTimeMax = (data['prepTimeMax'] as num?)?.toInt() ?? 25;
-                      final deliveryFee = (data['deliveryFee'] as num?)?.toDouble() ?? 0.0;
-                      final minOrderAmount = (data['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
-                      final freeDeliveryThreshold = (data['freeDeliveryThreshold'] as num?)?.toDouble();
-                      
-                      if (_deliveryMode == 'teslimat') {
-                        // DELIVERY MODE: Show prep time + delivery fee + min order
-                        // Calculate estimated delivery time = prep time + travel time (3 min/km)
-                        double travelTimeMin = 0;
-                        if (distanceText.isNotEmpty) {
-                          final kmMatch = RegExp(r'([\d.]+)').firstMatch(distanceText);
-                          if (kmMatch != null) {
-                            final km = double.tryParse(kmMatch.group(1) ?? '0') ?? 0;
-                            travelTimeMin = km * 3; // ~3 min per km
-                          }
-                        }
-                        final totalMin = prepTimeMin + travelTimeMin.round();
-                        final totalMax = prepTimeMax + travelTimeMin.round() + 5;
-                        
-                        final hasDeliveryFee = deliveryFee > 0;
-                        final hasMinOrder = minOrderAmount > 0;
-                        final hasFreeDelivery = freeDeliveryThreshold != null && freeDeliveryThreshold > 0;
-                        
-                        return Row(
-                          children: [
-                            // Delivery time
-                            Icon(Icons.access_time, color: Colors.grey[600], size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              '$totalMin-$totalMax dk',
-                              style: TextStyle(
-                                color: Colors.grey[700],
-                                fontSize: 13,
-                              ),
-                            ),
-                            
-                            // Delivery fee
-                            if (hasDeliveryFee || hasFreeDelivery) ...[
-                              Text(' · ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                              Icon(Icons.delivery_dining, color: Colors.grey[600], size: 14),
-                              const SizedBox(width: 4),
-                              if (hasFreeDelivery)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF2E7D32).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    deliveryFee > 0 ? '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}${CurrencyUtils.getCurrencySymbol()}' : 'Ücretsiz',
-                                    style: TextStyle(
-                                      color: deliveryFee > 0 ? Colors.grey[700] : const Color(0xFF2E7D32),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                )
-                              else
-                                Text(
-                                  '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')}${CurrencyUtils.getCurrencySymbol()}',
-                                  style: TextStyle(
-                                    color: Colors.grey[700],
-                                    fontSize: 13,
-                                  ),
-                                ),
-                            ],
-                            
-                            // Min order
-                            if (hasMinOrder) ...[
-                              Text(' · ', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                              Icon(Icons.shopping_basket_outlined, color: Colors.grey[600], size: 14),
-                              const SizedBox(width: 4),
+                      final isDark = Theme.of(context).brightness == Brightness.dark;
+                      final textColor = isDark ? Colors.white.withOpacity(0.9) : Colors.black87;
+                      final starColor = isDark ? Color(0xFFFF9529) : Color(0xFFFF9529);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.star, color: starColor, size: 16),
+                              const SizedBox(width: 6),
                               Text(
-                                'Min. ${minOrderAmount.toStringAsFixed(0)}${CurrencyUtils.getCurrencySymbol()}',
+                                rating.toStringAsFixed(1).replaceAll('.', ','),
                                 style: TextStyle(
-                                  color: Colors.grey[700],
-                                  fontSize: 13,
+                                  color: textColor,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600, // Reduced from w700
+                                ),
+                              ),
+                              if (reviewText.isNotEmpty) ...[
+                                const SizedBox(width: 4),
+                                Text(
+                                  reviewText,
+                                  style: TextStyle(
+                                    color: textColor,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                              Text(
+                                ' · ',
+                                style: TextStyle(color: textColor, fontSize: 15),
+                              ),
+                              Text(
+                                typeLabel,
+                                style: TextStyle(
+                                  color: textColor,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w400,
                                 ),
                               ),
                             ],
-                          ],
-                        );
-                      } else {
-                        // PICKUP MODE: Just show distance (Lieferando style)
-                        if (distanceText.isEmpty) return const SizedBox.shrink();
-                        return Row(
-                          children: [
-                            Icon(Icons.location_on_outlined, color: Colors.grey[600], size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              distanceText,
-                              style: TextStyle(
-                                color: Colors.grey[700],
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-                    },
+                          ),
+                          
+                          const SizedBox(height: 6),
+                          
+                          // Delivery Info Row
+                          Builder(
+                            builder: (context) {
+                              // Read business delivery settings
+                              final deliveryFee = (data['deliveryFee'] as num?)?.toDouble() ?? 0.0;
+                              final minOrderAmount = (data['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
+                              final freeDeliveryThreshold = (data['freeDeliveryThreshold'] as num?)?.toDouble();
+                              
+                              if (_deliveryMode == 'teslimat') {
+                                final hasFreeDelivery = freeDeliveryThreshold != null && freeDeliveryThreshold > 0;
+                                final hasMinOrder = minOrderAmount > 0;
+                                
+                                return Row(
+                                  children: [
+                                    // Delivery fee
+                                    Icon(Icons.directions_bike, color: textColor, size: 16),
+                                    const SizedBox(width: 6),
+                                    if (hasFreeDelivery && deliveryFee == 0)
+                                      Text(
+                                        'Ücretsiz',
+                                        style: TextStyle(color: textColor, fontSize: 15),
+                                      )
+                                    else
+                                      Text(
+                                        '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} Teslimat',
+                                        style: TextStyle(
+                                          color: textColor,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    
+                                    // Min order
+                                    if (hasMinOrder) ...[
+                                      Text(' · ', style: TextStyle(color: textColor, fontSize: 15)),
+                                      Icon(Icons.shopping_basket_outlined, color: textColor, size: 16),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Min. ${minOrderAmount.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
+                                        style: TextStyle(
+                                          color: textColor,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                );
+                              } else {
+                                // PICKUP MODE
+                                if (distanceText.isEmpty) return const SizedBox.shrink();
+                                return Row(
+                                  children: [
+                                    Icon(Icons.location_on_outlined, color: textColor, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      distanceText,
+                                      style: TextStyle(
+                                        color: textColor,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      );
+                    }
                   ),
 
                 ],
@@ -1704,6 +1705,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   void _showFilterBottomSheet() {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       backgroundColor: cardBg,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
