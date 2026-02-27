@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'legal_report_sheet.dart';
 
 import 'package:lokma_app/services/google_places_service.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
@@ -2278,7 +2279,25 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               const SizedBox(height: 24),
                                               // Rechtliche Bedenken melden
                                               GestureDetector(
-                                                onTap: () {},
+                                                onTap: () {
+                                                  showModalBottomSheet(
+                                                    context: context,
+                                                    isScrollControlled: true,
+                                                    backgroundColor: Colors.transparent,
+                                                    builder: (_) => DraggableScrollableSheet(
+                                                      initialChildSize: 0.85,
+                                                      maxChildSize: 0.95,
+                                                      minChildSize: 0.5,
+                                                      builder: (_, controller) => LegalReportSheet(
+                                                        businessId: widget.businessId,
+                                                        businessName: _butcherDoc?['companyName'] ?? _butcherDoc?['name'] ?? 'İşletme',
+                                                        productId: product.id,
+                                                        productName: product.name,
+                                                        productCategory: product.category,
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
                                                 child: Text('marketplace.report_legal_concerns'.tr(), style: TextStyle(fontSize: 14, color: isDark ? Colors.white70 : Colors.black54, decoration: TextDecoration.underline)),
                                               ),
                                               const SizedBox(height: 16),
@@ -2613,7 +2632,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           '${CurrencyUtils.getCurrencySymbol()}${ci.unitPrice.toStringAsFixed(2)}',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            color: accent,
+                                            color: textPrimary,
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
@@ -2623,7 +2642,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             width: 20,
                                             height: 20,
                                             decoration: BoxDecoration(
-                                              color: accent,
+                                              color: isDark ? Colors.white : Colors.black87,
                                               shape: BoxShape.circle,
                                             ),
                                             alignment: Alignment.center,

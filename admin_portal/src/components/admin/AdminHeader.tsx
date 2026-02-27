@@ -239,6 +239,7 @@ export default function AdminHeader() {
                                 { href: '/admin/activity-logs', label: t('activityLogs') },
                                 { href: '/admin/analytics', label: t('analytics') },
                                 { href: '/admin/reservations', label: t('reservations') },
+                                { href: '/admin/reports', label: '🚩 Meldungen' },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);
                                 return (
@@ -385,6 +386,7 @@ export default function AdminHeader() {
                                     { href: '/admin/dashboard?view=customers', label: t('customers') },
                                     { href: '/admin/orders/suppliers', label: t('suppliers') },
                                     { href: '/admin/products', label: t('productsCategories') },
+                                    { href: '/admin/reports', label: '🚩 Meldungen' },
                                 ].map(({ href, label }) => (
                                     <Link
                                         key={href}

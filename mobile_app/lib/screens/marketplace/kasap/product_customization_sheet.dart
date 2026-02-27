@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'legal_report_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/butcher_product.dart';
 import '../../../models/product_option.dart';
@@ -643,20 +644,23 @@ class _ProductCustomizationSheetState
                       children: [
                         Text('marketplace.allergens'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary)),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: product.allergens.isNotEmpty
-                                ? const Color(0xFFE8F5E9)
-                                : (isDark ? Colors.white10 : Colors.grey[200]),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            product.allergens.isNotEmpty ? 'marketplace.confirmed_by_seller'.tr() : 'marketplace.not_confirmed_by_seller'.tr(),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: product.allergens.isNotEmpty ? const Color(0xFF2E7D32) : textSecondary,
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: product.allergens.isNotEmpty
+                                  ? const Color(0xFFE8F5E9)
+                                  : (isDark ? Colors.white10 : Colors.grey[200]),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              product.allergens.isNotEmpty ? 'marketplace.confirmed_by_seller'.tr() : 'marketplace.not_confirmed_by_seller'.tr(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: product.allergens.isNotEmpty ? const Color(0xFF2E7D32) : textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
@@ -684,20 +688,23 @@ class _ProductCustomizationSheetState
                       children: [
                         Text('marketplace.additives'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary)),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: product.additives.isNotEmpty
-                                ? const Color(0xFFE8F5E9)
-                                : (isDark ? Colors.white10 : Colors.grey[200]),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            product.additives.isNotEmpty ? 'marketplace.confirmed_by_seller'.tr() : 'marketplace.not_confirmed_by_seller'.tr(),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: product.additives.isNotEmpty ? const Color(0xFF2E7D32) : textSecondary,
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: product.additives.isNotEmpty
+                                  ? const Color(0xFFE8F5E9)
+                                  : (isDark ? Colors.white10 : Colors.grey[200]),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              product.additives.isNotEmpty ? 'marketplace.confirmed_by_seller'.tr() : 'marketplace.not_confirmed_by_seller'.tr(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: product.additives.isNotEmpty ? const Color(0xFF2E7D32) : textSecondary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
@@ -743,7 +750,23 @@ class _ProductCustomizationSheetState
                     // Rechtliche Bedenken melden
                     GestureDetector(
                       onTap: () {
-                        // TODO: Navigate to legal concerns form
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => DraggableScrollableSheet(
+                            initialChildSize: 0.85,
+                            maxChildSize: 0.95,
+                            minChildSize: 0.5,
+                            builder: (_, controller) => LegalReportSheet(
+                              businessId: widget.businessId,
+                              businessName: widget.businessName,
+                              productId: widget.product.id,
+                              productName: widget.product.name,
+                              productCategory: widget.product.category,
+                            ),
+                          ),
+                        );
                       },
                       child: Text(
                         'marketplace.report_legal_concerns'.tr(),
