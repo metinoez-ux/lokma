@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/butcher_product.dart';
@@ -156,11 +157,11 @@ class _ProductCustomizationSheetState
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(widget.existingItem != null 
-        ? '$localizedName güncellendi' 
-        : '$localizedName sepete eklendi'),
+        ? 'marketplace.updated_in_cart'.tr(args: [localizedName]) 
+        : 'marketplace.added_to_cart'.tr(args: [localizedName])),
       duration: const Duration(seconds: 2),
       behavior: SnackBarBehavior.floating,
-      backgroundColor: const Color(0xFFFF8000),
+      backgroundColor: const Color(0xFFFB335B),
     ),
   );
 }
@@ -168,7 +169,7 @@ class _ProductCustomizationSheetState
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = const Color(0xFFFF8000);
+    final accent = const Color(0xFFFB335B);
     final bg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white54 : Colors.black45;
@@ -333,7 +334,7 @@ class _ProductCustomizationSheetState
                             elevation: 0,
                           ),
                           child: Text(
-                            '${widget.existingItem != null ? 'Güncelle' : 'Hinzufügen'}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2)}',
+                            '${widget.existingItem != null ? 'marketplace.update_item'.tr() : 'marketplace.add_to_cart'.tr()}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2)}',
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -384,7 +385,7 @@ class _ProductCustomizationSheetState
 
         // Price
         Text(
-          'ab ${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
+          '${'marketplace.from_price'.tr()} ${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
           style: TextStyle(
             fontSize: 14,
             color: textSecondary,
@@ -410,7 +411,7 @@ class _ProductCustomizationSheetState
         GestureDetector(
           onTap: () => _showProduktinfo(product),
           child: Text(
-            'Produktinfo',
+            'marketplace.product_info'.tr(),
             style: TextStyle(
               fontSize: 13,
               color: accent,
@@ -487,7 +488,7 @@ class _ProductCustomizationSheetState
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                group.required ? 'Pflichtfeld' : 'Optional',
+                group.required ? 'marketplace.required_field'.tr() : 'common.optional'.tr(),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -568,12 +569,14 @@ class _ProductCustomizationSheetState
     );
   }
 
-  // ── Produktinfo Modal ──
+  // ── Produktinfo Modal (Lieferando Style) ──
   void _showProduktinfo(ButcherProduct product) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textPrimary = isDark ? Colors.white : Colors.black87;
     final textSecondary = isDark ? Colors.white54 : Colors.black45;
     final bg = isDark ? const Color(0xFF1A1A1A) : Colors.white;
+    final dividerColor = isDark ? Colors.white12 : Colors.black12;
+    final warningBg = isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5);
 
     showModalBottomSheet(
       context: context,
@@ -581,81 +584,181 @@ class _ProductCustomizationSheetState
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(ctx).size.height * 0.6,
+          maxHeight: MediaQuery.of(ctx).size.height * 0.85,
         ),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
+            // Handle bar
+            Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 8),
               child: Container(
-                width: 36,
-                height: 4,
+                width: 36, height: 4,
                 decoration: BoxDecoration(
                   color: isDark ? Colors.white24 : Colors.black12,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Produktinfo',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: textPrimary,
+            // Header with back button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.of(ctx).pop(),
+                    child: Icon(Icons.arrow_back, color: textPrimary, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'marketplace.product_info'.tr(),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              I18nUtils.getLocalizedText(context, product.nameData),
-              style: TextStyle(
-                fontSize: 14,
-                color: textSecondary,
+            const SizedBox(height: 12),
+            Divider(height: 1, color: dividerColor),
+            // Content
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product name
+                    Text(
+                      I18nUtils.getLocalizedText(context, product.nameData),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
+                    ),
+                    const SizedBox(height: 24),
+                    // Allergene Section
+                    Row(
+                      children: [
+                        Text('marketplace.allergens'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary)),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: product.allergens.isNotEmpty
+                                ? const Color(0xFFE8F5E9)
+                                : (isDark ? Colors.white10 : Colors.grey[200]),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            product.allergens.isNotEmpty ? 'marketplace.confirmed_by_seller'.tr() : 'marketplace.not_confirmed_by_seller'.tr(),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: product.allergens.isNotEmpty ? const Color(0xFF2E7D32) : textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (product.allergens.isNotEmpty)
+                      ...product.allergens.map((allergen) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Icon(Icons.eco_outlined, size: 18, color: textSecondary),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(allergen, style: TextStyle(fontSize: 14, color: textPrimary))),
+                          ],
+                        ),
+                      ))
+                    else
+                      Text('marketplace.no_info_available'.tr(), style: TextStyle(fontSize: 14, color: textSecondary)),
+                    const SizedBox(height: 20),
+                    Divider(color: dividerColor),
+                    const SizedBox(height: 16),
+                    // Zusatzstoffe Section
+                    Row(
+                      children: [
+                        Text('marketplace.additives'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary)),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: product.additives.isNotEmpty
+                                ? const Color(0xFFE8F5E9)
+                                : (isDark ? Colors.white10 : Colors.grey[200]),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            product.additives.isNotEmpty ? 'marketplace.confirmed_by_seller'.tr() : 'marketplace.not_confirmed_by_seller'.tr(),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: product.additives.isNotEmpty ? const Color(0xFF2E7D32) : textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (product.additives.isNotEmpty)
+                      ...product.additives.map((additive) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Icon(Icons.science_outlined, size: 18, color: textSecondary),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(additive, style: TextStyle(fontSize: 14, color: textPrimary))),
+                          ],
+                        ),
+                      ))
+                    else
+                      Text('marketplace.no_info_available'.tr(), style: TextStyle(fontSize: 14, color: textSecondary)),
+                    const SizedBox(height: 24),
+                    // Haftungsausschluss / Disclaimer
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: warningBg,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.warning_amber_rounded, size: 24, color: isDark ? Colors.amber : Colors.amber[700]),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'marketplace.disclaimer_text'.tr(),
+                              style: TextStyle(fontSize: 13, color: textSecondary, height: 1.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Rechtliche Bedenken melden
+                    GestureDetector(
+                      onTap: () {
+                        // TODO: Navigate to legal concerns form
+                      },
+                      child: Text(
+                        'marketplace.report_legal_concerns'.tr(),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            if (product.description.isNotEmpty)
-              Text(
-                I18nUtils.getLocalizedText(context, product.descriptionData),
-                style: TextStyle(
-                  fontSize: 14,
-                  color: textPrimary,
-                  height: 1.5,
-                ),
-              ),
-            if (product.tags.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Zutaten / Tags',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: product.tags.map((tag) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white10 : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    tag,
-                    style: TextStyle(fontSize: 12, color: textSecondary),
-                  ),
-                )).toList(),
-              ),
-            ],
           ],
         ),
       ),

@@ -38,6 +38,11 @@ interface ExtendedProduct extends MasterProduct {
     isPackaged?: boolean;    // Paketli
     isLoose?: boolean;       // 🆕 Lose Ware / Açık Ürün (paketlenmemiş)
     isOrganic?: boolean;     // Organik
+    // 🧪 Alerjenler & Katkı Maddeleri (EU LMIV 1169/2011)
+    allergens?: string[];           // Alerjen listesi
+    additives?: string[];           // Katkı maddesi listesi
+    allergensConfirmed?: boolean;   // Satıcı tarafından onaylandı mı?
+    additivesConfirmed?: boolean;   // Satıcı tarafından onaylandı mı?
 }
 
 // İşletme türleri business-types.ts'den çekiliyor
@@ -496,6 +501,11 @@ function GlobalProductsPageContent() {
                 isPackaged: (formData as any).isPackaged || false,
                 isLoose: (formData as any).isLoose || false,  // Açık/Lose Ware
                 isOrganic: (formData as any).isOrganic || false,
+                // 🧪 Alerjenler & Katkı Maddeleri
+                allergens: (formData as any).allergens || [],
+                additives: (formData as any).additives || [],
+                allergensConfirmed: (formData as any).allergensConfirmed || false,
+                additivesConfirmed: (formData as any).additivesConfirmed || false,
                 // ERP Fields
                 barcode: (formData as any).barcode || null,
                 productType: (formData as any).productType || 'fresh',
@@ -2340,6 +2350,123 @@ function GlobalProductsPageContent() {
                                                         className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
                                                         placeholder="https://... veya assets/images/..."
                                                     />
+                                                </div>
+                                            </div>
+
+                                            {/* 🧪 Alerjenler & Katkı Maddeleri (EU LMIV 1169/2011) */}
+                                            <div className="border-b border-gray-700 pb-4">
+                                                <h3 className="text-sm font-medium text-orange-400 mb-3">🧪 Alerjenler & Katkı Maddeleri</h3>
+                                                <p className="text-xs text-gray-500 mb-3">EU LMIV 1169/2011 uyarınca 14 zorunlu alerjen bildirimi</p>
+
+                                                {/* Alerjenler */}
+                                                <div className="mb-4">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <label className="text-sm text-gray-300 font-medium">Alerjenler</label>
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(formData as any).allergensConfirmed || false}
+                                                                onChange={e => setFormData(prev => ({ ...prev, allergensConfirmed: e.target.checked } as any))}
+                                                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-green-600"
+                                                            />
+                                                            <span className="text-xs text-gray-400">✓ Satıcı tarafından onaylandı</span>
+                                                        </label>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {[
+                                                            { key: 'gluten', label: '🌾 Gluten', emoji: '🌾' },
+                                                            { key: 'crustaceans', label: '🦐 Krebstiere', emoji: '🦐' },
+                                                            { key: 'eggs', label: '🥚 Eier', emoji: '🥚' },
+                                                            { key: 'fish', label: '🐟 Fisch', emoji: '🐟' },
+                                                            { key: 'peanuts', label: '🥜 Erdnüsse', emoji: '🥜' },
+                                                            { key: 'soybeans', label: '🫘 Soja', emoji: '🫘' },
+                                                            { key: 'milk', label: '🥛 Milch', emoji: '🥛' },
+                                                            { key: 'nuts', label: '🌰 Schalenfrüchte', emoji: '🌰' },
+                                                            { key: 'celery', label: '🥬 Sellerie', emoji: '🥬' },
+                                                            { key: 'mustard', label: '🟡 Senf', emoji: '🟡' },
+                                                            { key: 'sesame', label: '⚪ Sesam', emoji: '⚪' },
+                                                            { key: 'sulphites', label: '🧪 Sulfite', emoji: '🧪' },
+                                                            { key: 'lupin', label: '🌸 Lupine', emoji: '🌸' },
+                                                            { key: 'molluscs', label: '🐚 Weichtiere', emoji: '🐚' },
+                                                        ].map(allergen => {
+                                                            const isSelected = ((formData as any).allergens || []).includes(allergen.key);
+                                                            return (
+                                                                <button
+                                                                    key={allergen.key}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const current = (formData as any).allergens || [];
+                                                                        const updated = isSelected
+                                                                            ? current.filter((a: string) => a !== allergen.key)
+                                                                            : [...current, allergen.key];
+                                                                        setFormData({ ...formData, allergens: updated } as any);
+                                                                    }}
+                                                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isSelected
+                                                                            ? 'bg-orange-600 text-white border-2 border-orange-400 shadow-lg'
+                                                                            : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
+                                                                        }`}
+                                                                >
+                                                                    {allergen.label}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+
+                                                {/* Katkı Maddeleri */}
+                                                <div>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <label className="text-sm text-gray-300 font-medium">Katkı Maddeleri</label>
+                                                        <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={(formData as any).additivesConfirmed || false}
+                                                                onChange={e => setFormData(prev => ({ ...prev, additivesConfirmed: e.target.checked } as any))}
+                                                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-green-600"
+                                                            />
+                                                            <span className="text-xs text-gray-400">✓ Satıcı tarafından onaylandı</span>
+                                                        </label>
+                                                    </div>
+                                                    <div className="flex gap-2 items-center">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Katkı maddesi ekle (Enter ile)"
+                                                            className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm"
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    const value = (e.target as HTMLInputElement).value.trim();
+                                                                    if (value) {
+                                                                        const current = (formData as any).additives || [];
+                                                                        if (!current.includes(value)) {
+                                                                            setFormData({ ...formData, additives: [...current, value] } as any);
+                                                                        }
+                                                                        (e.target as HTMLInputElement).value = '';
+                                                                    }
+                                                                }
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    {((formData as any).additives || []).length > 0 && (
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            {((formData as any).additives || []).map((additive: string, idx: number) => (
+                                                                <span key={idx} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-teal-900/50 text-teal-300 border border-teal-700">
+                                                                    {additive}
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const current = [...((formData as any).additives || [])];
+                                                                            current.splice(idx, 1);
+                                                                            setFormData({ ...formData, additives: current } as any);
+                                                                        }}
+                                                                        className="text-teal-400 hover:text-red-400 ml-1"
+                                                                    >
+                                                                        ✕
+                                                                    </button>
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
