@@ -286,8 +286,10 @@ class _LegalReportSheetState extends State<LegalReportSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _descriptionController,
-                    maxLines: 4,
+                    minLines: 4,
+                    maxLines: 6,
                     maxLength: 500,
+                    textInputAction: TextInputAction.done,
                     onChanged: (_) => setState(() {}),
                     style: TextStyle(fontSize: 14, color: textPrimary),
                     decoration: InputDecoration(
