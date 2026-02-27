@@ -7,7 +7,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:io';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:lokma_app/services/google_places_service.dart';
@@ -15,7 +14,6 @@ import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/data/product_catalog_data.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
-import 'package:lokma_app/utils/i18n_utils.dart';
 import 'cart_screen.dart';
 import 'product_customization_sheet.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
@@ -151,7 +149,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // 🚀 Service Mode (Lieferando-style toggle)
   // 0 = Kurye/Teslimat, 1 = Gel Al/Abholung, 2 = Masa/Dine-in
   late int _deliveryModeIndex;
-  bool get _isDeliveryMode => _deliveryModeIndex == 0;
   bool get _isMasaMode => _deliveryModeIndex == 2;
   
   // 🔍 Menu Search
@@ -294,11 +291,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       '📦': Icons.inventory_2,
       '🛒': Icons.shopping_bag,
       '🏠': Icons.grid_view,
-      '🍗': Icons.egg_alt,
-      '🌯': Icons.lunch_dining,
+      '🌯': Icons.kebab_dining,
       '🥙': Icons.lunch_dining,
       '🥤': Icons.local_drink,
-      '🥗': Icons.restaurant,
     };
     return emojiToIcon[emoji] ?? Icons.category;
   }
@@ -375,7 +370,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         barrierDismissible: true,
         builder: (dialogContext) {
           final theme = Theme.of(dialogContext);
-          final isDark = theme.brightness == Brightness.dark;
           return AlertDialog(
             backgroundColor: theme.dialogBackgroundColor,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -505,42 +499,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
   }
 
-  void _launchMaps() async {
-    final lat = _placeDetails?['geometry']?['location']?['lat'];
-    final lng = _placeDetails?['geometry']?['location']?['lng'];
-    final address = _butcherDoc?['address']?['street'];
-
-    if (lat != null && lng != null) {
-      final Uri uri;
-      if (Platform.isIOS) {
-        uri = Uri.parse('http://maps.apple.com/?q=$lat,$lng');
-      } else {
-        uri = Uri.parse('geo:$lat,$lng?q=$lat,$lng');
-      }
-      
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
-         final googleUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
-         if (await canLaunchUrl(googleUrl)) await launchUrl(googleUrl);
-      }
-    } else if (address != null) {
-         final Uri uri;
-         if (Platform.isIOS) {
-            uri = Uri.parse('http://maps.apple.com/?q=${Uri.encodeComponent(address)}');
-         } else {
-            uri = Uri.parse('geo:0,0?q=${Uri.encodeComponent(address)}');
-         }
-         
-         if (await canLaunchUrl(uri)) {
-            await launchUrl(uri);
-         } else {
-             final googleUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}');
-             if (await canLaunchUrl(googleUrl)) await launchUrl(googleUrl);
-         }
-    }
-  }
-  
   void _showWeeklyHours() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
@@ -1127,25 +1085,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     );
   }
 
-  // Safe wrapper for hours list
-  List<Widget> _buildHoursListSafe() {
-    try {
-      return _buildHoursList();
-    } catch (e) {
-      debugPrint('Error in _buildHoursListSafe: $e');
-      return [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Text('Çalışma saatleri görüntülenemiyor.', style: TextStyle(color: Colors.white54)),
-        )
-      ];
-    }
-  }
-  
   // Themed wrapper for hours list  
   List<Widget> _buildHoursListThemed(bool isDark) {
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final todayHighlight = isDark ? _getAccent(context) : _getAccent(context);
     final subtitleColor = isDark ? Colors.grey[400] : Colors.grey.shade600;
     
     // For simplicity, reuse _buildHoursList and just return - theme colors are handled via the page context
@@ -1371,120 +1312,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
   }
 
-  // Safe Data Access Helper
-  String _safeString(Map<String, dynamic>? data, String key, {String fallback = ''}) {
-    if (data == null || data[key] == null) return fallback;
-    return data[key].toString();
-  }
-
-  // Business Category Helpers (NEW!)
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case 'kasap':
-      case 'butcher':
-        return Icons.restaurant;
-      case 'restoran':
-      case 'restaurant':
-        return Icons.restaurant_menu;
-      case 'imbiss':
-        return Icons.lunch_dining;
-      case 'market':
-        return Icons.shopping_cart;
-      case 'pastane':
-      case 'bakery':
-        return Icons.cake;
-      case 'cafe':
-        return Icons.coffee;
-      case 'cicekci':
-      case 'florist':
-        return Icons.local_florist;
-      case 'catering':
-        return Icons.celebration;
-      default:
-        return Icons.store;
-    }
-  }
-
-  String _getCategoryLabel(String category) {
-    switch (category.toLowerCase()) {
-      case 'kasap':
-      case 'butcher':
-        return 'Kasap';
-      case 'restoran':
-      case 'restaurant':
-        return 'Restoran';
-      case 'imbiss':
-        return 'Imbiss';
-      case 'market':
-        return 'Market';
-      case 'pastane':
-      case 'bakery':
-        return 'Pastane';
-      case 'cafe':
-        return 'Kafe';
-      case 'cicekci':
-      case 'florist':
-        return 'Çiçekçi';
-      case 'catering':
-        return 'Catering';
-      default:
-        return 'İşletme';
-    }
-  }
-
-  Widget _buildServiceBadge(IconData icon, String label, Color color) {
-    return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 14),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Lieferando-style compact action button
-  Widget _buildQuickAction(IconData icon, String label, VoidCallback onTap, bool isDark) {
-    return Material(
-      color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[200],
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: isDark ? Colors.white70 : Colors.black54),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: isDark ? Colors.white70 : Colors.black54,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // LIEFERANDO STYLE: Theme-aware color system
@@ -1518,7 +1345,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final isOpen = openingHelper.isOpenAt(DateTime.now());
     final showBrandBadge = (data?['brandLabelActive'] ?? false) && 
                            (brand?.toString().toLowerCase() == 'tuna' || brand?.toString().toLowerCase() == 'akdeniz_toros');
-    final address = data?['address'] as Map<String, dynamic>?;
     
     // 🎨 BRAND COLOR SYSTEM: Use brand-specific colors when available
     Color accent;
@@ -1571,7 +1397,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             final query = _menuSearchQuery.toLowerCase();
             searchResults = products.where((p) => 
               p.name.toLowerCase().contains(query) ||
-              (p.description.toLowerCase().contains(query) ?? false)
+              p.description.toLowerCase().contains(query)
             ).toList();
           }
 
@@ -2113,394 +1939,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   }
 
 
-  Widget _buildProductCard(ButcherProduct product, CartState cart) {
-  final currentQty = _selections[product.sku] ?? product.minQuantity;
-  final isByWeight = product.unitType == 'kg';
-  
-  // LOGIC CHANGE: Price Chip now reflects what is IN THE CART, not what is selected
-  // Check if item is in cart
-  final cartItem = cart.items.firstWhere(
-    (item) => item.product.sku == product.sku, 
-    orElse: () => CartItem(product: product, quantity: 0) // Dummy empty item with 0 qty
-  );
-  
-  // If in cart (quantity > 0), show that price. Else show 0.
-  double displayPrice = 0;
-  if (cartItem.quantity > 0) {
-      displayPrice = cartItem.totalPrice;
-  }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E), // Dark Card Background
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Image & Badge Area
-          Stack(
-            children: [
-              // Product Image
-              AspectRatio(
-                aspectRatio: 1.5,
-                child: product.imageUrl != null && product.imageUrl!.isNotEmpty
-                    ? (product.imageUrl!.startsWith('assets/') 
-                        ? Image.asset(
-                            product.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_,__,___) => Container(
-                              color: Colors.grey[800],
-                              child: const Icon(Icons.image_not_supported, color: Colors.white24),
-                            ),
-                          )
-                        : Image.network(
-                            product.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_,__,___) => Container(
-                              color: Colors.grey[800],
-                              child: const Icon(Icons.image, color: Colors.white24),
-                            ),
-                          ))
-                    : Container(
-                        color: Colors.grey[800],
-                        child: const Icon(Icons.restaurant, color: Colors.white24, size: 40),
-                      ),
-              ),
-              
-              // Out of Stock Badge
-              if (!product.inStock)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: product.allowBackorder 
-                        ? (product.expectedRestockDate != null ? Colors.blue[800] : Colors.amber[800])
-                        : Color(0xFFFB335B), // Red Pill if truly out
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                         BoxShadow(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4), blurRadius: 4, offset:Offset(0,2))
-                      ],
-                    ),
-                    child: Text(
-                      product.allowBackorder 
-                        ? (product.expectedRestockDate != null 
-                            ? 'GELİYOR: ${product.expectedRestockDate!.day}.${product.expectedRestockDate!.month} ${product.expectedRestockDate!.hour.toString().padLeft(2, '0')}:${product.expectedRestockDate!.minute.toString().padLeft(2, '0')}' 
-                            : 'ÖN SİPARİŞ')
-                        : 'TÜKENDİ',
-                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-
-          // 2. Content Area
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    I18nUtils.getLocalizedText(context, product.nameData),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.surface, 
-                      fontWeight: FontWeight.bold, 
-                      fontSize: 16
-                    ),
-                  ),
-                  
-                  // Description
-                  const SizedBox(height: 4),
-                  Text(
-                    I18nUtils.getLocalizedText(context, product.descriptionData),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.grey[400], fontSize: 11, height: 1.2),
-                  ),
-
-                  if (product.allowBackorder && !product.inStock)
-                    Container(
-                      margin: const EdgeInsets.only(top: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[900]?.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue[800]!, width: 1),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.event_available, color: Colors.blue[400], size: 14),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product.expectedRestockDate != null
-                                   ? 'Tahmini Stok: ${product.expectedRestockDate!.day}.${product.expectedRestockDate!.month} ${product.expectedRestockDate!.hour.toString().padLeft(2, '0')}:${product.expectedRestockDate!.minute.toString().padLeft(2, '0')}'
-                                   : 'Ön Sipariş Verebilirsiniz',
-                                  style: TextStyle(
-                                    color: Colors.blue[200], 
-                                    fontSize: 11, 
-                                    fontWeight: FontWeight.bold
-                                  ),
-                                ),
-                                if (product.expectedRestockDate != null)
-                                  Text(
-                                    'Bu tarihte teslim edilecektir.',
-                                    style: TextStyle(color: Colors.blue[100], fontSize: 9),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  const Spacer(),
-                  
-                  // Price Tag Row
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        '${product.price.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
-                        style: const TextStyle(
-                          color: Color(0xFFFB335B), // Red Price
-                          fontWeight: FontWeight.w800, 
-                          fontSize: 18
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        isByWeight ? 'kg fiyatı' : 'adet fiyatı',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 10),
-                      ),
-                    ],
-                  ),
-                  
-                  if (isByWeight)
-                     Padding(
-                       padding: const EdgeInsets.only(top: 2),
-                       child: Text(
-                        'Premium kalite. %100 Yerli.', // Placeholder tagline or extra info
-                        style: TextStyle(color: Colors.grey[600], fontSize: 10, fontStyle: FontStyle.italic),
-                       ),
-                     ),
-                ],
-              ),
-            ),
-          ),
-
-          // 3. Action Area (Quantity & Button)
-          Container(
-            padding: const EdgeInsets.all(12),
-            color: const Color(0xFF252525), // Slightly lighter implementation container
-            child: Column(
-              children: [
-                // Quantity Selector (Unified Dark Box)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF151515), // Very dark background for selector
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Decrease
-                      _buildQtyBtn(
-                        icon: Icons.remove,
-                        onTap: () {
-                          final newQty = currentQty - product.stepQuantity;
-                          if (newQty >= product.minQuantity) {
-                             setState(() => _selections[product.sku] = newQty);
-                          }
-                        },
-                      ),
-                      
-                      // Quantity Text
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            isByWeight 
-                                ? (currentQty * 1000).toStringAsFixed(0) 
-                                : currentQty.toStringAsFixed(0),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.surface, 
-                              fontSize: 16, 
-                              fontWeight: FontWeight.bold
-                            ),
-                          ),
-                          Text(
-                            isByWeight ? 'gram' : 'adet',
-                            style: TextStyle(color: Colors.grey[500], fontSize: 10),
-                          ),
-                        ],
-                      ),
-
-                      // Increase
-                      _buildQtyBtn(
-                        icon: Icons.add,
-                        onTap: () {
-                           setState(() => _selections[product.sku] = currentQty + product.stepQuantity);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                // "Sepete Ekle" Button (Full Width, Dark)
-                SizedBox(
-                  width: double.infinity,
-                  height: 42,
-                  child: ElevatedButton(
-                    onPressed: (product.inStock || product.allowBackorder) ? () {
-                      final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                      final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
-                      ref.read(cartProvider.notifier).addToCart(product, currentQty, widget.businessId, butcherName);
-                      
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFF4CAF50),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 24),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Text(
-                                      'Sepetinize Eklendi!',
-                                      style: TextStyle(
-                                        color: Color(0xFF1E1E1E),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      product.name,
-                                      style: TextStyle(
-                                        color: Colors.grey[700],
-                                        fontSize: 13,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                          backgroundColor: Colors.white,
-                          margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
-                          elevation: 8,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    } : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: (product.inStock || product.allowBackorder) ? _getAccent(context) : Colors.white10, // Light visible gray
-                      foregroundColor: (product.inStock || product.allowBackorder) ? Colors.white : Colors.grey[500], // Visible disabled text
-                      disabledBackgroundColor: Colors.white10, // Explicit disabled bg
-                      disabledForegroundColor: Colors.grey[500], // Explicit disabled text
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 8), // Reduced Padding
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center, // Center checking
-                      children: [
-                        // Left Side: Icon + Text
-                         const Icon(Icons.shopping_basket_outlined, size: 18),
-                         const SizedBox(width: 6),
-                         Flexible(
-                           child: Text(
-                             (product.inStock || product.allowBackorder) 
-                               ? (product.allowBackorder && !product.inStock ? 'Ön Sipariş' : 'Sepete Ekle')
-                               : 'TÜKENDİ',
-                             overflow: TextOverflow.ellipsis,
-                             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-                           ),
-                         ),
-                        
-                        // Right Side: Price Chip (Only if In Cart > 0)
-                        if (displayPrice > 0) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.white24,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '${displayPrice.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQtyBtn({required IconData icon, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: 40, height: 40,
-        decoration: BoxDecoration(
-          color: Colors.white10,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, color: Theme.of(context).colorScheme.surface, size: 18),
-      ),
-    );
-  }
-
   Widget _buildCartBar() {
      final cart = ref.watch(cartProvider);
      
@@ -3035,7 +2473,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // Find all cart items for this product (may be multiple with different options)
     final productCartItems = cart.items.where((item) => item.product.sku == product.sku).toList();
     final inCart = productCartItems.isNotEmpty;
-    final cartItem = inCart ? productCartItems.first : CartItem(product: product, quantity: 0);
     final totalQtyInCart = productCartItems.fold(0.0, (sum, item) => sum + item.quantity);
     
     final isAvailable = product.inStock || product.allowBackorder;
@@ -3322,178 +2759,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     );
   }
 
-  /// Reusable action card for Masa section (QR, Garson, Rezervasyon)
-  Widget _buildMasaActionCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textPrimary = Theme.of(context).colorScheme.onSurface;
-    final textSecondary = isDark ? Colors.grey[400]! : Colors.grey[600]!;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.05)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        color: textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.arrow_forward_ios, color: color, size: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// MVP: Confirm dine-in with GPS proximity check
-  void _startDineInOrder(BuildContext context, Map<String, dynamic>? data) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(Icons.restaurant, color: Colors.amber, size: 28),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Masada Sipariş',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.amber.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-              ),
-              child: Column(
-                children: [
-                  Icon(Icons.location_on, color: Colors.amber, size: 32),
-                  const SizedBox(height: 8),
-                  Text(
-                    data?['companyName'] ?? data?['name'] ?? 'İşletme',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Bu işletmede masada olduğunuzu onaylıyor musunuz?',
-                    style: TextStyle(
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
-                      fontSize: 13,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'İptal',
-              style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
-            ),
-          ),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              // Set mode to Masa and show confirmation
-              setState(() => _deliveryModeIndex = 2);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 20),
-                      SizedBox(width: 8),
-                      Text(tr('orders.table_order_mode_active_add_products')),
-                    ],
-                  ),
-                  backgroundColor: Colors.green,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              );
-            },
-            icon: const Icon(Icons.check, size: 18),
-            label: Text(tr('common.i_confirm')),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // LIEFERANDO STYLE: Sticky Header Delegate for Category Tabs
@@ -3527,42 +2792,16 @@ class _StickyTabDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-// 🔍 Search Bar Delegate for pinned search bar (Lieferando-style)
-class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
-  final double height;
-  final Widget child;
-
-  _SearchBarDelegate({required this.height, required this.child});
-
-  @override
-  double get minExtent => height;
-
-  @override
-  double get maxExtent => height;
-
-  @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return SizedBox.expand(child: child);
-  }
-
-  @override
-  bool shouldRebuild(_SearchBarDelegate oldDelegate) {
-    return height != oldDelegate.height || child != oldDelegate.child;
-  }
-}
-
 // 🔍 Full-screen menu search page with instant search
 class _MenuSearchPage extends StatefulWidget {
   final String initialQuery;
   final ValueChanged<String> onSearch;
   final List<ButcherProduct> products;
-  final VoidCallback? onProductTap;
 
   const _MenuSearchPage({
     required this.initialQuery,
     required this.onSearch,
     required this.products,
-    this.onProductTap,
   });
 
   @override

@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'dart:io';
 import '../../providers/theme_provider.dart';
 import '../../providers/driver_provider.dart';
 import '../../services/staff_role_service.dart';
@@ -31,137 +29,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final ImagePicker _imagePicker = ImagePicker();
   bool _isLoading = false;
   bool _isUploadingPhoto = false;
-
-  Future<void> _changeProfilePhoto() async {
-    HapticFeedback.mediumImpact();
-
-    // Show bottom sheet to choose between camera and gallery
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'profile.profile_photo'.tr(),
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.camera_alt,
-                      color: Theme.of(context).primaryColor),
-                ),
-                title: Text('profile.camera'.tr(),
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface)),
-                subtitle: Text('profile.take_new_photo'.tr(),
-                    style: TextStyle(color: Colors.grey)),
-                onTap: () => Navigator.pop(ctx, ImageSource.camera),
-              ),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.photo_library,
-                      color: Theme.of(context).primaryColor),
-                ),
-                title: Text('profile.gallery'.tr(),
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface)),
-                subtitle:
-                    Text('profile.choose_from_gallery'.tr(), style: TextStyle(color: Colors.grey)),
-                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    if (source == null) return;
-
-    try {
-      final pickedFile = await _imagePicker.pickImage(
-        source: source,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 80,
-      );
-
-      if (pickedFile == null) return;
-
-      setState(() => _isUploadingPhoto = true);
-
-      final user = _auth.currentUser;
-      if (user == null) {
-        setState(() => _isUploadingPhoto = false);
-        return;
-      }
-
-      // Upload to Firebase Storage
-      final ref = FirebaseStorage.instance
-          .ref()
-          .child('profile_photos')
-          .child('${user.uid}.jpg');
-
-      await ref.putFile(File(pickedFile.path));
-      final downloadUrl = await ref.getDownloadURL();
-
-      // Update user profile
-      await user.updatePhotoURL(downloadUrl);
-
-      // Also save to Firestore for persistence
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'photoURL': downloadUrl,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-
-      setState(() => _isUploadingPhoto = false);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✅ ${'profile.photo_updated'.tr()}'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() => _isUploadingPhoto = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${'profile.error'.tr()}: $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -306,38 +173,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildLoginButton(String label, VoidCallback onTap,
-      {bool isApple = false}) {
-    final cardBg = Theme.of(context).cardColor;
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: isApple ? Colors.black : cardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isApple ? Colors.white : Colors.black87,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildProfile(User user) {
-    final accent = Theme.of(context).primaryColor;
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection('users')
@@ -363,7 +199,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           firstName = displayName.split(' ').first;
         }
 
-        final photoURL = userData?['photoURL'] as String? ?? user.photoURL;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 120),
@@ -420,8 +255,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     FutureBuilder<bool>(
                       future: StaffRoleService().checkStaffStatus(),
                       builder: (context, staffSnapshot) {
-                        final isStaff = staffSnapshot.data == true;
-                        final staffService = StaffRoleService();
 
                         return Column(
                           children: [
@@ -914,49 +747,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildThemeOption(
-      String label, ThemePreference preference, ThemePreference currentTheme) {
-    final isSelected = preference == currentTheme;
-    final primaryColor = Theme.of(context).primaryColor;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Clear visual distinction: selected=filled, unselected=outline only
-    final borderColor = isDark ? Colors.grey[500]! : Colors.grey[400]!;
-    final textColor = isDark ? Colors.grey[300]! : Colors.grey[700]!;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          ref.read(themePreferenceProvider.notifier).setPreference(preference);
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            // Selected: filled with primary color, Unselected: fully transparent
-            color: isSelected ? primaryColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
-            // Unselected: border only
-            border: Border.all(
-              color: isSelected ? primaryColor : borderColor,
-              width: isSelected ? 2 : 1,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : textColor,
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildLanguageSelector(BuildContext context) {
     final currentLocale = context.locale.languageCode;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1087,85 +877,4 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: accent, size: 22),
-            const SizedBox(width: 16),
-            Expanded(
-                child: Text(title,
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 15))),
-            Icon(Icons.arrow_forward_ios_rounded,
-                color: Colors.grey[400], size: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _navigateToLogin() {
-    context.push('/login');
-  }
-
-  Future<void> _signInWithApple() async {
-    // TODO: Implement Apple Sign-In
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('profile.apple_coming_soon'.tr())),
-    );
-  }
-
-  Future<void> _signInWithGoogle() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        setState(() => _isLoading = false);
-        return; // User canceled
-      }
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      await _auth.signInWithCredential(credential);
-      setState(() => _isLoading = false);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('✅ ${'profile.login_success'.tr()}'),
-              backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${'profile.error'.tr()}: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 }

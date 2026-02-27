@@ -407,7 +407,6 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
     final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
     return Scaffold(
       backgroundColor: _darkBg(isDark),

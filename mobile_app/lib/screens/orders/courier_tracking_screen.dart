@@ -127,7 +127,6 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         title: Row(

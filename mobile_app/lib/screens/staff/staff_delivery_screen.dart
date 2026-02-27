@@ -369,7 +369,6 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
     // Extract PLZ and city from address (privacy: no full address)
     String locationHint = '';
     if (order.deliveryAddress != null) {
-      final addressParts = order.deliveryAddress!.split(',');
       // Try to find PLZ (5 digits)
       final plzMatch = RegExp(r'\b\d{5}\b').firstMatch(order.deliveryAddress!);
       if (plzMatch != null) {

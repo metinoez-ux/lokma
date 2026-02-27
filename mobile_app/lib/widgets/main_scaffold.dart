@@ -80,7 +80,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
             final bp = priority[b.status.name] ?? 4;
             if (ap != bp) return ap.compareTo(bp);
             // Same priority → newer first
-            return (b.createdAt ?? DateTime(2000)).compareTo(a.createdAt ?? DateTime(2000));
+            return b.createdAt.compareTo(a.createdAt);
           });
           
           return orders;

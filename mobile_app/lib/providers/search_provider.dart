@@ -274,7 +274,6 @@ class SearchNotifier extends Notifier<SearchState> {
 
   Future<void> _performSearch(String query) async {
     final queryLower = query.toLowerCase().trim();
-    final queryNormalized = _normalizeTurkish(queryLower);
     if (queryLower.length < 2) {
       state = state.copyWith(isLoading: false, groups: [], hasSearched: true);
       return;

@@ -61,8 +61,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   }
   
   bool get _isKermesFuture => DateTime.now().isBefore(widget.event.startDate);
-  bool get _isKermesPast => DateTime.now().isAfter(widget.event.endDate);
-  
   /// Adım başlıkları
   List<String> get _stepTitles => [
     'Sepetim',
@@ -222,9 +220,6 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = _darkBg(isDark);
-    final cardColor = _cardBg(isDark);
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final subtleTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
     
     return Container(
       height: MediaQuery.of(context).size.height * 0.92,

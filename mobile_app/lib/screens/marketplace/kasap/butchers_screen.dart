@@ -224,21 +224,6 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
     }
   }
 
-  Future<void> _resolveAddress(String id, String address) async {
-    try {
-      if (_coordinateCache.containsKey(id)) return;
-      
-      List<Location> locations = await locationFromAddress(address);
-      if (locations.isNotEmpty && mounted) {
-        setState(() {
-          _coordinateCache[id] = locations.first;
-        });
-      }
-    } catch (e) {
-      debugPrint('Address resolution error for $id: $e');
-    }
-  }
-
   double _calculateDistance(double lat, double lng) {
     if (_userPosition == null) return 999.0;
     double distInMeters = Geolocator.distanceBetween(
@@ -258,70 +243,6 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
       case 'independent': return 'Bağımsız Kasap';
       default: return 'Bağımsız Kasap';
     }
-  }
-
-  void _showDeliveryInfoDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.ac_unit, color: Colors.blue, size: 40),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Soğuk Zincir Teslimat',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Et ürünlerimiz, soğuk zincir kırılmadan özel korumalı kutularda maksimum hızla size ulaştırılır.',
-                  style: TextStyle(color: Colors.grey.shade300, fontSize: 15, height: 1.5),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: accent,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                    child: const Text('Anladım', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   @override
@@ -1013,8 +934,6 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
     // Fallback if needed, but dynamic is preferred
     // final isOpen = butcher['isOpen'] as bool; 
     
-    final badgeText = butcher['badgeText'] as String?;
-    final isFavorite = butcher['isFavorite'] as bool;
     
     return GestureDetector(
       onTap: () {

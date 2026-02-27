@@ -1389,76 +1389,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     return typeCounts;
   }
 
-  Widget _buildDynamicCategoryChips() {
-    // Build chips dynamically - use filtered counts that respect all active filters
-    final filteredCounts = _filteredTypeCounts;
-    final sortedTypes = filteredCounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value)); // Sort by count descending
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            // "Tümü" chip
-            _buildFilterChip(
-              label: 'Tümü',
-              isSelected: _categoryFilter == 'all',
-              onTap: () => setState(() => _categoryFilter = 'all'),
-            ),
-
-            // Dynamic chips based on actual businessTypes
-            ...sortedTypes.map((entry) {
-              final typeKey = entry.key;
-              final count = entry.value;
-              final label = BUSINESS_TYPE_LABELS[typeKey] ?? typeKey;
-
-              return _buildFilterChip(
-                label: '$label ($count)',
-                isSelected: _categoryFilter == typeKey,
-                onTap: () => setState(() => _categoryFilter = typeKey),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip({
-    required String label,
-    required bool isSelected,
-    Color? color,
-    required VoidCallback onTap,
-  }) {
-    final chipColor = color ?? lokmaPink;
-
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        margin: const EdgeInsets.only(right: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? chipColor : cardBg,
-          borderRadius: BorderRadius.circular(20),
-          border: isSelected ? null : Border.all(color: Colors.grey.shade400),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[700],
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
-
   // SliverList versiyonu - CustomScrollView için
   Widget _buildRestaurantSliverList() {
     if (_isLoading) {
@@ -1504,52 +1434,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         },
         childCount: restaurants.length + 1, // +1 for header
       ),
-    );
-  }
-
-  Widget _buildRestaurantList() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: lokmaPink),
-      );
-    }
-
-    final restaurants = _filteredBusinesses;
-
-    if (restaurants.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Count header
-        Padding(
-          padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Text(
-            tr('discovery.businesses_at_service',
-                namedArgs: {'count': restaurants.length.toString()}),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.surface,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-
-        // Restaurant list
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 180),
-            itemCount: restaurants.length,
-            itemBuilder: (context, index) {
-              final doc = restaurants[index];
-              final data = doc.data() as Map<String, dynamic>;
-              return _buildRestaurantCard(doc.id, data);
-            },
-          ),
-        ),
-      ],
     );
   }
 
@@ -2230,7 +2114,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                           ?.toDouble();
 
                                   if (_deliveryMode == 'teslimat') {
-                                    final hasDeliveryFee = deliveryFee > 0;
                                     final hasMinOrder = minOrderAmount > 0;
                                     final hasFreeDelivery =
                                         freeDeliveryThreshold != null &&
@@ -2809,56 +2692,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     );
   }
 
-  Widget _buildSortOption(
-      String label, String value, IconData icon, StateSetter setStateSheet,
-      {bool isPremium = false}) {
-    final isSelected = _sortOption == value;
-
-    return InkWell(
-      onTap: () {
-        setState(() => _sortOption = value);
-        setStateSheet(() {}); // Update sheet UI
-        Navigator.pop(context); // Close sheet
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? lokmaPink : Colors.grey[600],
-              size: 24,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey[400],
-                  fontSize: 16,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ),
-            if (isPremium) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: tunaGreen.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: tunaGreen.withValues(alpha: 0.5)),
-                ),
-                child: const Text('Önerilen',
-                    style: TextStyle(color: tunaGreen, fontSize: 10)),
-              ),
-              const SizedBox(width: 12),
-            ],
-            if (isSelected) const Icon(Icons.check, color: lokmaPink, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
   /// Extracted Hero UI for Masa when no table is scanned yet
   Widget _buildMasaHeroHeader() {
     return Column(

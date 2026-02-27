@@ -1054,77 +1054,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     );
   }
 
-  Widget _buildDynamicCategoryChips() {
-    final filteredCounts = _filteredTypeCounts;
-    final sortedTypes = filteredCounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            // "Tümü" chip
-            _buildFilterChip(
-              label: 'Tümü',
-              isSelected: _categoryFilter == 'all',
-              onTap: () => setState(() => _categoryFilter = 'all'),
-            ),
-            
-            // Dynamic chips based on actual businessTypes
-            ...sortedTypes.map((entry) {
-              final typeKey = entry.key;
-              final count = entry.value;
-              final label = MARKET_TYPE_LABELS[typeKey] ?? typeKey;
-              
-              return _buildFilterChip(
-                label: '$label ($count)',
-                isSelected: _categoryFilter == typeKey,
-                onTap: () => setState(() => _categoryFilter = typeKey),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
   // TUNA pill toggle - same style as category chips but RED (tunaGreen for market)
 
-
-  Widget _buildFilterChip({
-    required String label,
-    required bool isSelected,
-    Color? color,
-    required VoidCallback onTap,
-  }) {
-    final chipColor = color ?? tunaGreen;
-    
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        margin: const EdgeInsets.only(right: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? chipColor : cardBg,
-          borderRadius: BorderRadius.circular(20),
-          border: isSelected ? null : Border.all(color: Colors.grey.shade400),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey[700],
-            fontSize: 14,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
 
   // Sliver version of market list for CustomScrollView
   Widget _buildMarketSliverList() {
@@ -1170,51 +1101,6 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     );
   }
 
-  Widget _buildMarketList() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: tunaGreen),
-      );
-    }
-
-    final markets = _filteredBusinesses;
-
-    if (markets.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Count header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: Text(
-            tr('discovery.businesses_at_service', namedArgs: {'count': markets.length.toString()}),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        
-        // Market list
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 180),
-            itemCount: markets.length,
-            itemBuilder: (context, index) {
-              final doc = markets[index];
-              final data = doc.data() as Map<String, dynamic>;
-              return _buildMarketCard(doc.id, data);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -1252,7 +1138,6 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     // 🆕 Gelişmiş Sipariş Saatleri
     final deliveryStartTime = data['deliveryStartTime'] as String?;
     final pickupStartTime = data['pickupStartTime'] as String?;
-    final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
     // 🆕 Geçici Kurye Kapatma
     final temporaryDeliveryPaused = data['temporaryDeliveryPaused'] as bool? ?? false;
     
@@ -2119,52 +2004,4 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     );
   }
 
-  Widget _buildSortOption(String label, String value, IconData icon, StateSetter setStateSheet, {bool isPremium = false}) {
-    final isSelected = _sortOption == value;
-    
-    return InkWell(
-      onTap: () {
-        setState(() => _sortOption = value);
-        setStateSheet(() {}); // Update sheet UI
-        Navigator.pop(context); // Close sheet
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? lokmaPink : Colors.grey[600],
-              size: 24,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey[400],
-                  fontSize: 16,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ),
-            if (isPremium) ...[
-               Container(
-                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                 decoration: BoxDecoration(
-                   color: tunaGreen.withValues(alpha: 0.2),
-                   borderRadius: BorderRadius.circular(4),
-                   border: Border.all(color: tunaGreen.withValues(alpha: 0.5)),
-                 ),
-                 child: const Text('Önerilen', style: TextStyle(color: lokmaPink, fontSize: 10)),
-               ),
-               const SizedBox(width: 12),
-            ],
-            if (isSelected)
-              const Icon(Icons.check, color: lokmaPink, size: 20),
-          ],
-        ),
-      ),
-    );
-  }
 }

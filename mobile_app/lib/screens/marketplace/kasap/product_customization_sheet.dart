@@ -283,7 +283,7 @@ class _ProductCustomizationSheetState
                                 ? Icons.delete_outline
                                 : Icons.remove,
                             color: _quantity <= (isByWeight ? product.minQuantity : 1)
-                                ? Colors.red
+                                ? textSecondary
                                 : textPrimary,
                             onTap: () {
                               if (_quantity <= (isByWeight ? product.minQuantity : 1)) {

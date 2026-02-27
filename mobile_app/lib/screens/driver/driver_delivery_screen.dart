@@ -845,7 +845,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        order.butcherName ?? '',
+                        order.butcherName,
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1011,7 +1011,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                 children: [
                   // Business name
                   Text(
-                    order.butcherName ?? tr('driver.i_sletme'),
+                    order.butcherName,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,

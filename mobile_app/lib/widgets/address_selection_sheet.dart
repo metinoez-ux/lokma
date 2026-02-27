@@ -35,7 +35,6 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
 
   Future<void> _fetchTrueGpsLocation() async {
     try {
-      final locNotifier = ref.read(userLocationProvider.notifier);
       // Create a temporary un-notified instance just to fetch the real GPS data
       // without updating the global state yet.
       // But instead of complex logic, we can just use the Geocoding api ourselves here
@@ -160,7 +159,6 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
     final screenHeight = MediaQuery.of(context).size.height;
-    final userLocAsync = ref.watch(userLocationProvider);
 
     return Container(
       constraints: BoxConstraints(
