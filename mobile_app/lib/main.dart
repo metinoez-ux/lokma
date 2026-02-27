@@ -39,8 +39,11 @@ void main() async {
       // Initialize Stripe SDK
       await StripePaymentService.initialize();
       
-      // Initialize FCM for push notifications
-      await FCMService().initialize();
+      // Initialize FCM for push notifications asynchronously to prevent blocking the UI
+      // while waiting for APNs token or user permission prompt
+      FCMService().initialize().catchError((e) {
+        debugPrint('FCM initialization error in background: $e');
+      });
       
       // Initialize date formatting for all locales (multi-language ready)
       await initializeDateFormatting('tr');

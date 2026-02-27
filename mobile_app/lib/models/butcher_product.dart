@@ -22,6 +22,8 @@ class ButcherProduct {
   final bool allowBackorder;
   final DateTime? expectedRestockDate;
   final List<OptionGroup> optionGroups;
+  final List<String> allergens;
+  final List<String> additives;
 
   ButcherProduct({
     required this.butcherId,
@@ -45,6 +47,8 @@ class ButcherProduct {
     this.allowBackorder = false,
     this.expectedRestockDate,
     this.optionGroups = const [],
+    this.allergens = const [],
+    this.additives = const [],
   });
 
   factory ButcherProduct.fromFirestore(Map<String, dynamic> data, String id, {required String butcherId, Map<String, dynamic>? masterData}) {
@@ -89,6 +93,8 @@ class ButcherProduct {
       optionGroups: (data['optionGroups'] as List<dynamic>?)
           ?.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>))
           .toList() ?? [],
+      allergens: List<String>.from(data['allergens'] ?? masterData?['allergens'] ?? []),
+      additives: List<String>.from(data['additives'] ?? masterData?['additives'] ?? []),
     );
   }
 

@@ -10,6 +10,7 @@ import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
+import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import '../../../utils/currency_utils.dart';
 
 /// Business type labels for display
@@ -611,18 +612,30 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       child: Row(
         children: [
+
           // Location info (şehir + sokak alt satırda)
           Expanded(
             child: GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
-                context.push('/my-info');
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => AddressSelectionSheet(),
+                ).then((_) {
+                  // Re-trigger auto-set when bottom sheet closes (location might have changed)
+                  if (mounted && _allBusinesses.isNotEmpty) {
+                    _autoSetSliderToNearestBusiness();
+                  }
+                });
               },
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.location_on, color: lokmaPink, size: 16),
                   const SizedBox(width: 4),
-                  Expanded(
+                  Flexible(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -652,7 +665,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 2),
                   Icon(Icons.keyboard_arrow_down, color: Colors.grey[400], size: 16),
                 ],
               ),

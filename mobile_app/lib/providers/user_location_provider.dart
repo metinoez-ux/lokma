@@ -134,11 +134,13 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
         final number = place.subThoroughfare ?? '';
         city = place.locality ?? place.administrativeArea ?? '';
 
-        // Build address string
-        final addressParts = <String>[];
-        if (street.isNotEmpty) addressParts.add(street);
-        if (number.isNotEmpty) addressParts.add(number);
-        final streetPart = addressParts.join(' ');
+        // Include house number in street for display
+        if (number.isNotEmpty && street.isNotEmpty) {
+          street = '$street $number';
+        }
+
+        // Build address string (street already includes number)
+        final streetPart = street;
 
         if (streetPart.isNotEmpty && city.isNotEmpty) {
           address = '$streetPart, $city';
@@ -180,6 +182,13 @@ class UserLocationNotifier extends Notifier<AsyncValue<UserLocation>> {
 
   /// Force refresh location (e.g., user pulled to refresh)
   Future<void> refresh() => fetchLocation(forceRefresh: true);
+
+  /// Manually set the location (e.g., from an autocomplete place)
+  void setLocation(UserLocation newLocation) {
+    debugPrint('📍 Manually setting user location: ${newLocation.address}');
+    _hasFetched = true;
+    state = AsyncValue.data(newLocation);
+  }
 }
 
 /// Global location provider - shared across all screens

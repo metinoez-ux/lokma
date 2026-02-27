@@ -19,6 +19,7 @@ import 'package:lokma_app/providers/table_group_provider.dart';
 import 'package:lokma_app/providers/bottom_nav_provider.dart';
 import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
+import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import '../../../utils/currency_utils.dart';
 
 /// Business type labels for display
@@ -786,19 +787,25 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       child: Row(
         children: [
+
           // Location info (şehir + sokak alt satırda)
           Expanded(
             child: GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
-                context.push('/my-info');
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => AddressSelectionSheet(),
+                );
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.location_on, color: lokmaPink, size: 16),
                   const SizedBox(width: 4),
-                  Expanded(
+                  Flexible(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -828,7 +835,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 2),
                   Icon(Icons.keyboard_arrow_down,
                       color: Colors.grey[400], size: 16),
                 ],
