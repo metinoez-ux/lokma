@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../utils/i18n_utils.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +9,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:google_places_flutter/model/prediction.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
 import 'package:lokma_app/providers/auth_provider.dart';
@@ -56,11 +60,19 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   bool _isSubmitting = false;
   OpeningHoursHelper? _hoursHelper;
   String _orderNote = '';
+  DateTime? _selectedPickupSlot; // 🆕 Selected pickup time for Gel Al
 
   // 🌟 Sponsored Products ("Bir şey mi unuttun?")
   List<Map<String, dynamic>> _sponsoredProductsList = [];
   bool _loadingSponsoredProducts = false;
   final Set<String> _sponsoredItemIds = {}; // Track IDs added from sponsored section
+
+  // 📦 Item Unavailability Preferences ("Falls Artikel nicht verfügbar")
+  String _unavailabilityPreference = 'refund'; // 'substitute' | 'refund' | 'perItem'
+  final Map<String, String> _perItemPreferences = {}; // productId → 'substitute' | 'refund'
+
+  // 📍 Delivery Address Management
+  Map<String, String>? _selectedDeliveryAddress; // null = use profile default
 
   /// 🎨 BRAND COLOUR - Dynamic resolution per Design System Protocol
   Color get _accentColor {
@@ -154,7 +166,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     setState(() => _loadingSponsoredProducts = true);
 
     try {
-      // 1. Get the business doc to find sponsoredProducts IDs
       final businessDoc = await FirebaseFirestore.instance
           .collection('businesses')
           .doc(butcherId)
@@ -163,25 +174,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       if (!businessDoc.exists) return;
       final businessData = businessDoc.data();
       final List<dynamic> sponsoredIds = businessData?['sponsoredProducts'] ?? [];
-      final bool hasSponsoredProducts = businessData?['hasSponsoredProducts'] ?? false;
 
-      if (!hasSponsoredProducts || sponsoredIds.isEmpty) {
+      if (sponsoredIds.isEmpty) {
         if (mounted) setState(() => _loadingSponsoredProducts = false);
         return;
       }
 
-      // 2. Check platform-level feature enabled
-      final settingsDoc = await FirebaseFirestore.instance
-          .collection('platformSettings')
-          .doc('sponsored')
-          .get();
-
-      if (!settingsDoc.exists || !(settingsDoc.data()?['enabled'] ?? false)) {
-        if (mounted) setState(() => _loadingSponsoredProducts = false);
-        return;
-      }
-
-      // 3. Fetch each sponsored product from the business products sub-collection
       final List<Map<String, dynamic>> fetchedProducts = [];
       for (final productId in sponsoredIds) {
         try {
@@ -194,15 +192,17 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
           if (productDoc.exists) {
             final pData = productDoc.data()!;
-            // Only include active/available products
             if (pData['isActive'] != false && pData['isAvailable'] != false) {
               fetchedProducts.add({
                 'id': productDoc.id,
                 'name': pData['name'] ?? '',
+                'nameData': pData['name'],
                 'price': (pData['price'] ?? 0).toDouble(),
                 'unit': pData['unit'] ?? 'adet',
                 'imageUrl': pData['imageUrl'] ?? '',
                 'category': pData['category'] ?? '',
+                'categoryData': pData['category'],
+                'descriptionData': pData['description'],
               });
             }
           }
@@ -211,7 +211,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         }
       }
 
-      // 4. Filter out products already in cart
       final cartItemIds = cart.items.map((i) => i.product.id).toSet();
       final filtered = fetchedProducts.where((p) => !cartItemIds.contains(p['id'])).toList();
 
@@ -319,13 +318,16 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final double grandTotal = cart.totalAmount + deliveryFee;
 
       // Build order data
-      final pickupDateTime = DateTime(
-        _selectedDate.year,
-        _selectedDate.month,
-        _selectedDate.day,
-        _selectedTime.hour,
-        _selectedTime.minute,
-      );
+      // Use selected pickup slot for Gel Al, otherwise build from date/time
+      final pickupDateTime = (_isPickUp && _selectedPickupSlot != null)
+          ? _selectedPickupSlot!
+          : DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              _selectedTime.hour,
+              _selectedTime.minute,
+            );
 
       // Use firebaseUser as fallback if currentUser is null
       // CRITICAL: Ensure userId is never empty
@@ -350,25 +352,30 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final userEmail = currentUser?.email ?? firebaseUser?.email ?? '';
       final userPhone = currentUser?.phoneNumber ?? firebaseUser?.phoneNumber ?? '';
       
-      // Build full delivery address from Firestore user document
+      // Build full delivery address — prefer selected override, then Firestore profile
       String? userAddress;
       if (!_isPickUp && !_isDineIn) {
-        try {
-          final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-          if (userDoc.exists) {
-            final userData = userDoc.data()!;
-            final street = userData['address'] ?? '';
-            final houseNumber = userData['houseNumber'] ?? '';
-            final postalCode = userData['postalCode'] ?? '';
-            final city = userData['city'] ?? '';
-            
-            // Build full address: "Street HouseNumber, PLZ City"
-            final streetPart = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
-            userAddress = [streetPart, '$postalCode $city'].where((s) => s.trim().isNotEmpty).join(', ');
+        if (_selectedDeliveryAddress != null) {
+          // User selected a specific address in checkout
+          final s = _selectedDeliveryAddress!;
+          final streetPart = (s['houseNumber'] ?? '').isNotEmpty ? '${s['street']} ${s['houseNumber']}' : (s['street'] ?? '');
+          userAddress = [streetPart, '${s['postalCode']} ${s['city']}'].where((p) => p.trim().isNotEmpty).join(', ');
+        } else {
+          try {
+            final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+            if (userDoc.exists) {
+              final userData = userDoc.data()!;
+              final street = userData['address'] ?? '';
+              final houseNumber = userData['houseNumber'] ?? '';
+              final postalCode = userData['postalCode'] ?? '';
+              final city = userData['city'] ?? '';
+              final streetPart = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
+              userAddress = [streetPart, '$postalCode $city'].where((s) => s.trim().isNotEmpty).join(', ');
+            }
+          } catch (e) {
+            debugPrint('Error fetching user address: $e');
+            userAddress = currentUser?.address;
           }
-        } catch (e) {
-          debugPrint('Error fetching user address: $e');
-          userAddress = currentUser?.address; // Fallback
         }
       }
 
@@ -441,6 +448,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         // Sponsored product conversion tracking
         if (_sponsoredItemIds.isNotEmpty) 'sponsoredItemIds': _sponsoredItemIds.toList(),
         if (_sponsoredItemIds.isNotEmpty) 'hasSponsoredItems': true,
+        // Item unavailability preferences
+        'unavailabilityPreference': _unavailabilityPreference,
+        if (_unavailabilityPreference == 'perItem' && _perItemPreferences.isNotEmpty)
+          'perItemPreferences': _perItemPreferences,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -2323,46 +2334,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 if (item.selectedOptions.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 3),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.selectedOptions.map((o) => o.optionName).join(', '),
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 12,
-                              height: 1.2,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        GestureDetector(
-                          onTap: () {
-                            final cart = ref.read(cartProvider);
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.transparent,
-                              builder: (ctx) => ProductCustomizationSheet(
-                                product: item.product,
-                                businessId: cart.butcherId ?? '',
-                                businessName: cart.butcherName ?? '',
-                                existingItem: item,
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Düzenle',
-                            style: TextStyle(
-                              color: const Color(0xFFFB335B),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      item.selectedOptions.map((o) => o.optionName).join(', '),
+                      style: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 12,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 if (isKg)
@@ -2420,6 +2400,34 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   fontSize: 15,
                 ),
               ),
+              // Düzenle link (only for items with options)
+              if (item.selectedOptions.isNotEmpty) ...[
+                SizedBox(height: 6),
+                GestureDetector(
+                  onTap: () {
+                    final cart = ref.read(cartProvider);
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (ctx) => ProductCustomizationSheet(
+                        product: item.product,
+                        businessId: cart.butcherId ?? '',
+                        businessName: cart.butcherName ?? '',
+                        existingItem: item,
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Düzenle',
+                    style: TextStyle(
+                      color: const Color(0xFFFB335B),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
               SizedBox(height: 8),
               // Quantity controls: - number +
               Builder(
@@ -2557,34 +2565,31 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Header
+        // Section Header — Lieferando style
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(
             children: [
-              Icon(Icons.lightbulb_outline, color: Colors.amber, size: 20),
-              SizedBox(width: 8),
               Text(
-                'Bir şey mi unuttun?',
+                'Etwas vergessen?',
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
               Spacer(),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.transparent,
                 ),
                 child: Text(
                   'Gesponsert',
                   style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.amber[700],
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: isDark ? Colors.grey[400] : Colors.grey[500],
                   ),
                 ),
               ),
@@ -2592,9 +2597,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           ),
         ),
 
-        // Horizontal Product Cards
+        // Horizontal Product Cards — Lieferando layout
         SizedBox(
-          height: 150,
+          height: 200,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: _sponsoredProductsList.length,
@@ -2607,7 +2612,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               final imageUrl = product['imageUrl'] as String;
 
               return Container(
-                width: 130,
+                width: 145,
                 decoration: BoxDecoration(
                   color: isDark ? Color(0xFF1E1E1E) : Colors.white,
                   borderRadius: BorderRadius.circular(14),
@@ -2616,138 +2621,107 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
                     ),
                   ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Product Image
-                    ClipRRect(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-                      child: imageUrl.isNotEmpty
-                          ? CachedNetworkImage(
-                              imageUrl: imageUrl,
-                              width: 130,
-                              height: 70,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => Container(
-                                width: 130,
-                                height: 70,
-                                color: isDark ? Colors.grey[800] : Colors.grey[100],
-                                child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+                    // Product Image with + overlay button (Lieferando style)
+                    Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+                          child: imageUrl.isNotEmpty
+                              ? CachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  width: 145,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                  placeholder: (_, __) => Container(
+                                    width: 145,
+                                    height: 100,
+                                    color: isDark ? Colors.grey[800] : Colors.grey[100],
+                                    child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28),
+                                  ),
+                                  errorWidget: (_, __, ___) => Container(
+                                    width: 145,
+                                    height: 100,
+                                    color: isDark ? Colors.grey[800] : Colors.grey[100],
+                                    child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28),
+                                  ),
+                                )
+                              : Container(
+                                  width: 145,
+                                  height: 100,
+                                  color: isDark ? Colors.grey[800] : Colors.grey[100],
+                                  child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28),
+                                ),
+                        ),
+                        // + button overlay on top-right of image
+                        Positioned(
+                          top: 6,
+                          right: 6,
+                          child: GestureDetector(
+                            onTap: () => _addSponsoredProduct(product, index, butcherId),
+                            child: Container(
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                color: _accentColor,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                              errorWidget: (_, __, ___) => Container(
-                                width: 130,
-                                height: 70,
-                                color: isDark ? Colors.grey[800] : Colors.grey[100],
-                                child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
-                              ),
-                            )
-                          : Container(
-                              width: 130,
-                              height: 70,
-                              color: isDark ? Colors.grey[800] : Colors.grey[100],
-                              child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+                              child: Icon(Icons.add, color: Colors.white, size: 18),
                             ),
+                          ),
+                        ),
+                      ],
                     ),
-                    // Product Info + Add button
+                    // Product Info
                     Expanded(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        padding: EdgeInsets.fromLTRB(10, 8, 10, 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               name,
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: isDark ? Colors.white : Colors.black87,
+                                height: 1.2,
                               ),
                             ),
                             Spacer(),
-                            Row(
-                              children: [
-                                Text(
-                                  '${price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: _accentColor,
-                                  ),
-                                ),
-                                if (unit.isNotEmpty)
-                                  Text(
-                                    ' /$unit',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.grey[500],
-                                    ),
-                                  ),
-                                Spacer(),
-                                // Add to cart button
-                                GestureDetector(
-                                  onTap: () {
-                                    // Create a ButcherProduct from sponsored data and add to cart
-                                    final butcherProduct = ButcherProduct(
-                                      id: product['id'] as String,
-                                      name: name,
-                                      price: price,
-                                      unitType: unit,
-                                      imageUrl: imageUrl,
-                                      category: product['category'] as String? ?? '',
-                                      butcherId: butcherId,
-                                      sku: product['id'] as String,
-                                      masterId: '',
-                                      description: '',
-                                      inStock: true,
-                                    );
-                                    ref.read(cartProvider.notifier).addToCart(
-                                      butcherProduct,
-                                      1,
-                                      butcherId,
-                                      _butcherData?['companyName'] ?? '',
-                                    );
-                                    
-                                    // Track this product as a sponsored conversion
-                                    _sponsoredItemIds.add(product['id'] as String);
-                                    
-                                    // Remove from sponsored list
-                                    setState(() {
-                                      _sponsoredProductsList.removeAt(index);
-                                    });
-                                    
-                                    // Haptic feedback
-                                    HapticFeedback.lightImpact();
-                                    
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('$name sepete eklendi ⭐'),
-                                        duration: Duration(seconds: 2),
-                                        backgroundColor: _accentColor,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    width: 26,
-                                    height: 26,
-                                    decoration: BoxDecoration(
-                                      color: _accentColor,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface, size: 16),
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              '${price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
                             ),
+                            if (unit.isNotEmpty && unit != 'adet')
+                              Text(
+                                '/$unit',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -2759,6 +2733,58 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           ),
         ),
       ],
+    );
+  }
+
+  /// Helper: Add a sponsored product to cart
+  void _addSponsoredProduct(Map<String, dynamic> product, int index, String butcherId) {
+    final name = product['name'] is String ? product['name'] as String : (product['name'] is Map ? (product['name']['tr'] ?? product['name'].values.first ?? '').toString() : '');
+    final price = product['price'] as double;
+    final unit = product['unit'] as String;
+    final imageUrl = product['imageUrl'] as String;
+
+    final butcherProduct = ButcherProduct(
+      id: product['id'] as String,
+      name: name,
+      nameData: product['nameData'] ?? product['name'],
+      price: price,
+      unitType: unit,
+      imageUrl: imageUrl,
+      category: product['category'] is String ? product['category'] as String : '',
+      categoryData: product['categoryData'],
+      descriptionData: product['descriptionData'],
+      butcherId: butcherId,
+      sku: product['id'] as String,
+      masterId: '',
+      description: '',
+      inStock: true,
+    );
+    ref.read(cartProvider.notifier).addToCart(
+      butcherProduct,
+      1,
+      butcherId,
+      _butcherData?['companyName'] ?? '',
+    );
+
+    // Track this product as a sponsored conversion
+    _sponsoredItemIds.add(product['id'] as String);
+
+    // Remove from sponsored list
+    setState(() {
+      _sponsoredProductsList.removeAt(index);
+    });
+
+    // Haptic feedback
+    HapticFeedback.lightImpact();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$name sepete eklendi ⭐'),
+        duration: Duration(seconds: 2),
+        backgroundColor: _accentColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
     );
   }
 
@@ -3713,44 +3739,71 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   );
                                 }
                                 final userData = snapshot.data?.data() as Map<String, dynamic>?;
-                                final street = userData?['address'] ?? '';
-                                final houseNumber = userData?['houseNumber'] ?? '';
-                                final postalCode = userData?['postalCode'] ?? '';
-                                final city = userData?['city'] ?? '';
-                                final streetFull = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
-                                final fullAddress = [streetFull, '$postalCode $city'].where((s) => s.trim().isNotEmpty).join(', ');
-                                final hasAddress = fullAddress.trim().isNotEmpty && street.toString().trim().isNotEmpty;
+                                final profileStreet = userData?['address'] ?? '';
+                                final profileHouseNumber = userData?['houseNumber'] ?? '';
+                                final profilePostalCode = userData?['postalCode'] ?? '';
+                                final profileCity = userData?['city'] ?? '';
+                                final profileStreetFull = profileHouseNumber.isNotEmpty ? '$profileStreet $profileHouseNumber' : profileStreet;
+                                final profileFullAddress = [profileStreetFull, '$profilePostalCode $profileCity'].where((s) => s.trim().isNotEmpty).join(', ');
+                                final hasProfileAddress = profileFullAddress.trim().isNotEmpty && profileStreet.toString().trim().isNotEmpty;
 
-                                return Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: hasAddress ? Colors.grey.shade300 : Colors.amber.shade300,
-                                    ),
+                                // Use selected address override or profile default
+                                final displayAddress = _selectedDeliveryAddress != null
+                                    ? [
+                                        _selectedDeliveryAddress!['houseNumber']!.isNotEmpty 
+                                            ? '${_selectedDeliveryAddress!['street']} ${_selectedDeliveryAddress!['houseNumber']}'
+                                            : _selectedDeliveryAddress!['street'] ?? '',
+                                        '${_selectedDeliveryAddress!['postalCode']} ${_selectedDeliveryAddress!['city']}'
+                                      ].where((s) => s.trim().isNotEmpty).join(', ')
+                                    : profileFullAddress;
+                                final hasAddress = _selectedDeliveryAddress != null || hasProfileAddress;
+
+                                return GestureDetector(
+                                  onTap: () => _showAddressPickerSheet(
+                                    ctx, 
+                                    setSheetState, 
+                                    firebaseUser?.uid ?? authState.appUser?.uid ?? '',
+                                    profileAddress: hasProfileAddress ? {
+                                      'street': profileStreet.toString(),
+                                      'houseNumber': profileHouseNumber.toString(),
+                                      'postalCode': profilePostalCode.toString(),
+                                      'city': profileCity.toString(),
+                                    } : null,
                                   ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        hasAddress ? Icons.location_on : Icons.warning_amber_rounded,
-                                        color: hasAddress ? _accentColor : Colors.amber,
-                                        size: 22,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: hasAddress ? Colors.grey.shade300 : Colors.amber.shade300,
                                       ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          hasAddress ? fullAddress : 'Adres bilgisi bulunamadı.\nProfil ayarlarından adres ekleyin.',
-                                          style: TextStyle(
-                                            color: hasAddress ? Theme.of(context).colorScheme.onSurface : Colors.amber.shade700,
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          hasAddress ? Icons.location_on : Icons.warning_amber_rounded,
+                                          color: hasAddress ? _accentColor : Colors.amber,
+                                          size: 22,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            hasAddress ? displayAddress : 'Adres bilgisi bulunamadı.\nAdres eklemek için dokunun.',
+                                            style: TextStyle(
+                                              color: hasAddress ? Theme.of(context).colorScheme.onSurface : Colors.amber.shade700,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      if (hasAddress)
-                                        Icon(Icons.check_circle, color: Colors.green, size: 20),
-                                    ],
+                                        const SizedBox(width: 8),
+                                        if (hasAddress)
+                                          Icon(Icons.edit_outlined, color: Colors.grey[500], size: 18),
+                                        if (!hasAddress)
+                                          Icon(Icons.add_circle_outline, color: Colors.amber, size: 20),
+                                      ],
+                                    ),
                                   ),
                                 );
                               },
@@ -3805,6 +3858,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       Icon(Icons.check_circle, color: Colors.green, size: 20),
                                     ],
                                   ),
+                                  // 🆕 Gel Al: Pickup time picker
+                                  if (_isPickUp && !_isDineIn) ...[
+                                    const SizedBox(height: 14),
+                                    const Divider(height: 1),
+                                    const SizedBox(height: 14),
+                                    _buildPickupTimePicker(setSheetState),
+                                  ],
                                   // 🪑 Dine-in: Table number input
                                   if (_isDineIn) ...[
                                     const SizedBox(height: 12),
@@ -4022,6 +4082,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           ),
                           const SizedBox(height: 20),
 
+                          // 📦 ITEM UNAVAILABILITY PREFERENCE (Collapsible dropdown)
+                          _buildCollapsibleUnavailabilitySection(ctx, setSheetState, cart),
+                          const SizedBox(height: 20),
+
                           // 🛒 ORDER ITEMS
                           _buildCheckoutSectionHeader('🛒', 'Sipariş Detayı'),
                           const SizedBox(height: 8),
@@ -4152,6 +4216,18 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     ),
                     child: GestureDetector(
                       onTap: _isSubmitting ? null : () {
+                        // Gel Al: require pickup time selection
+                        if (_isPickUp && !_isDineIn && _selectedPickupSlot == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Lütfen bir teslim alma saati seçin'),
+                              backgroundColor: Colors.amber,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                          );
+                          return;
+                        }
                         // Dine-in: require table number
                         if (_isDineIn && (_scannedTableNumber ?? _tableNumberController.text.trim()).isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -4207,6 +4283,1296 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
        },
      );
    }
+
+  /// 📍 Address Picker Bottom Sheet
+  void _showAddressPickerSheet(
+    BuildContext ctx,
+    StateSetter parentSetSheetState,
+    String userId, {
+    Map<String, String>? profileAddress,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (context, setPickerState) {
+            return Container(
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
+                  ),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Teslimat Adresi Seç',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: Icon(Icons.close, color: isDark ? Colors.white70 : Colors.black54),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(height: 1, color: isDark ? Colors.grey[800] : Colors.grey[200]),
+                  
+                  // Address list
+                  Flexible(
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(userId)
+                          .collection('savedAddresses')
+                          .orderBy('createdAt', descending: false)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        final savedAddresses = snapshot.data?.docs ?? [];
+                        
+                        return ListView(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          children: [
+                            // Profile default address
+                            if (profileAddress != null) ...[
+                              _buildAddressPickerItem(
+                                setPickerState: setPickerState,
+                                parentSetSheetState: parentSetSheetState,
+                                sheetCtx: sheetCtx,
+                                address: profileAddress,
+                                label: 'Varsayılan Adres',
+                                isSelected: _selectedDeliveryAddress == null,
+                                isDefault: true,
+                                isDark: isDark,
+                                onSelect: () {
+                                  setState(() => _selectedDeliveryAddress = null);
+                                  parentSetSheetState(() {});
+                                  Navigator.pop(sheetCtx);
+                                },
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                            
+                            // Saved addresses
+                            ...savedAddresses.map((doc) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              final addr = {
+                                'street': data['street']?.toString() ?? '',
+                                'houseNumber': data['houseNumber']?.toString() ?? '',
+                                'postalCode': data['postalCode']?.toString() ?? '',
+                                'city': data['city']?.toString() ?? '',
+                              };
+                              final label = data['label']?.toString() ?? '';
+                              final isSelected = _selectedDeliveryAddress != null &&
+                                  _selectedDeliveryAddress!['street'] == addr['street'] &&
+                                  _selectedDeliveryAddress!['houseNumber'] == addr['houseNumber'] &&
+                                  _selectedDeliveryAddress!['postalCode'] == addr['postalCode'] &&
+                                  _selectedDeliveryAddress!['city'] == addr['city'];
+                              
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: _buildAddressPickerItem(
+                                  setPickerState: setPickerState,
+                                  parentSetSheetState: parentSetSheetState,
+                                  sheetCtx: sheetCtx,
+                                  address: addr,
+                                  label: label.isNotEmpty ? label : null,
+                                  isSelected: isSelected,
+                                  isDefault: false,
+                                  isDark: isDark,
+                                  onSelect: () {
+                                    setState(() => _selectedDeliveryAddress = addr);
+                                    parentSetSheetState(() {});
+                                    Navigator.pop(sheetCtx);
+                                  },
+                                  onDelete: () async {
+                                    await FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(userId)
+                                        .collection('savedAddresses')
+                                        .doc(doc.id)
+                                        .delete();
+                                    // If deleted address was selected, clear selection
+                                    if (isSelected) {
+                                      setState(() => _selectedDeliveryAddress = null);
+                                      parentSetSheetState(() {});
+                                    }
+                                    setPickerState(() {});
+                                  },
+                                ),
+                              );
+                            }),
+                            
+                            const SizedBox(height: 8),
+                            // Add new address button
+                            GestureDetector(
+                              onTap: () => _showNewAddressForm(
+                                sheetCtx, 
+                                setPickerState,
+                                parentSetSheetState,
+                                userId,
+                                isDark,
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _accentColor.withOpacity(0.5),
+                                    style: BorderStyle.solid,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_circle_outline, color: _accentColor, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Yeni adres ekle',
+                                      style: TextStyle(
+                                        color: _accentColor,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Single address row in the picker
+  Widget _buildAddressPickerItem({
+    required StateSetter setPickerState,
+    required StateSetter parentSetSheetState,
+    required BuildContext sheetCtx,
+    required Map<String, String> address,
+    String? label,
+    required bool isSelected,
+    required bool isDefault,
+    required bool isDark,
+    required VoidCallback onSelect,
+    VoidCallback? onDelete,
+  }) {
+    final streetFull = (address['houseNumber'] ?? '').isNotEmpty
+        ? '${address['street']} ${address['houseNumber']}'
+        : (address['street'] ?? '');
+    final fullAddress = [streetFull, '${address['postalCode']} ${address['city']}']
+        .where((s) => s.trim().isNotEmpty)
+        .join(', ');
+
+    return GestureDetector(
+      onTap: onSelect,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? _accentColor.withOpacity(0.15) : _accentColor.withOpacity(0.08))
+              : (isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade50),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? _accentColor : (isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Radio indicator
+            Container(
+              width: 22, height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? _accentColor : (isDark ? Colors.grey[500]! : Colors.grey[400]!),
+                  width: isSelected ? 2 : 1.5,
+                ),
+              ),
+              child: isSelected
+                  ? Center(child: Container(width: 12, height: 12, decoration: BoxDecoration(shape: BoxShape.circle, color: _accentColor)))
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (label != null)
+                    Row(
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDefault ? Colors.green : _accentColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (isDefault) ...[
+                          const SizedBox(width: 4),
+                          Icon(Icons.star, size: 12, color: Colors.green),
+                        ],
+                      ],
+                    ),
+                  Text(
+                    fullAddress,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (onDelete != null)
+              IconButton(
+                icon: Icon(Icons.delete_outline, color: Colors.red.shade400, size: 20),
+                onPressed: onDelete,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// New Address Form Dialog with Google Places Autocomplete
+  void _showNewAddressForm(
+    BuildContext parentCtx,
+    StateSetter setPickerState,
+    StateSetter parentSetSheetState,
+    String userId,
+    bool isDark,
+  ) {
+    const String _placesApiKey = 'AIzaSyB8Pvs-P4580Wsk4mT46cvGT7TGlZiLkWo';
+    final searchController = TextEditingController();
+    final streetController = TextEditingController();
+    final houseNumberController = TextEditingController();
+    final postalCodeController = TextEditingController();
+    final cityController = TextEditingController();
+    final labelController = TextEditingController();
+    bool _addressSelected = false;
+
+    showModalBottomSheet(
+      context: parentCtx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (formCtx) {
+        return StatefulBuilder(
+          builder: (context, setFormState) {
+            final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+            return Container(
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottomInset),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Yeni Adres Ekle',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // 🔍 Google Places Autocomplete search
+                    Text(
+                      'Adres Ara',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 6),
+                    GooglePlaceAutoCompleteTextField(
+                      textEditingController: searchController,
+                      googleAPIKey: _placesApiKey,
+                      boxDecoration: const BoxDecoration(),
+                      inputDecoration: InputDecoration(
+                        hintText: 'Adres aramak için yazın...',
+                        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
+                        prefixIcon: Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 20),
+                        filled: true,
+                        fillColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade50,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _accentColor)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      ),
+                      textStyle: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14),
+                      debounceTime: 400,
+                      countries: const ['de'],
+                      isLatLngRequired: true,
+                      getPlaceDetailWithLatLng: (prediction) async {
+                        // Use reverse geocoding to get structured address components
+                        final lat = double.tryParse(prediction.lat ?? '');
+                        final lng = double.tryParse(prediction.lng ?? '');
+                        if (lat != null && lng != null) {
+                          try {
+                            final placemarks = await placemarkFromCoordinates(lat, lng).timeout(const Duration(seconds: 8));
+                            if (placemarks.isNotEmpty) {
+                              final place = placemarks.first;
+                              setFormState(() {
+                                streetController.text = place.thoroughfare ?? '';
+                                houseNumberController.text = place.subThoroughfare ?? '';
+                                postalCodeController.text = place.postalCode ?? '';
+                                cityController.text = place.locality ?? place.administrativeArea ?? '';
+                                _addressSelected = true;
+                              });
+                            }
+                          } catch (e) {
+                            debugPrint('Geocoding error: $e');
+                            // Fallback: try to parse from description
+                            final desc = prediction.description ?? '';
+                            final parts = desc.split(',');
+                            if (parts.isNotEmpty) {
+                              setFormState(() {
+                                streetController.text = parts[0].trim();
+                                if (parts.length >= 2) {
+                                  // Try to parse "PLZ City" from second part
+                                  final plzCity = parts[1].trim();
+                                  final match = RegExp(r'(\d{5})\s*(.*)').firstMatch(plzCity);
+                                  if (match != null) {
+                                    postalCodeController.text = match.group(1) ?? '';
+                                    cityController.text = match.group(2) ?? '';
+                                  } else {
+                                    cityController.text = plzCity;
+                                  }
+                                }
+                                _addressSelected = true;
+                              });
+                            }
+                          }
+                        }
+                      },
+                      itemClick: (Prediction prediction) {
+                        searchController.text = prediction.description ?? '';
+                        searchController.selection = TextSelection.fromPosition(
+                          TextPosition(offset: searchController.text.length),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+                    Divider(color: isDark ? Colors.grey[800] : Colors.grey[200]),
+                    const SizedBox(height: 8),
+
+                    // Label (optional)
+                    _buildAddressTextField(labelController, 'Adres Adı (opsiyonel)', 'Ör: Ev, İş', isDark, textInputAction: TextInputAction.next),
+                    const SizedBox(height: 12),
+
+                    // Street + House Number row (auto-filled or manual)
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: _buildAddressTextField(streetController, 'Sokak / Cadde *', 'Ör: Hauptstraße', isDark, textInputAction: TextInputAction.next),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 1,
+                          child: _buildAddressTextField(houseNumberController, 'Nr.', '', isDark, textInputAction: TextInputAction.next),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // PLZ + City row
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: _buildAddressTextField(postalCodeController, 'PLZ *', '', isDark, keyboardType: TextInputType.number, textInputAction: TextInputAction.next),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 3,
+                          child: _buildAddressTextField(cityController, 'Şehir *', '', isDark, textInputAction: TextInputAction.done),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Buttons
+                    Row(
+                      children: [
+                        // Use without saving
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              if (streetController.text.trim().isEmpty || cityController.text.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Lütfen sokak ve şehir bilgisi girin'), backgroundColor: Colors.red),
+                                );
+                                return;
+                              }
+                              final addr = {
+                                'street': streetController.text.trim(),
+                                'houseNumber': houseNumberController.text.trim(),
+                                'postalCode': postalCodeController.text.trim(),
+                                'city': cityController.text.trim(),
+                              };
+                              setState(() => _selectedDeliveryAddress = addr);
+                              parentSetSheetState(() {});
+                              Navigator.pop(formCtx); // close form
+                              Navigator.pop(parentCtx); // close picker
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: isDark ? Colors.grey.shade600 : Colors.grey.shade400),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: Text(
+                              'Sadece Kullan',
+                              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // Save and use
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              if (streetController.text.trim().isEmpty || cityController.text.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Lütfen sokak ve şehir bilgisi girin'), backgroundColor: Colors.red),
+                                );
+                                return;
+                              }
+                              final addr = {
+                                'street': streetController.text.trim(),
+                                'houseNumber': houseNumberController.text.trim(),
+                                'postalCode': postalCodeController.text.trim(),
+                                'city': cityController.text.trim(),
+                              };
+                              // Save to Firestore
+                              await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(userId)
+                                  .collection('savedAddresses')
+                                  .add({
+                                ...addr,
+                                'label': labelController.text.trim(),
+                                'createdAt': FieldValue.serverTimestamp(),
+                              });
+                              setState(() => _selectedDeliveryAddress = addr);
+                              parentSetSheetState(() {});
+                              setPickerState(() {});
+                              if (formCtx.mounted) Navigator.pop(formCtx);
+                              if (parentCtx.mounted) Navigator.pop(parentCtx);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _accentColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Kaydet & Kullan', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Build a styled text field for the address form
+  Widget _buildAddressTextField(
+    TextEditingController controller,
+    String label,
+    String hint,
+    bool isDark, {
+    TextInputType keyboardType = TextInputType.text,
+    TextInputAction textInputAction = TextInputAction.next,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13),
+        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+        filled: true,
+        fillColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade50,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _accentColor)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      ),
+    );
+  }
+
+  /// 📦 Collapsible Unavailability Preference Section
+  Widget _buildCollapsibleUnavailabilitySection(BuildContext ctx, StateSetter setSheetState, CartState cart) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Map preference value to display text
+    String selectedLabel;
+    switch (_unavailabilityPreference) {
+      case 'substitute':
+        selectedLabel = 'En iyi alternatifle değiştir';
+        break;
+      case 'refund':
+        selectedLabel = 'Ürün ücretini iade et';
+        break;
+      case 'perItem':
+        selectedLabel = 'Her ürün için ayrı seç';
+        break;
+      default:
+        selectedLabel = 'Ürün ücretini iade et';
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          initiallyExpanded: false,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Row(
+            children: [
+              const Text('📦', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Ürün bulunamazsa',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: ctx,
+                              builder: (dialogCtx) => AlertDialog(
+                                backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                title: Row(
+                                  children: [
+                                    Icon(Icons.info_outline, color: _accentColor, size: 22),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Ürün bulunamazsa ne olur?',
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                content: Text(
+                                  'Ürünlerimiz genellikle her zaman stoklarımızda mevcuttur. '
+                                  'Ancak çok nadir durumlarda, bir ürün geçici olarak tükenmiş olabilir. '
+                                  'Siparişinizi mümkün olan en kısa sürede tamamlayabilmemiz için, '
+                                  'böyle bir durumda ne yapmamızı istediğinizi önceden bildirmenizi rica ediyoruz. '
+                                  'Bu sayede size ulaşmak zorunda kalmadan siparişinizi hızlıca hazırlayabiliriz.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    height: 1.5,
+                                    color: isDark ? Colors.grey[300] : Colors.grey[700],
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(dialogCtx),
+                                    child: Text('Anladım', style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: isDark ? Colors.grey[500] : Colors.grey[400],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      selectedLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _accentColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          iconColor: isDark ? Colors.grey[400] : Colors.grey[600],
+          collapsedIconColor: isDark ? Colors.grey[400] : Colors.grey[600],
+          children: [
+            Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey[200]),
+            const SizedBox(height: 8),
+            // Option 1: Substitute
+            _buildUnavailabilityOption(
+              setSheetState: setSheetState,
+              value: 'substitute',
+              title: 'En iyi alternatifle değiştir',
+              subtitle: 'Eşdeğer veya daha düşük fiyatlı ürün gönderilir',
+              isDark: isDark,
+            ),
+            const SizedBox(height: 4),
+            Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey[200]),
+            const SizedBox(height: 4),
+            // Option 2: Refund
+            _buildUnavailabilityOption(
+              setSheetState: setSheetState,
+              value: 'refund',
+              title: 'Ürün ücretini iade et',
+              subtitle: 'Ödeme yönteminize göre otomatik iade',
+              isDark: isDark,
+            ),
+            const SizedBox(height: 4),
+            Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey[200]),
+            const SizedBox(height: 4),
+            // Option 3: Per-item
+            _buildUnavailabilityOption(
+              setSheetState: setSheetState,
+              value: 'perItem',
+              title: 'Her ürün için ayrı seç',
+              subtitle: 'Her ürün için tercih belirleyin',
+              isDark: isDark,
+            ),
+            // Per-item preferences (only when perItem is selected)
+            if (_unavailabilityPreference == 'perItem') ...[
+              const SizedBox(height: 16),
+              ...cart.items.map((item) {
+                final productId = item.product.id;
+                final productName = I18nUtils.getLocalizedText(context, item.product.nameData);
+                final pref = _perItemPreferences[productId] ?? 'refund';
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        productName,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          _buildPerItemChip(
+                            setSheetState: setSheetState,
+                            productId: productId,
+                            chipValue: 'substitute',
+                            currentValue: pref,
+                            label: 'Alternatif',
+                            isDark: isDark,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildPerItemChip(
+                            setSheetState: setSheetState,
+                            productId: productId,
+                            chipValue: 'refund',
+                            currentValue: pref,
+                            label: 'İade',
+                            isDark: isDark,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 📦 Unavailability Preference Section (Lieferando "Falls Artikel nicht verfügbar" style)
+  Widget _buildUnavailabilityPreferenceSection(BuildContext ctx, StateSetter setSheetState, CartState cart) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Option 1: Substitute
+          _buildUnavailabilityOption(
+            setSheetState: setSheetState,
+            value: 'substitute',
+            title: 'En iyi alternatifle değiştir',
+            subtitle: 'Eşdeğer veya daha düşük fiyatlı ürün gönderilir',
+            isDark: isDark,
+          ),
+          const SizedBox(height: 4),
+          Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey[200]),
+          const SizedBox(height: 4),
+
+          // Option 2: Refund
+          _buildUnavailabilityOption(
+            setSheetState: setSheetState,
+            value: 'refund',
+            title: 'Ürün ücretini iade et',
+            subtitle: 'Ödeme yönteminize göre otomatik iade',
+            isDark: isDark,
+          ),
+          const SizedBox(height: 4),
+          Divider(height: 1, color: isDark ? Colors.grey[700] : Colors.grey[200]),
+          const SizedBox(height: 4),
+
+          // Option 3: Per-item
+          _buildUnavailabilityOption(
+            setSheetState: setSheetState,
+            value: 'perItem',
+            title: 'Her ürün için ayrı seç',
+            subtitle: 'Her ürün için tercih belirleyin',
+            isDark: isDark,
+          ),
+
+          // Allergy info banner
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1A2744) : const Color(0xFFE8EEF8),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, size: 18, color: isDark ? Colors.blue[300] : Colors.blue[600]),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.blue[200] : Colors.blue[800],
+                        height: 1.4,
+                      ),
+                      children: [
+                        TextSpan(text: 'Alerjiniz varsa, '),
+                        TextSpan(
+                          text: '"Ürün ücretini iade et"',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(text: ' seçeneğini öneriyoruz.'),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Per-item preferences (only when perItem is selected)
+          if (_unavailabilityPreference == 'perItem') ...[
+            const SizedBox(height: 16),
+            ...cart.items.map((item) {
+              final productId = item.product.id;
+              final productName = I18nUtils.getLocalizedText(context, item.product.nameData);
+              final pref = _perItemPreferences[productId] ?? 'substitute';
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      productName,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        _buildPerItemChip(
+                          setSheetState: setSheetState,
+                          productId: productId,
+                          chipValue: 'substitute',
+                          currentValue: pref,
+                          label: 'Alternatif',
+                          isDark: isDark,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildPerItemChip(
+                          setSheetState: setSheetState,
+                          productId: productId,
+                          chipValue: 'refund',
+                          currentValue: pref,
+                          label: 'İade',
+                          isDark: isDark,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Single radio-style option for unavailability preference
+  Widget _buildUnavailabilityOption({
+    required StateSetter setSheetState,
+    required String value,
+    required String title,
+    required String subtitle,
+    required bool isDark,
+  }) {
+    final isSelected = _unavailabilityPreference == value;
+
+    return GestureDetector(
+      onTap: () {
+        setSheetState(() {});
+        setState(() {
+          _unavailabilityPreference = value;
+          // Initialize per-item prefs when selecting perItem
+          if (value == 'perItem') {
+            final cart = ref.read(cartProvider);
+            for (final item in cart.items) {
+              _perItemPreferences.putIfAbsent(item.product.id, () => 'substitute');
+            }
+          }
+        });
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Radio circle
+            Container(
+              width: 22,
+              height: 22,
+              margin: const EdgeInsets.only(top: 1),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? _accentColor : (isDark ? Colors.grey[500]! : Colors.grey[400]!),
+                  width: isSelected ? 2 : 1.5,
+                ),
+              ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _accentColor,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Per-item preference chip (Alternatif / İade)
+  Widget _buildPerItemChip({
+    required StateSetter setSheetState,
+    required String productId,
+    required String chipValue,
+    required String currentValue,
+    required String label,
+    required bool isDark,
+  }) {
+    final isSelected = currentValue == chipValue;
+
+    return GestureDetector(
+      onTap: () {
+        setSheetState(() {});
+        setState(() {
+          _perItemPreferences[productId] = chipValue;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? _accentColor.withValues(alpha: 0.2) : _accentColor.withValues(alpha: 0.1))
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? _accentColor
+                : (isDark ? Colors.grey[600]! : Colors.grey[300]!),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected
+                ? _accentColor
+                : (isDark ? Colors.grey[300] : Colors.grey[600]),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 🆕 Gel Al: Apple-style Cupertino wheel picker for pickup time
+  Widget _buildPickupTimePicker(StateSetter setSheetState) {
+    if (_hoursHelper == null) {
+      return const SizedBox.shrink();
+    }
+
+    final grouped = _hoursHelper!.getAvailableSlotsGroupedByDay(
+      isPickup: true,
+      daysToCheck: 3,
+      prepTimeMinutes: 30,
+    );
+
+    if (grouped.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.orange.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.orange, size: 18),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Şu an müsait zaman dilimi bulunamadı.',
+                style: TextStyle(color: Colors.orange, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final now = DateTime.now();
+    final dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+    final dayKeys = grouped.keys.toList();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Build day labels
+    final dayLabels = dayKeys.map((dateKey) {
+      final isToday = dateKey.day == now.day && dateKey.month == now.month && dateKey.year == now.year;
+      final tomorrow = now.add(const Duration(days: 1));
+      final isTomorrow = dateKey.day == tomorrow.day && dateKey.month == tomorrow.month && dateKey.year == tomorrow.year;
+      if (isToday) return 'Bugün';
+      if (isTomorrow) return 'Yarın';
+      return dayNames[dateKey.weekday - 1];
+    }).toList();
+
+    // Determine initial day index
+    int initialDayIndex = 0;
+    if (_selectedPickupSlot != null) {
+      final selDate = DateTime(_selectedPickupSlot!.year, _selectedPickupSlot!.month, _selectedPickupSlot!.day);
+      final idx = dayKeys.indexWhere((k) => k.year == selDate.year && k.month == selDate.month && k.day == selDate.day);
+      if (idx >= 0) initialDayIndex = idx;
+    }
+
+    // Time slots for the selected day
+    List<DateTime> currentTimeSlots = grouped[dayKeys[initialDayIndex]] ?? [];
+
+    // Determine initial time index
+    int initialTimeIndex = 0;
+    if (_selectedPickupSlot != null) {
+      final idx = currentTimeSlots.indexWhere((s) =>
+          s.hour == _selectedPickupSlot!.hour && s.minute == _selectedPickupSlot!.minute);
+      if (idx >= 0) initialTimeIndex = idx;
+    }
+
+    int currentDayIndex = initialDayIndex;
+    int currentTimeIndex = initialTimeIndex;
+    final timeController = FixedExtentScrollController(initialItem: initialTimeIndex);
+
+    return StatefulBuilder(
+      builder: (context, setPickerState) {
+        currentTimeSlots = grouped[dayKeys[currentDayIndex]] ?? [];
+        if (currentTimeIndex >= currentTimeSlots.length) {
+          currentTimeIndex = 0;
+        }
+
+        // Format the selected time for display
+        String selectedDisplay = '';
+        if (currentTimeSlots.isNotEmpty) {
+          final slot = currentTimeSlots[currentTimeIndex];
+          selectedDisplay = '${dayLabels[currentDayIndex]}, ${slot.hour.toString().padLeft(2, '0')}:${slot.minute.toString().padLeft(2, '0')}';
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.schedule, color: _accentColor, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Teslim Alma Saati',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                if (_selectedPickupSlot != null) ...[
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _accentColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      selectedDisplay,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: _accentColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            // Cupertino-style wheel picker
+            Container(
+              height: 150,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[900] : Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Stack(
+                children: [
+                  // Selection highlight bar
+                  Center(
+                    child: Container(
+                      height: 36,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.grey[800]!.withValues(alpha: 0.8)
+                            : Colors.grey[300]!.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      // Day picker (left wheel)
+                      Expanded(
+                        flex: 5,
+                        child: CupertinoPicker(
+                          scrollController: FixedExtentScrollController(initialItem: currentDayIndex),
+                          itemExtent: 36,
+                          diameterRatio: 1.2,
+                          squeeze: 1.1,
+                          selectionOverlay: const SizedBox.shrink(),
+                          onSelectedItemChanged: (index) {
+                            setPickerState(() {
+                              currentDayIndex = index;
+                              currentTimeIndex = 0;
+                              currentTimeSlots = grouped[dayKeys[currentDayIndex]] ?? [];
+                              timeController.jumpToItem(0);
+                            });
+                            // Auto-select first slot of new day
+                            if (currentTimeSlots.isNotEmpty) {
+                              final slot = currentTimeSlots[0];
+                              setSheetState(() {});
+                              setState(() {
+                                _selectedPickupSlot = slot;
+                                _selectedDate = DateTime(slot.year, slot.month, slot.day);
+                                _selectedTime = TimeOfDay(hour: slot.hour, minute: slot.minute);
+                              });
+                            }
+                          },
+                          children: List.generate(dayLabels.length, (index) {
+                            final isSelected = index == currentDayIndex;
+                            return Center(
+                              child: Text(
+                                dayLabels[index],
+                                style: TextStyle(
+                                  fontSize: isSelected ? 18 : 15,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                      // Separator
+                      Container(
+                        width: 1,
+                        height: 100,
+                        color: isDark ? Colors.grey[700] : Colors.grey[300],
+                      ),
+                      // Time picker (right wheel)
+                      Expanded(
+                        flex: 4,
+                        child: CupertinoPicker(
+                          scrollController: timeController,
+                          itemExtent: 36,
+                          diameterRatio: 1.2,
+                          squeeze: 1.1,
+                          selectionOverlay: const SizedBox.shrink(),
+                          onSelectedItemChanged: (index) {
+                            setPickerState(() {
+                              currentTimeIndex = index;
+                            });
+                            if (currentTimeSlots.isNotEmpty && index < currentTimeSlots.length) {
+                              final slot = currentTimeSlots[index];
+                              setSheetState(() {});
+                              setState(() {
+                                _selectedPickupSlot = slot;
+                                _selectedDate = DateTime(slot.year, slot.month, slot.day);
+                                _selectedTime = TimeOfDay(hour: slot.hour, minute: slot.minute);
+                              });
+                            }
+                          },
+                          children: List.generate(currentTimeSlots.length, (index) {
+                            final slot = currentTimeSlots[index];
+                            final timeStr = '${slot.hour.toString().padLeft(2, '0')}:${slot.minute.toString().padLeft(2, '0')}';
+                            final isSelected = index == currentTimeIndex;
+                            return Center(
+                              child: Text(
+                                timeStr,
+                                style: TextStyle(
+                                  fontSize: isSelected ? 18 : 15,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   /// Section header helper for checkout sheet
   Widget _buildCheckoutSectionHeader(String emoji, String title) {

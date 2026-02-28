@@ -13,7 +13,8 @@ import {
     getDoc,
     addDoc,
     query,
-    orderBy
+    orderBy,
+    where
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "@/lib/firebase";
@@ -186,8 +187,22 @@ function GlobalProductsPageContent() {
     const [loadingBusinessCategories, setLoadingBusinessCategories] = useState(false);
     const [activeCategoryTab, setActiveCategoryTab] = useState<string>('all');
 
-    // 🆕 DUAL VIEW: Kategoriler vs Ürünler toggle
-    const [businessViewMode, setBusinessViewMode] = useState<'products' | 'categories'>('products');
+    // 🆕 DUAL VIEW: Kategoriler vs Ürünler vs Sponsored toggle
+    const [businessViewMode, setBusinessViewMode] = useState<'products' | 'categories' | 'sponsored'>('products');
+
+    // 🌟 SPONSORED PRODUCTS STATE
+    const [sponsoredProducts, setSponsoredProducts] = useState<string[]>([]);
+    const [sponsoredSettings, setSponsoredSettings] = useState<{
+        enabled: boolean;
+        feePerConversion: number;
+        maxProductsPerBusiness: number;
+    }>({ enabled: false, feePerConversion: 0.40, maxProductsPerBusiness: 5 });
+    const [sponsoredSaving, setSponsoredSaving] = useState(false);
+
+    // 🆕 BUSINESS PRODUCT MULTI-SELECT & PAGINATION
+    const [selectedBusinessProducts, setSelectedBusinessProducts] = useState<Set<string>>(new Set());
+    const [businessProductPage, setBusinessProductPage] = useState(1);
+    const BUSINESS_PRODUCTS_PER_PAGE = 20;
 
     // 🆕 INLINE CATEGORY MANAGEMENT
     const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -298,6 +313,30 @@ function GlobalProductsPageContent() {
                         companyName: data.companyName || data.name || data.brand || t('isletme'),
                         type: data.type || data.businessType,
                     });
+                    // 🌟 Load sponsored products from business doc
+                    setSponsoredProducts(data.sponsoredProducts || []);
+
+                    // 🌟 Load sponsored limits from subscription plan
+                    const planCode = data.subscriptionPlan || 'basic';
+                    try {
+                        const plansQuery = query(
+                            collection(db, 'subscription_plans'),
+                            where('code', '==', planCode)
+                        );
+                        const planSnap = await getDocs(plansQuery);
+                        if (!planSnap.empty) {
+                            const planData = planSnap.docs[0].data();
+                            if (planData.features?.sponsoredProducts) {
+                                setSponsoredSettings({
+                                    enabled: true,
+                                    feePerConversion: planData.sponsoredFeePerConversion ?? 0.40,
+                                    maxProductsPerBusiness: planData.sponsoredMaxProducts ?? 5,
+                                });
+                            }
+                        }
+                    } catch (planError) {
+                        console.error('Error loading plan for sponsored settings:', planError);
+                    }
                 }
             } catch (error) {
                 console.error('Error loading business info:', error);
@@ -1235,6 +1274,15 @@ function GlobalProductsPageContent() {
                                     >
                                         {t('urunler1')}{businessProducts.length})
                                     </button>
+                                    <button
+                                        onClick={() => setBusinessViewMode('sponsored')}
+                                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${businessViewMode === 'sponsored'
+                                            ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/40'
+                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600 hover:text-white'
+                                            }`}
+                                    >
+                                        ⭐ Öne Çıkan ({sponsoredProducts.length})
+                                    </button>
                                 </div>
 
                                 {/* ═══════════════════════════════════════════ */}
@@ -1403,116 +1451,490 @@ function GlobalProductsPageContent() {
                                                 <p className="text-gray-400 mb-2">{t('buIsletmeyeHenuzUrunAtanmamis')}</p>
                                                 <p className="text-sm text-gray-500">{t('asagidanMasterKatalogdanUrunEkleyebilirsiniz')}</p>
                                             </div>
-                                        ) : (
-                                            <div className="overflow-x-auto">
-                                                <table className="w-full text-sm">
-                                                    <thead>
-                                                        <tr className="text-left text-gray-400 border-b border-gray-700">
-                                                            <th className="py-2 pr-2">Durum</th>
-                                                            <th className="py-2 pr-2">SKU</th>
-                                                            <th className="py-2 pr-4 min-w-[200px]">{t('urunAdi')}</th>
-                                                            <th className="py-2 pr-2">Kategoriler</th>
-                                                            <th className="py-2 pr-2">Fiyat</th>
-                                                            <th className="py-2 pr-2">Birim</th>
-                                                            <th className="py-2">{t('islemler')}</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {businessProducts
-                                                            .filter((product: any) => {
-                                                                if (activeCategoryTab === 'all') return true;
-                                                                const cats = product.categories || [product.category];
-                                                                if (activeCategoryTab === 'uncategorized') {
-                                                                    return !cats.some((c: string) =>
-                                                                        activeBusinessCategories.some(bc => getLocalizedText(bc.name).toLowerCase() === c?.toLowerCase())
-                                                                    );
-                                                                }
-                                                                const selectedCat = activeBusinessCategories.find(bc => bc.id === activeCategoryTab);
-                                                                if (!selectedCat) return true;
-                                                                return cats.some((c: string) => c?.toLowerCase() === getLocalizedText(selectedCat.name).toLowerCase());
-                                                            })
-                                                            .map((product: any) => (
-                                                                <tr key={product.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                                                                    <td className="py-3 pr-2">
-                                                                        <button
-                                                                            onClick={async () => {
-                                                                                const newStatus = product.isActive === false ? true : false;
-                                                                                try {
-                                                                                    await updateDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id), { isActive: newStatus });
-                                                                                    setBusinessProducts(prev => prev.map(p =>
-                                                                                        p.id === product.id ? { ...p, isActive: newStatus } : p
-                                                                                    ));
-                                                                                } catch (err) {
-                                                                                    console.error('Toggle error:', err);
+                                        ) : (() => {
+                                            // Filter products by category
+                                            const filteredBizProducts = businessProducts.filter((product: any) => {
+                                                if (activeCategoryTab === 'all') return true;
+                                                const cats = product.categories || [product.category];
+                                                if (activeCategoryTab === 'uncategorized') {
+                                                    return !cats.some((c: string) =>
+                                                        activeBusinessCategories.some(bc => getLocalizedText(bc.name).toLowerCase() === c?.toLowerCase())
+                                                    );
+                                                }
+                                                const selectedCat = activeBusinessCategories.find(bc => bc.id === activeCategoryTab);
+                                                if (!selectedCat) return true;
+                                                return cats.some((c: string) => c?.toLowerCase() === getLocalizedText(selectedCat.name).toLowerCase());
+                                            });
+
+                                            // Pagination
+                                            const totalBizPages = Math.ceil(filteredBizProducts.length / BUSINESS_PRODUCTS_PER_PAGE);
+                                            const safeBizPage = Math.min(businessProductPage, totalBizPages || 1);
+                                            const paginatedBizProducts = filteredBizProducts.slice(
+                                                (safeBizPage - 1) * BUSINESS_PRODUCTS_PER_PAGE,
+                                                safeBizPage * BUSINESS_PRODUCTS_PER_PAGE
+                                            );
+                                            const allPageSelected = paginatedBizProducts.length > 0 && paginatedBizProducts.every((p: any) => selectedBusinessProducts.has(p.id));
+
+                                            return (
+                                                <div className="space-y-3">
+                                                    {/* 🆕 BULK ACTION BAR */}
+                                                    {selectedBusinessProducts.size > 0 && (
+                                                        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-cyan-900/40 to-blue-900/30 rounded-xl border border-cyan-500/30 animate-in fade-in">
+                                                            <span className="text-cyan-300 text-sm font-bold">
+                                                                ✅ {selectedBusinessProducts.size} ürün seçili
+                                                            </span>
+                                                            <div className="flex-1" />
+                                                            <button
+                                                                onClick={async () => {
+                                                                    // 🔍 Check for missing images
+                                                                    const productsWithoutImages: string[] = [];
+                                                                    selectedBusinessProducts.forEach(id => {
+                                                                        const product = businessProducts.find((p: any) => p.id === id);
+                                                                        if (product && (!product.imageUrl || product.imageUrl === '')) {
+                                                                            const pName = typeof product.name === 'object' ? (product.name?.tr || product.name?.de || Object.values(product.name)[0] || product.id) : (product.name || product.id);
+                                                                            productsWithoutImages.push(pName as string);
+                                                                        }
+                                                                    });
+                                                                    if (productsWithoutImages.length > 0) {
+                                                                        alert(`⚠️ Aşağıdaki ürünlerin resmi yok! Öne çıkan ürünlerde resim zorunludur:\n\n${productsWithoutImages.map(n => `• ${n}`).join('\n')}\n\nLütfen önce bu ürünlere resim ekleyin.`);
+                                                                        return;
+                                                                    }
+
+                                                                    const newSponsored = [...sponsoredProducts];
+                                                                    let added = 0;
+                                                                    selectedBusinessProducts.forEach(id => {
+                                                                        if (!newSponsored.includes(id) && newSponsored.length < sponsoredSettings.maxProductsPerBusiness) {
+                                                                            newSponsored.push(id);
+                                                                            added++;
+                                                                        }
+                                                                    });
+                                                                    if (added === 0) {
+                                                                        alert(`Limit doldu (${sponsoredSettings.maxProductsPerBusiness} max) veya ürünler zaten öne çıkan.`);
+                                                                        return;
+                                                                    }
+                                                                    try {
+                                                                        await updateDoc(doc(db, 'businesses', contextBusinessId!), { sponsoredProducts: newSponsored, hasSponsoredProducts: newSponsored.length > 0 });
+                                                                        setSponsoredProducts(newSponsored);
+                                                                        setSelectedBusinessProducts(new Set());
+                                                                        alert(`⭐ ${added} ürün öne çıkan olarak eklendi!`);
+                                                                    } catch (err) {
+                                                                        console.error('Sponsored update error:', err);
+                                                                        alert('Hata oluştu!');
+                                                                    }
+                                                                }}
+                                                                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-medium transition"
+                                                            >
+                                                                ⭐ Öne Çıkan Yap
+                                                            </button>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    const batch = writeBatch(db);
+                                                                    selectedBusinessProducts.forEach(id => {
+                                                                        batch.update(doc(db, `businesses/${contextBusinessId}/products`, id), { isActive: true });
+                                                                    });
+                                                                    try {
+                                                                        await batch.commit();
+                                                                        setBusinessProducts(prev => prev.map(p =>
+                                                                            selectedBusinessProducts.has(p.id) ? { ...p, isActive: true } : p
+                                                                        ));
+                                                                        setSelectedBusinessProducts(new Set());
+                                                                    } catch (err) { console.error(err); }
+                                                                }}
+                                                                className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-medium transition"
+                                                            >
+                                                                🟢 Aktif Et
+                                                            </button>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    const batch = writeBatch(db);
+                                                                    selectedBusinessProducts.forEach(id => {
+                                                                        batch.update(doc(db, `businesses/${contextBusinessId}/products`, id), { isActive: false });
+                                                                    });
+                                                                    try {
+                                                                        await batch.commit();
+                                                                        setBusinessProducts(prev => prev.map(p =>
+                                                                            selectedBusinessProducts.has(p.id) ? { ...p, isActive: false } : p
+                                                                        ));
+                                                                        setSelectedBusinessProducts(new Set());
+                                                                    } catch (err) { console.error(err); }
+                                                                }}
+                                                                className="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-medium transition"
+                                                            >
+                                                                🔴 Pasif Et
+                                                            </button>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    if (!window.confirm(`${selectedBusinessProducts.size} ürünü silmek istediğinize emin misiniz?`)) return;
+                                                                    const batch = writeBatch(db);
+                                                                    selectedBusinessProducts.forEach(id => {
+                                                                        batch.delete(doc(db, `businesses/${contextBusinessId}/products`, id));
+                                                                    });
+                                                                    try {
+                                                                        await batch.commit();
+                                                                        setBusinessProducts(prev => prev.filter(p => !selectedBusinessProducts.has(p.id)));
+                                                                        // Also remove from sponsored if needed
+                                                                        setSponsoredProducts(prev => prev.filter(id => !selectedBusinessProducts.has(id)));
+                                                                        setSelectedBusinessProducts(new Set());
+                                                                    } catch (err) {
+                                                                        console.error(err);
+                                                                        alert('Silme hatası!');
+                                                                    }
+                                                                }}
+                                                                className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-medium transition"
+                                                            >
+                                                                🗑 Sil
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setSelectedBusinessProducts(new Set())}
+                                                                className="px-3 py-1.5 bg-gray-600 hover:bg-gray-500 text-gray-300 rounded-lg text-xs font-medium transition"
+                                                            >
+                                                                ✕ İptal
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Product Table */}
+                                                    <div className="overflow-x-auto">
+                                                        <table className="w-full text-sm">
+                                                            <thead>
+                                                                <tr className="text-left text-gray-400 border-b border-gray-700">
+                                                                    <th className="py-2 pr-2 w-8">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={allPageSelected}
+                                                                            onChange={() => {
+                                                                                if (allPageSelected) {
+                                                                                    setSelectedBusinessProducts(prev => {
+                                                                                        const next = new Set(prev);
+                                                                                        paginatedBizProducts.forEach((p: any) => next.delete(p.id));
+                                                                                        return next;
+                                                                                    });
+                                                                                } else {
+                                                                                    setSelectedBusinessProducts(prev => {
+                                                                                        const next = new Set(prev);
+                                                                                        paginatedBizProducts.forEach((p: any) => next.add(p.id));
+                                                                                        return next;
+                                                                                    });
                                                                                 }
                                                                             }}
-                                                                            className={`px-2 py-0.5 rounded text-xs font-medium transition ${product.isActive === false
-                                                                                ? 'bg-red-600/30 text-red-300 hover:bg-red-600/50'
-                                                                                : 'bg-green-600/30 text-green-300 hover:bg-green-600/50'
-                                                                                }`}
-                                                                        >
-                                                                            {product.isActive === false ? '🔴 Pasif' : '🟢 Aktif'}
-                                                                        </button>
-                                                                    </td>
-                                                                    <td className="py-3 pr-2 text-gray-400 font-mono text-xs">
-                                                                        {product.id?.substring(0, 15)}...
-                                                                    </td>
-                                                                    <td className="py-3 pr-4">
-                                                                        <span className="text-white font-medium">{getLocalizedText(product.name)}</span>
-                                                                    </td>
-                                                                    <td className="py-3 pr-2">
-                                                                        <div className="flex flex-wrap gap-1">
-                                                                            {(product.categories || [product.category]).filter(Boolean).slice(0, 2).map((cat: string) => {
-                                                                                const categoryConfig = PRODUCT_TYPE_OPTIONS.find(c => c.value === cat);
-                                                                                return (
-                                                                                    <span key={cat} className={`px-2 py-0.5 rounded text-xs ${categoryConfig?.color || 'bg-gray-600'} text-white`}>
-                                                                                        {categoryConfig?.label || cat}
-                                                                                    </span>
-                                                                                );
-                                                                            })}
-                                                                        </div>
-                                                                    </td>
-                                                                    <td className="py-3 pr-2">
-                                                                        <span className="text-green-400 font-medium">
-                                                                            {product.price ? `${product.price}€` : '-'}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="py-3 pr-2 text-gray-300">
-                                                                        {product.defaultUnit || product.unit || 'adet'}
-                                                                    </td>
-                                                                    <td className="py-3">
-                                                                        <div className="flex gap-2">
-                                                                            <button
-                                                                                onClick={() => openEdit(product)}
-                                                                                className="px-2 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50 text-xs"
-                                                                            >
-                                                                                {t('duzenle1')}
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={async () => {
-                                                                                    const prodNameStr = getLocalizedText(product.name);
-                                                                                    if (!window.confirm(`"${prodNameStr}${t('urununuSilmekIstediginizeEminMisiniz')}`)) return;
-                                                                                    try {
-                                                                                        await deleteDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id));
-                                                                                        setBusinessProducts(prev => prev.filter(p => p.id !== product.id));
-                                                                                    } catch (err) {
-                                                                                        console.error('Delete error:', err);
-                                                                                        alert(t('urunSilinirkenHataOlustu'));
-                                                                                    }
-                                                                                }}
-                                                                                className="px-2 py-1 bg-red-600/30 text-red-300 rounded hover:bg-red-600/50 text-xs"
-                                                                                title={t('urunuSil')}
-                                                                            >
-                                                                                🗑
-                                                                            </button>
-                                                                        </div>
-                                                                    </td>
+                                                                            className="w-4 h-4 rounded bg-gray-700 border-gray-600 accent-cyan-500"
+                                                                        />
+                                                                    </th>
+                                                                    <th className="py-2 pr-2">Durum</th>
+                                                                    <th className="py-2 pr-2">SKU</th>
+                                                                    <th className="py-2 pr-4 min-w-[200px]">{t('urunAdi')}</th>
+                                                                    <th className="py-2 pr-2">Kategoriler</th>
+                                                                    <th className="py-2 pr-2">Fiyat</th>
+                                                                    <th className="py-2 pr-2">Birim</th>
+                                                                    <th className="py-2">{t('islemler')}</th>
                                                                 </tr>
-                                                            ))}
-                                                    </tbody>
-                                                </table>
+                                                            </thead>
+                                                            <tbody>
+                                                                {paginatedBizProducts.map((product: any) => {
+                                                                    const isSelected = selectedBusinessProducts.has(product.id);
+                                                                    const isSponsoredProduct = sponsoredProducts.includes(product.id);
+                                                                    return (
+                                                                        <tr key={product.id} className={`border-b border-gray-700/50 transition ${isSelected ? 'bg-cyan-900/20' : 'hover:bg-gray-700/30'}`}>
+                                                                            <td className="py-3 pr-2">
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    checked={isSelected}
+                                                                                    onChange={() => {
+                                                                                        setSelectedBusinessProducts(prev => {
+                                                                                            const next = new Set(prev);
+                                                                                            if (next.has(product.id)) next.delete(product.id);
+                                                                                            else next.add(product.id);
+                                                                                            return next;
+                                                                                        });
+                                                                                    }}
+                                                                                    className="w-4 h-4 rounded bg-gray-700 border-gray-600 accent-cyan-500"
+                                                                                />
+                                                                            </td>
+                                                                            <td className="py-3 pr-2">
+                                                                                <button
+                                                                                    onClick={async () => {
+                                                                                        const newStatus = product.isActive === false ? true : false;
+                                                                                        try {
+                                                                                            await updateDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id), { isActive: newStatus });
+                                                                                            setBusinessProducts(prev => prev.map(p =>
+                                                                                                p.id === product.id ? { ...p, isActive: newStatus } : p
+                                                                                            ));
+                                                                                        } catch (err) {
+                                                                                            console.error('Toggle error:', err);
+                                                                                        }
+                                                                                    }}
+                                                                                    className={`px-2 py-0.5 rounded text-xs font-medium transition ${product.isActive === false
+                                                                                        ? 'bg-red-600/30 text-red-300 hover:bg-red-600/50'
+                                                                                        : 'bg-green-600/30 text-green-300 hover:bg-green-600/50'
+                                                                                        }`}
+                                                                                >
+                                                                                    {product.isActive === false ? '🔴 Pasif' : '🟢 Aktif'}
+                                                                                </button>
+                                                                            </td>
+                                                                            <td className="py-3 pr-2 text-gray-400 font-mono text-xs">
+                                                                                {product.id?.substring(0, 15)}...
+                                                                            </td>
+                                                                            <td className="py-3 pr-4">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className="text-white font-medium">{getLocalizedText(product.name)}</span>
+                                                                                    {isSponsoredProduct && <span className="text-amber-400 text-xs" title="Öne Çıkan">⭐</span>}
+                                                                                </div>
+                                                                            </td>
+                                                                            <td className="py-3 pr-2">
+                                                                                <div className="flex flex-wrap gap-1">
+                                                                                    {(product.categories || [product.category]).filter(Boolean).slice(0, 2).map((cat: string) => {
+                                                                                        const categoryConfig = PRODUCT_TYPE_OPTIONS.find(c => c.value === cat);
+                                                                                        return (
+                                                                                            <span key={cat} className={`px-2 py-0.5 rounded text-xs ${categoryConfig?.color || 'bg-gray-600'} text-white`}>
+                                                                                                {categoryConfig?.label || cat}
+                                                                                            </span>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+                                                                            </td>
+                                                                            <td className="py-3 pr-2">
+                                                                                <span className="text-green-400 font-medium">
+                                                                                    {product.price ? `${product.price}€` : '-'}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td className="py-3 pr-2 text-gray-300">
+                                                                                {product.defaultUnit || product.unit || 'adet'}
+                                                                            </td>
+                                                                            <td className="py-3">
+                                                                                <div className="flex gap-2">
+                                                                                    <button
+                                                                                        onClick={() => openEdit(product)}
+                                                                                        className="px-2 py-1 bg-blue-600/30 text-blue-300 rounded hover:bg-blue-600/50 text-xs"
+                                                                                    >
+                                                                                        {t('duzenle1')}
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={async () => {
+                                                                                            const prodNameStr = getLocalizedText(product.name);
+                                                                                            if (!window.confirm(`"${prodNameStr}${t('urununuSilmekIstediginizeEminMisiniz')}`)) return;
+                                                                                            try {
+                                                                                                await deleteDoc(doc(db, `businesses/${contextBusinessId}/products`, product.id));
+                                                                                                setBusinessProducts(prev => prev.filter(p => p.id !== product.id));
+                                                                                            } catch (err) {
+                                                                                                console.error('Delete error:', err);
+                                                                                                alert(t('urunSilinirkenHataOlustu'));
+                                                                                            }
+                                                                                        }}
+                                                                                        className="px-2 py-1 bg-red-600/30 text-red-300 rounded hover:bg-red-600/50 text-xs"
+                                                                                        title={t('urunuSil')}
+                                                                                    >
+                                                                                        🗑
+                                                                                    </button>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                })}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                    {/* PAGINATION */}
+                                                    {totalBizPages > 1 && (
+                                                        <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+                                                            <span className="text-gray-400 text-sm">
+                                                                {filteredBizProducts.length} üründen {((safeBizPage - 1) * BUSINESS_PRODUCTS_PER_PAGE) + 1}-{Math.min(safeBizPage * BUSINESS_PRODUCTS_PER_PAGE, filteredBizProducts.length)} gösteriliyor
+                                                            </span>
+                                                            <div className="flex items-center gap-1">
+                                                                <button
+                                                                    onClick={() => setBusinessProductPage(p => Math.max(1, p - 1))}
+                                                                    disabled={safeBizPage <= 1}
+                                                                    className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition"
+                                                                >
+                                                                    ← Önceki
+                                                                </button>
+                                                                {Array.from({ length: totalBizPages }, (_, i) => i + 1).map(page => (
+                                                                    <button
+                                                                        key={page}
+                                                                        onClick={() => setBusinessProductPage(page)}
+                                                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${page === safeBizPage
+                                                                            ? 'bg-emerald-600 text-white'
+                                                                            : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                                                                            }`}
+                                                                    >
+                                                                        {page}
+                                                                    </button>
+                                                                ))}
+                                                                <button
+                                                                    onClick={() => setBusinessProductPage(p => Math.min(totalBizPages, p + 1))}
+                                                                    disabled={safeBizPage >= totalBizPages}
+                                                                    className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed text-sm transition"
+                                                                >
+                                                                    Sonraki →
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                )}
+
+                                {/* ═══════════════════════════════════════════ */}
+                                {/* SPONSORED PRODUCTS VIEW                     */}
+                                {/* ═══════════════════════════════════════════ */}
+                                {businessViewMode === 'sponsored' && (
+                                    <div className="space-y-4">
+                                        {/* Header */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-2xl">⭐</span>
+                                                <div>
+                                                    <h4 className="text-white font-bold">Öne Çıkan Ürünler</h4>
+                                                    <p className="text-gray-400 text-xs">Müşterilere öne çıkan olarak gösterilecek ürünler</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Limit Progress Bar */}
+                                        <div className="bg-gray-700/50 rounded-xl border border-amber-500/30 p-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-sm text-gray-300 font-medium">
+                                                    Sponsored Ürün Kullanımı
+                                                </span>
+                                                <span className={`text-sm font-bold ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
+                                                    ? 'text-red-400'
+                                                    : 'text-amber-400'
+                                                    }`}>
+                                                    {sponsoredProducts.length} / {sponsoredSettings.maxProductsPerBusiness}
+                                                </span>
+                                            </div>
+                                            <div className="w-full bg-gray-600 rounded-full h-2.5">
+                                                <div
+                                                    className={`h-2.5 rounded-full transition-all duration-500 ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
+                                                        ? 'bg-red-500'
+                                                        : sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness * 0.8
+                                                            ? 'bg-amber-500'
+                                                            : 'bg-emerald-500'
+                                                        }`}
+                                                    style={{ width: `${Math.min((sponsoredProducts.length / Math.max(sponsoredSettings.maxProductsPerBusiness, 1)) * 100, 100)}%` }}
+                                                />
+                                            </div>
+                                            {sponsoredSettings.feePerConversion > 0 && (
+                                                <p className="text-xs text-gray-500 mt-2">
+                                                    💰 Dönüşüm başına ücret: {sponsoredSettings.feePerConversion}€
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Product List with Checkboxes */}
+                                        {loadingBusinessProducts ? (
+                                            <div className="flex justify-center py-8">
+                                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+                                            </div>
+                                        ) : businessProducts.length === 0 ? (
+                                            <div className="text-center py-8 bg-gray-700/30 rounded-xl border border-dashed border-gray-600">
+                                                <p className="text-3xl mb-2">📦</p>
+                                                <p className="text-gray-400 mb-2">Henüz ürün atanmamış</p>
+                                                <p className="text-sm text-gray-500">Önce işletmeye ürün atayın, sonra öne çıkan olarak seçin.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-1">
+                                                {businessProducts.filter((p: any) => p.isActive !== false).map((product: any) => {
+                                                    const isSponsored = sponsoredProducts.includes(product.id);
+                                                    const limitReached = sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness;
+                                                    const disabled = !isSponsored && limitReached;
+                                                    return (
+                                                        <label
+                                                            key={product.id}
+                                                            className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer ${isSponsored
+                                                                ? 'bg-amber-900/20 border-amber-500/40 hover:border-amber-400/60'
+                                                                : disabled
+                                                                    ? 'bg-gray-800/30 border-gray-700/50 opacity-50 cursor-not-allowed'
+                                                                    : 'bg-gray-800/40 border-gray-700 hover:border-gray-500'
+                                                                }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSponsored}
+                                                                disabled={disabled}
+                                                                onChange={() => {
+                                                                    if (isSponsored) {
+                                                                        setSponsoredProducts(prev => prev.filter(id => id !== product.id));
+                                                                    } else if (!limitReached) {
+                                                                        setSponsoredProducts(prev => [...prev, product.id]);
+                                                                    }
+                                                                }}
+                                                                className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-amber-500 focus:ring-amber-500 accent-amber-500"
+                                                            />
+                                                            {/* Product image */}
+                                                            {product.imageUrl || (product.images && product.images[0]) ? (
+                                                                <img
+                                                                    src={product.imageUrl || product.images[0]}
+                                                                    alt={getLocalizedText(product.name)}
+                                                                    className="w-10 h-10 rounded-lg object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center text-gray-500 text-lg">
+                                                                    📷
+                                                                </div>
+                                                            )}
+                                                            {/* Name */}
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-white text-sm font-medium truncate">
+                                                                    {getLocalizedText(product.name)}
+                                                                </p>
+                                                                <p className="text-gray-500 text-xs truncate">
+                                                                    {(product.categories || [product.category]).filter(Boolean).join(', ')}
+                                                                </p>
+                                                            </div>
+                                                            {/* Price */}
+                                                            <div className="text-right">
+                                                                {product.price != null && (
+                                                                    <span className="text-green-400 font-bold text-sm">
+                                                                        {product.price}€
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            {/* Star badge */}
+                                                            {isSponsored && (
+                                                                <span className="text-amber-400 text-lg">⭐</span>
+                                                            )}
+                                                        </label>
+                                                    );
+                                                })}
                                             </div>
                                         )}
+
+                                        {/* Save Button */}
+                                        <div className="flex justify-end pt-2">
+                                            <button
+                                                onClick={async () => {
+                                                    if (!contextBusinessId) return;
+                                                    setSponsoredSaving(true);
+                                                    try {
+                                                        await updateDoc(doc(db, 'businesses', contextBusinessId), {
+                                                            sponsoredProducts: sponsoredProducts,
+                                                            hasSponsoredProducts: sponsoredProducts.length > 0,
+                                                        });
+                                                        alert('⭐ Öne çıkan ürünler kaydedildi!');
+                                                    } catch (error) {
+                                                        console.error('Error saving sponsored products:', error);
+                                                        alert('Kaydetme hatası!');
+                                                    }
+                                                    setSponsoredSaving(false);
+                                                }}
+                                                disabled={sponsoredSaving}
+                                                className="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-medium text-sm transition-all disabled:opacity-50 flex items-center gap-2"
+                                            >
+                                                {sponsoredSaving ? (
+                                                    <>
+                                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                                        Kaydediliyor...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        💾 Kaydet ({sponsoredProducts.length} ürün)
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -2402,8 +2824,8 @@ function GlobalProductsPageContent() {
                                                                         setFormData({ ...formData, allergens: updated } as any);
                                                                     }}
                                                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isSelected
-                                                                            ? 'bg-orange-600 text-white border-2 border-orange-400 shadow-lg'
-                                                                            : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
+                                                                        ? 'bg-orange-600 text-white border-2 border-orange-400 shadow-lg'
+                                                                        : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
                                                                         }`}
                                                                 >
                                                                     {allergen.label}

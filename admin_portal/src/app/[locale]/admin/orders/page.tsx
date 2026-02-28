@@ -280,7 +280,7 @@ export default function OrdersPage() {
                         return raw;
                     })(),
                     createdAt: d.createdAt,
-                    scheduledAt: d.deliveryDate || d.scheduledDateTime,
+                    scheduledAt: d.deliveryDate || d.scheduledDateTime || d.pickupTime,
                     address: d.deliveryAddress ? { street: d.deliveryAddress } : d.address,
                     notes: d.notes || d.orderNote || d.customerNote || '',
                     // Dine-in fields
@@ -322,8 +322,19 @@ export default function OrdersPage() {
         return true;
     });
 
+    // Helper: determine if an order is a future pre-order (scheduled >30 min from now)
+    const isPreOrder = (order: Order): boolean => {
+        if (!order.scheduledAt) return false;
+        const scheduledTime = order.scheduledAt.toDate().getTime();
+        const thirtyMinFromNow = Date.now() + 30 * 60 * 1000;
+        return scheduledTime > thirtyMinFromNow;
+    };
+
     // Group orders by status for kanban view (using canonical statuses)
-    const pendingOrders = filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status));
+    const allPendingOrders = filteredOrders.filter(o => ['pending', 'accepted'].includes(o.status));
+    const immediatePendingOrders = allPendingOrders.filter(o => !isPreOrder(o));
+    const preOrders = allPendingOrders.filter(o => isPreOrder(o));
+    const pendingOrders = allPendingOrders; // Keep for stats
     const preparingOrders = filteredOrders.filter(o => o.status === 'preparing');
     const readyOrders = filteredOrders.filter(o => o.status === 'ready');
     // Note: 'served' orders (legacy dine-in) are included in completedOrders below
@@ -893,11 +904,28 @@ export default function OrdersPage() {
                                 {t('workflow.pending')} ({pendingOrders.length})
                             </h3>
                             <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                                {pendingOrders.slice(0, 10).map(order => (
+                                {/* Immediate orders */}
+                                {immediatePendingOrders.slice(0, 10).map(order => (
                                     <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} />
                                 ))}
-                                {pendingOrders.length > 10 && (
-                                    <p className="text-gray-500 text-center text-sm">+{pendingOrders.length - 10} {t('kanban.more')}</p>
+                                {immediatePendingOrders.length > 10 && (
+                                    <p className="text-gray-500 text-center text-sm">+{immediatePendingOrders.length - 10} {t('kanban.more')}</p>
+                                )}
+                                {/* Pre-orders separator */}
+                                {preOrders.length > 0 && (
+                                    <>
+                                        <div className="flex items-center gap-2 pt-3 pb-1">
+                                            <div className="flex-1 h-px bg-purple-500/30"></div>
+                                            <span className="text-purple-400 text-xs font-medium whitespace-nowrap">🕐 Ön Siparişler ({preOrders.length})</span>
+                                            <div className="flex-1 h-px bg-purple-500/30"></div>
+                                        </div>
+                                        {preOrders.slice(0, 10).map(order => (
+                                            <OrderCard key={order.id} order={order} businesses={businesses} checkedItems={checkedItems} onClick={() => setSelectedOrder(order)} t={t} isPreOrder />
+                                        ))}
+                                        {preOrders.length > 10 && (
+                                            <p className="text-gray-500 text-center text-sm">+{preOrders.length - 10} {t('kanban.more')}</p>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -1012,6 +1040,22 @@ export default function OrdersPage() {
                                     {orderTypes[selectedOrder.type]?.icon} {orderTypes[selectedOrder.type]?.label}
                                 </span>
                             </div>
+
+                            {/* Scheduled Pickup Time (Pre-order indicator) */}
+                            {selectedOrder.scheduledAt && (() => {
+                                const d = selectedOrder.scheduledAt!.toDate();
+                                const isFuture = d.getTime() > Date.now() + 30 * 60 * 1000;
+                                return (
+                                    <div className={`flex items-center justify-between ${isFuture ? 'bg-purple-600/10 border border-purple-500/30 rounded-lg px-3 py-2' : ''}`}>
+                                        <span className={isFuture ? 'text-purple-300 font-medium' : 'text-gray-400'}>
+                                            {isFuture ? '🕐 Planlanan Alım' : 'Alım Zamanı'}
+                                        </span>
+                                        <span className={isFuture ? 'text-purple-200 font-bold' : 'text-white'}>
+                                            {d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })} · {d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                );
+                            })()}
 
                             {/* Dine-in Info */}
                             {selectedOrder.type === 'dine_in' && (
@@ -1484,13 +1528,15 @@ function OrderCard({
     businesses,
     checkedItems,
     onClick,
-    t
+    t,
+    isPreOrder = false,
 }: {
     order: Order;
     businesses: Record<string, string>;
     checkedItems: Record<string, Record<number, boolean>>;
     onClick: () => void;
     t: any;
+    isPreOrder?: boolean;
 }) {
     const statusInfo = orderStatuses[order.status];
     const typeInfo = orderTypes[order.type];
@@ -1498,22 +1544,51 @@ function OrderCard({
     const checked = checkedItems[order.id] || {};
     const checkedCount = Object.values(checked).filter(Boolean).length;
 
+    // Format scheduled time for pre-orders
+    const formatScheduledTime = () => {
+        if (!order.scheduledAt) return '';
+        const d = order.scheduledAt.toDate();
+        const now = new Date();
+        const isToday = d.toDateString() === now.toDateString();
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const isTomorrow = d.toDateString() === tomorrow.toDateString();
+
+        const time = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+        if (isToday) return `Bugün ${time}`;
+        if (isTomorrow) return `Yarın ${time}`;
+        return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) + ` · ${time}`;
+    };
+
     return (
         <button
             onClick={onClick}
-            className="w-full text-left bg-gray-700 hover:bg-gray-600 rounded-xl p-3 transition"
+            className={`w-full text-left rounded-xl p-3 transition ${isPreOrder
+                ? 'bg-purple-900/20 hover:bg-purple-900/30 border-l-3 border-purple-500'
+                : 'bg-gray-700 hover:bg-gray-600'
+                }`}
         >
             <div className="flex items-center justify-between mb-2">
                 <span className="text-white font-medium text-sm">
                     #{order.orderNumber || order.id.slice(0, 6).toUpperCase()}
                 </span>
-                <span className={`px-2 py-0.5 rounded text-xs bg-${typeInfo?.color || 'gray'}-600/30 text-${typeInfo?.color || 'gray'}-400`}>
-                    {typeInfo?.icon} {typeInfo?.label}
-                </span>
+                <div className="flex items-center gap-1">
+                    <span className={`px-2 py-0.5 rounded text-xs bg-${typeInfo?.color || 'gray'}-600/30 text-${typeInfo?.color || 'gray'}-400`}>
+                        {typeInfo?.icon} {typeInfo?.label}
+                    </span>
+                </div>
             </div>
             <p className="text-gray-400 text-xs mb-1">
                 {businesses[order.businessId] || t('modal.business')}
             </p>
+            {/* Pre-order scheduled time badge */}
+            {isPreOrder && order.scheduledAt && (
+                <div className="mb-1.5">
+                    <span className="px-2 py-0.5 rounded bg-purple-600/30 text-purple-300 text-xs font-medium">
+                        🕐 {formatScheduledTime()}
+                    </span>
+                </div>
+            )}
             {/* Dine-in table badge + source */}
             {order.type === 'dine_in' && (
                 <div className="mb-1 space-y-0.5">
