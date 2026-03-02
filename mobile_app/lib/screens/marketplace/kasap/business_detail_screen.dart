@@ -24,8 +24,9 @@ class BusinessDetailScreen extends ConsumerStatefulWidget {
   final String businessId;
   final int initialDeliveryMode;
   final String? initialTableNumber;
+  final bool closedAcknowledged;
   
-  const BusinessDetailScreen({super.key, required this.businessId, this.initialDeliveryMode = 0, this.initialTableNumber});
+  const BusinessDetailScreen({super.key, required this.businessId, this.initialDeliveryMode = 0, this.initialTableNumber, this.closedAcknowledged = false});
 
   @override
   ConsumerState<BusinessDetailScreen> createState() => _BusinessDetailScreenState();
@@ -319,7 +320,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         final isOpen = openingHelper.isOpenAt(DateTime.now());
         final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
         
-        if (!isOpen && !_closedDialogShown) {
+        if (!isOpen && !_closedDialogShown && !widget.closedAcknowledged) {
           _closedDialogShown = true;
           _showClosedBusinessDialog(preOrderEnabled: preOrderEnabled);
         }
@@ -363,6 +364,28 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
   // 🆕 Kapalı işletme uyarı popup'ı
   void _showClosedBusinessDialog({bool preOrderEnabled = false}) {
+    // Calculate next opening time
+    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+    final openingHelper = OpeningHoursHelper(data?['openingHours']);
+    final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
+    String? nextOpenText;
+    if (nextOpen != null) {
+      final dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+      final now = DateTime.now();
+      final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
+      final tomorrow = now.add(const Duration(days: 1));
+      final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
+      
+      final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
+      if (isToday) {
+        nextOpenText = 'Bugün $timeStr\'de açılıyor';
+      } else if (isTomorrow) {
+        nextOpenText = 'Yarın $timeStr\'de açılıyor';
+      } else {
+        nextOpenText = '${dayNames[nextOpen.weekday - 1]} $timeStr\'de açılıyor';
+      }
+    }
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       
@@ -388,6 +411,33 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Next opening time
+                if (nextOpenText != null) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.schedule, color: Colors.blue, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            nextOpenText,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 Text(
                   preOrderEnabled
                       ? 'Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Sipariş verirseniz işletme açıldığında hazırlanacaktır.'
@@ -457,6 +507,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           return _MenuSearchPage(
             initialQuery: _menuSearchQuery,
             products: _allProducts,
+            businessId: widget.businessId,
+            businessName: (_butcherDoc?.data() as Map<String, dynamic>?)?['companyName'] ?? 
+                          (_butcherDoc?.data() as Map<String, dynamic>?)?['name'] ?? 'Kasap',
             onSearch: (query) {
               setState(() {
                 _menuSearchQuery = query;
@@ -2636,7 +2689,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                        if (ci.quantity > 1) ...[
+                                        if (ci.quantity > 0) ...[
                                           const SizedBox(width: 4),
                                           Container(
                                             width: 20,
@@ -2816,11 +2869,15 @@ class _MenuSearchPage extends StatefulWidget {
   final String initialQuery;
   final ValueChanged<String> onSearch;
   final List<ButcherProduct> products;
+  final String businessId;
+  final String businessName;
 
   const _MenuSearchPage({
     required this.initialQuery,
     required this.onSearch,
     required this.products,
+    required this.businessId,
+    required this.businessName,
   });
 
   @override
@@ -2874,14 +2931,38 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
         .replaceAll('Ç', 'c');
   }
 
+  /// Extract all string values from a localization map (or plain string)
+  List<String> _allLocalizedValues(dynamic data) {
+    if (data == null) return [];
+    if (data is String) return [data];
+    if (data is Map) {
+      return data.values
+          .where((v) => v != null && v.toString().trim().isNotEmpty)
+          .map((v) => v.toString().trim())
+          .toList();
+    }
+    return [data.toString()];
+  }
+
   List<ButcherProduct> get _filteredProducts {
     if (_localQuery.length < 2) return [];
     final query = _normalizeTurkish(_localQuery);
-    return widget.products.where((p) => 
-      _normalizeTurkish(p.name).contains(query) ||
-      (_normalizeTurkish(p.description).contains(query)) ||
-      _normalizeTurkish(p.category).contains(query)
-    ).toList();
+    return widget.products.where((p) {
+      // Search across ALL language variants of name, description, category
+      final allNames = _allLocalizedValues(p.nameData).isNotEmpty 
+          ? _allLocalizedValues(p.nameData) 
+          : [p.name];
+      final allDescs = _allLocalizedValues(p.descriptionData).isNotEmpty 
+          ? _allLocalizedValues(p.descriptionData) 
+          : [p.description];
+      final allCats = _allLocalizedValues(p.categoryData).isNotEmpty 
+          ? _allLocalizedValues(p.categoryData) 
+          : [p.category];
+
+      return allNames.any((n) => _normalizeTurkish(n).contains(query)) ||
+             allDescs.any((d) => _normalizeTurkish(d).contains(query)) ||
+             allCats.any((c) => _normalizeTurkish(c).contains(query));
+    }).toList();
   }
 
   @override
@@ -2953,16 +3034,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                             },
                           ),
                         ),
-                        if (_controller.text.isNotEmpty)
-                          IconButton(
-                            icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
-                            onPressed: () {
-                              _controller.clear();
-                              setState(() => _localQuery = '');
-                            },
-                          )
-                        else
-                          const SizedBox(width: 16),
+                        const SizedBox(width: 16),
                       ],
                     ),
                   ),
@@ -2971,9 +3043,16 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                 // Close Button (X)
                 GestureDetector(
                   onTap: () {
-                    // Clear the search query when closing without submitting
-                    widget.onSearch('');
-                    Navigator.of(context).pop();
+                    if (_controller.text.isNotEmpty) {
+                      // First tap: clear text
+                      _controller.clear();
+                      setState(() => _localQuery = '');
+                      _focusNode.requestFocus();
+                    } else {
+                      // Second tap (empty): close search
+                      widget.onSearch('');
+                      Navigator.of(context).pop();
+                    }
                   },
                   child: Container(
                     width: 40,
@@ -3007,6 +3086,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                         ),
                       )
                     : ListView.builder(
+                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemCount: groupedProducts.entries.fold<int>(
                           0, (sum, e) => sum + 1 + e.value.length), // Categories + products
@@ -3064,106 +3144,145 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
     Color accent,
     bool isLast,
   ) {
+    final isByWeight = product.unitType == 'kg';
+    final hasImage = product.imageUrl?.isNotEmpty == true;
+    final isAvailable = product.inStock || product.allowBackorder;
+
     return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InkWell(
-          onTap: () {
-            // TODO: Add to cart logic
-            Navigator.of(context).pop(); // Close search and navigate back
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Product info (left side)
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: textSecondary,
-                        ),
-                      ),
-                      if (product.description.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+        Opacity(
+          opacity: isAvailable ? 1.0 : 0.55,
+          child: InkWell(
+            onTap: () {
+              // Show product sheet on TOP of search page (don't close search)
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (ctx) => ProductCustomizationSheet(
+                  product: product,
+                  businessId: widget.businessId,
+                  businessName: widget.businessName,
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 16, 8, 16),
+              color: Colors.transparent,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Product Info (Left)
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
                         Text(
-                          product.description,
+                          product.name,
+                          style: TextStyle(
+                            color: isAvailable ? textPrimary : textSecondary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            height: 1.2,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        // Description
+                        if (product.description.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: Text(
+                              product.description,
+                              style: TextStyle(
+                                color: textSecondary,
+                                fontSize: 13,
+                                height: 1.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        // Price
+                        Text(
+                          '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
                           style: TextStyle(
-                            fontSize: 13,
-                            color: textSecondary,
+                            color: isAvailable ? textPrimary : textSecondary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+
+                  // Image & Add Button (Right)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Product Image (only if exists — no placeholder)
+                      if (hasImage)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            color: isDark ? Colors.white10 : Colors.grey[100],
+                            child: Image.network(
+                              product.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
+
+                      if (hasImage) const SizedBox(height: 12),
+
+                      // Circular + button (Lieferando style)
+                      if (isAvailable)
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(
+                              color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              )
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            color: accent,
+                            size: 24,
+                          ),
+                        ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 12),
-                // Product image + add button (right side)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        color: isDark ? Colors.grey[800] : Colors.grey[200],
-                        child: (product.imageUrl != null && product.imageUrl!.isNotEmpty)
-                            ? Image.network(
-                                product.imageUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Icon(
-                                  Icons.restaurant_menu,
-                                  color: isDark ? Colors.grey[600] : Colors.grey[400],
-                                  size: 32,
-                                ),
-                              )
-                            : Icon(
-                                Icons.restaurant_menu,
-                                color: isDark ? Colors.grey[600] : Colors.grey[400],
-                                size: 32,
-                              ),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    // 🎨 BRAND COLOUR: "+" pill button (same style as main menu)
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(Icons.add, color: Theme.of(context).colorScheme.surface, size: 16),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
-        // Divider (except for last item)
-        if (!isLast)
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: isDark ? Colors.grey[800] : Colors.grey[300],
-          ),
+        // Thin subtle divider
+        Divider(
+          height: 1,
+          thickness: 0.5,
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.2),
+        ),
       ],
     );
   }

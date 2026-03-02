@@ -1559,9 +1559,32 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     return null;
   }
 
-  /// 🆕 Show dialog for closed/unavailable business
+  /// 🆕 Show unified dialog for closed/unavailable business (merges list + detail popups)
   void _showClosedBusinessDialog(
-      BuildContext context, String businessName, String? reason) {
+      BuildContext context, String businessName, String? reason, Map<String, dynamic> businessData) {
+    final preOrderEnabled = businessData['preOrderEnabled'] as bool? ?? false;
+    
+    // Calculate next opening time
+    final openingHelper = OpeningHoursHelper(businessData['openingHours']);
+    final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
+    String? nextOpenText;
+    if (nextOpen != null) {
+      final dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+      final now = DateTime.now();
+      final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
+      final tomorrow = now.add(const Duration(days: 1));
+      final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
+      
+      final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
+      if (isToday) {
+        nextOpenText = 'Bugün $timeStr\'de açılıyor';
+      } else if (isTomorrow) {
+        nextOpenText = 'Yarın $timeStr\'de açılıyor';
+      } else {
+        nextOpenText = '${dayNames[nextOpen.weekday - 1]} $timeStr\'de açılıyor';
+      }
+    }
+    
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1606,11 +1629,63 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   ],
                 ),
               ),
+            // Next opening time
+            if (nextOpenText != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.schedule, color: Colors.blue, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        nextOpenText,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
-            const Text(
-              'Şu an kapalı, ama yine de menüye göz atabilirsiniz.',
-              style: TextStyle(fontSize: 15),
+            Text(
+              preOrderEnabled
+                  ? 'Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Menüye göz atıp sipariş verebilirsiniz — işletme açıldığında hazırlanacaktır.'
+                  : 'Şu an kapalı, ama yine de menüye göz atabilirsiniz.',
+              style: const TextStyle(fontSize: 15, height: 1.4),
             ),
+            if (preOrderEnabled) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green, size: 18),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Ön Sipariş Aktif',
+                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -1621,18 +1696,17 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              // Navigate to business detail
               final businessId = _currentBusinessIdForDialog;
               if (businessId != null) {
-                context.push('/business/$businessId?mode=$_deliveryMode');
+                context.push('/business/$businessId?mode=$_deliveryMode&closedAck=true');
               }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: lokmaPink,
               foregroundColor: Colors.white,
             ),
-            child: Text(tr('marketplace.see_menu')),
-          ), // Corrected matching here
+            child: Text(preOrderEnabled ? 'Menüyü Gör & Sipariş Ver' : tr('marketplace.see_menu')),
+          ),
         ],
       ),
     );
@@ -1713,7 +1787,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         if (!isAvailable) {
           // Store business ID for dialog navigation
           _currentBusinessIdForDialog = id;
-          _showClosedBusinessDialog(context, name, unavailableReason);
+          _showClosedBusinessDialog(context, name, unavailableReason, data);
         } else {
           context.push('/business/$id?mode=$_deliveryMode');
         }

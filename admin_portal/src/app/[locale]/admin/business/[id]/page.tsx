@@ -262,7 +262,7 @@ export default function BusinessDetailsPage() {
   const [settingsSubTab, setSettingsSubTab] = useState<
     "isletme" | "menu" | "personel" | "masa" | "abonelik" | "teslimat" | "odeme"
   >("isletme");
-  const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler">("kategoriler");
+  const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
   const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler">("bilgiler");
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
@@ -693,6 +693,14 @@ export default function BusinessDetailsPage() {
           if (!planSnap.empty) {
             const planData = planSnap.docs[0].data();
             setPlanFeatures(planData.features || {});
+            // 🌟 Load sponsored product settings from plan
+            if (planData.features?.sponsoredProducts) {
+              setSponsoredSettings({
+                enabled: true,
+                feePerConversion: planData.sponsoredFeePerConversion ?? 0.40,
+                maxProductsPerBusiness: planData.sponsoredMaxProducts ?? 5,
+              });
+            }
           }
         } catch (e) {
           console.error('Error loading plan features:', e);
@@ -2849,6 +2857,15 @@ export default function BusinessDetailsPage() {
                       >
                         {t('urunler')}{inlineProducts.length})
                       </button>
+                      <button
+                        onClick={() => setMenuInternalTab("sponsored")}
+                        className={`px-4 py-2 rounded-t-lg text-sm font-medium transition ${menuInternalTab === "sponsored"
+                          ? "bg-amber-600 text-white"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          }`}
+                      >
+                        ⭐ Öne Çıkan ({sponsoredProducts.length})
+                      </button>
                     </div>
 
                     {/* ==================== KATEGORİLER ==================== */}
@@ -3159,6 +3176,166 @@ export default function BusinessDetailsPage() {
                             </div>
                           );
                         })()}
+                      </div>
+                    )}
+
+                    {/* ==================== SPONSORED PRODUCTS ==================== */}
+                    {menuInternalTab === "sponsored" && (
+                      <div className="space-y-4">
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">⭐</span>
+                            <div>
+                              <h4 className="text-white font-bold">Öne Çıkan Ürünler</h4>
+                              <p className="text-gray-400 text-xs">Müşterilere öne çıkan olarak gösterilecek ürünler</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Limit Progress Bar */}
+                        <div className="bg-gray-800/60 rounded-xl border border-amber-500/30 p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-gray-300 font-medium">
+                              Sponsored Ürün Kullanımı
+                            </span>
+                            <span className={`text-sm font-bold ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
+                              ? 'text-red-400'
+                              : 'text-amber-400'
+                              }`}>
+                              {sponsoredProducts.length} / {sponsoredSettings.maxProductsPerBusiness}
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div
+                              className={`h-2.5 rounded-full transition-all duration-500 ${sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness
+                                ? 'bg-red-500'
+                                : sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness * 0.8
+                                  ? 'bg-amber-500'
+                                  : 'bg-emerald-500'
+                                }`}
+                              style={{ width: `${Math.min((sponsoredProducts.length / Math.max(sponsoredSettings.maxProductsPerBusiness, 1)) * 100, 100)}%` }}
+                            />
+                          </div>
+                          {sponsoredSettings.feePerConversion > 0 && (
+                            <p className="text-xs text-gray-500 mt-2">
+                              💰 Dönüşüm başına ücret: {sponsoredSettings.feePerConversion}€
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Product List with Checkboxes */}
+                        {loadingProducts ? (
+                          <div className="flex justify-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+                          </div>
+                        ) : inlineProducts.length === 0 ? (
+                          <div className="bg-gray-900/50 rounded-xl p-8 text-center border border-gray-700">
+                            <span className="text-4xl">📦</span>
+                            <h4 className="text-white font-medium mt-3">Henüz ürün eklenmemiş</h4>
+                            <p className="text-gray-400 text-sm mt-1">Önce işletmeye ürün atayın, sonra öne çıkan olarak seçin.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            {inlineProducts.filter((p: any) => p.isActive !== false).map((product: any) => {
+                              const isSponsored = sponsoredProducts.includes(product.id);
+                              const limitReached = sponsoredProducts.length >= sponsoredSettings.maxProductsPerBusiness;
+                              const disabled = !isSponsored && limitReached;
+                              return (
+                                <label
+                                  key={product.id}
+                                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer ${isSponsored
+                                    ? 'bg-amber-900/20 border-amber-500/40 hover:border-amber-400/60'
+                                    : disabled
+                                      ? 'bg-gray-800/30 border-gray-700/50 opacity-50 cursor-not-allowed'
+                                      : 'bg-gray-800/40 border-gray-700 hover:border-gray-500'
+                                    }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isSponsored}
+                                    disabled={disabled}
+                                    onChange={() => {
+                                      if (isSponsored) {
+                                        setSponsoredProducts(prev => prev.filter(id => id !== product.id));
+                                      } else if (!limitReached) {
+                                        setSponsoredProducts(prev => [...prev, product.id]);
+                                      }
+                                    }}
+                                    className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-amber-500 focus:ring-amber-500 accent-amber-500"
+                                  />
+                                  {/* Product image */}
+                                  {product.imageUrl || (product.images && product.images[0]) ? (
+                                    <img
+                                      src={product.imageUrl || product.images[0]}
+                                      alt={product.name}
+                                      className="w-10 h-10 rounded-lg object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center text-gray-500 text-lg">
+                                      📷
+                                    </div>
+                                  )}
+                                  {/* Name */}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-white text-sm font-medium truncate">
+                                      {typeof product.name === 'object' ? getLocalizedText(product.name) : product.name}
+                                    </p>
+                                    <p className="text-gray-500 text-xs truncate">
+                                      {product.category || ''}
+                                    </p>
+                                  </div>
+                                  {/* Price */}
+                                  <div className="text-right">
+                                    {product.price != null && (
+                                      <span className="text-green-400 font-bold text-sm">
+                                        {typeof product.price === 'number' ? product.price.toFixed(2) : product.price}€
+                                      </span>
+                                    )}
+                                  </div>
+                                  {/* Star badge */}
+                                  {isSponsored && (
+                                    <span className="text-amber-400 text-lg">⭐</span>
+                                  )}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Save Button */}
+                        <div className="flex justify-end pt-2">
+                          <button
+                            onClick={async () => {
+                              if (!businessId) return;
+                              setSponsoredSaving(true);
+                              try {
+                                await updateDoc(doc(db, 'businesses', businessId), {
+                                  sponsoredProducts: sponsoredProducts,
+                                  hasSponsoredProducts: sponsoredProducts.length > 0,
+                                });
+                                showToast('Öne çıkan ürünler kaydedildi! ⭐', 'success');
+                              } catch (error) {
+                                console.error('Error saving sponsored products:', error);
+                                showToast('Kaydetme hatası!', 'error');
+                              }
+                              setSponsoredSaving(false);
+                            }}
+                            disabled={sponsoredSaving}
+                            className="px-6 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-medium text-sm transition-all disabled:opacity-50 flex items-center gap-2"
+                          >
+                            {sponsoredSaving ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Kaydediliyor...
+                              </>
+                            ) : (
+                              <>
+                                💾 Kaydet ({sponsoredProducts.length} ürün)
+                              </>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

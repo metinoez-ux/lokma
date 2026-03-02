@@ -201,7 +201,7 @@ class OpeningHoursHelper {
   }
 
 
-  List<DateTime> getAvailableSlots({bool isPickup = true, int daysToCheck = 3, int prepTimeMinutes = 60, DateTime? startFrom}) {
+  List<DateTime> getAvailableSlots({bool isPickup = true, int daysToCheck = 3, int prepTimeMinutes = 60, int slotIntervalMinutes = 5, DateTime? startFrom}) {
     List<DateTime> slots = [];
     DateTime now = DateTime.now();
 
@@ -214,25 +214,21 @@ class OpeningHoursHelper {
       // If startFrom is in the past relative to now + prepTime, bump it?
       // Usually startFrom will be future (e.g. Tomorrow), so we just start there.
       // But we should roughly align to 00/30 minutes if needed, though usually valid dates are passed.
-      if (cursor.minute != 0 && cursor.minute != 30) {
-         // align
-         if (cursor.minute < 30) {
-            cursor = cursor.copyWith(minute: 30, second: 0, millisecond: 0, microsecond: 0);
-         } else {
-             cursor = cursor.add(Duration(minutes: 60 - cursor.minute));
-             cursor = cursor.copyWith(second: 0, millisecond: 0, microsecond: 0);
-         }
+      if (cursor.minute % slotIntervalMinutes != 0) {
+         // Align to next slot boundary
+         int remainder = cursor.minute % slotIntervalMinutes;
+         cursor = cursor.add(Duration(minutes: slotIntervalMinutes - remainder));
+         cursor = cursor.copyWith(second: 0, millisecond: 0, microsecond: 0);
       }
     } else {
       // Default Logic: ASAP (Now + Prep)
       DateTime minStart = now.add(Duration(minutes: prepTimeMinutes)); 
       
-      // Round to next 30 min
+      // Round to next slotInterval
       int minute = minStart.minute;
-      if (minute > 0 && minute < 30) {
-        minStart = minStart.add(Duration(minutes: 30 - minute));
-      } else if (minute > 30) {
-        minStart = minStart.add(Duration(minutes: 60 - minute));
+      int remainder = minute % slotIntervalMinutes;
+      if (remainder > 0) {
+        minStart = minStart.add(Duration(minutes: slotIntervalMinutes - remainder));
       }
       minStart = minStart.copyWith(second: 0, millisecond: 0, microsecond: 0);
       cursor = minStart;
@@ -253,7 +249,7 @@ class OpeningHoursHelper {
     // Safety break to prevent infinite loops
     int safety = 0;
     
-    while(cursor.isBefore(endLimit) && safety < 1000) { // increased safety limit for 7 days
+    while(cursor.isBefore(endLimit) && safety < 5000) { // increased for 5-min intervals
       safety++;
       
       // We only add if OPEN
@@ -261,7 +257,7 @@ class OpeningHoursHelper {
         slots.add(cursor);
       }
       
-      cursor = cursor.add(const Duration(minutes: 30));
+      cursor = cursor.add(Duration(minutes: slotIntervalMinutes));
     }
     return slots;
   }
