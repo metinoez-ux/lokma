@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../services/order_service.dart';
 import '../../utils/currency_utils.dart';
+import 'order_chat_screen.dart';
 
 /// Courier Tracking Screen - Customer views courier location on map
 class CourierTrackingScreen extends StatefulWidget {
@@ -161,6 +162,26 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
         backgroundColor: _brandColor,
         foregroundColor: Colors.white,
         actions: [
+          // Chat button
+          IconButton(
+            icon: const Icon(Icons.chat_bubble_outline),
+            tooltip: 'Mesaj Gönder',
+            onPressed: () {
+              if (_order != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OrderChatScreen(
+                      orderId: widget.orderId,
+                      orderNumber: _order!.orderNumber ?? widget.orderId.substring(0, 6).toUpperCase(),
+                      recipientName: _order!.courierName != null ? 'Kurye: ${_order!.courierName}' : 'Mesajlaşma',
+                      recipientRole: 'courier',
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
           if (_order?.courierPhone != null)
             IconButton(
               icon: const Icon(Icons.phone),

@@ -13,6 +13,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'rating_screen.dart';
 import 'courier_tracking_screen.dart';
 import 'group_order_history_card.dart';
+import 'order_chat_screen.dart';
 import '../../utils/currency_utils.dart';
 
 
@@ -1186,6 +1187,37 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         backgroundColor: Colors.teal,
                         foregroundColor: Colors.white,
                         elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                // Mesaj Gönder button — for onTheWay and preparing orders
+                if (order.status == OrderStatus.onTheWay || order.status == OrderStatus.preparing || order.status == OrderStatus.accepted) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => OrderChatScreen(
+                              orderId: order.id,
+                              orderNumber: order.orderNumber ?? order.id.substring(0, 6).toUpperCase(),
+                              recipientName: order.courierName != null ? 'Kurye: ${order.courierName}' : order.butcherName,
+                              recipientRole: order.courierName != null ? 'courier' : 'business',
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                      label: const Text('Mesaj Gönder'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.blueGrey,
+                        side: BorderSide(color: Colors.blueGrey.withValues(alpha: 0.3)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(22),
                         ),

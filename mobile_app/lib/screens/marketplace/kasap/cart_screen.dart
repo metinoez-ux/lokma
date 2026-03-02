@@ -31,6 +31,7 @@ import 'package:lokma_app/screens/marketplace/kasap/product_customization_sheet.
 import 'package:lokma_app/models/product_option.dart';
 import '../../../utils/currency_utils.dart';
 import '../../../services/stripe_payment_service.dart';
+import '../../../services/coupon_service.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
@@ -73,6 +74,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
   // 📍 Delivery Address Management
   Map<String, String>? _selectedDeliveryAddress; // null = use profile default
+
+  // 🎟️ Coupon/Promo Code
+  final CouponService _couponService = CouponService();
+  CouponResult? _appliedCoupon;
+  bool _isValidatingCoupon = false;
 
   /// 🎨 BRAND COLOUR - Dynamic resolution per Design System Protocol
   Color get _accentColor {
@@ -315,7 +321,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       }
 
       final double deliveryFee = (!_isPickUp && !_isDineIn ? (_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50 : 0.0);
-      final double grandTotal = cart.totalAmount + deliveryFee;
+      final double couponDiscount = _appliedCoupon?.isValid == true ? (_appliedCoupon!.calculatedDiscount ?? 0) : 0.0;
+      final double grandTotal = cart.totalAmount + deliveryFee - couponDiscount;
 
       // Build order data
       // Use selected pickup slot for Gel Al, otherwise build from date/time
@@ -452,6 +459,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         'unavailabilityPreference': _unavailabilityPreference,
         if (_unavailabilityPreference == 'perItem' && _perItemPreferences.isNotEmpty)
           'perItemPreferences': _perItemPreferences,
+        // Coupon data
+        if (_appliedCoupon?.isValid == true) ...{
+          'couponCode': _appliedCoupon!.code,
+          'couponId': _appliedCoupon!.couponId,
+          'couponDiscount': _appliedCoupon!.calculatedDiscount,
+          'couponDiscountType': _appliedCoupon!.discountType,
+        },
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -462,6 +476,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       // UOIP: Persist orderNumber using First-6-Digit standard for cross-platform consistency
       final orderNumber = orderRef.id.substring(0, 6).toUpperCase();
       await orderRef.update({'orderNumber': orderNumber});
+
+      // Apply coupon usage tracking
+      if (_appliedCoupon?.isValid == true && _appliedCoupon!.couponId != null) {
+        await _couponService.applyCoupon(
+          couponId: _appliedCoupon!.couponId!,
+          orderId: orderRef.id,
+          userId: userId,
+        );
+      }
       
       if (_paymentMethod == 'card') {
         if (mounted) Navigator.pop(context); // Close initial loading dialog before Stripe sheet
@@ -3633,8 +3656,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
     final cart = ref.read(cartProvider);
     final deliveryFee = (!_isPickUp && !_isDineIn ? (_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50 : 0.0);
-    final grandTotal = total + deliveryFee;
+    final couponDiscount = _appliedCoupon?.isValid == true ? (_appliedCoupon!.calculatedDiscount ?? 0) : 0.0;
+    final grandTotal = total + deliveryFee - couponDiscount;
     final noteController = TextEditingController(text: _orderNote);
+    final couponController = TextEditingController();
     // Pre-fill table number from QR scan
     if (_isDineIn && _scannedTableNumber != null) {
       _tableNumberController.text = _scannedTableNumber!;
@@ -4149,6 +4174,22 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     ],
                                   ),
                                 ],
+                                if (_appliedCoupon?.isValid == true) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.local_offer, size: 14, color: Colors.green),
+                                          const SizedBox(width: 4),
+                                          Text('Kupon İndirimi', style: TextStyle(color: Colors.green[700], fontSize: 13)),
+                                        ],
+                                      ),
+                                      Text('-${couponDiscount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                                    ],
+                                  ),
+                                ],
                                 const SizedBox(height: 8),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -4160,6 +4201,130 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               ],
                             ),
                           ),
+                          const SizedBox(height: 20),
+
+                          // 🎟️ COUPON CODE
+                          _buildCheckoutSectionHeader('🎟️', 'Kupon / Promo Kodu'),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: couponController,
+                                  textCapitalization: TextCapitalization.characters,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) => FocusScope.of(ctx).unfocus(),
+                                  enabled: _appliedCoupon?.isValid != true,
+                                  decoration: InputDecoration(
+                                    hintText: 'Kupon kodunu girin',
+                                    hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+                                    filled: true,
+                                    fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.grey.shade300),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: _accentColor),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                    prefixIcon: Icon(Icons.local_offer_outlined, color: Colors.grey[500], size: 20),
+                                  ),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 14,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (_appliedCoupon?.isValid == true)
+                                // Remove coupon button
+                                SizedBox(
+                                  height: 48,
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      setSheetState(() {
+                                        _appliedCoupon = null;
+                                        couponController.clear();
+                                      });
+                                      setState(() {});
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: Colors.red,
+                                      side: const BorderSide(color: Colors.red),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    ),
+                                    child: const Icon(Icons.close, size: 20),
+                                  ),
+                                )
+                              else
+                                // Apply coupon button
+                                SizedBox(
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    onPressed: _isValidatingCoupon ? null : () async {
+                                      final code = couponController.text.trim();
+                                      if (code.isEmpty) return;
+                                      setSheetState(() => _isValidatingCoupon = true);
+                                      final result = await _couponService.validateCoupon(
+                                        code: code,
+                                        orderAmount: total,
+                                        businessId: cart.butcherId,
+                                      );
+                                      setSheetState(() {
+                                        _isValidatingCoupon = false;
+                                        _appliedCoupon = result;
+                                      });
+                                      setState(() {});
+                                      if (!result.isValid && ctx.mounted) {
+                                        ScaffoldMessenger.of(ctx).showSnackBar(
+                                          SnackBar(
+                                            content: Text(result.errorMessage ?? 'Geçersiz kupon'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: _accentColor,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    ),
+                                    child: _isValidatingCoupon
+                                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                        : const Text('Uygula'),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          if (_appliedCoupon?.isValid == true)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${_appliedCoupon!.code} uygulandı! -${_appliedCoupon!.calculatedDiscount!.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                                      style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           const SizedBox(height: 20),
 
                           // 📝 ORDER NOTE

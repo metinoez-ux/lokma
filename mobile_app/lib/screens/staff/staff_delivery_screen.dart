@@ -10,6 +10,7 @@ import '../../services/order_service.dart';
 import '../../services/shift_service.dart';
 import '../../services/location_tracking_service.dart';
 import '../../utils/currency_utils.dart';
+import '../orders/order_chat_screen.dart';
 
 /// Staff Delivery Screen - Shows pending deliveries for staff to claim
 class StaffDeliveryScreen extends StatefulWidget {
@@ -1058,6 +1059,32 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
+          // Chat with customer button
+          StreamBuilder<LokmaOrder?>(
+            stream: _orderService.getOrderStream(widget.orderId),
+            builder: (context, snap) {
+              final order = snap.data;
+              return IconButton(
+                icon: const Icon(Icons.chat_bubble_outline),
+                tooltip: 'Müşteriye Mesaj',
+                onPressed: () {
+                  if (order != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OrderChatScreen(
+                          orderId: widget.orderId,
+                          orderNumber: order.orderNumber ?? widget.orderId.substring(0, 6).toUpperCase(),
+                          recipientName: 'Müşteri: ${order.userName}',
+                          recipientRole: 'customer',
+                        ),
+                      ),
+                    );
+                  }
+                },
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.cancel_outlined),
             tooltip: 'Teslimatı İptal Et',
