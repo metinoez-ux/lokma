@@ -32,6 +32,7 @@ import 'package:lokma_app/models/product_option.dart';
 import '../../../utils/currency_utils.dart';
 import '../../../services/stripe_payment_service.dart';
 import '../../../services/coupon_service.dart';
+import '../../../services/first_order_service.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
@@ -79,6 +80,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   final CouponService _couponService = CouponService();
   CouponResult? _appliedCoupon;
   bool _isValidatingCoupon = false;
+
+  // 💰 Wallet Balance
+  double _walletBalance = 0.0;
+  bool _useWallet = false;
 
   /// 🎨 BRAND COLOUR - Dynamic resolution per Design System Protocol
   Color get _accentColor {
@@ -322,7 +327,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
       final double deliveryFee = (!_isPickUp && !_isDineIn ? (_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50 : 0.0);
       final double couponDiscount = _appliedCoupon?.isValid == true ? (_appliedCoupon!.calculatedDiscount ?? 0) : 0.0;
-      final double grandTotal = cart.totalAmount + deliveryFee - couponDiscount;
+      // First-order discount: check eligibility and apply
+      final firstOrderDiscountObj = await FirstOrderService.checkDiscount(FirebaseAuth.instance.currentUser!.uid);
+      final double firstOrderDiscount = firstOrderDiscountObj?.discountAmount ?? 0.0;
+      final double subtotalAfterDiscounts = cart.totalAmount + deliveryFee - couponDiscount - firstOrderDiscount;
+      // Apply wallet balance if enabled
+      final double walletUsed = _useWallet ? (_walletBalance >= subtotalAfterDiscounts ? subtotalAfterDiscounts : _walletBalance) : 0.0;
+      final double grandTotal = (subtotalAfterDiscounts - walletUsed).clamp(0.0, double.infinity);
 
       // Build order data
       // Use selected pickup slot for Gel Al, otherwise build from date/time
@@ -466,6 +477,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           'couponDiscount': _appliedCoupon!.calculatedDiscount,
           'couponDiscountType': _appliedCoupon!.discountType,
         },
+        // First-order discount data
+        if (firstOrderDiscount > 0) ...{
+          'firstOrderDiscount': firstOrderDiscount,
+          'firstOrderTier': firstOrderDiscountObj?.orderNumber,
+        },
+        // Wallet usage data
+        if (walletUsed > 0) ...{
+          'walletUsed': walletUsed,
+        },
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -484,6 +504,21 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           orderId: orderRef.id,
           userId: userId,
         );
+      }
+
+      // Deduct wallet balance if used
+      if (walletUsed > 0) {
+        await FirebaseFirestore.instance.collection('users').doc(userId).set({
+          'walletBalance': FieldValue.increment(-walletUsed),
+        }, SetOptions(merge: true));
+        // Record wallet transaction
+        await FirebaseFirestore.instance.collection('users').doc(userId).collection('wallet_transactions').add({
+          'type': 'order_payment',
+          'amount': -walletUsed,
+          'orderId': orderRef.id,
+          'description': 'Sipariş ödemesi',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
       }
       
       if (_paymentMethod == 'card') {
@@ -3639,7 +3674,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   }
 
   /// 🛒 CHECKOUT CONFIRMATION BOTTOM SHEET
-  void _showCheckoutSheet(double total) {
+  Future<void> _showCheckoutSheet(double total) async {
     // Auth gate: giriş yapmamışsa login'e yönlendir
     final authState = ref.read(authProvider);
     final firebaseUser = FirebaseAuth.instance.currentUser;
@@ -3657,7 +3692,19 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final cart = ref.read(cartProvider);
     final deliveryFee = (!_isPickUp && !_isDineIn ? (_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50 : 0.0);
     final couponDiscount = _appliedCoupon?.isValid == true ? (_appliedCoupon!.calculatedDiscount ?? 0) : 0.0;
-    final grandTotal = total + deliveryFee - couponDiscount;
+    // First-order discount for checkout sheet display
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    double firstOrderDiscountAmount = 0.0;
+    if (currentUserId != null) {
+      final foDiscount = await FirstOrderService.checkDiscount(currentUserId);
+      firstOrderDiscountAmount = foDiscount?.discountAmount ?? 0.0;
+      // Fetch wallet balance
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUserId).get();
+      _walletBalance = (userDoc.data()?['walletBalance'] as num?)?.toDouble() ?? 0.0;
+    }
+    final subtotalAfterDiscounts = total + deliveryFee - couponDiscount - firstOrderDiscountAmount;
+    final walletApplied = _useWallet ? (_walletBalance >= subtotalAfterDiscounts ? subtotalAfterDiscounts : _walletBalance) : 0.0;
+    final grandTotal = (subtotalAfterDiscounts - walletApplied).clamp(0.0, double.infinity);
     final noteController = TextEditingController(text: _orderNote);
     final couponController = TextEditingController();
     // Pre-fill table number from QR scan
@@ -3947,6 +3994,41 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           // 💳 PAYMENT METHOD
                           _buildCheckoutSectionHeader('💳', 'Ödeme Yöntemi'),
                           const SizedBox(height: 8),
+                          // 💰 Wallet Balance Toggle
+                          if (_walletBalance > 0) ...[
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.green.shade300),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Text('💰', style: TextStyle(fontSize: 18)),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Cüzdan Bakiyesi', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 13)),
+                                        Text('${_walletBalance.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} mevcut', style: TextStyle(color: Colors.green[700], fontSize: 12)),
+                                      ],
+                                    ),
+                                  ),
+                                  Switch.adaptive(
+                                    value: _useWallet,
+                                    activeColor: Colors.green,
+                                    onChanged: (val) {
+                                      setSheetState(() => _useWallet = val);
+                                      setState(() {});
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
@@ -4190,6 +4272,38 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     ],
                                   ),
                                 ],
+                                if (firstOrderDiscountAmount > 0) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Text('🎉', style: TextStyle(fontSize: 14)),
+                                          const SizedBox(width: 4),
+                                          Text('Hoş Geldin İndirimi', style: TextStyle(color: Colors.orange[700], fontSize: 13)),
+                                        ],
+                                      ),
+                                      Text('-${firstOrderDiscountAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.orange[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                                    ],
+                                  ),
+                                ],
+                                if (_useWallet && walletApplied > 0) ...[
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Text('💰', style: TextStyle(fontSize: 14)),
+                                          const SizedBox(width: 4),
+                                          Text('Cüzdan Bakiyesi', style: TextStyle(color: Colors.green[700], fontSize: 13)),
+                                        ],
+                                      ),
+                                      Text('-${walletApplied.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                                    ],
+                                  ),
+                                ],
                                 const SizedBox(height: 8),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -4202,6 +4316,46 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             ),
                           ),
                           const SizedBox(height: 20),
+
+                          // 🎉 FIRST ORDER DISCOUNT BANNER
+                          FutureBuilder<String?>(
+                            future: FirstOrderService.getBannerText(),
+                            builder: (context, snap) {
+                              if (!snap.hasData || snap.data == null) return const SizedBox.shrink();
+                              return Column(
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [const Color(0xFFFF6B6B).withValues(alpha: 0.1), const Color(0xFFFFD93D).withValues(alpha: 0.1)],
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: const Color(0xFFFFD93D).withValues(alpha: 0.4)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Text('🎉', style: TextStyle(fontSize: 20)),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            snap.data!,
+                                            style: TextStyle(
+                                              color: Theme.of(context).colorScheme.onSurface,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                              );
+                            },
+                          ),
 
                           // 🎟️ COUPON CODE
                           _buildCheckoutSectionHeader('🎟️', 'Kupon / Promo Kodu'),
@@ -4276,6 +4430,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                         code: code,
                                         orderAmount: total,
                                         businessId: cart.butcherId,
+                                        userId: FirebaseAuth.instance.currentUser?.uid,
                                       );
                                       setSheetState(() {
                                         _isValidatingCoupon = false;

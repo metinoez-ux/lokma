@@ -11,6 +11,7 @@ import '../../providers/theme_provider.dart';
 import '../../providers/driver_provider.dart';
 import '../../services/staff_role_service.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../../services/referral_service.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -401,14 +402,113 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         );
                       },
                     ),
-                    // TODO: Cüzdan özelliği hazır olunca geri eklenecek (TODO.md)
+                    // === WALLET BALANCE ===
+                    Builder(
+                      builder: (context) {
+                        final balance = (userData?['walletBalance'] as num?)?.toDouble() ?? 0.0;
+                        if (balance <= 0) return const SizedBox.shrink();
+                        return Column(
+                          children: [
+                            const SizedBox(height: 12),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFFFD700), Color(0xFFFFA000)],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.account_balance_wallet, color: Colors.white, size: 22),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Bakiye: ${balance.toStringAsFixed(2)}\u20ac',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
 
-              // TODO: Fırsatlar bölümü hazır olunca geri eklenecek (TODO.md)
-              // - Kuponlarım
-              // - LOKMA Club
+              // === REFERRAL INVITE CARD ===
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    ReferralService.shareReferralCode(context);
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFFB335B).withValues(alpha: 0.08),
+                          const Color(0xFFFF6B6B).withValues(alpha: 0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFFB335B).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFB335B).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Text('\ud83c\udf81', style: TextStyle(fontSize: 24)),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Arkada\u015f\u0131n\u0131 Davet Et',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Sen 5\u20ac, arkada\u015f\u0131n 5\u20ac kazan!',
+                                style: TextStyle(
+                                  color: Colors.grey[500],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.share_rounded,
+                            color: const Color(0xFFFB335B), size: 22),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 24),
 

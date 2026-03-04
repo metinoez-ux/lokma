@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/splash/splash_screen.dart';
+import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/marketplace/kasap/kasap_screen.dart';
 import '../screens/marketplace/kasap/business_detail_screen.dart';
 import '../screens/marketplace/market/market_screen.dart';
@@ -53,6 +54,12 @@ class AppRouter {
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => OnboardingScreen(
+          onComplete: () => GoRouter.of(context).go('/restoran'),
+        ),
       ),
       ShellRoute(
         builder: (context, state, child) => MainScaffold(child: child),

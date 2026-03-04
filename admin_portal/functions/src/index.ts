@@ -778,6 +778,79 @@ export const onOrderStatusChange = onDocumentUpdated(
                 console.log(`[Feedback] Scheduled feedback request for ${orderNumber} at ${feedbackSendAt.toISOString()}`);
                 // Create commission record on delivery
                 await createCommissionRecord(event.params.orderId, after);
+
+                // =====================================================================
+                // PROMOTION SYSTEM: Increment Order Count & Process Referral Reward
+                // =====================================================================
+                const deliveredUserId = after.userId || after.customerId;
+                if (deliveredUserId) {
+                    try {
+                        // 1. Increment completedOrderCount for first-order discount tier progression
+                        await db.collection("users").doc(deliveredUserId).set({
+                            completedOrderCount: admin.firestore.FieldValue.increment(1),
+                        }, { merge: true });
+                        console.log(`[Promo] Incremented completedOrderCount for user ${deliveredUserId}`);
+
+                        // 2. Process referral reward on first completed order
+                        const userDoc = await db.collection("users").doc(deliveredUserId).get();
+                        const userData = userDoc.data();
+                        const newCount = (userData?.completedOrderCount as number) || 1;
+
+                        if (newCount === 1 && userData?.referredBy && !userData?.referralRewardProcessed) {
+                            const referrerId = userData.referredBy as string;
+                            const referrerReward = 5.0; // €5 for referrer
+                            const refereeReward = 3.0;  // €3 for referee
+
+                            const rewardBatch = db.batch();
+
+                            // Credit referrer wallet
+                            const referrerRef = db.collection("users").doc(referrerId);
+                            rewardBatch.set(referrerRef, {
+                                walletBalance: admin.firestore.FieldValue.increment(referrerReward),
+                            }, { merge: true });
+
+                            // Credit referrer wallet transaction
+                            const referrerTxRef = db.collection("users").doc(referrerId).collection("wallet_transactions").doc();
+                            rewardBatch.set(referrerTxRef, {
+                                type: "referral_reward",
+                                amount: referrerReward,
+                                description: "Arkadaş davet ödülü",
+                                referredUserId: deliveredUserId,
+                                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                            });
+
+                            // Credit referee wallet
+                            const refereeRef = db.collection("users").doc(deliveredUserId);
+                            rewardBatch.set(refereeRef, {
+                                walletBalance: admin.firestore.FieldValue.increment(refereeReward),
+                                referralRewardProcessed: true,
+                            }, { merge: true });
+
+                            // Credit referee wallet transaction
+                            const refereeTxRef = db.collection("users").doc(deliveredUserId).collection("wallet_transactions").doc();
+                            rewardBatch.set(refereeTxRef, {
+                                type: "referral_welcome",
+                                amount: refereeReward,
+                                description: "Hoş geldin ödülü",
+                                referrerId: referrerId,
+                                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                            });
+
+                            // Update referral stats
+                            const referralRef = db.collection("users").doc(referrerId).collection("referrals").doc(deliveredUserId);
+                            rewardBatch.set(referralRef, {
+                                status: "completed",
+                                completedAt: admin.firestore.FieldValue.serverTimestamp(),
+                                rewardAmount: referrerReward,
+                            }, { merge: true });
+
+                            await rewardBatch.commit();
+                            console.log(`[Promo] Processed referral reward: referrer=${referrerId} (+€${referrerReward}), referee=${deliveredUserId} (+€${refereeReward})`);
+                        }
+                    } catch (promoError) {
+                        console.error(`[Promo] Error processing promotion hooks for user ${deliveredUserId}:`, promoError);
+                    }
+                }
                 break;
             case "completed":
                 title = `${trans.orderDeliveredTitle}${orderTag}`;

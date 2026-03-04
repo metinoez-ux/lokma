@@ -1,0 +1,303 @@
+import { NextRequest, NextResponse } from 'next/server';
+import net from 'net';
+
+// ESC/POS Commands
+const ESC = 0x1B;
+const GS = 0x1D;
+const LF = 0x0A;
+
+const CMD = {
+    INIT: Buffer.from([ESC, 0x40]),                    // Initialize printer
+    BOLD_ON: Buffer.from([ESC, 0x45, 0x01]),           // Bold on
+    BOLD_OFF: Buffer.from([ESC, 0x45, 0x00]),          // Bold off
+    ALIGN_CENTER: Buffer.from([ESC, 0x61, 0x01]),      // Center align
+    ALIGN_LEFT: Buffer.from([ESC, 0x61, 0x00]),        // Left align
+    ALIGN_RIGHT: Buffer.from([ESC, 0x61, 0x02]),       // Right align
+    FONT_NORMAL: Buffer.from([ESC, 0x21, 0x00]),       // Normal size
+    FONT_DOUBLE_H: Buffer.from([ESC, 0x21, 0x10]),     // Double height
+    FONT_DOUBLE_W: Buffer.from([ESC, 0x21, 0x20]),     // Double width
+    FONT_DOUBLE: Buffer.from([ESC, 0x21, 0x30]),       // Double width + height
+    FONT_LARGE: Buffer.from([GS, 0x21, 0x11]),         // 2x width + 2x height
+    LINE: Buffer.from([LF]),                            // Line feed
+    CUT: Buffer.from([GS, 0x56, 0x00]),                // Full cut
+    PARTIAL_CUT: Buffer.from([GS, 0x56, 0x01]),        // Partial cut
+    FEED_3: Buffer.from([ESC, 0x64, 0x03]),            // Feed 3 lines
+    FEED_5: Buffer.from([ESC, 0x64, 0x05]),            // Feed 5 lines
+    UNDERLINE_ON: Buffer.from([ESC, 0x2D, 0x01]),      // Underline on
+    UNDERLINE_OFF: Buffer.from([ESC, 0x2D, 0x00]),     // Underline off
+};
+
+// Helper to encode text (handle German/Turkish chars via Latin-1 + codepage)
+function encodeText(text: string): Buffer {
+    // Set codepage to PC858 (Latin-1 + Euro) for German umlauts
+    const codepageCmd = Buffer.from([ESC, 0x74, 19]); // PC858
+    const textBuf = Buffer.from(text, 'latin1');
+    return Buffer.concat([codepageCmd, textBuf]);
+}
+
+function textLine(text: string): Buffer {
+    return Buffer.concat([encodeText(text), CMD.LINE]);
+}
+
+function separator(char = '-', width = 48): Buffer {
+    return textLine(char.repeat(width));
+}
+
+// Build receipt data from order
+function buildReceipt(order: any, businessName?: string): Buffer {
+    const parts: Buffer[] = [];
+
+    // INIT
+    parts.push(CMD.INIT);
+
+    // --- HEADER ---
+    parts.push(CMD.ALIGN_CENTER);
+    parts.push(CMD.BOLD_ON);
+    parts.push(CMD.FONT_DOUBLE_H);
+    parts.push(textLine(businessName || 'LOKMA'));
+    parts.push(CMD.FONT_NORMAL);
+    parts.push(CMD.BOLD_OFF);
+
+    // Order type badge
+    const typeLabels: Record<string, string> = {
+        delivery: 'KURYE / LIEFERUNG',
+        pickup: 'GEL-AL / ABHOLUNG',
+        dine_in: 'YERINDE / VOR ORT',
+    };
+    const orderType = order.orderType || order.type || 'delivery';
+    parts.push(CMD.BOLD_ON);
+    parts.push(textLine(typeLabels[orderType] || orderType.toUpperCase()));
+    parts.push(CMD.BOLD_OFF);
+    parts.push(CMD.ALIGN_LEFT);
+    parts.push(separator('='));
+
+    // --- ORDER NUMBER (BIG) ---
+    parts.push(CMD.ALIGN_CENTER);
+    parts.push(CMD.BOLD_ON);
+    parts.push(CMD.FONT_LARGE);
+    const orderNum = order.orderNumber || order.id?.substring(0, 6) || '---';
+    parts.push(textLine(`#${orderNum}`));
+    parts.push(CMD.FONT_NORMAL);
+    parts.push(CMD.BOLD_OFF);
+    parts.push(CMD.ALIGN_LEFT);
+    parts.push(separator());
+
+    // --- ITEMS ---
+    parts.push(CMD.BOLD_ON);
+    parts.push(textLine('URUNLER / ARTIKEL'));
+    parts.push(CMD.BOLD_OFF);
+    parts.push(separator('-'));
+
+    if (order.items && Array.isArray(order.items)) {
+        for (const item of order.items) {
+            const qty = item.quantity || 1;
+            const name = item.name || item.productName || 'Unbekannt';
+            const price = item.price ? `${(item.price * qty).toFixed(2)} EUR` : '';
+            const unit = item.unit ? ` ${item.unit}` : '';
+
+            // Item line: "2x Döner Kebab          12.00 EUR"
+            const itemText = `${qty}x${unit} ${name}`;
+            const padLen = 48 - itemText.length - price.length;
+            const padding = padLen > 0 ? ' '.repeat(padLen) : ' ';
+
+            parts.push(CMD.BOLD_ON);
+            parts.push(encodeText(`${itemText}`));
+            parts.push(CMD.BOLD_OFF);
+            parts.push(textLine(`${padding}${price}`));
+
+            // Options / variants
+            if (item.options && Array.isArray(item.options)) {
+                for (const opt of item.options) {
+                    parts.push(textLine(`  + ${opt.name || opt}`));
+                }
+            }
+            // Item note
+            if (item.note) {
+                parts.push(textLine(`  * ${item.note}`));
+            }
+        }
+    }
+
+    parts.push(separator());
+
+    // --- TOTAL ---
+    if (order.total || order.grandTotal) {
+        parts.push(CMD.ALIGN_RIGHT);
+        parts.push(CMD.BOLD_ON);
+        parts.push(CMD.FONT_DOUBLE_H);
+        const total = order.grandTotal || order.total || 0;
+        parts.push(textLine(`TOPLAM: ${total.toFixed(2)} EUR`));
+        parts.push(CMD.FONT_NORMAL);
+        parts.push(CMD.BOLD_OFF);
+        parts.push(CMD.ALIGN_LEFT);
+        parts.push(separator());
+    }
+
+    // --- CUSTOMER INFO ---
+    if (order.customerName || order.customerPhone) {
+        parts.push(CMD.BOLD_ON);
+        parts.push(textLine('MUSTERI / KUNDE'));
+        parts.push(CMD.BOLD_OFF);
+        if (order.customerName) parts.push(textLine(`Ad: ${order.customerName}`));
+        if (order.customerPhone) parts.push(textLine(`Tel: ${order.customerPhone}`));
+        parts.push(separator());
+    }
+
+    // --- DELIVERY ADDRESS ---
+    if (orderType === 'delivery' && order.deliveryAddress) {
+        parts.push(CMD.BOLD_ON);
+        parts.push(textLine('ADRES / ADRESSE'));
+        parts.push(CMD.BOLD_OFF);
+        const addr = order.deliveryAddress;
+        if (typeof addr === 'string') {
+            parts.push(textLine(addr));
+        } else {
+            if (addr.street) parts.push(textLine(addr.street));
+            if (addr.city || addr.zipCode) parts.push(textLine(`${addr.zipCode || ''} ${addr.city || ''}`));
+            if (addr.floor) parts.push(textLine(`Kat/Etage: ${addr.floor}`));
+            if (addr.note) parts.push(textLine(`Not: ${addr.note}`));
+        }
+        parts.push(separator());
+    }
+
+    // --- TABLE INFO (dine-in) ---
+    if (orderType === 'dine_in' && (order.tableNumber || order.tableName)) {
+        parts.push(CMD.ALIGN_CENTER);
+        parts.push(CMD.BOLD_ON);
+        parts.push(CMD.FONT_DOUBLE);
+        parts.push(textLine(`MASA / TISCH: ${order.tableName || order.tableNumber}`));
+        parts.push(CMD.FONT_NORMAL);
+        parts.push(CMD.BOLD_OFF);
+        parts.push(CMD.ALIGN_LEFT);
+        parts.push(separator());
+    }
+
+    // --- ORDER NOTE ---
+    if (order.note || order.orderNote) {
+        parts.push(CMD.BOLD_ON);
+        parts.push(textLine('NOT / HINWEIS'));
+        parts.push(CMD.BOLD_OFF);
+        parts.push(textLine(order.note || order.orderNote));
+        parts.push(separator());
+    }
+
+    // --- PAYMENT ---
+    if (order.paymentMethod) {
+        const payLabels: Record<string, string> = {
+            cash: 'Nakit / Bar',
+            card: 'Kart / Karte',
+            online: 'Online',
+            stripe: 'Stripe',
+        };
+        parts.push(textLine(`Odeme: ${payLabels[order.paymentMethod] || order.paymentMethod}`));
+    }
+
+    // --- FOOTER ---
+    parts.push(CMD.ALIGN_CENTER);
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    parts.push(textLine(`${dateStr}  ${timeStr}`));
+    parts.push(textLine('--- LOKMA ---'));
+    parts.push(CMD.ALIGN_LEFT);
+
+    // Feed and cut
+    parts.push(CMD.FEED_5);
+    parts.push(CMD.PARTIAL_CUT);
+
+    return Buffer.concat(parts);
+}
+
+// Send data to printer via TCP
+async function sendToPrinter(ip: string, port: number, data: Buffer, timeoutMs = 5000): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const socket = new net.Socket();
+        let resolved = false;
+
+        const timer = setTimeout(() => {
+            if (!resolved) {
+                resolved = true;
+                socket.destroy();
+                reject(new Error(`Printer timeout after ${timeoutMs}ms`));
+            }
+        }, timeoutMs);
+
+        socket.connect(port, ip, () => {
+            socket.write(data, () => {
+                clearTimeout(timer);
+                resolved = true;
+                socket.end();
+                resolve();
+            });
+        });
+
+        socket.on('error', (err) => {
+            clearTimeout(timer);
+            if (!resolved) {
+                resolved = true;
+                reject(err);
+            }
+        });
+
+        socket.on('close', () => {
+            clearTimeout(timer);
+            if (!resolved) {
+                resolved = true;
+                resolve();
+            }
+        });
+    });
+}
+
+// POST handler
+export async function POST(req: NextRequest) {
+    try {
+        const body = await req.json();
+        const { printerIp, printerPort = 9100, order, businessName, testPrint } = body;
+
+        if (!printerIp) {
+            return NextResponse.json({ error: 'printerIp is required' }, { status: 400 });
+        }
+
+        let receiptData: Buffer;
+
+        if (testPrint) {
+            // Build a test receipt
+            receiptData = buildReceipt({
+                orderNumber: 'TEST',
+                orderType: 'delivery',
+                items: [
+                    { name: 'Test Urun 1', quantity: 2, price: 5.50 },
+                    { name: 'Test Urun 2', quantity: 1, price: 3.00, note: 'Ohne Zwiebeln' },
+                ],
+                total: 14.00,
+                customerName: 'Test Musteri',
+                customerPhone: '0176 12345678',
+                deliveryAddress: { street: 'Teststr. 42', zipCode: '41836', city: 'Hueckelhoven' },
+            }, businessName || 'LOKMA Test');
+        } else {
+            if (!order) {
+                return NextResponse.json({ error: 'order data is required' }, { status: 400 });
+            }
+            receiptData = buildReceipt(order, businessName);
+        }
+
+        // Send to printer
+        const copies = body.copies || 1;
+        for (let i = 0; i < copies; i++) {
+            await sendToPrinter(printerIp, printerPort, receiptData);
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: `Receipt printed successfully (${copies} copy/copies)`,
+            bytesWritten: receiptData.length
+        });
+    } catch (error: any) {
+        console.error('Print error:', error);
+        return NextResponse.json({
+            error: 'Print failed',
+            details: error.message
+        }, { status: 500 });
+    }
+}

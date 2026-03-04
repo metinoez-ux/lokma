@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/referral_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -34,6 +35,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _referralCodeController = TextEditingController();
   bool _obscurePassword = true;
   
   // Password strength (0-4)
@@ -279,6 +281,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _referralCodeController.dispose();
     _phoneController.dispose();
     _smsCodeController.dispose();
     super.dispose();
@@ -736,6 +739,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             icon: Icons.lock_outline,
             obscureText: _obscurePassword,
           ),
+          const SizedBox(height: 12),
+          // Referral code field (optional)
+          _buildTextField(
+            controller: _referralCodeController,
+            label: 'Davet Kodu (isteğe bağlı)',
+            hint: 'Örn: ABC123',
+            icon: Icons.card_giftcard_outlined,
+          ),
         ],
         
         const SizedBox(height: 24),
@@ -1068,6 +1079,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await ref.read(authProvider.notifier).signInWithGoogle();
+      // Apply referral code for new Google sign-in users
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && _authMode == 1) {
+        final referralCode = _referralCodeController.text.trim();
+        if (referralCode.isNotEmpty) {
+          await ReferralService.applyReferralCode(user.uid, referralCode);
+        }
+      }
     } catch (e) {
       debugPrint('Google sign-in error: $e');
       if (mounted) {
@@ -1124,12 +1143,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await ref.read(authProvider.notifier).registerWithEmail(email, password);
         
         final user = FirebaseAuth.instance.currentUser;
-        if (user != null && !user.emailVerified) {
-          await user.sendEmailVerification();
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(tr('auth.registration_success_email_sent')), backgroundColor: Colors.green),
-            );
+        if (user != null) {
+          // Apply referral code if provided
+          final referralCode = _referralCodeController.text.trim();
+          if (referralCode.isNotEmpty) {
+            final applied = await ReferralService.applyReferralCode(user.uid, referralCode);
+            if (mounted && applied) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('🎉 Davet kodu uygulandı!'), backgroundColor: Colors.green),
+              );
+            }
+          }
+          
+          if (!user.emailVerified) {
+            await user.sendEmailVerification();
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(tr('auth.registration_success_email_sent')), backgroundColor: Colors.green),
+              );
+            }
           }
         }
       } else {
@@ -1279,6 +1311,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     
     setState(() => _isLoading = true);
     await ref.read(authProvider.notifier).signInWithSmsCode(_verificationId!, code);
+    // Apply referral code for new SMS sign-up users
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && _authMode == 1) {
+      final referralCode = _referralCodeController.text.trim();
+      if (referralCode.isNotEmpty) {
+        await ReferralService.applyReferralCode(user.uid, referralCode);
+      }
+    }
     setState(() => _isLoading = false);
   }
 }

@@ -12,6 +12,7 @@ import 'package:lokma_app/screens/orders/rating_screen.dart';
 import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/models/product_option.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
+import 'package:lokma_app/screens/marketplace/kasap/cart_screen.dart';
 import '../../utils/currency_utils.dart';
 
 
@@ -222,6 +223,15 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
         statusText = tr('common.i_ptal_edildi');
         statusColor = Colors.red;
         break;
+      case 'payment_failed':
+      case 'failed':
+        statusText = 'Ödeme Başarısız';
+        statusColor = Colors.red;
+        break;
+      case 'refunded':
+        statusText = 'İade Edildi';
+        statusColor = Colors.orange;
+        break;
       default:
         statusText = status;
     }
@@ -351,13 +361,20 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                           ),
                           const SizedBox(height: 4),
                           // tr('common.siparisi_goruntule') link
-                          Text(
-                            tr('common.siparisi_goruntule'),
-                            style: TextStyle(
-                              color: textPrimary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
+                          GestureDetector(
+                            onTap: () {
+                              if (businessId.isNotEmpty) {
+                                context.push('/kasap/$businessId');
+                              }
+                            },
+                            child: Text(
+                              tr('common.siparisi_goruntule'),
+                              style: TextStyle(
+                                color: textPrimary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -474,7 +491,9 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                             );
                           }
 
-                          context.push('/cart');
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const CartScreen()),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isDark ? const Color(0xFF3A3A3C) : const Color(0xFF1A1A1A),

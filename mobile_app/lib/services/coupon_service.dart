@@ -5,11 +5,12 @@ class CouponResult {
   final bool isValid;
   final String? errorMessage;
   final String? code;
-  final String? discountType; // 'percentage' or 'fixed'
+  final String? discountType; // 'percentage', 'fixed', or 'free_delivery'
   final double? discountValue;
   final double? maxDiscount;
   final double? calculatedDiscount;
   final String? couponId;
+  final String? couponType; // 'promo', 'referral', 'first_order', 'business_deal'
 
   CouponResult({
     required this.isValid,
@@ -20,6 +21,7 @@ class CouponResult {
     this.maxDiscount,
     this.calculatedDiscount,
     this.couponId,
+    this.couponType,
   });
 
   factory CouponResult.error(String message) => CouponResult(
@@ -37,6 +39,7 @@ class CouponService {
     required String code,
     required double orderAmount,
     String? businessId,
+    String? userId,
   }) async {
     final normalizedCode = code.trim().toUpperCase();
 
@@ -95,6 +98,23 @@ class CouponService {
       return CouponResult.error('Bu kupon bu işletme için geçerli değil');
     }
 
+    // Check per-user limit
+    final perUserLimit = data['perUserLimit'] as int?;
+    if (perUserLimit != null && userId != null) {
+      final userUsages = await _db
+          .collection('coupons')
+          .doc(doc.id)
+          .collection('usages')
+          .where('userId', isEqualTo: userId)
+          .get();
+      if (userUsages.docs.length >= perUserLimit) {
+        return CouponResult.error('Bu kuponu zaten kullandınız');
+      }
+    }
+
+    // Read coupon type
+    final couponType = data['couponType'] as String? ?? 'promo';
+
     // Calculate discount
     final discountType = data['discountType'] as String? ?? 'percentage';
     final discountValue = (data['discountValue'] as num?)?.toDouble() ?? 0;
@@ -106,6 +126,9 @@ class CouponService {
       if (maxDiscount != null && calculatedDiscount > maxDiscount) {
         calculatedDiscount = maxDiscount;
       }
+    } else if (discountType == 'free_delivery') {
+      // Free delivery — discount equals delivery fee (handled at checkout)
+      calculatedDiscount = 0; // Will be applied at checkout as free delivery
     } else {
       // fixed
       calculatedDiscount = discountValue;
@@ -122,6 +145,7 @@ class CouponService {
       maxDiscount: maxDiscount,
       calculatedDiscount: calculatedDiscount,
       couponId: doc.id,
+      couponType: couponType,
     );
   }
 

@@ -595,10 +595,485 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                     : const Text('Bilgileri Güncelle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
               ),
+              
+              const SizedBox(height: 36),
+              
+              // ═══════════════════════════════════════════
+              // KAYITLI ADRESLERİM (Saved Addresses)
+              // ═══════════════════════════════════════════
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildSectionTitle('Kayıtlı Adreslerim', textColor),
+                  TextButton.icon(
+                    onPressed: () => _showAddAddressDialog(isDark, cardBg, textColor, hintColor, borderColor),
+                    icon: const Icon(Icons.add_circle_outline, color: Color(0xFFFB335B), size: 18),
+                    label: const Text('Yeni Ekle', style: TextStyle(color: Color(0xFFFB335B), fontWeight: FontWeight.w600, fontSize: 13)),
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFFFB335B).withValues(alpha: 0.08),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              
+              // Saved addresses list from Firestore
+              _buildSavedAddressesList(isDark, cardBg, textColor, hintColor, borderColor),
+              
               const SizedBox(height: 32),
             ],
           ),
         ),
+      ),
+    );
+  }
+  
+  // ═══════════════════ SAVED ADDRESSES SECTION ═══════════════════
+  
+  IconData _getLabelIcon(String? label) {
+    if (label == null || label.isEmpty) return Icons.location_on;
+    final lower = label.toLowerCase();
+    if (lower.contains('ev') || lower.contains('home')) return Icons.home_outlined;
+    if (lower.contains('iş') || lower.contains('is') || lower.contains('work') || lower.contains('office') || lower.contains('büro')) return Icons.work_outline;
+    return Icons.location_on_outlined;
+  }
+  
+  Color _getLabelColor(String? label) {
+    if (label == null || label.isEmpty) return const Color(0xFFFB335B);
+    final lower = label.toLowerCase();
+    if (lower.contains('ev') || lower.contains('home')) return const Color(0xFF4CAF50);
+    if (lower.contains('iş') || lower.contains('is') || lower.contains('work') || lower.contains('office')) return const Color(0xFF2196F3);
+    return const Color(0xFFFB335B);
+  }
+  
+  Widget _buildSavedAddressesList(bool isDark, Color cardBg, Color textColor, Color hintColor, Color borderColor) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox.shrink();
+    
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('savedAddresses')
+          .orderBy('createdAt', descending: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: Padding(
+            padding: EdgeInsets.all(24),
+            child: CircularProgressIndicator(color: Color(0xFFFB335B), strokeWidth: 2),
+          ));
+        }
+        
+        final docs = snapshot.data?.docs ?? [];
+        
+        if (docs.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1F2937) : Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.location_off_outlined, size: 40, color: Colors.grey[400]),
+                const SizedBox(height: 12),
+                Text(
+                  'Henüz kayıtlı adresiniz yok',
+                  style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Sık kullandığınız adresleri kaydedin,\nsipariş verirken hızlıca seçin',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                ),
+              ],
+            ),
+          );
+        }
+        
+        return Column(
+          children: docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final label = data['label']?.toString() ?? '';
+            final street = data['street']?.toString() ?? '';
+            final houseNumber = data['houseNumber']?.toString() ?? '';
+            final postalCode = data['postalCode']?.toString() ?? '';
+            final city = data['city']?.toString() ?? '';
+            
+            final streetFull = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
+            final fullAddress = [streetFull, '$postalCode $city'].where((s) => s.trim().isNotEmpty).join(', ');
+            
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isDark ? Colors.grey.shade700 : Colors.grey.shade200),
+                boxShadow: [
+                  if (!isDark) BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Label icon
+                  Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(
+                      color: _getLabelColor(label).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(_getLabelIcon(label), color: _getLabelColor(label), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  // Address details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (label.isNotEmpty)
+                          Text(
+                            label,
+                            style: TextStyle(
+                              color: _getLabelColor(label),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        Text(
+                          fullAddress,
+                          style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w500),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Edit button
+                  IconButton(
+                    icon: Icon(Icons.edit_outlined, color: Colors.grey[500], size: 18),
+                    onPressed: () => _showEditAddressDialog(doc.id, data, isDark, cardBg, textColor, hintColor, borderColor),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                  // Delete button
+                  IconButton(
+                    icon: Icon(Icons.delete_outline, color: Colors.red[400], size: 18),
+                    onPressed: () => _confirmDeleteAddress(doc.id, label.isNotEmpty ? label : fullAddress),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+  
+  void _confirmDeleteAddress(String docId, String label) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Adresi Sil'),
+        content: Text('"$label" adresini silmek istediğinize emin misiniz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('İptal', style: TextStyle(color: Colors.grey[600])),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.uid)
+                    .collection('savedAddresses')
+                    .doc(docId)
+                    .delete();
+              }
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Sil', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  void _showAddAddressDialog(bool isDark, Color cardBg, Color textColor, Color hintColor, Color borderColor) {
+    _showAddressFormDialog(
+      isDark: isDark,
+      cardBg: cardBg,
+      textColor: textColor,
+      hintColor: hintColor,
+      borderColor: borderColor,
+      title: 'Yeni Adres Ekle',
+      onSave: (addressData) async {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('savedAddresses')
+              .add({
+            ...addressData,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+      },
+    );
+  }
+  
+  void _showEditAddressDialog(String docId, Map<String, dynamic> existing, bool isDark, Color cardBg, Color textColor, Color hintColor, Color borderColor) {
+    _showAddressFormDialog(
+      isDark: isDark,
+      cardBg: cardBg,
+      textColor: textColor,
+      hintColor: hintColor,
+      borderColor: borderColor,
+      title: 'Adresi Düzenle',
+      initialData: existing,
+      onSave: (addressData) async {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('savedAddresses')
+              .doc(docId)
+              .update(addressData);
+        }
+      },
+    );
+  }
+  
+  void _showAddressFormDialog({
+    required bool isDark,
+    required Color cardBg,
+    required Color textColor,
+    required Color hintColor,
+    required Color borderColor,
+    required String title,
+    Map<String, dynamic>? initialData,
+    required Future<void> Function(Map<String, dynamic>) onSave,
+  }) {
+    final labelCtrl = TextEditingController(text: initialData?['label']?.toString() ?? '');
+    final streetCtrl = TextEditingController(text: initialData?['street']?.toString() ?? '');
+    final houseNumCtrl = TextEditingController(text: initialData?['houseNumber']?.toString() ?? '');
+    final postalCtrl = TextEditingController(text: initialData?['postalCode']?.toString() ?? '');
+    final cityCtrl = TextEditingController(text: initialData?['city']?.toString() ?? '');
+    String selectedLabel = initialData?['label']?.toString() ?? '';
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setFormState) {
+            final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+            return Container(
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottomInset),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 40, height: 4,
+                        decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                    const SizedBox(height: 20),
+                    
+                    // Quick label chips
+                    Text('Adres Etiketi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: hintColor)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildLabelChip('Ev', Icons.home_outlined, const Color(0xFF4CAF50), selectedLabel, (val) {
+                          setFormState(() => selectedLabel = val);
+                          labelCtrl.text = val;
+                        }),
+                        const SizedBox(width: 8),
+                        _buildLabelChip('İş', Icons.work_outline, const Color(0xFF2196F3), selectedLabel, (val) {
+                          setFormState(() => selectedLabel = val);
+                          labelCtrl.text = val;
+                        }),
+                        const SizedBox(width: 8),
+                        _buildLabelChip('Diğer', Icons.location_on_outlined, const Color(0xFFFB335B), selectedLabel, (val) {
+                          setFormState(() => selectedLabel = val);
+                          labelCtrl.text = val;
+                        }),
+                        const SizedBox(width: 8),
+                        // Custom label
+                        Expanded(
+                          child: SizedBox(
+                            height: 36,
+                            child: TextField(
+                              controller: labelCtrl,
+                              style: TextStyle(color: textColor, fontSize: 12),
+                              decoration: InputDecoration(
+                                hintText: 'Özel ad...',
+                                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 12),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: borderColor)),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: borderColor)),
+                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFFB335B))),
+                                filled: true,
+                                fillColor: cardBg,
+                                isDense: true,
+                              ),
+                              onChanged: (val) => setFormState(() => selectedLabel = val),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Street + House Number
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: _buildFormField(streetCtrl, 'Sokak / Cadde *', Icons.location_on_outlined, isDark, cardBg, textColor, hintColor, borderColor),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 1,
+                          child: _buildFormField(houseNumCtrl, 'Nr.', null, isDark, cardBg, textColor, hintColor, borderColor),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // PLZ + City
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: _buildFormField(postalCtrl, 'PLZ *', Icons.local_post_office_outlined, isDark, cardBg, textColor, hintColor, borderColor, keyboardType: TextInputType.number),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 3,
+                          child: _buildFormField(cityCtrl, 'Şehir *', Icons.location_city_outlined, isDark, cardBg, textColor, hintColor, borderColor),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Save button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (streetCtrl.text.trim().isEmpty || cityCtrl.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Sokak ve şehir zorunlu'), backgroundColor: Colors.red),
+                            );
+                            return;
+                          }
+                          await onSave({
+                            'label': labelCtrl.text.trim(),
+                            'street': streetCtrl.text.trim(),
+                            'houseNumber': houseNumCtrl.text.trim(),
+                            'postalCode': postalCtrl.text.trim(),
+                            'city': cityCtrl.text.trim(),
+                          });
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFB335B),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: Text(
+                          initialData != null ? 'Güncelle' : 'Kaydet',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+  
+  Widget _buildLabelChip(String label, IconData icon, Color color, String selected, Function(String) onTap) {
+    final isSelected = selected.toLowerCase() == label.toLowerCase();
+    return GestureDetector(
+      onTap: () => onTap(label),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.shade400,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: isSelected ? color : Colors.grey[500]),
+            const SizedBox(width: 4),
+            Text(label, style: TextStyle(fontSize: 11, color: isSelected ? color : Colors.grey[600], fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildFormField(TextEditingController controller, String label, IconData? icon, bool isDark, Color cardBg, Color textColor, Color hintColor, Color borderColor, {TextInputType keyboardType = TextInputType.text}) {
+    return TextField(
+      controller: controller,
+      style: TextStyle(color: textColor, fontSize: 14),
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: icon != null ? Icon(icon, color: hintColor, size: 18) : null,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: borderColor)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFFB335B))),
+        filled: true,
+        fillColor: cardBg,
+        labelStyle: TextStyle(color: hintColor, fontSize: 13),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        isDense: true,
       ),
     );
   }

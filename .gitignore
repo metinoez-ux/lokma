@@ -79,3 +79,6 @@ ehthumbs.db
 *.backup
 *_BACKUP_*
 backups/*.zip
+admin_portal/serviceAccount.json
+admin_portal/temp_secret.txt
+admin_portal/.env.production

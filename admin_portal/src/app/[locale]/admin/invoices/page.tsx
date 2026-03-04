@@ -6,7 +6,7 @@ import { collection, query, orderBy, getDocs, where, Timestamp, limit, addDoc, s
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
-import { Invoice } from '@/types';
+import { Invoice, LOKMA_COMPANY_INFO } from '@/types';
 import { getNextInvoiceNumber, stornoInvoice, logAuditEntry, VAT_RATES } from '@/lib/erp-utils';
 import InvoicePreviewModal from '@/components/invoices/InvoicePreviewModal';
 import { useTranslations } from 'next-intl';
@@ -77,6 +77,66 @@ export default function InvoicesPage() {
 
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterMonth, setFilterMonth] = useState<string>('');
+
+    // Enhanced period filter
+    type PeriodPreset = 'current_quarter' | 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'this_year' | 'last_year' | 'q1' | 'q2' | 'q3' | 'q4' | 'custom_range' | 'custom_day' | 'all';
+    const [periodPreset, setPeriodPreset] = useState<PeriodPreset>('current_quarter');
+    const [dateFrom, setDateFrom] = useState<string>('');
+    const [dateTo, setDateTo] = useState<string>('');
+    const [singleDay, setSingleDay] = useState<string>('');
+
+    // Helper: Get date range for a preset
+    const getPresetDateRange = (preset: PeriodPreset): { from: Date; to: Date } | null => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth(); // 0-indexed
+
+        switch (preset) {
+            case 'this_month':
+                return { from: new Date(year, month, 1), to: new Date(year, month + 1, 0, 23, 59, 59) };
+            case 'last_month':
+                return { from: new Date(year, month - 1, 1), to: new Date(year, month, 0, 23, 59, 59) };
+            case 'current_quarter': {
+                const qStart = Math.floor(month / 3) * 3;
+                return { from: new Date(year, qStart, 1), to: new Date(year, qStart + 3, 0, 23, 59, 59) };
+            }
+            case 'q1':
+                return { from: new Date(year, 0, 1), to: new Date(year, 3, 0, 23, 59, 59) };
+            case 'q2':
+                return { from: new Date(year, 3, 1), to: new Date(year, 6, 0, 23, 59, 59) };
+            case 'q3':
+                return { from: new Date(year, 6, 1), to: new Date(year, 9, 0, 23, 59, 59) };
+            case 'q4':
+                return { from: new Date(year, 9, 1), to: new Date(year, 12, 0, 23, 59, 59) };
+            case 'last_3_months':
+                return { from: new Date(year, month - 2, 1), to: new Date(year, month + 1, 0, 23, 59, 59) };
+            case 'last_6_months':
+                return { from: new Date(year, month - 5, 1), to: new Date(year, month + 1, 0, 23, 59, 59) };
+            case 'this_year':
+                return { from: new Date(year, 0, 1), to: new Date(year, 11, 31, 23, 59, 59) };
+            case 'last_year':
+                return { from: new Date(year - 1, 0, 1), to: new Date(year - 1, 11, 31, 23, 59, 59) };
+            case 'custom_range':
+                if (dateFrom && dateTo) {
+                    return { from: new Date(dateFrom), to: new Date(dateTo + 'T23:59:59') };
+                }
+                return null;
+            case 'custom_day':
+                if (singleDay) {
+                    return { from: new Date(singleDay), to: new Date(singleDay + 'T23:59:59') };
+                }
+                return null;
+            case 'all':
+            default:
+                return null;
+        }
+    };
+
+    // Get current quarter label
+    const getCurrentQuarterLabel = () => {
+        const q = Math.floor(new Date().getMonth() / 3) + 1;
+        return `Q${q} ${new Date().getFullYear()}`;
+    };
     const [stats, setStats] = useState({
         total: 0,
         pending: 0,
@@ -254,7 +314,14 @@ export default function InvoicesPage() {
     // Filtrelenmiş faturalar
     const filteredInvoices = invoices.filter(invoice => {
         if (filterStatus !== 'all' && invoice.status !== filterStatus) return false;
+        // Legacy month filter (if still set)
         if (filterMonth && invoice.period !== filterMonth) return false;
+        // Enhanced period filter
+        const range = getPresetDateRange(periodPreset);
+        if (range) {
+            const invoiceDate = invoice.issueDate instanceof Date ? invoice.issueDate : new Date(invoice.issueDate);
+            if (invoiceDate < range.from || invoiceDate > range.to) return false;
+        }
         return true;
     });
 
@@ -287,11 +354,11 @@ export default function InvoicesPage() {
                                         type: 'subscription' as const,
                                         status: 'issued' as const,
                                         seller: {
-                                            name: 'LOKMA GmbH',
-                                            address: 'Schulte-Braucks-Str. 1',
-                                            city: t('huckelhoven'),
-                                            postalCode: '41836',
-                                            country: 'Deutschland'
+                                            name: LOKMA_COMPANY_INFO.name,
+                                            address: LOKMA_COMPANY_INFO.address,
+                                            city: LOKMA_COMPANY_INFO.city,
+                                            postalCode: LOKMA_COMPANY_INFO.postalCode,
+                                            country: LOKMA_COMPANY_INFO.country
                                         },
                                         buyer: {
                                             name: inv.butcherName,
@@ -398,9 +465,10 @@ export default function InvoicesPage() {
                     </div>
                 </div>
 
-                {/* Filters */}
-                <div className="bg-gray-800 rounded-xl p-4 mb-6">
-                    <div className="flex flex-wrap gap-4 items-center">
+                {/* Enhanced Filters */}
+                <div className="bg-gray-800 rounded-xl p-4 mb-6 space-y-4">
+                    {/* Row 1: Status + Period Presets */}
+                    <div className="flex flex-wrap gap-3 items-end">
                         <div>
                             <label className="block text-gray-400 text-xs mb-1">{t('durum')}</label>
                             <select
@@ -416,23 +484,109 @@ export default function InvoicesPage() {
                                 <option value="overdue">{t('gecikmis')}</option>
                             </select>
                         </div>
-                        <div>
-                            <label className="block text-gray-400 text-xs mb-1">{t('donem')}</label>
-                            <input
-                                type="month"
-                                value={filterMonth}
-                                onChange={(e) => setFilterMonth(e.target.value)}
-                                className="px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600"
-                                placeholder="YYYY-MM"
-                            />
-                        </div>
+                        <div className="flex-1" />
                         <button
-                            onClick={() => { setFilterStatus('all'); setFilterMonth(''); }}
-                            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 mt-5"
+                            onClick={() => { setFilterStatus('all'); setPeriodPreset('current_quarter'); setFilterMonth(''); setDateFrom(''); setDateTo(''); setSingleDay(''); }}
+                            className="px-4 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-500"
                         >
-                            Filtreleri Temizle
+                            ↺ Zurücksetzen
                         </button>
                     </div>
+
+                    {/* Row 2: Period Preset Chips */}
+                    <div>
+                        <label className="block text-gray-400 text-xs mb-2">Zeitraum</label>
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { key: 'current_quarter' as PeriodPreset, label: `Aktuelles Quartal (${getCurrentQuarterLabel()})` },
+                                { key: 'this_month' as PeriodPreset, label: 'Dieser Monat' },
+                                { key: 'last_month' as PeriodPreset, label: 'Letzter Monat' },
+                                { key: 'last_3_months' as PeriodPreset, label: 'Letzte 3 Monate' },
+                                { key: 'last_6_months' as PeriodPreset, label: 'Letzte 6 Monate' },
+                                { key: 'this_year' as PeriodPreset, label: 'Dieses Jahr' },
+                                { key: 'last_year' as PeriodPreset, label: 'Letztes Jahr' },
+                                { key: 'all' as PeriodPreset, label: 'Alle' },
+                            ].map(({ key, label }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => { setPeriodPreset(key); setFilterMonth(''); setDateFrom(''); setDateTo(''); setSingleDay(''); }}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${periodPreset === key
+                                            ? 'bg-red-600 text-white shadow-lg shadow-red-600/30'
+                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        }`}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Row 3: Quartal Chips */}
+                    <div>
+                        <label className="block text-gray-400 text-xs mb-2">Quartal {new Date().getFullYear()}</label>
+                        <div className="flex gap-2">
+                            {(['q1', 'q2', 'q3', 'q4'] as PeriodPreset[]).map((q) => (
+                                <button
+                                    key={q}
+                                    onClick={() => { setPeriodPreset(q); setFilterMonth(''); setDateFrom(''); setDateTo(''); setSingleDay(''); }}
+                                    className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${periodPreset === q
+                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        }`}
+                                >
+                                    {q.toUpperCase()} ({q === 'q1' ? 'Jan–Mär' : q === 'q2' ? 'Apr–Jun' : q === 'q3' ? 'Jul–Sep' : 'Okt–Dez'})
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Row 4: Custom Date Range + Single Day */}
+                    <div className="flex flex-wrap gap-4 items-end">
+                        <div>
+                            <label className="block text-gray-400 text-xs mb-1">Von</label>
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => { setDateFrom(e.target.value); if (dateTo) setPeriodPreset('custom_range'); setSingleDay(''); }}
+                                className="px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-gray-400 text-xs mb-1">Bis</label>
+                            <input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => { setDateTo(e.target.value); if (dateFrom) setPeriodPreset('custom_range'); setSingleDay(''); }}
+                                className="px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm"
+                            />
+                        </div>
+                        <div className="text-gray-500 text-sm pb-2">oder</div>
+                        <div>
+                            <label className="block text-gray-400 text-xs mb-1">Einzeltag</label>
+                            <input
+                                type="date"
+                                value={singleDay}
+                                onChange={(e) => { setSingleDay(e.target.value); setPeriodPreset('custom_day'); setDateFrom(''); setDateTo(''); }}
+                                className="px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Active filter info */}
+                    {periodPreset !== 'all' && (() => {
+                        const range = getPresetDateRange(periodPreset);
+                        if (!range) return null;
+                        return (
+                            <div className="text-xs text-gray-500 flex items-center gap-2">
+                                <span>📅</span>
+                                <span>
+                                    {range.from.toLocaleDateString('de-DE')} – {range.to.toLocaleDateString('de-DE')}
+                                </span>
+                                <span className="text-gray-600">|</span>
+                                <span>{filteredInvoices.length} Rechnung(en)</span>
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 {/* Invoice Table */}
@@ -485,7 +639,7 @@ export default function InvoicesPage() {
                                         </td>
                                         <td className="px-4 py-3 text-center">
                                             <div className="flex justify-center gap-2">
-                                                {invoice.pdfUrl && (
+                                                {invoice.pdfUrl ? (
                                                     <a
                                                         href={invoice.pdfUrl}
                                                         target="_blank"
@@ -494,6 +648,79 @@ export default function InvoicesPage() {
                                                     >
                                                         📄 PDF
                                                     </a>
+                                                ) : (
+                                                    <button
+                                                        onClick={async () => {
+                                                            try {
+                                                                const { generateInvoicePDF } = await import('@/services/invoicePDFService');
+                                                                const merchantInvoice = {
+                                                                    id: invoice.id,
+                                                                    invoiceNumber: invoice.invoiceNumber,
+                                                                    type: 'subscription' as const,
+                                                                    status: 'issued' as const,
+                                                                    seller: {
+                                                                        name: LOKMA_COMPANY_INFO.name,
+                                                                        address: LOKMA_COMPANY_INFO.address,
+                                                                        city: LOKMA_COMPANY_INFO.city,
+                                                                        postalCode: LOKMA_COMPANY_INFO.postalCode,
+                                                                        country: LOKMA_COMPANY_INFO.country,
+                                                                        vatId: LOKMA_COMPANY_INFO.vatId,
+                                                                        email: LOKMA_COMPANY_INFO.email,
+                                                                        taxId: LOKMA_COMPANY_INFO.taxId,
+                                                                        iban: LOKMA_COMPANY_INFO.iban,
+                                                                        bic: LOKMA_COMPANY_INFO.bic,
+                                                                    },
+                                                                    buyer: {
+                                                                        name: invoice.butcherName,
+                                                                        address: invoice.butcherAddress || '',
+                                                                        city: '',
+                                                                        postalCode: '',
+                                                                        country: 'Deutschland',
+                                                                    },
+                                                                    lineItems: [{
+                                                                        description: invoice.description || 'LOKMA Abonnement',
+                                                                        quantity: 1,
+                                                                        unit: 'Monat',
+                                                                        unitPrice: invoice.subtotal,
+                                                                        taxRate: (invoice.taxRate || 19) as 0 | 7 | 19,
+                                                                        netAmount: invoice.subtotal,
+                                                                        vatAmount: invoice.taxAmount,
+                                                                        grossAmount: invoice.grandTotal,
+                                                                    }],
+                                                                    netTotal: invoice.subtotal,
+                                                                    vatBreakdown: [{
+                                                                        rate: (invoice.taxRate || 19) as 0 | 7 | 19,
+                                                                        netAmount: invoice.subtotal,
+                                                                        vatAmount: invoice.taxAmount,
+                                                                    }],
+                                                                    vatTotal: invoice.taxAmount,
+                                                                    grossTotal: invoice.grandTotal,
+                                                                    currency: 'EUR',
+                                                                    paymentStatus: (invoice.status === 'paid' ? 'paid' : 'pending') as 'pending' | 'paid',
+                                                                    paymentDueDate: new Date(invoice.dueDate),
+                                                                    businessId: invoice.butcherId || '',
+                                                                    createdAt: new Date(invoice.createdAt),
+                                                                    updatedAt: new Date(invoice.updatedAt),
+                                                                    issuedAt: new Date(invoice.issueDate),
+                                                                };
+                                                                const pdfBlob = await generateInvoicePDF(merchantInvoice as any);
+                                                                const url = URL.createObjectURL(pdfBlob);
+                                                                const a = document.createElement('a');
+                                                                a.href = url;
+                                                                a.download = `${invoice.invoiceNumber}.pdf`;
+                                                                document.body.appendChild(a);
+                                                                a.click();
+                                                                document.body.removeChild(a);
+                                                                URL.revokeObjectURL(url);
+                                                            } catch (err) {
+                                                                console.error('PDF error:', err);
+                                                                alert('PDF oluşturma hatası');
+                                                            }
+                                                        }}
+                                                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-500"
+                                                    >
+                                                        📄 PDF
+                                                    </button>
                                                 )}
                                                 <Link
                                                     href={`/admin/invoices/${invoice.id}`}
@@ -534,13 +761,13 @@ export default function InvoicesPage() {
                                                                 type: 'subscription' as const,
                                                                 status: 'issued' as const,
                                                                 seller: {
-                                                                    name: 'LOKMA GmbH',
-                                                                    address: 'Schulte-Braucks-Str. 1',
-                                                                    city: t('huckelhoven'),
-                                                                    postalCode: '41836',
-                                                                    country: 'Deutschland',
-                                                                    vatId: 'DEMO-UST-DE123456',
-                                                                    email: 'info@lokma.shop'
+                                                                    name: LOKMA_COMPANY_INFO.name,
+                                                                    address: LOKMA_COMPANY_INFO.address,
+                                                                    city: LOKMA_COMPANY_INFO.city,
+                                                                    postalCode: LOKMA_COMPANY_INFO.postalCode,
+                                                                    country: LOKMA_COMPANY_INFO.country,
+                                                                    vatId: LOKMA_COMPANY_INFO.vatId,
+                                                                    email: LOKMA_COMPANY_INFO.email
                                                                 },
                                                                 buyer: {
                                                                     name: invoice.butcherName,

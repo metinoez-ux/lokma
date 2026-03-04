@@ -7,6 +7,8 @@ import 'package:lokma_app/providers/user_location_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 
 // Constants
@@ -354,6 +356,9 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
 
             const SizedBox(height: 16),
 
+            // ═══════════ KAYITLI ADRESLER (Saved Addresses) ═══════════
+            _buildSavedAddressesSection(isDark),
+
             // Recent Searches Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -459,6 +464,106 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
           ],
         ),
       ),
+    );
+  }
+
+  // ═══════════ SAVED ADDRESSES FROM FIRESTORE ═══════════
+  Widget _buildSavedAddressesSection(bool isDark) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox.shrink();
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('savedAddresses')
+          .orderBy('createdAt', descending: false)
+          .snapshots(),
+      builder: (context, snapshot) {
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Text(
+                'Kayıtlı Adresler',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            ...docs.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              final label = data['label']?.toString() ?? '';
+              final street = data['street']?.toString() ?? '';
+              final houseNumber = data['houseNumber']?.toString() ?? '';
+              final postalCode = data['postalCode']?.toString() ?? '';
+              final city = data['city']?.toString() ?? '';
+
+              final streetFull = houseNumber.isNotEmpty ? '$street $houseNumber' : street;
+              final fullAddress = [streetFull, '$postalCode $city'].where((s) => s.trim().isNotEmpty).join(', ');
+
+              IconData labelIcon;
+              Color labelColor;
+              final lower = label.toLowerCase();
+              if (lower.contains('ev') || lower.contains('home')) {
+                labelIcon = Icons.home_outlined;
+                labelColor = const Color(0xFF4CAF50);
+              } else if (lower.contains('iş') || lower.contains('is') || lower.contains('work')) {
+                labelIcon = Icons.work_outline;
+                labelColor = const Color(0xFF2196F3);
+              } else {
+                labelIcon = Icons.location_on_outlined;
+                labelColor = const Color(0xFFFB335B);
+              }
+
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+                leading: Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(
+                    color: labelColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(labelIcon, color: labelColor, size: 20),
+                ),
+                title: Text(
+                  label.isNotEmpty ? label : streetFull,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text(
+                  fullAddress,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () {
+                  // Use saved address - create a UserLocation from it
+                  final loc = UserLocation(
+                    latitude: 0, // Saved addresses may not have coordinates
+                    longitude: 0,
+                    address: fullAddress,
+                    street: streetFull,
+                    city: city,
+                    hasPermission: true,
+                  );
+                  _onAddressSelected(loc);
+                },
+              );
+            }),
+            const Divider(indent: 20, endIndent: 20),
+          ],
+        );
+      },
     );
   }
 }

@@ -242,15 +242,30 @@ export async function generateInvoicePDF(invoice: MerchantInvoice): Promise<Blob
     if (invoice.paymentStatus === 'paid') {
         doc.setTextColor(0, 128, 0);
         doc.text('✓ BEZAHLT', margin, y);
+        if (invoice.paidAt) {
+            y += 5;
+            doc.text(`Bezahlt am: ${formatDate(invoice.paidAt)}`, margin, y);
+        }
         doc.setTextColor(0, 0, 0);
     } else {
         doc.text('Bitte überweisen Sie den Betrag innerhalb von 14 Tagen auf folgendes Konto:', margin, y);
         y += 6;
-        doc.text('IBAN: DE89 3704 0044 0532 0130 00', margin, y);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`IBAN: ${LOKMA_COMPANY_INFO.iban || 'DE89 3704 0044 0532 0130 00'}`, margin, y);
         y += 4;
-        doc.text('BIC: COBADEFFXXX', margin, y);
+        doc.text(`BIC: ${LOKMA_COMPANY_INFO.bic || 'COBADEFFXXX'}`, margin, y);
+        doc.setFont('helvetica', 'normal');
+        y += 4;
+        doc.text(`Kontoinhaber: ${LOKMA_COMPANY_INFO.name}`, margin, y);
         y += 4;
         doc.text(`Verwendungszweck: ${invoice.invoiceNumber}`, margin, y);
+
+        // Stripe SEPA info
+        if (invoice.paymentMethod === 'sepa' || invoice.paymentMethod === 'stripe') {
+            y += 8;
+            doc.setFontSize(8);
+            doc.text('Der Betrag wird automatisch per SEPA-Lastschrift eingezogen.', margin, y);
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────

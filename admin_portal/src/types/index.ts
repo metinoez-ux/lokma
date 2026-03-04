@@ -287,6 +287,8 @@ export interface InvoiceParty {
     vatId?: string;             // USt-IdNr
     email?: string;
     phone?: string;
+    iban?: string;              // Bankverbindung
+    bic?: string;               // BIC/SWIFT
 }
 
 export interface InvoiceLineItem {
@@ -354,7 +356,88 @@ export interface MerchantInvoice {
     cancellationReason?: string;
 }
 
-// LOKMA Platform bilgileri (fatura kesimi için)
+// =============================================================================
+// FIRMENEINSTELLUNGEN (Company Settings)
+// =============================================================================
+
+/** German legal forms (Rechtsformen) */
+export type GermanLegalForm =
+    | 'einzelunternehmen'      // Einzelunternehmen (Sole Proprietorship)
+    | 'freiberufler'           // Freiberufler (Freelancer)
+    | 'gbr'                    // GbR (Gesellschaft bürgerlichen Rechts)
+    | 'ohg'                    // OHG (Offene Handelsgesellschaft)
+    | 'kg'                     // KG (Kommanditgesellschaft)
+    | 'gmbh'                   // GmbH (Gesellschaft mit beschränkter Haftung)
+    | 'ug'                     // UG (haftungsbeschränkt) - Mini-GmbH
+    | 'ag'                     // AG (Aktiengesellschaft)
+    | 'kgaa'                   // KGaA (Kommanditgesellschaft auf Aktien)
+    | 'eg'                     // eG (eingetragene Genossenschaft)
+    | 'partg'                  // PartG (Partnerschaftsgesellschaft)
+    | 'partg_mbb'              // PartG mbB
+    | 'ev'                     // e.V. (eingetragener Verein)
+    | 'stiftung'               // Stiftung (Foundation)
+    | 'se'                     // SE (Societas Europaea)
+    | 'gmbh_co_kg';            // GmbH & Co. KG
+
+export const GERMAN_LEGAL_FORM_LABELS: Record<GermanLegalForm, string> = {
+    einzelunternehmen: 'Einzelunternehmen',
+    freiberufler: 'Freiberufler',
+    gbr: 'GbR (Gesellschaft bürgerlichen Rechts)',
+    ohg: 'OHG (Offene Handelsgesellschaft)',
+    kg: 'KG (Kommanditgesellschaft)',
+    gmbh: 'GmbH (Gesellschaft mit beschränkter Haftung)',
+    ug: 'UG (haftungsbeschränkt)',
+    ag: 'AG (Aktiengesellschaft)',
+    kgaa: 'KGaA (Kommanditgesellschaft auf Aktien)',
+    eg: 'eG (eingetragene Genossenschaft)',
+    partg: 'PartG (Partnerschaftsgesellschaft)',
+    partg_mbb: 'PartG mbB',
+    ev: 'e.V. (eingetragener Verein)',
+    stiftung: 'Stiftung',
+    se: 'SE (Societas Europaea)',
+    gmbh_co_kg: 'GmbH & Co. KG',
+};
+
+export interface CompanySettings {
+    // Firma Bilgileri
+    companyName: string;
+    legalForm: GermanLegalForm;
+    address: string;
+    postalCode: string;
+    city: string;
+    country: string;
+
+    // Kontakt
+    phone: string;                  // Hauptnummer
+    customerServicePhone?: string;  // Kundenservice-Hotline
+    businessInfoPhone?: string;     // Info-Hotline für Geschäftskunden
+    email: string;
+    website?: string;
+
+    // Steuerdaten
+    taxId: string;                  // Steuernummer
+    vatId: string;                  // USt-IdNr (DE...)
+
+    // Bankverbindung
+    iban: string;
+    bic: string;
+    bankName?: string;
+    accountHolder?: string;         // Kontoinhaber (falls abweichend)
+
+    // Handelsregister
+    registerCourt?: string;         // Amtsgericht
+    registerNumber?: string;        // HRB / HRA Nummer
+
+    // Geschäftsführung
+    managingDirector?: string;      // Geschäftsführer
+    authorizedRepresentative?: string; // Vertretungsberechtigter
+
+    // Meta
+    updatedAt?: any;
+    updatedBy?: string;
+}
+
+// LOKMA Platform bilgileri — FALLBACK defaults (Firestore'dan yüklenirken kullanılır)
 export const LOKMA_COMPANY_INFO: InvoiceParty = {
     name: 'LOKMA GmbH',
     address: 'Schulte-Braucks-Str. 1',
@@ -364,7 +447,9 @@ export const LOKMA_COMPANY_INFO: InvoiceParty = {
     taxId: 'DEMO-ST-123456',      // Demo Steuernummer
     vatId: 'DEMO-UST-DE123456',   // Demo USt-IdNr
     email: 'info@lokma.shop',
-    phone: '+49 2433 123456'
+    phone: '+49 2433 123456',
+    iban: 'DE89 3704 0044 0532 0130 00',  // Demo IBAN
+    bic: 'COBADEFFXXX',                    // Demo BIC
 };
 
 // =============================================================================
@@ -719,6 +804,15 @@ export interface Admin {
         hueEnabled?: boolean;
         soundEnabled?: boolean;
         flashScreen?: boolean;
+    };
+    printerSettings?: {
+        enabled?: boolean;
+        printerType?: string;
+        printerIp?: string;
+        printerPort?: number;
+        paperWidth?: number;
+        autoPrint?: boolean;
+        printCopies?: number;
     };
 }
 

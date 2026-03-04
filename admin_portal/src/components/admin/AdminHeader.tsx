@@ -208,7 +208,7 @@ export default function AdminHeader() {
                             <div className="relative group">
                                 <Link
                                     href="/admin/invoices"
-                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans')
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans') || isActiveNav('/admin/coupons') || isActiveNav('/admin/deals')
                                         ? 'bg-white/15 text-white'
                                         : 'text-red-100 hover:text-white hover:bg-white/10'
                                         }`}
@@ -217,7 +217,7 @@ export default function AdminHeader() {
                                     <span className="text-[10px]">▼</span>
                                 </Link>
                                 {/* Dropdown */}
-                                <div className="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
+                                <div className="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[180px] overflow-hidden">
                                     <div className="py-1">
                                         <Link href="/admin/invoices" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
                                             {t('invoices')}
@@ -228,6 +228,38 @@ export default function AdminHeader() {
                                         <Link href="/admin/plans" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
                                             {t('plans')}
                                         </Link>
+                                        <div className="border-t border-gray-600 my-1"></div>
+                                        <Link href="/admin/coupons" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            🎟️ Kuponlar
+                                        </Link>
+                                        <Link href="/admin/deals" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            🔥 Fırsatlar
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Service Nav */}
+                            <div className="relative group">
+                                <Link
+                                    href="/admin/activity-logs"
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/activity-logs') || isActiveNav('/admin/reports')
+                                        ? 'bg-white/15 text-white'
+                                        : 'text-red-100 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    Service
+                                    <span className="text-[10px]">▼</span>
+                                </Link>
+                                {/* Dropdown */}
+                                <div className="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[160px] overflow-hidden">
+                                    <div className="py-1">
+                                        <Link href="/admin/activity-logs" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            📋 {t('activityLogs')}
+                                        </Link>
+                                        <Link href="/admin/reports" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            🚩 Meldungen
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -236,10 +268,8 @@ export default function AdminHeader() {
                             {[
                                 { href: '/admin/orders', label: t('orders') },
                                 { href: '/admin/products', label: t('productsCategories') },
-                                { href: '/admin/activity-logs', label: t('activityLogs') },
                                 { href: '/admin/analytics', label: t('analytics') },
                                 { href: '/admin/reservations', label: t('reservations') },
-                                { href: '/admin/reports', label: '🚩 Meldungen' },
                             ].map((item) => {
                                 const active = isActiveNav(item.href);
                                 return (
@@ -304,6 +334,12 @@ export default function AdminHeader() {
                                             className="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-xs"
                                         >
                                             {t('settings')}
+                                        </Link>
+                                        <Link
+                                            href="/admin/settings/company"
+                                            className="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition text-xs"
+                                        >
+                                            🏢 Firmeneinstellungen
                                         </Link>
                                         <Link
                                             href="/admin/ui-translations"

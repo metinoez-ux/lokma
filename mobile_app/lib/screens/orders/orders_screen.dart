@@ -14,6 +14,8 @@ import 'rating_screen.dart';
 import 'courier_tracking_screen.dart';
 import 'group_order_history_card.dart';
 import 'order_chat_screen.dart';
+import 'tip_bottom_sheet.dart';
+import '../../services/app_rating_service.dart';
 import '../../utils/currency_utils.dart';
 
 
@@ -1141,6 +1143,46 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   ],
                 ),
               ),
+            ),
+          ],
+          
+          // 💝 Tip Button — for delivered orders (check tip via Firestore)
+          if (order.status == OrderStatus.delivered) ...[
+            StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance.collection('meat_orders').doc(order.id).snapshots(),
+              builder: (context, tipSnap) {
+                final tipData = tipSnap.data?.data() as Map<String, dynamic>?;
+                final hasTip = tipData != null && tipData['tip'] != null && (tipData['tip'] as num) > 0;
+                if (hasTip) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final courierName = tipData?['courierName'] as String? ?? 'Kurye';
+                        final tipAmount = await TipBottomSheet.show(
+                          context,
+                          orderId: order.id,
+                          courierName: courierName,
+                          orderTotal: order.totalAmount,
+                        );
+                        if (context.mounted) {
+                          AppRatingService.onOrderDelivered(context);
+                        }
+                      },
+                      icon: const Text('💝', style: TextStyle(fontSize: 18)),
+                      label: const Text('Bahşiş Bırak'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFFB335B),
+                        side: const BorderSide(color: Color(0xFFFB335B)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ],
           

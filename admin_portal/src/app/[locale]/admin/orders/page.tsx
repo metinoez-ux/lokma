@@ -8,6 +8,7 @@ import { useAdmin } from '@/components/providers/AdminProvider';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useTranslations } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
+import { printOrder, PrinterSettings, DEFAULT_PRINTER_SETTINGS } from '@/services/printerService';
 
 // Canonical Order Status Set (7 statuses)
 // Synchronized with Mobile App OrderStatus enum
@@ -104,6 +105,10 @@ export default function OrdersPage() {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
     const [cancelReason, setCancelReason] = useState('');
+
+    // Printer state
+    const [printerSettings, setPrinterSettings] = useState<PrinterSettings>(DEFAULT_PRINTER_SETTINGS);
+    const [printingOrderId, setPrintingOrderId] = useState<string | null>(null);
 
     // Unavailable items modal state
     const [showUnavailableModal, setShowUnavailableModal] = useState(false);
@@ -233,6 +238,52 @@ export default function OrdersPage() {
             }
         }
     }, [admin]);
+
+    // Load printer settings
+    useEffect(() => {
+        if (admin?.printerSettings) {
+            setPrinterSettings(admin.printerSettings as PrinterSettings);
+        }
+    }, [admin]);
+
+    // Handle print order
+    const handlePrintOrder = async (order: Order) => {
+        if (!printerSettings.enabled || !printerSettings.printerIp) {
+            showToast('Yazıcı yapılandırılmamış. Ayarlar → IoT bölümünden ayarlayın.', 'error');
+            return;
+        }
+        setPrintingOrderId(order.id);
+        try {
+            const result = await printOrder(printerSettings, {
+                orderNumber: order.orderNumber || order.id.slice(0, 6).toUpperCase(),
+                orderType: order.type,
+                items: order.items?.map(item => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price,
+                    unit: item.unit,
+                })),
+                total: order.total,
+                grandTotal: order.total,
+                customerName: order.customerName,
+                customerPhone: order.customerPhone,
+                deliveryAddress: order.address,
+                tableNumber: order.tableNumber,
+                note: order.notes,
+                paymentMethod: order.paymentMethod,
+            }, order.businessName || businesses[order.businessId] || 'LOKMA');
+
+            if (result.success) {
+                showToast('🖨️ Bon yazdırıldı!', 'success');
+            } else {
+                showToast(`🖨️ Yazdırma hatası: ${result.message}`, 'error');
+            }
+        } catch (err: any) {
+            showToast(`🖨️ Hata: ${err.message}`, 'error');
+        } finally {
+            setPrintingOrderId(null);
+        }
+    };
 
     // Real-time orders subscription
     useEffect(() => {
@@ -1314,6 +1365,19 @@ export default function OrdersPage() {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Print Action */}
+                            {printerSettings.enabled && printerSettings.printerIp && (
+                                <div className="border-t border-gray-700 pt-4">
+                                    <button
+                                        onClick={() => handlePrintOrder(selectedOrder)}
+                                        disabled={printingOrderId === selectedOrder.id}
+                                        className="w-full px-4 py-3 bg-amber-600/20 border border-amber-500/50 text-amber-400 rounded-lg hover:bg-amber-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {printingOrderId === selectedOrder.id ? '⏳ Yazdırılıyor...' : '🖨️ Bon Yazdır'}
+                                    </button>
+                                </div>
+                            )}
 
                             {/* Delete Action */}
                             <div className="border-t border-gray-700 pt-4">

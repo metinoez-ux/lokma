@@ -75,8 +75,14 @@ class _SplashScreenState extends State<SplashScreen> {
     // Apply selected locale
     if (mounted) {
       await context.setLocale(Locale(_selectedLangCode));
-      // Navigate to main app
-      context.go('/restoran');
+      
+      // Check if onboarding has been seen
+      final hasSeenOnboarding = prefs.getBool('onboarding_seen') ?? false;
+      if (!hasSeenOnboarding) {
+        context.go('/onboarding');
+      } else {
+        context.go('/restoran');
+      }
     }
   }
 
