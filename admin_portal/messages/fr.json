@@ -798,7 +798,8 @@
     "yukaridanMasaSayisiniGirerekOtomatikOlusturun": "Yukarıdan masa sayısını girerek otomatik oluşturun veya tek tek ekleyin",
     "yukleniyor": "🔄 Yükleniyor...",
     "yukleniyor1": "Yükleniyor: %",
-    "zertifikaAyarlariSadeceSuperAdminTarafindan": "🔒 Zertifika ayarları sadece Super Admin tarafından görüntülenebilir."
+    "zertifikaAyarlariSadeceSuperAdminTarafindan": "🔒 Zertifika ayarları sadece Super Admin tarafından görüntülenebilir.",
+    "aktif_personel_kuryeler": "👥 Personnel actif et coursiers"
   },
   "AdminBusiness[id": {
     "adet": "quantité",

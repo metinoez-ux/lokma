@@ -3030,9 +3030,9 @@ export default function BusinessDetailsPage() {
 
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
-                                  <h5 className="text-white font-bold text-sm">{cat.name}</h5>
+                                  <h5 className="text-white font-bold text-sm">{typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name}</h5>
                                   <p className="text-gray-500 text-xs">
-                                    {inlineProducts.filter((p: any) => p.category === cat.name || p.categoryId === cat.id).length} {t('urun')} {cat.isActive ? '✅ Aktif' : t('pasif')}
+                                    {inlineProducts.filter((p: any) => p.category === (typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name) || p.categoryId === cat.id).length} {t('urun')} {cat.isActive ? '✅ Aktif' : t('pasif')}
                                   </p>
                                 </div>
 
@@ -3116,7 +3116,7 @@ export default function BusinessDetailsPage() {
                                 >{t('iptal1')}</button>
                                 <button
                                   onClick={handleSaveCategory}
-                                  disabled={savingCategory || !categoryForm.name.trim()}
+                                  disabled={savingCategory || !(typeof categoryForm.name === 'object' ? getLocalizedText(categoryForm.name) : categoryForm.name)?.trim()}
                                   className="flex-1 px-4 py-3 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition disabled:opacity-50"
                                 >
                                   {savingCategory ? 'Kaydediliyor...' : t('kaydet')}
@@ -3201,14 +3201,15 @@ export default function BusinessDetailsPage() {
                           // Group products by category
                           const grouped: Record<string, any[]> = {};
                           inlineProducts.forEach((p: any) => {
-                            const catName = p.category || 'Kategorisiz';
+                            const rawCat = p.category || 'Kategorisiz';
+                            const catName = typeof rawCat === 'object' ? getLocalizedText(rawCat) : rawCat;
                             if (!grouped[catName]) grouped[catName] = [];
                             grouped[catName].push(p);
                           });
                           return (
                             <div className="space-y-4">
                               {Object.entries(grouped).map(([catName, prods]) => {
-                                const catInfo = inlineCategories.find(c => c.name === catName);
+                                const catInfo = inlineCategories.find(c => (typeof c.name === 'object' ? getLocalizedText(c.name) : c.name) === catName);
                                 return (
                                   <div key={catName} className="bg-gray-800/60 rounded-xl border border-gray-700 overflow-hidden">
                                     {/* Category header */}
@@ -3235,7 +3236,7 @@ export default function BusinessDetailsPage() {
                                           )}
                                           {/* Name and details */}
                                           <div className="flex-1 min-w-0">
-                                            <p className="text-white text-sm font-medium truncate">{product.name}</p>
+                                            <p className="text-white text-sm font-medium truncate">{typeof product.name === 'object' ? getLocalizedText(product.name) : product.name}</p>
                                             <p className="text-gray-500 text-xs truncate">
                                               {getLocalizedText(product.description) || product.unit || ''}
                                             </p>

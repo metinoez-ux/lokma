@@ -396,7 +396,8 @@
     "yeni_isletme_ekle": "[NL] Yeni İşletme Ekle",
     "isletme_yonetimi": "[NL] İşletme Yönetimi",
     "tum_kayitli_isletmeleri_yonetin": "[NL] Tüm kayıtlı işletmeleri yönetin:",
-    "sektor_modulleri": "[NL] Sektör Modülleri"
+    "sektor_modulleri": "[NL] Sektör Modülleri",
+    "aktif_personel_kuryeler": "👥 Actief personeel & koeriers"
   },
   "AdminDashboard": {
     "yonlendiriliyor": "Yönlendiriliyor..."
