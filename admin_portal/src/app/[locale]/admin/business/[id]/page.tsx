@@ -886,6 +886,52 @@ export default function BusinessDetailsPage() {
     }
   };
 
+  // 📋 Default Menu Template: detect kasap-type business
+  const isKasapType = (() => {
+    const types = formData.types || [];
+    const kasapTypes = ['kasap', 'market', 'balik', 'sarkuteri', 'manav', 'bakkal'];
+    return types.some((t: string) => kasapTypes.includes(t.toLowerCase()));
+  })();
+
+  // 📋 Apply default kasap menu template from Firestore
+  const [applyingTemplate, setApplyingTemplate] = useState(false);
+  const applyDefaultTemplate = async () => {
+    if (!businessId) return;
+    setApplyingTemplate(true);
+    try {
+      // Fetch template from Firestore
+      const templateDoc = await getDoc(doc(db, 'defaultMenuTemplates', 'kasap'));
+      if (!templateDoc.exists()) {
+        showToast('Şablon bulunamadı!', 'error');
+        setApplyingTemplate(false);
+        return;
+      }
+      const template = templateDoc.data();
+      const categories = template.categories || [];
+      const startOrder = inlineCategories.length; // Append after existing
+
+      // Create each category as a sub-document
+      const catRef = collection(db, `businesses/${businessId}/categories`);
+      for (let i = 0; i < categories.length; i++) {
+        const cat = categories[i];
+        await addDoc(catRef, {
+          name: cat.name,
+          icon: cat.icon,
+          isActive: true,
+          order: startOrder + i,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+
+      await loadInlineCategories();
+      showToast(`${categories.length} kategori başarıyla eklendi ✅`, 'success');
+    } catch (error) {
+      console.error('Error applying template:', error);
+      showToast('Şablon uygulanırken hata oluştu', 'error');
+    }
+    setApplyingTemplate(false);
+  };
 
 
   // 🆕 Load Master Products from Firestore (filtered by business type)
@@ -2880,16 +2926,43 @@ export default function BusinessDetailsPage() {
                               <p className="text-gray-400 text-xs">{inlineCategories.length} {t('kategori')}</p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => {
-                              setEditingCategory(null);
-                              setCategoryForm({ name: { tr: '' }, icon: '📦', isActive: true });
-                              setShowCategoryModal(true);
-                            }}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition"
-                          >
-                            + Yeni Kategori
-                          </button>
+                          <div className="flex items-center gap-2">
+                            {isKasapType && (
+                              <button
+                                onClick={() => {
+                                  if (inlineCategories.length > 0) {
+                                    setConfirmModal({
+                                      show: true,
+                                      title: '📋 Kasap Şablonu Uygula',
+                                      message: `Bu işletmede zaten ${inlineCategories.length} kategori var. Şablon kategorileri (10 adet) mevcut kategorilerin ÜSTÜNE eklenecektir. Devam etmek istiyor musunuz?`,
+                                      confirmText: 'Evet, Ekle',
+                                      confirmColor: 'bg-emerald-600 hover:bg-emerald-500',
+                                      onConfirm: async () => {
+                                        setConfirmModal(prev => ({ ...prev, show: false }));
+                                        await applyDefaultTemplate();
+                                      },
+                                    });
+                                  } else {
+                                    applyDefaultTemplate();
+                                  }
+                                }}
+                                disabled={applyingTemplate}
+                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                              >
+                                {applyingTemplate ? '⏳ Uygulanıyor...' : '📋 Şablon Uygula'}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                setEditingCategory(null);
+                                setCategoryForm({ name: { tr: '' }, icon: '📦', isActive: true });
+                                setShowCategoryModal(true);
+                              }}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium rounded-lg transition"
+                            >
+                              + Yeni Kategori
+                            </button>
+                          </div>
                         </div>
 
                         {/* Loading */}
@@ -2905,16 +2978,27 @@ export default function BusinessDetailsPage() {
                             <span className="text-4xl">🗂️</span>
                             <h4 className="text-white font-medium mt-3">{t('henuzKategoriEklenmemis')}</h4>
                             <p className="text-gray-400 text-sm mt-1">{t('urunleriniziDuzenlemekIcinKategoriEkleyin')}</p>
-                            <button
-                              onClick={() => {
-                                setEditingCategory(null);
-                                setCategoryForm({ name: { tr: '' }, icon: '📦', isActive: true });
-                                setShowCategoryModal(true);
-                              }}
-                              className="mt-4 px-5 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition text-sm"
-                            >
-                              {t('ilkKategoriyiEkle')}
-                            </button>
+                            <div className="flex items-center gap-3 mt-4">
+                              {isKasapType && (
+                                <button
+                                  onClick={() => applyDefaultTemplate()}
+                                  disabled={applyingTemplate}
+                                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition text-sm font-medium disabled:opacity-50"
+                                >
+                                  {applyingTemplate ? '⏳ Uygulanıyor...' : '📋 Kasap Şablonu Uygula'}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setEditingCategory(null);
+                                  setCategoryForm({ name: { tr: '' }, icon: '📦', isActive: true });
+                                  setShowCategoryModal(true);
+                                }}
+                                className="px-5 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition text-sm"
+                              >
+                                {t('ilkKategoriyiEkle')}
+                              </button>
+                            </div>
                           </div>
                         )}
 
