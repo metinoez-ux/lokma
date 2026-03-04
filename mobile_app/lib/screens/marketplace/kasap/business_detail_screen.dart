@@ -9,9 +9,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'legal_report_sheet.dart';
+import 'package:lokma_app/services/business_deals_service.dart';
 
 import 'package:lokma_app/services/google_places_service.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
+import 'package:lokma_app/providers/product_favorites_provider.dart';
 import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/data/product_catalog_data.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
@@ -153,6 +155,25 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   late int _deliveryModeIndex;
   bool get _isMasaMode => _deliveryModeIndex == 2;
   
+  // 🛒 Market-type detection: grid layout for these business types
+  static const Set<String> _marketTypes = {
+    'kasap', 'market', 'balik', 'sarkuteri', 'kuruyemis', 
+    'ciftci', 'petshop', 'kozmetik', 'eticaret',
+  };
+  
+  bool get _isMarketType {
+    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+    if (data == null) return false;
+    final type = (data['type'] as String?)?.toLowerCase() ?? '';
+    if (_marketTypes.contains(type)) return true;
+    // Also check types array
+    final types = data['types'];
+    if (types is List) {
+      return types.any((t) => t is String && _marketTypes.contains(t.toLowerCase()));
+    }
+    return false;
+  }
+
   // 🔍 Menu Search
   String _menuSearchQuery = '';
   final bool _isSearching = false;
@@ -1559,7 +1580,48 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 ],
               ),
               
-              
+              // 🔥 ACTIVE DEALS BANNER
+              SliverToBoxAdapter(
+                child: (_butcherDoc != null)
+                    ? FutureBuilder<List<BusinessDeal>>(
+                        future: BusinessDealsService.getActiveDeals(_butcherDoc!.id),
+                        builder: (context, dealSnap) {
+                          if (!dealSnap.hasData || dealSnap.data!.isEmpty) return const SizedBox.shrink();
+                          final deals = dealSnap.data!;
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [const Color(0xFFFB335B).withValues(alpha: 0.08), const Color(0xFFFF6B6B).withValues(alpha: 0.04)],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFFB335B).withValues(alpha: 0.25)),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Text('🔥', style: TextStyle(fontSize: 20)),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      deals.map((d) => d.badgeText).join(' \u2022 '),
+                                      style: const TextStyle(
+                                        color: Color(0xFFFB335B),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+
               // 2. HERO IMAGE (separate sliver, not part of AppBar)
               SliverToBoxAdapter(
                 child: Container(
@@ -1889,9 +1951,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 ),
               ),
 
-              // 4. Products List Generation
+              // 4. Products List/Grid Generation
               if (isSearching) ...[
-                // Flat list for search results
+                // Flat list/grid for search results
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   sliver: SliverToBoxAdapter(
@@ -1902,7 +1964,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   ),
                 ),
                 SliverPadding(
-                  padding: EdgeInsets.zero,
+                  padding: _isMarketType ? const EdgeInsets.symmetric(horizontal: 12) : EdgeInsets.zero,
                   sliver: searchResults.isEmpty 
                     ? SliverToBoxAdapter(
                         child: Padding(
@@ -1914,23 +1976,46 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               )),
                         ),
                       )
-                    : SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) => _buildLieferandoProductCard(
-                            searchResults[index], 
-                            ref.watch(cartProvider),
-                            isDark: isDark,
-                            accent: accent,
-                            cardBg: cardBg,
-                            textPrimary: textPrimary,
-                            textSecondary: textSecondary,
+                    : _isMarketType
+                      // 🛒 MARKET: Grid layout for search results
+                      ? SliverGrid(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.52,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
                           ),
-                          childCount: searchResults.length,
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => _buildMarketGridCard(
+                              searchResults[index],
+                              ref.watch(cartProvider),
+                              isDark: isDark,
+                              accent: accent,
+                              cardBg: cardBg,
+                              textPrimary: textPrimary,
+                              textSecondary: textSecondary,
+                            ),
+                            childCount: searchResults.length,
+                          ),
+                        )
+                      // 🍽️ RESTORAN: List layout for search results
+                      : SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => _buildLieferandoProductCard(
+                              searchResults[index], 
+                              ref.watch(cartProvider),
+                              isDark: isDark,
+                              accent: accent,
+                              cardBg: cardBg,
+                              textPrimary: textPrimary,
+                              textSecondary: textSecondary,
+                            ),
+                            childCount: searchResults.length,
+                          ),
                         ),
-                      ),
                 ),
               ] else ...[
-              // Category Grouped List
+              // Category Grouped List/Grid
               ..._categories.where((c) => c['name'] != 'Tümü').expand((cat) {
                 final catName = cat['name'] as String;
                 final catProducts = products.where((p) => p.category == catName).toList();
@@ -1959,22 +2044,49 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               ),
                             ),
                           ),
-                          // Products List
-                          ListView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            padding: EdgeInsets.zero,
-                            itemCount: catProducts.length,
-                            itemBuilder: (context, index) => _buildLieferandoProductCard(
-                              catProducts[index], 
-                              ref.watch(cartProvider),
-                              isDark: isDark,
-                              accent: accent,
-                              cardBg: cardBg,
-                              textPrimary: textPrimary,
-                              textSecondary: textSecondary,
-                            ),
-                          ),
+                          // Products: Grid for market, List for restoran
+                          _isMarketType
+                            // 🛒 MARKET: 2-column grid
+                            ? Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                child: GridView.builder(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  shrinkWrap: true,
+                                  padding: EdgeInsets.zero,
+                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.52,
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 10,
+                                  ),
+                                  itemCount: catProducts.length,
+                                  itemBuilder: (context, index) => _buildMarketGridCard(
+                                    catProducts[index],
+                                    ref.watch(cartProvider),
+                                    isDark: isDark,
+                                    accent: accent,
+                                    cardBg: cardBg,
+                                    textPrimary: textPrimary,
+                                    textSecondary: textSecondary,
+                                  ),
+                                ),
+                              )
+                            // 🍽️ RESTORAN: Vertical list
+                            : ListView.builder(
+                                physics: const NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                padding: EdgeInsets.zero,
+                                itemCount: catProducts.length,
+                                itemBuilder: (context, index) => _buildLieferandoProductCard(
+                                  catProducts[index], 
+                                  ref.watch(cartProvider),
+                                  isDark: isDark,
+                                  accent: accent,
+                                  cardBg: cardBg,
+                                  textPrimary: textPrimary,
+                                  textSecondary: textSecondary,
+                                ),
+                              ),
                         ],
                       ),
                     ),
@@ -2728,22 +2840,53 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     children: [
                       // Product Image (if any)
                       if (hasImage)
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            width: 100,
-                            height: 100,
-                            color: isDark ? Colors.white10 : Colors.grey[100],
-                            child: Image.network(
-                              product.imageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Icon(
-                                Icons.restaurant_menu,
-                                size: 40,
-                                color: isDark ? Colors.white24 : Colors.grey[400],
+                        Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                width: 100,
+                                height: 100,
+                                color: isDark ? Colors.white10 : Colors.grey[100],
+                                child: Image.network(
+                                  product.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Icon(
+                                    Icons.restaurant_menu,
+                                    size: 40,
+                                    color: isDark ? Colors.white24 : Colors.grey[400],
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            // ❤️ Product Favorite Heart
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: Consumer(
+                                builder: (context, ref, _) {
+                                  final favs = ref.watch(productFavoritesProvider);
+                                  final isFav = favs.contains(product.sku);
+                                  return GestureDetector(
+                                    onTap: () => ref.read(productFavoritesProvider.notifier).toggleFavorite(product.sku),
+                                    child: Container(
+                                      width: 28,
+                                      height: 28,
+                                      decoration: BoxDecoration(
+                                        color: Colors.black.withValues(alpha: 0.35),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        isFav ? Icons.favorite : Icons.favorite_border,
+                                        color: isFav ? Colors.redAccent : Colors.white,
+                                        size: 16,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                         
                       if (hasImage) const SizedBox(height: 12),
@@ -2828,6 +2971,289 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.2),
         ),
       ],
+    );
+  }
+
+  // 🛒 MARKET GRID CARD: 2-column image-focused card for market/kasap businesses
+  Widget _buildMarketGridCard(
+    ButcherProduct product,
+    CartState cart, {
+    required bool isDark,
+    required Color accent,
+    required Color cardBg,
+    required Color textPrimary,
+    required Color textSecondary,
+  }) {
+    final isByWeight = product.unitType == 'kg';
+    final productCartItems = cart.items.where((item) => item.product.sku == product.sku).toList();
+    final inCart = productCartItems.isNotEmpty;
+    final totalQtyInCart = productCartItems.fold(0.0, (sum, item) => sum + item.quantity);
+    final isAvailable = product.inStock || product.allowBackorder;
+    final hasImage = product.imageUrl?.isNotEmpty == true;
+
+    // Default quantity step
+    final defaultQty = isByWeight ? (product.minQuantity > 0 ? product.minQuantity : 0.5) : 1.0;
+    final unitLabel = isByWeight ? 'gram' : 'Adet';
+    final displayQty = inCart ? totalQtyInCart : defaultQty;
+
+    return Opacity(
+      opacity: isAvailable ? 1.0 : 0.55,
+      child: GestureDetector(
+        onTap: isAvailable
+            ? () => _showProductBottomSheet(product)
+            : () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(tr('marketplace.item_not_available_de')),
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+        child: Container(
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(12),
+            border: inCart 
+              ? Border.all(color: accent.withValues(alpha: 0.4), width: 1.5)
+              : Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200, width: 0.5),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 📸 Product Image (square, fills width)
+              AspectRatio(
+                aspectRatio: 1.0,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      hasImage
+                          ? CachedNetworkImage(
+                              imageUrl: product.imageUrl!,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => Container(
+                                color: isDark ? Colors.grey[900] : Colors.grey[100],
+                                child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                              ),
+                              errorWidget: (_, __, ___) => Container(
+                                color: isDark ? Colors.grey[900] : Colors.grey[100],
+                                child: Icon(Icons.image_not_supported, color: textSecondary, size: 40),
+                              ),
+                            )
+                          : Container(
+                              color: isDark ? Colors.grey[900] : Colors.grey[100],
+                              child: Icon(Icons.shopping_bag, color: textSecondary, size: 40),
+                            ),
+                      // Stock Badge (top right)
+                      if (isAvailable)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              tr('marketplace.in_stock'),
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                      // Cart quantity badge (top left)
+                      if (inCart)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: accent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${isByWeight ? '${totalQtyInCart.toInt()}g' : '${totalQtyInCart.toInt()}x'}',
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 📝 Product Info
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name
+                      Text(
+                        product.name,
+                        style: TextStyle(
+                          color: textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          height: 1.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      // Price + unit
+                      Row(
+                        children: [
+                          Text(
+                            '${product.price.toStringAsFixed(product.price == product.price.roundToDouble() ? 0 : 2)} ${CurrencyUtils.getCurrencySymbol()}',
+                            style: TextStyle(
+                              color: accent,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          if (isByWeight)
+                            Text(
+                              'kg fiyatı',
+                              style: TextStyle(
+                                color: textSecondary,
+                                fontSize: 10,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      // Description
+                      if (product.description.isNotEmpty)
+                        Expanded(
+                          child: Text(
+                            product.description,
+                            style: TextStyle(
+                              color: textSecondary,
+                              fontSize: 11,
+                              height: 1.3,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      
+                      const Spacer(),
+                      
+                      // ➕ Quantity controls
+                      Container(
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Minus button
+                            GestureDetector(
+                              onTap: inCart ? () {
+                                // Remove from cart
+                                if (productCartItems.isNotEmpty) {
+                                  ref.read(cartProvider.notifier).removeFromCart(productCartItems.first.uniqueKey);
+                                }
+                              } : null,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(Icons.remove, color: inCart ? textPrimary : textSecondary, size: 16),
+                              ),
+                            ),
+                            // Quantity display
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '${displayQty.toInt()}',
+                                  style: TextStyle(
+                                    color: textPrimary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  unitLabel,
+                                  style: TextStyle(
+                                    color: textSecondary,
+                                    fontSize: 8,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // Plus button
+                            GestureDetector(
+                              onTap: isAvailable ? () {
+                                _showProductBottomSheet(product);
+                              } : null,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(Icons.add, color: accent, size: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 6),
+                      
+                      // 🛒 Add to Cart button
+                      GestureDetector(
+                        onTap: isAvailable ? () => _showProductBottomSheet(product) : null,
+                        child: Container(
+                          width: double.infinity,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: inCart ? accent : (isDark ? Colors.white : Colors.black87),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                inCart ? Icons.check : Icons.shopping_cart_outlined, 
+                                color: inCart ? Colors.white : (isDark ? Colors.black : Colors.white), 
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                inCart 
+                                  ? '${(totalQtyInCart * (isByWeight ? product.price / 1000 : product.price)).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'
+                                  : tr('marketplace.add_to_cart'),
+                                style: TextStyle(
+                                  color: inCart ? Colors.white : (isDark ? Colors.black : Colors.white),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
