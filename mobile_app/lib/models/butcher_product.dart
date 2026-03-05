@@ -24,6 +24,14 @@ class ButcherProduct {
   final List<OptionGroup> optionGroups;
   final List<String> allergens;
   final List<String> additives;
+  final bool outOfStock;
+  final double? appSellingPrice;
+  final double? inStorePrice;
+
+  /// Effective price shown in the app (delivery + pickup)
+  double get effectiveAppPrice => appSellingPrice ?? price;
+  /// Effective in-store / ESL price
+  double get effectiveInStorePrice => inStorePrice ?? price;
 
   ButcherProduct({
     required this.butcherId,
@@ -49,6 +57,9 @@ class ButcherProduct {
     this.optionGroups = const [],
     this.allergens = const [],
     this.additives = const [],
+    this.outOfStock = false,
+    this.appSellingPrice,
+    this.inStorePrice,
   });
 
   factory ButcherProduct.fromFirestore(Map<String, dynamic> data, String id, {required String butcherId, Map<String, dynamic>? masterData}) {
@@ -78,7 +89,7 @@ class ButcherProduct {
       descriptionData: getVal<dynamic>('description'),
       category: _extractString(getVal<dynamic>('category'), fallback: 'Diğer'),
       categoryData: getVal<dynamic>('category'),
-      price: (data['price'] ?? 0).toDouble(), // Price always from Butcher
+      price: (data['sellingPrice'] ?? data['price'] ?? masterData?['sellingPrice'] ?? masterData?['price'] ?? 0).toDouble(), // sellingPrice first (Admin Portal), then legacy price
       unitType: getVal<String>('unit') ?? 'adet', // Default to 'adet' not 'kg'
       imageUrl: imgUrl,
       tags: List<String>.from(data['tags'] ?? masterData?['tags'] ?? []),
@@ -95,6 +106,13 @@ class ButcherProduct {
           .toList() ?? [],
       allergens: List<String>.from(data['allergens'] ?? masterData?['allergens'] ?? []),
       additives: List<String>.from(data['additives'] ?? masterData?['additives'] ?? []),
+      outOfStock: data['outOfStock'] ?? false,
+      appSellingPrice: (data['appSellingPrice'] ?? masterData?['appSellingPrice']) != null
+          ? (data['appSellingPrice'] ?? masterData?['appSellingPrice']).toDouble()
+          : null,
+      inStorePrice: (data['inStorePrice'] ?? masterData?['inStorePrice']) != null
+          ? (data['inStorePrice'] ?? masterData?['inStorePrice']).toDouble()
+          : null,
     );
   }
 

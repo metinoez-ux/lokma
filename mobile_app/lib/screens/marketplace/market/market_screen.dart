@@ -1320,7 +1320,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 if (isTunaPartner)
                   Positioned(
                     left: 12,
-                    top: 12,
+                    top: isOpen ? 12 : 36, // Push below 'Şu an kapalı' banner when closed
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(

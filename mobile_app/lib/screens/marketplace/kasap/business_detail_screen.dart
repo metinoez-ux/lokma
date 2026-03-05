@@ -228,6 +228,23 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // 🔄 Real-time subscription for categories
   late final Stream<QuerySnapshot<Map<String, dynamic>>> _categoriesStream;
   
+  // 🆕 Helper: Extract localized string from a potentially multi-language name field
+  // Handles both String and Map<String, dynamic> (e.g. {tr: 'Dana Eti', de: 'Rindfleisch', en: 'Beef'})
+  String _getLocalizedCategoryName(dynamic name) {
+    if (name is String) return name;
+    if (name is Map) {
+      // Try device locale first, then 'tr' fallback, then first available
+      String locale = 'tr';
+      try {
+        locale = context.locale.languageCode;
+      } catch (_) {
+        // context.locale may not be available yet during initState/early callbacks
+      }
+      return (name[locale] ?? name['tr'] ?? name.values.firstOrNull ?? 'Kategori').toString();
+    }
+    return 'Kategori';
+  }
+  
   // 🆕 Setup real-time listener for categories from Firestore subcollection
   void _setupCategoriesListener() {
     debugPrint('🔵 [LOKMA] Setting up real-time categories listener for: ${widget.businessId}');
@@ -256,7 +273,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           if (data['isActive'] == true) {
             dynamicCategories.add({
               'id': doc.id,
-              'name': data['name'] ?? 'Kategori',
+              'name': _getLocalizedCategoryName(data['name']),
               'emoji': data['icon'] ?? '📦',
               'icon': _getIconFromEmoji(data['icon'] ?? '📦'),
               'order': data['order'] ?? 0,
@@ -329,8 +346,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           .doc(widget.businessId)
           .snapshots()
           .listen((doc) async {
-        if (!doc.exists) return;
-
+        if (!doc.exists) {
+          debugPrint('🔴 [LOKMA] Business document NOT FOUND: ${widget.businessId}');
+          return;
+        }
+        debugPrint('🟢 [LOKMA] Business document loaded: ${widget.businessId}');
         if (mounted) setState(() => _butcherDoc = doc);
 
         final data = doc.data();
@@ -818,9 +838,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _categories.length,
+                itemCount: _categories.where((c) => c['name'] == 'Tümü' || _allProducts.any((p) => p.category == c['name'])).length,
                 itemBuilder: (context, index) {
-                  final cat = _categories[index];
+                  // Only show categories with products (or 'Tümü')
+                  final visibleCategories = _categories.where((c) => c['name'] == 'Tümü' || _allProducts.any((p) => p.category == c['name'])).toList();
+                  final cat = visibleCategories[index];
                   final catName = cat['name'] as String;
                   final isSelected = _selectedCategory == catName;
                   
@@ -1442,25 +1464,34 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             .where('isActive', isEqualTo: true) // Only show active products
             .snapshots(),
         builder: (context, snapshot) {
+          // 🔴 Error handling for stream
+          if (snapshot.hasError) {
+            debugPrint('🔴 [LOKMA] Products stream error: ${snapshot.error}');
+          }
+          
           // Process Products
           List<ButcherProduct> products = [];
           if (snapshot.hasData) {
-            products = snapshot.data!.docs.map((doc) {
-              final data = doc.data() as Map<String, dynamic>;
-              final sku = data['masterProductId'] ?? data['masterProductSku'];
-              final masterData = MASTER_PRODUCT_CATALOG[sku];
-              
-              final masterMap = masterData != null ? {
-                'name': masterData.name,
-                'description': masterData.description,
-                'category': masterData.category,
-                'unit': masterData.unitType,
-                'imageAsset': masterData.imagePath,
-                'tags': masterData.tags,
-              } : null;
-              
-              return ButcherProduct.fromFirestore(data, doc.id, butcherId: widget.businessId, masterData: masterMap);
-            }).toList();
+            for (final doc in snapshot.data!.docs) {
+              try {
+                final data = doc.data() as Map<String, dynamic>;
+                final sku = data['masterProductId'] ?? data['masterProductSku'];
+                final masterData = MASTER_PRODUCT_CATALOG[sku];
+                
+                final masterMap = masterData != null ? {
+                  'name': masterData.name,
+                  'description': masterData.description,
+                  'category': masterData.category,
+                  'unit': masterData.unitType,
+                  'imageAsset': masterData.imagePath,
+                  'tags': masterData.tags,
+                } : null;
+                
+                products.add(ButcherProduct.fromFirestore(data, doc.id, butcherId: widget.businessId, masterData: masterMap));
+              } catch (e) {
+                debugPrint('🔴 [LOKMA] Error parsing product ${doc.id}: $e');
+              }
+            }
             // 🔍 Update all products for instant search
             _allProducts = products;
           }
@@ -1858,73 +1889,79 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             children: [
                               // Scrollable category chips
                               Expanded(
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  padding: const EdgeInsets.only(left: 16, right: 4, top: 8, bottom: 8),
-                                  itemCount: _categories.length,
-                                  itemBuilder: (context, index) {
-                                    final cat = _categories[index];
-                                    final catName = cat['name'] as String;
-                                    final isSelected = _selectedCategory == catName;
-                                    // Count cart items in this category
-                                    final cartItems = ref.watch(cartProvider).items;
-                                    final catCartCount = catName == 'Tümü'
-                                        ? cartItems.length
-                                        : cartItems.where((ci) => ci.product.category == catName).length;
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 6),
-                                      child: GestureDetector(
-                                        onTap: () => _selectCategory(catName),
-                                        child: Container(
-                                          key: _tabKeys.putIfAbsent(catName, () => GlobalKey()),
-                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                          decoration: BoxDecoration(
-                                            color: isSelected 
-                                              ? (isDark ? Colors.white : Colors.black87) 
-                                              : Colors.transparent,
-                                            borderRadius: BorderRadius.circular(16),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                catName == 'Tümü' ? tr('business_details.all') : catName,
-                                                style: TextStyle(
-                                                  color: isSelected 
-                                                    ? (isDark ? Colors.black : Colors.white) 
-                                                    : (isDark ? Colors.white70 : Colors.black54),
-                                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                                  fontSize: 13,
-                                                ),
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    // Only show categories that have products (or 'Tümü')
+                                    final visibleCategories = _categories.where((c) => c['name'] == 'Tümü' || _allProducts.any((p) => p.category == c['name'])).toList();
+                                    return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      padding: const EdgeInsets.only(left: 16, right: 4, top: 8, bottom: 8),
+                                      itemCount: visibleCategories.length,
+                                      itemBuilder: (context, index) {
+                                        final cat = visibleCategories[index];
+                                        final catName = cat['name'] as String;
+                                        final isSelected = _selectedCategory == catName;
+                                        // Count cart items in this category
+                                        final cartItems = ref.watch(cartProvider).items;
+                                        final catCartCount = catName == 'Tümü'
+                                            ? cartItems.length
+                                            : cartItems.where((ci) => ci.product.category == catName).length;
+                                        return Padding(
+                                          padding: const EdgeInsets.only(right: 6),
+                                          child: GestureDetector(
+                                            onTap: () => _selectCategory(catName),
+                                            child: Container(
+                                              key: _tabKeys.putIfAbsent(catName, () => GlobalKey()),
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: isSelected 
+                                                  ? (isDark ? Colors.white : Colors.black87) 
+                                                  : Colors.transparent,
+                                                borderRadius: BorderRadius.circular(16),
                                               ),
-                                              if (catCartCount > 0) ...[
-                                                const SizedBox(width: 6),
-                                                Container(
-                                                  width: 20,
-                                                  height: 20,
-                                                  decoration: BoxDecoration(
-                                                    color: isSelected
-                                                        ? (isDark ? Colors.black87 : Colors.white)
-                                                        : Colors.red,
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  alignment: Alignment.center,
-                                                  child: Text(
-                                                    '$catCartCount',
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    catName == 'Tümü' ? tr('business_details.all') : catName,
                                                     style: TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: isSelected
-                                                          ? (isDark ? Colors.white : Colors.black87)
-                                                          : Colors.white,
+                                                      color: isSelected 
+                                                        ? (isDark ? Colors.black : Colors.white) 
+                                                        : (isDark ? Colors.white70 : Colors.black54),
+                                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                                      fontSize: 13,
                                                     ),
                                                   ),
-                                                ),
-                                              ],
-                                            ],
+                                                  if (catCartCount > 0) ...[
+                                                    const SizedBox(width: 6),
+                                                    Container(
+                                                      width: 20,
+                                                      height: 20,
+                                                      decoration: BoxDecoration(
+                                                        color: isSelected
+                                                            ? (isDark ? Colors.black87 : Colors.white)
+                                                            : Colors.red,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      alignment: Alignment.center,
+                                                      child: Text(
+                                                        '$catCartCount',
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: isSelected
+                                                              ? (isDark ? Colors.white : Colors.black87)
+                                                              : Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ],
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                      ),
+                                        );
+                                      },
                                     );
                                   },
                                 ),
@@ -1981,7 +2018,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ? SliverGrid(
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            childAspectRatio: 0.52,
+                            childAspectRatio: 0.56,
                             crossAxisSpacing: 10,
                             mainAxisSpacing: 10,
                           ),
@@ -2055,7 +2092,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   padding: EdgeInsets.zero,
                                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: 2,
-                                    childAspectRatio: 0.52,
+                                    childAspectRatio: 0.56,
                                     crossAxisSpacing: 10,
                                     mainAxisSpacing: 10,
                                   ),
@@ -2218,7 +2255,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         
         return StatefulBuilder(
           builder: (context, setStateModal) {
-            final totalPrice = product.price * selectedQty;
+            final totalPrice = product.effectiveAppPrice * selectedQty;
             
             return Container(
               decoration: BoxDecoration(
@@ -2283,7 +2320,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
                           // Price
                           Text(
-                            '${'marketplace.from_price'.tr()} ${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
+                            '${'marketplace.from_price'.tr()} ${CurrencyUtils.getCurrencySymbol()}${product.effectiveAppPrice.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
                             style: TextStyle(
                               fontSize: 14,
                               color: textSecondary,
@@ -2659,7 +2696,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final inCart = productCartItems.isNotEmpty;
     final totalQtyInCart = productCartItems.fold(0.0, (sum, item) => sum + item.quantity);
     
-    final isAvailable = product.inStock || product.allowBackorder;
+    final isAvailable = (product.inStock || product.allowBackorder) && !product.outOfStock;
     final hasImage = product.imageUrl?.isNotEmpty == true;
 
     return Column(
@@ -2674,10 +2711,21 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 : () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(tr('marketplace.item_not_available_de')),
+                        content: Row(
+                          children: [
+                            Icon(Icons.remove_shopping_cart_outlined, color: Colors.white, size: 18),
+                            const SizedBox(width: 10),
+                            Text(
+                              product.outOfStock ? 'Bu ürün şu anda stokta yok' : 'Bu ürün şu anda mevcut değil',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
                         duration: const Duration(seconds: 2),
                         behavior: SnackBarBehavior.floating,
-                        backgroundColor: isDark ? Colors.grey[800] : Colors.grey[700],
+                        margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey[800],
                       ),
                     );
                   },
@@ -2707,12 +2755,21 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         // "Nicht verfügbar" label (Lieferando-style)
                         if (!isAvailable) ...[
                           const SizedBox(height: 4),
-                          Text(
-                            'Nicht verfügbar',
-                            style: TextStyle(
-                              color: textSecondary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: product.outOfStock
+                                  ? Colors.orange.withValues(alpha: 0.15)
+                                  : (isDark ? Colors.white10 : Colors.grey[200]!),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              product.outOfStock ? 'Stokta yok' : 'Mevcut değil',
+                              style: TextStyle(
+                                color: product.outOfStock ? Colors.orange : textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -2734,7 +2791,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           ),
                         // Price
                         Text(
-                          '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
+                          '${CurrencyUtils.getCurrencySymbol()}${product.effectiveAppPrice.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
                           style: TextStyle(
                             color: isAvailable ? textPrimary : textSecondary,
                             fontSize: 16,
@@ -2988,13 +3045,25 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final productCartItems = cart.items.where((item) => item.product.sku == product.sku).toList();
     final inCart = productCartItems.isNotEmpty;
     final totalQtyInCart = productCartItems.fold(0.0, (sum, item) => sum + item.quantity);
-    final isAvailable = product.inStock || product.allowBackorder;
+    final isAvailable = (product.inStock || product.allowBackorder) && !product.outOfStock;
     final hasImage = product.imageUrl?.isNotEmpty == true;
 
-    // Default quantity step
+    // Default quantity step (in native unit: kg for weight items, pieces for count)
+    final stepQty = isByWeight ? (product.stepQuantity > 0 ? product.stepQuantity : 0.5) : 1.0;
     final defaultQty = isByWeight ? (product.minQuantity > 0 ? product.minQuantity : 0.5) : 1.0;
     final unitLabel = isByWeight ? 'gram' : 'Adet';
-    final displayQty = inCart ? totalQtyInCart : defaultQty;
+
+    // When NOT in cart: use local _selections as quantity picker
+    // When IN cart: display the cart quantity
+    final selectedQty = _selections[product.sku] ?? defaultQty;
+    final displayQty = inCart ? totalQtyInCart : selectedQty;
+    // Convert kg to grams for display
+    final displayQtyGrams = isByWeight ? (displayQty * 1000).toInt() : displayQty.toInt();
+
+    // Calculate total price for cart display
+    final totalPrice = totalQtyInCart * product.effectiveAppPrice;
+    // Calculate preview price (for non-cart state, based on selected qty)
+    final previewPrice = selectedQty * product.effectiveAppPrice;
 
     return Opacity(
       opacity: isAvailable ? 1.0 : 0.55,
@@ -3004,28 +3073,38 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             : () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(tr('marketplace.item_not_available_de')),
+                    content: Row(
+                      children: [
+                        Icon(Icons.remove_shopping_cart_outlined, color: Colors.white, size: 18),
+                        const SizedBox(width: 10),
+                        Text(
+                          product.outOfStock ? 'Bu ürün şu anda stokta yok' : 'Bu ürün şu anda mevcut değil',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
                     duration: const Duration(seconds: 2),
                     behavior: SnackBarBehavior.floating,
+                    margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey[800],
                   ),
                 );
               },
         child: Container(
           decoration: BoxDecoration(
             color: cardBg,
-            borderRadius: BorderRadius.circular(12),
-            border: inCart 
-              ? Border.all(color: accent.withValues(alpha: 0.4), width: 1.5)
-              : Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200, width: 0.5),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: isDark ? Colors.white10 : Colors.grey.shade200, width: 0.5),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 📸 Product Image (square, fills width)
+              // 📸 Product Image — landscape 4:3, smaller to give text more room
               AspectRatio(
-                aspectRatio: 1.0,
+                aspectRatio: 1.6,
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -3044,8 +3123,27 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             )
                           : Container(
                               color: isDark ? Colors.grey[900] : Colors.grey[100],
-                              child: Icon(Icons.shopping_bag, color: textSecondary, size: 40),
+                              child: Icon(Icons.restaurant_menu, color: textSecondary, size: 40),
                             ),
+                      // Out of Stock Badge (top right)
+                      if (!isAvailable)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: product.outOfStock
+                                  ? Colors.orange.withValues(alpha: 0.85)
+                                  : Colors.red.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              product.outOfStock ? 'Stokta Yok' : tr('marketplace.unavailable'),
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
                       // Stock Badge (top right)
                       if (isAvailable)
                         Positioned(
@@ -3063,20 +3161,36 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             ),
                           ),
                         ),
-                      // Cart quantity badge (top left)
+                      // 🏷️ Cart quantity badge (top left) — shows gram/piece count
                       if (inCart)
                         Positioned(
                           top: 8,
                           left: 8,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
                               color: accent,
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: accent.withValues(alpha: 0.4),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Text(
-                              '${isByWeight ? '${totalQtyInCart.toInt()}g' : '${totalQtyInCart.toInt()}x'}',
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              isByWeight 
+                                ? (totalQtyInCart >= 1.0 
+                                    ? '${totalQtyInCart.toStringAsFixed(1)} kg' 
+                                    : '${(totalQtyInCart * 1000).toInt()} g')
+                                : '${totalQtyInCart.toInt()}x',
+                              style: const TextStyle(
+                                color: Colors.white, 
+                                fontSize: 11, 
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.3,
+                              ),
                             ),
                           ),
                         ),
@@ -3085,34 +3199,34 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 ),
               ),
 
-              // 📝 Product Info
+              // 📝 Product Info — compact padding
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+                  padding: const EdgeInsets.fromLTRB(10, 4, 10, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Name
+                      // Name — bigger
                       Text(
                         product.name,
                         style: TextStyle(
                           color: textPrimary,
-                          fontSize: 13,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                           height: 1.2,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
-                      // Price + unit
+                      const SizedBox(height: 3),
+                      // Price + unit — red accent
                       Row(
                         children: [
                           Text(
-                            '${product.price.toStringAsFixed(product.price == product.price.roundToDouble() ? 0 : 2)} ${CurrencyUtils.getCurrencySymbol()}',
+                            '${product.effectiveAppPrice.toStringAsFixed(product.effectiveAppPrice == product.effectiveAppPrice.roundToDouble() ? 0 : 2)} ${CurrencyUtils.getCurrencySymbol()}',
                             style: TextStyle(
                               color: accent,
-                              fontSize: 14,
+                              fontSize: 15,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -3130,115 +3244,189 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       const SizedBox(height: 4),
                       // Description
                       if (product.description.isNotEmpty)
-                        Expanded(
-                          child: Text(
-                            product.description,
-                            style: TextStyle(
-                              color: textSecondary,
-                              fontSize: 11,
-                              height: 1.3,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                        Text(
+                          product.description,
+                          style: TextStyle(
+                            color: textSecondary,
+                            fontSize: 11,
+                            height: 1.3,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      
                       const Spacer(),
                       
-                      // ➕ Quantity controls
-                      Container(
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Minus button
-                            GestureDetector(
-                              onTap: inCart ? () {
-                                // Remove from cart
+                      // ➕ Quantity controls — separate bordered buttons
+                      // When NOT in cart: +/- adjust local selection (quantity picker)
+                      // When IN cart: +/- directly adjust cart quantity
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // ⊖ Minus button — individual bordered square
+                          GestureDetector(
+                            onTap: () {
+                              if (inCart) {
+                                // IN CART: directly remove from cart
                                 if (productCartItems.isNotEmpty) {
                                   ref.read(cartProvider.notifier).removeFromCart(productCartItems.first.uniqueKey);
                                 }
-                              } : null,
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
+                              } else {
+                                // NOT IN CART: decrease local selection
+                                final current = _selections[product.sku] ?? defaultQty;
+                                if (current > defaultQty) {
+                                  setState(() => _selections[product.sku] = current - stepQty);
+                                }
+                              }
+                            },
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF2A2A2C) : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.grey.shade300,
+                                  width: 1,
                                 ),
-                                child: Icon(Icons.remove, color: inCart ? textPrimary : textSecondary, size: 16),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '—',
+                                style: TextStyle(
+                                  color: (inCart || (selectedQty > defaultQty)) ? textPrimary : textSecondary.withValues(alpha: 0.3),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                            // Quantity display
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '${displayQty.toInt()}',
-                                  style: TextStyle(
-                                    color: textPrimary,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          ),
+                          // Quantity display — centered
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '$displayQtyGrams',
+                                style: TextStyle(
+                                  color: textPrimary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                Text(
-                                  unitLabel,
-                                  style: TextStyle(
-                                    color: textSecondary,
-                                    fontSize: 8,
-                                  ),
+                              ),
+                              Text(
+                                unitLabel,
+                                style: TextStyle(
+                                  color: textSecondary,
+                                  fontSize: 9,
                                 ),
-                              ],
-                            ),
-                            // Plus button
-                            GestureDetector(
-                              onTap: isAvailable ? () {
-                                _showProductBottomSheet(product);
-                              } : null,
-                              child: Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
+                              ),
+                            ],
+                          ),
+                          // ⊕ Plus button — individual bordered square
+                          GestureDetector(
+                            onTap: isAvailable ? () {
+                              if (inCart) {
+                                // IN CART: directly add more to cart
+                                if (product.optionGroups.isNotEmpty) {
+                                  _showProductBottomSheet(product);
+                                } else {
+                                  final data = _butcherDoc?.data() as Map<String, dynamic>?;
+                                  final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                                  ref.read(cartProvider.notifier).addToCart(
+                                    product,
+                                    isByWeight ? stepQty : 1,
+                                    widget.businessId,
+                                    butcherName,
+                                  );
+                                  setState(() {});
+                                }
+                              } else {
+                                // NOT IN CART: increase local selection
+                                final current = _selections[product.sku] ?? defaultQty;
+                                setState(() => _selections[product.sku] = current + stepQty);
+                              }
+                            } : null,
+                            child: Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF2A2A2C) : Colors.grey[100],
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.grey.shade300,
+                                  width: 1,
                                 ),
-                                child: Icon(Icons.add, color: accent, size: 16),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '+',
+                                style: TextStyle(
+                                  color: accent,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                       
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       
-                      // 🛒 Add to Cart button
+                      // 🛒 Sepete Ekle / Sepette button — BRAND RED
                       GestureDetector(
-                        onTap: isAvailable ? () => _showProductBottomSheet(product) : null,
+                        onTap: isAvailable ? () {
+                          if (inCart) {
+                            // Already in cart — go to cart or show sheet
+                            _showProductBottomSheet(product);
+                          } else {
+                            // NOT in cart — add selected quantity
+                            if (product.optionGroups.isNotEmpty) {
+                              _showProductBottomSheet(product);
+                            } else {
+                              final data = _butcherDoc?.data() as Map<String, dynamic>?;
+                              final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                              final qtyToAdd = _selections[product.sku] ?? defaultQty;
+                              ref.read(cartProvider.notifier).addToCart(
+                                product,
+                                qtyToAdd,
+                                widget.businessId,
+                                butcherName,
+                              );
+                              // Reset local selection after adding
+                              setState(() => _selections.remove(product.sku));
+                            }
+                          }
+                        } : null,
                         child: Container(
                           width: double.infinity,
-                          height: 32,
+                          height: 36,
                           decoration: BoxDecoration(
-                            color: inCart ? accent : (isDark ? Colors.white : Colors.black87),
-                            borderRadius: BorderRadius.circular(8),
+                            color: inCart ? Colors.green.shade600 : accent,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (inCart ? Colors.green : accent).withValues(alpha: 0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                inCart ? Icons.check : Icons.shopping_cart_outlined, 
-                                color: inCart ? Colors.white : (isDark ? Colors.black : Colors.white), 
-                                size: 14,
+                                inCart ? Icons.check_circle_outline : Icons.shopping_cart_outlined,
+                                color: Colors.white,
+                                size: 15,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 6),
                               Text(
                                 inCart 
-                                  ? '${(totalQtyInCart * (isByWeight ? product.price / 1000 : product.price)).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'
-                                  : tr('marketplace.add_to_cart'),
-                                style: TextStyle(
-                                  color: inCart ? Colors.white : (isDark ? Colors.black : Colors.white),
-                                  fontSize: 11,
+                                  ? 'Sepette  ${totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'
+                                  : 'Sepete Ekle  ${previewPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -3635,7 +3823,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                           ),
                         // Price
                         Text(
-                          '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
+                          '${CurrencyUtils.getCurrencySymbol()}${product.effectiveAppPrice.toStringAsFixed(2)}${isByWeight ? '/kg' : ''}',
                           style: TextStyle(
                             color: isAvailable ? textPrimary : textSecondary,
                             fontSize: 16,

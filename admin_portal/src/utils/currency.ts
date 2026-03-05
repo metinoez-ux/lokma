@@ -8,6 +8,9 @@ export const COUNTRY_CONFIG = {
     MX: { name: 'Mexico', currency: 'MXN', symbol: '$' },
     US: { name: 'United States', currency: 'USD', symbol: '$' },
     UK: { name: 'United Kingdom', currency: 'GBP', symbol: '£' },
+    NO: { name: 'Norge', currency: 'NOK', symbol: 'kr' },
+    SE: { name: 'Sverige', currency: 'SEK', symbol: 'kr' },
+    DK: { name: 'Danmark', currency: 'DKK', symbol: 'kr' },
 };
 
 export type CountryCode = keyof typeof COUNTRY_CONFIG;
@@ -29,6 +32,9 @@ export function getCurrencySymbol(currencyCode: string | undefined): string {
         case 'GBP': return '£';
         case 'CHF': return 'CHF';
         case 'MXN': return '$';
+        case 'NOK': return 'kr';
+        case 'SEK': return 'kr';
+        case 'DKK': return 'kr';
     }
 
     // Fallback to Intl API if browser supports it

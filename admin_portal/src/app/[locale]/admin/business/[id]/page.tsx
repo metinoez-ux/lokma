@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { formatCurrency } from "@/utils/currency";
+import { formatCurrency, getCurrencySymbol } from "@/utils/currency";
 // Removing onAuthStateChanged import as it is no longer needed in this file
 import {
   doc,
@@ -3238,16 +3238,27 @@ export default function BusinessDetailsPage() {
                                           <div className="flex-1 min-w-0">
                                             <p className="text-white text-sm font-medium truncate">{typeof product.name === 'object' ? getLocalizedText(product.name) : product.name}</p>
                                             <p className="text-gray-500 text-xs truncate">
-                                              {getLocalizedText(product.description) || product.unit || ''}
+                                              {getLocalizedText(product.description) || ''}{product.unit ? ` · ${product.unit === 'kg' ? '⚖️ kg' : '📦 Adet'}` : ''}
                                             </p>
                                           </div>
                                           {/* Price */}
-                                          <div className="text-right">
-                                            {product.price != null && (
-                                              <span className="text-green-400 font-bold text-sm">
-                                                {formatCurrency(typeof product.price === 'number' ? product.price : parseFloat(product.price || '0'), business?.currency)}
-                                              </span>
-                                            )}
+                                          <div className="text-right shrink-0">
+                                            {(() => {
+                                              const basePrice = product.sellingPrice || product.price || null;
+                                              const appPrice = product.appSellingPrice || basePrice;
+                                              const taxRate = product.taxRate || 7;
+                                              const brutto = appPrice ? parseFloat((appPrice * (1 + taxRate / 100)).toFixed(2)) : null;
+                                              const currSym = getCurrencySymbol(business?.currency);
+                                              const hasAppMarkup = product.appSellingPrice && basePrice && product.appSellingPrice !== basePrice;
+                                              const unitSuffix = product.unit === 'kg' ? '/kg' : '';
+                                              if (!appPrice) return <span className="text-gray-600 text-xs">—</span>;
+                                              return (
+                                                <div className="space-y-0.5">
+                                                  <div className={`${hasAppMarkup ? 'text-blue-400' : 'text-green-400'} font-bold text-sm`}>{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">brutto{hasAppMarkup ? ' 📱' : ''}</span></div>
+                                                  <div className="text-gray-400 text-xs">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">netto</span></div>
+                                                </div>
+                                              );
+                                            })()}
                                             {product.isActive === false && (
                                               <span className="block text-red-400 text-[10px]">{t('pasif')}</span>
                                             )}

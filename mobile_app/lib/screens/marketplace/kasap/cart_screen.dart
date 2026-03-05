@@ -605,26 +605,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         backgroundColor: colorScheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 40,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, size: 20, color: colorScheme.onSurface),
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            } else {
-              context.go('/');
-            }
-          },
-        ),
-        title: Text(
-          'cart.my_cart'.tr(),
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
-          ),
-        ),
-        centerTitle: true,
+        toolbarHeight: 0,
+        leading: null,
+        automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: const Color(0xFFFB335B),
@@ -2143,6 +2126,44 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       );
     }
     
+    // Determine if this is a Market segment (no Masa option)
+    // Mirror _extractBusinessType logic: check 'type' first, then 'types', then 'businessType'
+    String bType = 'other';
+    final typeField = _butcherData?['type'];
+    if (typeField is String && typeField.isNotEmpty) {
+      bType = typeField.toLowerCase();
+    } else {
+      final typesField = _butcherData?['types'];
+      if (typesField is List && typesField.isNotEmpty) {
+        bType = (typesField.first as String? ?? 'other').toLowerCase();
+      } else {
+        final businessType = _butcherData?['businessType'];
+        if (businessType is String && businessType.isNotEmpty) {
+          bType = businessType.toLowerCase();
+        }
+      }
+    }
+    const marketTypes = {'kasap', 'market', 'cicekci', 'aktar', 'eticaret', 'kuruyemis', 'balik', 'tursu', 'sarkuteri', 'petshop', 'kozmetik'};
+    final isMarketSegment = marketTypes.contains(bType);
+    
+    if (isMarketSegment) {
+      // Market: only Kurye + Gel Al (no Masa)
+      return ThreeDimensionalPillTabBar(
+        selectedIndex: _isPickUp ? 1 : 0,
+        onTabSelected: (index) {
+          setState(() {
+            _isPickUp = index == 1;
+            _isDineIn = false;
+            if (_paymentMethod == 'payLater') _paymentMethod = 'cash';
+          });
+        },
+        tabs: const [
+          TabItem(title: 'Kurye', icon: Icons.delivery_dining),
+          TabItem(title: 'Gel Al', icon: Icons.store_outlined),
+        ],
+      );
+    }
+    
     // 3D Switch for Kurye / Gel Al / Masa
     return ThreeDimensionalPillTabBar(
       selectedIndex: _isDineIn ? 2 : (_isPickUp ? 1 : 0), // Kurye=0, Gel Al=1, Masa=2
@@ -2340,42 +2361,48 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
   
-  /// 🥩 Lieferando-style Kasap cart item
+  /// 🥩 Cart item — Reference design: Icon | Name + Qty | Price + Delete
   Widget _buildLieferandoCartItem(CartItem item, int positionNumber) {
     final productName = I18nUtils.getLocalizedText(context, item.product.nameData);
     final quantity = item.quantity;
     final totalPrice = item.totalPrice;
     final unitType = item.product.unitType.toLowerCase();
     final isKg = unitType == 'kg';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Quantity display text
+    final qtyText = isKg 
+        ? '${(quantity * 1000).toInt()}g'
+        : '${quantity.toInt()}';
     
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+        ),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // POSITION BADGE
+          // LEFT: Category icon
           Container(
-            width: 28,
-            height: 28,
-            margin: EdgeInsets.only(right: 10, top: 2),
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: Color(0xFFFB335B),
-              borderRadius: BorderRadius.circular(8),
+              color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+              borderRadius: BorderRadius.circular(10),
             ),
-            alignment: Alignment.center,
-            child: Text(
-              '#$positionNumber',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.surface,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
+            child: Icon(
+              Icons.restaurant_menu,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+              size: 22,
             ),
           ),
-          // LEFT: Product name and details
+          const SizedBox(width: 12),
+          // CENTER: Name + Quantity controls
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2384,171 +2411,108 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   productName,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                     fontSize: 15,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                // Selected options inline (Lieferando-style)
+                // Selected options (if any)
                 if (item.selectedOptions.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 3),
+                    padding: const EdgeInsets.only(top: 2),
                     child: Text(
                       item.selectedOptions.map((o) => o.optionName).join(', '),
-                      style: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 12,
-                        height: 1.2,
-                      ),
-                      maxLines: 2,
+                      style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                if (isKg)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '${item.product.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}/kg',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                    ),
-                  ),
-                // NOTE FIELD
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: GestureDetector(
-                    onTap: () => _showNoteDialog(item),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.edit_note_rounded,
-                          size: 16,
-                          color: item.note != null ? const Color(0xFFFB335B) : Colors.grey[400],
+                const SizedBox(height: 10),
+                // Quantity controls: [—]  qty  [+]
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // MINUS button (dark)
+                    GestureDetector(
+                      onTap: () {
+                        final step = isKg ? 0.5 : 1.0;
+                        final minQty = isKg ? 0.5 : 1.0;
+                        if (quantity > minQty) {
+                          ref.read(cartProvider.notifier).updateQuantity(item.uniqueKey, quantity - step);
+                        } else {
+                          ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey);
+                        }
+                      },
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[800] : Colors.grey[900],
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            item.note ?? 'Not ekle...',
-                            style: TextStyle(
-                              color: item.note != null ? const Color(0xFFFB335B) : Colors.grey[400],
-                              fontSize: 12,
-                              fontStyle: item.note == null ? FontStyle.italic : FontStyle.normal,
-                              fontWeight: item.note != null ? FontWeight.w500 : FontWeight.normal,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                        alignment: Alignment.center,
+                        child: Icon(Icons.remove, color: Colors.white, size: 16),
+                      ),
                     ),
-                  ),
+                    // Quantity text
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        qtyText,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    // PLUS button (accent red)
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(cartProvider.notifier).updateQuantity(
+                          item.uniqueKey,
+                          isKg ? quantity + 0.5 : quantity + 1,
+                        );
+                      },
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFB335B),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.add, color: Colors.white, size: 16),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          
-          // RIGHT: Price + Quantity controls (Lieferando style)
+          const SizedBox(width: 8),
+          // RIGHT: Price + Delete icon
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Price
               Text(
                 '${totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                 style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
                   fontSize: 15,
                 ),
               ),
-              // Düzenle link (only for items with options)
-              if (item.selectedOptions.isNotEmpty) ...[
-                SizedBox(height: 6),
-                GestureDetector(
-                  onTap: () {
-                    final cart = ref.read(cartProvider);
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (ctx) => ProductCustomizationSheet(
-                        product: item.product,
-                        businessId: cart.butcherId ?? '',
-                        businessName: cart.butcherName ?? '',
-                        existingItem: item,
-                      ),
-                    );
-                  },
-                  child: Text(
-                    'Düzenle',
-                    style: TextStyle(
-                      color: const Color(0xFFFB335B),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey),
+                child: Icon(
+                  Icons.delete_outline,
+                  color: isDark ? Colors.grey[500] : Colors.grey[400],
+                  size: 22,
                 ),
-              ],
-              SizedBox(height: 8),
-              // Quantity controls: - number +
-              Builder(
-                builder: (context) {
-                  final isDark = Theme.of(context).brightness == Brightness.dark;
-                  return Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: isDark ? Colors.grey.shade600 : Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Minus/Delete button
-                        GestureDetector(
-                          onTap: () {
-                            final step = isKg ? 100.0 : 1.0;
-                            final minQty = isKg ? 100.0 : 1.0;
-                            if (quantity > minQty) {
-                              ref.read(cartProvider.notifier).updateQuantity(item.uniqueKey, quantity - step);
-                            } else {
-                              ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey);
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            child: Icon(
-                              quantity == 1 ? Icons.delete_outline : Icons.remove,
-                              color: isDark ? Colors.grey[400] : Colors.grey[700],
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                        // Quantity
-                        Container(
-                          constraints: const BoxConstraints(minWidth: 32),
-                          alignment: Alignment.center,
-                          child: Text(
-                            isKg ? (quantity / 1000).toStringAsFixed(1) : '${quantity.toInt()}',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        // Plus button
-                        GestureDetector(
-                          onTap: () {
-                            ref.read(cartProvider.notifier).updateQuantity(
-                              item.uniqueKey, 
-                              isKg ? quantity + 100 : quantity + 1,
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            child: Icon(Icons.add, color: isDark ? Colors.grey[400] : Colors.grey[700], size: 18),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
               ),
             ],
           ),
@@ -4279,8 +4243,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     children: [
                                       Row(
                                         children: [
-                                          const Text('🎉', style: TextStyle(fontSize: 14)),
-                                          const SizedBox(width: 4),
                                           Text('Hoş Geldin İndirimi', style: TextStyle(color: Colors.orange[700], fontSize: 13)),
                                         ],
                                       ),
@@ -4336,8 +4298,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     ),
                                     child: Row(
                                       children: [
-                                        const Text('🎉', style: TextStyle(fontSize: 20)),
-                                        const SizedBox(width: 10),
                                         Expanded(
                                           child: Text(
                                             snap.data!,
