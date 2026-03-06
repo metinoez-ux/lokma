@@ -96,6 +96,7 @@ interface BusinessInfo {
     id: string;
     companyName: string;
     type?: string;
+    types?: string[];
 }
 
 function GlobalProductsPageContent() {
@@ -230,6 +231,14 @@ function GlobalProductsPageContent() {
     const [applyingCategoryTemplate, setApplyingCategoryTemplate] = useState(false);
     const [applyingProductTemplate, setApplyingProductTemplate] = useState(false);
 
+    // Helper: check if business is kasap-type (same logic as business detail page)
+    const isKasapType = (() => {
+        const types = businessInfo?.types || [];
+        const singleType = businessInfo?.type || '';
+        const kasapTypes = ['kasap', 'market', 'balik', 'sarkuteri', 'manav', 'bakkal'];
+        return types.some((t: string) => kasapTypes.includes(t.toLowerCase())) || kasapTypes.includes(singleType.toLowerCase());
+    })();
+
     // 🆕 BUSINESS PRODUCT MULTI-SELECT & PAGINATION
     const [selectedBusinessProducts, setSelectedBusinessProducts] = useState<Set<string>>(new Set());
     const [businessProductPage, setBusinessProductPage] = useState(1);
@@ -343,6 +352,7 @@ function GlobalProductsPageContent() {
                         id: businessDoc.id,
                         companyName: data.companyName || data.name || data.brand || t('isletme'),
                         type: data.type || data.businessType,
+                        types: data.types || [],
                     });
                     // 🌟 Load sponsored products from business doc
                     setSponsoredProducts(data.sponsoredProducts || []);
@@ -1545,7 +1555,7 @@ function GlobalProductsPageContent() {
                                                 {t('kategorileriSiralayinDuzenleyinVeyaYeniEkleyin')}
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                {businessInfo?.type === 'kasap' && (
+                                                {isKasapType && (
                                                     <button
                                                         onClick={() => {
                                                             if (businessCategories.length > 0) {
@@ -1655,7 +1665,7 @@ function GlobalProductsPageContent() {
                                 {businessViewMode === 'products' && (
                                     <div>
                                         {/* Ürün Şablonu Yükle Button */}
-                                        {businessInfo?.type === 'kasap' && (
+                                        {isKasapType && (
                                             <div className="flex items-center justify-end mb-4">
                                                 <button
                                                     onClick={() => {
