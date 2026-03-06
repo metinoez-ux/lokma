@@ -816,10 +816,12 @@ export default function BusinessDetailsPage() {
       const snapshot = await getDocs(collection(db, `businesses/${businessId}/products`));
       const prods = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       prods.sort((a: any, b: any) => {
-        const catA = a.category || '';
-        const catB = b.category || '';
+        const catA = (typeof a.category === 'object' ? getLocalizedText(a.category) : a.category) || '';
+        const catB = (typeof b.category === 'object' ? getLocalizedText(b.category) : b.category) || '';
         if (catA !== catB) return catA.localeCompare(catB);
-        return (a.name || '').localeCompare(b.name || '');
+        const nameA = (typeof a.name === 'object' ? getLocalizedText(a.name) : a.name) || '';
+        const nameB = (typeof b.name === 'object' ? getLocalizedText(b.name) : b.name) || '';
+        return nameA.localeCompare(nameB);
       });
       setInlineProducts(prods);
     } catch (error) {
@@ -829,11 +831,11 @@ export default function BusinessDetailsPage() {
   }, [businessId]);
 
   useEffect(() => {
-    if (settingsSubTab === 'menu' && businessId) {
+    if (businessId) {
       loadInlineCategories();
       loadInlineProducts();
     }
-  }, [settingsSubTab, businessId, loadInlineCategories, loadInlineProducts]);
+  }, [businessId, loadInlineCategories, loadInlineProducts]);
 
   // Category CRUD
   const handleSaveCategory = async () => {
@@ -2636,14 +2638,14 @@ export default function BusinessDetailsPage() {
                       {business.isActive ? "🔴 Deaktif Et" : t('aktif_et')}
                     </button>
                   )}
-                  {!isEditing ? (
+                  {!isEditing && settingsSubTab === 'isletme' ? (
                     <button
                       onClick={() => setIsEditing(true)}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
                     >
                       {t('duzenle')}
                     </button>
-                  ) : (
+                  ) : isEditing && settingsSubTab === 'isletme' ? (
                     <div className="flex gap-2">
                       <button
                         onClick={() => setIsEditing(false)}
@@ -2659,7 +2661,7 @@ export default function BusinessDetailsPage() {
                         {saving ? "Kaydediliyor..." : "💾 Kaydet"}
                       </button>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
 
