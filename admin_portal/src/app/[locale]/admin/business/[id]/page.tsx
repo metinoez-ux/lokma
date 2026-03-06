@@ -566,6 +566,15 @@ export default function BusinessDetailsPage() {
   // 🆕 Plan features resolved from subscription_plans collection
   const [planFeatures, setPlanFeatures] = useState<Record<string, boolean>>({});
 
+  // 📦 Template Selection Modal State
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateProducts, setTemplateProducts] = useState<any[]>([]);
+  const [selectedTemplateProducts, setSelectedTemplateProducts] = useState<Record<string, boolean>>({});
+  const [templateCategoryMap, setTemplateCategoryMap] = useState<Record<string, string>>({});
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateFilter, setTemplateFilter] = useState<string>('all');
+  const [templateSearch, setTemplateSearch] = useState('');
+
   // Load admin data - REMOVED (Handled by AdminProvider)
 
   // Check if admin is ready to load data
@@ -940,12 +949,49 @@ export default function BusinessDetailsPage() {
     setApplyingTemplate(false);
   };
 
-  // 📦 Apply kasap PRODUCT template from Firestore (products only)
+  // 📦 AI Category Mapping: product.category → business category name
+  const suggestCategoryForProduct = (product: any, categories: any[]): string => {
+    const name = typeof product.name === 'object'
+      ? (product.name.tr || product.name.de || '').toLowerCase()
+      : (product.name || '').toLowerCase();
+    const cat = product.category || '';
+
+    // Helper to find category by partial name match
+    const findCat = (search: string): string => {
+      const found = categories.find((c: any) => {
+        const catName = typeof c.name === 'object'
+          ? (c.name.tr || c.name.de || '').toLowerCase()
+          : (c.name || '').toLowerCase();
+        return catName.includes(search.toLowerCase());
+      });
+      return found ? (typeof found.name === 'object' ? getLocalizedText(found.name) : found.name) : '';
+    };
+
+    // Kuzu vs Dana distinction within 'et' category
+    if (cat === 'et') {
+      if (name.includes('kuzu') || name.includes('lamm')) return findCat('kuzu') || findCat('dana');
+      if (name.includes('dana') || name.includes('rind') || name.includes('jungbulle') || name.includes('roast')) return findCat('dana') || findCat('kuzu');
+      // Default: kıyma, işkembe, dil etc. → Dana
+      return findCat('dana') || findCat('kuzu');
+    }
+    if (cat === 'tavuk') return findCat('tavuk') || findCat('geflügel');
+    if (cat === 'dondurulmus') return findCat('dondur') || findCat('tiefkühl');
+    // Feinkost: sucuk, wurst, wurstchen, pastirma, kavurma, salam
+    if (['wurstchen', 'wurst', 'sucuk', 'pastirma', 'kavurma'].includes(cat)) {
+      return findCat('feinkost') || findCat('şarküteri');
+    }
+    // Fallback: first category
+    return categories.length > 0
+      ? (typeof categories[0].name === 'object' ? getLocalizedText(categories[0].name) : categories[0].name)
+      : 'Kategorisiz';
+  };
+
+  // 📦 Open Template Selection Modal (was: auto-add all)
   const applyProductTemplate = async () => {
     if (!businessId) return;
     setApplyingProductTemplate(true);
     try {
-      // Fetch kasap master products and assign to business
+      // Fetch kasap master products
       const masterProductsSnap = await getDocs(collection(db, 'master_products'));
       const kasapProducts = masterProductsSnap.docs
         .map(d => ({ id: d.id, ...d.data() }))
@@ -954,16 +1000,44 @@ export default function BusinessDetailsPage() {
           return types.includes('kasap');
         });
 
-      // Add products to business subcollection
+      // Pre-fill: all selected, AI category suggestions
+      setTemplateProducts(kasapProducts);
+      setSelectedTemplateProducts(
+        Object.fromEntries(kasapProducts.map((p: any) => [p.id, true]))
+      );
+      setTemplateCategoryMap(
+        Object.fromEntries(kasapProducts.map((p: any) => [
+          p.id,
+          suggestCategoryForProduct(p, inlineCategories)
+        ]))
+      );
+      setTemplateFilter('all');
+      setTemplateSearch('');
+      setShowTemplateModal(true);
+    } catch (error) {
+      console.error('Error loading template products:', error);
+      showToast('Şablon ürünleri yüklenirken hata oluştu', 'error');
+    }
+    setApplyingProductTemplate(false);
+  };
+
+  // 📦 Batch Save Selected Template Products
+  const saveSelectedTemplateProducts = async () => {
+    if (!businessId) return;
+    setSavingTemplate(true);
+    try {
+      const selectedProducts = templateProducts.filter((p: any) => selectedTemplateProducts[p.id]);
       let productCount = 0;
-      for (const product of kasapProducts) {
+
+      for (const product of selectedProducts) {
         const p = product as any;
+        const assignedCategory = templateCategoryMap[p.id] || p.category || 'dana';
         await setDoc(doc(db, `businesses/${businessId}/products`, p.id), {
           masterProductId: p.id,
           name: p.name,
           description: p.description || { tr: '' },
-          category: p.category || 'dana',
-          categories: p.categories || [p.category || 'dana'],
+          category: assignedCategory,
+          categories: [assignedCategory],
           defaultUnit: p.defaultUnit || 'kg',
           unit: p.unit || p.defaultUnit || 'kg',
           price: p.defaultPrice || 0,
@@ -979,12 +1053,13 @@ export default function BusinessDetailsPage() {
       }
 
       await loadInlineProducts();
+      setShowTemplateModal(false);
       showToast(`${productCount} ürün başarıyla eklendi ✅`, 'success');
     } catch (error) {
-      console.error('Error applying product template:', error);
-      showToast('Ürün şablonu uygulanırken hata oluştu', 'error');
+      console.error('Error saving template products:', error);
+      showToast('Ürün şablonu kaydedilirken hata oluştu', 'error');
     }
-    setApplyingProductTemplate(false);
+    setSavingTemplate(false);
   };
 
 
@@ -3214,19 +3289,7 @@ export default function BusinessDetailsPage() {
                           <div className="flex items-center gap-2">
                             {isKasapType && (
                               <button
-                                onClick={() => {
-                                  setConfirmModal({
-                                    show: true,
-                                    title: '📦 Ürün Şablonu Yükle',
-                                    message: `Kasap ürün şablonu bu işletmenin ürünlerine eklenecektir. Mevcut ürünlerin üstüne eklenecektir. Devam etmek istiyor musunuz?`,
-                                    confirmText: 'Evet, Yükle',
-                                    confirmColor: 'bg-amber-600 hover:bg-amber-500',
-                                    onConfirm: async () => {
-                                      setConfirmModal(prev => ({ ...prev, show: false }));
-                                      await applyProductTemplate();
-                                    },
-                                  });
-                                }}
+                                onClick={() => applyProductTemplate()}
                                 disabled={applyingProductTemplate}
                                 className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
                               >
@@ -4953,6 +5016,199 @@ export default function BusinessDetailsPage() {
           </div>
         )
       }
+
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {/* 📦 TEMPLATE SELECTION MODAL — Full-Screen Product Picker      */}
+      {/* ═══════════════════════════════════════════════════════════════ */}
+      {showTemplateModal && (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+            {/* Header */}
+            <div className="p-5 border-b border-gray-700 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    📦 Ürün Şablonu — Ürün Seçimi
+                  </h2>
+                  <p className="text-gray-400 text-sm mt-1">
+                    {templateProducts.length} ürün mevcut · {Object.values(selectedTemplateProducts).filter(Boolean).length} seçili
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowTemplateModal(false)}
+                  className="p-2 hover:bg-gray-700 rounded-lg transition text-gray-400 hover:text-white"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Controls: Select All / None + Search + Category Filter */}
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => setSelectedTemplateProducts(Object.fromEntries(templateProducts.map((p: any) => [p.id, true])))}
+                  className="px-3 py-1.5 bg-green-600/20 text-green-400 text-xs font-medium rounded-lg hover:bg-green-600/30 transition border border-green-600/30"
+                >
+                  ✅ Hepsini Seç
+                </button>
+                <button
+                  onClick={() => setSelectedTemplateProducts(Object.fromEntries(templateProducts.map((p: any) => [p.id, false])))}
+                  className="px-3 py-1.5 bg-red-600/20 text-red-400 text-xs font-medium rounded-lg hover:bg-red-600/30 transition border border-red-600/30"
+                >
+                  ❌ Hiçbirini Seçme
+                </button>
+                <div className="flex-1 min-w-[200px]">
+                  <input
+                    type="text"
+                    value={templateSearch}
+                    onChange={(e) => setTemplateSearch(e.target.value)}
+                    placeholder="🔍 Ürün ara..."
+                    className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  />
+                </div>
+                <select
+                  value={templateFilter}
+                  onChange={(e) => setTemplateFilter(e.target.value)}
+                  className="px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="all">📋 Tüm Kategoriler</option>
+                  {[...new Set(templateProducts.map((p: any) => p.category))].sort().map(cat => (
+                    <option key={cat} value={cat}>
+                      {cat === 'et' ? '🥩 Et' : cat === 'tavuk' ? '🐔 Tavuk' : cat === 'dondurulmus' ? '🧊 Dondurulmuş' :
+                        cat === 'wurstchen' ? '🌭 Sosis' : cat === 'wurst' ? '🥓 Salam' : cat === 'sucuk' ? '🧄 Sucuk' :
+                          cat === 'pastirma' ? '🥓 Pastırma' : cat === 'kavurma' ? '🍖 Kavurma' : cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Product List */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-2">
+                {templateProducts
+                  .filter((p: any) => templateFilter === 'all' || p.category === templateFilter)
+                  .filter((p: any) => {
+                    if (!templateSearch.trim()) return true;
+                    const search = templateSearch.toLowerCase();
+                    const name = typeof p.name === 'object' ? (p.name.tr || p.name.de || '') : p.name;
+                    return name.toLowerCase().includes(search);
+                  })
+                  .map((product: any) => {
+                    const prodName = typeof product.name === 'object' ? getLocalizedText(product.name) : product.name;
+                    const isSelected = selectedTemplateProducts[product.id] ?? false;
+                    const assignedCategory = templateCategoryMap[product.id] || '';
+                    const categoryIcon = product.category === 'et' ? '🥩' : product.category === 'tavuk' ? '🐔' :
+                      product.category === 'dondurulmus' ? '🧊' : product.category === 'wurstchen' ? '🌭' :
+                        product.category === 'wurst' ? '🥓' : product.category === 'sucuk' ? '🧄' :
+                          product.category === 'pastirma' ? '🥓' : product.category === 'kavurma' ? '🍖' : '📦';
+
+                    return (
+                      <div
+                        key={product.id}
+                        className={`flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer
+                          ${isSelected
+                            ? 'bg-amber-900/20 border-amber-600/40 hover:bg-amber-900/30'
+                            : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800 opacity-60'
+                          }`}
+                        onClick={() => setSelectedTemplateProducts(prev => ({ ...prev, [product.id]: !prev[product.id] }))}
+                      >
+                        {/* Checkbox */}
+                        <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition
+                          ${isSelected ? 'bg-amber-500 border-amber-500' : 'border-gray-500 bg-transparent'}`}
+                        >
+                          {isSelected && (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+
+                        {/* Thumbnail */}
+                        {product.imageUrl ? (
+                          <img
+                            src={product.imageUrl}
+                            alt={prodName}
+                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-lg">
+                            {categoryIcon}
+                          </div>
+                        )}
+
+                        {/* Product Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{prodName}</p>
+                          <p className="text-gray-400 text-xs">
+                            {categoryIcon} {product.category} · {product.defaultUnit === 'kg' ? '⚖️ kg' : '📦 Adet'}
+                            {product.defaultPrice ? ` · €${product.defaultPrice.toFixed(2)}` : ''}
+                          </p>
+                        </div>
+
+                        {/* Category Dropdown */}
+                        <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <select
+                            value={assignedCategory}
+                            onChange={(e) => setTemplateCategoryMap(prev => ({ ...prev, [product.id]: e.target.value }))}
+                            className={`px-2 py-1.5 rounded-lg text-xs font-medium border transition
+                              ${isSelected
+                                ? 'bg-gray-800 border-amber-600/50 text-amber-300 focus:ring-2 focus:ring-amber-500'
+                                : 'bg-gray-800/50 border-gray-600 text-gray-500'
+                              }`}
+                            disabled={!isSelected}
+                          >
+                            {inlineCategories.map((cat: any) => {
+                              const catName = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
+                              return (
+                                <option key={cat.id} value={catName}>
+                                  {cat.icon || '📦'} {catName}
+                                </option>
+                              );
+                            })}
+                            <option value="Kategorisiz">❓ Kategorisiz</option>
+                          </select>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-700 flex items-center justify-between flex-shrink-0">
+              <div className="text-gray-400 text-sm">
+                🤖 <span className="text-amber-400">AI</span> kategorileri otomatik önerdi — istediğinizi değiştirebilirsiniz
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowTemplateModal(false)}
+                  className="px-4 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium text-sm transition"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={saveSelectedTemplateProducts}
+                  disabled={savingTemplate || Object.values(selectedTemplateProducts).filter(Boolean).length === 0}
+                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium text-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {savingTemplate ? (
+                    <>
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                      Kaydediliyor...
+                    </>
+                  ) : (
+                    <>
+                      ✅ {Object.values(selectedTemplateProducts).filter(Boolean).length} Ürünü Kaydet
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div >
   );
 }
