@@ -520,7 +520,10 @@ function GlobalProductsPageContent() {
                 setSeeding(true);
                 try {
                     for (const product of MASTER_PRODUCTS) {
-                        await setDoc(doc(db, "master_products", product.id), product);
+                        await setDoc(doc(db, "master_products", product.id), {
+                            ...product,
+                            images: product.imageUrl ? [product.imageUrl] : [],
+                        });
                     }
                     alert(t('varsayilanUrunlerBasariylaEklendi'));
                     fetchProducts();

@@ -6,8 +6,8 @@ import { MASTER_PRODUCTS } from '@/lib/master_products';
  * POST /api/admin/seed-kasap-template
  * 
  * Kasap (Butcher) şablon verilerini Firestore'a seed eder:
- * 1. defaultMenuTemplates/kasap → 8 Kategori şablonu
- * 2. master_products koleksiyonu → 66 ürün
+ * 1. defaultMenuTemplates/kasap → 5 Kategori şablonu (multilingual)
+ * 2. master_products koleksiyonu → kasap ürünleri
  */
 export async function POST() {
     try {
@@ -15,53 +15,38 @@ export async function POST() {
         const batch = adminDb.batch();
 
         // ═══════════════════════════════════════════════════════
-        // 1. DEFAULT MENU TEMPLATE (8 Kategori Şablonu)
+        // 1. DEFAULT MENU TEMPLATE (5 Kategori Şablonu — Multilingual)
         // ═══════════════════════════════════════════════════════
         const templateRef = adminDb.collection('defaultMenuTemplates').doc('kasap');
         batch.set(templateRef, {
             name: 'Kasap Şablonu',
-            description: 'Tam kasap kategorileri: Tavuk, Et, Dondurulmuş, Sosis, Salam, Sucuk, Pastırma, Kavurma',
+            description: 'Kasap ana kategorileri: Dana Eti, Kuzu Eti, Tavuk Ürünleri, Feinkost, Dondurulmuş',
             updatedAt: new Date().toISOString(),
             categories: [
                 {
-                    name: { tr: 'Tavuk Ürünleri', de: 'Geflügel Produkte' },
-                    icon: '🐔',
+                    name: { tr: 'Dana Eti', de: 'Rindfleisch', en: 'Beef' },
+                    icon: '🐄',
                     order: 0,
                 },
                 {
-                    name: { tr: 'Et Ürünleri', de: 'Fleisch Produkte' },
-                    icon: '🥩',
+                    name: { tr: 'Kuzu Eti', de: 'Lammfleisch', en: 'Lamb' },
+                    icon: '🐑',
                     order: 1,
                 },
                 {
-                    name: { tr: 'Dondurulmuş Ürünler', de: 'Tiefkühl Produkte' },
-                    icon: '🧊',
+                    name: { tr: 'Tavuk Ürünleri', de: 'Geflügel', en: 'Poultry' },
+                    icon: '🐔',
                     order: 2,
                 },
                 {
-                    name: { tr: 'Sosis', de: 'Würstchen' },
-                    icon: '🌭',
+                    name: { tr: 'Feinkost Ürünleri', de: 'Feinkostprodukte', en: 'Delicatessen' },
+                    icon: '🧀',
                     order: 3,
                 },
                 {
-                    name: { tr: 'Salam', de: 'Wurst' },
-                    icon: '🥓',
+                    name: { tr: 'Dondurulmuş Ürünler', de: 'Tiefkühlprodukte', en: 'Frozen Products' },
+                    icon: '🧊',
                     order: 4,
-                },
-                {
-                    name: { tr: 'Sucuk', de: 'Sucuk' },
-                    icon: '🧄',
-                    order: 5,
-                },
-                {
-                    name: { tr: 'Pastırma', de: 'Rinderrohschinken' },
-                    icon: '🥓',
-                    order: 6,
-                },
-                {
-                    name: { tr: 'Kavurma', de: 'Braten' },
-                    icon: '🍖',
-                    order: 7,
                 },
             ],
         });
@@ -79,6 +64,7 @@ export async function POST() {
                 ...product,
                 categories: [product.category],
                 unit: product.defaultUnit,
+                images: product.imageUrl ? [product.imageUrl] : [],
                 isActive: true,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
@@ -88,21 +74,18 @@ export async function POST() {
         await batch.commit();
 
         const breakdown = {
+            dana: kasapProducts.filter(p => p.category === 'dana').length,
+            kuzu: kasapProducts.filter(p => p.category === 'kuzu').length,
             tavuk: kasapProducts.filter(p => p.category === 'tavuk').length,
-            et: kasapProducts.filter(p => p.category === 'et').length,
+            feinkost: kasapProducts.filter(p => ['wurstchen', 'wurst', 'sucuk', 'pastirma', 'kavurma'].includes(p.category)).length,
             dondurulmus: kasapProducts.filter(p => p.category === 'dondurulmus').length,
-            wurstchen: kasapProducts.filter(p => p.category === 'wurstchen').length,
-            wurst: kasapProducts.filter(p => p.category === 'wurst').length,
-            sucuk: kasapProducts.filter(p => p.category === 'sucuk').length,
-            pastirma: kasapProducts.filter(p => p.category === 'pastirma').length,
-            kavurma: kasapProducts.filter(p => p.category === 'kavurma').length,
         };
 
         return NextResponse.json({
             success: true,
             message: `Kasap şablonu ve ${kasapProducts.length} ürün başarıyla seed edildi.`,
             template: {
-                categories: 8,
+                categories: 5,
                 path: 'defaultMenuTemplates/kasap',
             },
             products: {

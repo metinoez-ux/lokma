@@ -893,13 +893,15 @@ export default function BusinessDetailsPage() {
     return types.some((t: string) => kasapTypes.includes(t.toLowerCase()));
   })();
 
-  // 📋 Apply default kasap menu template from Firestore
+  // 📋 Apply default kasap CATEGORY template from Firestore (categories only)
   const [applyingTemplate, setApplyingTemplate] = useState(false);
-  const applyDefaultTemplate = async () => {
+  const [applyingProductTemplate, setApplyingProductTemplate] = useState(false);
+
+  const applyCategoryTemplate = async () => {
     if (!businessId) return;
     setApplyingTemplate(true);
     try {
-      // 1. Fetch template from Firestore (categories)
+      // Fetch template from Firestore (categories only)
       const templateDoc = await getDoc(doc(db, 'defaultMenuTemplates', 'kasap'));
       if (!templateDoc.exists()) {
         showToast('Şablon bulunamadı!', 'error');
@@ -924,7 +926,21 @@ export default function BusinessDetailsPage() {
         });
       }
 
-      // 2. Fetch kasap master products and assign to business
+      await loadInlineCategories();
+      showToast(`${categories.length} kategori başarıyla eklendi ✅`, 'success');
+    } catch (error) {
+      console.error('Error applying category template:', error);
+      showToast('Kategori şablonu uygulanırken hata oluştu', 'error');
+    }
+    setApplyingTemplate(false);
+  };
+
+  // 📦 Apply kasap PRODUCT template from Firestore (products only)
+  const applyProductTemplate = async () => {
+    if (!businessId) return;
+    setApplyingProductTemplate(true);
+    try {
+      // Fetch kasap master products and assign to business
       const masterProductsSnap = await getDocs(collection(db, 'master_products'));
       const kasapProducts = masterProductsSnap.docs
         .map(d => ({ id: d.id, ...d.data() }))
@@ -934,7 +950,6 @@ export default function BusinessDetailsPage() {
         });
 
       // Add products to business subcollection
-      const prodRef = collection(db, `businesses/${businessId}/products`);
       let productCount = 0;
       for (const product of kasapProducts) {
         const p = product as any;
@@ -958,14 +973,13 @@ export default function BusinessDetailsPage() {
         productCount++;
       }
 
-      await loadInlineCategories();
       await loadInlineProducts();
-      showToast(`${categories.length} kategori ve ${productCount} ürün başarıyla eklendi ✅`, 'success');
+      showToast(`${productCount} ürün başarıyla eklendi ✅`, 'success');
     } catch (error) {
-      console.error('Error applying template:', error);
-      showToast('Şablon uygulanırken hata oluştu', 'error');
+      console.error('Error applying product template:', error);
+      showToast('Ürün şablonu uygulanırken hata oluştu', 'error');
     }
-    setApplyingTemplate(false);
+    setApplyingProductTemplate(false);
   };
 
 
@@ -2964,29 +2978,50 @@ export default function BusinessDetailsPage() {
                           </div>
                           <div className="flex items-center gap-2">
                             {isKasapType && (
-                              <button
-                                onClick={() => {
-                                  if (inlineCategories.length > 0) {
+                              <>
+                                <button
+                                  onClick={() => {
+                                    if (inlineCategories.length > 0) {
+                                      setConfirmModal({
+                                        show: true,
+                                        title: '📂 Kategori Şablonu Yükle',
+                                        message: `Bu işletmede zaten ${inlineCategories.length} kategori var. Şablon uygulandığında 5 kategori mevcut olan kategorilerin ÜSTÜNE eklenecektir. Devam etmek istiyor musunuz?`,
+                                        confirmText: 'Evet, Ekle',
+                                        confirmColor: 'bg-emerald-600 hover:bg-emerald-500',
+                                        onConfirm: async () => {
+                                          setConfirmModal(prev => ({ ...prev, show: false }));
+                                          await applyCategoryTemplate();
+                                        },
+                                      });
+                                    } else {
+                                      applyCategoryTemplate();
+                                    }
+                                  }}
+                                  disabled={applyingTemplate}
+                                  className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                >
+                                  {applyingTemplate ? '⏳ Yükleniyor...' : '📂 Kategori Şablonu Yükle'}
+                                </button>
+                                <button
+                                  onClick={() => {
                                     setConfirmModal({
                                       show: true,
-                                      title: '📋 Kasap Şablonu Uygula',
-                                      message: `Bu işletmede zaten ${inlineCategories.length} kategori var. Şablon uygulandığında 8 kategori ve 66 ürün mevcut olan kategorilerin ve ürünlerin ÜSTÜNE eklenecektir. Devam etmek istiyor musunuz?`,
-                                      confirmText: 'Evet, Ekle',
-                                      confirmColor: 'bg-emerald-600 hover:bg-emerald-500',
+                                      title: '📦 Ürün Şablonu Yükle',
+                                      message: `Kasap ürün şablonu bu işletmenin ürünlerine eklenecektir. Mevcut ürünlerin üstüne eklenecektir. Devam etmek istiyor musunuz?`,
+                                      confirmText: 'Evet, Yükle',
+                                      confirmColor: 'bg-amber-600 hover:bg-amber-500',
                                       onConfirm: async () => {
                                         setConfirmModal(prev => ({ ...prev, show: false }));
-                                        await applyDefaultTemplate();
+                                        await applyProductTemplate();
                                       },
                                     });
-                                  } else {
-                                    applyDefaultTemplate();
-                                  }
-                                }}
-                                disabled={applyingTemplate}
-                                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
-                              >
-                                {applyingTemplate ? '⏳ Uygulanıyor...' : '📋 Şablon Uygula'}
-                              </button>
+                                  }}
+                                  disabled={applyingProductTemplate}
+                                  className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                >
+                                  {applyingProductTemplate ? '⏳ Yükleniyor...' : '📦 Ürün Şablonu Yükle'}
+                                </button>
+                              </>
                             )}
                             <button
                               onClick={() => {
