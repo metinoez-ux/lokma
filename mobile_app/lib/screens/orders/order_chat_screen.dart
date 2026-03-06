@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/chat_service.dart';
@@ -53,13 +54,13 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
         final data = orderDoc.data()!;
         if (data['courierId'] == user.uid) {
           _currentUserRole = 'courier';
-          _currentUserName = data['courierName'] ?? user.displayName ?? 'Kurye';
+          _currentUserName = data['courierName'] ?? user.displayName ?? tr('common.courier');
         } else if (data['butcherId'] == user.uid) {
           _currentUserRole = 'business';
-          _currentUserName = data['butcherName'] ?? 'İşletme';
+          _currentUserName = data['butcherName'] ?? tr('common.business');
         } else {
           _currentUserRole = 'customer';
-          _currentUserName = data['userName'] ?? user.displayName ?? 'Müşteri';
+          _currentUserName = data['userName'] ?? user.displayName ?? tr('common.customer');
         }
       }
 
@@ -84,7 +85,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
     _chatService.sendMessage(
       orderId: widget.orderId,
       senderId: _currentUserId!,
-      senderName: _currentUserName ?? 'Kullanıcı',
+      senderName: _currentUserName ?? tr('common.user'),
       senderRole: _currentUserRole,
       text: text,
     );
@@ -122,7 +123,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
               ),
             ),
             Text(
-              'Sipariş #${widget.orderNumber}',
+              'orders.order_number'.tr(args: [widget.orderNumber]),
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.6),
                 fontSize: 12,
@@ -143,8 +144,8 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
               stream: _chatService.getMessagesStream(widget.orderId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFFF6B35)),
+                  return Center(
+                    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
                   );
                 }
 
@@ -162,7 +163,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Henüz mesaj yok',
+                          tr('common.no_messages'),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.5),
                             fontSize: 16,
@@ -170,7 +171,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'İlk mesajı gönderin!',
+                          tr('common.send_first_message'),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.3),
                             fontSize: 14,
@@ -229,7 +230,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
         break;
       case 'business':
         bubbleColor = isMe ? const Color(0xFF8B2D2D) : const Color(0xFF3D1A1A);
-        senderColor = const Color(0xFFFF6B35);
+        senderColor = Theme.of(context).colorScheme.primary;
         break;
       default: // customer
         bubbleColor = isMe ? const Color(0xFF2D4A8B) : const Color(0xFF1A2A3D);
@@ -375,7 +376,7 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _sendMessage(),
                 decoration: InputDecoration(
-                  hintText: 'Mesaj yazın...',
+                  hintText: tr('common.write_message'),
                   hintStyle: TextStyle(
                     color: Colors.white.withValues(alpha: 0.3),
                   ),
@@ -390,9 +391,9 @@ class _OrderChatScreenState extends State<OrderChatScreen> {
           ),
           const SizedBox(width: 8),
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFFFF6B35), Color(0xFFFF4444)],
+                colors: [Theme.of(context).colorScheme.primary, const Color(0xFFFF4444)],
               ),
               shape: BoxShape.circle,
             ),

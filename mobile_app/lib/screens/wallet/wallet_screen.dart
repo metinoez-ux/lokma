@@ -42,10 +42,11 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final customerId = user?.uid.substring(0, 8).toUpperCase() ?? 'GUEST';
-    final customerName = user?.displayName ?? user?.email?.split('@').first ?? 'Misafir';
+    final customerName = user?.displayName ?? user?.email?.split('@').first ?? tr('wallet.misafir');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: isDark ? Colors.black : const Color(0xFFF5F5F5),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -78,6 +79,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
   }
 
   Widget _buildHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16,
@@ -85,11 +87,11 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
         right: 24,
         bottom: 24,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF1A1A2E), Colors.black],
+          colors: isDark ? [const Color(0xFF1A1A2E), Colors.black] : [const Color(0xFF2A2A3E), const Color(0xFF1A1A2E)],
         ),
       ),
       child: Row(
@@ -370,7 +372,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
         children: [
           _buildActionButton(
             icon: Icons.qr_code_scanner,
-            label: 'Tara',
+            label: tr('wallet.tara'),
             color: lokmaRed,
             onTap: () => _showScanDialog(),
           ),
@@ -461,7 +463,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Aksiyon Kodu',
+                      tr('wallet.action_code'),
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -543,8 +545,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Avantajlar',
+          Text(
+            tr('wallet.benefits'),
             style: TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -568,7 +570,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
           const SizedBox(height: 12),
           _buildBenefitCard(
             icon: Icons.card_giftcard,
-            title: 'Puan Kazanın',
+            title: tr('wallet.puan_kazanin'),
             subtitle: tr('wallet.her_alisveriste_puan'),
             color: const Color(0xFF6C63FF),
           ),
@@ -629,8 +631,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
 
   void _showScanDialog() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('QR Tarayıcı yakında aktif olacak!', style: TextStyle(color: Colors.white)),
+      SnackBar(
+        content: Text(tr('wallet.qr_scanner_coming_soon'), style: const TextStyle(color: Colors.white)),
         backgroundColor: lokmaRed,
       ),
     );
@@ -657,7 +659,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '"$_promoCode" kodu aktif edildi! 🎉',
+            tr('wallet.kod_aktif_edildi', namedArgs: {'code': _promoCode}),
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           backgroundColor: const Color(0xFF00C851),

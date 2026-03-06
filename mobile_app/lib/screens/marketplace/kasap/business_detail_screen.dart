@@ -466,9 +466,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     children: [
                       const Icon(Icons.access_time, color: Colors.amber, size: 18),
                       const SizedBox(width: 8),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Şu an kapalı',
+                          'marketplace.currently_closed'.tr(),
                           style: TextStyle(fontWeight: FontWeight.w500, color: Colors.amber),
                         ),
                       ),
@@ -505,8 +505,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 const SizedBox(height: 16),
                 Text(
                   preOrderEnabled
-                      ? 'Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Menüye göz atıp sipariş verebilirsiniz — işletme açıldığında hazırlanacaktır.'
-                      : 'Şu an kapalı, ama yine de menüye göz atabilirsiniz.',
+                      ? 'marketplace.closed_but_preorder'.tr()
+                      : 'marketplace.closed_but_browse'.tr(),
                   style: const TextStyle(fontSize: 15, height: 1.4),
                 ),
                 if (preOrderEnabled) ...[
@@ -524,7 +524,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Ön Sipariş Aktif',
+                            'marketplace.pre_order_active'.tr(),
                             style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                         ),
@@ -548,7 +548,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   backgroundColor: _getAccent(context),
                   foregroundColor: Colors.white,
                 ),
-                child: Text(preOrderEnabled ? 'Menüyü Gör & Sipariş Ver' : tr('marketplace.see_menu')),
+                child: Text(preOrderEnabled ? 'marketplace.see_menu_and_order'.tr() : tr('marketplace.see_menu')),
               ),
             ],
           );
@@ -593,12 +593,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
 
   String _getBrandLabel(String? brand) {
-    if (brand == null) return 'Bağımsız Kasap';
+    if (brand == null) return 'marketplace.independent_butcher'.tr();
     switch (brand.toLowerCase()) {
       case 'tuna': return 'TUNA';
       case 'akdeniz_toros': return 'Akdeniz Toros';
-      case 'independent': return 'Bağımsız Kasap';
-      default: return 'Bağımsız Kasap';
+      case 'independent': return 'marketplace.independent_butcher'.tr();
+      default: return 'marketplace.independent_butcher'.tr();
     }
   }
 
@@ -635,7 +635,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
             ),
-            Text('Haftalık Çalışma Saatleri', style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('marketplace.weekly_hours'.tr(), style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 24),
             ..._buildHoursListThemed(isDark),
             const SizedBox(height: 24),
@@ -747,7 +747,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 // Review List
                 Expanded(
                   child: sortedReviews.isEmpty 
-                    ? const Center(child: Text('Henüz yorum yapılmamış.', style: TextStyle(color: Colors.white54)))
+                    ? Center(child: Text('marketplace.no_review_yet'.tr(), style: TextStyle(color: Colors.white54)))
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                         itemCount: sortedReviews.length,
@@ -992,10 +992,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      // Standards List
                      Text('Tedarik Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold)),
                      const SizedBox(height: 16),
-                     _buildCheckItem('Helal Kesim', 'İslami usullere uygun kesim'),
-                     _buildCheckItem('Elle Kesim', 'Geleneksel yöntemlerle'),
-                     _buildCheckItem('Şoksuz Kesim', 'Elektrik şoku uygulanmaz'),
-                     _buildCheckItem('Kuru Yolum', 'Beyaz ette hijyenik temizlik'),
+                     _buildCheckItem('marketplace.helal_kesim'.tr(), 'marketplace.helal_kesim_desc'.tr()),
+                     _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
+                     _buildCheckItem('marketplace.soksuz_kesim'.tr(), 'marketplace.soksuz_kesim_desc'.tr()),
+                     _buildCheckItem('marketplace.kuru_yolum'.tr(), 'marketplace.kuru_yolum_desc'.tr()),
 
                      const SizedBox(height: 24),
                      
@@ -1019,7 +1019,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                            ),
                            const SizedBox(height: 8),
                            Text(
-                             'İslami usullere göre kesimi yapılan tavuğun, haşlama kazanı, ilaçlı ve yüksek sıcaklıkta su kullanılmadan tüylerinin temizlenmesi işlemidir. Kuru yolum işlemi uygulanan tavuklarda bakteri, toz ve necaset bulunmaz.',
+                             'marketplace.kuru_yolum_full_desc'.tr(),
                              style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
                            ),
                          ],
@@ -1029,7 +1029,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      SizedBox(height: 24),
                      Text('Üretim Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold)),
                      const SizedBox(height: 16),
-                     _buildCheckItem('Yüksek Et Oranı', 'Kaliteli et kullanımı'),
+                     _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
                      _buildCheckItem('E621 İçermez', 'Glutamat/Çin tuzu yok'),
                      
                      const SizedBox(height: 40),
@@ -1163,7 +1163,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           final city = address is Map ? (address['city'] ?? '') : '';
                           return _buildInfoRow(Icons.location_on, 'Adres', '$street\n$postalCode $city', isDark: isDark);
                         } catch (e) {
-                          return _buildInfoRow(Icons.location_on, 'Adres', 'Adres bilgisi yok', isDark: isDark);
+                          return _buildInfoRow(Icons.location_on, 'marketplace.address_label'.tr(), 'marketplace.no_address_info'.tr(), isDark: isDark);
                         }
                       }),
                       Divider(color: isDark ? Colors.white10 : Colors.grey.shade300),
@@ -1192,7 +1192,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: const Center(
-              child: Text('Bilgi yüklenirken hata oluştu.', style: TextStyle(color: Colors.white54)),
+              child: Text('marketplace.info_load_error'.tr(), style: TextStyle(color: Colors.white54)),
             ),
           );
         }
@@ -1577,7 +1577,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  _menuSearchQuery.isNotEmpty ? _menuSearchQuery : 'Menüde ara...',
+                                  _menuSearchQuery.isNotEmpty ? _menuSearchQuery : 'marketplace.search_in_menu'.tr(),
                                   style: TextStyle(
                                     fontSize: 14, 
                                     color: _menuSearchQuery.isNotEmpty ? textPrimary : Colors.grey[500],
@@ -2026,7 +2026,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           padding: const EdgeInsets.all(40.0),
                           child: Center(
                               child: Text(
-                                'Sonuç bulunamadı', 
+                                'marketplace.no_results_found'.tr(), 
                                 style: TextStyle(color: textSecondary),
                               )),
                         ),
@@ -2550,7 +2550,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             maxLength: 40,
                             style: TextStyle(color: textPrimary, fontSize: 14),
                             decoration: InputDecoration(
-                              hintText: 'Not ekle (opsiyonel)  Ör: Hasan Usta',
+                              hintText: 'marketplace.add_note_hint'.tr(),
                               hintStyle: TextStyle(color: textSecondary, fontSize: 13),
                               prefixIcon: Icon(Icons.edit_note_rounded, color: accent, size: 20),
                               filled: true,
@@ -2734,7 +2734,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             Icon(Icons.remove_shopping_cart_outlined, color: Colors.white, size: 18),
                             const SizedBox(width: 10),
                             Text(
-                              product.outOfStock ? 'Bu ürün şu anda stokta yok' : 'Bu ürün şu anda mevcut değil',
+                              product.outOfStock ? 'marketplace.product_out_of_stock_desc'.tr() : 'marketplace.product_not_available_desc'.tr(),
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                             ),
                           ],
@@ -2782,7 +2782,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              product.outOfStock ? 'Stokta yok' : 'Mevcut değil',
+                              product.outOfStock ? 'marketplace.out_of_stock'.tr() : 'marketplace.product_not_available'.tr(),
                               style: TextStyle(
                                 color: product.outOfStock ? Colors.orange : textSecondary,
                                 fontSize: 12,
@@ -3096,7 +3096,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         Icon(Icons.remove_shopping_cart_outlined, color: Colors.white, size: 18),
                         const SizedBox(width: 10),
                         Text(
-                          product.outOfStock ? 'Bu ürün şu anda stokta yok' : 'Bu ürün şu anda mevcut değil',
+                          product.outOfStock ? 'marketplace.product_out_of_stock_desc'.tr() : 'marketplace.product_not_available_desc'.tr(),
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
                         ),
                       ],
@@ -3634,7 +3634,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                             style: TextStyle(fontSize: 16, color: textPrimary),
                             textInputAction: TextInputAction.search,
                             decoration: InputDecoration(
-                              hintText: 'Menüde ara...',
+                              hintText: 'marketplace.search_in_menu'.tr(),
                               hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.zero,
@@ -3694,7 +3694,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                             Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
                             const SizedBox(height: 12),
                             Text(
-                              'Sonuç bulunamadı',
+                              'marketplace.no_results_found'.tr(),
                               style: TextStyle(color: Colors.grey[500], fontSize: 16),
                             ),
                           ],

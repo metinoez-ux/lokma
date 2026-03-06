@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -37,30 +38,34 @@ class KasapScreen extends StatefulWidget {
 }
 
 class _KasapScreenState extends State<KasapScreen> {
-  static const Color darkBg = Color(0xFF0D0D0D);
-  static const Color cardBg = Color(0xFF1E1E1E);
-  static const Color accent = Color(0xFFFF6B35);
+  // Colors now come from Theme.of(context) — see build()
   
   // Selected sector filters - empty means all
   final Set<String> _selectedSectors = {};
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
+    final cardBgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final accent = Theme.of(context).colorScheme.primary;
+    final textPrimary = Theme.of(context).colorScheme.onSurface;
+    
     return Scaffold(
-      backgroundColor: darkBg,
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: cardBg,
-        title: const Row(
+        backgroundColor: cardBgColor,
+        title: Row(
           children: [
-            Text('🛒 ', style: TextStyle(fontSize: 24)),
-            Text('Marketler', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const Text('🛒 ', style: TextStyle(fontSize: 24)),
+            Text('marketplace.markets'.tr(), style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold)),
           ],
         ),
         actions: [
           IconButton(
             icon: Stack(
               children: [
-                const Icon(Icons.filter_list, color: Colors.white),
+                const Icon(Icons.filter_list, color: Colors.grey),
                 if (_selectedSectors.isNotEmpty)
                   Positioned(
                     right: 0,
@@ -92,7 +97,7 @@ class _KasapScreenState extends State<KasapScreen> {
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: cardBg,
+      backgroundColor: cardBgColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -130,7 +135,6 @@ class _KasapScreenState extends State<KasapScreen> {
                             Text(
                               'Mağaza Türleri',
                               style: TextStyle(
-                                color: Colors.white,
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -280,7 +284,7 @@ class _KasapScreenState extends State<KasapScreen> {
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              'Hata: ${snapshot.error}',
+              'marketplace.error_occurred'.tr(),
               style: const TextStyle(color: Colors.red),
             ),
           );
@@ -322,8 +326,8 @@ class _KasapScreenState extends State<KasapScreen> {
                 const SizedBox(height: 16),
                 Text(
                   _selectedSectors.isEmpty 
-                      ? 'Henüz mağaza bulunamadı'
-                      : 'Bu kategorilerde mağaza bulunamadı',
+                      ? 'marketplace.no_stores_yet'.tr()
+                      : 'marketplace.no_stores_in_category'.tr(),
                   style: const TextStyle(color: Colors.grey, fontSize: 16),
                 ),
                 if (_selectedSectors.isNotEmpty) ...[
@@ -335,7 +339,7 @@ class _KasapScreenState extends State<KasapScreen> {
                       });
                     },
                     icon: const Icon(Icons.filter_list_off, color: accent),
-                    label: const Text('Filtreleri Temizle', style: TextStyle(color: accent)),
+                    label: Text('marketplace.clear_filters'.tr(), style: TextStyle(color: accent)),
                   ),
                 ],
               ],
@@ -366,7 +370,7 @@ class _KasapScreenState extends State<KasapScreen> {
               
               return _BusinessCard(
                 id: doc.id,
-                name: data['companyName'] ?? data['businessName'] ?? data['name'] ?? 'İsimsiz Mağaza',
+                name: data['companyName'] ?? data['businessName'] ?? data['name'] ?? 'marketplace.unnamed_store'.tr(),
                 address: addressStr,
                 rating: (data['rating'] ?? 0).toDouble(),
                 imageUrl: data['imageUrl'],
@@ -431,7 +435,9 @@ class _BusinessCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1E1E1E)
+              : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
@@ -446,7 +452,9 @@ class _BusinessCard extends StatelessWidget {
                   Container(
                     height: 230,
                     width: double.infinity,
-                    color: const Color(0xFF2A2A2A),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF2A2A2A)
+                        : Colors.grey.shade100,
                     child: imageUrl != null && imageUrl!.isNotEmpty
                         ? Image.network(
                             imageUrl!,
@@ -612,7 +620,7 @@ class _BusinessCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              isOpen ? 'Açık' : 'Kapalı',
+                              isOpen ? 'marketplace.open'.tr() : 'marketplace.closed'.tr(),
                               style: TextStyle(
                                 color: isOpen ? Colors.green : Colors.red,
                                 fontSize: 12,

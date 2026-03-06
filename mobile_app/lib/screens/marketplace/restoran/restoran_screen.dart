@@ -79,7 +79,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   bool _onlyTuna = false;
 
   // Location
-  final String _userAddress = 'Konum alınıyor...';
+  final String _userAddress = 'marketplace.getting_location'.tr();
   bool _isLoadingLocation = true;
   double? _userLat;
   double? _userLng;
@@ -746,7 +746,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     // Get location from cached provider (no API call!)
     final locationAsync = ref.watch(userLocationProvider);
 
-    String cityName = 'Konum alınıyor...';
+    String cityName = 'marketplace.getting_location'.tr();
     String streetInfo = '';
     bool isLoading = true;
 
@@ -770,16 +770,16 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         } else {
           cityName = location.address.isNotEmpty
               ? location.address
-              : 'Konum izni verilmedi';
+              : 'marketplace.location_permission_denied'.tr();
         }
       },
       loading: () {
         isLoading = true;
-        cityName = 'Konum alınıyor...';
+        cityName = 'marketplace.getting_location'.tr();
       },
       error: (e, st) {
         isLoading = false;
-        cityName = 'Konum alınamadı';
+        cityName = 'marketplace.location_failed'.tr();
       },
     );
 
@@ -812,7 +812,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       children: [
                         // Şehir (ana satır)
                         Text(
-                          isLoading ? 'Konum alınıyor...' : cityName,
+                          isLoading ? 'marketplace.getting_location'.tr() : cityName,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 14,
@@ -1460,7 +1460,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     if (!_isBusinessOpenNow(data)) {
       return (
         isAvailable: false,
-        reason: 'Şu an kapalı',
+        reason: 'marketplace.currently_closed'.tr(),
         startTime: null,
         deliveryTime: deliveryStartTime,
         pickupTime: pickupStartTime
@@ -1499,7 +1499,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       if (temporaryDeliveryPaused) {
         return (
           isAvailable: false,
-          reason: 'Kurye şu an hizmet vermiyor',
+          reason: 'marketplace.courier_not_available'.tr(),
           startTime: null,
           deliveryTime: deliveryStartTime,
           pickupTime: pickupStartTime
@@ -1659,8 +1659,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             const SizedBox(height: 16),
             Text(
               preOrderEnabled
-                  ? 'Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Menüye göz atıp sipariş verebilirsiniz — işletme açıldığında hazırlanacaktır.'
-                  : 'Şu an kapalı, ama yine de menüye göz atabilirsiniz.',
+                  ? 'marketplace.closed_but_preorder'.tr()
+                  : 'marketplace.closed_but_browse'.tr(),
               style: const TextStyle(fontSize: 15, height: 1.4),
             ),
             if (preOrderEnabled) ...[
@@ -1893,7 +1893,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
                           child: Center(
                             child: Text(
-                              unavailableReason ?? 'Şu an kapalı',
+                              unavailableReason ?? 'marketplace.currently_closed'.tr(),
                               style: TextStyle(
                                 color: Theme.of(context).brightness ==
                                         Brightness.dark
@@ -2305,8 +2305,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           const SizedBox(height: 16),
           Text(
             _categoryFilter != 'all'
-                ? 'Bu kategoride işletme bulunamadı'
-                : 'Yakınızda işletme bulunamadı',
+                ? 'marketplace.no_business_in_category'.tr()
+                : 'marketplace.no_business_nearby'.tr(),
             style: TextStyle(color: Colors.grey[700], fontSize: 16),
           ),
           if (_categoryFilter != 'all' || _onlyTuna)
@@ -2454,7 +2454,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           // Sıralama Options (List style with checkbox)
                           _buildFilterListItem(
                             title: 'En Yakın',
-                            subtitle: 'Mesafeye göre sırala',
+                            subtitle: 'marketplace.sort_by_distance'.tr(),
                             isSelected: _sortOption == 'nearest',
                             onTap: () {
                               setState(() => _sortOption = 'nearest');
@@ -2493,7 +2493,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           // Tümü Option
                           _buildFilterListItem(
                             title: 'Tümü',
-                            subtitle: 'Tüm işletmeleri göster',
+                            subtitle: 'marketplace.sort_show_all'.tr(),
                             isSelected: _categoryFilter == 'all',
                             onTap: () {
                               setState(() => _categoryFilter = 'all');
@@ -2540,7 +2540,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
                           _buildFilterListItem(
                             title: 'İndirimler',
-                            subtitle: 'Aktif kampanyası olan işletmeler',
+                            subtitle: 'marketplace.filter_campaigns'.tr(),
                             isSelected: _filterDiscounts,
                             onTap: () {
                               setState(
@@ -2550,7 +2550,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
                           _buildFilterListItem(
                             title: 'Nakit Ödeme',
-                            subtitle: 'Nakit ödeme kabul eden işletmeler',
+                            subtitle: 'marketplace.filter_cash'.tr(),
                             isSelected: _filterCash,
                             onTap: () {
                               setState(() => _filterCash = !_filterCash);
@@ -2559,7 +2559,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
                           _buildFilterListItem(
                             title: 'Ücretsiz Teslimat',
-                            subtitle: 'Teslimat ücreti olmayan işletmeler',
+                            subtitle: 'marketplace.filter_free_delivery'.tr(),
                             isSelected: _filterFreeDelivery,
                             onTap: () {
                               setState(() =>
@@ -2590,7 +2590,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
                           _buildFilterListItem(
                             title: 'Şimdi Açık',
-                            subtitle: 'Şu anda açık olan işletmeler',
+                            subtitle: 'marketplace.filter_open_now'.tr(),
                             isSelected: _filterOpenNow,
                             onTap: () {
                               setState(() => _filterOpenNow = !_filterOpenNow);
@@ -2599,7 +2599,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
                           _buildFilterListItem(
                             title: 'Tuna Onaylı',
-                            subtitle: 'Tuna tarafından onaylı işletmeler',
+                            subtitle: 'marketplace.filter_tuna_verified'.tr(),
                             isSelected: _filterTunaApproved,
                             onTap: () {
                               setState(() =>
@@ -2609,7 +2609,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
                           _buildFilterListItem(
                             title: 'Vejetaryen',
-                            subtitle: 'Vejetaryen menü sunan işletmeler',
+                            subtitle: 'marketplace.filter_vegetarian'.tr(),
                             isSelected: _filterVegetarian,
                             onTap: () {
                               setState(

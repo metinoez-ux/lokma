@@ -521,7 +521,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           'type': 'order_payment',
           'amount': -walletUsed,
           'orderId': orderRef.id,
-          'description': 'Sipariş ödemesi',
+          'description': 'marketplace.payment_description'.tr(),
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
@@ -1800,7 +1800,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Afiyet olsun',
+                        'marketplace.bon_appetit'.tr(),
                         style: TextStyle(
                           fontFamily: 'Courier',
                           fontSize: 12,
@@ -2347,7 +2347,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Et ürünlerimiz soğuk zinciri kırılmadan özel korumalı boxlarda ulaştırılır.',
+                    'marketplace.cold_chain_short_desc'.tr(),
                     style: TextStyle(
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
                       fontSize: 11.5,
@@ -2813,7 +2813,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           child: Row(
             children: [
               Text(
-                'Etwas vergessen?',
+                'marketplace.forgot_something_de'.tr(),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -3187,7 +3187,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ),
               const SizedBox(height: 6),
               Text(
-                'Sipariş vermek için masanızdaki QR kodu taratın',
+                'marketplace.scan_qr_to_order'.tr(),
                 style: TextStyle(
                   fontSize: 14, 
                   color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -3262,7 +3262,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 },
                 icon: Icon(Icons.edit, size: 18, color: accent),
                 label: Text(
-                  'Manuel masa numarası gir',
+                  'marketplace.enter_table_manually'.tr(),
                   style: TextStyle(color: accent, fontSize: 14),
                 ),
               ),
@@ -3553,7 +3553,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             ),
             const SizedBox(height: 8),
             Text(
-              'Birden fazla kişi mi sipariş verecek?',
+              'marketplace.multiple_people_ordering'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -3847,11 +3847,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey[400]),
           SizedBox(height: 16),
           Text(
-            'Sepetiniz boş',
+            'marketplace.your_cart_is_empty'.tr(),
             style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 20),
           ),
           SizedBox(height: 8),
-          Text('Kermes menüsünden sipariş verin', style: TextStyle(color: Colors.grey)),
+          Text('marketplace.order_from_kermes'.tr(), style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
@@ -4318,7 +4318,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                               ),
                                               const SizedBox(width: 6),
                                               Text(
-                                                'Kart ile',
+                                                'marketplace.pay_by_card'.tr(),
                                                 style: TextStyle(
                                                   color: _paymentMethod == 'card' ? Colors.white : Theme.of(context).colorScheme.onSurface,
                                                   fontWeight: FontWeight.w600,
@@ -4550,7 +4550,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   onSubmitted: (_) => FocusScope.of(ctx).unfocus(),
                                   enabled: _appliedCoupon?.isValid != true,
                                   decoration: InputDecoration(
-                                    hintText: 'Kupon kodunu girin',
+                                    hintText: 'marketplace.enter_coupon'.tr(),
                                     hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
                                     filled: true,
                                     fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -5359,13 +5359,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     String selectedLabel;
     switch (_unavailabilityPreference) {
       case 'substitute':
-        selectedLabel = 'En iyi alternatifle değiştir';
+        selectedLabel = 'marketplace.product_unavailable_replace'.tr();
         break;
       case 'refund':
-        selectedLabel = 'Ürün ücretini iade et';
+        selectedLabel = 'marketplace.product_unavailable_refund'.tr();
         break;
       case 'perItem':
-        selectedLabel = 'Her ürün için ayrı seç';
+        selectedLabel = 'marketplace.product_unavailable_choose'.tr();
         break;
       default:
         selectedLabel = 'Ürün ücretini iade et';
@@ -5396,7 +5396,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     Row(
                       children: [
                         Text(
-                          'Ürün bulunamazsa',
+                          'marketplace.if_product_unavailable'.tr(),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -5417,7 +5417,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'Ürün bulunamazsa ne olur?',
+                                        'marketplace.what_if_unavailable'.tr(),
                                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
                                       ),
                                     ),
@@ -5475,7 +5475,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             _buildUnavailabilityOption(
               setSheetState: setSheetState,
               value: 'substitute',
-              title: 'En iyi alternatifle değiştir',
+              title: 'marketplace.product_unavailable_replace'.tr(),
               subtitle: 'Eşdeğer veya daha düşük fiyatlı ürün gönderilir',
               isDark: isDark,
             ),
@@ -5486,7 +5486,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             _buildUnavailabilityOption(
               setSheetState: setSheetState,
               value: 'refund',
-              title: 'Ürün ücretini iade et',
+              title: 'marketplace.product_unavailable_refund'.tr(),
               subtitle: 'Ödeme yönteminize göre otomatik iade',
               isDark: isDark,
             ),
@@ -5497,7 +5497,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             _buildUnavailabilityOption(
               setSheetState: setSheetState,
               value: 'perItem',
-              title: 'Her ürün için ayrı seç',
+              title: 'marketplace.product_unavailable_choose'.tr(),
               subtitle: 'Her ürün için tercih belirleyin',
               isDark: isDark,
             ),

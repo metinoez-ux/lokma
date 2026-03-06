@@ -20,7 +20,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   // LOKMA Brand Colors
   static const Color lokmaRed = Color(0xFFFB335B); // Rose-500 brand color
-  static const Color lokmaOrange = Color(0xFFFF6B35);
+  static const Color lokmaOrange = Color(0xFFFB335B); // Now matches brand (was wrong #FF6B35)
   static const Color lokmaDark = Color(0xFF1A1A1A);
   
   bool _isLoading = false;
@@ -104,11 +104,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           color = Colors.red;
           break;
         case 2:
-          text = 'Zayıf';
+          text = tr('auth.zayif');
           color = Colors.amber;
           break;
         case 3:
-          text = 'Orta';
+          text = tr('auth.orta');
           color = Colors.amber;
           break;
         case 4:
@@ -452,7 +452,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // SMS Auth Button - Dynamic based on auth mode
         _buildAuthButton(
           icon: Icons.sms_outlined,
-          label: _authMode == 0 ? tr('auth.sms_ile_giris_yap') : 'SMS ile Kayıt Ol',
+          label: _authMode == 0 ? tr('auth.sms_ile_giris_yap') : tr('auth.sms_ile_kayit_ol'),
           color: Theme.of(context).colorScheme.surface,
           textColor: lokmaDark,
           onTap: () => setState(() => _loginMode = 'phone'),
@@ -463,7 +463,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         // Email Auth Button - Dynamic based on auth mode
         _buildAuthButton(
           icon: Icons.email_outlined,
-          label: _authMode == 0 ? tr('auth.e_posta_ile_giris_yap') : 'E-posta ile Kayıt Ol',
+          label: _authMode == 0 ? tr('auth.e_posta_ile_giris_yap') : tr('auth.e_posta_ile_kayit_ol'),
           color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.15),
           textColor: Colors.white,
           borderColor: Colors.white.withValues(alpha: 0.3),
@@ -479,7 +479,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'veya',
+                tr('auth.veya'),
                 style: TextStyle(color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6), fontSize: 14),
               ),
             ),
@@ -510,7 +510,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         TextButton(
           onPressed: _signInAsGuest,
           child: Text(
-            'Misafir olarak devam et',
+            tr('auth.misafir_olarak_devam'),
             style: TextStyle(
               color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.7),
               fontSize: 14,
@@ -707,7 +707,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         
         _buildTextField(
           controller: _emailController,
-          label: 'E-posta',
+          label: tr('auth.e_posta'),
           icon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
         ),
@@ -743,7 +743,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           // Referral code field (optional)
           _buildTextField(
             controller: _referralCodeController,
-            label: 'Davet Kodu (isteğe bağlı)',
+            label: tr('auth.davet_kodu'),
             hint: 'Örn: ABC123',
             icon: Icons.card_giftcard_outlined,
           ),
@@ -752,7 +752,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         const SizedBox(height: 24),
         
         _buildPrimaryButton(
-          label: _authMode == 1 ? 'Kayıt Ol' : tr('auth.giris_yap'),
+          label: _authMode == 1 ? tr('auth.kayit_ol') : tr('auth.giris_yap'),
           onTap: _handleEmailSubmit,
         ),
         

@@ -6,23 +6,26 @@ class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
 
   static const Color lokmaRed = Color(0xFFFB335B);
-  static const Color blackPure = Color(0xFF000000);
-  static const Color surfaceCard = Color(0xFF181818);
-  static const Color textSubtle = Color(0xFF888888);
-  static const Color borderSubtle = Color(0xFF262626);
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scaffoldBg = isDark ? const Color(0xFF000000) : const Color(0xFFF5F5F5);
+    final surfaceCard = isDark ? const Color(0xFF181818) : Colors.white;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSubtle = isDark ? const Color(0xFF888888) : Colors.grey.shade600;
+    final borderSubtle = isDark ? const Color(0xFF262626) : Colors.grey.shade200;
+
     return Scaffold(
-      backgroundColor: blackPure,
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: blackPure,
+        backgroundColor: scaffoldBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Yardım', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text(tr('profile.help'), style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold)),
         centerTitle: true,
       ),
       body: ListView(
@@ -53,9 +56,9 @@ class HelpScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'Sıkça Sorulan Sorular',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                Text(
+                  tr('profile.faq'),
+                  style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -65,28 +68,28 @@ class HelpScreen extends StatelessWidget {
 
           // FAQ Items
           _FAQItem(
-            question: 'LOKMA Nedir?',
-            answer: 'LOKMA, yerel kasap, restoran ve marketlerden online sipariş verebileceğiniz bir platformdur. Taze et, ev yemekleri ve market ürünlerini kapınıza kadar getiriyoruz.',
+            question: tr('profile.faq_what_is_lokma'),
+            answer: tr('profile.faq_what_is_lokma_answer'),
           ),
           _FAQItem(
-            question: 'Nasıl Sipariş Veririm?',
-            answer: 'Ana sayfadan bir kategori seçin (Kasap, Market, Restoran vb.), istediğiniz işletmeyi seçin, ürünleri sepete ekleyin ve ödeme adımına geçin.',
+            question: tr('profile.faq_how_to_order'),
+            answer: tr('profile.faq_how_to_order_answer'),
           ),
           _FAQItem(
-            question: 'Teslimat Süresi Nedir?',
-            answer: 'Teslimat süresi işletmeye ve konumunuza göre değişir. Genellikle 30-60 dakika içinde siparişiniz teslim edilir.',
+            question: tr('profile.faq_delivery_time'),
+            answer: tr('profile.faq_delivery_time_answer'),
           ),
           _FAQItem(
-            question: 'Ödeme Nasıl Yapılır?',
-            answer: 'Kapıda nakit ödeme veya kart ile ödeme yapabilirsiniz. Ödeme tercihlerinizi Profil > Ödeme Yöntemleri bölümünden değiştirebilirsiniz.',
+            question: tr('profile.faq_payment'),
+            answer: tr('profile.faq_payment_answer'),
           ),
           _FAQItem(
-            question: 'Siparişimi İptal Edebilir Miyim?',
-            answer: 'Siparişiniz hazırlanmaya başlamadan önce iptal edebilirsiniz. Bunun için Siparişlerim sayfasından ilgili siparişi açın ve "İptal Et" butonuna tıklayın.',
+            question: tr('profile.faq_cancel_order'),
+            answer: tr('profile.faq_cancel_order_answer'),
           ),
           _FAQItem(
-            question: 'Minimum Sipariş Tutarı Var Mı?',
-            answer: 'Minimum sipariş tutarı işletmeden işletmeye değişiklik gösterebilir. Her işletmenin detay sayfasında bu bilgiyi görebilirsiniz.',
+            question: tr('profile.faq_minimum_order'),
+            answer: tr('profile.faq_minimum_order_answer'),
           ),
 
           const SizedBox(height: 32),
@@ -103,13 +106,13 @@ class HelpScreen extends StatelessWidget {
               children: [
                 const Icon(Icons.support_agent, color: lokmaRed, size: 40),
                 const SizedBox(height: 12),
-                const Text(
-                  'Yardıma mı ihtiyacınız var?',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                Text(
+                  tr('profile.need_help'),
+                  style: TextStyle(color: textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Bize ulaşmak için:',
+                  tr('profile.contact_us'),
                   style: TextStyle(color: textSubtle, fontSize: 14),
                 ),
                 const SizedBox(height: 16),
@@ -165,12 +168,15 @@ class _FAQItemState extends State<_FAQItem> {
   bool _isExpanded = false;
 
   static const Color lokmaRed = Color(0xFFFB335B);
-  static const Color surfaceCard = Color(0xFF181818);
-  static const Color textSubtle = Color(0xFF888888);
-  static const Color borderSubtle = Color(0xFF262626);
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceCard = isDark ? const Color(0xFF181818) : Colors.white;
+    final textPrimary = isDark ? Colors.white : Colors.black87;
+    final textSubtle = isDark ? const Color(0xFF888888) : Colors.grey.shade600;
+    final borderSubtle = isDark ? const Color(0xFF262626) : Colors.grey.shade200;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -192,8 +198,8 @@ class _FAQItemState extends State<_FAQItem> {
                   Expanded(
                     child: Text(
                       widget.question,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),

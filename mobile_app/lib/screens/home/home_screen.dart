@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../utils/currency_utils.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,19 +12,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Design tokens
-  static const Color darkBg = Color(0xFF0D0D0D);
-  static const Color cardBg = Color(0xFF1A1A1A);
-  static const Color accent = Color(0xFFFF6B35);
+  // Design tokens — use Theme for colors
+  // (static const removed — all from Theme.of(context) now)
   
   int _selectedFulfillmentType = 0; // 0=Teslimat, 1=Gel Al, 2=Masa
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = Theme.of(context).colorScheme.primary;
+    final cardBg = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100]!;
 
     return Scaffold(
-      backgroundColor: isDark ? darkBg : Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -102,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Yemek veya restoran ara...',
+                          'home.search_hint'.tr(),
                           style: TextStyle(color: Colors.grey[400], fontSize: 17),
                         ),
                       ),
@@ -137,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Text(
-                        'Kategoriler',
+                        'home.categories'.tr(),
                         style: TextStyle(
                           color: isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87,
                           fontSize: 18,
@@ -154,12 +155,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisSpacing: 12,
                       childAspectRatio: 0.95,
                       children: [
-                        _buildCategoryTile('🥩', 'Kasap', '/kasap'),
-                        _buildCategoryTile('🍖', 'Imbiss', '/market'),
-                        _buildCategoryTile('🍽️', 'Restoran', '/restoran'),
-                        _buildCategoryTile('🎪', 'Kermes', '/kermes'),
-                        _buildCategoryTile('☕', 'Shop', '/kahve'),
-                        _buildCategoryTile('🛒', 'Market', '/market'),
+                        _buildCategoryTile('🥩', 'home.kasap'.tr(), '/kasap'),
+                        _buildCategoryTile('🍖', 'home.imbiss'.tr(), '/market'),
+                        _buildCategoryTile('🍽️', 'home.restoran'.tr(), '/restoran'),
+                        _buildCategoryTile('🎪', 'home.kermes'.tr(), '/kermes'),
+                        _buildCategoryTile('☕', 'home.shop'.tr(), '/kahve'),
+                        _buildCategoryTile('🛒', 'home.market'.tr(), '/market'),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -187,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(width: 14),
                             Expanded(
                               child: Text(
-                                'Siparişlerim',
+                                'home.my_orders'.tr(),
                                 style: TextStyle(
                                   color: isDark ? Colors.white : Colors.black87,
                                   fontSize: 16,
@@ -225,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? accent : (isDark ? cardBg : Colors.grey[100]),
+            color: isSelected ? accent : (isDark ? const Color(0xFF1A1A1A) : Colors.grey[100]),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected ? accent : (isDark ? Colors.white.withValues(alpha: 0.08) : Colors.transparent),
@@ -255,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? cardBg : Colors.grey[100],
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
           border: isDark ? Border.all(color: Colors.white.withValues(alpha: 0.05)) : null,
         ),
@@ -301,7 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(Icons.replay_rounded, color: accent, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    'Tekrar Sipariş Ver',
+                    'home.reorder'.tr(),
                     style: TextStyle(
                       color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
                       fontSize: 18,
@@ -353,10 +354,10 @@ class _HomeScreenState extends State<HomeScreen> {
         // TODO: Add to cart with edit capability
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('$vendor siparişi sepete eklendi'),
+            content: Text('home.added_to_cart'.tr(args: [vendor])),
             backgroundColor: accent,
             action: SnackBarAction(
-              label: 'Düzenle',
+              label: 'home.edit'.tr(),
               textColor: Colors.white,
               onPressed: () {},
             ),
@@ -368,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isDark ? cardBg : Colors.grey[100],
+          color: isDark ? const Color(0xFF1A1A1A) : Colors.grey[100],
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: accent.withValues(alpha: 0.2)),
         ),
@@ -437,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Icon(Icons.add_shopping_cart_rounded, color: Colors.white, size: 14),
                       SizedBox(width: 4),
                       Text(
-                        'Tekrarla',
+                        'home.repeat'.tr(),
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 11,

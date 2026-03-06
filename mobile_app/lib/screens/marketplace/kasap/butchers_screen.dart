@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lokma_app/widgets/mira_3d_switch.dart';
 import 'package:lokma_app/widgets/distance_slider.dart';
@@ -236,12 +237,12 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
   }
 
   String _getBrandLabel(String? brand) {
-    if (brand == null) return 'Bağımsız Kasap';
+    if (brand == null) return 'marketplace.independent_butcher'.tr();
     switch (brand.trim().toLowerCase()) {
       case 'tuna': return 'TUNA';
       case 'akdeniz_toros': return 'Akdeniz Toros';
-      case 'independent': return 'Bağımsız Kasap';
-      default: return 'Bağımsız Kasap';
+      case 'independent': return 'marketplace.independent_butcher'.tr();
+      default: return 'marketplace.independent_butcher'.tr();
     }
   }
 
@@ -569,9 +570,9 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              const Expanded(
+                              Expanded(
                                 child: Text(
-                                  'Tuna Kasaplarını Göster',
+                                  'marketplace.filter_tuna_verified'.tr(),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
@@ -602,7 +603,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                               controller: _searchController,
                               style: const TextStyle(color: Colors.white, fontSize: 14),
                               decoration: InputDecoration(
-                                hintText: 'Kasap veya şehir ara...',
+                                hintText: 'marketplace.search_hint_butcher'.tr(),
                                 hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
                                 prefixIcon: Icon(Icons.search, color: Colors.grey[500], size: 20),
                                 border: InputBorder.none,
@@ -615,7 +616,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                           const SizedBox(height: 16),
                           
                           // Row 3: Mesafe Slider
-                          if (_deliveryMode == 'teslimat')
+                          if (!_isPickup)
                             Row(
                               children: [
                                 Icon(Icons.near_me, color: accent, size: 18),
@@ -688,7 +689,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
               if (snapshot.hasError) {
                 return const SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(child: Text('Bir hata oluştu', style: TextStyle(color: Colors.white))),
+                  child: Center(child: Text('marketplace.error_occurred'.tr(), style: TextStyle(color: Colors.white))),
                 );
               }
 
@@ -763,7 +764,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                  var filtered = allButchers.where((b) {
                     if (_showOnlyTuna && b['badgeText'] != 'TUNA') return false;
                     
-                    if (_deliveryMode == 'teslimat') {
+                    if (!_isPickup) {
                       final deliveryRadius = b['deliveryRadius'] as double;
                       if ((b['distance'] as double) > deliveryRadius) return false;
                     }
@@ -803,7 +804,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                  var matches = allButchers.where((b) {
                     if (_showOnlyTuna && b['badgeText'] != 'TUNA') return false;
                     
-                    if (_deliveryMode == 'teslimat') {
+                    if (!_isPickup) {
                       final deliveryRadius = b['deliveryRadius'] as double;
                       if ((b['distance'] as double) > deliveryRadius) return false;
                     }
@@ -846,7 +847,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                       children: [
                         Icon(Icons.search_off, size: 60, color: Colors.grey.shade800),
                         const SizedBox(height: 16),
-                        Text('Sonuç bulunamadı', style: TextStyle(color: Colors.grey.shade600)),
+                        Text('marketplace.no_results_found'.tr(), style: TextStyle(color: Colors.grey.shade600)),
                       ],
                     ),
                   ),
@@ -930,6 +931,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
   Widget _buildButcherCard(Map<String, dynamic> butcher, {bool isFavoriteSection = false}) {
     // Dynamic status check
     final isOpen = _isShopOpenNow(butcher['hours']);
+    final badgeText = butcher['badgeText'] as String?;
     
     // Fallback if needed, but dynamic is preferred
     // final isOpen = butcher['isOpen'] as bool; 
@@ -1021,7 +1023,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                             ),
                             child: Center(
                               child: Text(
-                                'Şu an kapalı',
+                                'marketplace.currently_closed'.tr(),
                                 style: TextStyle(
                                   color: Theme.of(context).brightness == Brightness.dark 
                                       ? Colors.white 

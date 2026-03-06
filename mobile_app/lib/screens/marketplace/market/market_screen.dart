@@ -56,7 +56,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   bool _onlyTuna = false;
   
   // Location
-  final String _userAddress = 'Konum alınıyor...';
+  final String _userAddress = 'marketplace.getting_location'.tr();
   bool _isLoadingLocation = true;
   double? _userLat;
   double? _userLng;
@@ -574,7 +574,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     // Get location from cached provider (no API call!)
     final locationAsync = ref.watch(userLocationProvider);
     
-    String cityName = 'Konum alınıyor...';
+    String cityName = 'marketplace.getting_location'.tr();
     String streetInfo = '';
     bool isLoading = true;
     
@@ -595,16 +595,16 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             });
           }
         } else {
-          cityName = location.address.isNotEmpty ? location.address : 'Konum izni verilmedi';
+          cityName = location.address.isNotEmpty ? location.address : 'marketplace.location_permission_denied'.tr();
         }
       },
       loading: () {
         isLoading = true;
-        cityName = 'Konum alınıyor...';
+        cityName = 'marketplace.getting_location'.tr();
       },
       error: (e, st) {
         isLoading = false;
-        cityName = 'Konum alınamadı';
+        cityName = 'marketplace.location_failed'.tr();
       },
     );
     
@@ -642,7 +642,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       children: [
                         // Şehir (ana satır)
                         Text(
-                          isLoading ? 'Konum alınıyor...' : cityName,
+                          isLoading ? 'marketplace.getting_location'.tr() : cityName,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 14,
@@ -1270,7 +1270,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          'Şu an kapalı',
+                          'marketplace.currently_closed'.tr(),
                           style: TextStyle(
                             color: Theme.of(context).brightness == Brightness.dark 
                                 ? Colors.white 
@@ -1706,7 +1706,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           // Sıralama Options (List style with checkbox)
                           _buildFilterListItem(
                             title: 'En Yakın',
-                            subtitle: 'Mesafeye göre sırala',
+                            subtitle: 'marketplace.sort_by_distance'.tr(),
                             isSelected: _sortOption == 'nearest',
                             onTap: () {
                               setState(() => _sortOption = 'nearest');
@@ -1715,7 +1715,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           ),
                           _buildFilterListItem(
                             title: 'En İyi Puan',
-                            subtitle: 'Yüksek puanlı işletmeler',
+                            subtitle: 'marketplace.sort_high_rated'.tr(),
                             isSelected: _sortOption == 'rating',
                             onTap: () {
                               setState(() => _sortOption = 'rating');
@@ -1769,7 +1769,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           
                           _buildFilterListItem(
                             title: 'İndirimler',
-                            subtitle: 'Aktif kampanyası olan işletmeler',
+                            subtitle: 'marketplace.filter_campaigns'.tr(),
                             isSelected: _filterDiscounts,
                             onTap: () {
                               setState(() => _filterDiscounts = !_filterDiscounts);
@@ -1778,7 +1778,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           ),
                           _buildFilterListItem(
                             title: 'Nakit Ödeme',
-                            subtitle: 'Nakit ödeme kabul eden işletmeler',
+                            subtitle: 'marketplace.filter_cash'.tr(),
                             isSelected: _filterCash,
                             onTap: () {
                               setState(() => _filterCash = !_filterCash);
@@ -1787,7 +1787,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           ),
                           _buildFilterListItem(
                             title: 'Ücretsiz Teslimat',
-                            subtitle: 'Teslimat ücreti olmayan işletmeler',
+                            subtitle: 'marketplace.filter_free_delivery'.tr(),
                             isSelected: _filterFreeDelivery,
                             onTap: () {
                               setState(() => _filterFreeDelivery = !_filterFreeDelivery);
@@ -1814,7 +1814,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           ),
                           _buildFilterListItem(
                             title: 'Şimdi Açık',
-                            subtitle: 'Şu anda açık olan işletmeler',
+                            subtitle: 'marketplace.filter_open_now'.tr(),
                             isSelected: _filterOpenNow,
                             onTap: () {
                               setState(() => _filterOpenNow = !_filterOpenNow);
@@ -1847,7 +1847,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           // Tümü Option
                           _buildFilterListItem(
                             title: 'Tümü',
-                            subtitle: 'Tüm işletmeleri göster',
+                            subtitle: 'marketplace.sort_show_all'.tr(),
                             isSelected: _categoryFilter == 'all',
                             onTap: () {
                               setState(() => _categoryFilter = 'all');
