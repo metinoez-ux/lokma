@@ -21,6 +21,7 @@ import {
   runTransaction,
   serverTimestamp,
   onSnapshot,
+  writeBatch,
 } from "firebase/firestore";
 import {
   ref,
@@ -3440,8 +3441,8 @@ export default function BusinessDetailsPage() {
                               <button
                                 onClick={() => setInlineCategoryFilter('all')}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === 'all'
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
                                   }`}
                               >
                                 🏷️ Tümü {inlineProducts.length}
@@ -3453,8 +3454,8 @@ export default function BusinessDetailsPage() {
                                     key={cn}
                                     onClick={() => setInlineCategoryFilter(cn)}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === cn
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
+                                      ? 'bg-blue-600 text-white'
+                                      : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
                                       }`}
                                   >
                                     {catInfo?.icon || '📦'} {cn} {catCounts[cn]}
