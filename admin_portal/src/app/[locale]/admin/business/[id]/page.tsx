@@ -576,6 +576,11 @@ export default function BusinessDetailsPage() {
   const [templateSearch, setTemplateSearch] = useState('');
   const [collapsedProductCategories, setCollapsedProductCategories] = useState<Record<string, boolean>>({});
 
+  // 🆕 Inline Product Management State
+  const [selectedInlineProducts, setSelectedInlineProducts] = useState<Set<string>>(new Set());
+  const [inlineStatusFilter, setInlineStatusFilter] = useState<string>('all');
+  const [inlineCategoryFilter, setInlineCategoryFilter] = useState<string>('all');
+
   // Load admin data - REMOVED (Handled by AdminProvider)
 
   // Check if admin is ready to load data
@@ -1124,6 +1129,116 @@ export default function BusinessDetailsPage() {
     } catch (error) {
       console.error("Error toggling product:", error);
       showToast(t('urunDurumuDegistirilirkenHataOlustu'), "error");
+    }
+  };
+
+  // 🆕 Inline Bulk Actions
+  const handleInlineBulkDelete = async () => {
+    if (!businessId || selectedInlineProducts.size === 0) return;
+    const count = selectedInlineProducts.size;
+    setConfirmModal({
+      show: true,
+      title: '🗑️ Toplu Sil',
+      message: `${count} ürün silinecek. Devam?`,
+      confirmText: 'Evet, Sil',
+      confirmColor: 'bg-red-600 hover:bg-red-500',
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, show: false }));
+        try {
+          const batch = writeBatch(db);
+          for (const pid of selectedInlineProducts) {
+            batch.delete(doc(db, `businesses/${businessId}/products`, pid));
+          }
+          await batch.commit();
+          setSelectedInlineProducts(new Set());
+          showToast(`${count} ürün silindi`, "success");
+          loadProducts();
+        } catch (error) {
+          console.error("Bulk delete error:", error);
+          showToast("Toplu silme hatası", "error");
+        }
+      },
+    });
+  };
+
+  const handleInlineBulkStatus = async (makeActive: boolean) => {
+    if (!businessId || selectedInlineProducts.size === 0) return;
+    try {
+      const batch = writeBatch(db);
+      for (const pid of selectedInlineProducts) {
+        batch.update(doc(db, `businesses/${businessId}/products`, pid), {
+          isActive: makeActive,
+          updatedAt: new Date(),
+        });
+      }
+      await batch.commit();
+      setSelectedInlineProducts(new Set());
+      showToast(`${selectedInlineProducts.size} ürün ${makeActive ? 'aktif' : 'pasif'} yapıldı`, "success");
+      loadProducts();
+    } catch (error) {
+      console.error("Bulk status error:", error);
+      showToast("Durum değiştirme hatası", "error");
+    }
+  };
+
+  const handleInlineBulkStock = async (inStock: boolean) => {
+    if (!businessId || selectedInlineProducts.size === 0) return;
+    try {
+      const batch = writeBatch(db);
+      for (const pid of selectedInlineProducts) {
+        batch.update(doc(db, `businesses/${businessId}/products`, pid), {
+          outOfStock: !inStock,
+          updatedAt: new Date(),
+        });
+      }
+      await batch.commit();
+      setSelectedInlineProducts(new Set());
+      showToast(`Stok durumu güncellendi`, "success");
+      loadProducts();
+    } catch (error) {
+      console.error("Bulk stock error:", error);
+      showToast("Stok güncelleme hatası", "error");
+    }
+  };
+
+  const handleInlineBulkFeatured = async () => {
+    if (!businessId || selectedInlineProducts.size === 0) return;
+    try {
+      const batch = writeBatch(db);
+      for (const pid of selectedInlineProducts) {
+        batch.update(doc(db, `businesses/${businessId}/products`, pid), {
+          isFeatured: true,
+          updatedAt: new Date(),
+        });
+      }
+      await batch.commit();
+      setSelectedInlineProducts(new Set());
+      showToast(`Öne çıkan olarak işaretlendi`, "success");
+      loadProducts();
+    } catch (error) {
+      console.error("Bulk featured error:", error);
+      showToast("Öne çıkan güncelleme hatası", "error");
+    }
+  };
+
+  const handleInlineBulkCategoryMove = async (newCategory: string) => {
+    if (!businessId || selectedInlineProducts.size === 0) return;
+    try {
+      const batch = writeBatch(db);
+      for (const pid of selectedInlineProducts) {
+        batch.update(doc(db, `businesses/${businessId}/products`, pid), {
+          category: newCategory,
+          categories: [newCategory],
+          updatedAt: new Date(),
+        });
+      }
+      await batch.commit();
+      setSelectedInlineProducts(new Set());
+      showToast(`${selectedInlineProducts.size} ürün "${newCategory}" kategorisine taşındı`, "success");
+      loadProducts();
+    } catch (error) {
+      console.error("Bulk category move error:", error);
+      showToast("Kategori taşıma hatası", "error");
     }
   };
 
@@ -3299,17 +3414,71 @@ export default function BusinessDetailsPage() {
                                 {applyingProductTemplate ? '⏳ Yükleniyor...' : '📦 Ürün Şablonu Yükle'}
                               </button>
                             )}
-                            <a
-                              href={`/admin/products?businessId=${businessId}`}
-                              className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-medium rounded-lg transition inline-flex items-center gap-1"
+                            <button
+                              onClick={() => setProductModalOpen(true)}
+                              className="px-3 py-2 bg-green-600 hover:bg-green-500 text-white text-sm font-medium rounded-lg transition inline-flex items-center gap-1"
                             >
-                              {t('urunEkleDuzenle')}
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                            </a>
+                              + Yeni Ürün Ekle
+                            </button>
                           </div>
                         </div>
+
+                        {/* Category Filter Chips + Status Filter */}
+                        {!loadingProducts && inlineProducts.length > 0 && (() => {
+                          // Build category counts
+                          const catCounts: Record<string, number> = {};
+                          inlineProducts.forEach((p: any) => {
+                            const rawCat = p.category || 'Kategorisiz';
+                            const catName = typeof rawCat === 'object' ? getLocalizedText(rawCat) : rawCat;
+                            catCounts[catName] = (catCounts[catName] || 0) + 1;
+                          });
+                          const catNames = Object.keys(catCounts);
+
+                          return (
+                            <div className="flex flex-wrap items-center gap-2">
+                              {/* Category chips */}
+                              <button
+                                onClick={() => setInlineCategoryFilter('all')}
+                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === 'all'
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
+                                  }`}
+                              >
+                                🏷️ Tümü {inlineProducts.length}
+                              </button>
+                              {catNames.map(cn => {
+                                const catInfo = inlineCategories.find((c: any) => (typeof c.name === 'object' ? getLocalizedText(c.name) : c.name) === cn);
+                                return (
+                                  <button
+                                    key={cn}
+                                    onClick={() => setInlineCategoryFilter(cn)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === cn
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
+                                      }`}
+                                  >
+                                    {catInfo?.icon || '📦'} {cn} {catCounts[cn]}
+                                  </button>
+                                );
+                              })}
+
+                              {/* Status filter dropdown — pushed right */}
+                              <div className="ml-auto flex items-center gap-2">
+                                <span className="text-gray-400 text-xs">Durum Filtresi:</span>
+                                <select
+                                  value={inlineStatusFilter}
+                                  onChange={(e) => setInlineStatusFilter(e.target.value)}
+                                  className="bg-gray-700 text-white text-xs rounded-lg px-3 py-1.5 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                >
+                                  <option value="all">🏷️ Tümü ({inlineProducts.length})</option>
+                                  <option value="active">🟢 Aktif</option>
+                                  <option value="passive">🔴 Pasif</option>
+                                  <option value="outOfStock">⚠️ Stokta Yok</option>
+                                </select>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Loading */}
                         {loadingProducts && (
@@ -3324,117 +3493,255 @@ export default function BusinessDetailsPage() {
                             <span className="text-4xl">📦</span>
                             <h4 className="text-white font-medium mt-3">{t('henuzUrunEklenmemis')}</h4>
                             <p className="text-gray-400 text-sm mt-1">{t('isletmeyeUrunAtamakIcinUrunYonetimine')}</p>
-                            <a
-                              href={`/admin/products?businessId=${businessId}`}
+                            <button
+                              onClick={() => setProductModalOpen(true)}
                               className="mt-4 inline-block px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
                             >
-                              {t('urunYonetimineGit')}
-                            </a>
+                              + Yeni Ürün Ekle
+                            </button>
                           </div>
                         )}
 
-                        {/* Product List grouped by category */}
+                        {/* Product Table */}
                         {!loadingProducts && inlineProducts.length > 0 && (() => {
-                          // Group products by category
-                          const grouped: Record<string, any[]> = {};
-                          inlineProducts.forEach((p: any) => {
-                            const rawCat = p.category || 'Kategorisiz';
-                            const catName = typeof rawCat === 'object' ? getLocalizedText(rawCat) : rawCat;
-                            if (!grouped[catName]) grouped[catName] = [];
-                            grouped[catName].push(p);
-                          });
-                          const allCollapsed = Object.keys(grouped).every(k => collapsedProductCategories[k]);
+                          // Filter products
+                          let filtered = [...inlineProducts];
+
+                          // Category filter
+                          if (inlineCategoryFilter !== 'all') {
+                            filtered = filtered.filter((p: any) => {
+                              const rawCat = p.category || 'Kategorisiz';
+                              const catName = typeof rawCat === 'object' ? getLocalizedText(rawCat) : rawCat;
+                              return catName === inlineCategoryFilter;
+                            });
+                          }
+
+                          // Status filter
+                          if (inlineStatusFilter === 'active') {
+                            filtered = filtered.filter((p: any) => p.isActive !== false);
+                          } else if (inlineStatusFilter === 'passive') {
+                            filtered = filtered.filter((p: any) => p.isActive === false);
+                          } else if (inlineStatusFilter === 'outOfStock') {
+                            filtered = filtered.filter((p: any) => p.outOfStock === true);
+                          }
+
+                          const allSelected = filtered.length > 0 && filtered.every((p: any) => selectedInlineProducts.has(p.id));
+
                           return (
-                            <div className="space-y-3">
-                              {/* Collapse/Expand All */}
-                              <div className="flex justify-end gap-2 mb-1">
-                                <button
-                                  onClick={() => {
-                                    const newState: Record<string, boolean> = {};
-                                    Object.keys(grouped).forEach(k => newState[k] = !allCollapsed);
-                                    setCollapsedProductCategories(newState);
-                                  }}
-                                  className="text-xs text-gray-400 hover:text-white transition px-2 py-1 rounded bg-gray-800/50 hover:bg-gray-700/50"
-                                >
-                                  {allCollapsed ? '📂 Hepsini Aç' : '📁 Hepsini Kapat'}
-                                </button>
+                            <div className="bg-gray-800/60 rounded-xl border border-gray-700 overflow-hidden">
+                              {/* Table Header */}
+                              <div className="px-4 py-2.5 bg-gray-700/50 border-b border-gray-700 grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center text-xs text-gray-400 font-medium">
+                                <div className="flex justify-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={allSelected}
+                                    onChange={() => {
+                                      if (allSelected) {
+                                        setSelectedInlineProducts(new Set());
+                                      } else {
+                                        setSelectedInlineProducts(new Set(filtered.map((p: any) => p.id)));
+                                      }
+                                    }}
+                                    className="w-4 h-4 rounded accent-green-500 cursor-pointer"
+                                  />
+                                </div>
+                                <div></div>
+                                <div>Ürün Adı</div>
+                                <div>SKU</div>
+                                <div>Fiyat (Netto / Brutto)</div>
+                                <div>Birim</div>
+                                <div>Durum</div>
+                                <div className="text-right">İşlemler</div>
                               </div>
-                              {Object.entries(grouped).map(([catName, prods]) => {
-                                const catInfo = inlineCategories.find(c => (typeof c.name === 'object' ? getLocalizedText(c.name) : c.name) === catName);
-                                const isCollapsed = collapsedProductCategories[catName] ?? true;
-                                return (
-                                  <div key={catName} className="bg-gray-800/60 rounded-xl border border-gray-700 overflow-hidden">
-                                    {/* Category header — clickable to toggle */}
+
+                              {/* Table Body */}
+                              <div className="divide-y divide-gray-700/50">
+                                {filtered.map((product: any) => {
+                                  const isSelected = selectedInlineProducts.has(product.id);
+                                  const productName = typeof product.name === 'object' ? getLocalizedText(product.name) : product.name;
+                                  const imageUrl = product.imageUrl || (product.images && product.images[0]) || null;
+                                  const basePrice = product.sellingPrice || product.price || null;
+                                  const appPrice = product.appSellingPrice || basePrice;
+                                  const taxRate = product.taxRate || 7;
+                                  const brutto = appPrice ? parseFloat((appPrice * (1 + taxRate / 100)).toFixed(2)) : null;
+                                  const currSym = getCurrencySymbol(business?.currency);
+                                  const unitSuffix = product.unit === 'kg' ? '/kg' : '';
+                                  const isActive = product.isActive !== false;
+                                  const sku = product.id || product.sku || '—';
+                                  const rawCat = product.category || 'Kategorisiz';
+                                  const catName = typeof rawCat === 'object' ? getLocalizedText(rawCat) : rawCat;
+
+                                  return (
                                     <div
-                                      onClick={() => setCollapsedProductCategories(prev => ({ ...prev, [catName]: !isCollapsed }))}
-                                      className="px-4 py-2.5 bg-gray-700/50 flex items-center gap-2 border-b border-gray-700 cursor-pointer hover:bg-gray-600/50 transition select-none"
+                                      key={product.id}
+                                      className={`px-4 py-2 grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center hover:bg-gray-700/30 transition ${isSelected ? 'bg-blue-900/20' : ''} ${!isActive ? 'opacity-60' : ''}`}
                                     >
-                                      <svg
-                                        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
-                                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                      >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                      </svg>
-                                      <span className="text-lg">{catInfo?.icon || '📦'}</span>
-                                      <span className="text-white font-bold text-sm">{catName}</span>
-                                      <span className="text-gray-400 text-xs ml-auto">{prods.length} {t('urun1')}</span>
-                                    </div>
-                                    {/* Product rows — collapsible */}
-                                    {!isCollapsed && (
-                                      <div className="divide-y divide-gray-700/50">
-                                        {prods.map((product: any) => (
-                                          <div key={product.id} className="px-4 py-2.5 flex items-center gap-3 hover:bg-gray-700/30 transition">
-                                            {/* Product image or placeholder */}
-                                            {product.imageUrl || (product.images && product.images[0]) ? (
-                                              <img
-                                                src={product.imageUrl || product.images[0]}
-                                                alt={product.name}
-                                                className="w-10 h-10 rounded-lg object-cover"
-                                              />
-                                            ) : (
-                                              <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center text-gray-500 text-lg">
-                                                📷
-                                              </div>
-                                            )}
-                                            {/* Name and details */}
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-white text-sm font-medium truncate">{typeof product.name === 'object' ? getLocalizedText(product.name) : product.name}</p>
-                                              <p className="text-gray-500 text-xs truncate">
-                                                {getLocalizedText(product.description) || ''}{product.unit ? ` · ${product.unit === 'kg' ? '⚖️ kg' : '📦 Adet'}` : ''}
-                                              </p>
-                                            </div>
-                                            {/* Price */}
-                                            <div className="text-right shrink-0">
-                                              {(() => {
-                                                const basePrice = product.sellingPrice || product.price || null;
-                                                const appPrice = product.appSellingPrice || basePrice;
-                                                const taxRate = product.taxRate || 7;
-                                                const brutto = appPrice ? parseFloat((appPrice * (1 + taxRate / 100)).toFixed(2)) : null;
-                                                const currSym = getCurrencySymbol(business?.currency);
-                                                const hasAppMarkup = product.appSellingPrice && basePrice && product.appSellingPrice !== basePrice;
-                                                const unitSuffix = product.unit === 'kg' ? '/kg' : '';
-                                                if (!appPrice) return <span className="text-gray-600 text-xs">—</span>;
-                                                return (
-                                                  <div className="space-y-0.5">
-                                                    <div className={`${hasAppMarkup ? 'text-blue-400' : 'text-green-400'} font-bold text-sm`}>{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">brutto{hasAppMarkup ? ' 📱' : ''}</span></div>
-                                                    <div className="text-gray-400 text-xs">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">netto</span></div>
-                                                  </div>
-                                                );
-                                              })()}
-                                              {product.isActive === false && (
-                                                <span className="block text-red-400 text-[10px]">{t('pasif')}</span>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ))}
+                                      {/* Checkbox */}
+                                      <div className="flex justify-center">
+                                        <input
+                                          type="checkbox"
+                                          checked={isSelected}
+                                          onChange={() => {
+                                            const next = new Set(selectedInlineProducts);
+                                            if (next.has(product.id)) next.delete(product.id);
+                                            else next.add(product.id);
+                                            setSelectedInlineProducts(next);
+                                          }}
+                                          className="w-4 h-4 rounded accent-green-500 cursor-pointer"
+                                        />
                                       </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                                      {/* Thumbnail */}
+                                      <div>
+                                        {imageUrl ? (
+                                          <img
+                                            src={imageUrl}
+                                            alt={productName}
+                                            loading="lazy"
+                                            className="w-9 h-9 rounded-lg object-cover"
+                                          />
+                                        ) : (
+                                          <div className="w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center text-gray-500 text-xs">
+                                            📷
+                                          </div>
+                                        )}
+                                      </div>
+                                      {/* Name + Description */}
+                                      <div className="min-w-0">
+                                        <p className="text-white text-sm font-medium truncate">{productName}</p>
+                                        <p className="text-gray-500 text-xs truncate">
+                                          {getLocalizedText(product.description) || ''}
+                                        </p>
+                                      </div>
+                                      {/* SKU */}
+                                      <div className="text-gray-400 text-xs truncate font-mono">{sku.length > 16 ? sku.slice(0, 16) + '...' : sku}</div>
+                                      {/* Price */}
+                                      <div className="text-right">
+                                        {appPrice ? (
+                                          <div className="space-y-0.5">
+                                            <div className="text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">brutto</span></div>
+                                            <div className="text-gray-400 text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">netto</span></div>
+                                          </div>
+                                        ) : (
+                                          <span className="text-gray-600 text-xs">—</span>
+                                        )}
+                                      </div>
+                                      {/* Unit */}
+                                      <div className="text-gray-300 text-xs text-center">{product.unit === 'kg' ? 'kg' : 'Adet'}</div>
+                                      {/* Status */}
+                                      <div className="flex justify-center">
+                                        <span
+                                          onClick={() => toggleProductActive(product.id, isActive)}
+                                          className={`text-[10px] px-2 py-0.5 rounded-full cursor-pointer font-medium ${isActive ? 'bg-green-900/60 text-green-400' : 'bg-red-900/60 text-red-400'
+                                            }`}
+                                          title={isActive ? 'Pasif yap' : 'Aktif yap'}
+                                        >
+                                          {isActive ? 'Aktif' : 'Pasif'}
+                                        </span>
+                                      </div>
+                                      {/* Actions */}
+                                      <div className="flex items-center justify-end gap-1">
+                                        <a
+                                          href={`/admin/products?businessId=${businessId}`}
+                                          className="text-xs px-2 py-1 bg-blue-600/80 hover:bg-blue-500 text-white rounded transition"
+                                          title="Düzenle"
+                                        >
+                                          ✏️
+                                        </a>
+                                        <button
+                                          onClick={() => handleDeleteProduct(product.id)}
+                                          className="text-xs px-2 py-1 bg-red-600/80 hover:bg-red-500 text-white rounded transition"
+                                          title="Sil"
+                                        >
+                                          🗑️
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
                           );
                         })()}
+
+                        {/* Bulk Action Bar — Sticky Bottom */}
+                        {selectedInlineProducts.size > 0 && (
+                          <div className="sticky bottom-0 z-10 bg-gradient-to-r from-gray-800 to-gray-900 border border-amber-500/30 rounded-xl px-4 py-2.5 flex items-center gap-2 flex-wrap shadow-lg">
+                            <span className="text-green-400 text-sm font-bold flex items-center gap-1">
+                              ☑ {selectedInlineProducts.size} ürün seçili
+                            </span>
+                            <span className="w-px h-5 bg-gray-600"></span>
+
+                            {/* Status */}
+                            <select
+                              onChange={(e) => {
+                                if (e.target.value === 'active') handleInlineBulkStatus(true);
+                                else if (e.target.value === 'passive') handleInlineBulkStatus(false);
+                                e.target.value = '';
+                              }}
+                              defaultValue=""
+                              className="bg-orange-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
+                            >
+                              <option value="" disabled>⚙️ Durum</option>
+                              <option value="active">🟢 Aktif Yap</option>
+                              <option value="passive">🔴 Pasif Yap</option>
+                            </select>
+
+                            {/* Stock */}
+                            <select
+                              onChange={(e) => {
+                                if (e.target.value === 'in') handleInlineBulkStock(true);
+                                else if (e.target.value === 'out') handleInlineBulkStock(false);
+                                e.target.value = '';
+                              }}
+                              defaultValue=""
+                              className="bg-yellow-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
+                            >
+                              <option value="" disabled>📦 Stok</option>
+                              <option value="in">✅ Stokta</option>
+                              <option value="out">⚠️ Stokta Yok</option>
+                            </select>
+
+                            {/* Featured */}
+                            <button
+                              onClick={() => handleInlineBulkFeatured()}
+                              className="bg-amber-600 hover:bg-amber-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
+                            >
+                              ⭐ Öne Çıkan
+                            </button>
+
+                            {/* Category Move */}
+                            <select
+                              onChange={(e) => {
+                                if (e.target.value) handleInlineBulkCategoryMove(e.target.value);
+                                e.target.value = '';
+                              }}
+                              defaultValue=""
+                              className="bg-blue-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
+                            >
+                              <option value="" disabled>📂 Kategoriye Taşı...</option>
+                              {inlineCategories.map((cat: any) => {
+                                const cn = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
+                                return <option key={cat.id} value={cn}>{cat.icon || '📦'} {cn}</option>;
+                              })}
+                            </select>
+
+                            {/* Delete + Cancel — pushed right */}
+                            <div className="ml-auto flex items-center gap-2">
+                              <button
+                                onClick={() => handleInlineBulkDelete()}
+                                className="bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
+                              >
+                                🗑️ Sil
+                              </button>
+                              <button
+                                onClick={() => setSelectedInlineProducts(new Set())}
+                                className="bg-gray-600 hover:bg-gray-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
+                              >
+                                ✖ İptal
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
 
