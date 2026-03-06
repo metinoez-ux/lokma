@@ -910,7 +910,12 @@ export default function BusinessDetailsPage() {
       }
       const template = templateDoc.data();
       const categories = template.categories || [];
-      const startOrder = inlineCategories.length; // Append after existing
+
+      // Delete existing categories first to avoid duplicates
+      const existingSnap = await getDocs(collection(db, `businesses/${businessId}/categories`));
+      for (const d of existingSnap.docs) {
+        await deleteDoc(d.ref);
+      }
 
       // Create each category as a sub-document
       const catRef = collection(db, `businesses/${businessId}/categories`);
@@ -920,7 +925,7 @@ export default function BusinessDetailsPage() {
           name: cat.name,
           icon: cat.icon,
           isActive: true,
-          order: startOrder + i,
+          order: i,
           createdAt: new Date(),
           updatedAt: new Date(),
         });
