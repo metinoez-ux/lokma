@@ -226,6 +226,10 @@ function GlobalProductsPageContent() {
     }>({ enabled: false, feePerConversion: 0.40, maxProductsPerBusiness: 5 });
     const [sponsoredSaving, setSponsoredSaving] = useState(false);
 
+    // 📂📦 TEMPLATE APPLY STATE
+    const [applyingCategoryTemplate, setApplyingCategoryTemplate] = useState(false);
+    const [applyingProductTemplate, setApplyingProductTemplate] = useState(false);
+
     // 🆕 BUSINESS PRODUCT MULTI-SELECT & PAGINATION
     const [selectedBusinessProducts, setSelectedBusinessProducts] = useState<Set<string>>(new Set());
     const [businessProductPage, setBusinessProductPage] = useState(1);
@@ -414,6 +418,92 @@ function GlobalProductsPageContent() {
             console.error('Error loading business categories:', error);
         }
         setLoadingBusinessCategories(false);
+    };
+
+    // 📂 Apply CATEGORY template to this business
+    const applyCategoryTemplate = async () => {
+        if (!contextBusinessId) return;
+        setApplyingCategoryTemplate(true);
+        try {
+            const templateDoc = await getDoc(doc(db, 'defaultMenuTemplates', 'kasap'));
+            if (!templateDoc.exists()) {
+                alert('Şablon bulunamadı!');
+                setApplyingCategoryTemplate(false);
+                return;
+            }
+            const template = templateDoc.data();
+            const categories = template.categories || [];
+
+            // Delete existing categories first
+            const existingSnap = await getDocs(collection(db, `businesses/${contextBusinessId}/categories`));
+            for (const d of existingSnap.docs) {
+                await deleteDoc(d.ref);
+            }
+
+            // Create each category
+            const catRef = collection(db, `businesses/${contextBusinessId}/categories`);
+            for (let i = 0; i < categories.length; i++) {
+                const cat = categories[i];
+                await addDoc(catRef, {
+                    name: cat.name,
+                    icon: cat.icon,
+                    isActive: true,
+                    order: i,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                });
+            }
+
+            await reloadBusinessCategories();
+            alert(`${categories.length} kategori başarıyla yüklendi ✅`);
+        } catch (error) {
+            console.error('Error applying category template:', error);
+            alert('Kategori şablonu uygulanırken hata oluştu');
+        }
+        setApplyingCategoryTemplate(false);
+    };
+
+    // 📦 Apply PRODUCT template to this business
+    const applyProductTemplate = async () => {
+        if (!contextBusinessId) return;
+        setApplyingProductTemplate(true);
+        try {
+            const masterProductsSnap = await getDocs(collection(db, 'master_products'));
+            const kasapProducts = masterProductsSnap.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter((p: any) => (p.allowedBusinessTypes || []).includes('kasap'));
+
+            let productCount = 0;
+            for (const product of kasapProducts) {
+                const p = product as any;
+                await setDoc(doc(db, `businesses/${contextBusinessId}/products`, p.id), {
+                    masterProductId: p.id,
+                    name: p.name,
+                    description: p.description || { tr: '' },
+                    category: p.category || 'dana',
+                    categories: p.categories || [p.category || 'dana'],
+                    defaultUnit: p.defaultUnit || 'kg',
+                    unit: p.unit || p.defaultUnit || 'kg',
+                    price: p.defaultPrice || 0,
+                    isActive: true,
+                    isAvailable: true,
+                    brandLabels: p.brandLabels || [],
+                    imageUrl: p.imageUrl || '',
+                    images: p.imageUrl ? [p.imageUrl] : (p.images || []),
+                    optionGroups: p.optionGroups || [],
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                }, { merge: true });
+                productCount++;
+            }
+
+            await fetchBusinessProducts();
+            alert(`${productCount} ürün başarıyla yüklendi ✅`);
+        } catch (error) {
+            console.error('Error applying product template:', error);
+            alert('Ürün şablonu uygulanırken hata oluştu');
+        }
+        setApplyingProductTemplate(false);
     };
 
     useEffect(() => {
@@ -1454,12 +1544,31 @@ function GlobalProductsPageContent() {
                                             <div className="text-gray-400 text-sm">
                                                 {t('kategorileriSiralayinDuzenleyinVeyaYeniEkleyin')}
                                             </div>
-                                            <button
-                                                onClick={openCategoryAdd}
-                                                className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-medium text-sm transition-all"
-                                            >
-                                                + Yeni Kategori
-                                            </button>
+                                            <div className="flex items-center gap-2">
+                                                {businessInfo?.type === 'kasap' && (
+                                                    <button
+                                                        onClick={() => {
+                                                            if (businessCategories.length > 0) {
+                                                                if (confirm(`Mevcut ${businessCategories.length} kategori silinip 5 şablon kategorisi yüklenecek. Devam?`)) {
+                                                                    applyCategoryTemplate();
+                                                                }
+                                                            } else {
+                                                                applyCategoryTemplate();
+                                                            }
+                                                        }}
+                                                        disabled={applyingCategoryTemplate}
+                                                        className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                                    >
+                                                        {applyingCategoryTemplate ? '⏳ Yükleniyor...' : '📂 Kategori Şablonu Yükle'}
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={openCategoryAdd}
+                                                    className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg font-medium text-sm transition-all"
+                                                >
+                                                    + Yeni Kategori
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {loadingBusinessCategories ? (
@@ -1545,6 +1654,22 @@ function GlobalProductsPageContent() {
                                 {/* ═══════════════════════════════════════════ */}
                                 {businessViewMode === 'products' && (
                                     <div>
+                                        {/* Ürün Şablonu Yükle Button */}
+                                        {businessInfo?.type === 'kasap' && (
+                                            <div className="flex items-center justify-end mb-4">
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm('Kasap ürün şablonu yüklenecek. Mevcut ürünlerin üstüne eklenecektir. Devam?')) {
+                                                            applyProductTemplate();
+                                                        }
+                                                    }}
+                                                    disabled={applyingProductTemplate}
+                                                    className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                                >
+                                                    {applyingProductTemplate ? '⏳ Yükleniyor...' : '📦 Ürün Şablonu Yükle'}
+                                                </button>
+                                            </div>
+                                        )}
                                         {/* Category Filter Tabs */}
                                         {activeBusinessCategories.length > 0 && (
                                             <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600">
