@@ -22,6 +22,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Bütün tavuk, temizlenmiş.', de: 'Ganzes Hähnchen, küchenfertig.' },
         defaultPrice: 6.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/452_tum_tavuk-1.jpg',
     },
     {
         id: 'TUNA-GP-002',
@@ -31,6 +32,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Tavuk but, kemikli.', de: 'Hähnchenschenkel.' },
         defaultPrice: 6.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/459_tavuk_incik-1.jpg',
     },
     {
         id: 'TUNA-GP-003',
@@ -40,6 +42,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Tavuk göğüs.', de: 'Hähnchenkeule.' },
         defaultPrice: 11.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/453_tavuk_but-1.jpg',
     },
     {
         id: 'TUNA-GP-004',
@@ -49,6 +52,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Tavuk kanat.', de: 'Hähnchenflügel.' },
         defaultPrice: 7.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/458_tavuk_kanat-1.jpg',
     },
     {
         id: 'TUNA-GP-005',
@@ -58,6 +62,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Tavuk fileto, 600 gr paket.', de: 'Hähnchenfilet, 600 gr Packung.' },
         defaultPrice: 7.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/456_tavuk_gogus-1.jpg',
     },
     {
         id: 'TUNA-GP-006',
@@ -67,6 +72,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Tavuk pirzola.', de: 'Hähnchenkoteletten.' },
         defaultPrice: 7.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/460_tavuk_pirzola-1.jpg',
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -82,6 +88,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Bütün kuzu, parçalanmış.', de: 'Ganzes Lamm, zerlegt.' },
         defaultPrice: 14.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/tum_kuzu-1.png',
     },
     {
         id: 'TUNA-FP-002',
@@ -91,6 +98,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kuzu pirzola.', de: 'Lamm-Koteletten.' },
         defaultPrice: 21.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/414_Kuzu_pirzola-1.jpg',
     },
     {
         id: 'TUNA-FP-003',
@@ -100,6 +108,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kuzu but, kemiksiz.', de: 'Lammkeule ohne Knochen.' },
         defaultPrice: 16.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/411_kuzu_but_kemiksiz-1.jpg',
     },
     {
         id: 'TUNA-FP-004',
@@ -109,6 +118,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kuzu incik.', de: 'Lamm Beinfleisch.' },
         defaultPrice: 15.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/418_kuzu_incik-1.jpg',
     },
     {
         id: 'TUNA-FP-005',
@@ -118,6 +128,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kuzu kaburga.', de: 'Lammrippen.' },
         defaultPrice: 13.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/415_kuzu_kaburga-1.jpg',
     },
     {
         id: 'TUNA-FP-006',
@@ -127,6 +138,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kuzu ciğer.', de: 'Lammleber.' },
         defaultPrice: 9.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/421_kuzu_ciger-1.jpg',
     },
     {
         id: 'TUNA-FP-007',
@@ -136,6 +148,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kuzu boyun eti.', de: 'Lammhals.' },
         defaultPrice: 13.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/417_kuzu_boyun-1.jpg',
     },
     {
         id: 'TUNA-FP-008',
@@ -145,6 +158,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kuzu but, kemikli.', de: 'Lamm-Keule am Knochen.' },
         defaultPrice: 14.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/410_kuzu_kemikli-1.jpg',
     },
     {
         id: 'TUNA-FP-009',
@@ -154,6 +168,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kuzu kol eti.', de: 'Lammschulter.' },
         defaultPrice: 15.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/416_kuzu_on_kol-1.jpg',
     },
     {
         id: 'TUNA-FP-010',
@@ -163,6 +178,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kuzu kelle.', de: 'Lamm Schädel.' },
         defaultPrice: 7.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/tunafood-temsili-urun-resmi-1.png',
     },
 
     // -- Dana / Jungbulle (JB) --
@@ -174,6 +190,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana biftek (roastbeef).', de: 'Roastbeef.' },
         defaultPrice: 22.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/195_roastbeef-1.jpg',
     },
     {
         id: 'TUNA-FP-012',
@@ -183,6 +200,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Bütün dana eti.', de: 'Ganzes Bullenfleisch.' },
         defaultPrice: 12.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/tosun_karkas-1.png',
     },
     {
         id: 'TUNA-FP-013',
@@ -192,6 +210,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana kontrfile.', de: 'Jungbulle Contrfilet.' },
         defaultPrice: 29.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/196_bonfile-1.jpg',
     },
     {
         id: 'TUNA-FP-014',
@@ -201,6 +220,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana kaburga, kemikli.', de: 'Jungbulle Lappen mit Knochen.' },
         defaultPrice: 13.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/183_tosun_kaburga_kemikli-1.jpg',
     },
     {
         id: 'TUNA-FP-015',
@@ -210,6 +230,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana tantuni eti, ince doğranmış.', de: 'Jungbulle Tantuni Fleisch, fein geschnitten.' },
         defaultPrice: 18.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/189_tosun_tantuni-1.jpg',
     },
     {
         id: 'TUNA-FP-016',
@@ -219,6 +240,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana kuşbaşı, güveç için ideal.', de: 'Jungbulle Gulaschfleisch.' },
         defaultPrice: 17.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/192_tosun_kusbasi-1.jpg',
     },
     {
         id: 'TUNA-FP-017',
@@ -228,6 +250,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana lop eti.', de: 'Jungbulle Teilstück.' },
         defaultPrice: 15.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/186_tosun_parca-1.jpg',
     },
     {
         id: 'TUNA-FP-018',
@@ -237,6 +260,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Yağsız kıyma, 2 kg paket.', de: 'Hackfleisch Mager, 2 kg Packung.' },
         defaultPrice: 29.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/210_yagsiz_kiyma-1.jpg',
     },
     {
         id: 'TUNA-FP-019',
@@ -246,6 +270,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana kıyma, normal yağ oranı.', de: 'Rinderhackfleisch, normaler Fettanteil.' },
         defaultPrice: 13.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/204_azyagli_kiyma-1.jpg',
     },
     {
         id: 'TUNA-FP-020',
@@ -255,6 +280,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana kıyma, yağlı.', de: 'Rinderhackfleisch, fettig.' },
         defaultPrice: 11.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/207_yagli_kiyma-1.jpg',
     },
 
     // -- Sakatat --
@@ -266,6 +292,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana dil.', de: 'Rinderzunge.' },
         defaultPrice: 14.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/359_sutdana_dil-1.jpg',
     },
     {
         id: 'TUNA-FP-022',
@@ -275,6 +302,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana işkembe.', de: 'Rind Pansen.' },
         defaultPrice: 9.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/358_sutdana_iskembe-1.jpg',
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -288,6 +316,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Ev tipi döner.', de: 'Doner für zu Hause.' },
         defaultPrice: 9.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/673_ev_tipi_doner-1.jpg',
     },
     {
         id: 'TUNA-TK-002',
@@ -297,6 +326,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kesilmiş kıyma döner.', de: 'Fleisch Doner gar.' },
         defaultPrice: 9.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/851_et_doner-1.png',
     },
     {
         id: 'TUNA-TK-003',
@@ -306,6 +336,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kesilmiş tavuk döner.', de: 'Hähnchen Doner gar.' },
         defaultPrice: 9.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/852_tavuk_doner-1.png',
     },
     {
         id: 'TUNA-TK-004',
@@ -315,6 +346,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Tavuk nugget, dondurulmuş.', de: 'Hähnchen Nuggets, tiefgekühlt.' },
         defaultPrice: 6.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/684_tavuk_nugget_500g-1.png',
     },
     {
         id: 'TUNA-TK-005',
@@ -324,6 +356,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dondurulmuş tavuk fileto.', de: 'Hähnchen-Fileto, tiefgekühlt.' },
         defaultPrice: 7.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/686_tavuk_fileto_600g-1.png',
     },
     {
         id: 'TUNA-TK-006',
@@ -333,6 +366,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Çıtır tavuk burger.', de: 'Hähnchen Burger.' },
         defaultPrice: 7.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/685_tavuk_burger_540g-1.png',
     },
     {
         id: 'TUNA-TK-007',
@@ -342,6 +376,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dana burger.', de: 'Rinds-Burger.' },
         defaultPrice: 9.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/656_dana_burger_600g-1.png',
     },
     {
         id: 'TUNA-TK-008',
@@ -351,6 +386,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'TUNA köfte.', de: 'Tuna Buletten.' },
         defaultPrice: 9.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/659_tuna_kofte_600g-1.png',
     },
     {
         id: 'TUNA-TK-009',
@@ -360,6 +396,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'İnegöl köfte.', de: 'İnegöl Buletten.' },
         defaultPrice: 9.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/658_inegol_kofte_600g-1.png',
     },
     {
         id: 'TUNA-TK-010',
@@ -369,6 +406,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Adana kebap.', de: 'Adana Kebap.' },
         defaultPrice: 9.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/657_adana_kebap_560g-1.png',
     },
     {
         id: 'TUNA-TK-011',
@@ -378,6 +416,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kıymalı döner, bağırsak içinde.', de: 'Normales Hackfleisch im Darm.' },
         defaultPrice: 9.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/672_ev_tipi_kiyma-1.jpg',
     },
     {
         id: 'TUNA-TK-012',
@@ -387,6 +426,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Türk mantısı.', de: 'Türkische Teigtaschen (Mantı).' },
         defaultPrice: 7.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/688_tuna_manti_750g-1.png',
     },
     {
         id: 'TUNA-TK-013',
@@ -396,6 +436,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Lahmacun.', de: 'Türkische Pizza (Lahmacun).' },
         defaultPrice: 6.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2024/03/lahmacun.jpg',
     },
     {
         id: 'TUNA-TK-014',
@@ -405,6 +446,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Sucuklu pizza.', de: 'Pizza mit Knoblauchwurst.' },
         defaultPrice: 7.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2024/03/pizza-sucuk.jpg',
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -418,6 +460,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Sığır sosis.', de: 'Rindswürstchen.' },
         defaultPrice: 6.25,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/12/sigir_sosis_konserve-1.png',
     },
     {
         id: 'TUNA-WU-002',
@@ -427,6 +470,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Tavuk sosis.', de: 'Hähnchenwürstchen.' },
         defaultPrice: 5.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/12/656_tavuk_sosis_400g-1.png',
     },
     {
         id: 'TUNA-WU-003',
@@ -436,6 +480,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Izgara sosis.', de: 'Grillwürstchen.' },
         defaultPrice: 6.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/12/sigir_sosis_konserve-1.png',
     },
     {
         id: 'TUNA-WU-004',
@@ -445,6 +490,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Jumbo sığır sosis.', de: 'Jumbo-Rindswürstchen.' },
         defaultPrice: 7.25,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/12/sigir_sosis_konserve-1.png',
     },
     {
         id: 'TUNA-WU-005',
@@ -454,6 +500,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Sığır sosis, 600 gr paket.', de: 'Rindswürstchen, 600 g Packung.' },
         defaultPrice: 8.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/12/sigir_sosis_konserve-1.png',
     },
     {
         id: 'TUNA-WU-006',
@@ -463,6 +510,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Sığır sosis, teneke kutu.', de: 'Rindswürstchen in der Dose.' },
         defaultPrice: 4.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/12/sigir_sosis_konserve-1.png',
     },
     {
         id: 'TUNA-WU-007',
@@ -472,6 +520,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Tavuk sosis, teneke kutu.', de: 'Hähnchenwürstchen in der Dose.' },
         defaultPrice: 4.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/12/tavuk_sosis_konserve-1.png',
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -485,6 +534,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Sığır dilim salam.', de: 'Rindswurst in Scheiben.' },
         defaultPrice: 2.69,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/596_dilim_sigir_salam_200g-1.png',
     },
     {
         id: 'TUNA-WR-002',
@@ -494,6 +544,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Biberli sığır dilim salam.', de: 'Rindfleischwurst in Scheiben mit Paprika.' },
         defaultPrice: 2.69,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/597_dilim_biberli_salam_200g-1.png',
     },
     {
         id: 'TUNA-WR-003',
@@ -503,6 +554,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Tavuk dilim salam.', de: 'Hähnchenwurst in Scheiben.' },
         defaultPrice: 2.69,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/598_dilim_tavuk_salam_200g-1.png',
     },
     {
         id: 'TUNA-WR-004',
@@ -512,6 +564,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Macar salam.', de: 'Salami ungarisch.' },
         defaultPrice: 6.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/599_macar_salam_2-1.png',
     },
     {
         id: 'TUNA-WR-005',
@@ -521,6 +574,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Sığır salam baton.', de: 'Rindswurst Stange.' },
         defaultPrice: 5.79,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/561_sade_salam_baton_400g-1.png',
     },
     {
         id: 'TUNA-WR-006',
@@ -530,6 +584,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Tavuk salam baton.', de: 'Hähnchenwurst Stange.' },
         defaultPrice: 4.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/567_tavuk_salam_baton_400g-1.png',
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -543,6 +598,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Orta acılı sucuk, 1 kg.', de: 'Mittelscharf Sucuk, 1 kg.' },
         defaultPrice: 15.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/501_parmak_sucuk_1kg_2-1.png',
     },
     {
         id: 'TUNA-SK-002',
@@ -552,6 +608,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kangal sucuk, 1 kg.', de: 'Kangal Sucuk, 1 kg.' },
         defaultPrice: 15.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/502_kangal_sucuk_1kg_2-1.png',
     },
     {
         id: 'TUNA-SK-003',
@@ -561,6 +618,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Ekstra acılı sucuk, 1 kg.', de: 'Extra Scharf Sucuk, 1 kg.' },
         defaultPrice: 15.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/503_sadrazam_sucuk_1kg-1.png',
     },
     {
         id: 'TUNA-SK-004',
@@ -570,6 +628,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Dilim sucuk.', de: 'Sucuk in Scheiben.' },
         defaultPrice: 4.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/101_dilim_sucuk_2-1.png',
     },
     {
         id: 'TUNA-SK-005',
@@ -579,6 +638,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Sucuk burger.', de: 'Sucuk Burger.' },
         defaultPrice: 4.49,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/12/508_de_sucuk_burger_250gr.png',
     },
     {
         id: 'TUNA-SK-006',
@@ -588,6 +648,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Mini sucuk.', de: 'Mini Sucuk.' },
         defaultPrice: 1.25,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/507_mini_sucuk-1.png',
     },
     {
         id: 'TUNA-SK-007',
@@ -597,6 +658,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Orta acılı sucuk, 400 gr.', de: 'Mittelscharf Sucuk, 400 g.' },
         defaultPrice: 6.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/504_parmak_sucuk_400g_2-1.png',
     },
     {
         id: 'TUNA-SK-008',
@@ -606,6 +668,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Ekstra acılı sucuk, 400 gr.', de: 'Extra Scharf Sucuk, 400 g.' },
         defaultPrice: 6.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/11/506_sadrazam_sucuk_400g-1.png',
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -619,6 +682,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Pastırma.', de: 'Rinderrohschinken nach türkischer Art.' },
         defaultPrice: 3.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2020/12/Pastirma_1x.png',
     },
 
     // ═══════════════════════════════════════════════════════════════
@@ -632,6 +696,7 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kavurma, 3 kg paket.', de: 'Gebratenes Rindfleisch, 3 kg.' },
         defaultPrice: 74.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2024/03/tunafood-baton-kavurma-582.png',
     },
     {
         id: 'TUNA-BR-002',
@@ -641,5 +706,6 @@ export const MASTER_PRODUCTS: MasterProduct[] = [
         description: { tr: 'Kavurma, doğranmış.', de: 'Gebratenes Rindfleisch, geschnitten.' },
         defaultPrice: 24.99,
         allowedBusinessTypes: ['kasap'],
+        imageUrl: 'https://tunafood.com/wp-content/uploads/2024/03/tunafood-dilim-kavurma-589.png',
     },
 ];
