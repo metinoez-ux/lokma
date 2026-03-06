@@ -574,6 +574,7 @@ export default function BusinessDetailsPage() {
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [templateFilter, setTemplateFilter] = useState<string>('all');
   const [templateSearch, setTemplateSearch] = useState('');
+  const [collapsedProductCategories, setCollapsedProductCategories] = useState<Record<string, boolean>>({});
 
   // Load admin data - REMOVED (Handled by AdminProvider)
 
@@ -3342,66 +3343,92 @@ export default function BusinessDetailsPage() {
                             if (!grouped[catName]) grouped[catName] = [];
                             grouped[catName].push(p);
                           });
+                          const allCollapsed = Object.keys(grouped).every(k => collapsedProductCategories[k]);
                           return (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
+                              {/* Collapse/Expand All */}
+                              <div className="flex justify-end gap-2 mb-1">
+                                <button
+                                  onClick={() => {
+                                    const newState: Record<string, boolean> = {};
+                                    Object.keys(grouped).forEach(k => newState[k] = !allCollapsed);
+                                    setCollapsedProductCategories(newState);
+                                  }}
+                                  className="text-xs text-gray-400 hover:text-white transition px-2 py-1 rounded bg-gray-800/50 hover:bg-gray-700/50"
+                                >
+                                  {allCollapsed ? '📂 Hepsini Aç' : '📁 Hepsini Kapat'}
+                                </button>
+                              </div>
                               {Object.entries(grouped).map(([catName, prods]) => {
                                 const catInfo = inlineCategories.find(c => (typeof c.name === 'object' ? getLocalizedText(c.name) : c.name) === catName);
+                                const isCollapsed = collapsedProductCategories[catName] ?? true;
                                 return (
                                   <div key={catName} className="bg-gray-800/60 rounded-xl border border-gray-700 overflow-hidden">
-                                    {/* Category header */}
-                                    <div className="px-4 py-2.5 bg-gray-700/50 flex items-center gap-2 border-b border-gray-700">
+                                    {/* Category header — clickable to toggle */}
+                                    <div
+                                      onClick={() => setCollapsedProductCategories(prev => ({ ...prev, [catName]: !isCollapsed }))}
+                                      className="px-4 py-2.5 bg-gray-700/50 flex items-center gap-2 border-b border-gray-700 cursor-pointer hover:bg-gray-600/50 transition select-none"
+                                    >
+                                      <svg
+                                        className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                      >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                      </svg>
                                       <span className="text-lg">{catInfo?.icon || '📦'}</span>
                                       <span className="text-white font-bold text-sm">{catName}</span>
                                       <span className="text-gray-400 text-xs ml-auto">{prods.length} {t('urun1')}</span>
                                     </div>
-                                    {/* Product rows */}
-                                    <div className="divide-y divide-gray-700/50">
-                                      {prods.map((product: any) => (
-                                        <div key={product.id} className="px-4 py-2.5 flex items-center gap-3 hover:bg-gray-700/30 transition">
-                                          {/* Product image or placeholder */}
-                                          {product.imageUrl || (product.images && product.images[0]) ? (
-                                            <img
-                                              src={product.imageUrl || product.images[0]}
-                                              alt={product.name}
-                                              className="w-10 h-10 rounded-lg object-cover"
-                                            />
-                                          ) : (
-                                            <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center text-gray-500 text-lg">
-                                              📷
-                                            </div>
-                                          )}
-                                          {/* Name and details */}
-                                          <div className="flex-1 min-w-0">
-                                            <p className="text-white text-sm font-medium truncate">{typeof product.name === 'object' ? getLocalizedText(product.name) : product.name}</p>
-                                            <p className="text-gray-500 text-xs truncate">
-                                              {getLocalizedText(product.description) || ''}{product.unit ? ` · ${product.unit === 'kg' ? '⚖️ kg' : '📦 Adet'}` : ''}
-                                            </p>
-                                          </div>
-                                          {/* Price */}
-                                          <div className="text-right shrink-0">
-                                            {(() => {
-                                              const basePrice = product.sellingPrice || product.price || null;
-                                              const appPrice = product.appSellingPrice || basePrice;
-                                              const taxRate = product.taxRate || 7;
-                                              const brutto = appPrice ? parseFloat((appPrice * (1 + taxRate / 100)).toFixed(2)) : null;
-                                              const currSym = getCurrencySymbol(business?.currency);
-                                              const hasAppMarkup = product.appSellingPrice && basePrice && product.appSellingPrice !== basePrice;
-                                              const unitSuffix = product.unit === 'kg' ? '/kg' : '';
-                                              if (!appPrice) return <span className="text-gray-600 text-xs">—</span>;
-                                              return (
-                                                <div className="space-y-0.5">
-                                                  <div className={`${hasAppMarkup ? 'text-blue-400' : 'text-green-400'} font-bold text-sm`}>{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">brutto{hasAppMarkup ? ' 📱' : ''}</span></div>
-                                                  <div className="text-gray-400 text-xs">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">netto</span></div>
-                                                </div>
-                                              );
-                                            })()}
-                                            {product.isActive === false && (
-                                              <span className="block text-red-400 text-[10px]">{t('pasif')}</span>
+                                    {/* Product rows — collapsible */}
+                                    {!isCollapsed && (
+                                      <div className="divide-y divide-gray-700/50">
+                                        {prods.map((product: any) => (
+                                          <div key={product.id} className="px-4 py-2.5 flex items-center gap-3 hover:bg-gray-700/30 transition">
+                                            {/* Product image or placeholder */}
+                                            {product.imageUrl || (product.images && product.images[0]) ? (
+                                              <img
+                                                src={product.imageUrl || product.images[0]}
+                                                alt={product.name}
+                                                className="w-10 h-10 rounded-lg object-cover"
+                                              />
+                                            ) : (
+                                              <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center text-gray-500 text-lg">
+                                                📷
+                                              </div>
                                             )}
+                                            {/* Name and details */}
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-white text-sm font-medium truncate">{typeof product.name === 'object' ? getLocalizedText(product.name) : product.name}</p>
+                                              <p className="text-gray-500 text-xs truncate">
+                                                {getLocalizedText(product.description) || ''}{product.unit ? ` · ${product.unit === 'kg' ? '⚖️ kg' : '📦 Adet'}` : ''}
+                                              </p>
+                                            </div>
+                                            {/* Price */}
+                                            <div className="text-right shrink-0">
+                                              {(() => {
+                                                const basePrice = product.sellingPrice || product.price || null;
+                                                const appPrice = product.appSellingPrice || basePrice;
+                                                const taxRate = product.taxRate || 7;
+                                                const brutto = appPrice ? parseFloat((appPrice * (1 + taxRate / 100)).toFixed(2)) : null;
+                                                const currSym = getCurrencySymbol(business?.currency);
+                                                const hasAppMarkup = product.appSellingPrice && basePrice && product.appSellingPrice !== basePrice;
+                                                const unitSuffix = product.unit === 'kg' ? '/kg' : '';
+                                                if (!appPrice) return <span className="text-gray-600 text-xs">—</span>;
+                                                return (
+                                                  <div className="space-y-0.5">
+                                                    <div className={`${hasAppMarkup ? 'text-blue-400' : 'text-green-400'} font-bold text-sm`}>{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">brutto{hasAppMarkup ? ' 📱' : ''}</span></div>
+                                                    <div className="text-gray-400 text-xs">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">netto</span></div>
+                                                  </div>
+                                                );
+                                              })()}
+                                              {product.isActive === false && (
+                                                <span className="block text-red-400 text-[10px]">{t('pasif')}</span>
+                                              )}
+                                            </div>
                                           </div>
-                                        </div>
-                                      ))}
-                                    </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
