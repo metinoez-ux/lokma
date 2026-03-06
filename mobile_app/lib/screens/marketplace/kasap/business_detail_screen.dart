@@ -403,10 +403,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
   }
 
-  // 🆕 Kapalı işletme uyarı popup'ı
+  // 🆕 Kapalı işletme uyarı popup'ı — Yemek segmenti stili
   void _showClosedBusinessDialog({bool preOrderEnabled = false}) {
-    // Calculate next opening time
+    // Get business name
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
+    final businessName = data?['businessName'] ?? data?['companyName'] ?? 'İşletme';
+    
+    // Calculate next opening time
     final openingHelper = OpeningHoursHelper(data?['openingHours']);
     final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
     String? nextOpenText;
@@ -434,17 +437,17 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         context: context,
         barrierDismissible: true,
         builder: (dialogContext) {
-          final theme = Theme.of(dialogContext);
           return AlertDialog(
-            backgroundColor: theme.dialogBackgroundColor,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
                 const Icon(Icons.schedule, color: Colors.amber, size: 28),
                 const SizedBox(width: 12),
-                Text(
-                  'İşletme Şu An Kapalı',
-                  style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    businessName,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ],
             ),
@@ -452,8 +455,29 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Amber reason badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.access_time, color: Colors.amber, size: 18),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Şu an kapalı',
+                          style: TextStyle(fontWeight: FontWeight.w500, color: Colors.amber),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 // Next opening time
                 if (nextOpenText != null) ...[
+                  const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
@@ -477,13 +501,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
                 ],
+                const SizedBox(height: 16),
                 Text(
                   preOrderEnabled
-                      ? 'Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Sipariş verirseniz işletme açıldığında hazırlanacaktır.'
-                      : 'Bu işletme şu an sipariş kabul etmiyor. Çalışma saatlerinde tekrar deneyebilir veya açık işletmeleri görebilirsiniz.',
-                  style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.7), fontSize: 14, height: 1.4),
+                      ? 'Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Menüye göz atıp sipariş verebilirsiniz — işletme açıldığında hazırlanacaktır.'
+                      : 'Şu an kapalı, ama yine de menüye göz atabilirsiniz.',
+                  style: const TextStyle(fontSize: 15, height: 1.4),
                 ),
                 if (preOrderEnabled) ...[
                   const SizedBox(height: 12),
@@ -512,26 +536,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: Text(
-                  preOrderEnabled ? 'Ön Sipariş Ver' : 'Göz At',
-                  style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-                ),
+                onPressed: () {
+                  Navigator.pop(dialogContext); // Close dialog
+                  context.pop(); // Go back to list
+                },
+                child: Text(tr('common.close')),
               ),
-              if (!preOrderEnabled)
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(dialogContext); // Close dialog
-                    context.pop(); // Go back to list
-                  },
-                  icon: const Icon(Icons.search, size: 18),
-                  label: Text(tr('marketplace.find_open_businesses')),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _getAccent(context),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _getAccent(context),
+                  foregroundColor: Colors.white,
                 ),
+                child: Text(preOrderEnabled ? 'Menüyü Gör & Sipariş Ver' : tr('marketplace.see_menu')),
+              ),
             ],
           );
         },
@@ -3140,23 +3158,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             ),
                             child: Text(
                               product.outOfStock ? 'Stokta Yok' : tr('marketplace.unavailable'),
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-                      // Stock Badge (top right)
-                      if (isAvailable)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              tr('marketplace.in_stock'),
                               style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
                             ),
                           ),

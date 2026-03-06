@@ -899,7 +899,7 @@ export default function BusinessDetailsPage() {
     if (!businessId) return;
     setApplyingTemplate(true);
     try {
-      // Fetch template from Firestore
+      // 1. Fetch template from Firestore (categories)
       const templateDoc = await getDoc(doc(db, 'defaultMenuTemplates', 'kasap'));
       if (!templateDoc.exists()) {
         showToast('Şablon bulunamadı!', 'error');
@@ -924,14 +924,50 @@ export default function BusinessDetailsPage() {
         });
       }
 
+      // 2. Fetch kasap master products and assign to business
+      const masterProductsSnap = await getDocs(collection(db, 'master_products'));
+      const kasapProducts = masterProductsSnap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter((p: any) => {
+          const types = p.allowedBusinessTypes || [];
+          return types.includes('kasap');
+        });
+
+      // Add products to business subcollection
+      const prodRef = collection(db, `businesses/${businessId}/products`);
+      let productCount = 0;
+      for (const product of kasapProducts) {
+        const p = product as any;
+        await setDoc(doc(db, `businesses/${businessId}/products`, p.id), {
+          masterProductId: p.id,
+          name: p.name,
+          description: p.description || { tr: '' },
+          category: p.category || 'dana',
+          categories: p.categories || [p.category || 'dana'],
+          defaultUnit: p.defaultUnit || 'kg',
+          unit: p.unit || p.defaultUnit || 'kg',
+          price: p.defaultPrice || 0,
+          isActive: true,
+          isAvailable: true,
+          brandLabels: p.brandLabels || [],
+          imageUrl: p.imageUrl || '',
+          optionGroups: p.optionGroups || [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
+        productCount++;
+      }
+
       await loadInlineCategories();
-      showToast(`${categories.length} kategori başarıyla eklendi ✅`, 'success');
+      await loadInlineProducts();
+      showToast(`${categories.length} kategori ve ${productCount} ürün başarıyla eklendi ✅`, 'success');
     } catch (error) {
       console.error('Error applying template:', error);
       showToast('Şablon uygulanırken hata oluştu', 'error');
     }
     setApplyingTemplate(false);
   };
+
 
 
   // 🆕 Load Master Products from Firestore (filtered by business type)
@@ -2934,7 +2970,7 @@ export default function BusinessDetailsPage() {
                                     setConfirmModal({
                                       show: true,
                                       title: '📋 Kasap Şablonu Uygula',
-                                      message: `Bu işletmede zaten ${inlineCategories.length} kategori var. Şablon kategorileri (10 adet) mevcut kategorilerin ÜSTÜNE eklenecektir. Devam etmek istiyor musunuz?`,
+                                      message: `Bu işletmede zaten ${inlineCategories.length} kategori var. Şablon uygulandığında 8 kategori ve 66 ürün mevcut olan kategorilerin ve ürünlerin ÜSTÜNE eklenecektir. Devam etmek istiyor musunuz?`,
                                       confirmText: 'Evet, Ekle',
                                       confirmColor: 'bg-emerald-600 hover:bg-emerald-500',
                                       onConfirm: async () => {
@@ -2979,15 +3015,6 @@ export default function BusinessDetailsPage() {
                             <h4 className="text-white font-medium mt-3">{t('henuzKategoriEklenmemis')}</h4>
                             <p className="text-gray-400 text-sm mt-1">{t('urunleriniziDuzenlemekIcinKategoriEkleyin')}</p>
                             <div className="flex items-center gap-3 mt-4">
-                              {isKasapType && (
-                                <button
-                                  onClick={() => applyDefaultTemplate()}
-                                  disabled={applyingTemplate}
-                                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition text-sm font-medium disabled:opacity-50"
-                                >
-                                  {applyingTemplate ? '⏳ Uygulanıyor...' : '📋 Kasap Şablonu Uygula'}
-                                </button>
-                              )}
                               <button
                                 onClick={() => {
                                   setEditingCategory(null);

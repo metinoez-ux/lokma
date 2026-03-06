@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { db, storage } from '@/lib/firebase';
 import {
@@ -137,6 +137,8 @@ export default function ImageGeneratorPage() {
     const [backgroundPrompt, setBackgroundPrompt] = useState('');
     const [negativePrompt, setNegativePrompt] = useState('');
     const [showAdvanced, setShowAdvanced] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // ── Toast helper ─────────────────────────────────────────────────────
     const showToast = useCallback((text: string, type: 'success' | 'error' = 'success') => {
@@ -201,36 +203,33 @@ export default function ImageGeneratorPage() {
         }
 
         try {
-            // Dedicated AI Studio key for Generative Language API (not the restricted Firebase key)
-            const apiKey = process.env.NEXT_PUBLIC_IMAGEN_API_KEY || t('aizasydl6yzw9o5mvxqbdahyfhsgghmhuq1z_sm');
-            if (!apiKey) throw new Error(t('api_key_not_configured'));
+            // Use secure server-side proxy (API key stored encrypted in Firestore vault)
+            const { auth: firebaseAuth } = await import('@/lib/firebase');
+            const token = await firebaseAuth.currentUser?.getIdToken();
+            if (!token) throw new Error('Nicht authentifiziert');
 
             const formatInfo = outputFormats.find((f) => f.id === activeFormat);
 
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        instances: [{ prompt: fullPrompt }],
-                        parameters: {
-                            sampleCount: 1,
-                            aspectRatio: formatInfo?.aspectRatio || '1:1',
-                        },
-                    }),
-                }
-            );
+            const response = await fetch('/api/ai/generate-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    prompt: fullPrompt,
+                    aspectRatio: formatInfo?.aspectRatio || '1:1',
+                }),
+            });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData?.error?.message || `API error: ${response.status}`);
+                throw new Error(errorData?.error || `API error: ${response.status}`);
             }
 
             const result = await response.json();
 
-            // Imagen 4 predict response format
-            const imageData = result.predictions?.[0]?.bytesBase64Encoded;
+            const imageData = result.imageBase64;
             if (!imageData) {
                 throw new Error(t('api_yanitinda_gorsel_bulunamadi'));
             }
@@ -318,6 +317,71 @@ export default function ImageGeneratorPage() {
             setTimeout(() => setCopiedId(null), 2000);
         } catch {
             showToast(t('url_kopyalanamadi'), 'error');
+        }
+    };
+
+    // ── Upload external image ────────────────────────────────────────────
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0 || !admin) return;
+
+        setIsUploading(true);
+        let uploadedCount = 0;
+
+        try {
+            for (const file of Array.from(files)) {
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showToast(`"${file.name}" ist kein Bild`, 'error');
+                    continue;
+                }
+
+                // Max 10MB per file
+                if (file.size > 10 * 1024 * 1024) {
+                    showToast(`"${file.name}" ist zu groß (max. 10 MB)`, 'error');
+                    continue;
+                }
+
+                const timestamp = Date.now();
+                const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+                const sanitizedName = file.name
+                    .replace(/\.[^.]+$/, '')
+                    .toLowerCase()
+                    .replace(/[^a-z0-9ğüşıöçĞÜŞİÖÇ_-]/gi, '_')
+                    .substring(0, 30);
+                const storagePath = `lokma-images/${activeCategory}/${sanitizedName}_${timestamp}.${ext}`;
+                const storageRef = ref(storage, storagePath);
+
+                await uploadBytes(storageRef, file);
+                const downloadUrl = await getDownloadURL(storageRef);
+
+                // Save metadata to Firestore (same structure as AI-generated)
+                await addDoc(collection(db, GALLERY_COLLECTION), {
+                    category: activeCategory,
+                    prompt: 'Manuell hochgeladen',
+                    keyword: file.name.replace(/\.[^.]+$/, ''),
+                    imageUrl: downloadUrl,
+                    storagePath,
+                    aspectRatio: 'custom',
+                    createdAt: Timestamp.now(),
+                    createdBy: admin.id || admin.email || 'unknown',
+                    createdByName: admin.displayName || admin.email || 'Admin',
+                    source: 'upload',
+                });
+
+                uploadedCount++;
+            }
+
+            if (uploadedCount > 0) {
+                showToast(`📸 ${uploadedCount} Bild${uploadedCount > 1 ? 'er' : ''} hochgeladen!`);
+            }
+        } catch (error: any) {
+            console.error('Upload error:', error);
+            showToast(error.message || 'Upload fehlgeschlagen', 'error');
+        } finally {
+            setIsUploading(false);
+            // Reset input so same file can be re-selected
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -518,16 +582,46 @@ export default function ImageGeneratorPage() {
 
                 {/* ═══ Gallery ═══ */}
                 <div>
-                    {/* Gallery Header + Filter */}
+                    {/* Gallery Header + Filter + Upload */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                        <h2 className="text-xl font-bold flex items-center gap-2">
-                            <span className="text-pink-400">◈</span> {t('gorsel_kutuphanesi')}
-                            {!isSuperAdmin && (
-                                <span className="text-xs bg-blue-900/40 text-blue-300 px-2.5 py-1 rounded-full border border-blue-700/50 ml-2">
-                                    {t('gorselleri_isletmenizde_kullanabilirsini')}
-                                </span>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                <span className="text-pink-400">◈</span> {t('gorsel_kutuphanesi')}
+                                {!isSuperAdmin && (
+                                    <span className="text-xs bg-blue-900/40 text-blue-300 px-2.5 py-1 rounded-full border border-blue-700/50 ml-2">
+                                        {t('gorselleri_isletmenizde_kullanabilirsini')}
+                                    </span>
+                                )}
+                            </h2>
+
+                            {/* Upload Button */}
+                            {isSuperAdmin && (
+                                <>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleFileUpload}
+                                        className="hidden"
+                                    />
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isUploading}
+                                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-sm font-bold rounded-xl hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 transition-all shadow-lg shadow-emerald-900/30"
+                                    >
+                                        {isUploading ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                Hochladen...
+                                            </>
+                                        ) : (
+                                            <>📤 Bild hochladen</>
+                                        )}
+                                    </button>
+                                </>
                             )}
-                        </h2>
+                        </div>
 
                         {/* Category filter pills */}
                         <div className="flex flex-wrap gap-1.5">

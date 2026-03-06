@@ -1,13 +1,15 @@
-// Firebase Admin SDK for server-side operations (push notifications)
+// Firebase Admin SDK for server-side operations (push notifications, storage)
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getMessaging, Messaging } from 'firebase-admin/messaging';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getAuth, Auth } from 'firebase-admin/auth';
+import { getStorage, Storage } from 'firebase-admin/storage';
 
 let adminApp: App;
 let messaging: Messaging;
 let db: Firestore;
 let auth: Auth;
+let storage: Storage;
 
 function initializeFirebaseAdmin() {
     if (getApps().length === 0) {
@@ -25,6 +27,7 @@ function initializeFirebaseAdmin() {
             adminApp = initializeApp({
                 credential: cert(parsedServiceAccount),
                 projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
             });
         } catch (error) {
             console.error('Failed to parse service account:', error);
@@ -37,7 +40,8 @@ function initializeFirebaseAdmin() {
     messaging = getMessaging(adminApp);
     db = getFirestore(adminApp);
     auth = getAuth(adminApp);
-    return { adminApp, messaging, db, auth };
+    storage = getStorage(adminApp);
+    return { adminApp, messaging, db, auth, storage };
 }
 
 export function getFirebaseMessaging(): Messaging {
@@ -47,11 +51,11 @@ export function getFirebaseMessaging(): Messaging {
     return messaging;
 }
 
-export function getFirebaseAdmin(): { auth: Auth; db: Firestore } {
-    if (!db || !auth) {
+export function getFirebaseAdmin(): { auth: Auth; db: Firestore; storage: Storage } {
+    if (!db || !auth || !storage) {
         initializeFirebaseAdmin();
     }
-    return { auth, db };
+    return { auth, db, storage };
 }
 
 // Available notification topics

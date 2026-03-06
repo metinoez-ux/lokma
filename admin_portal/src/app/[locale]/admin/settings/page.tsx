@@ -168,6 +168,21 @@ export default function SettingsPage() {
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-amber-400 transition text-xl">→</span>
                             </Link>
+
+                            {/* API Schlüssel */}
+                            <Link
+                                href="/admin/settings/api-keys"
+                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-orange-600 hover:bg-orange-950/20 transition-all group"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-orange-900/50 flex items-center justify-center text-2xl group-hover:bg-orange-800/50 transition">
+                                    🔑
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white group-hover:text-orange-300 transition">API-Schlüssel</h3>
+                                    <p className="text-xs text-gray-500">Verschlüsselte API-Schlüsselverwaltung</p>
+                                </div>
+                                <span className="ml-auto text-gray-600 group-hover:text-orange-400 transition text-xl">→</span>
+                            </Link>
                         </div>
                     </div>
                 )}

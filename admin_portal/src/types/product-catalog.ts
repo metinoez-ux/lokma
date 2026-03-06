@@ -131,9 +131,12 @@ export function formatDualVolume(pricePerLiter: number, currency = '€'): strin
 // =============================================================================
 
 export const MEAT_CATEGORIES: ProductCategory[] = [
-    { code: 'dana', name: 'Dana Eti', icon: 'lunch_dining', domain: 'kasap' },
-    { code: 'kuzu', name: 'Kuzu Eti', icon: 'kebab_dining', domain: 'kasap' },
-    { code: 'tavuk', name: 'Tavuk', icon: 'egg_alt', domain: 'kasap' },
-    { code: 'islenmiş', name: 'İşlenmiş Ürünler', icon: 'kitchen', domain: 'kasap' },
-    { code: 'ozel', name: 'Özel Paketler', icon: 'star', domain: 'kasap' },
+    { code: 'tavuk', name: 'Tavuk Ürünleri', icon: 'egg_alt', domain: 'kasap' },
+    { code: 'et', name: 'Et Ürünleri', icon: 'kebab_dining', domain: 'kasap' },
+    { code: 'dondurulmus', name: 'Dondurulmuş Ürünler', icon: 'ac_unit', domain: 'kasap' },
+    { code: 'wurstchen', name: 'Sosis', icon: 'lunch_dining', domain: 'kasap' },
+    { code: 'wurst', name: 'Salam', icon: 'tapas', domain: 'kasap' },
+    { code: 'sucuk', name: 'Sucuk', icon: 'local_fire_department', domain: 'kasap' },
+    { code: 'pastirma', name: 'Pastırma', icon: 'restaurant', domain: 'kasap' },
+    { code: 'kavurma', name: 'Kavurma', icon: 'outdoor_grill', domain: 'kasap' },
 ];

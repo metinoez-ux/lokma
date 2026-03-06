@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../utils/i18n_utils.dart';
@@ -85,6 +86,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   double _walletBalance = 0.0;
   bool _useWallet = false;
 
+  // ❄️ Cold Chain Banner
+  bool _showColdChainBanner = false; // true = show full expanded banner
+
   /// 🎨 BRAND COLOUR - Dynamic resolution per Design System Protocol
   Color get _accentColor {
     final brandColorHex = _butcherData?['brandColor']?.toString();
@@ -115,6 +119,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       _paymentMethod = 'payLater'; // Default for dine-in
     }
     _tabController = TabController(length: 2, vsync: this);
+    _checkColdChainBanner();
     
     // Pulse animation for active orders indicator
     _pulseController = AnimationController(
@@ -2038,6 +2043,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               _buildLieferandoDeliveryPill(),
               SizedBox(height: 16),
               
+              // ❄️ Cold Chain Banner (Kasap + Kurye only)
+              if (hasKasap && _butcherData != null && !_isPickUp && !_isDineIn)
+                _buildColdChainBanner(),
+              
               // 🟡 Minimum Order Bar (Yellow - Lieferando style) - ONLY for Kurye mode
               if (hasKasap && _butcherData != null && !_isPickUp && !_isDineIn)
                 _buildLieferandoMinimumBar(cart.totalAmount),
@@ -2189,6 +2198,217 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
   
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ❄️ COLD CHAIN INFO BANNER
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  /// Check SharedPreferences if user has seen the cold chain banner before
+  Future<void> _checkColdChainBanner() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasSeen = prefs.getBool('cold_chain_banner_seen') ?? false;
+    if (mounted) {
+      setState(() {
+        _showColdChainBanner = !hasSeen; // Show full banner if never seen
+      });
+    }
+  }
+  
+  /// Mark cold chain banner as seen
+  Future<void> _dismissColdChainBanner() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('cold_chain_banner_seen', true);
+    if (mounted) {
+      setState(() {
+        _showColdChainBanner = false;
+      });
+    }
+  }
+  
+  /// Show cold chain info as a bottom sheet dialog
+  void _showColdChainInfoSheet() {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1A2332) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFF4FC3F7).withValues(alpha: 0.4),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFF4FC3F7).withValues(alpha: 0.2),
+                      const Color(0xFF0288D1).withValues(alpha: 0.1),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Text('❄️', style: TextStyle(fontSize: 32)),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Soğuk Zincir Garantisi',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Et ürünlerimiz max. hızda size ulaşabilecek şekilde soğuk zinciri kırılmadan özel korumalı boxlarda ulaştırılır.\n\nTeslimat süresince ürünleriniz soğuk kalır ve tazeliğini korur.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4FC3F7),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Anladım', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  
+  /// Build the cold chain banner widget
+  Widget _buildColdChainBanner() {
+    // Only show for kasap-type businesses
+    final bType = _butcherData?['type']?.toString().toLowerCase() ?? 
+                  _butcherData?['businessType']?.toString().toLowerCase() ?? '';
+    final isKasap = bType == 'kasap';
+    if (!isKasap) return const SizedBox.shrink();
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Show full expanded banner (first time)
+    if (_showColdChainBanner) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFF4FC3F7).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(child: Text('❄️', style: TextStyle(fontSize: 16))),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Soğuk Zincir Garantisi',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Et ürünlerimiz soğuk zinciri kırılmadan özel korumalı boxlarda ulaştırılır.',
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      fontSize: 11.5,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            GestureDetector(
+              onTap: _dismissColdChainBanner,
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Icon(
+                  Icons.close_rounded,
+                  color: isDark ? Colors.grey[500] : Colors.grey[400],
+                  size: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // Show collapsed ❄️ inline pill (after dismissal)
+    return GestureDetector(
+      onTap: _showColdChainInfoSheet,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey[100],
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('❄️', style: TextStyle(fontSize: 13)),
+            const SizedBox(width: 6),
+            Text(
+              'Soğuk Zincir',
+              style: TextStyle(
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.info_outline_rounded,
+              color: isDark ? Colors.grey[500] : Colors.grey[400],
+              size: 13,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
   /// 🟡 Lieferando-style minimum order bar (yellow warning or green success)
   Widget _buildLieferandoMinimumBar(double currentTotal) {
     final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
@@ -2197,32 +2417,32 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     if (isReached) {
-      // ✅ SUCCESS: Minimum reached - show green bar with min order info
+      // ✅ SUCCESS: Minimum reached
       return Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1B3A1B) : const Color(0xFFE8F5E9),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: isDark ? 0.5 : 0.3)),
+          color: isDark ? const Color(0xFF4CAF50).withValues(alpha: 0.12) : const Color(0xFFE8F5E9),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(4),
+              width: 22,
+              height: 22,
               decoration: BoxDecoration(
-                color: Color(0xFF4CAF50),
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFF4CAF50),
+                borderRadius: BorderRadius.circular(6),
               ),
-              child: Icon(Icons.check, color: Theme.of(context).colorScheme.surface, size: 14),
+              child: const Icon(Icons.check, color: Colors.white, size: 14),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 'Min. ${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()} ✓ Teslimat için yeterli',
                 style: TextStyle(
                   color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32),
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -2232,36 +2452,36 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       );
     }
     
-    // 🟡 WARNING: Below minimum - show yellow/amber bar
-    final barBg = isDark ? const Color(0xFF3A2E00) : const Color(0xFFFFF9C4);
-    final textColor = isDark ? const Color(0xFFFFD54F) : const Color(0xFF5D4037);
-    final iconColor = isDark ? const Color(0xFFFFD54F) : const Color(0xFFF9A825);
-    
+    // 🟡 WARNING: Below minimum
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: barBg,
-        borderRadius: BorderRadius.circular(8),
-        border: isDark ? Border.all(color: const Color(0xFFFFD54F).withValues(alpha: 0.3)) : null,
+        color: isDark ? const Color(0xFFFFD54F).withValues(alpha: 0.10) : const Color(0xFFFFF9C4),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: iconColor, size: 20),
-          SizedBox(width: 10),
+          Icon(Icons.info_outline_rounded, 
+            color: isDark ? const Color(0xFFFFD54F) : const Color(0xFFF9A825), 
+            size: 18),
+          const SizedBox(width: 10),
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: TextStyle(color: textColor, fontSize: 14),
+                style: TextStyle(
+                  color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF5D4037), 
+                  fontSize: 13,
+                ),
                 children: [
                   TextSpan(
                     text: '${remaining.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const TextSpan(text: ' daha ekle, min. sipariş '),
                   TextSpan(
                     text: '${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
               ),

@@ -1,125 +1,645 @@
 export interface MasterProduct {
     id: string; // SKU Matching Mobile App
     name: Record<string, string> | string;
-    category: 'dana' | 'kuzu' | 'tavuk' | 'hazir' | 'diger' | string;
+    category: string;
     defaultUnit: 'kg' | 'ad' | string;
     description: Record<string, string> | string;
-    allowedBusinessTypes?: string[];  // 🆕 Hangi işletme türleri satabilir
+    defaultPrice?: number;  // Varsayılan fiyat (EUR)
+    allowedBusinessTypes?: string[];  // Hangi işletme türleri satabilir
+    imageUrl?: string; // Ürün görseli URL
 }
 
 export const MASTER_PRODUCTS: MasterProduct[] = [
-    // Dana Eti
-    {
-        id: 'MIRA-MEAT-DANA-001',
-        name: 'Dana Antrikot',
-        category: 'dana',
-        defaultUnit: 'kg',
-        description: 'Özel besi dana etinin en lezzetli kısmı.'
-    },
-    {
-        id: 'MIRA-MEAT-DANA-002',
-        name: 'Dana Bonfile',
-        category: 'dana',
-        defaultUnit: 'kg',
-        description: 'En yumuşak et, özel günler için.'
-    },
-    {
-        id: 'MIRA-MEAT-DANA-003',
-        name: 'Dana Kıyma',
-        category: 'dana',
-        defaultUnit: 'kg',
-        description: 'Az yağlı, günlük taze çekim.'
-    },
-    {
-        id: 'MIRA-MEAT-DANA-004',
-        name: 'Dana Kuşbaşı',
-        category: 'dana',
-        defaultUnit: 'kg',
-        description: 'Sinirsiz dana but, güveç için.'
-    },
-    {
-        id: 'MIRA-MEAT-DANA-005',
-        name: 'Dana Kaburga',
-        category: 'dana',
-        defaultUnit: 'kg',
-        description: 'Fırın ve haşlama için ideal.'
-    },
 
-    // Kuzu Eti
+    // ═══════════════════════════════════════════════════════════════
+    // 🐔 GEFLÜGEL PRODUKTE / TAVUK ÜRÜNLERİ — 6 Ürün
+    // ═══════════════════════════════════════════════════════════════
     {
-        id: 'MIRA-MEAT-KUZU-001',
-        name: 'Kuzu Pirzola',
-        category: 'kuzu',
-        defaultUnit: 'kg',
-        description: 'Premium kuzu pirzola, ızgara için.'
-    },
-    {
-        id: 'MIRA-MEAT-KUZU-002',
-        name: 'Kuzu But',
-        category: 'kuzu',
-        defaultUnit: 'kg',
-        description: 'Bütün kuzu but, fırın için.'
-    },
-    {
-        id: 'MIRA-MEAT-KUZU-003',
-        name: 'Kuzu Kıyma',
-        category: 'kuzu',
-        defaultUnit: 'kg',
-        description: 'Taze çekilmiş kuzu kıyma.'
-    },
-
-    // Tavuk
-    {
-        id: 'MIRA-MEAT-TAVUK-001',
-        name: 'Tavuk Göğsü',
+        id: 'TUNA-GP-001',
+        name: { tr: 'Bütün Tavuk', de: 'Hähnchen Ganz' },
         category: 'tavuk',
         defaultUnit: 'kg',
-        description: 'Derisiz tavuk göğsü fileto.'
+        description: { tr: 'Bütün tavuk, temizlenmiş.', de: 'Ganzes Hähnchen, küchenfertig.' },
+        defaultPrice: 6.49,
+        allowedBusinessTypes: ['kasap'],
     },
     {
-        id: 'MIRA-MEAT-TAVUK-002',
-        name: 'Bütün Tavuk',
+        id: 'TUNA-GP-002',
+        name: { tr: 'Tavuk But', de: 'Hähnchenschenkel' },
+        category: 'tavuk',
+        defaultUnit: 'kg',
+        description: { tr: 'Tavuk but, kemikli.', de: 'Hähnchenschenkel.' },
+        defaultPrice: 6.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-GP-003',
+        name: { tr: 'Tavuk Göğüs', de: 'Hähnchenkeule' },
+        category: 'tavuk',
+        defaultUnit: 'kg',
+        description: { tr: 'Tavuk göğüs.', de: 'Hähnchenkeule.' },
+        defaultPrice: 11.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-GP-004',
+        name: { tr: 'Tavuk Kanat', de: 'Hähnchenflügel' },
+        category: 'tavuk',
+        defaultUnit: 'kg',
+        description: { tr: 'Tavuk kanat.', de: 'Hähnchenflügel.' },
+        defaultPrice: 7.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-GP-005',
+        name: { tr: 'Tavuk Fileto 600 gr', de: 'Hähnchenfilet 600 gr' },
         category: 'tavuk',
         defaultUnit: 'ad',
-        description: 'Temizlenmiş bütün tavuk.'
+        description: { tr: 'Tavuk fileto, 600 gr paket.', de: 'Hähnchenfilet, 600 gr Packung.' },
+        defaultPrice: 7.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-GP-006',
+        name: { tr: 'Tavuk Pirzola', de: 'Hähnchenkoteletten' },
+        category: 'tavuk',
+        defaultUnit: 'kg',
+        description: { tr: 'Tavuk pirzola.', de: 'Hähnchenkoteletten.' },
+        defaultPrice: 7.99,
+        allowedBusinessTypes: ['kasap'],
     },
 
-    // İşlenmiş (Hazır)
+    // ═══════════════════════════════════════════════════════════════
+    // 🥩 FLEISCH PRODUKTE / ET ÜRÜNLERİ — 22 Ürün
+    // ═══════════════════════════════════════════════════════════════
+
+    // -- Kuzu (Lamm) --
     {
-        id: 'MIRA-MEAT-ISLEM-001',
-        name: 'Evlik Sucuk',
-        category: 'hazir',
+        id: 'TUNA-FP-001',
+        name: { tr: 'Bütün Kuzu', de: 'Lamm Ganz' },
+        category: 'et',
         defaultUnit: 'kg',
-        description: 'Geleneksel fermente dana sucuk.'
+        description: { tr: 'Bütün kuzu, parçalanmış.', de: 'Ganzes Lamm, zerlegt.' },
+        defaultPrice: 14.99,
+        allowedBusinessTypes: ['kasap'],
     },
     {
-        id: 'MIRA-MEAT-ISLEM-002',
-        name: 'Pastırma',
-        category: 'hazir',
+        id: 'TUNA-FP-002',
+        name: { tr: 'Kuzu Pirzola', de: 'Lamm-Koteletten' },
+        category: 'et',
         defaultUnit: 'kg',
-        description: 'El yapımı Kayseri pastırması.'
+        description: { tr: 'Kuzu pirzola.', de: 'Lamm-Koteletten.' },
+        defaultPrice: 21.99,
+        allowedBusinessTypes: ['kasap'],
     },
     {
-        id: 'MIRA-MEAT-ISLEM-003',
-        name: 'Kasap Köfte',
-        category: 'hazir',
+        id: 'TUNA-FP-003',
+        name: { tr: 'Kuzu But (Kemiksiz)', de: 'Lammkeule ohne Knochen' },
+        category: 'et',
         defaultUnit: 'kg',
-        description: 'Özel baharat karışımlı.'
+        description: { tr: 'Kuzu but, kemiksiz.', de: 'Lammkeule ohne Knochen.' },
+        defaultPrice: 16.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-004',
+        name: { tr: 'Kuzu İncik', de: 'Lamm Beinfleisch' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Kuzu incik.', de: 'Lamm Beinfleisch.' },
+        defaultPrice: 15.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-005',
+        name: { tr: 'Kuzu Kaburga', de: 'Lammrippen' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Kuzu kaburga.', de: 'Lammrippen.' },
+        defaultPrice: 13.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-006',
+        name: { tr: 'Kuzu Ciğer', de: 'Lammleber' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Kuzu ciğer.', de: 'Lammleber.' },
+        defaultPrice: 9.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-007',
+        name: { tr: 'Kuzu Boyun', de: 'Lammhals' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Kuzu boyun eti.', de: 'Lammhals.' },
+        defaultPrice: 13.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-008',
+        name: { tr: 'Kuzu But (Kemikli)', de: 'Lamm-Keule' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Kuzu but, kemikli.', de: 'Lamm-Keule am Knochen.' },
+        defaultPrice: 14.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-009',
+        name: { tr: 'Kuzu Kol', de: 'Lammschulter' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Kuzu kol eti.', de: 'Lammschulter.' },
+        defaultPrice: 15.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-010',
+        name: { tr: 'Kuzu Kelle', de: 'Lamm Schädel' },
+        category: 'et',
+        defaultUnit: 'ad',
+        description: { tr: 'Kuzu kelle.', de: 'Lamm Schädel.' },
+        defaultPrice: 7.99,
+        allowedBusinessTypes: ['kasap'],
     },
 
-    // Özel / Diğer
+    // -- Dana / Jungbulle (JB) --
     {
-        id: 'MIRA-MEAT-OZEL-001',
-        name: 'Kurban Paketi',
-        category: 'diger',
-        defaultUnit: 'ad',
-        description: 'Özel kurban kesim paketi.'
+        id: 'TUNA-FP-011',
+        name: { tr: 'Dana Biftek', de: 'Roastbeef' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Dana biftek (roastbeef).', de: 'Roastbeef.' },
+        defaultPrice: 22.99,
+        allowedBusinessTypes: ['kasap'],
     },
     {
-        id: 'MIRA-MEAT-OZEL-002',
-        name: 'Mangal Paketi',
-        category: 'diger',
+        id: 'TUNA-FP-012',
+        name: { tr: 'Bütün Dana', de: 'Ganzes Bullenfleisch' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Bütün dana eti.', de: 'Ganzes Bullenfleisch.' },
+        defaultPrice: 12.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-013',
+        name: { tr: 'Dana Kontrfile', de: 'Jungbulle Contrfilet' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Dana kontrfile.', de: 'Jungbulle Contrfilet.' },
+        defaultPrice: 29.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-014',
+        name: { tr: 'Dana Kaburga Kemikli', de: 'Jungbulle Lappen mit Knochen' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Dana kaburga, kemikli.', de: 'Jungbulle Lappen mit Knochen.' },
+        defaultPrice: 13.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-015',
+        name: { tr: 'Dana Tantuni Eti', de: 'Jungbulle Tantuni Fleisch' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Dana tantuni eti, ince doğranmış.', de: 'Jungbulle Tantuni Fleisch, fein geschnitten.' },
+        defaultPrice: 18.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-016',
+        name: { tr: 'Dana Kuşbaşı', de: 'Jungbulle Gulaschfleisch' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Dana kuşbaşı, güveç için ideal.', de: 'Jungbulle Gulaschfleisch.' },
+        defaultPrice: 17.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-017',
+        name: { tr: 'Dana Lop Et', de: 'Jungbulle Teilstück' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Dana lop eti.', de: 'Jungbulle Teilstück.' },
+        defaultPrice: 15.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-018',
+        name: { tr: 'Yağsız Kıyma 2 Kg', de: 'Hackfleisch Mager 2 kg' },
+        category: 'et',
         defaultUnit: 'ad',
-        description: 'Pirzola, köfte içeren mangal seti.'
+        description: { tr: 'Yağsız kıyma, 2 kg paket.', de: 'Hackfleisch Mager, 2 kg Packung.' },
+        defaultPrice: 29.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-019',
+        name: { tr: 'Dana Kıyma (Normal)', de: 'Rinderhackfleisch Normal' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Dana kıyma, normal yağ oranı.', de: 'Rinderhackfleisch, normaler Fettanteil.' },
+        defaultPrice: 13.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-020',
+        name: { tr: 'Dana Kıyma (Yağlı)', de: 'Rinderhackfleisch Fettig' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Dana kıyma, yağlı.', de: 'Rinderhackfleisch, fettig.' },
+        defaultPrice: 11.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+
+    // -- Sakatat --
+    {
+        id: 'TUNA-FP-021',
+        name: { tr: 'Dana Dil', de: 'Rinderzunge' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Dana dil.', de: 'Rinderzunge.' },
+        defaultPrice: 14.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-FP-022',
+        name: { tr: 'Dana İşkembe', de: 'Rind Pansen' },
+        category: 'et',
+        defaultUnit: 'kg',
+        description: { tr: 'Dana işkembe.', de: 'Rind Pansen.' },
+        defaultPrice: 9.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🧊 TIEFKÜHL PRODUKTE / DONDURULMUŞ ÜRÜNLER — 14 Ürün
+    // ═══════════════════════════════════════════════════════════════
+    {
+        id: 'TUNA-TK-001',
+        name: { tr: 'Ev Tipi Döner 500 gr', de: 'Doner für zu Hause 500 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Ev tipi döner.', de: 'Doner für zu Hause.' },
+        defaultPrice: 9.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-002',
+        name: { tr: 'Kesilmiş Kıyma Döner 500 gr', de: 'Fleisch Doner gar 500 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Kesilmiş kıyma döner.', de: 'Fleisch Doner gar.' },
+        defaultPrice: 9.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-003',
+        name: { tr: 'Kesilmiş Tavuk Döner 500 gr', de: 'Hähnchen Doner gar 500 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Kesilmiş tavuk döner.', de: 'Hähnchen Doner gar.' },
+        defaultPrice: 9.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-004',
+        name: { tr: 'Tavuk Nugget 500 gr', de: 'Hähnchen Nuggets 500 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Tavuk nugget, dondurulmuş.', de: 'Hähnchen Nuggets, tiefgekühlt.' },
+        defaultPrice: 6.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-005',
+        name: { tr: 'Tavuk Fileto 600 gr', de: 'Hähnchen-Fileto 600 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Dondurulmuş tavuk fileto.', de: 'Hähnchen-Fileto, tiefgekühlt.' },
+        defaultPrice: 7.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-006',
+        name: { tr: 'Çıtır Tavuk Burger 540 gr', de: 'Hähnchen Burger 540 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Çıtır tavuk burger.', de: 'Hähnchen Burger.' },
+        defaultPrice: 7.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-007',
+        name: { tr: 'Dana Burger 600 gr', de: 'Rinds-Burger 600 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Dana burger.', de: 'Rinds-Burger.' },
+        defaultPrice: 9.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-008',
+        name: { tr: 'TUNA Köfte 600 gr', de: 'Tuna Buletten 600 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'TUNA köfte.', de: 'Tuna Buletten.' },
+        defaultPrice: 9.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-009',
+        name: { tr: 'İnegöl Köfte 600 gr', de: 'İnegöl Buletten 600 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'İnegöl köfte.', de: 'İnegöl Buletten.' },
+        defaultPrice: 9.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-010',
+        name: { tr: 'Adana Kebap 560 gr', de: 'Adana Kebap 560 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Adana kebap.', de: 'Adana Kebap.' },
+        defaultPrice: 9.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-011',
+        name: { tr: 'Kıymalı Döner Bağırsak 500 gr', de: 'Normales Hackfleisch im Darm 500 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Kıymalı döner, bağırsak içinde.', de: 'Normales Hackfleisch im Darm.' },
+        defaultPrice: 9.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-012',
+        name: { tr: 'Mantı 750 gr', de: 'Mantı 750 g' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Türk mantısı.', de: 'Türkische Teigtaschen (Mantı).' },
+        defaultPrice: 7.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-013',
+        name: { tr: 'Lahmacun', de: 'Lahmacun' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Lahmacun.', de: 'Türkische Pizza (Lahmacun).' },
+        defaultPrice: 6.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-TK-014',
+        name: { tr: 'Sucuklu Pizza', de: 'Pizza Sucuk' },
+        category: 'dondurulmus',
+        defaultUnit: 'ad',
+        description: { tr: 'Sucuklu pizza.', de: 'Pizza mit Knoblauchwurst.' },
+        defaultPrice: 7.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🌭 WÜRSTCHEN / SOSİS — 7 Ürün
+    // ═══════════════════════════════════════════════════════════════
+    {
+        id: 'TUNA-WU-001',
+        name: { tr: 'Sığır Sosis 400 gr', de: 'Rindswürstchen 400 g' },
+        category: 'wurstchen',
+        defaultUnit: 'ad',
+        description: { tr: 'Sığır sosis.', de: 'Rindswürstchen.' },
+        defaultPrice: 6.25,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WU-002',
+        name: { tr: 'Tavuk Sosis 400 gr', de: 'Hähnchenwürstchen 400 g' },
+        category: 'wurstchen',
+        defaultUnit: 'ad',
+        description: { tr: 'Tavuk sosis.', de: 'Hähnchenwürstchen.' },
+        defaultPrice: 5.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WU-003',
+        name: { tr: 'Izgara Sosis 500 gr', de: 'Grillwürstchen 500 g' },
+        category: 'wurstchen',
+        defaultUnit: 'ad',
+        description: { tr: 'Izgara sosis.', de: 'Grillwürstchen.' },
+        defaultPrice: 6.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WU-004',
+        name: { tr: 'Jumbo Sığır Sosis 500 gr', de: 'Jumbo-Rindswürstchen 500 g' },
+        category: 'wurstchen',
+        defaultUnit: 'ad',
+        description: { tr: 'Jumbo sığır sosis.', de: 'Jumbo-Rindswürstchen.' },
+        defaultPrice: 7.25,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WU-005',
+        name: { tr: 'Sığır Sosis 600 gr', de: 'Rindswürstchen 600 g' },
+        category: 'wurstchen',
+        defaultUnit: 'ad',
+        description: { tr: 'Sığır sosis, 600 gr paket.', de: 'Rindswürstchen, 600 g Packung.' },
+        defaultPrice: 8.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WU-006',
+        name: { tr: 'Sığır Sosis Teneke 250 gr', de: 'Rindswürstchen in der Dose 250 g' },
+        category: 'wurstchen',
+        defaultUnit: 'ad',
+        description: { tr: 'Sığır sosis, teneke kutu.', de: 'Rindswürstchen in der Dose.' },
+        defaultPrice: 4.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WU-007',
+        name: { tr: 'Tavuk Sosis Teneke 250 gr', de: 'Hähnchenwürstchen in der Dose 250 g' },
+        category: 'wurstchen',
+        defaultUnit: 'ad',
+        description: { tr: 'Tavuk sosis, teneke kutu.', de: 'Hähnchenwürstchen in der Dose.' },
+        defaultPrice: 4.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🥓 WURST / SALAM — 6 Ürün
+    // ═══════════════════════════════════════════════════════════════
+    {
+        id: 'TUNA-WR-001',
+        name: { tr: 'Sığır Dilim Salam 150 gr', de: 'Rindswurst in Scheiben 150 g' },
+        category: 'wurst',
+        defaultUnit: 'ad',
+        description: { tr: 'Sığır dilim salam.', de: 'Rindswurst in Scheiben.' },
+        defaultPrice: 2.69,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WR-002',
+        name: { tr: 'Biberli Sığır Dilim Salam 150 gr', de: 'Rindfleischwurst in Scheiben mit Paprika 150 g' },
+        category: 'wurst',
+        defaultUnit: 'ad',
+        description: { tr: 'Biberli sığır dilim salam.', de: 'Rindfleischwurst in Scheiben mit Paprika.' },
+        defaultPrice: 2.69,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WR-003',
+        name: { tr: 'Tavuk Dilim Salam 150 gr', de: 'Hähnchenwurst in Scheiben 150 g' },
+        category: 'wurst',
+        defaultUnit: 'ad',
+        description: { tr: 'Tavuk dilim salam.', de: 'Hähnchenwurst in Scheiben.' },
+        defaultPrice: 2.69,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WR-004',
+        name: { tr: 'Macar Salam 400 gr', de: 'Salami ungarisch 400 g' },
+        category: 'wurst',
+        defaultUnit: 'ad',
+        description: { tr: 'Macar salam.', de: 'Salami ungarisch.' },
+        defaultPrice: 6.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WR-005',
+        name: { tr: 'Sığır Salam 400 gr', de: 'Rindswurst 400 g' },
+        category: 'wurst',
+        defaultUnit: 'ad',
+        description: { tr: 'Sığır salam baton.', de: 'Rindswurst Stange.' },
+        defaultPrice: 5.79,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-WR-006',
+        name: { tr: 'Tavuk Salam 400 gr', de: 'Hähnchenwurst 400 g' },
+        category: 'wurst',
+        defaultUnit: 'ad',
+        description: { tr: 'Tavuk salam baton.', de: 'Hähnchenwurst Stange.' },
+        defaultPrice: 4.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🧄 SUCUK — 8 Ürün
+    // ═══════════════════════════════════════════════════════════════
+    {
+        id: 'TUNA-SK-001',
+        name: { tr: 'Orta Acı Sucuk 1000 gr', de: 'Mittelscharf Sucuk 1000 g' },
+        category: 'sucuk',
+        defaultUnit: 'ad',
+        description: { tr: 'Orta acılı sucuk, 1 kg.', de: 'Mittelscharf Sucuk, 1 kg.' },
+        defaultPrice: 15.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-SK-002',
+        name: { tr: 'Kangal Sucuk 1000 gr', de: 'Kangal Sucuk 1000 g' },
+        category: 'sucuk',
+        defaultUnit: 'ad',
+        description: { tr: 'Kangal sucuk, 1 kg.', de: 'Kangal Sucuk, 1 kg.' },
+        defaultPrice: 15.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-SK-003',
+        name: { tr: 'Ekstra Acı Sucuk 1000 gr', de: 'Extra Scharf Sucuk 1000 g' },
+        category: 'sucuk',
+        defaultUnit: 'ad',
+        description: { tr: 'Ekstra acılı sucuk, 1 kg.', de: 'Extra Scharf Sucuk, 1 kg.' },
+        defaultPrice: 15.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-SK-004',
+        name: { tr: 'Dilim Sucuk 250 gr', de: 'Sucuk in Scheiben 250 g' },
+        category: 'sucuk',
+        defaultUnit: 'ad',
+        description: { tr: 'Dilim sucuk.', de: 'Sucuk in Scheiben.' },
+        defaultPrice: 4.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-SK-005',
+        name: { tr: 'Sucuk Burger 250 gr', de: 'Sucuk Burger 250 gr' },
+        category: 'sucuk',
+        defaultUnit: 'ad',
+        description: { tr: 'Sucuk burger.', de: 'Sucuk Burger.' },
+        defaultPrice: 4.49,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-SK-006',
+        name: { tr: 'Mini Sucuk 30 gr', de: 'Mini Sucuk 30 g' },
+        category: 'sucuk',
+        defaultUnit: 'ad',
+        description: { tr: 'Mini sucuk.', de: 'Mini Sucuk.' },
+        defaultPrice: 1.25,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-SK-007',
+        name: { tr: 'Orta Acı Sucuk 400 gr', de: 'Mittelscharf Sucuk 400 g' },
+        category: 'sucuk',
+        defaultUnit: 'ad',
+        description: { tr: 'Orta acılı sucuk, 400 gr.', de: 'Mittelscharf Sucuk, 400 g.' },
+        defaultPrice: 6.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-SK-008',
+        name: { tr: 'Ekstra Acı Sucuk 400 gr', de: 'Extra Scharf Sucuk 400 g' },
+        category: 'sucuk',
+        defaultUnit: 'ad',
+        description: { tr: 'Ekstra acılı sucuk, 400 gr.', de: 'Extra Scharf Sucuk, 400 g.' },
+        defaultPrice: 6.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🥓 RINDERROHSCHINKEN / PASTIRMA — 1 Ürün
+    // ═══════════════════════════════════════════════════════════════
+    {
+        id: 'TUNA-RS-001',
+        name: { tr: 'Pastırma 100 gr', de: 'Rinderrohschinken 100 g' },
+        category: 'pastirma',
+        defaultUnit: 'ad',
+        description: { tr: 'Pastırma.', de: 'Rinderrohschinken nach türkischer Art.' },
+        defaultPrice: 3.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 🍖 BRATEN / KAVURMA — 2 Ürün
+    // ═══════════════════════════════════════════════════════════════
+    {
+        id: 'TUNA-BR-001',
+        name: { tr: 'Kavurma 3 Kg', de: 'Gebratenes Rindfleisch 3 Kg' },
+        category: 'kavurma',
+        defaultUnit: 'ad',
+        description: { tr: 'Kavurma, 3 kg paket.', de: 'Gebratenes Rindfleisch, 3 kg.' },
+        defaultPrice: 74.99,
+        allowedBusinessTypes: ['kasap'],
+    },
+    {
+        id: 'TUNA-BR-002',
+        name: { tr: 'Kavurma (Kesilmiş)', de: 'Gebratenes Rindfleisch, Geschnitten' },
+        category: 'kavurma',
+        defaultUnit: 'kg',
+        description: { tr: 'Kavurma, doğranmış.', de: 'Gebratenes Rindfleisch, geschnitten.' },
+        defaultPrice: 24.99,
+        allowedBusinessTypes: ['kasap'],
     },
 ];
