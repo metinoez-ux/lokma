@@ -258,7 +258,7 @@ export default function BusinessDetailsPage() {
   } | null>(null);
 
   const [activeTab, setActiveTab] = useState<
-    "overview" | "orders" | "reservations" | "settings"
+    "overview" | "orders" | "reservations" | "settings" | "procurement"
   >(initialTab);
   const [settingsSubTab, setSettingsSubTab] = useState<
     "isletme" | "menu" | "personel" | "masa" | "abonelik" | "teslimat" | "odeme" | "promosyon"
@@ -266,6 +266,29 @@ export default function BusinessDetailsPage() {
   const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
   const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler">("bilgiler");
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+
+  // 📦 Tedarik Sipariş Yönetimi (Procurement)
+  const [procurementSubTab, setProcurementSubTab] = useState<'suppliers' | 'orders'>('orders');
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [supplierOrders, setSupplierOrders] = useState<any[]>([]);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+  const [loadingSupplierOrders, setLoadingSupplierOrders] = useState(false);
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<any>(null);
+  const [supplierForm, setSupplierForm] = useState<any>({
+    name: '', contactPerson: '', phone: '', email: '', address: '',
+    taxId: '', paymentTerms: '', deliveryDays: '', minOrderValue: '', notes: '', isActive: true
+  });
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<any>(null);
+  const [orderForm, setOrderForm] = useState<any>({
+    supplierId: '', supplierName: '', status: 'draft',
+    expectedDeliveryDate: '', notes: '', invoiceNumber: '', items: []
+  });
+  const [showGoodsReceiptModal, setShowGoodsReceiptModal] = useState(false);
+  const [goodsReceiptOrder, setGoodsReceiptOrder] = useState<any>(null);
+  const [savingSupplier, setSavingSupplier] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   // 🆕 Inline Category Management
   const [inlineCategories, setInlineCategories] = useState<{ id: string; name: any; icon: string; order: number; isActive: boolean; productCount?: number }[]>([]);
@@ -773,6 +796,153 @@ export default function BusinessDetailsPage() {
       console.error("Error loading orders:", error);
     }
   }, [businessId]);
+
+  // 📦 Load Suppliers
+  const loadSuppliers = useCallback(async () => {
+    if (!businessId) return;
+    setLoadingSuppliers(true);
+    try {
+      const snap = await getDocs(collection(db, 'businesses', businessId, 'suppliers'));
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSuppliers(data.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || '')));
+    } catch (err) {
+      console.error('Error loading suppliers:', err);
+    } finally {
+      setLoadingSuppliers(false);
+    }
+  }, [businessId]);
+
+  // 📋 Load Supplier Orders
+  const loadSupplierOrders = useCallback(async () => {
+    if (!businessId) return;
+    setLoadingSupplierOrders(true);
+    try {
+      const snap = await getDocs(collection(db, 'businesses', businessId, 'supplierOrders'));
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSupplierOrders(data.sort((a: any, b: any) => {
+        const aTime = a.orderDate?.toDate?.()?.getTime() || a.createdAt?.toDate?.()?.getTime() || 0;
+        const bTime = b.orderDate?.toDate?.()?.getTime() || b.createdAt?.toDate?.()?.getTime() || 0;
+        return bTime - aTime;
+      }));
+    } catch (err) {
+      console.error('Error loading supplier orders:', err);
+    } finally {
+      setLoadingSupplierOrders(false);
+    }
+  }, [businessId]);
+
+  // Save Supplier
+  const saveSupplier = async () => {
+    if (!businessId || !supplierForm.name.trim()) return;
+    setSavingSupplier(true);
+    try {
+      const data = {
+        ...supplierForm,
+        deliveryDays: supplierForm.deliveryDays ? Number(supplierForm.deliveryDays) : null,
+        minOrderValue: supplierForm.minOrderValue ? Number(supplierForm.minOrderValue) : null,
+        updatedAt: serverTimestamp(),
+      };
+      if (editingSupplier) {
+        await updateDoc(doc(db, 'businesses', businessId, 'suppliers', editingSupplier.id), data);
+        showToast('Tedarikçi güncellendi ✓', 'success');
+      } else {
+        await addDoc(collection(db, 'businesses', businessId, 'suppliers'), { ...data, createdAt: serverTimestamp() });
+        showToast('Tedarikçi eklendi ✓', 'success');
+      }
+      setShowSupplierModal(false);
+      setEditingSupplier(null);
+      loadSuppliers();
+    } catch (err) {
+      console.error('Error saving supplier:', err);
+      showToast('Hata oluştu', 'error');
+    } finally {
+      setSavingSupplier(false);
+    }
+  };
+
+  // Save Supplier Order
+  const saveSupplierOrder = async () => {
+    if (!businessId || !orderForm.supplierId) return;
+    setSavingOrder(true);
+    try {
+      const totalAmount = orderForm.items.reduce((sum: number, item: any) => sum + (Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0)), 0);
+      const orderNumber = editingOrder?.orderNumber || `TED-${new Date().getFullYear()}-${String(supplierOrders.length + 1).padStart(3, '0')}`;
+      const data = {
+        ...orderForm,
+        orderNumber,
+        totalAmount,
+        currency: (business as any)?.currency || 'EUR',
+        orderDate: editingOrder?.orderDate || serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        items: orderForm.items.map((item: any) => ({
+          ...item,
+          orderedQuantity: Number(item.orderedQuantity || 0),
+          receivedQuantity: Number(item.receivedQuantity || 0),
+          purchasePrice: Number(item.purchasePrice || 0),
+          totalPrice: Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0),
+          isFullyReceived: Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity || 0),
+        })),
+      };
+      if (editingOrder) {
+        await updateDoc(doc(db, 'businesses', businessId, 'supplierOrders', editingOrder.id), data);
+        showToast('Sipariş güncellendi ✓', 'success');
+      } else {
+        await addDoc(collection(db, 'businesses', businessId, 'supplierOrders'), { ...data, createdBy: admin?.email || '', createdAt: serverTimestamp() });
+        showToast('Sipariş oluşturuldu ✓', 'success');
+      }
+      setShowOrderModal(false);
+      setEditingOrder(null);
+      loadSupplierOrders();
+    } catch (err) {
+      console.error('Error saving order:', err);
+      showToast('Hata oluştu', 'error');
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  // Goods Receipt (Mal Kabul)
+  const processGoodsReceipt = async () => {
+    if (!businessId || !goodsReceiptOrder) return;
+    setSavingOrder(true);
+    try {
+      const allReceived = goodsReceiptOrder.items.every((item: any) => Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity || 0));
+      const anyReceived = goodsReceiptOrder.items.some((item: any) => Number(item.receivedQuantity || 0) > 0);
+      const newStatus = allReceived ? 'delivered' : anyReceived ? 'partiallyDelivered' : goodsReceiptOrder.status;
+      await updateDoc(doc(db, 'businesses', businessId, 'supplierOrders', goodsReceiptOrder.id), {
+        items: goodsReceiptOrder.items.map((item: any) => ({
+          ...item,
+          receivedQuantity: Number(item.receivedQuantity || 0),
+          isFullyReceived: Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity || 0),
+        })),
+        status: newStatus,
+        actualDeliveryDate: allReceived ? serverTimestamp() : null,
+        updatedAt: serverTimestamp(),
+      });
+      showToast(allReceived ? 'Tam teslim alındı ✓' : 'Kısmi teslim kaydedildi ✓', 'success');
+      setShowGoodsReceiptModal(false);
+      setGoodsReceiptOrder(null);
+      loadSupplierOrders();
+    } catch (err) {
+      console.error('Error processing goods receipt:', err);
+      showToast('Hata oluştu', 'error');
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  // Delete supplier
+  const deleteSupplier = async (supplierId: string) => {
+    if (!businessId || !confirm('Bu tedarikçiyi silmek istediğinize emin misiniz?')) return;
+    try {
+      await deleteDoc(doc(db, 'businesses', businessId, 'suppliers', supplierId));
+      showToast('Tedarikçi silindi', 'success');
+      loadSuppliers();
+    } catch (err) {
+      console.error('Error deleting supplier:', err);
+      showToast('Silinemedi', 'error');
+    }
+  };
 
   // Load staff
   const loadStaff = useCallback(async () => {
@@ -1396,8 +1566,10 @@ export default function BusinessDetailsPage() {
       loadOrders();
       loadStaff();
       loadProducts(); // Load products when admin is ready
+      loadSuppliers();
+      loadSupplierOrders();
     }
-  }, [admin, loadBusiness, loadOrders, loadStaff, loadProducts]);
+  }, [admin, loadBusiness, loadOrders, loadStaff, loadProducts, loadSuppliers, loadSupplierOrders]);
 
   // 🔴 Real-time active shifts listener
   // Mobile writes shiftBusinessId (not businessId) — query both fields + merge
@@ -2153,6 +2325,12 @@ export default function BusinessDetailsPage() {
             >
               {t('siparisler')}{orders.length})
             </button>
+            <button
+              onClick={() => { setActiveTab("procurement"); setShowSettingsDropdown(false); }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${activeTab === "procurement" ? "bg-red-600 text-white" : "bg-gray-700 text-gray-300 hover:bg-gray-600"}`}
+            >
+              📦 Tedarik ({supplierOrders.length})
+            </button>
             {formData.hasReservation && (
               <button
                 onClick={() => { setActiveTab("reservations"); setShowSettingsDropdown(false); }}
@@ -2791,6 +2969,247 @@ export default function BusinessDetailsPage() {
                     ))}
                   </tbody>
                 </table>
+              )}
+            </div>
+          )
+        }
+
+        {/* Procurement Tab */}
+        {
+          activeTab === "procurement" && (
+            <div className="space-y-4">
+              {/* Sub-tabs */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setProcurementSubTab('orders')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'orders' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  📋 Tedarik Siparişleri ({supplierOrders.length})
+                </button>
+                <button
+                  onClick={() => setProcurementSubTab('suppliers')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${procurementSubTab === 'suppliers' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                >
+                  🏭 Tedarikçiler ({suppliers.length})
+                </button>
+              </div>
+
+              {/* ═══ SUPPLIERS LIST ═══ */}
+              {procurementSubTab === 'suppliers' && (
+                <div className="bg-gray-800 rounded-xl overflow-hidden">
+                  <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+                    <h3 className="text-white font-bold">🏭 Tedarikçiler (Lieferanten)</h3>
+                    <button
+                      onClick={() => {
+                        setEditingSupplier(null);
+                        setSupplierForm({ name: '', contactPerson: '', phone: '', email: '', address: '', taxId: '', paymentTerms: '', deliveryDays: '', minOrderValue: '', notes: '', isActive: true });
+                        setShowSupplierModal(true);
+                      }}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
+                    >
+                      + Tedarikçi Ekle
+                    </button>
+                  </div>
+                  {loadingSuppliers ? (
+                    <div className="text-center py-12 text-gray-400">
+                      <span className="animate-spin inline-block">⏳</span> Yükleniyor...
+                    </div>
+                  ) : suppliers.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400">
+                      <p className="text-4xl mb-4">🏭</p>
+                      <p>Henüz tedarikçi eklenmemiş</p>
+                      <p className="text-sm mt-1">Toptancılarınızı ekleyerek tedarik siparişlerinizi takip edin</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-700">
+                      {suppliers.map((supplier: any) => (
+                        <div key={supplier.id} className="p-4 hover:bg-gray-750 flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <span className="text-lg">🏭</span>
+                              <div>
+                                <p className="text-white font-semibold">{supplier.name}</p>
+                                <div className="flex gap-4 text-xs text-gray-400 mt-1">
+                                  {supplier.contactPerson && <span>👤 {supplier.contactPerson}</span>}
+                                  {supplier.phone && <span>📞 {supplier.phone}</span>}
+                                  {supplier.email && <span>📧 {supplier.email}</span>}
+                                  {supplier.deliveryDays && <span>🚚 {supplier.deliveryDays} gün</span>}
+                                  {supplier.paymentTerms && <span>💳 {supplier.paymentTerms}</span>}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingSupplier(supplier);
+                                setSupplierForm({
+                                  name: supplier.name || '',
+                                  contactPerson: supplier.contactPerson || '',
+                                  phone: supplier.phone || '',
+                                  email: supplier.email || '',
+                                  address: supplier.address || '',
+                                  taxId: supplier.taxId || '',
+                                  paymentTerms: supplier.paymentTerms || '',
+                                  deliveryDays: supplier.deliveryDays || '',
+                                  minOrderValue: supplier.minOrderValue || '',
+                                  notes: supplier.notes || '',
+                                  isActive: supplier.isActive !== false,
+                                });
+                                setShowSupplierModal(true);
+                              }}
+                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs"
+                            >
+                              ✏️ Düzenle
+                            </button>
+                            <button
+                              onClick={() => deleteSupplier(supplier.id)}
+                              className="px-3 py-1.5 bg-red-600/30 hover:bg-red-600 text-red-300 rounded text-xs"
+                            >
+                              🗑
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ═══ SUPPLIER ORDERS LIST ═══ */}
+              {procurementSubTab === 'orders' && (
+                <div className="bg-gray-800 rounded-xl overflow-hidden">
+                  <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+                    <h3 className="text-white font-bold">📋 Tedarik Siparişleri (Lieferantenbestellungen)</h3>
+                    <button
+                      onClick={() => {
+                        if (suppliers.length === 0) {
+                          showToast('Önce bir tedarikçi ekleyin', 'error');
+                          setProcurementSubTab('suppliers');
+                          return;
+                        }
+                        setEditingOrder(null);
+                        setOrderForm({
+                          supplierId: suppliers[0]?.id || '',
+                          supplierName: suppliers[0]?.name || '',
+                          status: 'draft',
+                          expectedDeliveryDate: '',
+                          notes: '',
+                          invoiceNumber: '',
+                          items: [{ productId: '', productName: '', sku: '', orderedQuantity: 1, receivedQuantity: 0, unit: 'kg', purchasePrice: 0, batchNumber: '', productionDate: '', expirationDate: '' }]
+                        });
+                        setShowOrderModal(true);
+                      }}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium"
+                    >
+                      + Yeni Sipariş
+                    </button>
+                  </div>
+                  {loadingSupplierOrders ? (
+                    <div className="text-center py-12 text-gray-400">
+                      <span className="animate-spin inline-block">⏳</span> Yükleniyor...
+                    </div>
+                  ) : supplierOrders.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400">
+                      <p className="text-4xl mb-4">📦</p>
+                      <p>Henüz tedarik siparişi yok</p>
+                      <p className="text-sm mt-1">Toptancılardan aldığınız siparişleri buradan takip edin</p>
+                    </div>
+                  ) : (
+                    <table className="w-full text-left">
+                      <thead className="bg-gray-750 text-gray-400 text-sm">
+                        <tr>
+                          <th className="px-4 py-3">Sipariş No</th>
+                          <th className="px-4 py-3">Tedarikçi</th>
+                          <th className="px-4 py-3">Ürünler</th>
+                          <th className="px-4 py-3">Tutar</th>
+                          <th className="px-4 py-3">Durum</th>
+                          <th className="px-4 py-3">Tarih</th>
+                          <th className="px-4 py-3">İşlem</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-white">
+                        {supplierOrders.map((order: any) => {
+                          const statusColors: any = {
+                            draft: 'bg-gray-600 text-gray-200',
+                            ordered: 'bg-blue-600 text-blue-100',
+                            partiallyDelivered: 'bg-yellow-600 text-yellow-100',
+                            delivered: 'bg-green-600 text-green-100',
+                            cancelled: 'bg-red-600 text-red-100',
+                          };
+                          const statusLabels: any = {
+                            draft: '📝 Taslak',
+                            ordered: '📤 Sipariş Verildi',
+                            partiallyDelivered: '📦 Kısmi Teslim',
+                            delivered: '✅ Teslim Alındı',
+                            cancelled: '❌ İptal',
+                          };
+                          return (
+                            <tr key={order.id} className="border-t border-gray-700 hover:bg-gray-750">
+                              <td className="px-4 py-3 font-mono text-sm text-blue-400">{order.orderNumber}</td>
+                              <td className="px-4 py-3">{order.supplierName}</td>
+                              <td className="px-4 py-3 text-sm text-gray-400">{order.items?.length || 0} kalem</td>
+                              <td className="px-4 py-3 font-semibold">{formatCurrency(order.totalAmount || 0, order.currency || 'EUR')}</td>
+                              <td className="px-4 py-3">
+                                <span className={`px-2 py-1 rounded text-xs ${statusColors[order.status] || 'bg-gray-600'}`}>
+                                  {statusLabels[order.status] || order.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-gray-400 text-sm">
+                                {order.orderDate?.toDate?.()?.toLocaleDateString('de-DE') || order.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || '—'}
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="flex gap-1">
+                                  {(order.status === 'ordered' || order.status === 'partiallyDelivered') && (
+                                    <button
+                                      onClick={() => {
+                                        setGoodsReceiptOrder({ ...order, items: order.items.map((it: any) => ({ ...it })) });
+                                        setShowGoodsReceiptModal(true);
+                                      }}
+                                      className="px-2 py-1 bg-green-600 hover:bg-green-500 text-white rounded text-xs"
+                                    >
+                                      📥 Mal Kabul
+                                    </button>
+                                  )}
+                                  {order.status === 'draft' && (
+                                    <button
+                                      onClick={async () => {
+                                        await updateDoc(doc(db, 'businesses', businessId, 'supplierOrders', order.id), { status: 'ordered', updatedAt: serverTimestamp() });
+                                        showToast('Sipariş verildi olarak işaretlendi', 'success');
+                                        loadSupplierOrders();
+                                      }}
+                                      className="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs"
+                                    >
+                                      📤 Sipariş Ver
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => {
+                                      setEditingOrder(order);
+                                      setOrderForm({
+                                        supplierId: order.supplierId,
+                                        supplierName: order.supplierName,
+                                        status: order.status,
+                                        expectedDeliveryDate: order.expectedDeliveryDate || '',
+                                        notes: order.notes || '',
+                                        invoiceNumber: order.invoiceNumber || '',
+                                        items: order.items?.map((it: any) => ({ ...it })) || [],
+                                      });
+                                      setShowOrderModal(true);
+                                    }}
+                                    className="px-2 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-xs"
+                                  >
+                                    ✏️
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
               )}
             </div>
           )
@@ -4631,13 +5050,10 @@ export default function BusinessDetailsPage() {
                                                           <label className="text-xs text-gray-400 mb-1 block">MHD (Mindesthaltbarkeit)</label>
                                                           <input value={editFormFull.mhd || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, mhd: e.target.value }))} placeholder="z.B. 14 Tage" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                         </div>
-                                                        <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Üretim Tarihi</label>
-                                                          <input type="date" value={editFormFull.productionDate || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, productionDate: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                                                        </div>
-                                                        <div>
-                                                          <label className="text-xs text-gray-400 mb-1 block">Son Kullanma Tarihi</label>
-                                                          <input type="date" value={editFormFull.expirationDate || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, expirationDate: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        <div className="col-span-2">
+                                                          <p className="text-xs text-amber-400/80 bg-amber-900/20 border border-amber-700/30 rounded px-3 py-2">
+                                                            ℹ️ Üretim & Son Kullanma tarihleri artık <strong>Tedarik</strong> sekmesindeki Mal Kabul (Wareneingang) ile parti bazında yönetilmektedir.
+                                                          </p>
                                                         </div>
                                                         <div>
                                                           <label className="text-xs text-gray-400 mb-1 block">Artikelnummer</label>
@@ -6698,6 +7114,403 @@ export default function BusinessDetailsPage() {
           </div>
         )
       }
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* ═══ SUPPLIER MODAL ═══ */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {showSupplierModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowSupplierModal(false)}>
+          <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-white">{editingSupplier ? '✏️ Tedarikçi Düzenle' : '🏭 Yeni Tedarikçi Ekle'}</h2>
+              <button onClick={() => setShowSupplierModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="text-xs text-gray-400 mb-1 block">Firma Adı *</label>
+                  <input value={supplierForm.name} onChange={e => setSupplierForm((p: any) => ({ ...p, name: e.target.value }))}
+                    placeholder="Metro Großhandel, TUNA Fleisch GmbH..."
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Yetkili Kişi</label>
+                  <input value={supplierForm.contactPerson} onChange={e => setSupplierForm((p: any) => ({ ...p, contactPerson: e.target.value }))}
+                    placeholder="İsim Soyisim"
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Telefon</label>
+                  <input value={supplierForm.phone} onChange={e => setSupplierForm((p: any) => ({ ...p, phone: e.target.value }))}
+                    placeholder="+49 ..."
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">E-Posta</label>
+                  <input value={supplierForm.email} onChange={e => setSupplierForm((p: any) => ({ ...p, email: e.target.value }))}
+                    placeholder="info@firma.de"
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Vergi No (USt-IdNr)</label>
+                  <input value={supplierForm.taxId} onChange={e => setSupplierForm((p: any) => ({ ...p, taxId: e.target.value }))}
+                    placeholder="DE123456789"
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs text-gray-400 mb-1 block">Adres</label>
+                  <input value={supplierForm.address} onChange={e => setSupplierForm((p: any) => ({ ...p, address: e.target.value }))}
+                    placeholder="Straße, PLZ Stadt"
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Ödeme Koşulları</label>
+                  <input value={supplierForm.paymentTerms} onChange={e => setSupplierForm((p: any) => ({ ...p, paymentTerms: e.target.value }))}
+                    placeholder="30 Tage netto, Sofortzahlung..."
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Teslimat Süresi (gün)</label>
+                  <input type="number" value={supplierForm.deliveryDays} onChange={e => setSupplierForm((p: any) => ({ ...p, deliveryDays: e.target.value }))}
+                    placeholder="2"
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Min. Sipariş Tutarı (€)</label>
+                  <input type="number" value={supplierForm.minOrderValue} onChange={e => setSupplierForm((p: any) => ({ ...p, minOrderValue: e.target.value }))}
+                    placeholder="100"
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Durum</label>
+                  <select value={supplierForm.isActive ? 'active' : 'inactive'} onChange={e => setSupplierForm((p: any) => ({ ...p, isActive: e.target.value === 'active' }))}
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                    <option value="active">✅ Aktif</option>
+                    <option value="inactive">⏸ Pasif</option>
+                  </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="text-xs text-gray-400 mb-1 block">Notlar</label>
+                  <textarea value={supplierForm.notes} onChange={e => setSupplierForm((p: any) => ({ ...p, notes: e.target.value }))}
+                    rows={2} placeholder="Özel koşullar, sabit sipariş günleri vb..."
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                </div>
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
+              <button onClick={() => setShowSupplierModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
+              <button onClick={saveSupplier} disabled={savingSupplier || !supplierForm.name.trim()}
+                className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                {savingSupplier ? '⏳ Kaydediliyor...' : editingSupplier ? '✅ Güncelle' : '✅ Kaydet'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* ═══ ORDER CREATION MODAL ═══ */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {showOrderModal && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowOrderModal(false)}>
+          <div className="bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-white">{editingOrder ? '✏️ Sipariş Düzenle' : '📋 Yeni Tedarik Siparişi'}</h2>
+              <button onClick={() => setShowOrderModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <div className="p-6 space-y-5">
+              {/* Supplier Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Tedarikçi *</label>
+                  <select
+                    value={orderForm.supplierId}
+                    onChange={e => {
+                      const s = suppliers.find((s: any) => s.id === e.target.value);
+                      setOrderForm((p: any) => ({ ...p, supplierId: e.target.value, supplierName: s?.name || '' }));
+                    }}
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                    {suppliers.map((s: any) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Beklenen Teslimat</label>
+                  <input type="date" value={orderForm.expectedDeliveryDate} onChange={e => setOrderForm((p: any) => ({ ...p, expectedDeliveryDate: e.target.value }))}
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Fatura No</label>
+                  <input value={orderForm.invoiceNumber} onChange={e => setOrderForm((p: any) => ({ ...p, invoiceNumber: e.target.value }))}
+                    placeholder="RE-2026-001"
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                </div>
+              </div>
+
+              {/* Order Lines */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-sm font-semibold text-white">📦 Sipariş Kalemleri</h3>
+                  <button
+                    onClick={() => setOrderForm((p: any) => ({
+                      ...p,
+                      items: [...p.items, { productId: '', productName: '', sku: '', orderedQuantity: 1, receivedQuantity: 0, unit: 'kg', purchasePrice: 0, batchNumber: '', productionDate: '', expirationDate: '' }]
+                    }))}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium"
+                  >
+                    + Kalem Ekle
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {orderForm.items.map((item: any, idx: number) => (
+                    <div key={idx} className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs text-gray-500 font-semibold">Kalem #{idx + 1}</span>
+                        {orderForm.items.length > 1 && (
+                          <button
+                            onClick={() => setOrderForm((p: any) => ({ ...p, items: p.items.filter((_: any, i: number) => i !== idx) }))}
+                            className="text-red-400 hover:text-red-300 text-xs"
+                          >
+                            🗑 Kaldır
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="col-span-2">
+                          <label className="text-xs text-gray-400 mb-1 block">Ürün Adı *</label>
+                          <div className="relative">
+                            <input
+                              value={item.productName}
+                              onChange={e => {
+                                const newItems = [...orderForm.items];
+                                newItems[idx] = { ...newItems[idx], productName: e.target.value };
+                                setOrderForm((p: any) => ({ ...p, items: newItems }));
+                              }}
+                              placeholder="Ürün adı yazın veya listeden seçin..."
+                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                              list={`product-list-${idx}`}
+                            />
+                            <datalist id={`product-list-${idx}`}>
+                              {inlineProducts.map((prod: any) => (
+                                <option key={prod.id} value={typeof prod.name === 'object' ? (prod.name.tr || prod.name.de || Object.values(prod.name)[0]) : prod.name}>
+                                  {prod.id}
+                                </option>
+                              ))}
+                            </datalist>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-400 mb-1 block">SKU / Artikelnr</label>
+                          <input
+                            value={item.sku || ''}
+                            onChange={e => {
+                              const newItems = [...orderForm.items];
+                              newItems[idx] = { ...newItems[idx], sku: e.target.value };
+                              setOrderForm((p: any) => ({ ...p, items: newItems }));
+                            }}
+                            placeholder="Art.Nr."
+                            className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-400 mb-1 block">Birim</label>
+                          <select
+                            value={item.unit}
+                            onChange={e => {
+                              const newItems = [...orderForm.items];
+                              newItems[idx] = { ...newItems[idx], unit: e.target.value };
+                              setOrderForm((p: any) => ({ ...p, items: newItems }));
+                            }}
+                            className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600">
+                            <option value="kg">kg</option>
+                            <option value="adet">Adet (Stück)</option>
+                            <option value="paket">Paket</option>
+                            <option value="kutu">Kutu (Karton)</option>
+                            <option value="lt">Litre</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-400 mb-1 block">Sipariş Miktarı *</label>
+                          <input
+                            type="number"
+                            min="0" step="0.1"
+                            value={item.orderedQuantity}
+                            onChange={e => {
+                              const newItems = [...orderForm.items];
+                              newItems[idx] = { ...newItems[idx], orderedQuantity: e.target.value };
+                              setOrderForm((p: any) => ({ ...p, items: newItems }));
+                            }}
+                            className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-400 mb-1 block">Birim Fiyat (EK) *</label>
+                          <input
+                            type="number"
+                            min="0" step="0.01"
+                            value={item.purchasePrice}
+                            onChange={e => {
+                              const newItems = [...orderForm.items];
+                              newItems[idx] = { ...newItems[idx], purchasePrice: e.target.value };
+                              setOrderForm((p: any) => ({ ...p, items: newItems }));
+                            }}
+                            placeholder="€"
+                            className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-400 mb-1 block">Satır Toplam</label>
+                          <p className="text-white text-sm font-semibold py-2">
+                            {formatCurrency(Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0), (business as any)?.currency || 'EUR')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* Total */}
+                <div className="mt-4 text-right">
+                  <span className="text-gray-400 text-sm">Toplam: </span>
+                  <span className="text-white text-lg font-bold">
+                    {formatCurrency(
+                      orderForm.items.reduce((sum: number, item: any) => sum + (Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0)), 0),
+                      (business as any)?.currency || 'EUR'
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="text-xs text-gray-400 mb-1 block">Notlar</label>
+                <textarea value={orderForm.notes} onChange={e => setOrderForm((p: any) => ({ ...p, notes: e.target.value }))}
+                  rows={2} placeholder="Sipariş notları..."
+                  className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
+              <button onClick={() => setShowOrderModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
+              <button onClick={saveSupplierOrder} disabled={savingOrder || !orderForm.supplierId}
+                className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                {savingOrder ? '⏳ Kaydediliyor...' : editingOrder ? '✅ Güncelle' : '✅ Sipariş Oluştur'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* ═══ GOODS RECEIPT MODAL (Wareneingang / Mal Kabul) ═══ */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {showGoodsReceiptModal && goodsReceiptOrder && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowGoodsReceiptModal(false)}>
+          <div className="bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-700">
+              <h2 className="text-xl font-bold text-white">📥 Mal Kabul (Wareneingang)</h2>
+              <p className="text-gray-400 text-sm mt-1">
+                Sipariş: <span className="text-blue-400 font-mono">{goodsReceiptOrder.orderNumber}</span> — {goodsReceiptOrder.supplierName}
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              {goodsReceiptOrder.items.map((item: any, idx: number) => (
+                <div key={idx} className={`rounded-lg p-4 border ${item.isFullyReceived ? 'bg-green-900/20 border-green-700/50' : 'bg-gray-900/50 border-gray-700'}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <span className="text-white font-semibold">{item.productName}</span>
+                      {item.sku && <span className="text-gray-500 text-xs ml-2">(#{item.sku})</span>}
+                    </div>
+                    <span className="text-gray-400 text-sm">
+                      Sipariş: <strong className="text-white">{item.orderedQuantity} {item.unit}</strong>
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <div>
+                      <label className="text-xs text-gray-400 mb-1 block">Teslim Alınan Miktar</label>
+                      <input
+                        type="number" min="0" step="0.1"
+                        value={item.receivedQuantity || ''}
+                        onChange={e => {
+                          const newItems = [...goodsReceiptOrder.items];
+                          newItems[idx] = { ...newItems[idx], receivedQuantity: e.target.value };
+                          setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
+                        }}
+                        placeholder="0"
+                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 mb-1 block">Parti / Charge No</label>
+                      <input
+                        value={item.batchNumber || ''}
+                        onChange={e => {
+                          const newItems = [...goodsReceiptOrder.items];
+                          newItems[idx] = { ...newItems[idx], batchNumber: e.target.value };
+                          setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
+                        }}
+                        placeholder="LOT-001"
+                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 mb-1 block">Üretim Tarihi</label>
+                      <input
+                        type="date"
+                        value={item.productionDate || ''}
+                        onChange={e => {
+                          const newItems = [...goodsReceiptOrder.items];
+                          newItems[idx] = { ...newItems[idx], productionDate: e.target.value };
+                          setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
+                        }}
+                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 mb-1 block">Son Kullanma (MHD)</label>
+                      <input
+                        type="date"
+                        value={item.expirationDate || ''}
+                        onChange={e => {
+                          const newItems = [...goodsReceiptOrder.items];
+                          newItems[idx] = { ...newItems[idx], expirationDate: e.target.value };
+                          setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
+                        }}
+                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <div className={`w-full text-center py-2 rounded text-xs font-semibold ${Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity)
+                        ? 'bg-green-600/30 text-green-300'
+                        : Number(item.receivedQuantity || 0) > 0
+                          ? 'bg-yellow-600/30 text-yellow-300'
+                          : 'bg-gray-700 text-gray-400'
+                        }`}>
+                        {Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity)
+                          ? '✅ Tam'
+                          : Number(item.receivedQuantity || 0) > 0
+                            ? `📦 Kısmi (${item.receivedQuantity}/${item.orderedQuantity})`
+                            : '⏳ Bekliyor'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-6 border-t border-gray-700 flex justify-between items-center">
+              <div className="text-sm text-gray-400">
+                {goodsReceiptOrder.items.filter((it: any) => Number(it.receivedQuantity || 0) >= Number(it.orderedQuantity)).length} / {goodsReceiptOrder.items.length} kalem tam teslim
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setShowGoodsReceiptModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
+                <button onClick={processGoodsReceipt} disabled={savingOrder}
+                  className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                  {savingOrder ? '⏳ Kaydediliyor...' : '📥 Mal Kabulü Kaydet'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div >
   );
 }
