@@ -3989,7 +3989,6 @@ export default function BusinessDetailsPage() {
                                                     { key: 'media', label: 'Medya' },
                                                     { key: 'contentCompliance', label: 'İçerik & Uyum' },
                                                     { key: 'app', label: 'App' },
-                                                    { key: 'audit', label: 'Denetim' },
                                                   ].map(tab => (
                                                     <button
                                                       key={tab.key}
@@ -4311,23 +4310,80 @@ export default function BusinessDetailsPage() {
                                                 )}
 
                                                 {editInlineTab === 'media' && (
-                                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                  <div className="space-y-4">
+                                                    {/* Mevcut Görseller */}
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Mevcut Görseller</label>
+                                                      <label className="text-xs text-gray-400 mb-2 block">Mevcut Görseller</label>
                                                       <div className="flex gap-2 flex-wrap">
                                                         {editingInlineProduct?.imageUrl && (
-                                                          <img src={editingInlineProduct.imageUrl} alt="" className="w-20 h-20 rounded object-cover border border-gray-700" />
+                                                          <div className="relative group">
+                                                            <img src={editingInlineProduct.imageUrl} alt="" className="w-20 h-20 rounded object-cover border border-gray-700" />
+                                                          </div>
                                                         )}
-                                                        {(editingInlineProduct?.images || []).map((img: string, i: number) => (
-                                                          <img key={i} src={img} alt="" className="w-20 h-20 rounded object-cover border border-gray-700" />
+                                                        {(editFormFull.images || editingInlineProduct?.images || []).map((img: string, i: number) => (
+                                                          <div key={i} className="relative group">
+                                                            <img src={img} alt="" className="w-20 h-20 rounded object-cover border border-gray-700" />
+                                                            <button
+                                                              type="button"
+                                                              onClick={() => {
+                                                                setEditFormFull((p: any) => {
+                                                                  const current = [...(p.images || editingInlineProduct?.images || [])];
+                                                                  current.splice(i, 1);
+                                                                  return { ...p, images: current };
+                                                                });
+                                                              }}
+                                                              className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            >
+                                                              ✕
+                                                            </button>
+                                                          </div>
                                                         ))}
-                                                        {!editingInlineProduct?.imageUrl && !(editingInlineProduct?.images?.length) && (
+                                                        {!editingInlineProduct?.imageUrl && !(editFormFull.images || editingInlineProduct?.images || []).length && (
                                                           <p className="text-gray-500 text-sm">Görsel yok</p>
                                                         )}
                                                       </div>
                                                     </div>
+
+                                                    {/* Dosyadan Yükle */}
                                                     <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Görsel URL (opsiyonel)</label>
+                                                      <label className="text-xs text-gray-400 mb-2 block">📤 Görsel Yükle (Dosya Seç)</label>
+                                                      <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        multiple
+                                                        onChange={async (e) => {
+                                                          if (!e.target.files || e.target.files.length === 0) return;
+                                                          const files = Array.from(e.target.files);
+                                                          for (const file of files) {
+                                                            try {
+                                                              const storageRef = ref(storage, `business_products/${businessId}/${Date.now()}_${file.name}`);
+                                                              const uploadTask = uploadBytesResumable(storageRef, file);
+                                                              uploadTask.on('state_changed', () => { }, (error) => {
+                                                                console.error('Image upload error:', error);
+                                                                showToast('Görsel yüklenirken hata oluştu', 'error');
+                                                              }, async () => {
+                                                                const url = await getDownloadURL(uploadTask.snapshot.ref);
+                                                                setEditFormFull((p: any) => ({
+                                                                  ...p,
+                                                                  imageUrl: p.imageUrl || url,
+                                                                  images: [...(p.images || []), url]
+                                                                }));
+                                                                showToast('Görsel yüklendi ✓', 'success');
+                                                              });
+                                                            } catch (err) {
+                                                              console.error('Upload error:', err);
+                                                            }
+                                                          }
+                                                          e.target.value = '';
+                                                        }}
+                                                        className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30"
+                                                      />
+                                                      <p className="text-xs text-gray-500 mt-1">Birden fazla dosya seçebilirsiniz. JPG, PNG, WebP formatları desteklenir.</p>
+                                                    </div>
+
+                                                    {/* URL ile ekle */}
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">🔗 Görsel URL (opsiyonel)</label>
                                                       <input value={editFormFull.imageUrl || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, imageUrl: e.target.value }))} placeholder="https://..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                                                     </div>
                                                   </div>
@@ -4510,7 +4566,50 @@ export default function BusinessDetailsPage() {
 
                                                     <hr className="border-gray-700/50" />
 
-                                                    {/* ═══ BÖLÜM 5: FİZİKSEL & SAKLAMA ═══ */}
+                                                    {/* ═══ BÖLÜM 5: DAHİLİ NOTLAR & ETİKETLER ═══ */}
+                                                    <div>
+                                                      <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <span>📝</span> Dahili Notlar & Etiketler
+                                                      </h4>
+                                                      <div className="space-y-3">
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Dahili Notlar</label>
+                                                          <textarea value={editFormFull.internalNotes || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, internalNotes: e.target.value }))} rows={3} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" placeholder="Sadece admin panelinde görünür notlar..." />
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Etiketler</label>
+                                                          <input value={(editFormFull.tags || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, tags: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="etiket1, etiket2" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        </div>
+                                                      </div>
+                                                    </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 6: DENETİM İZİ ═══ */}
+                                                    <div>
+                                                      <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <span>🕒</span> Denetim İzi
+                                                      </h4>
+                                                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                                                        <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                          <p className="text-xs text-gray-500 mb-1">Oluşturulma</p>
+                                                          <p className="text-xs text-gray-300">{editingInlineProduct?.createdAt?.toDate ? editingInlineProduct.createdAt.toDate().toLocaleDateString('tr-TR') : '—'}</p>
+                                                        </div>
+                                                        <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                          <p className="text-xs text-gray-500 mb-1">Güncelleme</p>
+                                                          <p className="text-xs text-gray-300">{editingInlineProduct?.updatedAt?.toDate ? editingInlineProduct.updatedAt.toDate().toLocaleDateString('tr-TR') : '—'}</p>
+                                                        </div>
+                                                        <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                          <p className="text-xs text-gray-500 mb-1">SKU / Master ID</p>
+                                                          <p className="text-xs text-gray-300">{editingInlineProduct?.id || '—'}</p>
+                                                          <p className="text-xs text-gray-400">{editingInlineProduct?.masterId ? `Master: ${editingInlineProduct.masterId}` : ''}</p>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 7: FİZİKSEL & SAKLAMA ═══ */}
                                                     <div>
                                                       <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                         <span>📦</span> Fiziksel Bilgiler & Saklama (Produktdaten)
@@ -4593,49 +4692,7 @@ export default function BusinessDetailsPage() {
                                                   </div>
                                                 )}
 
-                                                {editInlineTab === 'audit' && (
-                                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    <div className="md:col-span-2 lg:col-span-3">
-                                                      <label className="text-xs text-gray-400 mb-2 block">Marka Etiketleri (Brand Labels)</label>
-                                                      <div className="flex flex-wrap gap-2">
-                                                        {['TUNA', 'Akdeniz', 'Eigenmarke', 'Bio', 'Halal', 'Vegan', 'Glutenfrei'].map(label => (
-                                                          <button
-                                                            key={label}
-                                                            type="button"
-                                                            onClick={() => {
-                                                              setEditFormFull((p: any) => {
-                                                                const current = p.brandLabels || [];
-                                                                return { ...p, brandLabels: current.includes(label) ? current.filter((l: string) => l !== label) : [...current, label] };
-                                                              });
-                                                            }}
-                                                            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition ${(editFormFull.brandLabels || []).includes(label)
-                                                              ? 'bg-blue-500/30 border-blue-500 text-blue-300'
-                                                              : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-500'
-                                                              }`}
-                                                          >
-                                                            {(editFormFull.brandLabels || []).includes(label) ? '✓ ' : ''}{label}
-                                                          </button>
-                                                        ))}
-                                                      </div>
-                                                    </div>
-                                                    <div className="md:col-span-2 lg:col-span-3">
-                                                      <label className="text-xs text-gray-400 mb-1 block">Dahili Notlar</label>
-                                                      <textarea value={editFormFull.internalNotes || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, internalNotes: e.target.value }))} rows={3} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
-                                                    </div>
-                                                    <div>
-                                                      <label className="text-xs text-gray-400 mb-1 block">Etiketler</label>
-                                                      <input value={(editFormFull.tags || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, tags: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="etiket1, etiket2" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                                                    </div>
-                                                    <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
-                                                      <p className="text-xs text-gray-400">Oluşturulma: {editingInlineProduct?.createdAt?.toDate ? editingInlineProduct.createdAt.toDate().toLocaleDateString('tr-TR') : '—'}</p>
-                                                      <p className="text-xs text-gray-400">Güncelleme: {editingInlineProduct?.updatedAt?.toDate ? editingInlineProduct.updatedAt.toDate().toLocaleDateString('tr-TR') : '—'}</p>
-                                                    </div>
-                                                    <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
-                                                      <p className="text-xs text-gray-400">SKU: {editingInlineProduct?.id || '—'}</p>
-                                                      <p className="text-xs text-gray-400">Master ID: {editingInlineProduct?.masterId || '—'}</p>
-                                                    </div>
-                                                  </div>
-                                                )}
+
                                               </div>
 
                                               {/* Footer */}

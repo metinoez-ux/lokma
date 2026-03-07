@@ -85,7 +85,7 @@ interface ExtendedProduct extends MasterProduct {
 }
 
 // Product Edit Tab Type
-type ProductEditTab = 'general' | 'pricing' | 'stock' | 'media' | 'contentCompliance' | 'audit' | 'app';
+type ProductEditTab = 'general' | 'pricing' | 'stock' | 'media' | 'contentCompliance' | 'app';
 
 // İşletme türleri business-types.ts'den çekiliyor
 const BUSINESS_TYPE_OPTIONS = getBusinessTypesList().map(bt => ({
@@ -2942,7 +2942,6 @@ function GlobalProductsPageContent() {
                                                     { key: 'media' as ProductEditTab, label: '🖼️ Medya', icon: '🖼️' },
                                                     { key: 'contentCompliance' as ProductEditTab, label: '🧪 İçerik & Uyum', icon: '🧪' },
                                                     { key: 'app' as ProductEditTab, label: '📱 App', icon: '📱' },
-                                                    { key: 'audit' as ProductEditTab, label: '📊 Denetim', icon: '📊' },
                                                 ] as const).map(tab => (
                                                     <button
                                                         key={tab.key}
@@ -3397,7 +3396,87 @@ function GlobalProductsPageContent() {
 
                                                     <hr className="border-gray-700/50" />
 
-                                                    {/* ═══ BÖLÜM 5: FİZİKSEL & SAKLAMA ═══ */}
+                                                    {/* ═══ BÖLÜM 5: DAHİLİ NOTLAR & ETİKETLER ═══ */}
+                                                    <div>
+                                                        <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                            <span>📝</span> Dahili Notlar & Etiketler
+                                                        </h4>
+                                                        <div className="space-y-3">
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">Dahili Notlar</label>
+                                                                <textarea
+                                                                    value={(formData as any).internalNotes || ''}
+                                                                    onChange={e => setFormData({ ...formData, internalNotes: e.target.value } as any)}
+                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-sm min-h-[80px]"
+                                                                    placeholder="Sadece admin panelinde görünür notlar..."
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">Etiketler</label>
+                                                                <div className="flex gap-2 items-center mb-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        placeholder="Etiket ekle (Enter ile)"
+                                                                        className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm"
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter') {
+                                                                                e.preventDefault();
+                                                                                const value = (e.target as HTMLInputElement).value.trim();
+                                                                                if (value) {
+                                                                                    const current = (formData as any).tags || [];
+                                                                                    if (!current.includes(value)) {
+                                                                                        setFormData({ ...formData, tags: [...current, value] } as any);
+                                                                                    }
+                                                                                    (e.target as HTMLInputElement).value = '';
+                                                                                }
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                {((formData as any).tags || []).length > 0 && (
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {((formData as any).tags || []).map((tag: string, idx: number) => (
+                                                                            <span key={idx} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-indigo-900/50 text-indigo-300 border border-indigo-700">
+                                                                                {tag}
+                                                                                <button type="button" onClick={() => { const current = [...((formData as any).tags || [])]; current.splice(idx, 1); setFormData({ ...formData, tags: current } as any); }} className="text-indigo-400 hover:text-red-400 ml-1">✕</button>
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 6: DENETİM İZİ ═══ */}
+                                                    <div>
+                                                        <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                            <span>🕒</span> Denetim İzi
+                                                        </h4>
+                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                            <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                                <p className="text-xs text-gray-500 mb-1">Oluşturulma</p>
+                                                                <p className="text-xs text-gray-300">{(formData as any).createdAt ? new Date((formData as any).createdAt).toLocaleString('tr-TR') : 'Henüz kaydedilmedi'}</p>
+                                                            </div>
+                                                            <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                                <p className="text-xs text-gray-500 mb-1">Son Güncelleme</p>
+                                                                <p className="text-xs text-gray-300">{(formData as any).updatedAt ? new Date((formData as any).updatedAt).toLocaleString('tr-TR') : '--'}</p>
+                                                            </div>
+                                                            <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                                <p className="text-xs text-gray-500 mb-1">Son Düzenleyen</p>
+                                                                <p className="text-xs text-gray-300">{(formData as any).lastModifiedBy || '--'}</p>
+                                                            </div>
+                                                            <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                                <p className="text-xs text-gray-500 mb-1">Menşe Ülke</p>
+                                                                <input type="text" value={(formData as any).originCountry || ''} onChange={e => setFormData({ ...formData, originCountry: e.target.value } as any)} className="w-full bg-transparent border-0 text-xs text-gray-300 p-0 focus:outline-none" placeholder="örn: Almanya, Türkiye" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 7: FİZİKSEL & SAKLAMA ═══ */}
                                                     <div>
                                                         <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                                                             <span>📦</span> Fiziksel Bilgiler & Saklama (Produktdaten)
@@ -4029,115 +4108,7 @@ function GlobalProductsPageContent() {
                                             })()}
 
                                             {/* ═══════════ TAB 6: DENETİM ═══════════ */}
-                                            {productEditTab === 'audit' && (
-                                                <div className="space-y-6">
-                                                    {/* Dahili Notlar */}
-                                                    <div className="border-b border-gray-700 pb-4">
-                                                        <h3 className="text-sm font-medium text-indigo-400 mb-3">📝 Dahili Notlar</h3>
-                                                        <textarea
-                                                            value={(formData as any).internalNotes || ''}
-                                                            onChange={e => setFormData({ ...formData, internalNotes: e.target.value } as any)}
-                                                            className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-sm min-h-[100px]"
-                                                            placeholder="Sadece admin panelinde görünür notlar..."
-                                                        />
-                                                    </div>
 
-                                                    {/* Etiketler */}
-                                                    <div className="border-b border-gray-700 pb-4">
-                                                        <h3 className="text-sm font-medium text-indigo-400 mb-3">🏷️ Etiketler</h3>
-                                                        <div className="flex gap-2 items-center mb-2">
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Etiket ekle (Enter ile)"
-                                                                className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm"
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === 'Enter') {
-                                                                        e.preventDefault();
-                                                                        const value = (e.target as HTMLInputElement).value.trim();
-                                                                        if (value) {
-                                                                            const current = (formData as any).tags || [];
-                                                                            if (!current.includes(value)) {
-                                                                                setFormData({ ...formData, tags: [...current, value] } as any);
-                                                                            }
-                                                                            (e.target as HTMLInputElement).value = '';
-                                                                        }
-                                                                    }
-                                                                }}
-                                                            />
-                                                        </div>
-                                                        {((formData as any).tags || []).length > 0 && (
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {((formData as any).tags || []).map((tag: string, idx: number) => (
-                                                                    <span key={idx} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-indigo-900/50 text-indigo-300 border border-indigo-700">
-                                                                        {tag}
-                                                                        <button type="button" onClick={() => { const current = [...((formData as any).tags || [])]; current.splice(idx, 1); setFormData({ ...formData, tags: current } as any); }} className="text-indigo-400 hover:text-red-400 ml-1">✕</button>
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Marka Etiketleri (TUNA / Akdeniz Toros) */}
-                                                    <div className="border-b border-gray-700 pb-4">
-                                                        <h3 className="text-sm font-medium text-yellow-400 mb-3">🏷️ Marka Etiketleri (Kasap Zincirleri)</h3>
-                                                        <p className="text-xs text-gray-500 mb-3">{t('isaretlediginizMarkalarUygulamadaUrununUzerindeBadge')}</p>
-                                                        <div className="flex flex-wrap gap-3">
-                                                            {BRAND_LABELS.map(brand => (
-                                                                <button
-                                                                    key={brand.value}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const currentLabels = (formData as any).brandLabels || [];
-                                                                        const newLabels = currentLabels.includes(brand.value)
-                                                                            ? currentLabels.filter((l: string) => l !== brand.value)
-                                                                            : [...currentLabels, brand.value];
-                                                                        setFormData({ ...formData, brandLabels: newLabels } as any);
-                                                                    }}
-                                                                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${((formData as any).brandLabels || []).includes(brand.value)
-                                                                        ? `${brand.color} text-white border-2 border-white/50 shadow-lg`
-                                                                        : 'bg-gray-700 text-gray-400 border border-gray-600 hover:bg-gray-600'
-                                                                        }`}
-                                                                >
-                                                                    {brand.icon}
-                                                                    <span>{brand.label}</span>
-                                                                    {((formData as any).brandLabels || []).includes(brand.value) && (
-                                                                        <span className="ml-1">✓</span>
-                                                                    )}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Denetim İzi */}
-                                                    <div className="border-b border-gray-700 pb-4">
-                                                        <h3 className="text-sm font-medium text-indigo-400 mb-3">🕒 Denetim İzi</h3>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div>
-                                                                <label className="block text-xs text-gray-500 mb-1">Oluşturulma</label>
-                                                                <div className="text-sm text-gray-300 bg-gray-900 rounded-lg px-3 py-2 border border-gray-700">
-                                                                    {(formData as any).createdAt ? new Date((formData as any).createdAt).toLocaleString('tr-TR') : <span className="text-gray-500">Henüz kaydedilmedi</span>}
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-xs text-gray-500 mb-1">Son Güncelleme</label>
-                                                                <div className="text-sm text-gray-300 bg-gray-900 rounded-lg px-3 py-2 border border-gray-700">
-                                                                    {(formData as any).updatedAt ? new Date((formData as any).updatedAt).toLocaleString('tr-TR') : <span className="text-gray-500">--</span>}
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-xs text-gray-500 mb-1">Son Düzenleyen</label>
-                                                                <div className="text-sm text-gray-300 bg-gray-900 rounded-lg px-3 py-2 border border-gray-700">
-                                                                    {(formData as any).lastModifiedBy || <span className="text-gray-500">--</span>}
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-xs text-gray-500 mb-1">Menşe Ülke</label>
-                                                                <input type="text" value={(formData as any).originCountry || ''} onChange={e => setFormData({ ...formData, originCountry: e.target.value } as any)} className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" placeholder="örn: Almanya, Türkiye" />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            )}
 
                                         </div>{/* End Scrollable Tab Content */}
 
