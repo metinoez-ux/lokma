@@ -2,10 +2,16 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
 import PublicHeader from '@/components/ui/PublicHeader';
 import PublicFooter from '@/components/ui/PublicFooter';
+import { hwTexts } from './translations';
 
 export default function HardwarePage() {
+    const locale = useLocale();
+    const tx = (hwTexts[locale] || hwTexts['en'] || hwTexts['de']) as Record<string, unknown>;
+    const t = (key: string) => (tx[key] as string) || key;
+    const tArr = (key: string) => (tx[key] as string[]) || [];
     return (
         <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
             <PublicHeader themeAware={true} />
@@ -30,21 +36,20 @@ export default function HardwarePage() {
                 <div className="relative z-10 max-w-5xl mx-auto text-center px-4 py-20">
                     <span className="inline-flex items-center gap-2 bg-[#fb335b]/10 text-[#fb335b] px-5 py-2.5 rounded-full text-sm font-bold mb-8 tracking-widest uppercase border border-[#fb335b]/30 backdrop-blur-sm">
                         <span className="material-symbols-outlined text-[18px]">devices</span>
-                        LOKMA Hardware Ekosistemi
+                        {t('ecosystemTag')}
                     </span>
 
                     <h1 className="text-5xl md:text-7xl lg:text-8xl font-black leading-[0.95] tracking-tight mb-8">
-                        İşletmenin{' '}
+                        {t('heroTitle1')}{' '}
                         <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">
-                            Tüm Teknolojisi
+                            {t('heroTitle2')}
                         </span>
                         <br />
-                        Tek Platformda
+                        {t('heroTitle3')}
                     </h1>
 
                     <p className="text-xl md:text-2xl text-white/60 max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
-                        Kasa sistemi, elektronik raf etiketleri, akıllı terazi ve mobil sipariş —
-                        hepsi LOKMA ekosistemiyle entegre, hepsi tek panelden yönetiliyor.
+                        {t('heroSub')}
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -52,7 +57,7 @@ export default function HardwarePage() {
                             href="/partner/apply"
                             className="inline-flex items-center justify-center gap-3 bg-[#fb335b] hover:bg-red-600 text-white px-10 py-5 rounded-2xl font-black text-lg shadow-2xl shadow-[#fb335b]/25 transition-all hover:scale-105 active:scale-95"
                         >
-                            Ücretsiz Demo Talep Et
+                            {t('ctaDemo')}
                             <span className="material-symbols-outlined animate-bounce">arrow_forward</span>
                         </Link>
                         <Link
@@ -60,17 +65,17 @@ export default function HardwarePage() {
                             className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/20 text-white px-10 py-5 rounded-2xl font-bold text-lg transition-all backdrop-blur-sm"
                         >
                             <span className="material-symbols-outlined">call</span>
-                            Bizi Arayın
+                            {t('ctaCall')}
                         </Link>
                     </div>
 
                     {/* Stats bar */}
                     <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
                         {[
-                            { value: '360°', label: 'Entegrasyon' },
-                            { value: '<5sn', label: 'Fiyat Senkronizasyonu' },
-                            { value: '99.9%', label: 'Uptime Garantisi' },
-                            { value: '24/7', label: 'Teknik Destek' },
+                            { value: t('stat1'), label: t('stat1Label') },
+                            { value: t('stat2'), label: t('stat2Label') },
+                            { value: t('stat3'), label: t('stat3Label') },
+                            { value: t('stat4'), label: t('stat4Label') },
                         ].map((stat, i) => (
                             <div key={i} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4">
                                 <div className="text-2xl md:text-3xl font-black text-[#fb335b]">{stat.value}</div>
@@ -88,15 +93,13 @@ export default function HardwarePage() {
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-20">
                         <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6">
-                            Neden{' '}
+                            {t('whyTitle1')}{' '}
                             <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">
-                                Tek Platform?
+                                {t('whyTitle2')}
                             </span>
                         </h2>
                         <p className="text-xl text-white/50 max-w-3xl mx-auto leading-relaxed">
-                            Geleneksel sistemlerde kasa, etiket ve online sipariş ayrı ayrı çalışır.
-                            LOKMA ile hepsi tek bir ekosistemde birleşir — fiyat değişikliğinden stok takibine,
-                            siparişten rapora her şey anında senkronize olur.
+                            {t('whySub')}
                         </p>
                     </div>
 
@@ -108,18 +111,18 @@ export default function HardwarePage() {
                                 <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
                                     <span className="material-symbols-outlined text-red-400 text-2xl">warning</span>
                                 </div>
-                                <h3 className="text-2xl font-black text-red-400">Geleneksel Yaklaşım</h3>
+                                <h3 className="text-2xl font-black text-red-400">{t('oldTitle')}</h3>
                             </div>
                             <ul className="space-y-4 text-white/70">
                                 {[
-                                    'Kasa sistemi ayrı yazılım, ayrı lisans ücreti',
-                                    'Fiyat etiketleri elle tek tek değiştirilmeli',
-                                    'Online sipariş platformuyla senkronizasyon yok',
-                                    'Stok bilgisi güncel değil, manuel güncelleme',
-                                    'Her sistem için ayrı destek hattı',
-                                    'Farklı sağlayıcılar arası uyumsuzluk',
-                                    'İndirim kampanyası için 3 ayrı yerde güncelleme',
-                                    'Veri analizi için manuel raporlama',
+                                    t('old1'),
+                                    t('old2'),
+                                    t('old3'),
+                                    t('old4'),
+                                    t('old5'),
+                                    t('old6'),
+                                    t('old7'),
+                                    t('old8'),
                                 ].map((item, i) => (
                                     <li key={i} className="flex items-start gap-3">
                                         <span className="material-symbols-outlined text-red-400 text-lg mt-0.5 shrink-0">close</span>
@@ -135,18 +138,18 @@ export default function HardwarePage() {
                                 <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
                                     <span className="material-symbols-outlined text-emerald-400 text-2xl">check_circle</span>
                                 </div>
-                                <h3 className="text-2xl font-black text-emerald-400">LOKMA Ekosistemi</h3>
+                                <h3 className="text-2xl font-black text-emerald-400">{t('newTitle')}</h3>
                             </div>
                             <ul className="space-y-4 text-white/70">
                                 {[
-                                    'Kasa, etiket, online — hepsi tek lisans, tek platform',
-                                    'Fiyat değişince raf etiketi saniyeler içinde güncellenir',
-                                    'Mobil uygulama ve web siparişleri anlık senkronize',
-                                    'Gerçek zamanlı stok takibi tüm kanallarda',
-                                    'Tek destek hattı, tek muhatap',
-                                    'Donanımlar birbiriyle sorunsuz çalışır',
-                                    'Bir tıkla tüm kanallarda kampanya aktif',
-                                    'Otomatik raporlar ve gelir analitiği',
+                                    t('new1'),
+                                    t('new2'),
+                                    t('new3'),
+                                    t('new4'),
+                                    t('new5'),
+                                    t('new6'),
+                                    t('new7'),
+                                    t('new8'),
                                 ].map((item, i) => (
                                     <li key={i} className="flex items-start gap-3">
                                         <span className="material-symbols-outlined text-emerald-400 text-lg mt-0.5 shrink-0">check</span>
@@ -161,15 +164,15 @@ export default function HardwarePage() {
                     <div className="bg-white/[0.03] border border-white/10 rounded-3xl p-8 md:p-12">
                         <h3 className="text-2xl font-black text-center mb-10">
                             <span className="material-symbols-outlined text-[#fb335b] text-3xl align-middle mr-2">sync</span>
-                            Fiyat Değişikliği = Otomatik Senkronizasyon
+                            {t('syncTitle')}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
                             {[
-                                { icon: 'edit', label: 'Admin Paneli', desc: 'Fiyat değiştir', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/30' },
+                                { icon: 'edit', label: t('syncAdmin'), desc: t('syncAdminDesc'), color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/30' },
                                 { icon: 'arrow_forward', label: '', desc: '', color: 'text-white/20', bg: '' },
-                                { icon: 'point_of_sale', label: 'Kasa (POS)', desc: 'Otomatik güncellenir', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' },
-                                { icon: 'label', label: 'Raf Etiketi (ESL)', desc: 'Saniyeler içinde yansır', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' },
-                                { icon: 'phone_android', label: 'Mobil Uygulama', desc: 'Anında aktif', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30' },
+                                { icon: 'point_of_sale', label: t('syncPOS'), desc: t('syncPOSDesc'), color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' },
+                                { icon: 'label', label: t('syncESL'), desc: t('syncESLDesc'), color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' },
+                                { icon: 'phone_android', label: t('syncApp'), desc: t('syncAppDesc'), color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30' },
                             ].map((step, i) => (
                                 step.label === '' ? (
                                     <div key={i} className="hidden md:flex justify-center">
@@ -186,7 +189,7 @@ export default function HardwarePage() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* ═══════════════════════════════════════ */}
             {/* POS KASA SİSTEMİ                        */}
@@ -196,15 +199,14 @@ export default function HardwarePage() {
                     <div className="text-center mb-16">
                         <span className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-400 px-4 py-2 rounded-full text-sm font-bold mb-6 border border-amber-500/20">
                             <span className="material-symbols-outlined text-[16px]">point_of_sale</span>
-                            LOKMA Kasa Sistemi
+                            {t('posTag')}
                         </span>
                         <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6">
-                            Akıllı POS Kasa{' '}
-                            <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Terminalleri</span>
+                            {t('posTitle1')}{' '}
+                            <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{t('posTitle2')}</span>
                         </h2>
                         <p className="text-xl text-white/50 max-w-3xl mx-auto">
-                            Restoranlar, kasaplar, marketler ve daha fazlası için özel olarak yapılandırılmış
-                            profesyonel kasa donanımları. LOKMA yazılımı ile entegre, kutudan çıkar çıkmaz çalışır.
+                            {t('posSub')}
                         </p>
                     </div>
 
@@ -228,23 +230,22 @@ export default function HardwarePage() {
                                 <span className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
                                     <span className="material-symbols-outlined text-amber-400 text-2xl">desktop_windows</span>
                                 </span>
-                                Masaüstü POS Terminal
+                                {t('desktopTitle')}
                             </h3>
                             <p className="text-white/60 text-lg mb-8 leading-relaxed">
-                                15.6 inç Full HD dokunmatik ekran, 10 inç müşteri ekranı, NFC ödeme desteği ve
-                                modüler aluminyum gövde. Restoran, kafe ve marketler için ideal.
+                                {t('desktopDesc')}
                             </p>
 
                             <div className="grid grid-cols-2 gap-4 mb-8">
                                 {[
-                                    { icon: 'monitor', text: '15.6" FHD Dokunmatik Ana Ekran' },
-                                    { icon: 'tablet', text: '10" Müşteri Ekranı (NFC)' },
-                                    { icon: 'memory', text: '4GB RAM + 64GB Depolama' },
-                                    { icon: 'fingerprint', text: 'Parmak İzi ile Giriş' },
-                                    { icon: 'print', text: 'Entegre Fiş Yazıcı' },
-                                    { icon: 'wifi', text: 'WiFi + Ethernet + Bluetooth' },
-                                    { icon: 'contactless', text: 'NFC / SoftPOS Ödeme' },
-                                    { icon: 'cable', text: 'Gizli Kablo Yönetimi' },
+                                    { icon: 'monitor', text: t('spec1') },
+                                    { icon: 'tablet', text: t('spec2') },
+                                    { icon: 'memory', text: t('spec3') },
+                                    { icon: 'fingerprint', text: t('spec4') },
+                                    { icon: 'print', text: t('spec5') },
+                                    { icon: 'wifi', text: t('spec6') },
+                                    { icon: 'contactless', text: t('spec7') },
+                                    { icon: 'cable', text: t('spec8') },
                                 ].map((spec, i) => (
                                     <div key={i} className="flex items-center gap-3 bg-white/[0.03] rounded-xl p-3 border border-white/5">
                                         <span className="material-symbols-outlined text-amber-400 text-xl">{spec.icon}</span>
@@ -256,12 +257,10 @@ export default function HardwarePage() {
                             <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-5">
                                 <h4 className="font-bold text-amber-400 mb-2 flex items-center gap-2">
                                     <span className="material-symbols-outlined text-lg">restaurant</span>
-                                    LOKMA Entegrasyonu
+                                    {t('integrationTitle')}
                                 </h4>
                                 <p className="text-white/60 text-sm leading-relaxed">
-                                    Siparişler, masa yönetimi, garson çağırma, indirim kampanyaları ve tüm
-                                    ödeme yöntemleri LOKMA admin panelinden yönetilir. Online siparişler
-                                    doğrudan kasaya düşer — ekstra cihaz veya yazılım gerekmez.
+                                    {t('integrationDesc')}
                                 </p>
                             </div>
                         </div>
@@ -274,19 +273,18 @@ export default function HardwarePage() {
                                 <span className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
                                     <span className="material-symbols-outlined text-purple-400 text-2xl">smartphone</span>
                                 </span>
-                                Mobil POS Terminal
+                                {t('mobileTitle')}
                             </h3>
                             <p className="text-white/60 text-lg mb-8 leading-relaxed">
-                                Garsonlar için cep boyutunda, taşınabilir POS cihazı. Masa başında sipariş alma,
-                                ödeme tahsilat ve fiş yazdırma — hepsi tek cihazda.
+                                {t('mobileDesc')}
                             </p>
 
                             <div className="space-y-4 mb-8">
                                 {[
-                                    { title: 'Masa Başı Sipariş', desc: 'Garson doğrudan masada sipariş girer, anında mutfağa iletilir', icon: 'restaurant_menu' },
-                                    { title: 'Temassız Ödeme', desc: 'Kart, NFC ve QR kod ile masa başında ödeme alın', icon: 'contactless' },
-                                    { title: 'Fiş & Fatura', desc: 'Entegre termal yazıcı ile anında fiş çıktısı', icon: 'receipt_long' },
-                                    { title: 'Vardiya Sistemi', desc: 'Garson giriş-çıkış ve performans takibi', icon: 'schedule' },
+                                    { title: t('mobileF1'), desc: t('mobileF1Desc'), icon: 'restaurant_menu' },
+                                    { title: t('mobileF2'), desc: t('mobileF2Desc'), icon: 'contactless' },
+                                    { title: t('mobileF3'), desc: t('mobileF3Desc'), icon: 'receipt_long' },
+                                    { title: t('mobileF4'), desc: t('mobileF4Desc'), icon: 'schedule' },
                                 ].map((feature, i) => (
                                     <div key={i} className="flex items-start gap-4 bg-white/[0.03] rounded-xl p-4 border border-white/5 hover:border-purple-500/30 transition-colors">
                                         <span className="material-symbols-outlined text-purple-400 text-2xl mt-0.5 shrink-0">{feature.icon}</span>
@@ -333,19 +331,18 @@ export default function HardwarePage() {
                                 <span className="w-12 h-12 bg-teal-500/20 rounded-xl flex items-center justify-center">
                                     <span className="material-symbols-outlined text-teal-400 text-2xl">scale</span>
                                 </span>
-                                Akıllı Terazi
+                                {t('scaleTitle')}
                             </h3>
                             <p className="text-white/60 text-lg mb-8 leading-relaxed">
-                                Kasap, şarküteri, manav ve taze gıda reyonları için dokunmatik ekranlı akıllı terazi.
-                                Tartım, fiyatlandırma ve etiket basımı tek cihazda. LOKMA ile entegre çalışır.
+                                {t('scaleDesc')}
                             </p>
 
                             <div className="grid grid-cols-1 gap-3 mb-8">
                                 {[
-                                    { title: 'Otomatik Fiyatlandırma', desc: 'Ürün seçildiğinde birim fiyat LOKMA\'dan otomatik çekilir', icon: 'price_change' },
-                                    { title: 'Etiket Basımı', desc: 'Entegre yazıcı ile barkodlu etiket anında basılır', icon: 'label' },
-                                    { title: 'Stok Entegrasyonu', desc: 'Tartılan her gram gerçek zamanlı stoktan düşülür', icon: 'inventory_2' },
-                                    { title: 'Gramaj Doğrulama', desc: 'Online siparişlerde gramaj farkı otomatik hesaplanır', icon: 'straighten' },
+                                    { title: t('scaleF1'), desc: t('scaleF1Desc'), icon: 'price_change' },
+                                    { title: t('scaleF2'), desc: t('scaleF2Desc'), icon: 'label' },
+                                    { title: t('scaleF3'), desc: t('scaleF3Desc'), icon: 'inventory_2' },
+                                    { title: t('scaleF4'), desc: t('scaleF4Desc'), icon: 'straighten' },
                                 ].map((feature, i) => (
                                     <div key={i} className="flex items-start gap-4 bg-white/[0.03] rounded-xl p-4 border border-white/5 hover:border-teal-500/30 transition-colors">
                                         <span className="material-symbols-outlined text-teal-400 text-2xl mt-0.5 shrink-0">{feature.icon}</span>
@@ -369,15 +366,14 @@ export default function HardwarePage() {
                     <div className="text-center mb-16">
                         <span className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-sm font-bold mb-6 border border-emerald-500/20">
                             <span className="material-symbols-outlined text-[16px]">label</span>
-                            Elektronik Raf Etiketi Sistemi
+                            {t('eslTag')}
                         </span>
                         <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6">
-                            Dijital{' '}
-                            <span className="bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">Fiyat Etiketleri</span>
+                            {t('eslTitle1')}{' '}
+                            <span className="bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">{t('eslTitle2')}</span>
                         </h2>
                         <p className="text-xl text-white/50 max-w-3xl mx-auto">
-                            Kağıt etiketlerle vedalaşın. Elektronik raf etiketleri (ESL) ile fiyatlarınızı
-                            saniyeler içinde tüm ürünlerde, tüm kanallarda güncelleyin.
+                            {t('eslSub')}
                         </p>
                     </div>
 
@@ -397,19 +393,18 @@ export default function HardwarePage() {
                         </div>
 
                         <div>
-                            <h3 className="text-3xl font-black mb-6">E-Ink Teknolojisi ile Dayanıklı Etiketler</h3>
+                            <h3 className="text-3xl font-black mb-6">{t('eslTechTitle')}</h3>
                             <p className="text-white/60 text-lg mb-8 leading-relaxed">
-                                Düşük enerji tüketen e-mürekkep (E-Ink) ekranlar sayesinde tek pil ile
-                                5+ yıl kesintisiz çalışma. Güneş ışığında bile mükemmel okunabilirlik.
+                                {t('eslTechDesc')}
                             </p>
 
                             <div className="space-y-3">
                                 {[
-                                    { title: '1.54" Küçük Etiket', desc: 'Raf kenarı ürünler için kompakt çözüm', specs: '152×152 piksel • Siyah-Beyaz' },
-                                    { title: '2.13" Standart Etiket', desc: 'En popüler boyut — market rafları için ideal', specs: '250×122 piksel • Siyah-Beyaz-Kırmızı' },
-                                    { title: '2.9" Geniş Etiket', desc: 'Detaylı bilgi gösterimi, barkod desteği', specs: '296×128 piksel • 3 Renk' },
-                                    { title: '4.2" Büyük Etiket', desc: 'Promosyon ve kampanya vurgusu için', specs: '400×300 piksel • Tam Renkli' },
-                                    { title: '7.5" Jumbo Etiket', desc: 'Vitrin ve endcap gösterimi', specs: '800×480 piksel • Tam Renkli' },
+                                    { title: t('eslSize1'), desc: t('eslSize1Desc'), specs: t('eslSize1Spec') },
+                                    { title: t('eslSize2'), desc: t('eslSize2Desc'), specs: t('eslSize2Spec') },
+                                    { title: t('eslSize3'), desc: t('eslSize3Desc'), specs: t('eslSize3Spec') },
+                                    { title: t('eslSize4'), desc: t('eslSize4Desc'), specs: t('eslSize4Spec') },
+                                    { title: t('eslSize5'), desc: t('eslSize5Desc'), specs: t('eslSize5Spec') },
                                 ].map((size, i) => (
                                     <div key={i} className="bg-white/[0.03] border border-white/5 rounded-xl p-4 hover:border-emerald-500/30 transition-all group/item">
                                         <div className="flex items-center justify-between">
@@ -430,43 +425,43 @@ export default function HardwarePage() {
                         {[
                             {
                                 icon: 'bolt',
-                                title: 'Anında Fiyat Güncellemesi',
-                                desc: 'LOKMA panelinden fiyat değiştirin, saniyeler içinde tüm raf etiketleri otomatik güncellenir. Kasa ve mobil uygulama da eş zamanlı yansır.',
+                                title: t('eslAdv1'),
+                                desc: t('eslAdv1Desc'),
                                 color: 'text-yellow-400',
                                 border: 'border-yellow-500/20',
                             },
                             {
                                 icon: 'eco',
-                                title: 'Çevre Dostu & Tasarruf',
-                                desc: 'Kağıt etiket basımı tarih olsun. Yılda ortalama 5.000+ etiket tasarrufu — hem çevreye hem bütçeye katkı.',
+                                title: t('eslAdv2'),
+                                desc: t('eslAdv2Desc'),
                                 color: 'text-emerald-400',
                                 border: 'border-emerald-500/20',
                             },
                             {
                                 icon: 'timer',
-                                title: 'İş Gücü Tasarrufu',
-                                desc: 'Etiket değiştirmek için saatlerce uğraşmayın. Tek tıkla binlerce ürünün fiyatını güncelleyin — personel değerli işlere odaklansın.',
+                                title: t('eslAdv3'),
+                                desc: t('eslAdv3Desc'),
                                 color: 'text-blue-400',
                                 border: 'border-blue-500/20',
                             },
                             {
                                 icon: 'campaign',
-                                title: 'Dinamik Kampanyalar',
-                                desc: 'Happy Hour, gün sonu indirimi, haftalık kampanya — etiketler otomatik güncellenir, kampanya bitince eski fiyata döner.',
+                                title: t('eslAdv4'),
+                                desc: t('eslAdv4Desc'),
                                 color: 'text-pink-400',
                                 border: 'border-pink-500/20',
                             },
                             {
                                 icon: 'gavel',
-                                title: 'Yasal Uyumluluk',
-                                desc: 'PAngV (Preisangabenverordnung) ve LMIV gereği doğru fiyat gösterimi garanti altında. Birim fiyat hesaplama otomatik.',
+                                title: t('eslAdv5'),
+                                desc: t('eslAdv5Desc'),
                                 color: 'text-orange-400',
                                 border: 'border-orange-500/20',
                             },
                             {
                                 icon: 'battery_charging_full',
-                                title: '5+ Yıl Pil Ömrü',
-                                desc: 'E-Ink teknolojisi sayesinde ultra-düşük güç tüketimi. Pilin bitmesini beklemeden yıllar boyu kesintisiz kullanım.',
+                                title: t('eslAdv6'),
+                                desc: t('eslAdv6Desc'),
                                 color: 'text-cyan-400',
                                 border: 'border-cyan-500/20',
                             },
@@ -488,12 +483,11 @@ export default function HardwarePage() {
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6">
-                            Bir Platformda{' '}
-                            <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">Her Şey</span>
+                            {t('fullIntTitle1')}{' '}
+                            <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">{t('fullIntTitle2')}</span>
                         </h2>
                         <p className="text-xl text-white/50 max-w-3xl mx-auto">
-                            LOKMA ekosistemi ile işletmenizin tüm dijital ve fiziksel operasyonları
-                            tek bir merkezden yönetilir.
+                            {t('fullIntSub')}
                         </p>
                     </div>
 
@@ -501,50 +495,50 @@ export default function HardwarePage() {
                         {[
                             {
                                 icon: 'shopping_cart',
-                                title: 'Online Sipariş ↔ Kasa',
-                                desc: 'Müşteri mobil uygulamadan ya da webden sipariş verdiğinde, sipariş doğrudan kasa ekranına düşer. Ekstra tablet veya yazılım gerekmez.',
+                                title: t('int1'),
+                                desc: t('int1Desc'),
                                 gradient: 'from-blue-600/20 to-blue-800/5',
                             },
                             {
                                 icon: 'inventory',
-                                title: 'Stok ↔ Tüm Kanallar',
-                                desc: 'Ürün satıldığında — ister kasadan, ister online — stok tüm kanallarda otomatik güncellenir. "Stokta Yok" durumu anında yansır.',
+                                title: t('int2'),
+                                desc: t('int2Desc'),
                                 gradient: 'from-amber-600/20 to-amber-800/5',
                             },
                             {
                                 icon: 'receipt_long',
-                                title: 'TSE / Finanzamt Uyumlu',
-                                desc: 'Alman mali mevzuatı gereği TSE (Kassensicherungstechnik) uyumlu altyapı. Dijital fiş, Z-Raporu ve GoBD muhasebe standartları entegre.',
+                                title: t('int3'),
+                                desc: t('int3Desc'),
                                 gradient: 'from-red-600/20 to-red-800/5',
                             },
                             {
                                 icon: 'table_restaurant',
-                                title: 'Masa Yönetimi & QR Sipariş',
-                                desc: 'Restoranlarda masalara QR kod ile sipariş. Müşteriler kendi telefonundan menüyü görür, sipariş verir — doğrudan kasa ve mutfağa yansır.',
+                                title: t('int4'),
+                                desc: t('int4Desc'),
                                 gradient: 'from-violet-600/20 to-violet-800/5',
                             },
                             {
                                 icon: 'local_shipping',
-                                title: 'Kurye Yönetimi',
-                                desc: 'Sipariş kabul edildiğinde en yakın uygun kuryeye otomatik atanır. Müşteri gerçek zamanlı konum takibi yapar.',
+                                title: t('int5'),
+                                desc: t('int5Desc'),
                                 gradient: 'from-teal-600/20 to-teal-800/5',
                             },
                             {
                                 icon: 'analytics',
-                                title: 'Gelir & Performans Raporları',
-                                desc: 'Tüm kanallardan gelen satış verileri tek panelde birleşir. Günlük, haftalık, aylık raporlar — ürün bazlı ve kanal bazlı analiz.',
+                                title: t('int6'),
+                                desc: t('int6Desc'),
                                 gradient: 'from-emerald-600/20 to-emerald-800/5',
                             },
                             {
                                 icon: 'payments',
-                                title: 'Ödeme Entegrasyonu',
-                                desc: 'Nakit, EC-Kart, Kreditkarte, Apple Pay, Google Pay, SEPA — tüm ödeme yöntemleri tek altyapıda. Stripe Connect ile otomatik uzlaşma.',
+                                title: t('int7'),
+                                desc: t('int7Desc'),
                                 gradient: 'from-pink-600/20 to-pink-800/5',
                             },
                             {
                                 icon: 'groups',
-                                title: 'Personel & Vardiya',
-                                desc: 'Garson, kasiyer ve kurye ekibini yönetin. Vardiya planlama, performans takibi ve yetkilendirme — tek panelden.',
+                                title: t('int8'),
+                                desc: t('int8Desc'),
                                 gradient: 'from-indigo-600/20 to-indigo-800/5',
                             },
                         ].map((item, i) => (
@@ -571,8 +565,8 @@ export default function HardwarePage() {
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-6">
-                            Her Sektöre{' '}
-                            <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">Özel Çözüm</span>
+                            {t('sectorTitle1')}{' '}
+                            <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">{t('sectorTitle2')}</span>
                         </h2>
                     </div>
 
@@ -580,33 +574,33 @@ export default function HardwarePage() {
                         {[
                             {
                                 emoji: '🍕',
-                                title: 'Restoran & Pizzeria',
-                                features: ['Masa başı sipariş alma', 'Mutfak ekranı entegrasyonu', 'QR menü & dine-in', 'Happy Hour otomasyonu'],
+                                title: t('sector1'),
+                                features: tArr('sector1F'),
                             },
                             {
                                 emoji: '🥩',
-                                title: 'Kasap & Şarküteri',
-                                features: ['Akıllı terazi entegrasyonu', 'Gramaj bazlı fiyatlandırma', 'Etiket basım sistemi', 'Soğuk zincir takibi'],
+                                title: t('sector2'),
+                                features: tArr('sector2F'),
                             },
                             {
                                 emoji: '🛒',
-                                title: 'Market & Bakkal',
-                                features: ['ESL elektronik etiketler', 'Barkod tarama', 'Stok yönetimi & uyarılar', 'Tedarik zinciri entegrasyonu'],
+                                title: t('sector3'),
+                                features: tArr('sector3F'),
                             },
                             {
                                 emoji: '🧁',
-                                title: 'Pastane & Fırın',
-                                features: ['Ürün vitrini yönetimi', 'Günlük üretim takibi', 'Özel sipariş modülü', 'Alerjen bilgisi gösterimi'],
+                                title: t('sector4'),
+                                features: tArr('sector4F'),
                             },
                             {
                                 emoji: '☕',
-                                title: 'Kafe & Bistro',
-                                features: ['Hızlı sipariş ekranı', 'Sadakat programı', 'Take-away optimizasyonu', 'Barista performans takibi'],
+                                title: t('sector5'),
+                                features: tArr('sector5F'),
                             },
                             {
                                 emoji: '🕌',
-                                title: 'Kermes & Topluluk',
-                                features: ['Etkinlik bazlı menü', 'Topluluk sipariş sistemi', 'Gönüllü vardiya planı', 'Bağış & satış raporları'],
+                                title: t('sector6'),
+                                features: tArr('sector6F'),
                             },
                         ].map((sector, i) => (
                             <div key={i} className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 hover:border-[#fb335b]/30 hover:scale-[1.02] transition-all duration-300">
@@ -624,7 +618,7 @@ export default function HardwarePage() {
                         ))}
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* ═══════════════════════════════════════ */}
             {/* CTA SECTION                             */}
@@ -635,14 +629,13 @@ export default function HardwarePage() {
 
                 <div className="relative z-10 max-w-4xl mx-auto text-center">
                     <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-8">
-                        İşletmenizi{' '}
+                        {t('ctaTitle1')}{' '}
                         <span className="bg-gradient-to-r from-[#fb335b] to-[#ff6b35] bg-clip-text text-transparent">
-                            Dijitalleştirin
+                            {t('ctaTitle2')}
                         </span>
                     </h2>
                     <p className="text-xl text-white/50 max-w-2xl mx-auto mb-12 leading-relaxed">
-                        LOKMA donanım ekosistemi ile işletmenizi geleceğe taşıyın. POS kasa, elektronik etiket
-                        ve akıllı terazi — hepsi tek platformda, hepsi tek lisansta.
+                        {t('ctaSub')}
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -650,7 +643,7 @@ export default function HardwarePage() {
                             href="/partner/apply"
                             className="inline-flex items-center justify-center gap-3 bg-[#fb335b] hover:bg-red-600 text-white px-12 py-5 rounded-2xl font-black text-xl shadow-2xl shadow-[#fb335b]/25 transition-all hover:scale-105 active:scale-95"
                         >
-                            Hemen Başvur
+                            {t('ctaApply')}
                             <span className="material-symbols-outlined">rocket_launch</span>
                         </Link>
                         <Link
@@ -658,12 +651,12 @@ export default function HardwarePage() {
                             className="inline-flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/20 text-white px-12 py-5 rounded-2xl font-bold text-xl transition-all"
                         >
                             <span className="material-symbols-outlined">mail</span>
-                            İletişime Geçin
+                            {t('ctaContact')}
                         </Link>
                     </div>
 
                     <div className="flex flex-wrap justify-center gap-6 text-white/40 text-sm">
-                        {['✓ Ücretsiz kurulum desteği', '✓ 30 gün deneme süresi', '✓ 7/24 teknik destek', '✓ Eğitim dahil'].map((item, i) => (
+                        {[t('ctaF1'), t('ctaF2'), t('ctaF3'), t('ctaF4')].map((item, i) => (
                             <span key={i}>{item}</span>
                         ))}
                     </div>
@@ -671,6 +664,6 @@ export default function HardwarePage() {
             </section>
 
             <PublicFooter themeAware={true} />
-        </div>
+        </div >
     );
 }
