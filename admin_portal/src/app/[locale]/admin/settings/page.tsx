@@ -169,6 +169,21 @@ export default function SettingsPage() {
                                 <span className="ml-auto text-gray-600 group-hover:text-amber-400 transition text-xl">→</span>
                             </Link>
 
+                            {/* 🥤 Gratis İçecek */}
+                            <Link
+                                href="/admin/settings/free-drink"
+                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-emerald-600 hover:bg-emerald-950/20 transition-all group"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-emerald-900/50 flex items-center justify-center text-2xl group-hover:bg-emerald-800/50 transition">
+                                    🥤
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white group-hover:text-emerald-300 transition">{t('gratis_icecek') || 'Gratis İçecek'}</h3>
+                                    <p className="text-xs text-gray-500">{t('gratis_icecek_settings_desc') || 'Bedava içecek promosyonu ayarları'}</p>
+                                </div>
+                                <span className="ml-auto text-gray-600 group-hover:text-emerald-400 transition text-xl">→</span>
+                            </Link>
+
                             {/* API Schlüssel */}
                             <Link
                                 href="/admin/settings/api-keys"

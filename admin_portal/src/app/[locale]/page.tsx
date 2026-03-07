@@ -158,7 +158,7 @@ export default function LandingPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col bg-[#120a0a] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
-      <PublicHeader themeAware={true} />
+      <PublicHeader themeAware={false} />
 
       {/* Hero Section */}
       <section className="relative pt-24 min-h-[85vh] flex items-center justify-center overflow-hidden">

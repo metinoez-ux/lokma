@@ -83,6 +83,7 @@ interface Order {
     // Served by waiter
     servedByName?: string;
     servedAt?: Timestamp;
+    isScheduledOrder?: boolean;
 }
 
 export default function OrdersPage() {
@@ -331,7 +332,8 @@ export default function OrdersPage() {
                         return raw;
                     })(),
                     createdAt: d.createdAt,
-                    scheduledAt: d.deliveryDate || d.scheduledDateTime || d.pickupTime,
+                    scheduledAt: d.scheduledDeliveryTime || d.deliveryDate || d.scheduledDateTime || d.pickupTime,
+                    isScheduledOrder: !!d.isScheduledOrder,
                     address: d.deliveryAddress ? { street: d.deliveryAddress } : d.address,
                     notes: d.notes || d.orderNote || d.customerNote || '',
                     // Dine-in fields
@@ -1231,11 +1233,22 @@ export default function OrdersPage() {
                                                             {isChecked && <span className="text-xs">✓</span>}
                                                         </button>
                                                         <span className="bg-amber-500 text-white text-xs font-bold rounded px-1.5 py-0.5 flex-shrink-0">#{posNum}</span>
-                                                        <span className={`flex-1 ${isChecked ? 'text-green-300 line-through opacity-70' : 'text-gray-300'}`}>
+                                                        {/* 🥤 Free Drink Badge */}
+                                                        {item.isFreeDrink && (
+                                                            <span className="bg-emerald-500 text-white text-[10px] font-bold rounded px-1.5 py-0.5 flex-shrink-0 tracking-wide">GRATIS</span>
+                                                        )}
+                                                        <span className={`flex-1 ${isChecked ? 'text-green-300 line-through opacity-70' : item.isFreeDrink ? 'text-emerald-300' : 'text-gray-300'}`}>
                                                             {item.quantity}x {item.productName || item.name}
                                                         </span>
-                                                        <span className={`${isChecked ? 'text-green-400 opacity-70' : 'text-white'}`}>
-                                                            {formatCurrency(item.totalPrice ?? ((item.unitPrice || item.price || 0) * (item.quantity || 1)), selectedOrder?.currency)}
+                                                        <span className={`${isChecked ? 'text-green-400 opacity-70' : item.isFreeDrink ? 'text-emerald-400' : 'text-white'}`}>
+                                                            {item.isFreeDrink ? (
+                                                                <span className="flex items-center gap-1">
+                                                                    <span className="line-through text-gray-500 text-xs">{formatCurrency(item.originalPrice || item.unitPrice || 0, selectedOrder?.currency)}</span>
+                                                                    <span className="text-emerald-400 font-bold">0,00 €</span>
+                                                                </span>
+                                                            ) : (
+                                                                formatCurrency(item.totalPrice ?? ((item.unitPrice || item.price || 0) * (item.quantity || 1)), selectedOrder?.currency)
+                                                            )}
                                                         </span>
                                                     </div>
                                                     {/* Show selected options */}

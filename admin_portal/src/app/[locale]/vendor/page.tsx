@@ -453,7 +453,11 @@ export default function VendorPage() {
                                 <span className="material-symbols-outlined text-[18px]">expand_more</span>
                             </Link>
                         </div>
-                        <p className="text-white/40 text-sm font-medium">{tx.ctaSub}</p>
+                        <p className="text-white/40 text-sm font-medium mb-4">{tx.ctaSub}</p>
+                        <Link href="/login" className="inline-flex items-center gap-2 text-white/50 hover:text-[#fb335b] text-sm font-medium transition-colors">
+                            <span className="material-symbols-outlined text-[16px]">login</span>
+                            Bereits Händler? Hier einloggen
+                        </Link>
                     </div>
                 </div>
             </section>

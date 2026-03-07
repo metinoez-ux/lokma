@@ -63,6 +63,7 @@ export default function LoginPage() {
     const [logoutReason, setLogoutReason] = useState<string | null>(null);
     const [resetEmailSent, setResetEmailSent] = useState(false);
     const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+    const [accessDenied, setAccessDenied] = useState<{ email?: string; reason: 'no_account' | 'not_active' } | null>(null);
     const router = useRouter();
 
     // Handle forgot password
@@ -128,7 +129,11 @@ export default function LoginPage() {
                         const data = adminDoc.data();
                         router.push(getAdminRedirectPath(data.role, data.adminType));
                     } else {
-                        router.push('/profile');
+                        // Not an admin/worker — sign out and show error
+                        const { signOut } = await import('firebase/auth');
+                        await signOut(auth);
+                        setAccessDenied({ email: user.email || undefined, reason: adminDoc.exists() ? 'not_active' : 'no_account' });
+                        setCheckingAuth(false);
                     }
                 }
             } else {
@@ -267,50 +272,12 @@ export default function LoginPage() {
             }
         }
 
-        // No admin match found - ensure user is in users collection for visibility
+        // No admin match found — show access denied, sign out
         console.log('No admin match found for user:', userId, userEmail, userPhone);
-
-        // Create or update user record in users collection so they appear in admin panel
-        const { setDoc, getDoc: getDocFn } = await import('firebase/firestore');
-        const userDocRef = doc(db, 'users', userId);
-        const existingUser = await getDocFn(userDocRef);
-
-        if (!existingUser.exists()) {
-            // Create new user record
-            await setDoc(userDocRef, {
-                email: userEmail || null,
-                phoneNumber: userPhone || null,
-                displayName: auth.currentUser?.displayName || userEmail?.split('@')[0] || tAdminLogin('mira_kullanici'),
-                firstName: auth.currentUser?.displayName?.split(' ')[0] || null,
-                lastName: auth.currentUser?.displayName?.split(' ').slice(1).join(' ') || null,
-                photoURL: auth.currentUser?.photoURL || null, // CRITICAL: Save Google profile picture
-                createdAt: new Date().toISOString(),
-                createdVia: 'miraportal_login',
-                isAdmin: false,
-                lastLoginAt: new Date().toISOString(),
-            });
-            console.log('Created new user record for:', userId, 'with photoURL:', auth.currentUser?.photoURL);
-        } else {
-            // Update last login time and sync profile picture from OAuth
-            const { updateDoc: updateDocFn } = await import('firebase/firestore');
-            const existingData = existingUser.data();
-            const updateData: Record<string, unknown> = {
-                lastLoginAt: new Date().toISOString(),
-            };
-            // If user logged in with Google and no photoURL saved, save it now
-            if (auth.currentUser?.photoURL && !existingData.photoURL) {
-                updateData.photoURL = auth.currentUser.photoURL;
-                console.log('📸 Updated missing photoURL from Google:', auth.currentUser.photoURL);
-            }
-            // Also sync displayName/firstName/lastName if missing
-            if (auth.currentUser?.displayName && !existingData.firstName) {
-                updateData.firstName = auth.currentUser.displayName.split(' ')[0];
-                updateData.lastName = auth.currentUser.displayName.split(' ').slice(1).join(' ') || null;
-            }
-            await updateDocFn(userDocRef, updateData);
-        }
-
-        router.push('/profile');
+        const { signOut } = await import('firebase/auth');
+        await signOut(auth);
+        setAccessDenied({ email: userEmail || undefined, reason: 'no_account' });
+        setLoading(false);
     };
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -682,6 +649,71 @@ export default function LoginPage() {
         return (
             <div className="min-h-screen bg-[#120a0a] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#fb335b]"></div>
+            </div>
+        );
+    }
+
+    // Show access denied screen for non-business accounts
+    if (accessDenied) {
+        return (
+            <div className="min-h-screen bg-[#120a0a] flex items-center justify-center p-4">
+                <div className="w-full max-w-md">
+                    <div className="bg-[#1a1010] border border-white/10 rounded-2xl shadow-xl p-8 text-center">
+                        {/* Icon */}
+                        <div className="w-20 h-20 mx-auto mb-6 bg-amber-500/10 border-2 border-amber-500/20 rounded-2xl flex items-center justify-center">
+                            <span className="material-symbols-outlined text-4xl text-amber-400">store</span>
+                        </div>
+
+                        {/* Title */}
+                        <h1 className="text-2xl font-bold text-white mb-3">
+                            {accessDenied.reason === 'not_active'
+                                ? tAdminLogin('hesabiniz_henuz_aktif_degil') || 'Hesabınız henüz aktif değil'
+                                : tAdminLogin('isletmeci_hesabi_bulunamadi') || 'İşletmeci hesabı bulunamadı'
+                            }
+                        </h1>
+
+                        {/* Description */}
+                        <p className="text-white/60 text-sm mb-6 leading-relaxed">
+                            {accessDenied.reason === 'not_active'
+                                ? tAdminLogin('hesabiniz_aktif_edilmemis_desc') || 'İşletmeci hesabınız henüz aktif edilmemiştir. Lütfen yöneticinizle iletişime geçin.'
+                                : tAdminLogin('isletmeci_hesabi_yok_desc') || 'Bu hesapla ilişkilendirilmiş bir işletme bulunamadı. Eğer bir işletmeciyseniz, lütfen LOKMA iş ortağı başvurusu yapın.'
+                            }
+                        </p>
+
+                        {accessDenied.email && (
+                            <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3 mb-6">
+                                <p className="text-white/40 text-xs mb-1">Giriş yapılan hesap</p>
+                                <p className="text-white/80 text-sm font-medium">{accessDenied.email}</p>
+                            </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="space-y-3">
+                            <Link
+                                href="/partner/apply"
+                                className="block w-full bg-[#fb335b] hover:bg-red-600 text-white py-3 rounded-xl font-bold text-sm transition-all"
+                            >
+                                🤝 İş Ortağı Başvurusu Yap
+                            </Link>
+                            <button
+                                onClick={() => {
+                                    setAccessDenied(null);
+                                    setError('');
+                                    setLoading(false);
+                                }}
+                                className="block w-full bg-white/10 hover:bg-white/15 text-white py-3 rounded-xl font-medium text-sm transition-all"
+                            >
+                                ← Farklı hesapla giriş yap
+                            </button>
+                            <Link
+                                href="/"
+                                className="block w-full text-white/50 hover:text-white py-2 text-sm transition-colors"
+                            >
+                                Ana sayfaya dön
+                            </Link>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }

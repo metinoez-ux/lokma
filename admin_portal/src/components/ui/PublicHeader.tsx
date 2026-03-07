@@ -237,9 +237,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                         )}
                     </div>
 
-                    <Link href="/login" className="hidden sm:flex bg-[#fb335b] hover:bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-bold transition-all">
-                        {t('login')}
-                    </Link>
+
 
                     {/* Mobile Menu Button */}
                     <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -257,7 +255,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                             <Link className="text-sm font-medium py-2" href="/about">{t('about')}</Link>
                             <Link className="text-sm font-medium py-2" href="/vendor">{t('vendorPortal')}</Link>
                             <Link className="text-sm font-medium py-2" href="/support">{t('support')}</Link>
-                            <Link className="bg-[#fb335b] text-white text-center py-3 rounded-lg font-bold" href="/login">{t('login')}</Link>
+
                         </nav>
                     </div>
                 )
