@@ -7,19 +7,23 @@ class CartItem {
   final double quantity;
   final List<SelectedOption> selectedOptions;
   final String? note; // Per-item note (e.g. "Hasan Usta", "Yonca Hanım")
+  final bool isFreeDrink; // 🥤 Gratis İçecek — platform promotion
 
   CartItem({
     required this.product,
     required this.quantity,
     this.selectedOptions = const [],
     this.note,
+    this.isFreeDrink = false,
   });
 
   /// Unique key: SKU + sorted option IDs (same product, different options = different cart items)
+  /// Free drink items get a special prefix to avoid merging with paid items
   String get uniqueKey {
-    if (selectedOptions.isEmpty) return product.sku;
+    final prefix = isFreeDrink ? 'FREE_DRINK|' : '';
+    if (selectedOptions.isEmpty) return '$prefix${product.sku}';
     final optionKeys = selectedOptions.map((o) => '${o.groupId}:${o.optionId}').toList()..sort();
-    return '${product.sku}|${optionKeys.join(',')}';
+    return '$prefix${product.sku}|${optionKeys.join(',')}';
   }
 
   double get optionsTotal =>
@@ -27,7 +31,11 @@ class CartItem {
 
   double get unitPrice => product.price + optionsTotal;
 
-  double get totalPrice => unitPrice * quantity;
+  /// Original price (before free drink discount)
+  double get originalPrice => unitPrice * quantity;
+
+  /// Effective price: 0.00 for free drinks
+  double get totalPrice => isFreeDrink ? 0.0 : unitPrice * quantity;
 }
 
 class CartState {
@@ -43,7 +51,11 @@ class CartState {
 
   double get totalAmount => items.fold(0, (sum, item) => sum + item.totalPrice);
   bool get isEmpty => items.isEmpty;
-  bool get isNotEmpty => items.isNotEmpty; // Added explicit getter
+  bool get isNotEmpty => items.isNotEmpty;
+
+  /// 🥤 Free drink helpers
+  bool get hasFreeDrink => items.any((item) => item.isFreeDrink);
+  CartItem? get freeDrinkItem => items.cast<CartItem?>().firstWhere((item) => item!.isFreeDrink, orElse: () => null);
 }
 
 class CartNotifier extends Notifier<CartState> {
@@ -109,6 +121,32 @@ class CartNotifier extends Notifier<CartState> {
     state = CartState(items: []);
   }
 
+  /// 🥤 Add a free drink to cart (max 1 per order, quantity locked at 1)
+  void addFreeDrinkItem(ButcherProduct product, String currentButcherId, String currentButcherName) {
+    // Already have a free drink? Replace it
+    final itemsWithoutFreeDrink = state.items.where((item) => !item.isFreeDrink).toList();
+    final freeDrinkItem = CartItem(
+      product: product,
+      quantity: 1,
+      isFreeDrink: true,
+    );
+    state = CartState(
+      items: [...itemsWithoutFreeDrink, freeDrinkItem],
+      butcherId: state.butcherId ?? currentButcherId,
+      butcherName: state.butcherName ?? currentButcherName,
+    );
+  }
+
+  /// 🥤 Remove the free drink from cart
+  void removeFreeDrinkItem() {
+    final newItems = state.items.where((item) => !item.isFreeDrink).toList();
+    state = CartState(
+      items: newItems,
+      butcherId: newItems.isEmpty ? null : state.butcherId,
+      butcherName: newItems.isEmpty ? null : state.butcherName,
+    );
+  }
+
   void updateQuantity(String uniqueKey, double quantity) {
     if (quantity <= 0) {
       removeFromCart(uniqueKey);
@@ -124,6 +162,7 @@ class CartNotifier extends Notifier<CartState> {
          quantity: quantity,
          selectedOptions: existing.selectedOptions,
          note: existing.note,
+         isFreeDrink: existing.isFreeDrink,
        );
        state = CartState(
          items: updatedItems,
@@ -143,6 +182,7 @@ class CartNotifier extends Notifier<CartState> {
         quantity: existing.quantity,
         selectedOptions: existing.selectedOptions,
         note: (note != null && note.trim().isNotEmpty) ? note.trim() : null,
+        isFreeDrink: existing.isFreeDrink,
       );
       state = CartState(
         items: updatedItems,

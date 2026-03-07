@@ -271,24 +271,23 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Back button (only show on non-first steps)
-              if (_currentStep > 0)
-                GestureDetector(
-                  onTap: _previousStep,
-                  child: Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: _cardBg(isDark),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Theme.of(context).colorScheme.surface,
-                      size: 20,
-                    ),
+              // Back button (always visible — step 0 closes sheet, others go back)
+              GestureDetector(
+                onTap: _previousStep,
+                child: Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: _cardBg(isDark),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    _currentStep > 0 ? Icons.arrow_back_ios_new : Icons.close,
+                    color: Theme.of(context).colorScheme.surface,
+                    size: 20,
                   ),
                 ),
-              if (_currentStep > 0) const SizedBox(width: 12),
+              ),
+              const SizedBox(width: 12),
               
               // Title + Step indicator
               Expanded(

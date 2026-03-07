@@ -518,7 +518,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
                         Icon(Icons.check_circle, color: Colors.green, size: 18),
                         SizedBox(width: 8),
@@ -1191,7 +1191,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               color: Color(0xFF1E1E1E),
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            child: const Center(
+            child: Center(
               child: Text('marketplace.info_load_error'.tr(), style: TextStyle(color: Colors.white54)),
             ),
           );

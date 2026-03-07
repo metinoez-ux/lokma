@@ -72,8 +72,8 @@ class _KasapScreenState extends State<KasapScreen> {
                     top: 0,
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: accent,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
@@ -97,7 +97,7 @@ class _KasapScreenState extends State<KasapScreen> {
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: cardBgColor,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -154,9 +154,9 @@ class _KasapScreenState extends State<KasapScreen> {
                               });
                               setState(() {});
                             },
-                            child: const Text(
+                            child: Text(
                               'Temizle',
-                              style: TextStyle(color: accent),
+                              style: TextStyle(color: Theme.of(context).colorScheme.primary),
                             ),
                           ),
                       ],
@@ -239,7 +239,7 @@ class _KasapScreenState extends State<KasapScreen> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.pop(context),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: accent,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -291,8 +291,8 @@ class _KasapScreenState extends State<KasapScreen> {
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: accent),
+          return Center(
+            child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
           );
         }
 
@@ -338,8 +338,8 @@ class _KasapScreenState extends State<KasapScreen> {
                         _selectedSectors.clear();
                       });
                     },
-                    icon: const Icon(Icons.filter_list_off, color: accent),
-                    label: Text('marketplace.clear_filters'.tr(), style: TextStyle(color: accent)),
+                    icon: Icon(Icons.filter_list_off, color: Theme.of(context).colorScheme.primary),
+                    label: Text('marketplace.clear_filters'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.primary)),
                   ),
                 ],
               ],

@@ -64,11 +64,16 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   OpeningHoursHelper? _hoursHelper;
   String _orderNote = '';
   DateTime? _selectedPickupSlot; // 🆕 Selected pickup time for Gel Al
+  DateTime? _scheduledDeliverySlot; // 🆕 Scheduled delivery time for Kurye (null = ASAP)
 
   // 🌟 Sponsored Products ("Bir şey mi unuttun?")
   List<Map<String, dynamic>> _sponsoredProductsList = [];
   bool _loadingSponsoredProducts = false;
   final Set<String> _sponsoredItemIds = {}; // Track IDs added from sponsored section
+
+  // 🥤 Gratis İçecek (Free Drink Promotion)
+  List<Map<String, dynamic>> _freeDrinkProducts = [];
+  bool _loadingFreeDrinks = false;
 
   // 📦 Item Unavailability Preferences ("Falls Artikel nicht verfügbar")
   String _unavailabilityPreference = 'refund'; // 'substitute' | 'refund' | 'perItem'
@@ -140,6 +145,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       _checkDeliverySupport();
       _updateEarliestPickupTime();
       _fetchSponsoredProducts();
+      _fetchFreeDrinkProducts();
     });
   }
 
@@ -239,6 +245,94 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     } catch (e) {
       debugPrint('Error fetching sponsored products: $e');
       if (mounted) setState(() => _loadingSponsoredProducts = false);
+    }
+  }
+
+  /// 🥤 Fetch drink-category products for the free drink promotion
+  Future<void> _fetchFreeDrinkProducts() async {
+    final cart = ref.read(cartProvider);
+    final butcherId = cart.butcherId;
+    if (butcherId == null) return;
+
+    setState(() => _loadingFreeDrinks = true);
+
+    try {
+      // Fetch all products for this business
+      final productsSnap = await FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(butcherId)
+          .collection('products')
+          .where('isActive', isEqualTo: true)
+          .get();
+
+      // Known drink category identifiers (multi-language)
+      const drinkCategories = [
+        'içecek', 'icecek', 'İçecek', 'İçecekler',
+        'getränke', 'Getränke', 'getraenke', 'Getraenke',
+        'drinks', 'Drinks', 'beverage', 'Beverage', 'Beverages',
+        'boissons', 'Boissons',
+        'bebidas', 'Bebidas',
+        'bibite', 'Bibite',
+        'dranken', 'Dranken',
+      ];
+
+      final List<Map<String, dynamic>> drinks = [];
+      for (final doc in productsSnap.docs) {
+        final data = doc.data();
+
+        // Skip unavailable or out-of-stock
+        if (data['isAvailable'] == false || data['outOfStock'] == true) continue;
+
+        // Check category (handle both string and localization map)
+        final categoryRaw = data['category'];
+        String categoryStr = '';
+        if (categoryRaw is String) {
+          categoryStr = categoryRaw;
+        } else if (categoryRaw is Map) {
+          // Try all language keys
+          for (final v in categoryRaw.values) {
+            if (v != null && drinkCategories.any((dc) => v.toString().toLowerCase() == dc.toLowerCase())) {
+              categoryStr = v.toString();
+              break;
+            }
+          }
+          if (categoryStr.isEmpty) {
+            categoryStr = (categoryRaw['tr'] ?? categoryRaw['de'] ?? categoryRaw.values.first ?? '').toString();
+          }
+        }
+
+        // Match against known drink categories
+        final isDrink = drinkCategories.any((dc) => categoryStr.toLowerCase() == dc.toLowerCase());
+        if (!isDrink) continue;
+
+        drinks.add({
+          'id': doc.id,
+          'name': data['name'] ?? '',
+          'nameData': data['name'],
+          'price': (data['sellingPrice'] ?? data['price'] ?? 0).toDouble(),
+          'unit': data['unit'] ?? 'adet',
+          'imageUrl': data['imageUrl'] ?? '',
+          'category': categoryStr,
+          'categoryData': data['category'],
+          'descriptionData': data['description'],
+          'masterProductSku': data['masterProductSku'] ?? doc.id,
+          'masterId': data['masterId'] ?? '',
+        });
+      }
+
+      // Filter out products already in cart
+      final cartItemIds = cart.items.map((i) => i.product.id).toSet();
+      final filtered = drinks.where((p) => !cartItemIds.contains(p['id'])).toList();
+
+      if (mounted) {
+        setState(() {
+          _freeDrinkProducts = filtered;
+          _loadingFreeDrinks = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching free drink products: $e');
+      if (mounted) setState(() => _loadingFreeDrinks = false);
     }
   }
 
@@ -446,6 +540,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           'totalPrice': item.totalPrice,
           'imageUrl': item.product.imageUrl,
           'positionNumber': positionNumber,
+          // 🥤 Free Drink Promotion
+          if (item.isFreeDrink) 'isFreeDrink': true,
+          if (item.isFreeDrink) 'originalPrice': item.originalPrice,
           if (item.note != null && item.note!.trim().isNotEmpty) 'itemNote': item.note!.trim(),
           if (item.selectedOptions.isNotEmpty)
             'selectedOptions': item.selectedOptions.map((o) => {
@@ -460,6 +557,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         'totalAmount': cart.totalAmount,
         'deliveryMethod': _isDineIn ? 'dineIn' : (_isPickUp ? 'pickup' : 'delivery'),
         'pickupTime': (_isPickUp || _isDineIn) ? Timestamp.fromDate(pickupDateTime) : null,
+        // 🆕 Scheduled Delivery
+        if (_scheduledDeliverySlot != null && !_isPickUp && !_isDineIn) ...{
+          'scheduledDeliveryTime': Timestamp.fromDate(_scheduledDeliverySlot!),
+          'isScheduledOrder': true,
+          'deliveryDate': Timestamp.fromDate(_scheduledDeliverySlot!),
+          'scheduledDateTime': Timestamp.fromDate(_scheduledDeliverySlot!),
+        },
         'deliveryAddress': (!_isPickUp && !_isDineIn) ? userAddress : null,
         'paymentMethod': _paymentMethod,
         'paymentStatus': _paymentMethod == 'payLater' ? 'payLater' : (_paymentMethod == 'card' ? 'pending' : 'paid'),
@@ -471,6 +575,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         // Sponsored product conversion tracking
         if (_sponsoredItemIds.isNotEmpty) 'sponsoredItemIds': _sponsoredItemIds.toList(),
         if (_sponsoredItemIds.isNotEmpty) 'hasSponsoredItems': true,
+        // 🥤 Free Drink Promotion tracking
+        if (cart.hasFreeDrink) 'hasFreeDrink': true,
         // Item unavailability preferences
         'unavailabilityPreference': _unavailabilityPreference,
         if (_unavailabilityPreference == 'perItem' && _perItemPreferences.isNotEmpty)
@@ -2072,6 +2178,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 _buildSponsoredProductsSection(),
                 SizedBox(height: 16),
               ],
+
+              // 🥤 Gratis İçecek (Free Drink Promotion)
+              if (_freeDrinkProducts.isNotEmpty) ...[
+                SizedBox(height: 8),
+                _buildFreeDrinkSection(),
+                SizedBox(height: 16),
+              ],
               
               // 💰 Price Summary
               _buildLieferandoPriceSummary(kermesTotal, kasapTotal, grandTotal),
@@ -3028,6 +3141,395 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
+  }
+
+  /// 🥤 FREE DRINK SECTION — "Her siparişe 1 içecek bedava!"
+  Widget _buildFreeDrinkSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cart = ref.read(cartProvider);
+    final butcherId = cart.butcherId ?? '';
+    final hasFreeDrink = cart.hasFreeDrink;
+    final locale = context.locale.languageCode;
+
+    // Localized strings
+    final titleMap = {
+      'tr': '🎁 1 İçecek Bedava!',
+      'de': '🎁 1 Getränk Gratis!',
+      'en': '🎁 1 Free Drink!',
+      'es': '🎁 1 Bebida Gratis!',
+      'fr': '🎁 1 Boisson Gratuite!',
+      'it': '🎁 1 Bibita Gratis!',
+      'nl': '🎁 1 Drankje Gratis!',
+    };
+    final subtitleMap = {
+      'tr': 'Aşağıdaki içeceklerden birini seç',
+      'de': 'Wähle ein Getränk aus',
+      'en': 'Choose one of the drinks below',
+      'es': 'Elige una bebida',
+      'fr': 'Choisissez une boisson',
+      'it': 'Scegli una bibita',
+      'nl': 'Kies een drankje',
+    };
+    final selectedMap = {
+      'tr': '✅ İçecek seçildi',
+      'de': '✅ Getränk ausgewählt',
+      'en': '✅ Drink selected',
+      'es': '✅ Bebida seleccionada',
+      'fr': '✅ Boisson sélectionnée',
+      'it': '✅ Bibita selezionata',
+      'nl': '✅ Drankje geselecteerd',
+    };
+    final changeMap = {
+      'tr': 'Değiştirmek için başka bir içecek seç',
+      'de': 'Wähle ein anderes Getränk zum Ändern',
+      'en': 'Select another drink to change',
+      'es': 'Selecciona otra bebida para cambiar',
+      'fr': 'Sélectionnez une autre boisson pour changer',
+      'it': 'Seleziona un\'altra bibita per cambiare',
+      'nl': 'Selecteer een ander drankje om te wijzigen',
+    };
+
+    final title = titleMap[locale] ?? titleMap['de']!;
+    final subtitle = hasFreeDrink
+        ? (selectedMap[locale] ?? selectedMap['de']!)
+        : (subtitleMap[locale] ?? subtitleMap['de']!);
+    final changeText = changeMap[locale] ?? changeMap['de']!;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF065F46).withValues(alpha: isDark ? 0.6 : 0.15),
+            Color(0xFF0D9488).withValues(alpha: isDark ? 0.4 : 0.10),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Color(0xFF10B981).withValues(alpha: isDark ? 0.4 : 0.3),
+          width: 1.5,
+        ),
+      ),
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with gift icon and title
+          Row(
+            children: [
+              // Animated gift icon
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF10B981), Color(0xFF059669)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF10B981).withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text('🎁', style: TextStyle(fontSize: 22)),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: isDark ? Colors.white : Color(0xFF064E3B),
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: hasFreeDrink ? FontWeight.w600 : FontWeight.w500,
+                        color: hasFreeDrink
+                            ? Color(0xFF10B981)
+                            : (isDark ? Colors.white60 : Color(0xFF065F46)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // GRATIS pill badge
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF10B981), Color(0xFF059669)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFF10B981).withValues(alpha: 0.3),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  'GRATIS',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 14),
+
+          // Horizontal scrolling drink cards
+          SizedBox(
+            height: 160,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _freeDrinkProducts.length,
+              separatorBuilder: (_, __) => SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final product = _freeDrinkProducts[index];
+                final name = product['name'] is String
+                    ? product['name'] as String
+                    : (product['name'] is Map
+                        ? (product['name'][locale] ?? product['name']['tr'] ?? product['name']['de'] ?? product['name'].values.first ?? '').toString()
+                        : '');
+                final price = product['price'] as double;
+                final imageUrl = product['imageUrl'] as String;
+                final productId = product['id'] as String;
+
+                // Check if this is the currently selected free drink
+                final isSelected = hasFreeDrink && cart.freeDrinkItem?.product.id == productId;
+
+                return GestureDetector(
+                  onTap: () => _addFreeDrinkToCart(product, butcherId),
+                  child: Container(
+                    width: 120,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Color(0xFF10B981).withValues(alpha: isDark ? 0.25 : 0.15)
+                          : (isDark ? Color(0xFF1A2E28) : Colors.white),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isSelected
+                            ? Color(0xFF10B981)
+                            : (isDark ? Colors.grey[700]! : Colors.grey[200]!),
+                        width: isSelected ? 2 : 1,
+                      ),
+                      boxShadow: isSelected
+                          ? [BoxShadow(color: Color(0xFF10B981).withValues(alpha: 0.2), blurRadius: 8)]
+                          : null,
+                    ),
+                    child: Stack(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Product image or icon
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.grey[800] : Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: imageUrl.isNotEmpty
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: Image.network(
+                                          imageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Icon(
+                                            Icons.local_drink_rounded,
+                                            size: 28,
+                                            color: Color(0xFF10B981),
+                                          ),
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.local_drink_rounded,
+                                        size: 28,
+                                        color: Color(0xFF10B981),
+                                      ),
+                              ),
+                              SizedBox(height: 6),
+
+                              // Product name
+                              Text(
+                                name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                  height: 1.2,
+                                ),
+                              ),
+                              Spacer(),
+
+                              // Price row: Strikethrough original + GRATIS
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '${price.toStringAsFixed(2)} €',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark ? Colors.grey[500] : Colors.grey[400],
+                                      decoration: TextDecoration.lineThrough,
+                                      decorationColor: isDark ? Colors.grey[500] : Colors.grey[400],
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    '0,00 €',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF10B981),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Selected checkmark
+                        if (isSelected)
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF10B981),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.check, size: 14, color: Colors.white),
+                            ),
+                          ),
+
+                        // "+" badge for unselected
+                        if (!isSelected)
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF10B981),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.add, size: 14, color: Colors.white),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // Change hint when already selected
+          if (hasFreeDrink)
+            Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                changeText,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: isDark ? Colors.white38 : Color(0xFF065F46).withValues(alpha: 0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// 🥤 Helper: Add a free drink to cart
+  void _addFreeDrinkToCart(Map<String, dynamic> product, String butcherId) {
+    final locale = context.locale.languageCode;
+    final name = product['name'] is String
+        ? product['name'] as String
+        : (product['name'] is Map
+            ? (product['name'][locale] ?? product['name']['tr'] ?? product['name']['de'] ?? product['name'].values.first ?? '').toString()
+            : '');
+    final price = product['price'] as double;
+    final unit = product['unit'] as String;
+    final imageUrl = product['imageUrl'] as String;
+
+    final butcherProduct = ButcherProduct(
+      id: product['id'] as String,
+      name: name,
+      nameData: product['nameData'] ?? product['name'],
+      price: price,
+      unitType: unit,
+      imageUrl: imageUrl,
+      category: product['category'] is String ? product['category'] as String : '',
+      categoryData: product['categoryData'],
+      descriptionData: product['descriptionData'],
+      butcherId: butcherId,
+      sku: product['masterProductSku'] ?? product['id'] as String,
+      masterId: product['masterId'] ?? '',
+      description: '',
+      inStock: true,
+    );
+
+    ref.read(cartProvider.notifier).addFreeDrinkItem(
+      butcherProduct,
+      butcherId,
+      _butcherData?['companyName'] ?? '',
+    );
+
+    // Haptic feedback
+    HapticFeedback.lightImpact();
+
+    final snackMap = {
+      'tr': '🥤 $name bedava eklendi!',
+      'de': '🥤 $name gratis hinzugefügt!',
+      'en': '🥤 $name added for free!',
+    };
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(snackMap[locale] ?? snackMap['de']!),
+        duration: Duration(seconds: 2),
+        backgroundColor: Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+
+    setState(() {});
   }
 
   /// 💰 Price Summary
@@ -4120,6 +4622,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     const Divider(height: 1),
                                     const SizedBox(height: 14),
                                     _buildPickupTimePicker(setSheetState),
+                                  ],
+                                  // 🆕 Kurye: Scheduled delivery time picker
+                                  if (!_isPickUp && !_isDineIn) ...[
+                                    const SizedBox(height: 14),
+                                    const Divider(height: 1),
+                                    const SizedBox(height: 14),
+                                    _buildDeliveryTimePicker(setSheetState),
                                   ],
                                   // 🪑 Dine-in: Table number input
                                   if (_isDineIn) ...[
@@ -6042,6 +6551,376 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 _selectedDate = DateTime(slot.year, slot.month, slot.day);
                                 _selectedTime = TimeOfDay(hour: slot.hour, minute: slot.minute);
                               });
+                            }
+                          },
+                          children: List.generate(currentTimeSlots.length, (index) {
+                            final slot = currentTimeSlots[index];
+                            final timeStr = '${slot.hour.toString().padLeft(2, '0')}:${slot.minute.toString().padLeft(2, '0')}';
+                            final isSelected = index == currentTimeIndex;
+                            return Center(
+                              child: Text(
+                                timeStr,
+                                style: TextStyle(
+                                  fontSize: isSelected ? 18 : 15,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// 🆕 Kurye: Scheduled delivery time picker (ASAP or future slot)
+  Widget _buildDeliveryTimePicker(StateSetter setSheetState) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bool isScheduled = _scheduledDeliverySlot != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.schedule, color: _accentColor, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'Teslimat Zamanı',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // ASAP / Scheduled toggle row
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setSheetState(() {});
+                  setState(() => _scheduledDeliverySlot = null);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: !isScheduled
+                        ? _accentColor.withValues(alpha: 0.12)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: !isScheduled
+                          ? _accentColor
+                          : (isDark ? Colors.grey[600]! : Colors.grey[300]!),
+                      width: !isScheduled ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.bolt,
+                        size: 16,
+                        color: !isScheduled
+                            ? _accentColor
+                            : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'En kısa sürede',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: !isScheduled ? FontWeight.w600 : FontWeight.w500,
+                          color: !isScheduled
+                              ? _accentColor
+                              : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  // Select first available slot
+                  if (_hoursHelper != null) {
+                    final grouped = _hoursHelper!.getAvailableSlotsGroupedByDay(
+                      isPickup: false,
+                      daysToCheck: 7,
+                      prepTimeMinutes: 60,
+                    );
+                    if (grouped.isNotEmpty) {
+                      final firstSlots = grouped.values.first;
+                      if (firstSlots.isNotEmpty) {
+                        setSheetState(() {});
+                        setState(() => _scheduledDeliverySlot = firstSlots.first);
+                      }
+                    }
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isScheduled
+                        ? _accentColor.withValues(alpha: 0.12)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isScheduled
+                          ? _accentColor
+                          : (isDark ? Colors.grey[600]! : Colors.grey[300]!),
+                      width: isScheduled ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 14,
+                        color: isScheduled
+                            ? _accentColor
+                            : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'İleri tarih',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: isScheduled ? FontWeight.w600 : FontWeight.w500,
+                          color: isScheduled
+                              ? _accentColor
+                              : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        // Show wheel picker only when scheduled
+        if (isScheduled && _hoursHelper != null) ...[
+          const SizedBox(height: 12),
+          _buildScheduledDeliveryWheelPicker(setSheetState),
+        ],
+      ],
+    );
+  }
+
+  /// 🆕 Cupertino wheel picker for scheduled delivery time (reuses Gel Al pattern)
+  Widget _buildScheduledDeliveryWheelPicker(StateSetter setSheetState) {
+    final grouped = _hoursHelper!.getAvailableSlotsGroupedByDay(
+      isPickup: false,
+      daysToCheck: 7,
+      prepTimeMinutes: 60,
+    );
+
+    if (grouped.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.orange.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.orange, size: 18),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Uygun teslimat zamanı bulunamadı.',
+                style: TextStyle(color: Colors.orange, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final now = DateTime.now();
+    final dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+    final dayKeys = grouped.keys.toList();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final dayLabels = dayKeys.map((dateKey) {
+      final isToday = dateKey.day == now.day && dateKey.month == now.month && dateKey.year == now.year;
+      final tomorrow = now.add(const Duration(days: 1));
+      final isTomorrow = dateKey.day == tomorrow.day && dateKey.month == tomorrow.month && dateKey.year == tomorrow.year;
+      if (isToday) return 'Bugün';
+      if (isTomorrow) return 'Yarın';
+      return dayNames[dateKey.weekday - 1];
+    }).toList();
+
+    int initialDayIndex = 0;
+    if (_scheduledDeliverySlot != null) {
+      final selDate = DateTime(_scheduledDeliverySlot!.year, _scheduledDeliverySlot!.month, _scheduledDeliverySlot!.day);
+      final idx = dayKeys.indexWhere((k) => k.year == selDate.year && k.month == selDate.month && k.day == selDate.day);
+      if (idx >= 0) initialDayIndex = idx;
+    }
+
+    List<DateTime> currentTimeSlots = grouped[dayKeys[initialDayIndex]] ?? [];
+
+    int initialTimeIndex = 0;
+    if (_scheduledDeliverySlot != null) {
+      final idx = currentTimeSlots.indexWhere((s) =>
+          s.hour == _scheduledDeliverySlot!.hour && s.minute == _scheduledDeliverySlot!.minute);
+      if (idx >= 0) initialTimeIndex = idx;
+    }
+
+    int currentDayIndex = initialDayIndex;
+    int currentTimeIndex = initialTimeIndex;
+    final timeController = FixedExtentScrollController(initialItem: initialTimeIndex);
+
+    // Selected display badge
+    String selectedDisplay = '';
+    if (currentTimeSlots.isNotEmpty && currentTimeIndex < currentTimeSlots.length) {
+      final slot = currentTimeSlots[currentTimeIndex];
+      selectedDisplay = '${dayLabels[currentDayIndex]}, ${slot.hour.toString().padLeft(2, '0')}:${slot.minute.toString().padLeft(2, '0')}';
+    }
+
+    return StatefulBuilder(
+      builder: (context, setPickerState) {
+        currentTimeSlots = grouped[dayKeys[currentDayIndex]] ?? [];
+        if (currentTimeIndex >= currentTimeSlots.length) {
+          currentTimeIndex = 0;
+        }
+
+        if (currentTimeSlots.isNotEmpty) {
+          final slot = currentTimeSlots[currentTimeIndex];
+          selectedDisplay = '${dayLabels[currentDayIndex]}, ${slot.hour.toString().padLeft(2, '0')}:${slot.minute.toString().padLeft(2, '0')}';
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Selected time badge
+            if (_scheduledDeliverySlot != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: _accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.schedule, size: 14, color: _accentColor),
+                    const SizedBox(width: 6),
+                    Text(
+                      selectedDisplay,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: _accentColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            // Cupertino-style wheel picker
+            Container(
+              height: 150,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[900] : Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Stack(
+                children: [
+                  Center(
+                    child: Container(
+                      height: 36,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.grey[800]!.withValues(alpha: 0.8)
+                            : Colors.grey[300]!.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      // Day picker (left wheel)
+                      Expanded(
+                        flex: 5,
+                        child: CupertinoPicker(
+                          scrollController: FixedExtentScrollController(initialItem: currentDayIndex),
+                          itemExtent: 36,
+                          diameterRatio: 1.2,
+                          squeeze: 1.1,
+                          selectionOverlay: const SizedBox.shrink(),
+                          onSelectedItemChanged: (index) {
+                            setPickerState(() {
+                              currentDayIndex = index;
+                              currentTimeIndex = 0;
+                              currentTimeSlots = grouped[dayKeys[currentDayIndex]] ?? [];
+                              timeController.jumpToItem(0);
+                            });
+                            if (currentTimeSlots.isNotEmpty) {
+                              final slot = currentTimeSlots[0];
+                              setSheetState(() {});
+                              setState(() => _scheduledDeliverySlot = slot);
+                            }
+                          },
+                          children: List.generate(dayLabels.length, (index) {
+                            final isSelected = index == currentDayIndex;
+                            return Center(
+                              child: Text(
+                                dayLabels[index],
+                                style: TextStyle(
+                                  fontSize: isSelected ? 18 : 15,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
+                                  color: isSelected
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                      Container(
+                        width: 1,
+                        height: 100,
+                        color: isDark ? Colors.grey[700] : Colors.grey[300],
+                      ),
+                      // Time picker (right wheel)
+                      Expanded(
+                        flex: 4,
+                        child: CupertinoPicker(
+                          scrollController: timeController,
+                          itemExtent: 36,
+                          diameterRatio: 1.2,
+                          squeeze: 1.1,
+                          selectionOverlay: const SizedBox.shrink(),
+                          onSelectedItemChanged: (index) {
+                            setPickerState(() {
+                              currentTimeIndex = index;
+                            });
+                            if (currentTimeSlots.isNotEmpty && index < currentTimeSlots.length) {
+                              final slot = currentTimeSlots[index];
+                              setSheetState(() {});
+                              setState(() => _scheduledDeliverySlot = slot);
                             }
                           },
                           children: List.generate(currentTimeSlots.length, (index) {
