@@ -5,10 +5,106 @@ import { useSearchParams } from 'next/navigation';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import Link from 'next/link';
+import { useLocale } from 'next-intl';
+import PublicHeader from '@/components/ui/PublicHeader';
+import PublicFooter from '@/components/ui/PublicFooter';
+
+const texts: Record<string, Record<string, string>> = {
+    de: {
+        title: 'Feedback & Kontakt', subtitle: 'Kontaktieren Sie das Entwicklungsteam',
+        desc: 'Ihre Ideen, Vorschläge oder Beschwerden sind uns wichtig. Wir lesen jede Nachricht!',
+        type: 'Nachrichtentyp', suggestion: 'Vorschlag', complaint: 'Beschwerde', question: 'Frage',
+        email: 'E-Mail (optional)', emailPh: 'Damit wir Ihnen antworten können',
+        subject: 'Betreff', subjectPh: 'Kurz beschrieben',
+        message: 'Ihre Nachricht *',
+        phSuggestion: 'Was ist Ihre Idee für eine neue Funktion oder Verbesserung?',
+        phComplaint: 'Beschreiben Sie das Problem ausführlich...',
+        phQuestion: 'Schreiben Sie Ihre Frage hier...',
+        send: 'Senden', sending: 'Wird gesendet...', error: 'Beim Senden ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
+        thanks: 'Vielen Dank!', thanksSub: 'Ihre Nachricht wurde erfolgreich gesendet. Wir werden sie schnellstmöglich prüfen.',
+        home: 'Zur Startseite', newMsg: 'Neue Nachricht senden',
+        note: 'Nachrichten werden direkt an unser Entwicklerteam weitergeleitet.',
+        back: '← Support',
+    },
+    tr: {
+        title: 'Geri Bildirim', subtitle: 'Geliştirici ile İletişim',
+        desc: 'Fikirleriniz, önerileriniz veya şikayetleriniz için bize ulaşın. Her mesajı okuyoruz!',
+        type: 'Mesaj Türü', suggestion: 'Öneri', complaint: 'Şikayet', question: 'Soru',
+        email: 'E-posta (opsiyonel)', emailPh: 'Size geri dönmemiz için',
+        subject: 'Konu', subjectPh: 'Kısaca ne hakkında?',
+        message: 'Mesajınız *',
+        phSuggestion: 'Yeni bir özellik veya iyileştirme öneriniz nedir?',
+        phComplaint: 'Karşılaştığınız sorunu detaylı anlatın...',
+        phQuestion: 'Sorunuzu buraya yazın...',
+        send: 'Gönder', sending: 'Gönderiliyor...', error: 'Gönderilirken bir hata oluştu. Lütfen tekrar deneyin.',
+        thanks: 'Teşekkürler!', thanksSub: 'Mesajınız başarıyla gönderildi. En kısa sürede inceleyeceğiz.',
+        home: 'Ana Sayfaya Dön', newMsg: 'Yeni Mesaj Gönder',
+        note: 'Mesajlar doğrudan geliştirici ekibimize iletilir.',
+        back: '← Destek',
+    },
+    en: {
+        title: 'Feedback', subtitle: 'Contact the Development Team',
+        desc: 'Your ideas, suggestions, or complaints matter to us. We read every message!',
+        type: 'Message Type', suggestion: 'Suggestion', complaint: 'Complaint', question: 'Question',
+        email: 'Email (optional)', emailPh: 'So we can get back to you',
+        subject: 'Subject', subjectPh: 'Brief description',
+        message: 'Your Message *',
+        phSuggestion: 'What\'s your idea for a new feature or improvement?',
+        phComplaint: 'Describe the issue in detail...',
+        phQuestion: 'Write your question here...',
+        send: 'Send', sending: 'Sending...', error: 'An error occurred while sending. Please try again.',
+        thanks: 'Thank You!', thanksSub: 'Your message has been sent successfully. We\'ll review it as soon as possible.',
+        home: 'Go to Homepage', newMsg: 'Send New Message',
+        note: 'Messages are forwarded directly to our development team.',
+        back: '← Support',
+    },
+    fr: {
+        title: 'Commentaires', subtitle: 'Contactez l\'équipe de développement',
+        desc: 'Vos idées, suggestions ou plaintes nous importent. Nous lisons chaque message !',
+        type: 'Type de message', suggestion: 'Suggestion', complaint: 'Plainte', question: 'Question',
+        email: 'E-mail (optionnel)', emailPh: 'Pour que nous puissions vous répondre',
+        subject: 'Sujet', subjectPh: 'Brève description',
+        message: 'Votre message *',
+        phSuggestion: 'Quelle est votre idée ?', phComplaint: 'Décrivez le problème...', phQuestion: 'Écrivez votre question...',
+        send: 'Envoyer', sending: 'Envoi en cours...', error: 'Erreur lors de l\'envoi. Veuillez réessayer.',
+        thanks: 'Merci !', thanksSub: 'Votre message a été envoyé. Nous l\'examinerons dès que possible.',
+        home: 'Accueil', newMsg: 'Nouveau message', note: 'Les messages sont transmis directement à notre équipe.',
+        back: '← Support',
+    },
+    it: {
+        title: 'Feedback', subtitle: 'Contatta il team di sviluppo',
+        desc: 'Le vostre idee, suggerimenti o reclami sono importanti per noi!',
+        type: 'Tipo di messaggio', suggestion: 'Suggerimento', complaint: 'Reclamo', question: 'Domanda',
+        email: 'Email (opzionale)', emailPh: 'Per rispondervi',
+        subject: 'Oggetto', subjectPh: 'Breve descrizione',
+        message: 'Il vostro messaggio *',
+        phSuggestion: 'Qual è la vostra idea?', phComplaint: 'Descrivete il problema...', phQuestion: 'Scrivete la vostra domanda...',
+        send: 'Invia', sending: 'Invio in corso...', error: 'Errore durante l\'invio. Riprovare.',
+        thanks: 'Grazie!', thanksSub: 'Messaggio inviato con successo.',
+        home: 'Homepage', newMsg: 'Nuovo messaggio', note: 'I messaggi vengono inoltrati direttamente al nostro team.',
+        back: '← Supporto',
+    },
+    es: {
+        title: 'Comentarios', subtitle: 'Contacta al equipo de desarrollo',
+        desc: '¡Tus ideas, sugerencias o quejas son importantes para nosotros!',
+        type: 'Tipo de mensaje', suggestion: 'Sugerencia', complaint: 'Queja', question: 'Pregunta',
+        email: 'Email (opcional)', emailPh: 'Para responderle',
+        subject: 'Asunto', subjectPh: 'Breve descripción',
+        message: 'Su mensaje *',
+        phSuggestion: '¿Cuál es tu idea?', phComplaint: 'Describe el problema...', phQuestion: 'Escribe tu pregunta...',
+        send: 'Enviar', sending: 'Enviando...', error: 'Error al enviar. Intente de nuevo.',
+        thanks: '¡Gracias!', thanksSub: 'Tu mensaje ha sido enviado exitosamente.',
+        home: 'Inicio', newMsg: 'Nuevo mensaje', note: 'Los mensajes se envían directamente a nuestro equipo.',
+        back: '← Soporte',
+    },
+};
 
 function FeedbackContent() {
     const searchParams = useSearchParams();
     const initialType = searchParams.get('type') || 'suggestion';
+    const locale = useLocale();
+    const tx = texts[locale] || texts['en'];
+    const t = (k: string) => tx[k] || k;
 
     const [feedbackType, setFeedbackType] = useState<'suggestion' | 'complaint' | 'question'>(
         initialType === 'complaint' ? 'complaint' : 'suggestion'
@@ -20,195 +116,113 @@ function FeedbackContent() {
     const [sent, setSent] = useState(false);
 
     useEffect(() => {
-        // Auto-fill email if logged in
-        if (auth.currentUser?.email) {
-            setEmail(auth.currentUser.email);
-        }
+        if (auth.currentUser?.email) setEmail(auth.currentUser.email);
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!message.trim()) return;
-
         setSending(true);
         try {
             await addDoc(collection(db, 'feedback'), {
-                type: feedbackType,
-                subject,
-                message,
-                email,
-                userId: auth.currentUser?.uid || null,
-                status: 'new',
-                createdAt: Timestamp.now(),
+                type: feedbackType, subject, message, email,
+                userId: auth.currentUser?.uid || null, status: 'new', createdAt: Timestamp.now(),
             });
             setSent(true);
-        } catch (error) {
-            console.error('Error sending feedback:', error);
-            alert('Gönderilirken bir hata oluştu. Lütfen tekrar deneyin.');
+        } catch {
+            alert(t('error'));
         }
         setSending(false);
     };
 
     if (sent) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
-                    <div className="text-6xl mb-4">✅</div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Teşekkürler!</h1>
-                    <p className="text-gray-600 mb-6">
-                        Mesajınız başarıyla gönderildi. En kısa sürede inceleyeceğiz.
-                    </p>
-                    <div className="space-y-3">
-                        <Link
-                            href="/"
-                            className="block w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700"
-                        >
-                            Ana Sayfaya Dön
-                        </Link>
-                        <button
-                            onClick={() => {
-                                setSent(false);
-                                setMessage('');
-                                setSubject('');
-                            }}
-                            className="block w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-200"
-                        >
-                            Yeni Mesaj Gönder
-                        </button>
+            <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+                <PublicHeader themeAware={true} />
+                <div className="flex-1 flex items-center justify-center p-4 pt-32">
+                    <div className="bg-white/5 border border-white/10 rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+                        <div className="text-6xl mb-4">✅</div>
+                        <h1 className="text-2xl font-bold mb-2">{t('thanks')}</h1>
+                        <p className="text-white/60 mb-6">{t('thanksSub')}</p>
+                        <div className="space-y-3">
+                            <Link href="/" className="block w-full bg-[#fb335b] text-white py-3 rounded-xl font-semibold hover:bg-red-600">{t('home')}</Link>
+                            <button onClick={() => { setSent(false); setMessage(''); setSubject(''); }} className="block w-full bg-white/10 text-white py-3 rounded-xl font-medium hover:bg-white/20">
+                                {t('newMsg')}
+                            </button>
+                        </div>
                     </div>
                 </div>
+                <PublicFooter />
             </div>
         );
     }
 
+    const getPlaceholder = () => {
+        if (feedbackType === 'suggestion') return t('phSuggestion');
+        if (feedbackType === 'complaint') return t('phComplaint');
+        return t('phQuestion');
+    };
+
+    const typeButtons: { key: 'suggestion' | 'complaint' | 'question'; emoji: string }[] = [
+        { key: 'suggestion', emoji: '💡' },
+        { key: 'complaint', emoji: '📝' },
+        { key: 'question', emoji: '❓' },
+    ];
+
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white border-b sticky top-0 z-10">
-                <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <Link href="/support" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                        ← Destek
-                    </Link>
-                    <span className="font-bold text-gray-900">Geri Bildirim</span>
-                    <div className="w-16"></div>
-                </div>
-            </header>
+        <div className="relative flex min-h-screen flex-col bg-[#0a0a0f] text-white font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
+            <PublicHeader themeAware={true} />
 
-            <main className="max-w-2xl mx-auto px-4 py-8">
-                <div className="bg-white rounded-2xl shadow-sm p-6">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Geliştirici ile İletişim</h1>
-                    <p className="text-gray-500 mb-6">
-                        Fikirleriniz, önerileriniz veya şikayetleriniz için bize ulaşın. Her mesajı okuyoruz!
-                    </p>
+            <main className="pt-32 pb-20 px-4 md:px-20 lg:px-40 flex-1">
+                <div className="max-w-2xl mx-auto">
+                    <div className="bg-white/5 border border-white/10 rounded-2xl shadow-sm p-6">
+                        <h1 className="text-2xl font-bold mb-2">{t('subtitle')}</h1>
+                        <p className="text-white/60 mb-6">{t('desc')}</p>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Feedback Type */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Mesaj Türü
-                            </label>
-                            <div className="grid grid-cols-3 gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setFeedbackType('suggestion')}
-                                    className={`py-3 px-4 rounded-xl border text-center transition ${feedbackType === 'suggestion'
-                                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                        }`}
-                                >
-                                    <span className="text-xl">💡</span>
-                                    <p className="text-sm font-medium mt-1">Öneri</p>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setFeedbackType('complaint')}
-                                    className={`py-3 px-4 rounded-xl border text-center transition ${feedbackType === 'complaint'
-                                            ? 'border-red-500 bg-red-50 text-red-700'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                        }`}
-                                >
-                                    <span className="text-xl">📝</span>
-                                    <p className="text-sm font-medium mt-1">Şikayet</p>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setFeedbackType('question')}
-                                    className={`py-3 px-4 rounded-xl border text-center transition ${feedbackType === 'question'
-                                            ? 'border-green-500 bg-green-50 text-green-700'
-                                            : 'border-gray-200 hover:border-gray-300'
-                                        }`}
-                                >
-                                    <span className="text-xl">❓</span>
-                                    <p className="text-sm font-medium mt-1">Soru</p>
-                                </button>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-white/80 mb-2">{t('type')}</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {typeButtons.map(b => (
+                                        <button key={b.key} type="button" onClick={() => setFeedbackType(b.key)}
+                                            className={`py-3 px-4 rounded-xl border text-center transition ${feedbackType === b.key ? 'border-[#fb335b] bg-[#fb335b]/20 text-white' : 'border-white/10 hover:border-white/30'}`}>
+                                            <span className="text-xl">{b.emoji}</span>
+                                            <p className="text-sm font-medium mt-1">{t(b.key)}</p>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Email */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                E-posta (opsiyonel)
-                            </label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Size geri dönmemiz için"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
+                            <div>
+                                <label className="block text-sm font-medium text-white/80 mb-1">{t('email')}</label>
+                                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={t('emailPh')}
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent" />
+                            </div>
 
-                        {/* Subject */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Konu
-                            </label>
-                            <input
-                                type="text"
-                                value={subject}
-                                onChange={(e) => setSubject(e.target.value)}
-                                placeholder="Kısaca ne hakkında?"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                        </div>
+                            <div>
+                                <label className="block text-sm font-medium text-white/80 mb-1">{t('subject')}</label>
+                                <input type="text" value={subject} onChange={e => setSubject(e.target.value)} placeholder={t('subjectPh')}
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent" />
+                            </div>
 
-                        {/* Message */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Mesajınız *
-                            </label>
-                            <textarea
-                                value={message}
-                                onChange={(e) => setMessage(e.target.value)}
-                                rows={5}
-                                placeholder={
-                                    feedbackType === 'suggestion'
-                                        ? 'Yeni bir özellik veya iyileştirme öneriniz nedir?'
-                                        : feedbackType === 'complaint'
-                                            ? 'Karşılaştığınız sorunu detaylı anlatın...'
-                                            : 'Sorunuzu buraya yazın...'
-                                }
-                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                required
-                            />
-                        </div>
+                            <div>
+                                <label className="block text-sm font-medium text-white/80 mb-1">{t('message')}</label>
+                                <textarea value={message} onChange={e => setMessage(e.target.value)} rows={5} placeholder={getPlaceholder()}
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:ring-2 focus:ring-[#fb335b] focus:border-transparent resize-none" required />
+                            </div>
 
-                        {/* Submit */}
-                        <button
-                            type="submit"
-                            disabled={sending || !message.trim()}
-                            className="w-full bg-blue-600 text-white py-4 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {sending ? 'Gönderiliyor...' : 'Gönder'}
-                        </button>
-                    </form>
+                            <button type="submit" disabled={sending || !message.trim()}
+                                className="w-full bg-[#fb335b] text-white py-4 rounded-xl font-semibold hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                {sending ? t('sending') : t('send')}
+                            </button>
+                        </form>
+                    </div>
+
+                    <p className="text-center text-white/40 text-sm mt-6">{t('note')}</p>
                 </div>
-
-                {/* Note */}
-                <p className="text-center text-gray-400 text-sm mt-6">
-                    Mesajlar doğrudan geliştirici ekibimize iletilir.
-                </p>
             </main>
+
+            <PublicFooter />
         </div>
     );
 }
@@ -216,8 +230,8 @@ function FeedbackContent() {
 export default function FeedbackPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#fb335b]" />
             </div>
         }>
             <FeedbackContent />

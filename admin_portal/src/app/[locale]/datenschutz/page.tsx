@@ -1,14 +1,27 @@
 'use client';
 
+import { useLocale } from 'next-intl';
 import PublicHeader from '@/components/ui/PublicHeader';
 import PublicFooter from '@/components/ui/PublicFooter';
 
+const titles: Record<string, string> = {
+    de: 'Datenschutzerklärung',
+    tr: 'Gizlilik Politikası',
+    en: 'Privacy Policy',
+    fr: 'Politique de confidentialité',
+    it: 'Informativa sulla privacy',
+    es: 'Política de privacidad',
+};
+
 export default function DatenschutzPage() {
+    const locale = useLocale();
+    const title = titles[locale] || titles['en'];
+
     return (
         <div className="min-h-screen bg-white dark:bg-[#120a0a] text-gray-900 dark:text-white pt-32 pb-20 px-4 md:px-20 lg:px-40 font-['Plus_Jakarta_Sans',sans-serif]">
             <PublicHeader themeAware={true} />
             <div className="max-w-4xl mx-auto bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-[2rem] p-8 md:p-16 shadow-2xl">
-                <h1 className="text-4xl md:text-5xl font-black mb-10 tracking-tight text-[#fb335b]">Datenschutzerklärung</h1>
+                <h1 className="text-4xl md:text-5xl font-black mb-10 tracking-tight text-[#fb335b]">{title}</h1>
                 <div className="space-y-6 text-gray-600 dark:text-white/70 leading-relaxed text-lg">
 
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-10 mb-4 border-b border-gray-200 dark:border-white/10 pb-2">1. Datenschutz auf einen Blick</h2>
