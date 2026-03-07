@@ -917,7 +917,10 @@ function GlobalProductsPageContent() {
                             category: product.category || 'diger',
                             categories: product.categories || [product.category || 'diger'],
                             defaultUnit: product.defaultUnit || 'kg',
-                            price: (product as any).price || 0,
+                            price: (product as any).price || (product as any).sellingPrice || (product as any).defaultPrice || 0,
+                            sellingPrice: (product as any).sellingPrice || (product as any).price || (product as any).defaultPrice || 0,
+                            purchasePrice: (product as any).purchasePrice || 0,
+                            taxRate: (product as any).taxRate || 7,
                             isActive: true,
                             isAvailable: true,
                             brandLabels: (product as any).brandLabels || [],
@@ -1132,7 +1135,10 @@ function GlobalProductsPageContent() {
             isActive: product.isActive !== false,
             defaultUnit: resolvedUnit,
             brandLabels: (product as any).brandLabels || [],
-            optionGroups: (product as any).optionGroups || []
+            optionGroups: (product as any).optionGroups || [],
+            // Ensure price fields are populated (business products may only have 'price')
+            sellingPrice: (product as any).sellingPrice || (product as any).price || (product as any).defaultPrice || 0,
+            purchasePrice: (product as any).purchasePrice || 0,
         } as any);
         setShowModal(true);
     };

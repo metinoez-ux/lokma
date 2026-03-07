@@ -61,8 +61,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
                 return output;
             };
 
-            // Merge Firestore messages OVER the local messages
-            messages = deepMerge(localMessages, firestoreMessages);
+            // Merge: Local JSON takes priority, Firestore fills in gaps only
+            // Local files are the source of truth for translations
+            messages = deepMerge(firestoreMessages, localMessages);
         } else {
             // Fallback completely to local files if Firestore doc doesn't exist
             console.warn(`Translation document for locale '${locale}' not found in Firestore. Using only local JSON.`);

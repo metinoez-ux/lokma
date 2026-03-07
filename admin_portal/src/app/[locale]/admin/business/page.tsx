@@ -1049,9 +1049,9 @@ export default function BusinessesPage() {
                                         <tr>
                                             <th className="px-4 py-3">🎪 Kermes</th>
                                             <th className="px-4 py-3">{t('tarih')}</th>
-                                            <th className="px-4 py-3">📍 Konum</th>
+                                            <th className="px-4 py-3">📍 {t('konum')}</th>
                                             <th className="px-4 py-3">{t('menu')}</th>
-                                            <th className="px-4 py-3">📊 Durum</th>
+                                            <th className="px-4 py-3">📊 {t('durum')}</th>
                                             <th className="px-4 py-3 text-center">{t('islemler')}</th>
                                         </tr>
                                     </thead>
@@ -1322,16 +1322,16 @@ export default function BusinessesPage() {
                                                         <td className="px-4 py-4">
                                                             <div className="flex gap-1">
                                                                 {business.services?.delivery && (
-                                                                    <span title="Teslimat" className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs">🛵</span>
+                                                                    <span title={t('teslimat')} className="px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs">🛵</span>
                                                                 )}
                                                                 {business.services?.pickup && (
-                                                                    <span title="Gel Al" className="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs">🏃</span>
+                                                                    <span title={t('gelAl')} className="px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs">🏃</span>
                                                                 )}
                                                                 {business.services?.dineIn && (
-                                                                    <span title="Yerinde" className="px-2 py-1 bg-amber-600/20 text-amber-400 rounded text-xs">🍽️</span>
+                                                                    <span title={t('yerinde')} className="px-2 py-1 bg-amber-600/20 text-amber-400 rounded text-xs">🍽️</span>
                                                                 )}
                                                                 {business.services?.reservation && (
-                                                                    <span title="Rezervasyon" className="px-2 py-1 bg-purple-600/20 text-purple-400 rounded text-xs">📅</span>
+                                                                    <span title={t('rezervasyon')} className="px-2 py-1 bg-purple-600/20 text-purple-400 rounded text-xs">📅</span>
                                                                 )}
                                                             </div>
                                                         </td>

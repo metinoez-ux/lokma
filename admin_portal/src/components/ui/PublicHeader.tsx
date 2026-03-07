@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, usePathname } from '../../i18n/routing';
 import Image from 'next/image';
 
@@ -40,8 +40,9 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
     const countryRef = useRef<HTMLDivElement>(null);
     const langRef = useRef<HTMLDivElement>(null);
 
-    // Default to Turkish language, auto-detect country
-    const [currentLang, setCurrentLang] = useState('tr');
+    // Sync language with next-intl active locale
+    const activeLocale = useLocale();
+    const [currentLang, setCurrentLang] = useState(activeLocale);
     const [currentCountry, setCurrentCountry] = useState('DE');
     const [isLoading, setIsLoading] = useState(true);
 
@@ -160,7 +161,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
                             className={`flex items-center gap-2 bg-black/5 dark:bg-white/5 ${itemHover} px-3 py-2 rounded-lg transition-all border border-transparent dark:border-white/10`}
                             onClick={() => setCountryMenuOpen(!countryMenuOpen)}
                         >
-                            <span className="text-lg">{currentCountryData.flag}</span>
+                            <span className="text-lg">{currentLangData.flag}</span>
                             <span className="text-sm font-medium hidden sm:block">{currentLangData.name}</span>
                             <span className="material-symbols-outlined text-[16px]">expand_more</span>
                         </button>

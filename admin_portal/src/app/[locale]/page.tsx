@@ -261,31 +261,29 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Split Section (Partners & Couriers) */}
+        {/* Slim Business & Courier Banner */}
         <section className="max-w-[1200px] mx-auto py-10 px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-[#fb335b]/20 to-transparent border border-[#fb335b]/30 p-10 flex flex-col justify-between rounded-[2rem] min-h-[300px]">
-              <div>
-                <h3 className="text-3xl font-black mb-4">{t('splitPartnerTitle')}</h3>
-                <p className="text-white/70 text-lg mb-8">{t('splitPartnerDesc')}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Link href="/vendor" className="group flex items-center gap-4 bg-white/5 border border-white/10 hover:border-[#fb335b]/30 p-5 rounded-2xl transition-all">
+              <div className="w-12 h-12 bg-[#fb335b]/10 text-[#fb335b] rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined">storefront</span>
               </div>
-              <div>
-                <Link href="/partner" className="inline-flex items-center gap-2 bg-[#fb335b] hover:bg-red-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-[#fb335b]/20">
-                  {t('splitPartnerBtn')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </Link>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-base">{t('splitPartnerTitle')}</h4>
+                <p className="text-white/50 text-sm truncate">{t('splitPartnerDesc')}</p>
               </div>
-            </div>
-            <div className="bg-gradient-to-br from-emerald-500/20 to-transparent border border-emerald-500/30 p-10 flex flex-col justify-between rounded-[2rem] min-h-[300px]">
-              <div>
-                <h3 className="text-3xl font-black mb-4">{t('splitCourierTitle')}</h3>
-                <p className="text-white/70 text-lg mb-8">{t('splitCourierDesc')}</p>
+              <span className="material-symbols-outlined text-white/30 group-hover:text-[#fb335b] transition-colors flex-shrink-0">arrow_forward</span>
+            </Link>
+            <Link href="/kurye" className="group flex items-center gap-4 bg-white/5 border border-white/10 hover:border-emerald-500/30 p-5 rounded-2xl transition-all">
+              <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined">delivery_dining</span>
               </div>
-              <div>
-                <Link href="/kurye" className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20">
-                  {t('splitCourierBtn')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </Link>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-base">{t('splitCourierTitle')}</h4>
+                <p className="text-white/50 text-sm truncate">{t('splitCourierDesc')}</p>
               </div>
-            </div>
+              <span className="material-symbols-outlined text-white/30 group-hover:text-emerald-400 transition-colors flex-shrink-0">arrow_forward</span>
+            </Link>
           </div>
         </section>
 
@@ -316,31 +314,31 @@ export default function LandingPage() {
       </main>
 
       {/* App Download CTA */}
-      <section className="py-16 px-4 md:px-20 lg:px-40 bg-gradient-to-b from-gray-100 to-white dark:from-[#120a0a] dark:to-[#0a0505]">
+      <section className="py-16 px-4 md:px-20 lg:px-40 bg-gradient-to-b from-[#120a0a] to-[#0a0505]">
         <div className="max-w-[800px] mx-auto bg-gradient-to-br from-white/10 to-transparent border border-white/20 rounded-3xl p-8 md:p-12 text-center">
           <div className="inline-flex items-center gap-2 bg-red-500/20 text-red-400 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <span className="material-symbols-outlined text-[18px]">smartphone</span>
-            Alışveriş Uygulamada
+            {t('appBadge')}
           </div>
           <h2 className="text-3xl md:text-4xl font-black mb-4">
-            <span className="text-[#fb335b]">LOKMA</span> Uygulamasını İndir
+            <span className="text-[#fb335b]">LOKMA</span> {t('appDownloadTitle')}
           </h2>
           <p className="text-white/60 mb-8 max-w-xl mx-auto text-lg">
-            Tüm kategoriler, özel kampanyalar ve anlık teslimat takibi uygulamamızda.
+            {t('appDownloadDesc')}
             <span className="text-white font-medium"> Fresh. Fast. Local.</span>
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <a href="https://apps.apple.com/app/lokma" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
               <img
                 src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-                alt="App Store'dan İndir"
+                alt="App Store"
                 className="h-14"
               />
             </a>
             <a href="https://play.google.com/store/apps/details?id=com.lokma.app" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
               <img
                 src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-                alt="Google Play'den İndir"
+                alt="Google Play"
                 className="h-14"
               />
             </a>

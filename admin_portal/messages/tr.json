@@ -799,7 +799,11 @@
     "yukleniyor": "🔄 Yükleniyor...",
     "yukleniyor1": "Yükleniyor: %",
     "zertifikaAyarlariSadeceSuperAdminTarafindan": "🔒 Zertifika ayarları sadece Super Admin tarafından görüntülenebilir.",
-    "aktif_personel_kuryeler": "👥 Aktif Personel & Kuryeler"
+    "aktif_personel_kuryeler": "👥 Aktif Personel & Kuryeler",
+    "teslimat": "Teslimat",
+    "gelAl": "Gel Al",
+    "yerinde": "Yerinde",
+    "rezervasyon": "Rezervasyon"
   },
   "AdminBusiness[id": {
     "adet": "Adet",
@@ -5104,7 +5108,10 @@
     "lokmaRider": "LOKMA Kuryesi",
     "artisanPartnership": "Esnaf Ortaklığı",
     "appStoreButton": "App Store'dan İndir",
-    "playStoreButton": "Google Play'den İndir"
+    "playStoreButton": "Google Play'den İndir",
+    "appBadge": "Alışveriş Uygulamada",
+    "appDownloadTitle": "Uygulamayı İndir",
+    "appDownloadDesc": "Tüm kategoriler, özel kampanyalar ve anlık teslimat takibi uygulamamızda."
   },
   "marketplace": {
     "business_hours": "Çalışma Saatleri",

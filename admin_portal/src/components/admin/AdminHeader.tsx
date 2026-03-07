@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname, Link } from '@/i18n/routing';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { auth, db } from '@/lib/firebase';
 import { collection, getDocs, query, where, limit } from 'firebase/firestore';
@@ -25,6 +25,7 @@ interface PendingInvitation {
 
 export default function AdminHeader() {
     const t = useTranslations('AdminNav');
+    const currentLocale = useLocale();
     const { admin } = useAdmin();
     const adminTypeLabels: Record<string, string> = {
         super: t('superAdmin'),
@@ -50,6 +51,7 @@ export default function AdminHeader() {
     const pathname = usePathname();
     const [showPendingModal, setShowPendingModal] = useState(false);
     const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
+    const [loggingOut, setLoggingOut] = useState(false);
 
     const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -123,9 +125,19 @@ export default function AdminHeader() {
 
     // handleChipClick removed
 
-    const handleLogout = async () => {
-        await auth.signOut();
-        window.location.href = '/login';
+    const handleLogout = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setLoggingOut(true);
+        // Clear cached admin profile immediately for instant UI feedback
+        localStorage.removeItem('mira_admin_profile');
+        try {
+            await auth.signOut();
+        } catch (err) {
+            console.error('Logout error:', err);
+        }
+        // Hard redirect with locale prefix for clean state
+        window.location.href = `/${currentLocale}/login`;
     };
 
     return (
@@ -362,10 +374,11 @@ export default function AdminHeader() {
                                     </div>
 
                                     <button
-                                        onClick={handleLogout}
-                                        className="w-full flex items-center gap-2 px-4 py-3 text-red-500 hover:bg-red-900/40 hover:text-red-400 transition text-xs font-medium rounded-b-lg"
+                                        onMouseDown={handleLogout}
+                                        disabled={loggingOut}
+                                        className="w-full flex items-center gap-2 px-4 py-3 text-red-500 hover:bg-red-900/40 hover:text-red-400 transition text-xs font-medium rounded-b-lg disabled:opacity-50"
                                     >
-                                        🚪 {t('logout')}
+                                        {loggingOut ? '⏳' : '🚪'} {loggingOut ? '...' : t('logout')}
                                     </button>
                                 </div>
                             </div>
@@ -554,10 +567,11 @@ export default function AdminHeader() {
                                             {t('myAccount')}
                                         </Link>
                                         <button
-                                            onClick={handleLogout}
-                                            className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition text-sm"
+                                            onMouseDown={handleLogout}
+                                            disabled={loggingOut}
+                                            className="w-full flex items-center gap-2 px-4 py-3 text-red-400 hover:bg-red-900/30 hover:text-red-300 transition text-sm disabled:opacity-50"
                                         >
-                                            {t('logout')}
+                                            {loggingOut ? '⏳ ...' : t('logout')}
                                         </button>
                                     </div>
                                 </div>
