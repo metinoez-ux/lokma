@@ -120,7 +120,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
     const currentCountryData = countries.find(c => c.code === currentCountry) || countries[0];
     const currentLangData = languages.find(l => l.code === currentLang) || languages[0];
 
-    const headerBg = themeAware ? 'bg-white/80 dark:bg-[#120a0a]/80 border-gray-200 dark:border-white/10' : 'bg-[#120a0a]/80 border-white/10';
+    const headerBg = themeAware ? 'bg-white/80 dark:bg-[#120a0a]/80 border-gray-200 dark:border-white/10' : 'bg-transparent border-transparent';
     const textColor = themeAware ? 'text-gray-900 dark:text-white' : 'text-white';
     const menuBg = themeAware ? 'bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-white/10 text-gray-900 dark:text-white' : 'bg-[#1a1a1a] border-white/10 text-white';
     const itemHover = themeAware ? 'hover:bg-gray-100 dark:hover:bg-white/10' : 'hover:bg-white/10';
@@ -128,7 +128,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
 
     if (isLoading) {
         return (
-            <header className={`fixed top-0 z-50 w-full backdrop-blur-xl border-b ${headerBg} px-4 md:px-20 lg:px-40 py-4`}>
+            <header className={`fixed top-0 z-50 w-full ${themeAware ? 'backdrop-blur-xl' : ''} border-b ${headerBg} px-4 md:px-20 lg:px-40 py-4`}>
                 <div className="max-w-[1200px] mx-auto flex items-center h-9">
                 </div>
             </header>
@@ -136,7 +136,7 @@ export default function PublicHeader({ themeAware = false }: { themeAware?: bool
     }
 
     return (
-        <header className={`fixed top-0 z-50 w-full backdrop-blur-xl border-b ${headerBg} ${textColor} px-4 md:px-20 lg:px-40 py-4`}>
+        <header className={`fixed top-0 z-50 w-full ${themeAware ? 'backdrop-blur-xl' : ''} border-b ${headerBg} ${textColor} px-4 md:px-20 lg:px-40 py-4`}>
             <div className="max-w-[1200px] mx-auto flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-3">
