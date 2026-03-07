@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Fragment } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatCurrency, getCurrencySymbol } from "@/utils/currency";
@@ -261,7 +261,7 @@ export default function BusinessDetailsPage() {
     "overview" | "orders" | "reservations" | "settings"
   >(initialTab);
   const [settingsSubTab, setSettingsSubTab] = useState<
-    "isletme" | "menu" | "personel" | "masa" | "abonelik" | "teslimat" | "odeme"
+    "isletme" | "menu" | "personel" | "masa" | "abonelik" | "teslimat" | "odeme" | "promosyon"
   >("isletme");
   const [menuInternalTab, setMenuInternalTab] = useState<"kategoriler" | "urunler" | "sponsored">("kategoriler");
   const [isletmeInternalTab, setIsletmeInternalTab] = useState<"bilgiler" | "fatura" | "zertifikalar" | "gorseller" | "saatler">("bilgiler");
@@ -297,7 +297,7 @@ export default function BusinessDetailsPage() {
       setActiveTab(tab as any);
     }
     const subTab = searchParams.get('subTab');
-    if (subTab && ['isletme', 'menu', 'personel', 'masa', 'abonelik', 'teslimat', 'odeme'].includes(subTab)) {
+    if (subTab && ['isletme', 'menu', 'personel', 'masa', 'abonelik', 'teslimat', 'odeme', 'promosyon'].includes(subTab)) {
       setSettingsSubTab(subTab as any);
       setActiveTab('settings');
     }
@@ -330,6 +330,9 @@ export default function BusinessDetailsPage() {
     imageFile: null as File | null,
   });
   const [addingProduct, setAddingProduct] = useState(false);
+  const [editingInlineProduct, setEditingInlineProduct] = useState<any>(null);
+  const [editInlineTab, setEditInlineTab] = useState<'general' | 'pricing' | 'stock' | 'media' | 'contentCompliance' | 'app' | 'audit'>('general');
+  const [editFormFull, setEditFormFull] = useState<any>({});
   const [uploading, setUploading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -422,6 +425,8 @@ export default function BusinessDetailsPage() {
     // 🆕 Yerinde Sipariş Ayarları
     dineInPaymentMode: 'payLater' as string,  // 'payFirst' = Hemen öde (fast food), 'payLater' = Çıkışta öde (restoran)
     hasTableService: false,   // Garson servisi var mı?
+    // 🎁 Promosyon
+    freeDrinkEnabled: true,   // Bedava içecek promosyonu aktif mi? (default: true — platform default)
   });
 
   // Google Places search states
@@ -581,6 +586,9 @@ export default function BusinessDetailsPage() {
   const [selectedInlineProducts, setSelectedInlineProducts] = useState<Set<string>>(new Set());
   const [inlineStatusFilter, setInlineStatusFilter] = useState<string>('all');
   const [inlineCategoryFilter, setInlineCategoryFilter] = useState<string>('all');
+  const [productSearchQuery, setProductSearchQuery] = useState<string>('');
+  const [productCurrentPage, setProductCurrentPage] = useState<number>(1);
+  const [productsPerPage, setProductsPerPage] = useState<number>(20);
 
   // Load admin data - REMOVED (Handled by AdminProvider)
 
@@ -696,6 +704,8 @@ export default function BusinessDetailsPage() {
           // 🆕 Yerinde Sipariş Ayarları
           dineInPaymentMode: d.dineInPaymentMode || 'payLater',
           hasTableService: d.hasTableService || false,
+          // 🎁 Promosyon
+          freeDrinkEnabled: d.freeDrinkEnabled !== false,  // default true
         });
 
         // 🆕 Resolve plan features from subscription_plans collection
@@ -1164,6 +1174,7 @@ export default function BusinessDetailsPage() {
 
   const handleInlineBulkStatus = async (makeActive: boolean) => {
     if (!businessId || selectedInlineProducts.size === 0) return;
+    const count = selectedInlineProducts.size;
     try {
       const batch = writeBatch(db);
       for (const pid of selectedInlineProducts) {
@@ -1174,7 +1185,7 @@ export default function BusinessDetailsPage() {
       }
       await batch.commit();
       setSelectedInlineProducts(new Set());
-      showToast(`${selectedInlineProducts.size} ürün ${makeActive ? 'aktif' : 'pasif'} yapıldı`, "success");
+      showToast(`${count} ürün ${makeActive ? 'aktif' : 'pasif'} yapıldı`, "success");
       loadProducts();
     } catch (error) {
       console.error("Bulk status error:", error);
@@ -1184,6 +1195,7 @@ export default function BusinessDetailsPage() {
 
   const handleInlineBulkStock = async (inStock: boolean) => {
     if (!businessId || selectedInlineProducts.size === 0) return;
+    const count = selectedInlineProducts.size;
     try {
       const batch = writeBatch(db);
       for (const pid of selectedInlineProducts) {
@@ -1194,7 +1206,7 @@ export default function BusinessDetailsPage() {
       }
       await batch.commit();
       setSelectedInlineProducts(new Set());
-      showToast(`Stok durumu güncellendi`, "success");
+      showToast(`${count} ürün stok durumu güncellendi`, "success");
       loadProducts();
     } catch (error) {
       console.error("Bulk stock error:", error);
@@ -1204,6 +1216,7 @@ export default function BusinessDetailsPage() {
 
   const handleInlineBulkFeatured = async () => {
     if (!businessId || selectedInlineProducts.size === 0) return;
+    const count = selectedInlineProducts.size;
     try {
       const batch = writeBatch(db);
       for (const pid of selectedInlineProducts) {
@@ -1214,7 +1227,7 @@ export default function BusinessDetailsPage() {
       }
       await batch.commit();
       setSelectedInlineProducts(new Set());
-      showToast(`Öne çıkan olarak işaretlendi`, "success");
+      showToast(`${count} ürün öne çıkan olarak işaretlendi`, "success");
       loadProducts();
     } catch (error) {
       console.error("Bulk featured error:", error);
@@ -1248,6 +1261,87 @@ export default function BusinessDetailsPage() {
     if (!businessId) return;
     setAddingProduct(true);
     try {
+      // EDIT MODE: Update existing product
+      if (editingInlineProduct) {
+        const ef = editFormFull;
+        const updateData: Record<string, unknown> = {
+          name: ef.name || customProductForm.name,
+          price: parseFloat(ef.sellingPrice ?? customProductForm.price) || 0,
+          sellingPrice: parseFloat(ef.sellingPrice ?? customProductForm.price) || 0,
+          unit: ef.unit || customProductForm.unit || 'kg',
+          defaultUnit: ef.unit || customProductForm.unit || 'kg',
+          updatedAt: new Date(),
+        };
+        // Optional fields
+        if (ef.brand !== undefined) updateData.brand = ef.brand;
+        if (ef.description !== undefined) updateData.description = ef.description;
+        if (ef.taxRate !== undefined) updateData.taxRate = parseFloat(ef.taxRate) || 7;
+        if (ef.purchasePrice !== undefined) updateData.purchasePrice = parseFloat(ef.purchasePrice) || 0;
+        if (ef.discountedPrice !== undefined) updateData.discountedPrice = parseFloat(ef.discountedPrice) || 0;
+        if (ef.isActive !== undefined) updateData.isActive = ef.isActive;
+        if (ef.outOfStock !== undefined) updateData.outOfStock = ef.outOfStock;
+        if (ef.barcode !== undefined) updateData.barcode = ef.barcode;
+        if (ef.category !== undefined) updateData.category = ef.category;
+        // Stock & Supply fields
+        if (ef.currentStock !== undefined) updateData.currentStock = parseInt(ef.currentStock) || 0;
+        if (ef.minStock !== undefined) updateData.minStock = parseInt(ef.minStock) || 0;
+        if (ef.reorderPoint !== undefined) updateData.reorderPoint = parseInt(ef.reorderPoint) || 0;
+        if (ef.stockLocation !== undefined) updateData.stockLocation = ef.stockLocation;
+        if (ef.supplierName !== undefined) updateData.supplierName = ef.supplierName;
+        if (ef.batchNumber !== undefined) updateData.batchNumber = ef.batchNumber;
+        if (ef.stockUnit !== undefined) updateData.stockUnit = ef.stockUnit;
+        // Compliance & Quality fields
+        if (ef.productionDate !== undefined) updateData.productionDate = ef.productionDate;
+        if (ef.expirationDate !== undefined) updateData.expirationDate = ef.expirationDate;
+        if (ef.allergens !== undefined) updateData.allergens = ef.allergens;
+        if (ef.containsAlcohol !== undefined) updateData.containsAlcohol = ef.containsAlcohol;
+        if (ef.additives !== undefined) updateData.additives = ef.additives;
+        if (ef.nutritionPer100g !== undefined) {
+          // Parse nutrition values as numbers for Firestore
+          const raw = ef.nutritionPer100g;
+          const parsed: Record<string, number> = {};
+          for (const [k, v] of Object.entries(raw)) {
+            const num = parseFloat(v as string);
+            if (!isNaN(num)) parsed[k] = num;
+          }
+          updateData.nutritionPer100g = Object.keys(parsed).length > 0 ? parsed : {};
+        }
+        if (ef.certifications !== undefined) updateData.certifications = ef.certifications;
+        if (ef.origin !== undefined) {
+          updateData.origin = ef.origin;
+          updateData.originCountry = ef.origin; // Keep in sync for cross-page compat
+        }
+        // Audit fields
+        if (ef.internalNotes !== undefined) updateData.internalNotes = ef.internalNotes;
+        if (ef.tags !== undefined) updateData.tags = ef.tags;
+        // Channel pricing
+        if (ef.appPrice !== undefined) updateData.appPrice = parseFloat(ef.appPrice) || 0;
+        if (ef.eslPrice !== undefined) updateData.eslPrice = parseFloat(ef.eslPrice) || 0;
+        if (ef.courierPrice !== undefined) updateData.courierPrice = parseFloat(ef.courierPrice) || 0;
+        if (ef.storePrice !== undefined) updateData.storePrice = parseFloat(ef.storePrice) || 0;
+        // Product details
+        if (ef.ingredients !== undefined) updateData.ingredients = ef.ingredients;
+        if (ef.consumptionInfo !== undefined) updateData.consumptionInfo = ef.consumptionInfo;
+        if (ef.specialInfo !== undefined) updateData.specialInfo = ef.specialInfo;
+        if (ef.weight !== undefined) updateData.weight = ef.weight;
+        if (ef.mhd !== undefined) updateData.mhd = ef.mhd;
+        if (ef.packung !== undefined) updateData.packung = ef.packung;
+        if (ef.artikelnummer !== undefined) updateData.artikelnummer = ef.artikelnummer;
+        if (ef.storageTemp !== undefined) updateData.storageTemp = ef.storageTemp;
+        if (ef.isFeatured !== undefined) updateData.isFeatured = ef.isFeatured;
+        if (ef.brandLabels !== undefined) updateData.brandLabels = ef.brandLabels;
+        await updateDoc(doc(db, `businesses/${businessId}/products`, editingInlineProduct.id), updateData);
+        showToast('Ürün güncellendi ✅', 'success');
+        setProductModalOpen(false);
+        setEditingInlineProduct(null);
+        setEditFormFull({});
+        setEditInlineTab('general');
+        setCustomProductForm({ name: { tr: '' }, price: '', unit: 'kg', imageFile: null });
+        loadProducts();
+        return;
+      }
+
+      // ADD MODE: Create new product
       const productData: Record<string, unknown> = {
         isActive: true,
         createdAt: new Date(),
@@ -1741,6 +1835,8 @@ export default function BusinessDetailsPage() {
         // 🆕 Yerinde Sipariş Ayarları
         dineInPaymentMode: formData.dineInPaymentMode || 'payLater',
         hasTableService: formData.hasTableService || false,
+        // 🎁 Promosyon
+        freeDrinkEnabled: formData.freeDrinkEnabled !== false,
         acceptsCardPayment: formData.acceptsCardPayment || false,
         vatNumber: formData.vatNumber || "", // Added missing vatNumber
         imageUrl: downloadURL || "",
@@ -2088,6 +2184,7 @@ export default function BusinessDetailsPage() {
                     { key: "abonelik", icon: "💳", label: t('abonelikPlani'), action: "tab" },
                     { key: "teslimat", icon: "🚚", label: "Teslimat", action: "tab" },
                     { key: "odeme", icon: "🏦", label: t('odemeBilgileri'), action: "tab" },
+                    { key: "promosyon", icon: "🎁", label: "Promosyon", action: "tab" },
                   ].map((item) => {
                     return (
                       <button
@@ -2495,9 +2592,11 @@ export default function BusinessDetailsPage() {
         )}
 
 
-        {/* ADD PRODUCT MODAL */}
+
+
+        {/* ADD PRODUCT MODAL (add-only, not edit) */}
         {
-          productModalOpen && (
+          productModalOpen && !editingInlineProduct && (
             <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
               <div className="bg-gray-800 rounded-xl w-full max-w-lg overflow-hidden border border-gray-700">
                 <div className="p-4 border-b border-gray-700 flex justify-between items-center">
@@ -2528,13 +2627,10 @@ export default function BusinessDetailsPage() {
                         <label className="text-gray-400 text-sm block mb-1">{t('urunSecin')}</label>
                         <select
                           value={selectedMasterId}
-                          onChange={(e) => {
-                            setSelectedMasterId(e.target.value);
-                          }}
+                          onChange={(e) => setSelectedMasterId(e.target.value)}
                           className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg"
                         >
                           <option value="">{t('seciniz')}</option>
-                          {/* 🆕 Firestore'dan filtrelenmiş ürünler, fallback hardcoded */}
                           {(firestoreMasterProducts.length > 0 ? firestoreMasterProducts : MASTER_PRODUCTS).map(mp => (
                             <option key={mp.id} value={mp.id}>
                               {getLocalizedText(mp.name)} ({mp.category})
@@ -2714,6 +2810,7 @@ export default function BusinessDetailsPage() {
                   {settingsSubTab === "abonelik" && t('abonelikPlani1')}
                   {settingsSubTab === "teslimat" && t('teslimatAyarlari')}
                   {settingsSubTab === "odeme" && t('odemeBilgileri1')}
+                  {settingsSubTab === "promosyon" && "🎁 Promosyon Ayarları"}
                 </h3>
                 <div className="flex items-center gap-3">
                   {/* Kurye Aktif/Deaktif Toggle - only in Teslimat sub-tab */}
@@ -3424,6 +3521,36 @@ export default function BusinessDetailsPage() {
                           </div>
                         </div>
 
+                        {/* Search Input */}
+                        {!loadingProducts && inlineProducts.length > 0 && (
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={productSearchQuery}
+                              onChange={(e) => {
+                                setProductSearchQuery(e.target.value);
+                                setProductCurrentPage(1);
+                              }}
+                              placeholder="Ürün ara... (isim, SKU, kategori)"
+                              className="w-full px-4 py-2.5 pl-10 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                            />
+                            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            {productSearchQuery && (
+                              <button
+                                onClick={() => {
+                                  setProductSearchQuery('');
+                                  setProductCurrentPage(1);
+                                }}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                        )}
+
                         {/* Category Filter Chips + Status Filter */}
                         {!loadingProducts && inlineProducts.length > 0 && (() => {
                           // Build category counts
@@ -3439,7 +3566,7 @@ export default function BusinessDetailsPage() {
                             <div className="flex flex-wrap items-center gap-2">
                               {/* Category chips */}
                               <button
-                                onClick={() => setInlineCategoryFilter('all')}
+                                onClick={() => { setInlineCategoryFilter('all'); setProductCurrentPage(1); }}
                                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === 'all'
                                   ? 'bg-green-600 text-white'
                                   : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
@@ -3452,7 +3579,7 @@ export default function BusinessDetailsPage() {
                                 return (
                                   <button
                                     key={cn}
-                                    onClick={() => setInlineCategoryFilter(cn)}
+                                    onClick={() => { setInlineCategoryFilter(cn); setProductCurrentPage(1); }}
                                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${inlineCategoryFilter === cn
                                       ? 'bg-blue-600 text-white'
                                       : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600'
@@ -3468,7 +3595,7 @@ export default function BusinessDetailsPage() {
                                 <span className="text-gray-400 text-xs">Durum Filtresi:</span>
                                 <select
                                   value={inlineStatusFilter}
-                                  onChange={(e) => setInlineStatusFilter(e.target.value)}
+                                  onChange={(e) => { setInlineStatusFilter(e.target.value); setProductCurrentPage(1); }}
                                   className="bg-gray-700 text-white text-xs rounded-lg px-3 py-1.5 border border-gray-600 focus:border-blue-500 focus:outline-none"
                                 >
                                   <option value="all">🏷️ Tümü ({inlineProducts.length})</option>
@@ -3526,223 +3653,1110 @@ export default function BusinessDetailsPage() {
                             filtered = filtered.filter((p: any) => p.outOfStock === true);
                           }
 
-                          const allSelected = filtered.length > 0 && filtered.every((p: any) => selectedInlineProducts.has(p.id));
+                          // Search filter with Turkish/multi-language character normalization
+                          if (productSearchQuery.trim()) {
+                            const normalizeSearch = (str: string): string => {
+                              return str
+                                .replace(/İ/g, 'i')  // Turkish capital İ → i
+                                .replace(/ı/g, 'i')  // Turkish lowercase ı → i
+                                .toLowerCase()
+                                .normalize('NFD')
+                                .replace(/[\u0300-\u036f]/g, ''); // strip combining diacritics (ö→o, ü→u, ç→c, ş→s, ğ→g, etc.)
+                            };
+                            const q = normalizeSearch(productSearchQuery);
+                            filtered = filtered.filter((p: any) => {
+                              const name = typeof p.name === 'object' ? getLocalizedText(p.name) : (p.name || '');
+                              const sku = p.id || p.sku || '';
+                              const cat = typeof p.category === 'object' ? getLocalizedText(p.category) : (p.category || '');
+                              const desc = typeof p.description === 'object' ? getLocalizedText(p.description) : (p.description || '');
+                              return normalizeSearch(name).includes(q) || normalizeSearch(sku).includes(q) || normalizeSearch(cat).includes(q) || normalizeSearch(desc).includes(q);
+                            });
+                          }
+
+                          // Pagination
+                          const totalFiltered = filtered.length;
+                          const totalPages = Math.max(1, Math.ceil(totalFiltered / productsPerPage));
+                          const safeCurrentPage = Math.min(productCurrentPage, totalPages);
+                          const startIdx = (safeCurrentPage - 1) * productsPerPage;
+                          const endIdx = startIdx + productsPerPage;
+                          const paginatedProducts = filtered.slice(startIdx, endIdx);
+
+                          const allSelected = paginatedProducts.length > 0 && paginatedProducts.every((p: any) => selectedInlineProducts.has(p.id));
+
+                          // Generate page numbers for display
+                          const getPageNumbers = () => {
+                            const pages: (number | '...')[] = [];
+                            if (totalPages <= 7) {
+                              for (let i = 1; i <= totalPages; i++) pages.push(i);
+                            } else {
+                              pages.push(1);
+                              if (safeCurrentPage > 3) pages.push('...');
+                              for (let i = Math.max(2, safeCurrentPage - 1); i <= Math.min(totalPages - 1, safeCurrentPage + 1); i++) {
+                                pages.push(i);
+                              }
+                              if (safeCurrentPage < totalPages - 2) pages.push('...');
+                              pages.push(totalPages);
+                            }
+                            return pages;
+                          };
 
                           return (
-                            <div className="bg-gray-800/60 rounded-xl border border-gray-700 overflow-hidden">
-                              {/* Table Header */}
-                              <div className="px-4 py-2.5 bg-gray-700/50 border-b border-gray-700 grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center text-xs text-gray-400 font-medium">
-                                <div className="flex justify-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={allSelected}
-                                    onChange={() => {
-                                      if (allSelected) {
-                                        setSelectedInlineProducts(new Set());
-                                      } else {
-                                        setSelectedInlineProducts(new Set(filtered.map((p: any) => p.id)));
-                                      }
+                            <div>
+                              {/* Bulk Action Bar — Above Table */}
+                              {selectedInlineProducts.size > 0 && (
+                                <div className="bg-gradient-to-r from-gray-800 to-gray-900 border border-amber-500/30 rounded-xl px-4 py-2.5 mb-2 flex items-center gap-2 flex-wrap shadow-lg">
+                                  <span className="text-green-400 text-sm font-bold flex items-center gap-1">
+                                    ☑ {selectedInlineProducts.size} ürün seçili
+                                  </span>
+                                  <span className="w-px h-5 bg-gray-600"></span>
+
+                                  {/* Status */}
+                                  <select
+                                    value=""
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      if (v === 'active') handleInlineBulkStatus(true);
+                                      else if (v === 'passive') handleInlineBulkStatus(false);
                                     }}
-                                    className="w-4 h-4 rounded accent-green-500 cursor-pointer"
-                                  />
-                                </div>
-                                <div></div>
-                                <div>Ürün Adı</div>
-                                <div>SKU</div>
-                                <div>Fiyat (Netto / Brutto)</div>
-                                <div>Birim</div>
-                                <div>Durum</div>
-                                <div className="text-right">İşlemler</div>
-                              </div>
+                                    className="bg-orange-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
+                                  >
+                                    <option value="" disabled>⚙️ Durum</option>
+                                    <option value="active">🟢 Aktif Yap</option>
+                                    <option value="passive">🔴 Pasif Yap</option>
+                                  </select>
 
-                              {/* Table Body */}
-                              <div className="divide-y divide-gray-700/50">
-                                {filtered.map((product: any) => {
-                                  const isSelected = selectedInlineProducts.has(product.id);
-                                  const productName = typeof product.name === 'object' ? getLocalizedText(product.name) : product.name;
-                                  const imageUrl = product.imageUrl || (product.images && product.images[0]) || null;
-                                  const basePrice = product.sellingPrice || product.price || null;
-                                  const appPrice = product.appSellingPrice || basePrice;
-                                  const taxRate = product.taxRate || 7;
-                                  const brutto = appPrice ? parseFloat((appPrice * (1 + taxRate / 100)).toFixed(2)) : null;
-                                  const currSym = getCurrencySymbol(business?.currency);
-                                  const unitSuffix = product.unit === 'kg' ? '/kg' : '';
-                                  const isActive = product.isActive !== false;
-                                  const sku = product.id || product.sku || '—';
-                                  const rawCat = product.category || 'Kategorisiz';
-                                  const catName = typeof rawCat === 'object' ? getLocalizedText(rawCat) : rawCat;
+                                  {/* Stock */}
+                                  <select
+                                    value=""
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      if (v === 'in') handleInlineBulkStock(true);
+                                      else if (v === 'out') handleInlineBulkStock(false);
+                                    }}
+                                    className="bg-yellow-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
+                                  >
+                                    <option value="" disabled>📦 Stok</option>
+                                    <option value="in">✅ Stokta</option>
+                                    <option value="out">⚠️ Stokta Yok</option>
+                                  </select>
 
-                                  return (
-                                    <div
-                                      key={product.id}
-                                      className={`px-4 py-2 grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center hover:bg-gray-700/30 transition ${isSelected ? 'bg-blue-900/20' : ''} ${!isActive ? 'opacity-60' : ''}`}
+                                  {/* Featured */}
+                                  <button
+                                    onClick={() => handleInlineBulkFeatured()}
+                                    className="bg-amber-600 hover:bg-amber-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
+                                  >
+                                    ⭐ Öne Çıkan
+                                  </button>
+
+                                  {/* Category Move */}
+                                  <select
+                                    value=""
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      if (v) handleInlineBulkCategoryMove(v);
+                                    }}
+                                    className="bg-blue-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
+                                  >
+                                    <option value="" disabled>📂 Kategoriye Taşı...</option>
+                                    {inlineCategories.map((cat: any) => {
+                                      const cn = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
+                                      return <option key={cat.id} value={cn}>{cat.icon || '📦'} {cn}</option>;
+                                    })}
+                                  </select>
+
+                                  {/* Delete + Cancel — pushed right */}
+                                  <div className="ml-auto flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleInlineBulkDelete()}
+                                      className="bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
                                     >
-                                      {/* Checkbox */}
-                                      <div className="flex justify-center">
-                                        <input
-                                          type="checkbox"
-                                          checked={isSelected}
-                                          onChange={() => {
-                                            const next = new Set(selectedInlineProducts);
-                                            if (next.has(product.id)) next.delete(product.id);
-                                            else next.add(product.id);
-                                            setSelectedInlineProducts(next);
-                                          }}
-                                          className="w-4 h-4 rounded accent-green-500 cursor-pointer"
-                                        />
-                                      </div>
-                                      {/* Thumbnail */}
-                                      <div>
-                                        {imageUrl ? (
-                                          <img
-                                            src={imageUrl}
-                                            alt={productName}
-                                            loading="lazy"
-                                            className="w-9 h-9 rounded-lg object-cover"
-                                          />
-                                        ) : (
-                                          <div className="w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center text-gray-500 text-xs">
-                                            📷
+                                      🗑️ Sil
+                                    </button>
+                                    <button
+                                      onClick={() => setSelectedInlineProducts(new Set())}
+                                      className="bg-gray-600 hover:bg-gray-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
+                                    >
+                                      ✖ İptal
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="bg-gray-800/60 rounded-xl border border-gray-700 overflow-hidden">
+                                {/* Table Header */}
+                                <div className="px-4 py-2.5 bg-gray-700/50 border-b border-gray-700 grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center text-xs text-gray-400 font-medium">
+                                  <div className="flex justify-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={allSelected}
+                                      onChange={() => {
+                                        if (allSelected) {
+                                          setSelectedInlineProducts(new Set());
+                                        } else {
+                                          setSelectedInlineProducts(new Set(paginatedProducts.map((p: any) => p.id)));
+                                        }
+                                      }}
+                                      className="w-4 h-4 rounded accent-green-500 cursor-pointer"
+                                    />
+                                  </div>
+                                  <div></div>
+                                  <div>Ürün Adı</div>
+                                  <div>SKU</div>
+                                  <div>Fiyat (Netto / Brutto)</div>
+                                  <div>Birim</div>
+                                  <div>Durum</div>
+                                  <div className="text-right">İşlemler</div>
+                                </div>
+
+                                {/* Table Body */}
+                                <div className="divide-y divide-gray-700/50">
+                                  {paginatedProducts.map((product: any) => {
+                                    const isSelected = selectedInlineProducts.has(product.id);
+                                    const productName = typeof product.name === 'object' ? getLocalizedText(product.name) : product.name;
+                                    const imageUrl = product.imageUrl || (product.images && product.images[0]) || null;
+                                    const basePrice = product.sellingPrice || product.price || null;
+                                    const appPrice = product.appSellingPrice || basePrice;
+                                    const taxRate = product.taxRate || 7;
+                                    const brutto = appPrice ? parseFloat((appPrice * (1 + taxRate / 100)).toFixed(2)) : null;
+                                    const currSym = getCurrencySymbol(business?.currency);
+                                    const unitSuffix = product.unit === 'kg' ? '/kg' : '';
+                                    const isActive = product.isActive !== false;
+                                    const sku = product.id || product.sku || '—';
+                                    const rawCat = product.category || 'Kategorisiz';
+                                    const catName = typeof rawCat === 'object' ? getLocalizedText(rawCat) : rawCat;
+
+                                    return (
+                                      <Fragment key={product.id}>
+                                        <div
+                                          className={`px-4 py-2 grid grid-cols-[36px_40px_1fr_120px_140px_70px_70px_100px] gap-2 items-center hover:bg-gray-700/30 transition cursor-pointer ${isSelected ? 'bg-blue-900/20' : ''} ${editingInlineProduct?.id === product.id ? 'bg-blue-900/30 border-l-2 border-blue-500' : ''} ${!isActive ? 'opacity-60' : ''}`}
+                                        >
+                                          {/* Checkbox */}
+                                          <div className="flex justify-center">
+                                            <input
+                                              type="checkbox"
+                                              checked={isSelected}
+                                              onChange={() => {
+                                                const next = new Set(selectedInlineProducts);
+                                                if (next.has(product.id)) next.delete(product.id);
+                                                else next.add(product.id);
+                                                setSelectedInlineProducts(next);
+                                              }}
+                                              className="w-4 h-4 rounded accent-green-500 cursor-pointer"
+                                            />
+                                          </div>
+                                          {/* Thumbnail */}
+                                          <div>
+                                            {imageUrl ? (
+                                              <img
+                                                src={imageUrl}
+                                                alt={productName}
+                                                loading="lazy"
+                                                className="w-9 h-9 rounded-lg object-cover"
+                                              />
+                                            ) : (
+                                              <div className="w-9 h-9 rounded-lg bg-gray-700 flex items-center justify-center text-gray-500 text-xs">
+                                                📷
+                                              </div>
+                                            )}
+                                          </div>
+                                          {/* Name + Description */}
+                                          <div className="min-w-0">
+                                            <p className="text-white text-sm font-medium truncate">{productName}</p>
+                                            <p className="text-gray-500 text-xs truncate">
+                                              {getLocalizedText(product.description) || ''}
+                                            </p>
+                                          </div>
+                                          {/* SKU */}
+                                          <div className="text-gray-400 text-xs truncate font-mono">{sku.length > 16 ? sku.slice(0, 16) + '...' : sku}</div>
+                                          {/* Price */}
+                                          <div className="text-right">
+                                            {appPrice ? (
+                                              <div className="space-y-0.5">
+                                                <div className="text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">brutto</span></div>
+                                                <div className="text-gray-400 text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">netto</span></div>
+                                              </div>
+                                            ) : (
+                                              <span className="text-gray-600 text-xs">—</span>
+                                            )}
+                                          </div>
+                                          {/* Unit */}
+                                          <div className="text-gray-300 text-xs text-center">{product.unit === 'kg' ? 'kg' : 'Adet'}</div>
+                                          {/* Status */}
+                                          <div className="flex flex-col items-center gap-0.5">
+                                            <span
+                                              onClick={() => toggleProductActive(product.id, isActive)}
+                                              className={`text-[10px] px-2 py-0.5 rounded-full cursor-pointer font-medium ${isActive ? 'bg-green-900/60 text-green-400' : 'bg-red-900/60 text-red-400'}`}
+                                              title={isActive ? 'Pasif yap' : 'Aktif yap'}
+                                            >
+                                              {isActive ? 'Aktif' : 'Pasif'}
+                                            </span>
+                                            {product.outOfStock && (
+                                              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-900/60 text-yellow-400 font-medium">
+                                                Stokta Yok
+                                              </span>
+                                            )}
+                                          </div>
+                                          {/* Actions */}
+                                          <div className="flex items-center justify-end gap-1">
+                                            <button
+                                              onClick={() => {
+                                                // Full inline edit – populate all known fields
+                                                setEditingInlineProduct(product);
+                                                setEditInlineTab('general');
+                                                setProductMode('custom');
+                                                setCustomProductForm({
+                                                  name: product.name || { tr: '' },
+                                                  price: String(product.price || product.sellingPrice || ''),
+                                                  unit: product.unit || product.defaultUnit || 'kg',
+                                                  imageFile: null,
+                                                });
+                                                setEditFormFull({
+                                                  name: product.name || { tr: '' },
+                                                  unit: product.unit || product.defaultUnit || 'kg',
+                                                  brand: product.brand || '',
+                                                  barcode: product.barcode || '',
+                                                  category: product.category || '',
+                                                  isActive: product.isActive !== false,
+                                                  isFeatured: product.isFeatured || false,
+                                                  sellingPrice: String(product.price || product.sellingPrice || ''),
+                                                  purchasePrice: product.purchasePrice || '',
+                                                  discountedPrice: product.discountedPrice || '',
+                                                  appPrice: product.appPrice || '',
+                                                  eslPrice: product.eslPrice || '',
+                                                  courierPrice: product.courierPrice || '',
+                                                  storePrice: product.storePrice || '',
+                                                  taxRate: String(product.taxRate ?? '7'),
+                                                  outOfStock: product.outOfStock || false,
+                                                  description: product.description || { tr: '' },
+                                                  ingredients: product.ingredients || '',
+                                                  consumptionInfo: product.consumptionInfo || '',
+                                                  specialInfo: product.specialInfo || '',
+                                                  weight: product.weight || '',
+                                                  mhd: product.mhd || '',
+                                                  packung: product.packung || '',
+                                                  artikelnummer: product.artikelnummer || '',
+                                                  storageTemp: product.storageTemp || '',
+                                                  allergens: product.allergens || {},
+                                                  containsAlcohol: product.containsAlcohol || false,
+                                                  additives: product.additives || [],
+                                                  nutritionPer100g: product.nutritionPer100g || {},
+                                                  certifications: product.certifications || [],
+                                                  origin: product.origin || '',
+                                                  productionDate: product.productionDate || '',
+                                                  expirationDate: product.expirationDate || '',
+                                                  optionGroups: product.optionGroups || [],
+                                                  internalNotes: product.internalNotes || '',
+                                                  tags: product.tags || [],
+                                                  brandLabels: product.brandLabels || [],
+                                                  supplierName: product.supplierName || '',
+                                                  batchNumber: product.batchNumber || '',
+                                                  currentStock: product.currentStock || '',
+                                                  minStock: product.minStock || '',
+                                                  reorderPoint: product.reorderPoint || '',
+                                                  stockUnit: product.stockUnit || 'kg',
+                                                  stockLocation: product.stockLocation || '',
+                                                });
+                                                // Scroll to inline edit panel
+                                                setTimeout(() => {
+                                                  document.getElementById('inline-edit-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                }, 100);
+                                              }}
+                                              className="text-xs px-2 py-1 bg-blue-600/80 hover:bg-blue-500 text-white rounded transition"
+                                              title="Düzenle"
+                                            >
+                                              Düzenle
+                                            </button>
+                                            <button
+                                              onClick={() => handleDeleteProduct(product.id)}
+                                              className="text-xs px-2 py-1 bg-red-600/80 hover:bg-red-500 text-white rounded transition"
+                                              title="Sil"
+                                            >
+                                              Sil
+                                            </button>
+                                          </div>
+                                        </div>
+                                        {/* ═══ ACCORDION EDIT PANEL ═══ */}
+                                        {editingInlineProduct?.id === product.id && (
+                                          <div className="col-span-full bg-slate-800/90 border-l-2 border-blue-500 rounded-b-lg overflow-hidden" style={{ backdropFilter: 'blur(8px)', minHeight: '420px' }}>
+                                            <div id="inline-edit-panel" className="p-4">
+                                              {/* Tab Navigation */}
+                                              <div className="flex items-center justify-between mb-4">
+                                                <div className="flex gap-1 overflow-x-auto">
+                                                  {[
+                                                    { key: 'general', label: 'Genel' },
+                                                    { key: 'pricing', label: 'Fiyat & Vergi' },
+                                                    { key: 'stock', label: 'Stok & Tedarik' },
+                                                    { key: 'media', label: 'Medya' },
+                                                    { key: 'contentCompliance', label: 'İçerik & Uyum' },
+                                                    { key: 'app', label: 'App' },
+                                                    { key: 'audit', label: 'Denetim' },
+                                                  ].map(tab => (
+                                                    <button
+                                                      key={tab.key}
+                                                      onClick={() => setEditInlineTab(tab.key as any)}
+                                                      className={`px-3 py-1.5 text-xs font-medium rounded whitespace-nowrap transition ${editInlineTab === tab.key
+                                                        ? 'bg-blue-500 text-white'
+                                                        : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                                                        }`}
+                                                    >
+                                                      {tab.label}
+                                                    </button>
+                                                  ))}
+                                                </div>
+                                                <button
+                                                  onClick={() => { setEditingInlineProduct(null); setEditFormFull({}); setEditInlineTab('general'); }}
+                                                  className="text-gray-400 hover:text-white p-1 transition"
+                                                >
+                                                  ✕
+                                                </button>
+                                              </div>
+
+                                              {/* Tab Content */}
+                                              <div className="max-h-[50vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
+                                                {editInlineTab === 'general' && (
+                                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">SKU (ID)</label>
+                                                      <input value={editFormFull.sku || editingInlineProduct?.id || ''} readOnly className="w-full bg-gray-900/50 text-gray-300 text-sm rounded px-3 py-2 border border-gray-700" />
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Barkod</label>
+                                                      <input value={editFormFull.barcode || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, barcode: e.target.value }))} placeholder="EAN/UPC" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Kategori</label>
+                                                      <select value={editFormFull.category || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, category: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none">
+                                                        <option value="">Kategori Seçin</option>
+                                                        {inlineCategories.map((cat: any) => (
+                                                          <option key={cat.id || cat.name} value={typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}>{typeof cat === 'string' ? cat : (cat.name?.tr || cat.name || cat.id)}</option>
+                                                        ))}
+                                                      </select>
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                      <label className="text-xs text-gray-400 mb-1 block">Ürün Adı</label>
+                                                      <MultiLanguageInput label="Ürün Adı" value={editFormFull.name || customProductForm.name} onChange={(v: any) => { setEditFormFull((p: any) => ({ ...p, name: v })); setCustomProductForm((prev: any) => ({ ...prev, name: v })); }} />
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Marka</label>
+                                                      <input value={editFormFull.brand || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, brand: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                      <div className="flex-1">
+                                                        <label className="text-xs text-gray-400 mb-1 block">Birim</label>
+                                                        <select value={editFormFull.unit || 'kg'} onChange={e => setEditFormFull((p: any) => ({ ...p, unit: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                          <option value="kg">Kg</option><option value="adet">Adet</option><option value="litre">Litre</option><option value="paket">Paket</option>
+                                                        </select>
+                                                      </div>
+                                                      <div className="flex-1">
+                                                        <label className="text-xs text-gray-400 mb-1 block">Durum</label>
+                                                        <select value={editFormFull.isActive !== false ? 'active' : 'passive'} onChange={e => setEditFormFull((p: any) => ({ ...p, isActive: e.target.value === 'active' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                          <option value="active">Aktif</option><option value="passive">Pasif</option>
+                                                        </select>
+                                                      </div>
+                                                      <div className="flex-1">
+                                                        <label className="text-xs text-gray-400 mb-1 block">KDV</label>
+                                                        <select value={editFormFull.taxRate ?? '7'} onChange={e => setEditFormFull((p: any) => ({ ...p, taxRate: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                          <option value="7">%7</option><option value="19">%19</option><option value="0">%0</option>
+                                                        </select>
+                                                      </div>
+                                                    </div>
+                                                    <div className="md:col-span-2 lg:col-span-3">
+                                                      <label className="text-xs text-gray-400 mb-1 block">Açıklama</label>
+                                                      <MultiLanguageInput label="Açıklama" value={editFormFull.description || { tr: '' }} onChange={(v: any) => setEditFormFull((p: any) => ({ ...p, description: v }))} isTextArea />
+                                                    </div>
+                                                  </div>
+                                                )}
+
+                                                {editInlineTab === 'pricing' && (() => {
+                                                  const taxRate = editFormFull.taxRate === undefined ? 7 : parseFloat(editFormFull.taxRate || '7');
+                                                  const taxMultiplier = 1 + (taxRate / 100);
+                                                  const priceInputMode = editFormFull._priceInputMode || 'netto';
+                                                  const calcBrutto = (netto: number) => netto > 0 ? parseFloat((netto * taxMultiplier).toFixed(2)) : 0;
+                                                  const calcNetto = (brutto: number) => brutto > 0 ? parseFloat((brutto / taxMultiplier).toFixed(2)) : 0;
+
+                                                  const sp = parseFloat(editFormFull.sellingPrice || '0');
+                                                  const pp = parseFloat(editFormFull.purchasePrice || '0');
+                                                  const dp = parseFloat(editFormFull.discountedPrice || '0');
+                                                  const discountPct = sp > 0 && dp > 0 && dp < sp ? ((1 - dp / sp) * 100).toFixed(1) : null;
+
+                                                  return (
+                                                    <div className="space-y-6">
+                                                      {/* 🏦 Vergi Oranı */}
+                                                      <div className="border-b border-gray-700 pb-4">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                          <h3 className="text-sm font-medium text-amber-400">🏦 Vergi Oranı</h3>
+                                                          <span className="text-xs text-gray-500">Netto/Brutto hesaplaması bu orana göre yapılır</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                          <select value={String(taxRate)} onChange={e => { const val = e.target.value; if (val === 'custom') { const customRate = prompt('Vergi oranını girin:', '0'); if (customRate !== null) { setEditFormFull((p: any) => ({ ...p, taxRate: String(parseFloat(customRate) || 0) })); } } else { setEditFormFull((p: any) => ({ ...p, taxRate: val })); } }} className="bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white">
+                                                            <option value="0">%0 (Vergisiz)</option>
+                                                            <option value="7">%7 (İndirimli)</option>
+                                                            <option value="19">%19 (Standart)</option>
+                                                            <option value="custom">Manuel Giriş</option>
+                                                          </select>
+                                                          {![0, 7, 19].includes(taxRate) && (
+                                                            <span className="px-3 py-1.5 bg-blue-900/50 text-blue-300 rounded-lg text-xs">Özel: %{taxRate}</span>
+                                                          )}
+                                                        </div>
+                                                      </div>
+
+                                                      {/* 💰 Fiyatlandırma + Netto/Brutto Toggle */}
+                                                      <div className="border-b border-gray-700 pb-4">
+                                                        <div className="flex items-center justify-between mb-4">
+                                                          <h3 className="text-sm font-medium text-amber-400">💰 Fiyatlandırma</h3>
+                                                          <div className="flex items-center bg-gray-800 rounded-lg p-0.5 border border-gray-600">
+                                                            <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'netto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'netto' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}>
+                                                              Netto girişi
+                                                            </button>
+                                                            <button type="button" onClick={() => setEditFormFull((p: any) => ({ ...p, _priceInputMode: 'brutto' }))} className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${priceInputMode === 'brutto' ? 'bg-amber-600 text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}>
+                                                              Brutto girişi
+                                                            </button>
+                                                          </div>
+                                                        </div>
+
+                                                        {/* Alış Fiyatı */}
+                                                        <div className="mb-4">
+                                                          <label className="block text-sm text-gray-300 font-medium mb-2">Alış Fiyatı</label>
+                                                          <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                              <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
+                                                              {priceInputMode === 'netto' ? (
+                                                                <input type="number" step="0.01" value={editFormFull.purchasePrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, purchasePrice: e.target.value }))} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                              ) : (
+                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                  {pp > 0 ? `€${pp.toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                </div>
+                                                              )}
+                                                            </div>
+                                                            <div>
+                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. %{taxRate} MwSt.</span></label>
+                                                              {priceInputMode === 'brutto' ? (
+                                                                <input type="number" step="0.01" value={pp > 0 ? calcBrutto(pp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, purchasePrice: String(calcNetto(brutto)) })); }} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                              ) : (
+                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                  {pp > 0 ? `€${calcBrutto(pp).toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                </div>
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                        </div>
+
+                                                        {/* Satış Fiyatı */}
+                                                        <div className="mb-4">
+                                                          <label className="block text-sm text-gray-300 font-medium mb-2">Satış Fiyatı</label>
+                                                          <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                              <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
+                                                              {priceInputMode === 'netto' ? (
+                                                                <input type="number" step="0.01" value={editFormFull.sellingPrice || ''} onChange={e => { setEditFormFull((p: any) => ({ ...p, sellingPrice: e.target.value })); setCustomProductForm((prev: any) => ({ ...prev, price: e.target.value })); }} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                              ) : (
+                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                  {sp > 0 ? `€${sp.toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                </div>
+                                                              )}
+                                                            </div>
+                                                            <div>
+                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. %{taxRate} MwSt.</span></label>
+                                                              {priceInputMode === 'brutto' ? (
+                                                                <input type="number" step="0.01" value={sp > 0 ? calcBrutto(sp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; const netto = calcNetto(brutto); setEditFormFull((p: any) => ({ ...p, sellingPrice: String(netto) })); setCustomProductForm((prev: any) => ({ ...prev, price: String(netto) })); }} className="w-full bg-gray-900 border border-amber-600/50 rounded-lg px-4 py-2 text-amber-200" placeholder="0.00" />
+                                                              ) : (
+                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                  {sp > 0 ? `€${calcBrutto(sp).toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                </div>
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                        </div>
+
+                                                        {/* İndirimli Fiyat */}
+                                                        <div className="mb-4">
+                                                          <label className="block text-sm text-gray-300 font-medium mb-2 flex items-center gap-2">
+                                                            İndirimli Fiyat
+                                                            {discountPct && (
+                                                              <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-red-600/80 text-white animate-pulse">
+                                                                -%{discountPct}
+                                                              </span>
+                                                            )}
+                                                          </label>
+                                                          <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                              <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
+                                                              {priceInputMode === 'netto' ? (
+                                                                <input type="number" step="0.01" value={editFormFull.discountedPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, discountedPrice: e.target.value }))} className="w-full bg-gray-900 border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00 (opsiyonel)" />
+                                                              ) : (
+                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                  {dp > 0 ? `€${dp.toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                </div>
+                                                              )}
+                                                            </div>
+                                                            <div>
+                                                              <label className="block text-xs text-gray-500 mb-1">Brutto (€) <span className="text-gray-600">inkl. %{taxRate} MwSt.</span></label>
+                                                              {priceInputMode === 'brutto' ? (
+                                                                <input type="number" step="0.01" value={dp > 0 ? calcBrutto(dp) : ''} onChange={e => { const brutto = parseFloat(e.target.value) || 0; setEditFormFull((p: any) => ({ ...p, discountedPrice: String(calcNetto(brutto)) })); }} className="w-full bg-gray-900 border border-red-600/50 rounded-lg px-4 py-2 text-red-200" placeholder="0.00" />
+                                                              ) : (
+                                                                <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                  {dp > 0 ? `€${calcBrutto(dp).toFixed(2)}` : <span className="text-gray-500">--</span>}
+                                                                </div>
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                        </div>
+
+                                                        {/* Kar Marjı Özet */}
+                                                        <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700">
+                                                          <div className="grid grid-cols-3 gap-3 text-center">
+                                                            <div>
+                                                              <span className="block text-xs text-gray-500 mb-1">Kar Marjı</span>
+                                                              <span className="text-sm font-medium text-emerald-400">
+                                                                {sp > 0 && pp > 0 ? `%${(((sp - pp) / pp) * 100).toFixed(1)}` : '--'}
+                                                              </span>
+                                                            </div>
+                                                            <div>
+                                                              <span className="block text-xs text-gray-500 mb-1">Vergi Tutarı</span>
+                                                              <span className="text-sm font-medium text-amber-400">
+                                                                {sp > 0 ? `€${(sp * taxRate / 100).toFixed(2)}` : '--'}
+                                                              </span>
+                                                            </div>
+                                                            <div>
+                                                              <span className="block text-xs text-gray-500 mb-1">Brutto Satış</span>
+                                                              <span className="text-sm font-medium text-white">
+                                                                {sp > 0 ? `€${calcBrutto(sp).toFixed(2)}` : '--'}
+                                                              </span>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+
+                                                      {/* 📱 App Satış Fiyatı */}
+                                                      <div className="border-b border-gray-700 pb-4">
+                                                        <div className="flex items-center justify-between mb-3">
+                                                          <h3 className="text-sm font-medium text-blue-400">📱 App Satış Fiyatı</h3>
+                                                          <label className="flex items-center gap-2 cursor-pointer">
+                                                            <input type="checkbox" checked={!!(editFormFull.appPrice && parseFloat(editFormFull.appPrice) > 0)} onChange={e => { if (!e.target.checked) { setEditFormFull((p: any) => ({ ...p, appPrice: '' })); } else { setEditFormFull((p: any) => ({ ...p, appPrice: editFormFull.sellingPrice || '0' })); } }} className="w-4 h-4 rounded accent-blue-500" />
+                                                            <span className="text-xs text-gray-400">Farklı fiyat uygula</span>
+                                                          </label>
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 mb-3">Kurye ve Gel-Al siparişlerinde gösterilen fiyat</p>
+                                                        {editFormFull.appPrice && parseFloat(editFormFull.appPrice) > 0 ? (
+                                                          <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                              <label className="block text-xs text-gray-500 mb-1">Netto (€)</label>
+                                                              <input type="number" step="0.01" value={editFormFull.appPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, appPrice: e.target.value }))} className="w-full bg-gray-900 border border-blue-600/50 rounded-lg px-4 py-2 text-blue-200" placeholder="0.00" />
+                                                            </div>
+                                                            <div>
+                                                              <label className="block text-xs text-gray-500 mb-1">Brutto <span className="text-gray-600">inkl. %{taxRate}</span></label>
+                                                              <div className="px-4 py-2 bg-gray-900/60 border border-gray-700 rounded-lg text-sm text-gray-300">
+                                                                {parseFloat(editFormFull.appPrice) > 0 ? `€${calcBrutto(parseFloat(editFormFull.appPrice)).toFixed(2)}` : '--'}
+                                                              </div>
+                                                            </div>
+                                                          </div>
+                                                        ) : (
+                                                          <div className="px-4 py-3 bg-gray-800/40 border border-gray-700 rounded-lg text-center">
+                                                            <span className="text-sm text-gray-500">💡 Satış fiyatı ile aynı{sp > 0 ? ` (€${sp.toFixed(2)})` : ''}</span>
+                                                          </div>
+                                                        )}
+                                                      </div>
+
+                                                      {/* 🏪 ESL + 🚚 Kanal Fiyatları */}
+                                                      <div className="pb-4">
+                                                        <h3 className="text-sm font-medium text-emerald-400 mb-3">🏪 Kanal Fiyatları <span className="text-xs text-gray-500">(ESL, Kurye, Dükkan)</span></h3>
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                          <div>
+                                                            <label className="text-xs text-gray-400 mb-1 block">ESL Fiyatı (€)</label>
+                                                            <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
+                                                          </div>
+                                                          <div>
+                                                            <label className="text-xs text-gray-400 mb-1 block">Kurye Fiyatı (€)</label>
+                                                            <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
+                                                          </div>
+                                                          <div>
+                                                            <label className="text-xs text-gray-400 mb-1 block">Dükkan Fiyatı (€)</label>
+                                                            <input type="number" step="0.01" value={editFormFull.storePrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, storePrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  );
+                                                })()}
+
+                                                {editInlineTab === 'stock' && (
+                                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Stok Durumu</label>
+                                                      <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                        <option value="in">Stokta</option><option value="out">Stokta Değil</option>
+                                                      </select>
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Mevcut Stok</label>
+                                                      <input type="number" value={editFormFull.currentStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, currentStock: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Min Stok</label>
+                                                      <input type="number" value={editFormFull.minStock || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, minStock: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Tedarikçi</label>
+                                                      <input value={editFormFull.supplierName || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, supplierName: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Parti No</label>
+                                                      <input value={editFormFull.batchNumber || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, batchNumber: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Depo Konumu</label>
+                                                      <input value={editFormFull.stockLocation || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, stockLocation: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                    </div>
+                                                  </div>
+                                                )}
+
+                                                {editInlineTab === 'media' && (
+                                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Mevcut Görseller</label>
+                                                      <div className="flex gap-2 flex-wrap">
+                                                        {editingInlineProduct?.imageUrl && (
+                                                          <img src={editingInlineProduct.imageUrl} alt="" className="w-20 h-20 rounded object-cover border border-gray-700" />
+                                                        )}
+                                                        {(editingInlineProduct?.images || []).map((img: string, i: number) => (
+                                                          <img key={i} src={img} alt="" className="w-20 h-20 rounded object-cover border border-gray-700" />
+                                                        ))}
+                                                        {!editingInlineProduct?.imageUrl && !(editingInlineProduct?.images?.length) && (
+                                                          <p className="text-gray-500 text-sm">Görsel yok</p>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Görsel URL (opsiyonel)</label>
+                                                      <input value={editFormFull.imageUrl || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, imageUrl: e.target.value }))} placeholder="https://..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                    </div>
+                                                  </div>
+                                                )}
+
+                                                {editInlineTab === 'contentCompliance' && (
+                                                  <div className="space-y-6">
+
+                                                    {/* ═══ BÖLÜM 1: İÇERİK LİSTESİ ═══ */}
+                                                    <div>
+                                                      <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <span>📋</span> İçerik Listesi (Zutaten)
+                                                      </h4>
+                                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        <div className="md:col-span-2">
+                                                          <label className="text-xs text-gray-400 mb-1 block">Ürün İçeriği / Zutaten (LMIV sırasına göre)</label>
+                                                          <textarea value={editFormFull.ingredients || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, ingredients: e.target.value }))} rows={3} placeholder="Hähnchenfleisch (60%), Zwiebeln, Paprika, Gewürze (Salz, Pfeffer, Kreuzkümmel), Sonnenblumenöl..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Tüketim Bilgisi (Verbraucherinformation)</label>
+                                                          <textarea value={editFormFull.consumptionInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, consumptionInfo: e.target.value }))} rows={2} placeholder="Zum sofortigen Verzehr bestimmt. Kühl lagern bei +2°C bis +7°C." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Katkı Maddeleri / Zusatzstoffe</label>
+                                                          <input value={(editFormFull.additives || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="E300, E330, E621..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Herkunft / Menşe</label>
+                                                          <input value={editFormFull.origin || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, origin: e.target.value }))} placeholder="z.B. Deutschland, Türkei, EU" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        </div>
+                                                        <div className="flex items-center gap-3">
+                                                          <label className="inline-flex items-center gap-2 cursor-pointer">
+                                                            <input type="checkbox" checked={editFormFull.containsAlcohol || false} onChange={e => setEditFormFull((p: any) => ({ ...p, containsAlcohol: e.target.checked }))} className="w-4 h-4 rounded border-gray-600 bg-gray-800" />
+                                                            <span className="text-xs text-gray-300">🍷 Alkol İçerir (Alkoholhaltig)</span>
+                                                          </label>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 2: EU 14 ALERJEN ═══ */}
+                                                    <div>
+                                                      <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <span>⚠️</span> Alerjenler — EU 1169/2011 Annex II (14 Pflichtallergen)
+                                                      </h4>
+                                                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                                                        {[
+                                                          { key: 'gluten', label: 'Glüten', emoji: '🌾', de: 'Getreide' },
+                                                          { key: 'crustaceans', label: 'Kabuklular', emoji: '🦐', de: 'Krebstiere' },
+                                                          { key: 'eggs', label: 'Yumurta', emoji: '🥚', de: 'Eier' },
+                                                          { key: 'fish', label: 'Balık', emoji: '🐟', de: 'Fisch' },
+                                                          { key: 'peanuts', label: 'Yer Fıstığı', emoji: '🥜', de: 'Erdnüsse' },
+                                                          { key: 'soy', label: 'Soya', emoji: '🫘', de: 'Soja' },
+                                                          { key: 'milk', label: 'Süt/Laktoz', emoji: '🥛', de: 'Milch' },
+                                                          { key: 'treeNuts', label: 'Sert Kabuklu', emoji: '🌰', de: 'Schalenfrüchte' },
+                                                          { key: 'celery', label: 'Kereviz', emoji: '🥬', de: 'Sellerie' },
+                                                          { key: 'mustard', label: 'Hardal', emoji: '🟡', de: 'Senf' },
+                                                          { key: 'sesame', label: 'Susam', emoji: '⚪', de: 'Sesam' },
+                                                          { key: 'sulfites', label: 'Sülfitler', emoji: '🧪', de: 'Sulfite' },
+                                                          { key: 'lupin', label: 'Lupin', emoji: '🌸', de: 'Lupinen' },
+                                                          { key: 'molluscs', label: 'Yumuşakçalar', emoji: '🐚', de: 'Weichtiere' },
+                                                        ].map(allergen => {
+                                                          const checked = (editFormFull.allergens || {})[allergen.key] === true;
+                                                          return (
+                                                            <button
+                                                              key={allergen.key}
+                                                              type="button"
+                                                              onClick={() => setEditFormFull((p: any) => ({
+                                                                ...p,
+                                                                allergens: { ...(p.allergens || {}), [allergen.key]: !(p.allergens || {})[allergen.key] }
+                                                              }))}
+                                                              className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-center transition ${checked
+                                                                ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                                                                : 'bg-gray-800/50 border-gray-700 text-gray-500 hover:border-gray-500'
+                                                                }`}
+                                                            >
+                                                              <span className="text-lg">{allergen.emoji}</span>
+                                                              <span className="text-[10px] font-medium leading-tight">{allergen.label}</span>
+                                                              <span className="text-[9px] opacity-60">{allergen.de}</span>
+                                                            </button>
+                                                          );
+                                                        })}
+                                                      </div>
+                                                    </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 3: BESİN DEĞERLERİ ═══ */}
+                                                    <div>
+                                                      <h4 className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <span>🥗</span> Besin Değerleri — Nährwerte pro 100g (Big 7 + Ek)
+                                                      </h4>
+                                                      <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
+                                                        {[
+                                                          { key: 'energie_kj', label: 'Energie', unit: 'kJ', required: true },
+                                                          { key: 'energie_kcal', label: 'Energie', unit: 'kcal', required: true },
+                                                          { key: 'fett', label: 'Fett', unit: 'g', required: true },
+                                                          { key: 'gesaettigte_fettsaeuren', label: 'ges. Fetts.', unit: 'g', required: true },
+                                                          { key: 'kohlenhydrate', label: 'Kohlenh.', unit: 'g', required: true },
+                                                          { key: 'zucker', label: 'Zucker', unit: 'g', required: true },
+                                                          { key: 'protein', label: 'Eiweiß', unit: 'g', required: true },
+                                                          { key: 'salz', label: 'Salz', unit: 'g', required: true },
+                                                          { key: 'ballaststoffe', label: 'Ballastst.', unit: 'g', required: false },
+                                                          { key: 'einfach_unges_fett', label: 'einf. ung. F.', unit: 'g', required: false },
+                                                          { key: 'mehrfach_unges_fett', label: 'mehrf. ung. F.', unit: 'g', required: false },
+                                                          { key: 'staerke', label: 'Stärke', unit: 'g', required: false },
+                                                        ].map(item => (
+                                                          <div key={item.key}>
+                                                            <span className={`text-[9px] block mb-0.5 ${item.required ? 'text-green-500 font-medium' : 'text-gray-600'}`}>
+                                                              {item.label} ({item.unit}){item.required ? ' *' : ''}
+                                                            </span>
+                                                            <input
+                                                              type="number"
+                                                              step="0.01"
+                                                              value={(editFormFull.nutritionPer100g || {})[item.key] ?? ''}
+                                                              onChange={e => setEditFormFull((p: any) => ({
+                                                                ...p,
+                                                                nutritionPer100g: { ...(p.nutritionPer100g || {}), [item.key]: e.target.value === '' ? undefined : parseFloat(e.target.value) }
+                                                              }))}
+                                                              className="w-full bg-gray-900/50 text-white text-xs rounded px-2 py-1.5 border border-gray-700 focus:border-green-500 focus:outline-none"
+                                                            />
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                      <p className="text-[10px] text-gray-600 mt-1">* EU Big 7 — zorunlu beyan alanları</p>
+                                                    </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 4: SERTİFİKALAR ═══ */}
+                                                    <div>
+                                                      <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <span>🏅</span> Sertifikalar & Etiketler (Zertifikate)
+                                                      </h4>
+                                                      <div className="flex flex-wrap gap-2">
+                                                        {[
+                                                          { key: 'cert_tuna', label: 'TUNA', emoji: '🐟', color: 'blue' },
+                                                          { key: 'cert_akdeniz', label: 'Akdeniz', emoji: '🌊', color: 'cyan' },
+                                                          { key: 'cert_halal', label: 'Halal', emoji: '☪️', color: 'green' },
+                                                          { key: 'cert_bio', label: 'Bio / Organic', emoji: '🌿', color: 'green' },
+                                                          { key: 'cert_vegan', label: 'Vegan', emoji: '🌱', color: 'green' },
+                                                          { key: 'cert_vegetarian', label: 'Vegetarisch', emoji: '🥬', color: 'green' },
+                                                          { key: 'cert_glutenfree', label: 'Glutenfrei', emoji: '🚫', color: 'amber' },
+                                                          { key: 'cert_lactosefree', label: 'Laktosefrei', emoji: '🚫', color: 'amber' },
+                                                          { key: 'cert_ifs', label: 'IFS Food', emoji: '🛡️', color: 'purple' },
+                                                          { key: 'cert_haccp', label: 'HACCP', emoji: '✅', color: 'purple' },
+                                                          { key: 'cert_msc', label: 'MSC', emoji: '🔵', color: 'blue' },
+                                                          { key: 'cert_fairtrade', label: 'Fairtrade', emoji: '🟢', color: 'green' },
+                                                          { key: 'cert_eigenmarke', label: 'Eigenmarke', emoji: '🇩🇪', color: 'gray' },
+                                                        ].map(cert => {
+                                                          const selected = (editFormFull.certifications || []).includes(cert.key);
+                                                          return (
+                                                            <button
+                                                              key={cert.key}
+                                                              type="button"
+                                                              onClick={() => {
+                                                                setEditFormFull((p: any) => {
+                                                                  const current = p.certifications || [];
+                                                                  return {
+                                                                    ...p,
+                                                                    certifications: selected
+                                                                      ? current.filter((c: string) => c !== cert.key)
+                                                                      : [...current, cert.key]
+                                                                  };
+                                                                });
+                                                              }}
+                                                              className={`px-3 py-2 text-xs font-medium rounded-lg border transition flex items-center gap-1.5 ${selected
+                                                                ? 'bg-purple-500/20 border-purple-500 text-purple-300 shadow-sm shadow-purple-500/10'
+                                                                : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-500'
+                                                                }`}
+                                                            >
+                                                              <span>{cert.emoji}</span>
+                                                              <span>{selected ? '✓ ' : ''}{cert.label}</span>
+                                                            </button>
+                                                          );
+                                                        })}
+                                                      </div>
+                                                    </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 5: FİZİKSEL & SAKLAMA ═══ */}
+                                                    <div>
+                                                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                        <span>📦</span> Fiziksel Bilgiler & Saklama (Produktdaten)
+                                                      </h4>
+                                                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Gewicht (Ağırlık)</label>
+                                                          <input value={editFormFull.weight || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, weight: e.target.value }))} placeholder="500g, 1kg" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Packung (Ambalaj)</label>
+                                                          <input value={editFormFull.packung || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, packung: e.target.value }))} placeholder="Vakuum, Schale" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Gehäusetemperatur (Saklama)</label>
+                                                          <input value={editFormFull.storageTemp || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, storageTemp: e.target.value }))} placeholder="+2°C bis +7°C" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">MHD (Mindesthaltbarkeit)</label>
+                                                          <input value={editFormFull.mhd || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, mhd: e.target.value }))} placeholder="z.B. 14 Tage" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Üretim Tarihi</label>
+                                                          <input type="date" value={editFormFull.productionDate || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, productionDate: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Son Kullanma Tarihi</label>
+                                                          <input type="date" value={editFormFull.expirationDate || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, expirationDate: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        </div>
+                                                        <div>
+                                                          <label className="text-xs text-gray-400 mb-1 block">Artikelnummer</label>
+                                                          <input value={editFormFull.artikelnummer || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, artikelnummer: e.target.value }))} placeholder="Ürün No" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                        </div>
+                                                        <div className="col-span-2 md:col-span-3 lg:col-span-4">
+                                                          <label className="text-xs text-gray-400 mb-1 block">Besondere Informationen (Özel Bilgiler)</label>
+                                                          <textarea value={editFormFull.specialInfo || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, specialInfo: e.target.value }))} rows={2} placeholder="Özel uyarılar, saklama talimatları..." className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                                                        </div>
+                                                      </div>
+                                                    </div>
+
+                                                  </div>
+                                                )}
+
+                                                {editInlineTab === 'app' && (
+                                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Öne Çıkan Ürün</label>
+                                                      <select value={editFormFull.isFeatured ? 'yes' : 'no'} onChange={e => setEditFormFull((p: any) => ({ ...p, isFeatured: e.target.value === 'yes' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                        <option value="no">Hayır</option>
+                                                        <option value="yes">Evet ⭐</option>
+                                                      </select>
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Stok Durumu (App)</label>
+                                                      <select value={editFormFull.outOfStock ? 'out' : 'in'} onChange={e => setEditFormFull((p: any) => ({ ...p, outOfStock: e.target.value === 'out' }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                                                        <option value="in">Stokta ✅</option>
+                                                        <option value="out">Stokta Yok ❌</option>
+                                                      </select>
+                                                    </div>
+                                                    <div className="md:col-span-2 lg:col-span-3">
+                                                      <label className="text-xs text-gray-400 mb-2 block">Seçenek Grupları (Opsiyonlar/Extras)</label>
+                                                      {(editFormFull.optionGroups || []).length > 0 ? (
+                                                        <div className="space-y-2">
+                                                          {(editFormFull.optionGroups || []).map((group: any, i: number) => (
+                                                            <div key={i} className="bg-gray-900/30 rounded p-2 border border-gray-700/50 text-sm text-gray-300">
+                                                              <span className="font-medium text-white">{group.name || `Grup ${i + 1}`}</span>
+                                                              {group.options?.length > 0 && (
+                                                                <span className="text-gray-500 ml-2">({group.options.length} seçenek)</span>
+                                                              )}
+                                                            </div>
+                                                          ))}
+                                                        </div>
+                                                      ) : (
+                                                        <p className="text-gray-500 text-sm">Seçenek grubu tanımlanmamış</p>
+                                                      )}
+                                                    </div>
+                                                    <div className="md:col-span-2 lg:col-span-3 bg-gray-900/20 rounded p-3 border border-gray-700/30">
+                                                      <p className="text-xs text-gray-500">💡 Mobil uygulamada bu ürünün nasıl görüneceğini buradan yönetebilirsiniz. Fiyatlandırma farklılıkları &quot;Fiyat &amp; Vergi&quot; sekmesindedir.</p>
+                                                    </div>
+                                                  </div>
+                                                )}
+
+                                                {editInlineTab === 'audit' && (
+                                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    <div className="md:col-span-2 lg:col-span-3">
+                                                      <label className="text-xs text-gray-400 mb-2 block">Marka Etiketleri (Brand Labels)</label>
+                                                      <div className="flex flex-wrap gap-2">
+                                                        {['TUNA', 'Akdeniz', 'Eigenmarke', 'Bio', 'Halal', 'Vegan', 'Glutenfrei'].map(label => (
+                                                          <button
+                                                            key={label}
+                                                            type="button"
+                                                            onClick={() => {
+                                                              setEditFormFull((p: any) => {
+                                                                const current = p.brandLabels || [];
+                                                                return { ...p, brandLabels: current.includes(label) ? current.filter((l: string) => l !== label) : [...current, label] };
+                                                              });
+                                                            }}
+                                                            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition ${(editFormFull.brandLabels || []).includes(label)
+                                                              ? 'bg-blue-500/30 border-blue-500 text-blue-300'
+                                                              : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-500'
+                                                              }`}
+                                                          >
+                                                            {(editFormFull.brandLabels || []).includes(label) ? '✓ ' : ''}{label}
+                                                          </button>
+                                                        ))}
+                                                      </div>
+                                                    </div>
+                                                    <div className="md:col-span-2 lg:col-span-3">
+                                                      <label className="text-xs text-gray-400 mb-1 block">Dahili Notlar</label>
+                                                      <textarea value={editFormFull.internalNotes || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, internalNotes: e.target.value }))} rows={3} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                                                    </div>
+                                                    <div>
+                                                      <label className="text-xs text-gray-400 mb-1 block">Etiketler</label>
+                                                      <input value={(editFormFull.tags || []).join(', ')} onChange={e => setEditFormFull((p: any) => ({ ...p, tags: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) }))} placeholder="etiket1, etiket2" className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                                                    </div>
+                                                    <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                      <p className="text-xs text-gray-400">Oluşturulma: {editingInlineProduct?.createdAt?.toDate ? editingInlineProduct.createdAt.toDate().toLocaleDateString('tr-TR') : '—'}</p>
+                                                      <p className="text-xs text-gray-400">Güncelleme: {editingInlineProduct?.updatedAt?.toDate ? editingInlineProduct.updatedAt.toDate().toLocaleDateString('tr-TR') : '—'}</p>
+                                                    </div>
+                                                    <div className="bg-gray-900/30 rounded p-3 border border-gray-700/50">
+                                                      <p className="text-xs text-gray-400">SKU: {editingInlineProduct?.id || '—'}</p>
+                                                      <p className="text-xs text-gray-400">Master ID: {editingInlineProduct?.masterId || '—'}</p>
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </div>
+
+                                              {/* Footer */}
+                                              <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-gray-700/50">
+                                                <button onClick={() => { setEditingInlineProduct(null); setEditFormFull({}); setEditInlineTab('general'); }} className="px-6 py-2 text-sm text-gray-400 hover:text-white transition">
+                                                  İptal
+                                                </button>
+                                                <button onClick={handleAddProduct} disabled={addingProduct} className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg shadow-lg shadow-blue-500/20 transition active:scale-95 disabled:opacity-50">
+                                                  {addingProduct ? 'Kaydediliyor...' : 'Kaydet'}
+                                                </button>
+                                              </div>
+                                            </div>
                                           </div>
                                         )}
-                                      </div>
-                                      {/* Name + Description */}
-                                      <div className="min-w-0">
-                                        <p className="text-white text-sm font-medium truncate">{productName}</p>
-                                        <p className="text-gray-500 text-xs truncate">
-                                          {getLocalizedText(product.description) || ''}
-                                        </p>
-                                      </div>
-                                      {/* SKU */}
-                                      <div className="text-gray-400 text-xs truncate font-mono">{sku.length > 16 ? sku.slice(0, 16) + '...' : sku}</div>
-                                      {/* Price */}
-                                      <div className="text-right">
-                                        {appPrice ? (
-                                          <div className="space-y-0.5">
-                                            <div className="text-green-400 font-bold text-xs">{brutto?.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px] font-normal">brutto</span></div>
-                                            <div className="text-gray-400 text-[11px]">{appPrice.toFixed(2)}{currSym}{unitSuffix} <span className="text-gray-500 text-[10px]">netto</span></div>
-                                          </div>
-                                        ) : (
-                                          <span className="text-gray-600 text-xs">—</span>
+                                      </Fragment>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Pagination Controls */}
+                                {
+                                  totalPages > 1 && (
+                                    <div className="px-4 py-3 bg-gray-700/30 border-t border-gray-700 flex items-center justify-between flex-wrap gap-2">
+                                      {/* Left: Info */}
+                                      <div className="text-gray-400 text-xs">
+                                        {startIdx + 1}–{Math.min(endIdx, totalFiltered)} / {totalFiltered} ürün
+                                        {productSearchQuery.trim() && (
+                                          <span className="text-blue-400 ml-1">(arama sonuçları)</span>
                                         )}
                                       </div>
-                                      {/* Unit */}
-                                      <div className="text-gray-300 text-xs text-center">{product.unit === 'kg' ? 'kg' : 'Adet'}</div>
-                                      {/* Status */}
-                                      <div className="flex justify-center">
-                                        <span
-                                          onClick={() => toggleProductActive(product.id, isActive)}
-                                          className={`text-[10px] px-2 py-0.5 rounded-full cursor-pointer font-medium ${isActive ? 'bg-green-900/60 text-green-400' : 'bg-red-900/60 text-red-400'
-                                            }`}
-                                          title={isActive ? 'Pasif yap' : 'Aktif yap'}
-                                        >
-                                          {isActive ? 'Aktif' : 'Pasif'}
-                                        </span>
-                                      </div>
-                                      {/* Actions */}
-                                      <div className="flex items-center justify-end gap-1">
-                                        <a
-                                          href={`/admin/products?businessId=${businessId}`}
-                                          className="text-xs px-2 py-1 bg-blue-600/80 hover:bg-blue-500 text-white rounded transition"
-                                          title="Düzenle"
-                                        >
-                                          ✏️
-                                        </a>
+
+                                      {/* Center: Page Buttons */}
+                                      <div className="flex items-center gap-1">
                                         <button
-                                          onClick={() => handleDeleteProduct(product.id)}
-                                          className="text-xs px-2 py-1 bg-red-600/80 hover:bg-red-500 text-white rounded transition"
-                                          title="Sil"
+                                          onClick={() => setProductCurrentPage(1)}
+                                          disabled={safeCurrentPage === 1}
+                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
                                         >
-                                          🗑️
+                                          «
+                                        </button>
+                                        <button
+                                          onClick={() => setProductCurrentPage(Math.max(1, safeCurrentPage - 1))}
+                                          disabled={safeCurrentPage === 1}
+                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                        >
+                                          ‹
+                                        </button>
+                                        {getPageNumbers().map((pg, idx) => (
+                                          pg === '...' ? (
+                                            <span key={`dots-${idx}`} className="px-1 text-gray-500 text-xs">…</span>
+                                          ) : (
+                                            <button
+                                              key={pg}
+                                              onClick={() => setProductCurrentPage(pg)}
+                                              className={`px-2.5 py-1 rounded text-xs font-medium transition ${pg === safeCurrentPage
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                                }`}
+                                            >
+                                              {pg}
+                                            </button>
+                                          )
+                                        ))}
+                                        <button
+                                          onClick={() => setProductCurrentPage(Math.min(totalPages, safeCurrentPage + 1))}
+                                          disabled={safeCurrentPage === totalPages}
+                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                        >
+                                          ›
+                                        </button>
+                                        <button
+                                          onClick={() => setProductCurrentPage(totalPages)}
+                                          disabled={safeCurrentPage === totalPages}
+                                          className="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                                        >
+                                          »
                                         </button>
                                       </div>
+
+                                      {/* Right: Per page selector */}
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-gray-500 text-xs">Sayfa başı:</span>
+                                        <select
+                                          value={productsPerPage}
+                                          onChange={(e) => {
+                                            setProductsPerPage(Number(e.target.value));
+                                            setProductCurrentPage(1);
+                                          }}
+                                          className="bg-gray-700 text-white text-xs rounded px-2 py-1 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                        >
+                                          <option value={10}>10</option>
+                                          <option value={20}>20</option>
+                                          <option value={50}>50</option>
+                                          <option value={100}>100</option>
+                                        </select>
+                                      </div>
                                     </div>
-                                  );
-                                })}
+                                  )
+                                }
+
+                                {/* No results message for search */}
+                                {
+                                  totalFiltered === 0 && productSearchQuery.trim() && (
+                                    <div className="px-4 py-8 text-center">
+                                      <p className="text-gray-400 text-sm">Aranılan <span className="text-white font-medium">"{productSearchQuery}"</span> için sonuç bulunamadı.</p>
+                                      <button
+                                        onClick={() => {
+                                          setProductSearchQuery('');
+                                          setProductCurrentPage(1);
+                                        }}
+                                        className="mt-2 text-blue-400 hover:text-blue-300 text-sm transition"
+                                      >
+                                        Aramayı temizle
+                                      </button>
+                                    </div>
+                                  )
+                                }
                               </div>
                             </div>
                           );
                         })()}
-
-                        {/* Bulk Action Bar — Sticky Bottom */}
-                        {selectedInlineProducts.size > 0 && (
-                          <div className="sticky bottom-0 z-10 bg-gradient-to-r from-gray-800 to-gray-900 border border-amber-500/30 rounded-xl px-4 py-2.5 flex items-center gap-2 flex-wrap shadow-lg">
-                            <span className="text-green-400 text-sm font-bold flex items-center gap-1">
-                              ☑ {selectedInlineProducts.size} ürün seçili
-                            </span>
-                            <span className="w-px h-5 bg-gray-600"></span>
-
-                            {/* Status */}
-                            <select
-                              onChange={(e) => {
-                                if (e.target.value === 'active') handleInlineBulkStatus(true);
-                                else if (e.target.value === 'passive') handleInlineBulkStatus(false);
-                                e.target.value = '';
-                              }}
-                              defaultValue=""
-                              className="bg-orange-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
-                            >
-                              <option value="" disabled>⚙️ Durum</option>
-                              <option value="active">🟢 Aktif Yap</option>
-                              <option value="passive">🔴 Pasif Yap</option>
-                            </select>
-
-                            {/* Stock */}
-                            <select
-                              onChange={(e) => {
-                                if (e.target.value === 'in') handleInlineBulkStock(true);
-                                else if (e.target.value === 'out') handleInlineBulkStock(false);
-                                e.target.value = '';
-                              }}
-                              defaultValue=""
-                              className="bg-yellow-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
-                            >
-                              <option value="" disabled>📦 Stok</option>
-                              <option value="in">✅ Stokta</option>
-                              <option value="out">⚠️ Stokta Yok</option>
-                            </select>
-
-                            {/* Featured */}
-                            <button
-                              onClick={() => handleInlineBulkFeatured()}
-                              className="bg-amber-600 hover:bg-amber-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
-                            >
-                              ⭐ Öne Çıkan
-                            </button>
-
-                            {/* Category Move */}
-                            <select
-                              onChange={(e) => {
-                                if (e.target.value) handleInlineBulkCategoryMove(e.target.value);
-                                e.target.value = '';
-                              }}
-                              defaultValue=""
-                              className="bg-blue-600 text-white text-xs rounded-lg px-3 py-1.5 font-medium cursor-pointer border-0 focus:outline-none"
-                            >
-                              <option value="" disabled>📂 Kategoriye Taşı...</option>
-                              {inlineCategories.map((cat: any) => {
-                                const cn = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
-                                return <option key={cat.id} value={cn}>{cat.icon || '📦'} {cn}</option>;
-                              })}
-                            </select>
-
-                            {/* Delete + Cancel — pushed right */}
-                            <div className="ml-auto flex items-center gap-2">
-                              <button
-                                onClick={() => handleInlineBulkDelete()}
-                                className="bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
-                              >
-                                🗑️ Sil
-                              </button>
-                              <button
-                                onClick={() => setSelectedInlineProducts(new Set())}
-                                className="bg-gray-600 hover:bg-gray-500 text-white text-xs rounded-lg px-3 py-1.5 font-medium transition"
-                              >
-                                ✖ İptal
-                              </button>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     )}
 
@@ -4816,6 +5830,85 @@ export default function BusinessDetailsPage() {
                 )
               }
 
+              {/* 🎁 Promosyon Sub-Tab */}
+              {
+                settingsSubTab === "promosyon" && (
+                  <div className="space-y-6">
+                    {/* Bedava İçecek Toggle */}
+                    <div className="p-5 bg-gray-900 rounded-xl border border-gray-700">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">🥤</span>
+                          <div>
+                            <h4 className="text-white font-bold">Bedava İçecek</h4>
+                            <p className="text-gray-400 text-xs">Her siparişe 1 içecek bedava — bu işletme için aktif/deaktif</p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.freeDrinkEnabled}
+                            onChange={async (e) => {
+                              const newVal = e.target.checked;
+                              setFormData({ ...formData, freeDrinkEnabled: newVal });
+                              // Instant save to Firestore
+                              if (businessId && businessId !== 'new') {
+                                try {
+                                  await updateDoc(doc(db, "businesses", businessId), {
+                                    freeDrinkEnabled: newVal,
+                                  });
+                                  showToast(
+                                    newVal ? 'Bedava içecek promosyonu aktif edildi' : 'Bedava içecek promosyonu deaktif edildi',
+                                    'success'
+                                  );
+                                } catch (err) {
+                                  console.error('Error updating freeDrinkEnabled:', err);
+                                  showToast('Hata oluştu', 'error');
+                                }
+                              }
+                            }}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Status Info */}
+                    <div className={`p-4 rounded-xl border ${formData.freeDrinkEnabled ? 'bg-emerald-950/30 border-emerald-800/40' : 'bg-red-950/30 border-red-800/40'}`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{formData.freeDrinkEnabled ? '✅' : '🚫'}</span>
+                        <p className={`text-sm font-medium ${formData.freeDrinkEnabled ? 'text-emerald-300' : 'text-red-300'}`}>
+                          {formData.freeDrinkEnabled
+                            ? 'Bu işletmede bedava içecek promosyonu aktif — müşteriler sepette 1 bedava içecek seçebilir'
+                            : 'Bu işletmede bedava içecek promosyonu deaktif — müşterilere bedava içecek sunulmayacak'
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Info Box */}
+                    <div className="p-4 bg-blue-950/30 border border-blue-800/40 rounded-xl">
+                      <p className="text-blue-300 text-sm font-bold mb-2">ℹ️ Nasıl çalışır?</p>
+                      <ul className="text-blue-200/70 text-xs space-y-1 list-disc list-inside">
+                        <li>Platform genelinde bedava içecek aktif olsa bile, bu toggle ile tek tek işletmeleri devre dışı bırakabilirsiniz</li>
+                        <li>Deaktif edilen işletmelerin sepetinde "Gratis İçecek" bölümü gösterilmez</li>
+                        <li>İçecek maliyeti platform tarafından karşılanır (komisyon farkından düşülür)</li>
+                        <li>Müşteri en fazla 1 bedava içecek seçebilir (İçecek/Getränke kategorisinden)</li>
+                      </ul>
+                    </div>
+
+                    {/* Future Promos Placeholder */}
+                    <div className="p-4 bg-gray-900/50 border border-gray-700/50 rounded-xl border-dashed">
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <span>🔮</span>
+                        <p className="text-sm">Daha fazla promosyon türü yakında eklenecek...</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+
               {/* Reviews Section - shown in İşletme sub-tab */}
               {
                 settingsSubTab === "isletme" && (
@@ -5357,195 +6450,197 @@ export default function BusinessDetailsPage() {
       {/* ═══════════════════════════════════════════════════════════════ */}
       {/* 📦 TEMPLATE SELECTION MODAL — Full-Screen Product Picker      */}
       {/* ═══════════════════════════════════════════════════════════════ */}
-      {showTemplateModal && (
-        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-gray-900 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
-            {/* Header */}
-            <div className="p-5 border-b border-gray-700 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    📦 Ürün Şablonu — Ürün Seçimi
-                  </h2>
-                  <p className="text-gray-400 text-sm mt-1">
-                    {templateProducts.length} ürün mevcut · {Object.values(selectedTemplateProducts).filter(Boolean).length} seçili
-                  </p>
+      {
+        showTemplateModal && (
+          <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4">
+            <div className="bg-gray-900 rounded-2xl w-full max-w-5xl max-h-[90vh] flex flex-col border border-gray-700 shadow-2xl">
+              {/* Header */}
+              <div className="p-5 border-b border-gray-700 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      📦 Ürün Şablonu — Ürün Seçimi
+                    </h2>
+                    <p className="text-gray-400 text-sm mt-1">
+                      {templateProducts.length} ürün mevcut · {Object.values(selectedTemplateProducts).filter(Boolean).length} seçili
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowTemplateModal(false)}
+                    className="p-2 hover:bg-gray-700 rounded-lg transition text-gray-400 hover:text-white"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-                <button
-                  onClick={() => setShowTemplateModal(false)}
-                  className="p-2 hover:bg-gray-700 rounded-lg transition text-gray-400 hover:text-white"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+
+                {/* Controls: Select All / None + Search + Category Filter */}
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => setSelectedTemplateProducts(Object.fromEntries(templateProducts.map((p: any) => [p.id, true])))}
+                    className="px-3 py-1.5 bg-green-600/20 text-green-400 text-xs font-medium rounded-lg hover:bg-green-600/30 transition border border-green-600/30"
+                  >
+                    ✅ Hepsini Seç
+                  </button>
+                  <button
+                    onClick={() => setSelectedTemplateProducts(Object.fromEntries(templateProducts.map((p: any) => [p.id, false])))}
+                    className="px-3 py-1.5 bg-red-600/20 text-red-400 text-xs font-medium rounded-lg hover:bg-red-600/30 transition border border-red-600/30"
+                  >
+                    ❌ Hiçbirini Seçme
+                  </button>
+                  <div className="flex-1 min-w-[200px]">
+                    <input
+                      type="text"
+                      value={templateSearch}
+                      onChange={(e) => setTemplateSearch(e.target.value)}
+                      placeholder="🔍 Ürün ara..."
+                      className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    />
+                  </div>
+                  <select
+                    value={templateFilter}
+                    onChange={(e) => setTemplateFilter(e.target.value)}
+                    className="px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="all">📋 Tüm Kategoriler</option>
+                    {[...new Set(templateProducts.map((p: any) => p.category))].sort().map(cat => (
+                      <option key={cat} value={cat}>
+                        {cat === 'et' ? '🥩 Et' : cat === 'tavuk' ? '🐔 Tavuk' : cat === 'dondurulmus' ? '🧊 Dondurulmuş' :
+                          cat === 'wurstchen' ? '🌭 Sosis' : cat === 'wurst' ? '🥓 Salam' : cat === 'sucuk' ? '🧄 Sucuk' :
+                            cat === 'pastirma' ? '🥓 Pastırma' : cat === 'kavurma' ? '🍖 Kavurma' : cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {/* Controls: Select All / None + Search + Category Filter */}
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => setSelectedTemplateProducts(Object.fromEntries(templateProducts.map((p: any) => [p.id, true])))}
-                  className="px-3 py-1.5 bg-green-600/20 text-green-400 text-xs font-medium rounded-lg hover:bg-green-600/30 transition border border-green-600/30"
-                >
-                  ✅ Hepsini Seç
-                </button>
-                <button
-                  onClick={() => setSelectedTemplateProducts(Object.fromEntries(templateProducts.map((p: any) => [p.id, false])))}
-                  className="px-3 py-1.5 bg-red-600/20 text-red-400 text-xs font-medium rounded-lg hover:bg-red-600/30 transition border border-red-600/30"
-                >
-                  ❌ Hiçbirini Seçme
-                </button>
-                <div className="flex-1 min-w-[200px]">
-                  <input
-                    type="text"
-                    value={templateSearch}
-                    onChange={(e) => setTemplateSearch(e.target.value)}
-                    placeholder="🔍 Ürün ara..."
-                    className="w-full px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm placeholder:text-gray-500 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  />
-                </div>
-                <select
-                  value={templateFilter}
-                  onChange={(e) => setTemplateFilter(e.target.value)}
-                  className="px-3 py-1.5 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:ring-2 focus:ring-amber-500"
-                >
-                  <option value="all">📋 Tüm Kategoriler</option>
-                  {[...new Set(templateProducts.map((p: any) => p.category))].sort().map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat === 'et' ? '🥩 Et' : cat === 'tavuk' ? '🐔 Tavuk' : cat === 'dondurulmus' ? '🧊 Dondurulmuş' :
-                        cat === 'wurstchen' ? '🌭 Sosis' : cat === 'wurst' ? '🥓 Salam' : cat === 'sucuk' ? '🧄 Sucuk' :
-                          cat === 'pastirma' ? '🥓 Pastırma' : cat === 'kavurma' ? '🍖 Kavurma' : cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+              {/* Product List */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <div className="space-y-2">
+                  {templateProducts
+                    .filter((p: any) => templateFilter === 'all' || p.category === templateFilter)
+                    .filter((p: any) => {
+                      if (!templateSearch.trim()) return true;
+                      const search = templateSearch.toLowerCase();
+                      const name = typeof p.name === 'object' ? (p.name.tr || p.name.de || '') : p.name;
+                      return name.toLowerCase().includes(search);
+                    })
+                    .map((product: any) => {
+                      const prodName = typeof product.name === 'object' ? getLocalizedText(product.name) : product.name;
+                      const isSelected = selectedTemplateProducts[product.id] ?? false;
+                      const assignedCategory = templateCategoryMap[product.id] || '';
+                      const categoryIcon = product.category === 'et' ? '🥩' : product.category === 'tavuk' ? '🐔' :
+                        product.category === 'dondurulmus' ? '🧊' : product.category === 'wurstchen' ? '🌭' :
+                          product.category === 'wurst' ? '🥓' : product.category === 'sucuk' ? '🧄' :
+                            product.category === 'pastirma' ? '🥓' : product.category === 'kavurma' ? '🍖' : '📦';
 
-            {/* Product List */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="space-y-2">
-                {templateProducts
-                  .filter((p: any) => templateFilter === 'all' || p.category === templateFilter)
-                  .filter((p: any) => {
-                    if (!templateSearch.trim()) return true;
-                    const search = templateSearch.toLowerCase();
-                    const name = typeof p.name === 'object' ? (p.name.tr || p.name.de || '') : p.name;
-                    return name.toLowerCase().includes(search);
-                  })
-                  .map((product: any) => {
-                    const prodName = typeof product.name === 'object' ? getLocalizedText(product.name) : product.name;
-                    const isSelected = selectedTemplateProducts[product.id] ?? false;
-                    const assignedCategory = templateCategoryMap[product.id] || '';
-                    const categoryIcon = product.category === 'et' ? '🥩' : product.category === 'tavuk' ? '🐔' :
-                      product.category === 'dondurulmus' ? '🧊' : product.category === 'wurstchen' ? '🌭' :
-                        product.category === 'wurst' ? '🥓' : product.category === 'sucuk' ? '🧄' :
-                          product.category === 'pastirma' ? '🥓' : product.category === 'kavurma' ? '🍖' : '📦';
-
-                    return (
-                      <div
-                        key={product.id}
-                        className={`flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer
+                      return (
+                        <div
+                          key={product.id}
+                          className={`flex items-center gap-3 p-3 rounded-xl border transition cursor-pointer
                           ${isSelected
-                            ? 'bg-amber-900/20 border-amber-600/40 hover:bg-amber-900/30'
-                            : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800 opacity-60'
-                          }`}
-                        onClick={() => setSelectedTemplateProducts(prev => ({ ...prev, [product.id]: !prev[product.id] }))}
-                      >
-                        {/* Checkbox */}
-                        <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition
-                          ${isSelected ? 'bg-amber-500 border-amber-500' : 'border-gray-500 bg-transparent'}`}
+                              ? 'bg-amber-900/20 border-amber-600/40 hover:bg-amber-900/30'
+                              : 'bg-gray-800/50 border-gray-700 hover:bg-gray-800 opacity-60'
+                            }`}
+                          onClick={() => setSelectedTemplateProducts(prev => ({ ...prev, [product.id]: !prev[product.id] }))}
                         >
-                          {isSelected && (
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </div>
-
-                        {/* Thumbnail */}
-                        {product.imageUrl ? (
-                          <img
-                            src={product.imageUrl}
-                            alt={prodName}
-                            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-lg">
-                            {categoryIcon}
-                          </div>
-                        )}
-
-                        {/* Product Info */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm font-medium truncate">{prodName}</p>
-                          <p className="text-gray-400 text-xs">
-                            {categoryIcon} {product.category} · {product.defaultUnit === 'kg' ? '⚖️ kg' : '📦 Adet'}
-                            {product.defaultPrice ? ` · €${product.defaultPrice.toFixed(2)}` : ''}
-                          </p>
-                        </div>
-
-                        {/* Category Dropdown */}
-                        <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <select
-                            value={assignedCategory}
-                            onChange={(e) => setTemplateCategoryMap(prev => ({ ...prev, [product.id]: e.target.value }))}
-                            className={`px-2 py-1.5 rounded-lg text-xs font-medium border transition
-                              ${isSelected
-                                ? 'bg-gray-800 border-amber-600/50 text-amber-300 focus:ring-2 focus:ring-amber-500'
-                                : 'bg-gray-800/50 border-gray-600 text-gray-500'
-                              }`}
-                            disabled={!isSelected}
+                          {/* Checkbox */}
+                          <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border-2 transition
+                          ${isSelected ? 'bg-amber-500 border-amber-500' : 'border-gray-500 bg-transparent'}`}
                           >
-                            {inlineCategories.map((cat: any) => {
-                              const catName = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
-                              return (
-                                <option key={cat.id} value={catName}>
-                                  {cat.icon || '📦'} {catName}
-                                </option>
-                              );
-                            })}
-                            <option value="Kategorisiz">❓ Kategorisiz</option>
-                          </select>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
+                            {isSelected && (
+                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
 
-            {/* Footer */}
-            <div className="p-4 border-t border-gray-700 flex items-center justify-between flex-shrink-0">
-              <div className="text-gray-400 text-sm">
-                🤖 <span className="text-amber-400">AI</span> kategorileri otomatik önerdi — istediğinizi değiştirebilirsiniz
+                          {/* Thumbnail */}
+                          {product.imageUrl ? (
+                            <img
+                              src={product.imageUrl}
+                              alt={prodName}
+                              className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0 text-lg">
+                              {categoryIcon}
+                            </div>
+                          )}
+
+                          {/* Product Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-medium truncate">{prodName}</p>
+                            <p className="text-gray-400 text-xs">
+                              {categoryIcon} {product.category} · {product.defaultUnit === 'kg' ? '⚖️ kg' : '📦 Adet'}
+                              {product.defaultPrice ? ` · €${product.defaultPrice.toFixed(2)}` : ''}
+                            </p>
+                          </div>
+
+                          {/* Category Dropdown */}
+                          <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                            <select
+                              value={assignedCategory}
+                              onChange={(e) => setTemplateCategoryMap(prev => ({ ...prev, [product.id]: e.target.value }))}
+                              className={`px-2 py-1.5 rounded-lg text-xs font-medium border transition
+                              ${isSelected
+                                  ? 'bg-gray-800 border-amber-600/50 text-amber-300 focus:ring-2 focus:ring-amber-500'
+                                  : 'bg-gray-800/50 border-gray-600 text-gray-500'
+                                }`}
+                              disabled={!isSelected}
+                            >
+                              {inlineCategories.map((cat: any) => {
+                                const catName = typeof cat.name === 'object' ? getLocalizedText(cat.name) : cat.name;
+                                return (
+                                  <option key={cat.id} value={catName}>
+                                    {cat.icon || '📦'} {catName}
+                                  </option>
+                                );
+                              })}
+                              <option value="Kategorisiz">❓ Kategorisiz</option>
+                            </select>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setShowTemplateModal(false)}
-                  className="px-4 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium text-sm transition"
-                >
-                  İptal
-                </button>
-                <button
-                  onClick={saveSelectedTemplateProducts}
-                  disabled={savingTemplate || Object.values(selectedTemplateProducts).filter(Boolean).length === 0}
-                  className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium text-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {savingTemplate ? (
-                    <>
-                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                      Kaydediliyor...
-                    </>
-                  ) : (
-                    <>
-                      ✅ {Object.values(selectedTemplateProducts).filter(Boolean).length} Ürünü Kaydet
-                    </>
-                  )}
-                </button>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-gray-700 flex items-center justify-between flex-shrink-0">
+                <div className="text-gray-400 text-sm">
+                  🤖 <span className="text-amber-400">AI</span> kategorileri otomatik önerdi — istediğinizi değiştirebilirsiniz
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowTemplateModal(false)}
+                    className="px-4 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium text-sm transition"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    onClick={saveSelectedTemplateProducts}
+                    disabled={savingTemplate || Object.values(selectedTemplateProducts).filter(Boolean).length === 0}
+                    className="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg font-medium text-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {savingTemplate ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                        Kaydediliyor...
+                      </>
+                    ) : (
+                      <>
+                        ✅ {Object.values(selectedTemplateProducts).filter(Boolean).length} Ürünü Kaydet
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
     </div >
   );
 }

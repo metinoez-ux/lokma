@@ -41,23 +41,39 @@ interface ExtendedProduct extends MasterProduct {
     isLoose?: boolean;       // 🆕 Lose Ware / Açık Ürün (paketlenmemiş)
     isOrganic?: boolean;     // Organik
     // 🧪 Alerjenler & Katkı Maddeleri (EU LMIV 1169/2011)
-    allergens?: string[];           // Alerjen listesi
+    allergens?: Record<string, boolean>;  // Alerjen map {gluten: true, milk: false, ...}
     additives?: string[];           // Katkı maddesi listesi
     allergensConfirmed?: boolean;   // Satıcı tarafından onaylandı mı?
     additivesConfirmed?: boolean;   // Satıcı tarafından onaylandı mı?
     // 🆕 Besin Değerleri (EU LMIV 1169/2011 Nutrition Facts per 100g)
     nutritionPer100g?: {
-        energy_kcal?: number;
-        energy_kj?: number;
-        fat?: number;
-        saturatedFat?: number;
-        carbohydrates?: number;
-        sugar?: number;
+        energie_kcal?: number;
+        energie_kj?: number;
+        fett?: number;
+        gesaettigte_fettsaeuren?: number;
+        kohlenhydrate?: number;
+        zucker?: number;
         protein?: number;
-        salt?: number;
+        salz?: number;
+        ballaststoffe?: number;
+        einfach_unges_fett?: number;
+        mehrfach_unges_fett?: number;
+        staerke?: number;
     };
+    // 🆕 İçerik & Uyum Fields
+    ingredients?: string;            // Ürün içeriği / Zutaten
+    consumptionInfo?: string;        // Tüketim bilgisi
+    containsAlcohol?: boolean;       // Alkol içerir mi?
+    certifications?: string[];       // Sertifika key'leri [cert_tuna, cert_halal, ...]
+    origin?: string;                 // Menşe / Herkunft
+    specialInfo?: string;            // Özel bilgiler
+    weight?: string;                 // Ağırlık
+    mhd?: string;                    // Mindesthaltbarkeit
+    packung?: string;                // Ambalaj tipi
+    storageTemp?: string;            // Saklama sıcaklığı
+    artikelnummer?: string;          // Ürün numarası
     // 🆕 ERP Extended Fields
-    originCountry?: string;          // Menşe ülke
+    originCountry?: string;          // Menşe ülke (legacy alias)
     chargeNumber?: string;           // Charge/Lot numarası
     internalNotes?: string;          // Dahili admin notları
     tags?: string[];                 // Etiketler/Tags
@@ -69,7 +85,7 @@ interface ExtendedProduct extends MasterProduct {
 }
 
 // Product Edit Tab Type
-type ProductEditTab = 'general' | 'pricing' | 'stock' | 'media' | 'compliance' | 'audit' | 'app';
+type ProductEditTab = 'general' | 'pricing' | 'stock' | 'media' | 'contentCompliance' | 'audit' | 'app';
 
 // İşletme türleri business-types.ts'den çekiliyor
 const BUSINESS_TYPE_OPTIONS = getBusinessTypesList().map(bt => ({
@@ -150,6 +166,7 @@ function GlobalProductsPageContent() {
     const searchParams = useSearchParams();
     const urlBusinessId = searchParams.get('businessId');
     const urlKermesId = searchParams.get('kermesId');
+    const urlEditProductId = searchParams.get('editProductId');
 
     // Determine the active business context
     const isSuperAdmin = admin?.adminType === 'super';
@@ -395,11 +412,23 @@ function GlobalProductsPageContent() {
     }, [adminLoading]);
 
     // 🆕 Load business products when in business context
+    const editProductAutoOpenedRef = useRef(false);
     useEffect(() => {
         if (isBusinessContext && !adminLoading) {
             fetchBusinessProducts();
         }
     }, [contextBusinessId, adminLoading]);
+
+    // 🆕 Auto-open product edit modal when editProductId URL param is present
+    useEffect(() => {
+        if (urlEditProductId && businessProducts.length > 0 && !editProductAutoOpenedRef.current) {
+            const productToEdit = businessProducts.find(p => p.id === urlEditProductId);
+            if (productToEdit) {
+                editProductAutoOpenedRef.current = true;
+                openEdit(productToEdit);
+            }
+        }
+    }, [urlEditProductId, businessProducts]);
 
     // 🆕 Load business categories for tab display
     // Helper: reload categories from Firestore
@@ -677,10 +706,22 @@ function GlobalProductsPageContent() {
                 isLoose: (formData as any).isLoose || false,  // Açık/Lose Ware
                 isOrganic: (formData as any).isOrganic || false,
                 // 🧪 Alerjenler & Katkı Maddeleri
-                allergens: (formData as any).allergens || [],
+                allergens: (formData as any).allergens || {},
                 additives: (formData as any).additives || [],
                 allergensConfirmed: (formData as any).allergensConfirmed || false,
                 additivesConfirmed: (formData as any).additivesConfirmed || false,
+                // 🆕 İçerik & Uyum Fields
+                ingredients: (formData as any).ingredients || null,
+                consumptionInfo: (formData as any).consumptionInfo || null,
+                containsAlcohol: (formData as any).containsAlcohol || false,
+                certifications: (formData as any).certifications || [],
+                origin: (formData as any).origin || (formData as any).originCountry || null,
+                specialInfo: (formData as any).specialInfo || null,
+                weight: (formData as any).weight || null,
+                mhd: (formData as any).mhd || null,
+                packung: (formData as any).packung || null,
+                storageTemp: (formData as any).storageTemp || null,
+                artikelnummer: (formData as any).artikelnummer || null,
                 // ERP Fields
                 barcode: (formData as any).barcode || null,
                 productType: (formData as any).productType || 'fresh',
@@ -703,10 +744,19 @@ function GlobalProductsPageContent() {
                 lastStockUpdate: new Date().toISOString(),
                 // 🎛️ Ürün Seçenekleri (Lieferando-style Option Groups)
                 optionGroups: (formData as any).optionGroups || [],
-                // 🆕 Besin Değerleri (EU LMIV Nutrition per 100g)
-                nutritionPer100g: (formData as any).nutritionPer100g || null,
+                // 🆕 Besin Değerleri (EU LMIV Nutrition per 100g) — parse as numbers
+                nutritionPer100g: (() => {
+                    const raw = (formData as any).nutritionPer100g;
+                    if (!raw) return null;
+                    const parsed: Record<string, number> = {};
+                    for (const [k, v] of Object.entries(raw)) {
+                        const num = parseFloat(v as string);
+                        if (!isNaN(num)) parsed[k] = num;
+                    }
+                    return Object.keys(parsed).length > 0 ? parsed : null;
+                })(),
                 // 🆕 ERP Extended Fields
-                originCountry: (formData as any).originCountry || null,
+                originCountry: (formData as any).origin || (formData as any).originCountry || null,
                 chargeNumber: (formData as any).chargeNumber || null,
                 internalNotes: (formData as any).internalNotes || null,
                 tags: (formData as any).tags || [],
@@ -2890,7 +2940,7 @@ function GlobalProductsPageContent() {
                                                     { key: 'pricing' as ProductEditTab, label: '💰 Fiyat & Vergi', icon: '💰' },
                                                     { key: 'stock' as ProductEditTab, label: '📦 Stok & Tedarik', icon: '📦' },
                                                     { key: 'media' as ProductEditTab, label: '🖼️ Medya', icon: '🖼️' },
-                                                    { key: 'compliance' as ProductEditTab, label: '🧪 Uyum & Kalite', icon: '🧪' },
+                                                    { key: 'contentCompliance' as ProductEditTab, label: '🧪 İçerik & Uyum', icon: '🧪' },
                                                     { key: 'app' as ProductEditTab, label: '📱 App', icon: '📱' },
                                                     { key: 'audit' as ProductEditTab, label: '📊 Denetim', icon: '📊' },
                                                 ] as const).map(tab => (
@@ -3170,184 +3220,224 @@ function GlobalProductsPageContent() {
                                                 </div>
                                             )}
 
-                                            {/* ═══════════ TAB 5: UYUM & KALİTE ═══════════ */}
-                                            {productEditTab === 'compliance' && (
+                                            {productEditTab === 'contentCompliance' && (
                                                 <div className="space-y-6">
-                                                    {/* Tarihler */}
-                                                    <div className="border-b border-gray-700 pb-4">
-                                                        <h3 className="text-sm font-medium text-purple-400 mb-3">📅 Tarihler</h3>
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">{t('uretimTarihi')}</label>
-                                                                <input
-                                                                    type="date"
-                                                                    value={(formData as any).productionDate || ''}
-                                                                    onChange={e => setFormData({ ...formData, productionDate: e.target.value } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
-                                                                />
+
+                                                    {/* ═══ BÖLÜM 1: İÇERİK LİSTESİ ═══ */}
+                                                    <div>
+                                                        <h4 className="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                            <span>📋</span> İçerik Listesi (Zutaten)
+                                                        </h4>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                            <div className="md:col-span-2">
+                                                                <label className="text-xs text-gray-400 mb-1 block">Ürün İçeriği / Zutaten (LMIV sırasına göre)</label>
+                                                                <textarea value={(formData as any).ingredients || ''} onChange={e => setFormData({ ...formData, ingredients: e.target.value } as any)} rows={3} placeholder="Hähnchenfleisch (60%), Zwiebeln, Paprika, Gewürze (Salz, Pfeffer, Kreuzkümmel), Sonnenblumenöl..." className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none" />
                                                             </div>
                                                             <div>
-                                                                <label className="block text-sm text-gray-400 mb-1">Son Kullanma Tarihi (SKT)</label>
-                                                                <input
-                                                                    type="date"
-                                                                    value={(formData as any).expirationDate || ''}
-                                                                    onChange={e => setFormData({ ...formData, expirationDate: e.target.value } as any)}
-                                                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2"
-                                                                />
+                                                                <label className="text-xs text-gray-400 mb-1 block">Tüketim Bilgisi (Verbraucherinformation)</label>
+                                                                <textarea value={(formData as any).consumptionInfo || ''} onChange={e => setFormData({ ...formData, consumptionInfo: e.target.value } as any)} rows={2} placeholder="Zum sofortigen Verzehr bestimmt. Kühl lagern bei +2°C bis +7°C." className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">Katkı Maddeleri / Zusatzstoffe</label>
+                                                                <input value={((formData as any).additives || []).join(', ')} onChange={e => setFormData({ ...formData, additives: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) } as any)} placeholder="E300, E330, E621..." className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">Herkunft / Menşe</label>
+                                                                <input value={(formData as any).origin || (formData as any).originCountry || ''} onChange={e => setFormData({ ...formData, origin: e.target.value } as any)} placeholder="z.B. Deutschland, Türkei, EU" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                            </div>
+                                                            <div className="flex items-center gap-3">
+                                                                <label className="inline-flex items-center gap-2 cursor-pointer">
+                                                                    <input type="checkbox" checked={(formData as any).containsAlcohol || false} onChange={e => setFormData({ ...formData, containsAlcohol: e.target.checked } as any)} className="w-4 h-4 rounded border-gray-600 bg-gray-800" />
+                                                                    <span className="text-xs text-gray-300">🍷 Alkol İçerir (Alkoholhaltig)</span>
+                                                                </label>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    {/* 🧪 Alerjenler & Katkı Maddeleri (EU LMIV 1169/2011) */}
-                                                    <div className="border-b border-gray-700 pb-4">
-                                                        <h3 className="text-sm font-medium text-orange-400 mb-3">🧪 Alerjenler & Katkı Maddeleri</h3>
-                                                        <p className="text-xs text-gray-500 mb-3">EU LMIV 1169/2011 uyarınca 14 zorunlu alerjen bildirimi</p>
+                                                    <hr className="border-gray-700/50" />
 
-                                                        {/* Alerjenler */}
-                                                        <div className="mb-4">
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <label className="text-sm text-gray-300 font-medium">Alerjenler</label>
-                                                                <label className="flex items-center gap-2 cursor-pointer">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={(formData as any).allergensConfirmed || false}
-                                                                        onChange={e => setFormData(prev => ({ ...prev, allergensConfirmed: e.target.checked } as any))}
-                                                                        className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-green-600"
-                                                                    />
-                                                                    <span className="text-xs text-gray-400">✓ Satıcı tarafından onaylandı</span>
-                                                                </label>
-                                                            </div>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {[
-                                                                    { key: 'gluten', label: '🌾 Gluten', emoji: '🌾' },
-                                                                    { key: 'crustaceans', label: '🦐 Krebstiere', emoji: '🦐' },
-                                                                    { key: 'eggs', label: '🥚 Eier', emoji: '🥚' },
-                                                                    { key: 'fish', label: '🐟 Fisch', emoji: '🐟' },
-                                                                    { key: 'peanuts', label: '🥜 Erdnüsse', emoji: '🥜' },
-                                                                    { key: 'soybeans', label: '🫘 Soja', emoji: '🫘' },
-                                                                    { key: 'milk', label: '🥛 Milch', emoji: '🥛' },
-                                                                    { key: 'nuts', label: '🌰 Schalenfrüchte', emoji: '🌰' },
-                                                                    { key: 'celery', label: '🥬 Sellerie', emoji: '🥬' },
-                                                                    { key: 'mustard', label: '🟡 Senf', emoji: '🟡' },
-                                                                    { key: 'sesame', label: '⚪ Sesam', emoji: '⚪' },
-                                                                    { key: 'sulphites', label: '🧪 Sulfite', emoji: '🧪' },
-                                                                    { key: 'lupin', label: '🌸 Lupine', emoji: '🌸' },
-                                                                    { key: 'molluscs', label: '🐚 Weichtiere', emoji: '🐚' },
-                                                                ].map(allergen => {
-                                                                    const isSelected = ((formData as any).allergens || []).includes(allergen.key);
-                                                                    return (
-                                                                        <button
-                                                                            key={allergen.key}
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                const current = (formData as any).allergens || [];
-                                                                                const updated = isSelected
-                                                                                    ? current.filter((a: string) => a !== allergen.key)
-                                                                                    : [...current, allergen.key];
-                                                                                setFormData({ ...formData, allergens: updated } as any);
-                                                                            }}
-                                                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isSelected
-                                                                                ? 'bg-orange-600 text-white border-2 border-orange-400 shadow-lg'
-                                                                                : 'bg-gray-700 text-gray-300 border border-gray-600 hover:bg-gray-600'
-                                                                                }`}
-                                                                        >
-                                                                            {allergen.label}
-                                                                        </button>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Katkı Maddeleri */}
-                                                        <div>
-                                                            <div className="flex items-center justify-between mb-2">
-                                                                <label className="text-sm text-gray-300 font-medium">Katkı Maddeleri</label>
-                                                                <label className="flex items-center gap-2 cursor-pointer">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={(formData as any).additivesConfirmed || false}
-                                                                        onChange={e => setFormData(prev => ({ ...prev, additivesConfirmed: e.target.checked } as any))}
-                                                                        className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-green-600"
-                                                                    />
-                                                                    <span className="text-xs text-gray-400">✓ Satıcı tarafından onaylandı</span>
-                                                                </label>
-                                                            </div>
-                                                            <div className="flex gap-2 items-center">
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Katkı maddesi ekle (Enter ile)"
-                                                                    className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm"
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === 'Enter') {
-                                                                            e.preventDefault();
-                                                                            const value = (e.target as HTMLInputElement).value.trim();
-                                                                            if (value) {
-                                                                                const current = (formData as any).additives || [];
-                                                                                if (!current.includes(value)) {
-                                                                                    setFormData({ ...formData, additives: [...current, value] } as any);
-                                                                                }
-                                                                                (e.target as HTMLInputElement).value = '';
-                                                                            }
-                                                                        }
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            {((formData as any).additives || []).length > 0 && (
-                                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                                    {((formData as any).additives || []).map((additive: string, idx: number) => (
-                                                                        <span key={idx} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs bg-teal-900/50 text-teal-300 border border-teal-700">
-                                                                            {additive}
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    const current = [...((formData as any).additives || [])];
-                                                                                    current.splice(idx, 1);
-                                                                                    setFormData({ ...formData, additives: current } as any);
-                                                                                }}
-                                                                                className="text-teal-400 hover:text-red-400 ml-1"
-                                                                            >
-                                                                                ✕
-                                                                            </button>
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* 🥗 Besin Değerleri (EU LMIV per 100g) */}
-                                                    <div className="border-b border-gray-700 pb-4">
-                                                        <h3 className="text-sm font-medium text-green-400 mb-3">🥗 Besin Değerleri (per 100g)</h3>
-                                                        <p className="text-xs text-gray-500 mb-3">EU LMIV 1169/2011 uyarınca zorunlu besin değerleri bildirimi</p>
-                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                    {/* ═══ BÖLÜM 2: EU 14 ALERJEN ═══ */}
+                                                    <div>
+                                                        <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                            <span>⚠️</span> Alerjenler — EU 1169/2011 Annex II (14 Pflichtallergen)
+                                                        </h4>
+                                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
                                                             {[
-                                                                { key: 'energy_kcal', label: 'Enerji (kcal)', unit: 'kcal' },
-                                                                { key: 'energy_kj', label: 'Enerji (kJ)', unit: 'kJ' },
-                                                                { key: 'fat', label: 'Yağ', unit: 'g' },
-                                                                { key: 'saturatedFat', label: 'Doymuş Yağ', unit: 'g' },
-                                                                { key: 'carbohydrates', label: 'Karbonhidrat', unit: 'g' },
-                                                                { key: 'sugar', label: 'Şeker', unit: 'g' },
-                                                                { key: 'protein', label: 'Protein', unit: 'g' },
-                                                                { key: 'salt', label: 'Tuz', unit: 'g' },
-                                                            ].map(field => (
-                                                                <div key={field.key}>
-                                                                    <label className="block text-xs text-gray-400 mb-1">{field.label} ({field.unit})</label>
+                                                                { key: 'gluten', label: 'Glüten', emoji: '🌾', de: 'Getreide' },
+                                                                { key: 'crustaceans', label: 'Kabuklular', emoji: '🦐', de: 'Krebstiere' },
+                                                                { key: 'eggs', label: 'Yumurta', emoji: '🥚', de: 'Eier' },
+                                                                { key: 'fish', label: 'Balık', emoji: '🐟', de: 'Fisch' },
+                                                                { key: 'peanuts', label: 'Yer Fıstığı', emoji: '🥜', de: 'Erdnüsse' },
+                                                                { key: 'soy', label: 'Soya', emoji: '🫘', de: 'Soja' },
+                                                                { key: 'milk', label: 'Süt/Laktoz', emoji: '🥛', de: 'Milch' },
+                                                                { key: 'treeNuts', label: 'Sert Kabuklu', emoji: '🌰', de: 'Schalenfrüchte' },
+                                                                { key: 'celery', label: 'Kereviz', emoji: '🥬', de: 'Sellerie' },
+                                                                { key: 'mustard', label: 'Hardal', emoji: '🟡', de: 'Senf' },
+                                                                { key: 'sesame', label: 'Susam', emoji: '⚪', de: 'Sesam' },
+                                                                { key: 'sulfites', label: 'Sülfitler', emoji: '🧪', de: 'Sulfite' },
+                                                                { key: 'lupin', label: 'Lupin', emoji: '🌸', de: 'Lupinen' },
+                                                                { key: 'molluscs', label: 'Yumuşakçalar', emoji: '🐚', de: 'Weichtiere' },
+                                                            ].map(allergen => {
+                                                                const checked = ((formData as any).allergens || {})[allergen.key] === true;
+                                                                return (
+                                                                    <button
+                                                                        key={allergen.key}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const currentAllergens = (formData as any).allergens || {};
+                                                                            setFormData({ ...formData, allergens: { ...currentAllergens, [allergen.key]: !currentAllergens[allergen.key] } } as any);
+                                                                        }}
+                                                                        className={`flex flex-col items-center gap-1 p-2 rounded-lg border text-center transition ${checked
+                                                                            ? 'bg-amber-500/20 border-amber-500 text-amber-300'
+                                                                            : 'bg-gray-800/50 border-gray-700 text-gray-500 hover:border-gray-500'
+                                                                            }`}
+                                                                    >
+                                                                        <span className="text-lg">{allergen.emoji}</span>
+                                                                        <span className="text-[10px] font-medium leading-tight">{allergen.label}</span>
+                                                                        <span className="text-[9px] opacity-60">{allergen.de}</span>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 3: BESİN DEĞERLERİ ═══ */}
+                                                    <div>
+                                                        <h4 className="text-xs font-semibold text-green-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                            <span>🥗</span> Besin Değerleri — Nährwerte pro 100g (Big 7 + Ek)
+                                                        </h4>
+                                                        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
+                                                            {[
+                                                                { key: 'energie_kj', label: 'Energie', unit: 'kJ', required: true },
+                                                                { key: 'energie_kcal', label: 'Energie', unit: 'kcal', required: true },
+                                                                { key: 'fett', label: 'Fett', unit: 'g', required: true },
+                                                                { key: 'gesaettigte_fettsaeuren', label: 'ges. Fetts.', unit: 'g', required: true },
+                                                                { key: 'kohlenhydrate', label: 'Kohlenh.', unit: 'g', required: true },
+                                                                { key: 'zucker', label: 'Zucker', unit: 'g', required: true },
+                                                                { key: 'protein', label: 'Eiweiß', unit: 'g', required: true },
+                                                                { key: 'salz', label: 'Salz', unit: 'g', required: true },
+                                                                { key: 'ballaststoffe', label: 'Ballastst.', unit: 'g', required: false },
+                                                                { key: 'einfach_unges_fett', label: 'einf. ung. F.', unit: 'g', required: false },
+                                                                { key: 'mehrfach_unges_fett', label: 'mehrf. ung. F.', unit: 'g', required: false },
+                                                                { key: 'staerke', label: 'Stärke', unit: 'g', required: false },
+                                                            ].map(item => (
+                                                                <div key={item.key}>
+                                                                    <span className={`text-[9px] block mb-0.5 ${item.required ? 'text-green-500 font-medium' : 'text-gray-600'}`}>
+                                                                        {item.label} ({item.unit}){item.required ? ' *' : ''}
+                                                                    </span>
                                                                     <input
                                                                         type="number"
                                                                         step="0.01"
-                                                                        value={((formData as any).nutritionPer100g || {} as any)[field.key] || ''}
+                                                                        value={((formData as any).nutritionPer100g || {} as any)[item.key] ?? ''}
                                                                         onChange={e => {
                                                                             const nutrition = { ...((formData as any).nutritionPer100g || {}) };
-                                                                            (nutrition as any)[field.key] = parseFloat(e.target.value) || 0;
+                                                                            const val = e.target.value;
+                                                                            (nutrition as any)[item.key] = val === '' ? undefined : parseFloat(val);
                                                                             setFormData({ ...formData, nutritionPer100g: nutrition } as any);
                                                                         }}
-                                                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-1.5 text-sm"
-                                                                        placeholder="0.0"
+                                                                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-2 py-1.5 text-xs"
                                                                     />
                                                                 </div>
                                                             ))}
                                                         </div>
+                                                        <p className="text-[10px] text-gray-600 mt-1">* EU Big 7 — zorunlu beyan alanları</p>
                                                     </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 4: SERTİFİKALAR ═══ */}
+                                                    <div>
+                                                        <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                            <span>🏅</span> Sertifikalar & Etiketler (Zertifikate)
+                                                        </h4>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {[
+                                                                { key: 'cert_tuna', label: 'TUNA', emoji: '🐟', color: 'blue' },
+                                                                { key: 'cert_akdeniz', label: 'Akdeniz', emoji: '🌊', color: 'cyan' },
+                                                                { key: 'cert_halal', label: 'Halal', emoji: '☪️', color: 'green' },
+                                                                { key: 'cert_bio', label: 'Bio / Organic', emoji: '🌿', color: 'green' },
+                                                                { key: 'cert_vegan', label: 'Vegan', emoji: '🌱', color: 'green' },
+                                                                { key: 'cert_vegetarian', label: 'Vegetarisch', emoji: '🥬', color: 'green' },
+                                                                { key: 'cert_glutenfree', label: 'Glutenfrei', emoji: '🚫', color: 'amber' },
+                                                                { key: 'cert_lactosefree', label: 'Laktosefrei', emoji: '🚫', color: 'amber' },
+                                                                { key: 'cert_ifs', label: 'IFS Food', emoji: '🛡️', color: 'purple' },
+                                                                { key: 'cert_haccp', label: 'HACCP', emoji: '✅', color: 'purple' },
+                                                                { key: 'cert_msc', label: 'MSC', emoji: '🔵', color: 'blue' },
+                                                                { key: 'cert_fairtrade', label: 'Fairtrade', emoji: '🟢', color: 'green' },
+                                                                { key: 'cert_eigenmarke', label: 'Eigenmarke', emoji: '🇩🇪', color: 'gray' },
+                                                            ].map(cert => {
+                                                                const selected = ((formData as any).certifications || []).includes(cert.key);
+                                                                return (
+                                                                    <button
+                                                                        key={cert.key}
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const current = (formData as any).certifications || [];
+                                                                            setFormData({
+                                                                                ...formData,
+                                                                                certifications: selected
+                                                                                    ? current.filter((c: string) => c !== cert.key)
+                                                                                    : [...current, cert.key]
+                                                                            } as any);
+                                                                        }}
+                                                                        className={`px-3 py-2 text-xs font-medium rounded-lg border transition flex items-center gap-1.5 ${selected
+                                                                            ? 'bg-purple-500/20 border-purple-500 text-purple-300 shadow-sm shadow-purple-500/10'
+                                                                            : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-500'
+                                                                            }`}
+                                                                    >
+                                                                        <span>{cert.emoji}</span>
+                                                                        <span>{selected ? '✓ ' : ''}{cert.label}</span>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    <hr className="border-gray-700/50" />
+
+                                                    {/* ═══ BÖLÜM 5: FİZİKSEL & SAKLAMA ═══ */}
+                                                    <div>
+                                                        <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                            <span>📦</span> Fiziksel Bilgiler & Saklama (Produktdaten)
+                                                        </h4>
+                                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">Gewicht (Ağırlık)</label>
+                                                                <input value={(formData as any).weight || ''} onChange={e => setFormData({ ...formData, weight: e.target.value } as any)} placeholder="500g, 1kg" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">Packung (Ambalaj)</label>
+                                                                <input value={(formData as any).packung || ''} onChange={e => setFormData({ ...formData, packung: e.target.value } as any)} placeholder="Vakuum, Schale" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">Gehäusetemperatur (Saklama)</label>
+                                                                <input value={(formData as any).storageTemp || ''} onChange={e => setFormData({ ...formData, storageTemp: e.target.value } as any)} placeholder="+2°C bis +7°C" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">MHD (Mindesthaltbarkeit)</label>
+                                                                <input value={(formData as any).mhd || ''} onChange={e => setFormData({ ...formData, mhd: e.target.value } as any)} placeholder="z.B. 14 Tage" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">Üretim Tarihi</label>
+                                                                <input type="date" value={(formData as any).productionDate || ''} onChange={e => setFormData({ ...formData, productionDate: e.target.value } as any)} className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">Son Kullanma Tarihi</label>
+                                                                <input type="date" value={(formData as any).expirationDate || ''} onChange={e => setFormData({ ...formData, expirationDate: e.target.value } as any)} className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-xs text-gray-400 mb-1 block">Artikelnummer</label>
+                                                                <input value={(formData as any).artikelnummer || ''} onChange={e => setFormData({ ...formData, artikelnummer: e.target.value } as any)} placeholder="Ürün No" className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm" />
+                                                            </div>
+                                                            <div className="col-span-2 md:col-span-3 lg:col-span-4">
+                                                                <label className="text-xs text-gray-400 mb-1 block">Besondere Informationen (Özel Bilgiler)</label>
+                                                                <textarea value={(formData as any).specialInfo || ''} onChange={e => setFormData({ ...formData, specialInfo: e.target.value } as any)} rows={2} placeholder="Özel uyarılar, saklama talimatları..." className="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm resize-none" />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
                                                 </div>
                                             )}
 
