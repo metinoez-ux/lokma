@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { collection, getDocs, doc, updateDoc, deleteDoc, deleteField, query, orderBy, where, onSnapshot, Timestamp, increment } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteField, query, orderBy, where, onSnapshot, Timestamp, increment } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
-import ConfirmModal from '@/components/ui/ConfirmModal';
+
 import { useTranslations } from 'next-intl';
 import { formatCurrency as globalFormatCurrency } from '@/lib/utils/currency';
 import { printOrder, PrinterSettings, DEFAULT_PRINTER_SETTINGS } from '@/services/printerService';
@@ -631,44 +631,7 @@ export default function OrdersPage() {
         setCancelReason('');
     };
 
-    // Delete order
-    const [confirmDeleteOrderId, setConfirmDeleteOrderId] = useState<string | null>(null);
-    const handleDeleteOrder = (orderId: string) => {
-        setConfirmDeleteOrderId(orderId);
-    };
-    const handleDeleteOrderConfirm = async () => {
-        if (!confirmDeleteOrderId) return;
-        try {
-            // Find the order data before deleting to check for group session
-            const orderToDelete = orders.find(o => o.id === confirmDeleteOrderId);
 
-            // Delete the order
-            await deleteDoc(doc(db, 'meat_orders', confirmDeleteOrderId));
-
-            // Check if this was a group order session
-            if (orderToDelete?.groupSessionId) {
-                try {
-                    const sessionRef = doc(db, 'table_group_sessions', orderToDelete.groupSessionId);
-                    await updateDoc(sessionRef, {
-                        status: 'cancelled',
-                        closedAt: Timestamp.now(),
-                        cancelledBy: 'Admin Panel',
-                        cancelReason: t('siparis_admin_panelden_silindi'),
-                    });
-                } catch (sessionError) {
-                    console.warn('Could not clean up group session:', sessionError);
-                    // Non-critical — order is already deleted
-                }
-            }
-
-            showToast(t('siparis_silindi'), 'success');
-            setSelectedOrder(null);
-            setConfirmDeleteOrderId(null);
-        } catch (error) {
-            console.error('Error deleting order:', error);
-            showToast(t('siparis_silinirken_hata_olustu'), 'error');
-        }
-    };
 
     // Format date
     const formatDate = (timestamp: Timestamp | undefined) => {
@@ -1338,10 +1301,10 @@ export default function OrdersPage() {
                                     <span className="text-gray-400">{t('modal.subtotal')}</span>
                                     <span className="text-white">{formatCurrency(selectedOrder.subtotal || 0, selectedOrder.currency)}</span>
                                 </div>
-                                {selectedOrder.deliveryFee && (
+                                {(selectedOrder.deliveryFee ?? 0) > 0 && (
                                     <div className="flex justify-between">
                                         <span className="text-gray-400">{t('modal.deliveryFee')}</span>
-                                        <span className="text-white">{formatCurrency(selectedOrder.deliveryFee, selectedOrder.currency)}</span>
+                                        <span className="text-white">{formatCurrency(selectedOrder.deliveryFee || 0, selectedOrder.currency)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-lg font-bold">
@@ -1392,15 +1355,7 @@ export default function OrdersPage() {
                                 </div>
                             )}
 
-                            {/* Delete Action */}
-                            <div className="border-t border-gray-700 pt-4">
-                                <button
-                                    onClick={() => handleDeleteOrder(selectedOrder.id)}
-                                    className="w-full px-4 py-3 bg-red-600/20 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-600/30 transition flex items-center justify-center gap-2"
-                                >
-                                    🗑️ {t('modal.deleteOrder')}
-                                </button>
-                            </div>
+
                         </div>
                     </div>
                 </div>
