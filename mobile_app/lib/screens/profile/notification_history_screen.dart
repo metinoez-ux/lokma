@@ -53,7 +53,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
   static final _statusMeta = <String, Map<String, dynamic>>{
     'pending':   {'label': 'Sipariş Verildi',    'icon': '', 'color': 0xFFFF9800, 'iconData': Icons.receipt_long_rounded},
     'accepted':  {'label': 'Onaylandı',          'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.check_circle_outline_rounded},
-    'preparing': {'label': 'Hazırlanıyor',       'icon': '', 'color': 0xFF2196F3, 'iconData': Icons.room_service},
+    'preparing': {'label': 'Hazırlanıyor',       'icon': '', 'color': 0xFF2196F3, 'iconData': Icons.room_service, 'assetIcon': 'assets/icons/chef_preparing.png'},
     'ready':     {'label': 'Hazır',              'icon': '', 'color': 0xFF9C27B0, 'iconData': Icons.inventory_2_rounded},
     'onTheWay':  {'label': 'Yola Çıktı',        'icon': '', 'color': 0xFF00BCD4, 'iconData': Icons.delivery_dining},
     'delivered': {'label': 'Teslim Edildi',      'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.done_all_rounded},
@@ -393,7 +393,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
       final timeStr = allStatusTimestamps['pending'] ?? '';
       if (dt == null || timeStr.isEmpty) return timeStr;
       const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
-      return '${dt.day} ${months[dt.month - 1]} $timeStr';
+      return '${dt.day} ${months[dt.month - 1]} | $timeStr';
     }
 
     // Determine which steps are ACTUALLY completed based on latestStatus position
@@ -525,7 +525,10 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (meta['iconData'] != null) ...[
+                            if ((meta['assetIcon'] as String?)?.isNotEmpty == true) ...[
+                              Image.asset(meta['assetIcon'] as String, width: 13, height: 13, color: statusColor),
+                              const SizedBox(width: 4),
+                            ] else if (meta['iconData'] != null) ...[
                               Icon(meta['iconData'] as IconData, size: 13, color: statusColor),
                               const SizedBox(width: 4),
                             ] else if ((meta['icon'] as String?)?.isNotEmpty == true) ...[
@@ -544,6 +547,52 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                         ),
                       ),
                       const Spacer(),
+                      // ── Checked items counter (live from Firestore) ──
+                      StreamBuilder<DocumentSnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('orders')
+                            .doc(group.orderId)
+                            .snapshots(),
+                        builder: (context, snap) {
+                          if (!snap.hasData || !snap.data!.exists) return const SizedBox.shrink();
+                          final od = snap.data!.data() as Map<String, dynamic>? ?? {};
+                          final items = od['items'] as List<dynamic>? ?? [];
+                          final checkedMap = od['checkedItems'] as Map<String, dynamic>? ?? {};
+                          if (items.isEmpty) return const SizedBox.shrink();
+                          final total = items.length;
+                          final checked = checkedMap.values.where((v) => v == true).length;
+                          final allDone = checked >= total;
+                          return Container(
+                            margin: const EdgeInsets.only(right: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: allDone
+                                  ? const Color(0xFF22C55E).withValues(alpha: 0.15)
+                                  : (isDark ? Colors.grey[700]!.withValues(alpha: 0.4) : Colors.grey[300]!),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.check_rounded,
+                                  size: 11,
+                                  color: allDone ? const Color(0xFF22C55E) : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  '$checked/$total',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: allDone ? const Color(0xFF22C55E) : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                       if (group.totalAmount != null && group.totalAmount! > 0)
                         Text(
                           '${group.totalAmount!.toStringAsFixed(2)} €',
@@ -575,10 +624,13 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                     final stepColor = Color(stepMeta['color'] as int);
                     final isCompleted = completedStatuses.contains(stepStatus);
                     final isLast = i == stepsToShow.length - 1;
-                    // Pending step gets full date+time; others get smart label (date+time only if different day)
-                    final timeStr = stepStatus == 'pending'
-                        ? orderCreationLabel()
-                        : smartTimeLabel(stepStatus);
+                    // Only show timestamp for completed steps — prevents stale timestamps
+                    // appearing after admin reverts a status back to an earlier stage
+                    final timeStr = !isCompleted
+                        ? ''
+                        : stepStatus == 'pending'
+                            ? orderCreationLabel()
+                            : smartTimeLabel(stepStatus);
 
                     // Determine if this is the "current active" step
                     final isCurrentStep = stepStatus == latestStatus && !isCancelled;
@@ -624,7 +676,17 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                             Expanded(
                               child: Row(
                                 children: [
-                                  if (stepMeta['iconData'] != null) ...[
+                                  if ((stepMeta['assetIcon'] as String?)?.isNotEmpty == true) ...[
+                                    Image.asset(
+                                      stepMeta['assetIcon'] as String,
+                                      width: 16,
+                                      height: 16,
+                                      color: isCompleted
+                                          ? Color(stepMeta['color'] as int)
+                                          : (isDark ? Colors.grey[600] : Colors.grey[400]),
+                                    ),
+                                    const SizedBox(width: 4),
+                                  ] else if (stepMeta['iconData'] != null) ...[
                                     Icon(
                                       stepMeta['iconData'] as IconData,
                                       size: 16,
@@ -762,7 +824,14 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                   child: SizedBox(
                     height: 36,
                     child: TextButton.icon(
-                      onPressed: () => _showOrderDetail(context, group.orderId),
+                      onPressed: () {
+                          final pendingEntry = group.statuses.firstWhere(
+                            (s) => s['status'] == 'pending',
+                            orElse: () => group.statuses.first,
+                          );
+                          final pendingTs = pendingEntry['createdAt'] as Timestamp?;
+                          _showOrderDetail(context, group.orderId, pendingTs?.toDate());
+                        },
                       icon: const Icon(Icons.receipt_long_rounded, size: 16),
                       label: const Text('Siparişi Göster'),
                       style: TextButton.styleFrom(
@@ -814,7 +883,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
   }
 
   // ── Show order detail ────────────────────────────────────────────────
-  void _showOrderDetail(BuildContext ctx, String orderId) async {
+  void _showOrderDetail(BuildContext ctx, String orderId, [DateTime? pendingAt]) async {
     // Show loading indicator
     showDialog(
       context: ctx,
@@ -912,7 +981,10 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                           Icon(Icons.calendar_today, size: 15, color: Colors.grey[500]),
                           const SizedBox(width: 6),
                           Text(
-                            '${order.createdAt.day.toString().padLeft(2, '0')}.${order.createdAt.month.toString().padLeft(2, '0')}.${order.createdAt.year}  ${order.createdAt.hour.toString().padLeft(2, '0')}:${order.createdAt.minute.toString().padLeft(2, '0')}',
+                            () {
+                                      final dt = pendingAt ?? order.createdAt;
+                                      return '${dt.day.toString().padLeft(2, '0')}.${dt.month.toString().padLeft(2, '0')}.${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                                    }(),
                             style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13),
                           ),
                         ],
