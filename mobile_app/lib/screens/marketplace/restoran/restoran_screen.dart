@@ -637,13 +637,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge, // Overflow'u kesin gizle
-              expandedHeight: 210, // Genişletilmiş yükseklik
+              expandedHeight: 195, // Genişletilmiş yükseklik
               collapsedHeight:
                   110, // Daraltılmış yükseklik (sadece konum + arama)
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
-                  final expandedHeight = 210.0;
+                  final expandedHeight = 195.0;
                   final collapsedHeight = 110.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /
