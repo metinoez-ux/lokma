@@ -677,9 +677,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     // Mesafe aralığını Gel Al ve Masa modlarında göster
                                     if (_deliveryMode == 'gelal' ||
                                         _deliveryMode == 'masa')
-                                      _buildDistanceSlider()
-                                    else if (_deliveryMode == 'teslimat')
-                                      _buildTunaToggleOnly(), // Teslimatta sadece Tuna
+                                      _buildDistanceSlider(),
                                   ],
                                 ),
                               ),
@@ -1284,76 +1282,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 fontSize: 12,
                 fontWeight:
                     hasBusinessAtCurrent ? FontWeight.bold : FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // TUNA pill toggle - hap şeklinde, kırmızı
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              setState(() => _onlyTuna = !_onlyTuna);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: _onlyTuna ? const Color(0xFFA01E22) : Colors.transparent,
-                borderRadius: BorderRadius.circular(20), // Pill shape
-                border: Border.all(
-                  color: _onlyTuna
-                      ? const Color(0xFFA01E22)
-                      : Colors.grey.shade400,
-                  width: 1.5,
-                ),
-              ),
-              child: Text(
-                'TUNA',
-                style: TextStyle(
-                  color: _onlyTuna ? const Color(0xFF69B445) : Colors.grey[600],
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 🆕 TUNA toggle only (for Kurye mode - no distance slider)
-  Widget _buildTunaToggleOnly() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              setState(() => _onlyTuna = !_onlyTuna);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: _onlyTuna ? const Color(0xFFA01E22) : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: _onlyTuna
-                      ? const Color(0xFFA01E22)
-                      : Colors.grey.shade400,
-                  width: 1.5,
-                ),
-              ),
-              child: Text(
-                'TUNA',
-                style: TextStyle(
-                  color: _onlyTuna ? const Color(0xFF69B445) : Colors.grey[600],
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                ),
               ),
             ),
           ),
@@ -2425,19 +2353,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // İptal Button
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            'İptal',
-                            style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withValues(alpha: 0.7),
-                                fontSize: 15),
-                          ),
-                        ),
+                        // Empty space to balance Sıfırla on right
+                        const SizedBox(width: 60),
                         // Results Count
                         Text(
                           'Filtrele',
@@ -2454,6 +2371,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               _sortOption = 'nearest';
                               _categoryFilter = 'all';
                               // 🆕 Reset quick filters
+                              _onlyTuna = false;
                               _filterDiscounts = false;
                               _filterCash = false;
                               _filterFreeDelivery = false;
@@ -2489,6 +2407,98 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 20),
+
+                          // 🐟 TUNA Sertifika Filtresi - Premium toggle
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              setState(() => _onlyTuna = !_onlyTuna);
+                              setStateSheet(() {});
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                gradient: _onlyTuna 
+                                    ? const LinearGradient(
+                                        colors: [Color(0xFF1A0506), Color(0xFF2D0A0C)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : null,
+                                color: _onlyTuna ? null : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: _onlyTuna 
+                                      ? const Color(0xFFA01E22).withValues(alpha: 0.6) 
+                                      : Colors.grey.shade300,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  // TUNA branded pill badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFA01E22),
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: _onlyTuna ? [
+                                        BoxShadow(
+                                          color: const Color(0xFFA01E22).withValues(alpha: 0.4),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ] : null,
+                                    ),
+                                    child: const Text(
+                                      'TUNA',
+                                      style: TextStyle(
+                                        color: Color(0xFF69B445),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  // Descriptive text
+                                  Expanded(
+                                    child: Text(
+                                      'Sadece TUNA sertifikalı onaylı işletmeleri göster',
+                                      style: TextStyle(
+                                        color: _onlyTuna 
+                                            ? Colors.white.withValues(alpha: 0.9) 
+                                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.3,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  // iOS-style Switch toggle
+                                  SizedBox(
+                                    height: 28,
+                                    child: Switch.adaptive(
+                                      value: _onlyTuna,
+                                      activeColor: const Color(0xFF69B445),
+                                      activeTrackColor: const Color(0xFFA01E22),
+                                      inactiveThumbColor: Colors.white,
+                                      inactiveTrackColor: Colors.grey.shade300,
+                                      onChanged: (val) {
+                                        HapticFeedback.lightImpact();
+                                        setState(() => _onlyTuna = val);
+                                        setStateSheet(() {});
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
 
                           // Sıralama Section Header
                           Padding(
@@ -2653,16 +2663,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               setStateSheet(() {});
                             },
                           ),
-                          _buildFilterListItem(
-                            title: 'Tuna Onaylı',
-                            subtitle: 'marketplace.filter_tuna_verified'.tr(),
-                            isSelected: _filterTunaApproved,
-                            onTap: () {
-                              setState(() =>
-                                  _filterTunaApproved = !_filterTunaApproved);
-                              setStateSheet(() {});
-                            },
-                          ),
+
                           _buildFilterListItem(
                             title: 'Vejetaryen',
                             subtitle: 'marketplace.filter_vegetarian'.tr(),
