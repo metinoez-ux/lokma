@@ -1943,30 +1943,21 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         right: 0,
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 6),
-                          decoration: BoxDecoration(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? const Color(0xFF5A5A5C)
-                                    : Colors.grey.shade100
-                                        .withValues(alpha: 0.9), // Lighter background
-                            borderRadius: const BorderRadius.only(
-                              topLeft:
-                                  Radius.circular(12), // Match main card radius
-                              topRight:
-                                  Radius.circular(12), // Match main card radius
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF2C2C2E), // Dark grey background
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              topRight: Radius.circular(12),
                             ),
                           ),
                           child: Center(
                             child: Text(
                               unavailableReason ?? 'marketplace.currently_closed'.tr(),
-                              style: TextStyle(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black87,
-                                fontSize: 12, // Thinner, smaller font
-                                fontWeight: FontWeight.w500, // Medium weight
-                                letterSpacing: 0.2, // Tighter letter spacing
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ),
@@ -2018,7 +2009,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         left: 12,
                         top: isAvailable ? 12 : 36,
                         child: Opacity(
-                          opacity: isAvailable ? 1.0 : 0.7,
+                          opacity: 1.0, // Always fully visible, even when closed
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 14, vertical: 6),

@@ -1012,11 +1012,9 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                           right: 0,
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).brightness == Brightness.dark 
-                                  ? const Color(0xFF5A5A5C) 
-                                  : Colors.grey.shade300,
-                              borderRadius: const BorderRadius.only(
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF2C2C2E), // Dark grey background
+                              borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(16),
                                 topRight: Radius.circular(16),
                               ),
@@ -1024,12 +1022,10 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                             child: Center(
                               child: Text(
                                 'marketplace.currently_closed'.tr(),
-                                style: TextStyle(
-                                  color: Theme.of(context).brightness == Brightness.dark 
-                                      ? Colors.white 
-                                      : Colors.black87,
-                                  fontSize: 11, // Slightly smaller since the butcher image is smaller
-                                  fontWeight: FontWeight.w400, // Thinner font
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w400,
                                   letterSpacing: 0.3,
                                 ),
                               ),
