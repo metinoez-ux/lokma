@@ -1580,128 +1580,151 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.schedule, color: Colors.amber, size: 28),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                businessName,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (reason != null)
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        final onSurface = theme.colorScheme.onSurface;
+        final surfaceVariant = theme.colorScheme.surfaceContainerHighest;
+        
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: theme.dialogBackgroundColor,
+          title: Row(
+            children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: surfaceVariant.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.access_time,
-                        color: Colors.amber, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        reason,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w500, color: Colors.amber),
-                      ),
-                    ),
-                  ],
-                ),
+                child: Icon(Icons.storefront_outlined, color: onSurface.withValues(alpha: 0.7), size: 22),
               ),
-            // Next opening time
-            if (nextOpenText != null) ...[
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.schedule, color: Colors.blue, size: 18),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        nextOpenText,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  businessName,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: onSurface,
+                  ),
                 ),
               ),
             ],
-            const SizedBox(height: 16),
-            Text(
-              preOrderEnabled
-                  ? 'marketplace.closed_but_preorder'.tr()
-                  : 'marketplace.closed_but_browse'.tr(),
-              style: const TextStyle(fontSize: 15, height: 1.4),
-            ),
-            if (preOrderEnabled) ...[
-              const SizedBox(height: 12),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Status info row - reason + next opening combined
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                  color: surfaceVariant.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 18),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Ön Sipariş Aktif',
-                        style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
+                    if (reason != null)
+                      Row(
+                        children: [
+                          Icon(Icons.schedule_outlined, color: onSurface.withValues(alpha: 0.5), size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              reason,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: onSurface.withValues(alpha: 0.7),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                    if (reason != null && nextOpenText != null)
+                      Divider(color: onSurface.withValues(alpha: 0.1), height: 16),
+                    if (nextOpenText != null)
+                      Row(
+                        children: [
+                          Icon(Icons.event_available_outlined, color: lokmaPink, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              nextOpenText,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: lokmaPink,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
+              const SizedBox(height: 14),
+              Text(
+                preOrderEnabled
+                    ? 'marketplace.closed_but_preorder'.tr()
+                    : 'marketplace.closed_but_browse'.tr(),
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: onSurface.withValues(alpha: 0.7),
+                ),
+              ),
+              if (preOrderEnabled) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: lokmaPink.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.shopping_bag_outlined, color: lokmaPink, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Ön Sipariş Aktif',
+                        style: TextStyle(color: lokmaPink, fontWeight: FontWeight.w600, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(tr('common.close')),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              final businessId = _currentBusinessIdForDialog;
-              if (businessId != null) {
-                context.push('/business/$businessId?mode=$_deliveryMode&closedAck=true');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: lokmaPink,
-              foregroundColor: Colors.white,
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                tr('common.close'),
+                style: TextStyle(color: onSurface.withValues(alpha: 0.5)),
+              ),
             ),
-            child: Text(preOrderEnabled ? 'Menüyü Gör & Sipariş Ver' : tr('marketplace.see_menu')),
-          ),
-        ],
-      ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                final businessId = _currentBusinessIdForDialog;
+                if (businessId != null) {
+                  context.push('/business/$businessId?mode=$_deliveryMode&closedAck=true');
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: lokmaPink,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+              child: Text(preOrderEnabled ? 'Menüyü Gör & Sipariş Ver' : tr('marketplace.see_menu')),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -2364,13 +2387,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        // Sıfırla Button
-                        TextButton(
+                        // Reset icon button
+                        IconButton(
                           onPressed: () {
                             setState(() {
                               _sortOption = 'nearest';
                               _categoryFilter = 'all';
-                              // 🆕 Reset quick filters
                               _onlyTuna = false;
                               _filterDiscounts = false;
                               _filterCash = false;
@@ -2383,14 +2405,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             });
                             setStateSheet(() {});
                           },
-                          child: Text(
-                            'Sıfırla',
-                            style: TextStyle(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withValues(alpha: 0.7),
-                                fontSize: 15),
+                          icon: Icon(
+                            Icons.restart_alt_rounded,
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            size: 22,
                           ),
                         ),
                       ],
@@ -2415,26 +2433,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               setState(() => _onlyTuna = !_onlyTuna);
                               setStateSheet(() {});
                             },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                gradient: _onlyTuna 
-                                    ? const LinearGradient(
-                                        colors: [Color(0xFF1A0506), Color(0xFF2D0A0C)],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      )
-                                    : null,
-                                color: _onlyTuna ? null : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: _onlyTuna 
-                                      ? const Color(0xFFA01E22).withValues(alpha: 0.6) 
-                                      : Colors.grey.shade300,
-                                  width: 1,
-                                ),
-                              ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
                               child: Row(
                                 children: [
                                   // TUNA branded pill badge
@@ -2467,9 +2467,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     child: Text(
                                       'Sadece TUNA sertifikalı onaylı işletmeleri göster',
                                       style: TextStyle(
-                                        color: _onlyTuna 
-                                            ? Colors.white.withValues(alpha: 0.9) 
-                                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
                                         height: 1.3,
@@ -2482,10 +2480,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     height: 28,
                                     child: Switch.adaptive(
                                       value: _onlyTuna,
-                                      activeColor: const Color(0xFF69B445),
-                                      activeTrackColor: const Color(0xFFA01E22),
+                                      activeColor: Colors.white,
+                                      activeTrackColor: lokmaPink,
                                       inactiveThumbColor: Colors.white,
-                                      inactiveTrackColor: Colors.grey.shade300,
+                                      inactiveTrackColor: Theme.of(context).dividerColor,
                                       onChanged: (val) {
                                         HapticFeedback.lightImpact();
                                         setState(() => _onlyTuna = val);
