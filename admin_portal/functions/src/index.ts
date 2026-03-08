@@ -50,32 +50,49 @@ export const onNewOrder = onDocumentCreated(
 
         // ── Pre-Order Detection ──────────────────────────────────────────────
         const isPickupOrder = order.deliveryMethod === "pickup";
-        const pickupTimestamp = order.pickupTime; // Firestore Timestamp
+        const isDeliveryOrder = order.deliveryMethod === "delivery";
+        const pickupTimestamp = order.pickupTime; // Firestore Timestamp (Gel Al)
+        const scheduledDeliveryTimestamp = order.scheduledDeliveryTime || order.scheduledDateTime; // Kurye scheduled
+        const isScheduledOrder = order.isScheduledOrder === true;
         let isPreOrder = false;
         let pickupTimeStr = "";
         let pickupDate: Date | null = null;
 
-        if (isPickupOrder && pickupTimestamp) {
-            const pd = pickupTimestamp.toDate();
-            pickupDate = pd;
-            const now = new Date();
-            // If pickup time is more than 30 minutes in the future, it's a pre-order
-            isPreOrder = (pd.getTime() - now.getTime()) > 30 * 60 * 1000;
-
-            // Format pickup time nicely
-            const pickupHours = pd.getHours().toString().padStart(2, "0");
-            const pickupMinutes = pd.getMinutes().toString().padStart(2, "0");
+        // Helper to format a date nicely
+        const formatScheduledDate = (d: Date): string => {
+            const hours = d.getHours().toString().padStart(2, "0");
+            const minutes = d.getMinutes().toString().padStart(2, "0");
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
 
-            if (pd.toDateString() === today.toDateString()) {
-                pickupTimeStr = `Bugün ${pickupHours}:${pickupMinutes}`;
-            } else if (pd.toDateString() === tomorrow.toDateString()) {
-                pickupTimeStr = `Yarın ${pickupHours}:${pickupMinutes}`;
+            if (d.toDateString() === today.toDateString()) {
+                return `Bugün ${hours}:${minutes}`;
+            } else if (d.toDateString() === tomorrow.toDateString()) {
+                return `Yarın ${hours}:${minutes}`;
             } else {
                 const dayNames = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-                pickupTimeStr = `${dayNames[pd.getDay()]} ${pickupHours}:${pickupMinutes}`;
+                return `${dayNames[d.getDay()]} ${hours}:${minutes}`;
+            }
+        };
+
+        // Case 1: Gel Al (pickup) pre-order
+        if (isPickupOrder && pickupTimestamp) {
+            const pd = pickupTimestamp.toDate();
+            pickupDate = pd;
+            const now = new Date();
+            isPreOrder = (pd.getTime() - now.getTime()) > 30 * 60 * 1000;
+            pickupTimeStr = formatScheduledDate(pd);
+        }
+
+        // Case 2: Kurye (delivery) scheduled/pre-order
+        if (isDeliveryOrder && (isScheduledOrder || scheduledDeliveryTimestamp)) {
+            const sd = scheduledDeliveryTimestamp ? scheduledDeliveryTimestamp.toDate() : null;
+            if (sd) {
+                pickupDate = sd;
+                const now = new Date();
+                isPreOrder = (sd.getTime() - now.getTime()) > 30 * 60 * 1000;
+                pickupTimeStr = formatScheduledDate(sd);
             }
         }
 
@@ -231,6 +248,102 @@ export const onNewOrder = onDocumentCreated(
             }
         } catch (iotError) {
             console.error("[IoT Gateway] Error:", iotError);
+        }
+
+        // ── Save "pending" notification to customer's notification history ────
+        // This ensures the notification timeline starts from order placement
+        const customerId = order.userId || order.customerId;
+        if (customerId) {
+            try {
+                const businessName2 = order.butcherName || order.businessName || "İşletme";
+                const pendingTitle = `⏳ ${orderNumber}`;
+                const deliveryLabel = isPickupOrder ? "Gel Al" : "Kurye Teslimat";
+                const pendingBody = isPreOrder && pickupTimeStr
+                    ? `Ön siparişiniz alındı — ${deliveryLabel}: ${pickupTimeStr}`
+                    : `Siparişiniz alındı — ${businessName2} onayını bekliyor.`;
+
+                // Fetch business address info
+                let businessCity = "";
+                let businessPostalCode = "";
+                try {
+                    const bDoc = await db.collection("butcher_admins").doc(butcherId).get();
+                    const bData = bDoc.data();
+                    if (bData) {
+                        businessCity = bData.city || bData.ort || "";
+                        businessPostalCode = bData.postalCode || bData.plz || "";
+                    }
+                } catch (e) { /* ignore */ }
+
+                const notificationData: Record<string, any> = {
+                    title: pendingTitle,
+                    body: pendingBody,
+                    type: "order_status",
+                    orderId: event.params.orderId,
+                    status: "pending",
+                    rawOrderNumber: rawOrderNum || event.params.orderId.substring(0, 6).toUpperCase(),
+                    businessName: businessName2,
+                    totalAmount: totalAmount,
+                    businessCity: businessCity,
+                    businessPostalCode: businessPostalCode,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    read: false,
+                };
+
+                // Include scheduled delivery info for pre-orders
+                if (isPreOrder && pickupTimeStr) {
+                    notificationData.isPreOrder = true;
+                    notificationData.pickupTimeStr = pickupTimeStr;
+                }
+
+                await db.collection("users").doc(customerId).collection("notifications").add(notificationData);
+                console.log(`[Customer Notify] Saved pending notification for user ${customerId}, order ${rawOrderNum}${isPreOrder ? " (pre-order)" : ""}`);
+
+                // ── Send FCM Push to Customer Device ────────────────────────
+                // Get the customer's FCM token from the order or from user doc
+                const customerFcmTokens: string[] = [];
+                if (order.fcmToken) customerFcmTokens.push(order.fcmToken);
+                if (order.customerFcmToken) customerFcmTokens.push(order.customerFcmToken);
+
+                // Also check user doc for additional tokens
+                try {
+                    const userDoc = await db.collection("users").doc(customerId).get();
+                    const userData = userDoc.data();
+                    if (userData?.fcmToken && !customerFcmTokens.includes(userData.fcmToken)) {
+                        customerFcmTokens.push(userData.fcmToken);
+                    }
+                    if (userData?.fcmTokens && Array.isArray(userData.fcmTokens)) {
+                        userData.fcmTokens.forEach((t: string) => {
+                            if (t && !customerFcmTokens.includes(t)) customerFcmTokens.push(t);
+                        });
+                    }
+                } catch (e) { /* ignore */ }
+
+                if (customerFcmTokens.length > 0) {
+                    try {
+                        const customerPush = {
+                            notification: {
+                                title: pendingTitle,
+                                body: pendingBody,
+                            },
+                            data: {
+                                type: "order_status",
+                                orderId: event.params.orderId,
+                                status: "pending",
+                                ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
+                            },
+                            tokens: customerFcmTokens,
+                        };
+                        const pushResponse = await messaging.sendEachForMulticast(customerPush);
+                        console.log(`[Customer Push] Sent order confirmation to ${pushResponse.successCount}/${customerFcmTokens.length} customer devices`);
+                    } catch (pushErr) {
+                        console.error("[Customer Push] Error sending FCM to customer:", pushErr);
+                    }
+                } else {
+                    console.log(`[Customer Push] No FCM tokens found for customer ${customerId}`);
+                }
+            } catch (notifError) {
+                console.error("[Customer Notify] Error saving pending notification:", notifError);
+            }
         }
 
         // ── Schedule Pre-Order Reminder (20 min before pickup) ───────────────
@@ -545,6 +658,10 @@ export const onOrderStatusChange = onDocumentUpdated(
         let body = "";
 
         switch (newStatus) {
+            case "pending":
+                title = `${orderPrefix} Güncellendi${orderTag}`;
+                body = `${orderNumber} - Siparişiniz tekrar bekleme durumunda.`;
+                break;
             case "accepted":
                 title = `${trans.orderAcceptedTitle}${orderTag}`;
                 body = `${orderNumber} - ${businessName} ${trans.orderAcceptedBody.toLowerCase()}`;
@@ -948,6 +1065,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                         orderId: event.params.orderId,
                         status: newStatus,
                         rawOrderNumber,
+                        businessName,
                         createdAt: admin.firestore.FieldValue.serverTimestamp(),
                         read: false,
                     };

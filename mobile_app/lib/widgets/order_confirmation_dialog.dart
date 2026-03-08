@@ -23,63 +23,34 @@ class OrderConfirmationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final cardColor = isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey.shade50;
+    final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
-    final subtextColor = isDark ? Colors.white70 : Colors.grey.shade600;
-    final borderColor = isDark ? Colors.white10 : Colors.grey.shade200;
-    final accentColor = const Color(0xFFFB335B);
+    final subtextColor = isDark ? Colors.grey[400]! : Colors.grey.shade600;
+    const accentColor = Color(0xFFFB335B);
 
     return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
       child: Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 28),
         child: Container(
           width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ✅ Success header
+              // ✅ Checkmark
               Container(
-                height: 100,
-                width: double.infinity,
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.green.withValues(alpha: 0.15),
-                      Colors.green.withValues(alpha: 0.05),
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  color: Colors.green.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: const BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.check, color: Colors.white, size: 32),
-                    ),
-                  ],
-                ),
+                child: const Icon(Icons.check_rounded, color: Colors.green, size: 36),
               ),
 
               const SizedBox(height: 20),
@@ -94,163 +65,123 @@ class OrderConfirmationDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Text(
-                  businessName != null
-                    ? 'Siparişiniz $businessName tarafından hazırlanacak.'
-                    : 'Siparişiniz iletildi.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: subtextColor, fontSize: 14),
-                ),
+              Text(
+                businessName != null
+                  ? 'Siparişiniz $businessName tarafından hazırlanacak.'
+                  : 'Siparişiniz iletildi.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: subtextColor, fontSize: 14, height: 1.4),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-              // 📦 Mode-specific info card
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: borderColor),
-                ),
-                child: isDineIn
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Masa Siparişi',
-                            style: TextStyle(color: subtextColor, fontSize: 12, fontWeight: FontWeight.w500),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Masanızda servis edilecek',
-                            style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      )
-                    : isPickUp
-                        ? Row(
-                            children: [
-                              // Icon
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: accentColor.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Icon(Icons.store_outlined, color: accentColor, size: 22),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Gel Al',
-                                      style: TextStyle(color: subtextColor, fontSize: 12, fontWeight: FontWeight.w500),
-                                    ),
-                                    const SizedBox(height: 3),
-                                    Text(
-                                      _formatPickupDay(),
-                                      style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Time badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: accentColor.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: accentColor.withValues(alpha: 0.25)),
-                                ),
-                                child: Text(
-                                  _formatPickupClock(),
-                                  style: TextStyle(
-                                    color: accentColor,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Kurye ile Teslimat',
-                                style: TextStyle(color: subtextColor, fontSize: 12, fontWeight: FontWeight.w500),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Tahmini süre: 30-45 dk',
-                                style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
+              // Divider
+              Divider(color: isDark ? Colors.white10 : Colors.grey.shade200, height: 1),
+
+              const SizedBox(height: 16),
+
+              // Mode info
+              _buildModeInfo(textColor, subtextColor, accentColor, isDark),
+
+              const SizedBox(height: 16),
+
+              // Mode-specific hint
+              Text(
+                isDineIn
+                    ? 'Siparişiniz mutfağa iletildi. Masanızda bekleyiniz.'
+                    : (isPickUp
+                        ? 'Hazır olduğunda bildirim alacaksınız.'
+                        : 'Kuryenizi canlı takip edebilirsiniz.'),
+                textAlign: TextAlign.center,
+                style: TextStyle(color: subtextColor, fontSize: 13, height: 1.4),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // Mode-specific warning card
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: isDark ? 0.12 : 0.08),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
-                ),
-                child: Text(
-                  isDineIn
-                      ? 'Siparişiniz mutfağa iletildi. Masanızda bekleyiniz.'
-                      : (isPickUp
-                          ? 'Siparişiniz hazır olduğunda bildirim alacaksınız. Hazır bildirimi gelmeden lütfen mağazaya gitmeyiniz.'
-                          : 'Kuryenizi canlı takip edebilirsiniz.'),
-                  style: TextStyle(color: subtextColor, fontSize: 13, height: 1.4),
-                ),
+              // Notification reminder
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.notifications_active_outlined, color: subtextColor, size: 16),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'Bildirimleri açmayı unutmayın!',
+                      style: TextStyle(color: subtextColor, fontSize: 12, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               // Action Button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      final navigator = Navigator.of(context, rootNavigator: true);
-                      context.go('/restoran');
-                      navigator.pop();
-                      if (onDismiss != null) onDismiss!();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: accentColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 0,
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final navigator = Navigator.of(context, rootNavigator: true);
+                    context.go('/restoran');
+                    navigator.pop();
+                    if (onDismiss != null) onDismiss!();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: accentColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Text('Tamam', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    elevation: 0,
                   ),
+                  child: const Text('Tamam', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ),
-
-              const SizedBox(height: 20),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildModeInfo(Color textColor, Color subtextColor, Color accentColor, bool isDark) {
+    if (isDineIn) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.restaurant, color: accentColor, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            'Masanızda servis edilecek',
+            style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
+          ),
+        ],
+      );
+    } else if (isPickUp) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.store_outlined, color: subtextColor, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            '${_formatPickupDay()}, ${_formatPickupClock()}',
+            style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ],
+      );
+    } else {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.delivery_dining, color: subtextColor, size: 22),
+          const SizedBox(width: 8),
+          Text(
+            'Tahmini süre: 30-45 dk',
+            style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
+          ),
+        ],
+      );
+    }
   }
 
   String _formatPickupDay() {

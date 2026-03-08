@@ -39,7 +39,8 @@ class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
   final bool initialDineIn;
   final String? initialTableNumber;
-  const CartScreen({super.key, this.initialPickUp = false, this.initialDineIn = false, this.initialTableNumber});
+  final int initialTab;
+  const CartScreen({super.key, this.initialPickUp = false, this.initialDineIn = false, this.initialTableNumber, this.initialTab = 0});
 
   @override
   ConsumerState<CartScreen> createState() => _CartScreenState();
@@ -65,6 +66,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   String _orderNote = '';
   DateTime? _selectedPickupSlot; // 🆕 Selected pickup time for Gel Al
   DateTime? _scheduledDeliverySlot; // 🆕 Scheduled delivery time for Kurye (null = ASAP)
+  bool _scheduledInfoDismissed = false; // 🆕 Info note dismiss state
 
   // 🌟 Sponsored Products ("Bir şey mi unuttun?")
   List<Map<String, dynamic>> _sponsoredProductsList = [];
@@ -123,7 +125,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       _isPickUp = false;
       _paymentMethod = 'payLater'; // Default for dine-in
     }
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTab.clamp(0, 1));
     _checkColdChainBanner();
     
     // Pulse animation for active orders indicator
@@ -716,9 +718,24 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         backgroundColor: colorScheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 0,
-        leading: null,
-        automaticallyImplyLeading: false,
+        toolbarHeight: 38,
+        leadingWidth: 56,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: IconButton(
+            padding: const EdgeInsets.all(12),
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: colorScheme.onSurface, size: 22),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              if (GoRouter.of(context).canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: const Color(0xFFFB335B),
@@ -2168,7 +2185,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               if (hasKasap) ...[
                 if (hasKermes) const Divider(height: 32),
                 if (_butcherData != null)
-                  _buildLieferandoSectionHeader(_butcherData!['companyName'] ?? 'Kasap'),
+                  _buildLieferandoSectionHeader(
+                    _butcherData!['companyName'] ?? 'Kasap',
+                    subtitle: [
+                      _butcherData!['postalCode']?.toString() ?? '',
+                      _butcherData!['city']?.toString() ?? '',
+                    ].where((s) => s.isNotEmpty).join(' '),
+                  ),
                 ...cart.items.asMap().entries.map((entry) => _buildLieferandoCartItem(entry.value, entry.key + 1)),
                 SizedBox(height: 16),
               ],
@@ -2204,9 +2227,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             children: [
               _buildScannedTableBanner(),
               _buildLieferandoCheckoutButton(grandTotal),
-              SizedBox(height: 12),
-              // Legal terms footer (Lieferando style)
-              _buildLegalTermsFooter(),
             ],
           ),
         ),
@@ -2530,39 +2550,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     if (isReached) {
-      // ✅ SUCCESS: Minimum reached
-      return Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF4CAF50).withValues(alpha: 0.12) : const Color(0xFFE8F5E9),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: const Icon(Icons.check, color: Colors.white, size: 14),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Min. ${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()} ✓ Teslimat için yeterli',
-                style: TextStyle(
-                  color: isDark ? const Color(0xFF81C784) : const Color(0xFF2E7D32),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
+      // ✅ SUCCESS: Minimum reached — hide the banner entirely to save space
+      return const SizedBox.shrink();
     }
     
     // 🟡 WARNING: Below minimum
@@ -2606,16 +2595,33 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   }
   
   /// Section header (e.g., restaurant name)
-  Widget _buildLieferandoSectionHeader(String title) {
+  Widget _buildLieferandoSectionHeader(String title, {String? subtitle}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (subtitle != null && subtitle.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                subtitle,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -2761,6 +2767,46 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                // Per-item note display / add button
+                GestureDetector(
+                  onTap: () => _showNoteDialog(item),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          item.note != null && item.note!.isNotEmpty
+                              ? Icons.edit_note
+                              : Icons.note_add_outlined,
+                          size: 14,
+                          color: item.note != null && item.note!.isNotEmpty
+                              ? const Color(0xFFFB335B)
+                              : Colors.grey[500],
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            item.note != null && item.note!.isNotEmpty
+                                ? item.note!
+                                : 'Not ekle',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: item.note != null && item.note!.isNotEmpty
+                                  ? (isDark ? Colors.grey[300] : Colors.grey[700])
+                                  : Colors.grey[500],
+                              fontStyle: item.note != null && item.note!.isNotEmpty
+                                  ? FontStyle.normal
+                                  : FontStyle.italic,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 10),
                 // Quantity controls: [—]  qty  [+]
                 Row(
@@ -2769,6 +2815,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     // MINUS button (dark)
                     GestureDetector(
                       onTap: () {
+                        HapticFeedback.lightImpact();
                         final step = isKg ? 0.5 : 1.0;
                         final minQty = isKg ? 0.5 : 1.0;
                         if (quantity > minQty) {
@@ -2803,6 +2850,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     // PLUS button (accent red)
                     GestureDetector(
                       onTap: () {
+                        HapticFeedback.lightImpact();
                         ref.read(cartProvider.notifier).updateQuantity(
                           item.uniqueKey,
                           isKg ? quantity + 0.5 : quantity + 1,
@@ -2840,7 +2888,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ),
               const SizedBox(height: 16),
               GestureDetector(
-                onTap: () => ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey),
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey);
+                },
                 child: Icon(
                   Icons.delete_outline,
                   color: isDark ? Colors.grey[500] : Colors.grey[400],
@@ -2961,10 +3012,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             separatorBuilder: (_, __) => SizedBox(width: 12),
             itemBuilder: (context, index) {
               final product = _sponsoredProductsList[index];
-              final name = product['name'] as String;
-              final price = product['price'] as double;
-              final unit = product['unit'] as String;
-              final imageUrl = product['imageUrl'] as String;
+              final nameRaw = product['name'];
+              final name = nameRaw is String ? nameRaw : (nameRaw is Map ? (nameRaw['tr'] ?? nameRaw.values.first ?? '').toString() : '');
+              final price = (product['price'] ?? 0) is double ? product['price'] as double : (product['price'] ?? 0).toDouble();
+              final unit = (product['unit'] ?? 'adet').toString();
+              final imageUrl = (product['imageUrl'] ?? '').toString();
 
               return Container(
                 width: 145,
@@ -3093,6 +3145,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
   /// Helper: Add a sponsored product to cart
   void _addSponsoredProduct(Map<String, dynamic> product, int index, String butcherId) {
+    HapticFeedback.lightImpact();
     final name = product['name'] is String ? product['name'] as String : (product['name'] is Map ? (product['name']['tr'] ?? product['name'].values.first ?? '').toString() : '');
     final price = product['price'] as double;
     final unit = product['unit'] as String;
@@ -3622,13 +3675,17 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               Text(
                 (_isDineIn && _scannedTableNumber == null)
                     ? 'Masa QR Kodunu Tara · ${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'
-                    : 'Siparişi Onayla · ${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                    : 'Ödemeye Geç · ${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.surface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              if (!(_isDineIn && _scannedTableNumber == null)) ...[
+                SizedBox(width: 8),
+                Icon(Icons.arrow_forward_rounded, color: Theme.of(context).colorScheme.surface, size: 20),
+              ],
             ],
           ),
         ),
@@ -4350,10 +4407,38 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           SizedBox(height: 16),
           Text(
             'marketplace.your_cart_is_empty'.tr(),
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 20),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 20, fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 8),
           Text('marketplace.order_from_kermes'.tr(), style: TextStyle(color: Colors.grey)),
+          SizedBox(height: 32),
+          // "Menüye Dön" butonu
+          SizedBox(
+            width: 220,
+            height: 48,
+            child: FilledButton.icon(
+              onPressed: () {
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                } else {
+                  // Bottom nav tab'taysa ana sayfaya yönlendir
+                  context.go('/');
+                }
+              },
+              icon: const Icon(Icons.arrow_back_rounded, size: 20),
+              label: const Text(
+                'Menüye Dön',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: _accentColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -4398,900 +4483,40 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       _tableNumberController.text = _scannedTableNumber!;
     }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        final scrollController = ScrollController();
-        bool hasScrolledForKeyboard = false;
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            final bottomInset = MediaQuery.of(ctx).viewInsets.bottom;
-            // Auto-scroll to bottom (note field) when keyboard opens — once only
-            if (bottomInset > 0 && !hasScrolledForKeyboard) {
-              hasScrolledForKeyboard = true;
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (scrollController.hasClients) {
-                  scrollController.animateTo(
-                    scrollController.position.maxScrollExtent,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                }
-              });
-            } else if (bottomInset == 0) {
-              hasScrolledForKeyboard = false;
-            }
-            return Container(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.85,
-              ),
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Handle bar
-                  Container(
-                    margin: const EdgeInsets.only(top: 12, bottom: 8),
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[400],
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                    child: Row(
-                      children: [
-                        Text(
-                          'Sipariş Özeti',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          icon: Icon(Icons.close, color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // Scrollable content
-                  Flexible(
-                    child: GestureDetector(
-                      onTap: () => FocusScope.of(ctx).unfocus(),
-                      child: SingleChildScrollView(
-                      controller: scrollController,
-                      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottomInset),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 📍 DELIVERY ADDRESS (only for delivery — not pickup or dine-in)
-                          if (!_isPickUp && !_isDineIn) ...[
-                            _buildCheckoutSectionHeader('📍', 'Teslimat Adresi'),
-                            const SizedBox(height: 8),
-                            FutureBuilder<DocumentSnapshot>(
-                              future: FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(firebaseUser?.uid ?? authState.appUser?.uid)
-                                  .get(),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
-                                  );
-                                }
-                                final userData = snapshot.data?.data() as Map<String, dynamic>?;
-                                final profileStreet = userData?['address'] ?? '';
-                                final profileHouseNumber = userData?['houseNumber'] ?? '';
-                                final profilePostalCode = userData?['postalCode'] ?? '';
-                                final profileCity = userData?['city'] ?? '';
-                                final profileStreetFull = profileHouseNumber.isNotEmpty ? '$profileStreet $profileHouseNumber' : profileStreet;
-                                final profileFullAddress = [profileStreetFull, '$profilePostalCode $profileCity'].where((s) => s.trim().isNotEmpty).join(', ');
-                                final hasProfileAddress = profileFullAddress.trim().isNotEmpty && profileStreet.toString().trim().isNotEmpty;
-
-                                // Use selected address override or profile default
-                                final displayAddress = _selectedDeliveryAddress != null
-                                    ? [
-                                        _selectedDeliveryAddress!['houseNumber']!.isNotEmpty 
-                                            ? '${_selectedDeliveryAddress!['street']} ${_selectedDeliveryAddress!['houseNumber']}'
-                                            : _selectedDeliveryAddress!['street'] ?? '',
-                                        '${_selectedDeliveryAddress!['postalCode']} ${_selectedDeliveryAddress!['city']}'
-                                      ].where((s) => s.trim().isNotEmpty).join(', ')
-                                    : profileFullAddress;
-                                final hasAddress = _selectedDeliveryAddress != null || hasProfileAddress;
-
-                                return GestureDetector(
-                                  onTap: () => _showAddressPickerSheet(
-                                    ctx, 
-                                    setSheetState, 
-                                    firebaseUser?.uid ?? authState.appUser?.uid ?? '',
-                                    profileAddress: hasProfileAddress ? {
-                                      'street': profileStreet.toString(),
-                                      'houseNumber': profileHouseNumber.toString(),
-                                      'postalCode': profilePostalCode.toString(),
-                                      'city': profileCity.toString(),
-                                    } : null,
-                                  ),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: hasAddress ? Colors.grey.shade300 : Colors.amber.shade300,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          hasAddress ? Icons.location_on : Icons.warning_amber_rounded,
-                                          color: hasAddress ? _accentColor : Colors.amber,
-                                          size: 22,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            hasAddress ? displayAddress : 'Adres bilgisi bulunamadı.\nAdres eklemek için dokunun.',
-                                            style: TextStyle(
-                                              color: hasAddress ? Theme.of(context).colorScheme.onSurface : Colors.amber.shade700,
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        if (hasAddress)
-                                          Icon(Icons.edit_outlined, color: Colors.grey[500], size: 18),
-                                        if (!hasAddress)
-                                          Icon(Icons.add_circle_outline, color: Colors.amber, size: 20),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 20),
-                          ],
-
-                          // 🏪 GEL AL / MASA info
-                          if (_isPickUp || _isDineIn) ...[
-                            _buildCheckoutSectionHeader(_isDineIn ? '🪑' : '🏪', _isDineIn ? 'Masada Sipariş' : 'Gel Al'),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade300),
-                              ),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(_isDineIn ? Icons.restaurant : Icons.store, color: _accentColor, size: 22),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              _butcherData?['companyName'] ?? cart.butcherName ?? 'İşletme',
-                                              style: TextStyle(
-                                                color: Theme.of(context).colorScheme.onSurface,
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            if (_isDineIn && _scannedTableNumber != null)
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 2),
-                                                child: Text(
-                                                  'Masa $_scannedTableNumber  ✓',
-                                                  style: TextStyle(
-                                                    color: Colors.green[700],
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                      Icon(Icons.check_circle, color: Colors.green, size: 20),
-                                    ],
-                                  ),
-                                  // 🆕 Gel Al: Pickup time picker
-                                  if (_isPickUp && !_isDineIn) ...[
-                                    const SizedBox(height: 14),
-                                    const Divider(height: 1),
-                                    const SizedBox(height: 14),
-                                    _buildPickupTimePicker(setSheetState),
-                                  ],
-                                  // 🆕 Kurye: Scheduled delivery time picker
-                                  if (!_isPickUp && !_isDineIn) ...[
-                                    const SizedBox(height: 14),
-                                    const Divider(height: 1),
-                                    const SizedBox(height: 14),
-                                    _buildDeliveryTimePicker(setSheetState),
-                                  ],
-                                  // 🪑 Dine-in: Table number input
-                                  if (_isDineIn) ...[
-                                    const SizedBox(height: 12),
-                                    TextField(
-                                      controller: _tableNumberController,
-                                      readOnly: _scannedTableNumber != null,
-                                      enabled: _scannedTableNumber == null,
-                                      keyboardType: TextInputType.number,
-                                      textInputAction: TextInputAction.done,
-                                      onSubmitted: (_) => FocusScope.of(ctx).unfocus(),
-                                      onChanged: _scannedTableNumber != null ? null : (val) {
-                                        setSheetState(() {});
-                                        setState(() {
-                                          _scannedTableNumber = val.trim().isNotEmpty ? val.trim() : null;
-                                        });
-                                      },
-                                      decoration: InputDecoration(
-                                        hintText: _scannedTableNumber != null ? 'QR ile belirlendi' : 'Masa numaranızı girin',
-                                        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
-                                        prefixIcon: Icon(
-                                          _scannedTableNumber != null ? Icons.lock : Icons.table_bar,
-                                          color: _scannedTableNumber != null ? Colors.green : _accentColor,
-                                          size: 20,
-                                        ),
-                                        filled: true,
-                                        fillColor: Theme.of(context).colorScheme.surface,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                          borderSide: BorderSide(color: Colors.grey.shade300),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(10),
-                                          borderSide: BorderSide(color: _accentColor),
-                                        ),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                        isDense: true,
-                                      ),
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.onSurface,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                          ],
-
-                          // 💳 PAYMENT METHOD
-                          _buildCheckoutSectionHeader('💳', 'Ödeme Yöntemi'),
-                          const SizedBox(height: 8),
-                          // 💰 Wallet Balance Toggle
-                          if (_walletBalance > 0) ...[
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.green.shade300),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Text('💰', style: TextStyle(fontSize: 18)),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Cüzdan Bakiyesi', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 13)),
-                                        Text('${_walletBalance.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} mevcut', style: TextStyle(color: Colors.green[700], fontSize: 12)),
-                                      ],
-                                    ),
-                                  ),
-                                  Switch.adaptive(
-                                    value: _useWallet,
-                                    activeColor: Colors.green,
-                                    onChanged: (val) {
-                                      setSheetState(() => _useWallet = val);
-                                      setState(() {});
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade300),
-                            ),
-                            child: Column(
-                              children: [
-                                // 🪑 DINE-IN: "Sonra Ödeyeceğim" option (top row) — only if business allows payLater
-                                if (_isDineIn && _butcherData?['dineInPaymentMode'] != 'payFirst') ...[
-                                  GestureDetector(
-                                    onTap: () {
-                                      setSheetState(() {});
-                                      setState(() => _paymentMethod = 'payLater');
-                                    },
-                                    child: Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.symmetric(vertical: 12),
-                                      decoration: BoxDecoration(
-                                        color: _paymentMethod == 'payLater' ? _accentColor : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.schedule,
-                                            size: 18,
-                                            color: _paymentMethod == 'payLater' ? Colors.white : Colors.grey[600],
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            'Sonra Ödeyeceğim',
-                                            style: TextStyle(
-                                              color: _paymentMethod == 'payLater' ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                ],
-                                // Cash / Card row
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setSheetState(() {});
-                                          setState(() => _paymentMethod = 'cash');
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                          decoration: BoxDecoration(
-                                            color: _paymentMethod == 'cash' ? _accentColor : Colors.transparent,
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                (_isPickUp || _isDineIn) ? Icons.store_outlined : Icons.payments_outlined,
-                                                size: 18,
-                                                color: _paymentMethod == 'cash' ? Colors.white : Colors.grey[600],
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                (_isPickUp || _isDineIn) ? 'İşletmede Öde' : 'Kapıda Nakit',
-                                                style: TextStyle(
-                                                  color: _paymentMethod == 'cash' ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 13,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          setSheetState(() {});
-                                          setState(() => _paymentMethod = 'card');
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                          decoration: BoxDecoration(
-                                            color: _paymentMethod == 'card' ? _accentColor : Colors.transparent,
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.credit_card,
-                                                size: 18,
-                                                color: _paymentMethod == 'card' ? Colors.white : Colors.grey[600],
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                'marketplace.pay_by_card'.tr(),
-                                                style: TextStyle(
-                                                  color: _paymentMethod == 'card' ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Payment methods info row (animated)
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 250),
-                            curve: Curves.easeInOut,
-                            child: (_paymentMethod == 'card' || _paymentMethod == 'payLater')
-                                ? Padding(
-                                    padding: const EdgeInsets.only(top: 10),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: Colors.grey.shade200),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.info_outline, size: 16, color: Colors.grey[500]),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              _paymentMethod == 'payLater'
-                                                ? 'Hesabınızı masada kapatabilirsiniz'
-                                                : 'Apple Pay · Google Pay · Visa · Mastercard',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey[600],
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // 📦 ITEM UNAVAILABILITY PREFERENCE (Collapsible dropdown)
-                          _buildCollapsibleUnavailabilitySection(ctx, setSheetState, cart),
-                          const SizedBox(height: 20),
-
-                          // 🛒 ORDER ITEMS
-                          _buildCheckoutSectionHeader('🛒', 'Sipariş Detayı'),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade300),
-                            ),
-                            child: Column(
-                              children: [
-                                ...cart.items.map((item) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        '${item.quantity}x',
-                                        style: TextStyle(
-                                          color: _accentColor,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          I18nUtils.getLocalizedText(context, item.product.nameData),
-                                          style: TextStyle(
-                                            color: Theme.of(context).colorScheme.onSurface,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                                        style: TextStyle(
-                                          color: Theme.of(context).colorScheme.onSurface,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )),
-                                const Divider(),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('Ara Toplam', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                                    Text('${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
-                                  ],
-                                ),
-                                if (!_isPickUp && !_isDineIn) ...[
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text('Teslimat Ücreti', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                                      Text('${deliveryFee.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
-                                    ],
-                                  ),
-                                ],
-                                if (_appliedCoupon?.isValid == true) ...[
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.local_offer, size: 14, color: Colors.green),
-                                          const SizedBox(width: 4),
-                                          Text('Kupon İndirimi', style: TextStyle(color: Colors.green[700], fontSize: 13)),
-                                        ],
-                                      ),
-                                      Text('-${couponDiscount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
-                                    ],
-                                  ),
-                                ],
-                                if (firstOrderDiscountAmount > 0) ...[
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text('Hoş Geldin İndirimi', style: TextStyle(color: Colors.orange[700], fontSize: 13)),
-                                        ],
-                                      ),
-                                      Text('-${firstOrderDiscountAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.orange[700], fontSize: 13, fontWeight: FontWeight.w600)),
-                                    ],
-                                  ),
-                                ],
-                                if (_useWallet && walletApplied > 0) ...[
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          const Text('💰', style: TextStyle(fontSize: 14)),
-                                          const SizedBox(width: 4),
-                                          Text('Cüzdan Bakiyesi', style: TextStyle(color: Colors.green[700], fontSize: 13)),
-                                        ],
-                                      ),
-                                      Text('-${walletApplied.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
-                                    ],
-                                  ),
-                                ],
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text('Toplam', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
-                                    Text('${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: _accentColor, fontWeight: FontWeight.bold, fontSize: 16)),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // 🎉 FIRST ORDER DISCOUNT BANNER
-                          FutureBuilder<String?>(
-                            future: FirstOrderService.getBannerText(),
-                            builder: (context, snap) {
-                              if (!snap.hasData || snap.data == null) return const SizedBox.shrink();
-                              return Column(
-                                children: [
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [const Color(0xFFFF6B6B).withValues(alpha: 0.1), const Color(0xFFFFD93D).withValues(alpha: 0.1)],
-                                      ),
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: const Color(0xFFFFD93D).withValues(alpha: 0.4)),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            snap.data!,
-                                            style: TextStyle(
-                                              color: Theme.of(context).colorScheme.onSurface,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                ],
-                              );
-                            },
-                          ),
-
-                          // 🎟️ COUPON CODE
-                          _buildCheckoutSectionHeader('🎟️', 'Kupon / Promo Kodu'),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: couponController,
-                                  textCapitalization: TextCapitalization.characters,
-                                  textInputAction: TextInputAction.done,
-                                  onSubmitted: (_) => FocusScope.of(ctx).unfocus(),
-                                  enabled: _appliedCoupon?.isValid != true,
-                                  decoration: InputDecoration(
-                                    hintText: 'marketplace.enter_coupon'.tr(),
-                                    hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
-                                    filled: true,
-                                    fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.grey.shade300),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: _accentColor),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                    prefixIcon: Icon(Icons.local_offer_outlined, color: Colors.grey[500], size: 20),
-                                  ),
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.onSurface,
-                                    fontSize: 14,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              if (_appliedCoupon?.isValid == true)
-                                // Remove coupon button
-                                SizedBox(
-                                  height: 48,
-                                  child: OutlinedButton(
-                                    onPressed: () {
-                                      setSheetState(() {
-                                        _appliedCoupon = null;
-                                        couponController.clear();
-                                      });
-                                      setState(() {});
-                                    },
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: Colors.red,
-                                      side: const BorderSide(color: Colors.red),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    ),
-                                    child: const Icon(Icons.close, size: 20),
-                                  ),
-                                )
-                              else
-                                // Apply coupon button
-                                SizedBox(
-                                  height: 48,
-                                  child: ElevatedButton(
-                                    onPressed: _isValidatingCoupon ? null : () async {
-                                      final code = couponController.text.trim();
-                                      if (code.isEmpty) return;
-                                      setSheetState(() => _isValidatingCoupon = true);
-                                      final result = await _couponService.validateCoupon(
-                                        code: code,
-                                        orderAmount: total,
-                                        businessId: cart.butcherId,
-                                        userId: FirebaseAuth.instance.currentUser?.uid,
-                                      );
-                                      setSheetState(() {
-                                        _isValidatingCoupon = false;
-                                        _appliedCoupon = result;
-                                      });
-                                      setState(() {});
-                                      if (!result.isValid && ctx.mounted) {
-                                        ScaffoldMessenger.of(ctx).showSnackBar(
-                                          SnackBar(
-                                            content: Text(result.errorMessage ?? 'Geçersiz kupon'),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: _accentColor,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    ),
-                                    child: _isValidatingCoupon
-                                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                        : const Text('Uygula'),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          if (_appliedCoupon?.isValid == true)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.check_circle, color: Colors.green, size: 18),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      '${_appliedCoupon!.code} uygulandı! -${_appliedCoupon!.calculatedDiscount!.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
-                                      style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 20),
-
-                          // 📝 ORDER NOTE
-                          _buildCheckoutSectionHeader('📝', 'Sipariş Notu (opsiyonel)'),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: noteController,
-                            maxLines: 3,
-                            minLines: 2,
-                            textInputAction: TextInputAction.done,
-                            onSubmitted: (_) => FocusScope.of(ctx).unfocus(),
-                            decoration: InputDecoration(
-                              hintText: 'Ör: Kapı zili çalışmıyor, lütfen arayın…',
-                              hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
-                              filled: true,
-                              fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: _accentColor),
-                              ),
-                              contentPadding: const EdgeInsets.all(14),
-                            ),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                        ],
-                      ),
-                    ),
-                    ),
-                  ),
-                  // Bottom button
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -4),
-                        ),
-                      ],
-                    ),
-                    child: GestureDetector(
-                      onTap: _isSubmitting ? null : () {
-                        // Gel Al: require pickup time selection
-                        if (_isPickUp && !_isDineIn && _selectedPickupSlot == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Text('Lütfen bir teslim alma saati seçin'),
-                              backgroundColor: Colors.amber,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                          );
-                          return;
-                        }
-                        // Dine-in: require table number
-                        if (_isDineIn && (_scannedTableNumber ?? _tableNumberController.text.trim()).isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(tr('orders.please_enter_table_number')),
-                              backgroundColor: Colors.amber,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                          );
-                          return;
-                        }
-                        _orderNote = noteController.text;
-                        Navigator.pop(ctx);
-                        _submitOrder();
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        decoration: BoxDecoration(
-                          color: _isSubmitting ? Colors.grey : _accentColor,
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _accentColor.withValues(alpha: 0.3),
-                              blurRadius: 12,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: _isSubmitting
-                              ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2.5))
-                              : Text(
-                                  _isDineIn && _scannedTableNumber != null
-                                    ? 'Siparişi Gönder · Masa $_scannedTableNumber'
-                                    : 'Siparişi Gönder · ${grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.surface,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-               ),
-            );
-           },
-         );
-       },
-     );
-   }
+    if (!mounted) return;
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (routeContext, animation, secondaryAnimation) {
+          return _CheckoutFullPage(
+            total: total,
+            deliveryFee: deliveryFee,
+            couponDiscount: couponDiscount,
+            firstOrderDiscountAmount: firstOrderDiscountAmount,
+            walletApplied: walletApplied,
+            grandTotal: grandTotal,
+            noteController: noteController,
+            couponController: couponController,
+            cart: cart,
+            firebaseUser: firebaseUser,
+            authState: authState,
+            cartScreenState: this,
+          );
+        },
+        transitionsBuilder: (routeContext, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+          final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 350),
+        reverseTransitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
 
   /// 📍 Address Picker Bottom Sheet
   void _showAddressPickerSheet(
@@ -5882,9 +5107,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -5896,8 +5120,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           title: Row(
             children: [
-              const Text('📦', style: TextStyle(fontSize: 16)),
-              const SizedBox(width: 8),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -6606,121 +5829,128 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           ],
         ),
         const SizedBox(height: 10),
-        // ASAP / Scheduled toggle row
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  setSheetState(() {});
-                  setState(() => _scheduledDeliverySlot = null);
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: !isScheduled
-                        ? _accentColor.withValues(alpha: 0.12)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: !isScheduled
-                          ? _accentColor
-                          : (isDark ? Colors.grey[600]! : Colors.grey[300]!),
-                      width: !isScheduled ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.bolt,
-                        size: 16,
-                        color: !isScheduled
-                            ? _accentColor
-                            : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'En kısa sürede',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: !isScheduled ? FontWeight.w600 : FontWeight.w500,
-                          color: !isScheduled
-                              ? _accentColor
-                              : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  // Select first available slot
-                  if (_hoursHelper != null) {
-                    final grouped = _hoursHelper!.getAvailableSlotsGroupedByDay(
-                      isPickup: false,
-                      daysToCheck: 7,
-                      prepTimeMinutes: 60,
-                    );
-                    if (grouped.isNotEmpty) {
-                      final firstSlots = grouped.values.first;
-                      if (firstSlots.isNotEmpty) {
-                        setSheetState(() {});
-                        setState(() => _scheduledDeliverySlot = firstSlots.first);
-                      }
-                    }
+        // ASAP / Scheduled 3D pill toggle
+        ThreeDimensionalPillTabBar(
+          selectedIndex: isScheduled ? 1 : 0,
+          onTabSelected: (index) {
+            if (index == 0) {
+              // ASAP
+              _scheduledDeliverySlot = null;
+              _scheduledInfoDismissed = false;
+              setSheetState(() {});
+            } else {
+              // İleri tarih — select first available slot
+              if (_hoursHelper != null) {
+                final grouped = _hoursHelper!.getAvailableSlotsGroupedByDay(
+                  isPickup: false,
+                  daysToCheck: 7,
+                  prepTimeMinutes: 60,
+                );
+                if (grouped.isNotEmpty) {
+                  final firstSlots = grouped.values.first;
+                  if (firstSlots.isNotEmpty) {
+                    _scheduledDeliverySlot = firstSlots.first;
+                    _scheduledInfoDismissed = false;
+                    setSheetState(() {});
                   }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: isScheduled
-                        ? _accentColor.withValues(alpha: 0.12)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isScheduled
-                          ? _accentColor
-                          : (isDark ? Colors.grey[600]! : Colors.grey[300]!),
-                      width: isScheduled ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 14,
-                        color: isScheduled
-                            ? _accentColor
-                            : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'İleri tarih',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: isScheduled ? FontWeight.w600 : FontWeight.w500,
-                          color: isScheduled
-                              ? _accentColor
-                              : (isDark ? Colors.grey[400] : Colors.grey[600]),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                }
+              }
+            }
+          },
+          tabs: const [
+            TabItem(title: 'En kısa sürede', icon: Icons.bolt),
+            TabItem(title: 'İleri tarih', icon: Icons.calendar_today),
           ],
         ),
         // Show wheel picker only when scheduled
         if (isScheduled && _hoursHelper != null) ...[
           const SizedBox(height: 12),
           _buildScheduledDeliveryWheelPicker(setSheetState),
+          const SizedBox(height: 12),
+          // Info note about scheduled delivery
+          if (!_scheduledInfoDismissed)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Theme.of(context).colorScheme.surfaceContainerHighest
+                  : Colors.blue.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark
+                    ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)
+                    : Colors.blue.withValues(alpha: 0.15),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: isDark ? Colors.grey[400] : Colors.blue[400]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Siparişinizi seçtiğiniz saatte teslim etmeye özen gösteriyoruz. Ancak trafik yoğunluğu veya öngörülemeyen sebeplerden dolayı teslimat zamanında hafif farklılıklar olabilir.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.location_on_outlined, size: 16, color: isDark ? Colors.grey[400] : Colors.blue[400]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Kuryenizi canlı harita üzerinden gerçek zamanlı takip edebilirsiniz.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isDark ? Colors.grey[300] : Colors.blue[700],
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // Dismiss button
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () {
+                      _scheduledInfoDismissed = true;
+                      setSheetState(() {});
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)
+                            : Colors.blue.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Anladım ✓',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.grey[300] : Colors.blue[700],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ],
     );
@@ -6732,6 +5962,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       isPickup: false,
       daysToCheck: 7,
       prepTimeMinutes: 60,
+      slotIntervalMinutes: 15,
     );
 
     if (grouped.isEmpty) {
@@ -6765,9 +5996,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final isToday = dateKey.day == now.day && dateKey.month == now.month && dateKey.year == now.year;
       final tomorrow = now.add(const Duration(days: 1));
       final isTomorrow = dateKey.day == tomorrow.day && dateKey.month == tomorrow.month && dateKey.year == tomorrow.year;
-      if (isToday) return 'Bugün';
-      if (isTomorrow) return 'Yarın';
-      return dayNames[dateKey.weekday - 1];
+      final dateStr = '${dateKey.day.toString().padLeft(2, '0')}.${dateKey.month.toString().padLeft(2, '0')}';
+      if (isToday) return 'Bugün, $dateStr';
+      if (isTomorrow) return 'Yarın, $dateStr';
+      return '${dayNames[dateKey.weekday - 1]}, $dateStr';
     }).toList();
 
     int initialDayIndex = 0;
@@ -6865,9 +6097,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         flex: 5,
                         child: CupertinoPicker(
                           scrollController: FixedExtentScrollController(initialItem: currentDayIndex),
-                          itemExtent: 36,
-                          diameterRatio: 1.2,
-                          squeeze: 1.1,
+                          itemExtent: 40,
+                          diameterRatio: 1.5,
+                          squeeze: 1.0,
+                          useMagnifier: true,
+                          magnification: 1.05,
                           selectionOverlay: const SizedBox.shrink(),
                           onSelectedItemChanged: (index) {
                             setPickerState(() {
@@ -6878,7 +6112,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             });
                             if (currentTimeSlots.isNotEmpty) {
                               final slot = currentTimeSlots[0];
-                              setSheetState(() {});
                               setState(() => _scheduledDeliverySlot = slot);
                             }
                           },
@@ -6909,9 +6142,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         flex: 4,
                         child: CupertinoPicker(
                           scrollController: timeController,
-                          itemExtent: 36,
-                          diameterRatio: 1.2,
-                          squeeze: 1.1,
+                          itemExtent: 40,
+                          diameterRatio: 1.5,
+                          squeeze: 1.0,
+                          useMagnifier: true,
+                          magnification: 1.05,
                           selectionOverlay: const SizedBox.shrink(),
                           onSelectedItemChanged: (index) {
                             setPickerState(() {
@@ -6919,7 +6154,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             });
                             if (currentTimeSlots.isNotEmpty && index < currentTimeSlots.length) {
                               final slot = currentTimeSlots[index];
-                              setSheetState(() {});
                               setState(() => _scheduledDeliverySlot = slot);
                             }
                           },
@@ -6972,3 +6206,842 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   }
 
 }
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 🛒 FULL-PAGE CHECKOUT (replaces the old bottom sheet)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CheckoutFullPage extends StatefulWidget {
+  final double total;
+  final double deliveryFee;
+  final double couponDiscount;
+  final double firstOrderDiscountAmount;
+  final double walletApplied;
+  final double grandTotal;
+  final TextEditingController noteController;
+  final TextEditingController couponController;
+  final CartState cart;
+  final dynamic firebaseUser;
+  final dynamic authState;
+  final _CartScreenState cartScreenState;
+
+  const _CheckoutFullPage({
+    required this.total,
+    required this.deliveryFee,
+    required this.couponDiscount,
+    required this.firstOrderDiscountAmount,
+    required this.walletApplied,
+    required this.grandTotal,
+    required this.noteController,
+    required this.couponController,
+    required this.cart,
+    required this.firebaseUser,
+    required this.authState,
+    required this.cartScreenState,
+  });
+
+  @override
+  State<_CheckoutFullPage> createState() => _CheckoutFullPageState();
+}
+
+class _CheckoutFullPageState extends State<_CheckoutFullPage> {
+  final ScrollController _scrollController = ScrollController();
+  bool _hasScrolledForKeyboard = false;
+
+  // Cached futures to prevent re-fetch on every setState (causes tremble)
+  late final Future<String?> _bannerTextFuture;
+  late final Future<DocumentSnapshot> _userDocFuture;
+
+  // Convenience accessor
+  _CartScreenState get parent => widget.cartScreenState;
+
+  @override
+  void initState() {
+    super.initState();
+    _bannerTextFuture = FirstOrderService.getBannerText();
+    _userDocFuture = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.firebaseUser?.uid ?? widget.authState.appUser?.uid)
+        .get();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    // Auto-scroll when keyboard opens
+    if (bottomInset > 0 && !_hasScrolledForKeyboard) {
+      _hasScrolledForKeyboard = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    } else if (bottomInset == 0) {
+      _hasScrolledForKeyboard = false;
+    }
+
+    final accentColor = parent._accentColor;
+
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        elevation: 0,
+        scrolledUnderElevation: 0.5,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Sipariş Özeti',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+        ),
+        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: _buildStepIndicator(context, accentColor),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Scrollable content
+          Expanded(
+            child: GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottomInset),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 🎉 FIRST ORDER DISCOUNT BANNER (top priority)
+                    FutureBuilder<String?>(
+                      future: _bannerTextFuture,
+                      builder: (context, snap) {
+                        if (!snap.hasData || snap.data == null) return const SizedBox.shrink();
+                        return Column(
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [const Color(0xFFFF6B6B).withValues(alpha: 0.1), const Color(0xFFFFD93D).withValues(alpha: 0.1)],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      snap.data!,
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      },
+                    ),
+
+                    // 1️⃣ SİPARİŞ DETAYI (Order Items - first)
+                    parent._buildCheckoutSectionHeader('', 'Sipariş Detayı'),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          ...widget.cart.items.map<Widget>((item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                Text('${item.quantity}x', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    I18nUtils.getLocalizedText(context, item.product.nameData),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                                  ),
+                                ),
+                                Text(
+                                  '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          )),
+                          const Divider(),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Ara Toplam', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                              Text('${widget.total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                            ],
+                          ),
+                          if (!parent._isPickUp && !parent._isDineIn) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Teslimat Ücreti', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                Text('${widget.deliveryFee.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
+                              ],
+                            ),
+                          ],
+                          if (parent._appliedCoupon?.isValid == true) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(children: [
+                                  const Icon(Icons.local_offer, size: 14, color: Colors.green),
+                                  const SizedBox(width: 4),
+                                  Text('Kupon İndirimi', style: TextStyle(color: Colors.green[700], fontSize: 13)),
+                                ]),
+                                Text('-${widget.couponDiscount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ],
+                          if (widget.firstOrderDiscountAmount > 0) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Hoş Geldin İndirimi', style: TextStyle(color: Colors.orange[700], fontSize: 13)),
+                                Text('-${widget.firstOrderDiscountAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.orange[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ],
+                          if (parent._useWallet && widget.walletApplied > 0) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(children: [
+                                  const Text('💰', style: TextStyle(fontSize: 14)),
+                                  const SizedBox(width: 4),
+                                  Text('Cüzdan Bakiyesi', style: TextStyle(color: Colors.green[700], fontSize: 13)),
+                                ]),
+                                Text('-${widget.walletApplied.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Toplam', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
+                              Text('${widget.grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 2️⃣ TESLİMAT ADRESİ (only for delivery)
+                    if (!parent._isPickUp && !parent._isDineIn) ...[
+                      parent._buildCheckoutSectionHeader('', 'Teslimat Adresi'),
+                      const SizedBox(height: 8),
+                      FutureBuilder<DocumentSnapshot>(
+                        future: _userDocFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
+                            );
+                          }
+                          final userData = snapshot.data?.data() as Map<String, dynamic>?;
+                          final profileStreet = userData?['address'] ?? '';
+                          final profileHouseNumber = userData?['houseNumber'] ?? '';
+                          final profilePostalCode = userData?['postalCode'] ?? '';
+                          final profileCity = userData?['city'] ?? '';
+                          final profileStreetFull = profileHouseNumber.isNotEmpty ? '$profileStreet $profileHouseNumber' : profileStreet;
+                          final profileFullAddress = [profileStreetFull, '$profilePostalCode $profileCity'].where((s) => s.trim().isNotEmpty).join(', ');
+                          final hasProfileAddress = profileFullAddress.trim().isNotEmpty && profileStreet.toString().trim().isNotEmpty;
+
+                          final displayAddress = parent._selectedDeliveryAddress != null
+                              ? [
+                                  parent._selectedDeliveryAddress!['houseNumber']!.isNotEmpty 
+                                      ? '${parent._selectedDeliveryAddress!['street']} ${parent._selectedDeliveryAddress!['houseNumber']}'
+                                      : parent._selectedDeliveryAddress!['street'] ?? '',
+                                  '${parent._selectedDeliveryAddress!['postalCode']} ${parent._selectedDeliveryAddress!['city']}'
+                                ].where((s) => s.trim().isNotEmpty).join(', ')
+                              : profileFullAddress;
+                          final hasAddress = parent._selectedDeliveryAddress != null || hasProfileAddress;
+
+                          return GestureDetector(
+                            onTap: () => parent._showAddressPickerSheet(
+                              context, 
+                              setState, 
+                              widget.firebaseUser?.uid ?? widget.authState.appUser?.uid ?? '',
+                              profileAddress: hasProfileAddress ? {
+                                'street': profileStreet.toString(),
+                                'houseNumber': profileHouseNumber.toString(),
+                                'postalCode': profilePostalCode.toString(),
+                                'city': profileCity.toString(),
+                              } : null,
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                borderRadius: BorderRadius.circular(12),
+                                border: !hasAddress ? Border.all(color: Colors.amber.shade300) : null,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    hasAddress ? Icons.location_on : Icons.warning_amber_rounded,
+                                    color: hasAddress ? accentColor : Colors.amber,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      hasAddress ? displayAddress : 'Adres bilgisi bulunamadı.\nAdres eklemek için dokunun.',
+                                      style: TextStyle(
+                                        color: hasAddress ? Theme.of(context).colorScheme.onSurface : Colors.amber.shade700,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  if (hasAddress)
+                                    Icon(Icons.edit_outlined, color: Colors.grey[500], size: 18),
+                                  if (!hasAddress)
+                                    Icon(Icons.add_circle_outline, color: Colors.amber, size: 20),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // 3️⃣ TESLİMAT ZAMANI (Delivery time picker)
+                    if (!parent._isPickUp && !parent._isDineIn) ...[
+                      parent._buildCheckoutSectionHeader('', 'Teslimat Zamanı'),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: parent._buildDeliveryTimePicker(setState),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // 3️⃣ GEL AL / MASA info
+                    if (parent._isPickUp || parent._isDineIn) ...[
+                      parent._buildCheckoutSectionHeader('', parent._isDineIn ? 'Masada Sipariş' : 'Gel Al'),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Icon(parent._isDineIn ? Icons.restaurant : Icons.store, color: accentColor, size: 22),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        parent._butcherData?['companyName'] ?? widget.cart.butcherName ?? 'İşletme',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      if (parent._isDineIn && parent._scannedTableNumber != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 2),
+                                          child: Text(
+                                            'Masa ${parent._scannedTableNumber}  ✓',
+                                            style: TextStyle(
+                                              color: Colors.green[700],
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                              ],
+                            ),
+                            // Gel Al: Pickup time
+                            if (parent._isPickUp && !parent._isDineIn) ...[
+                              const SizedBox(height: 14),
+                              const Divider(height: 1),
+                              const SizedBox(height: 14),
+                              parent._buildPickupTimePicker(setState),
+                            ],
+                            // Dine-in: Table number
+                            if (parent._isDineIn) ...[
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller: parent._tableNumberController,
+                                readOnly: parent._scannedTableNumber != null,
+                                enabled: parent._scannedTableNumber == null,
+                                keyboardType: TextInputType.number,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                                onChanged: parent._scannedTableNumber != null ? null : (val) {
+                                  setState(() {
+                                    parent._scannedTableNumber = val.trim().isNotEmpty ? val.trim() : null;
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  hintText: parent._scannedTableNumber != null ? 'QR ile belirlendi' : 'Masa numaranızı girin',
+                                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+                                  prefixIcon: Icon(
+                                    parent._scannedTableNumber != null ? Icons.lock : Icons.table_bar,
+                                    color: parent._scannedTableNumber != null ? Colors.green : accentColor,
+                                    size: 20,
+                                  ),
+                                  filled: true,
+                                  fillColor: Theme.of(context).colorScheme.surface,
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: accentColor)),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                  isDense: true,
+                                ),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // 4️⃣ ÜRÜN BULUNAMAZSA (Item Unavailability)
+                    parent._buildCollapsibleUnavailabilitySection(context, setState, widget.cart),
+                    const SizedBox(height: 20),
+
+                    // 5️⃣ ÖDEME YÖNTEMİ (Payment Method)
+                    parent._buildCheckoutSectionHeader('', 'Ödeme Yöntemi'),
+                    const SizedBox(height: 8),
+                    // Wallet
+                    if (parent._walletBalance > 0) ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Text('💰', style: TextStyle(fontSize: 18)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Cüzdan Bakiyesi', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 13)),
+                                  Text('${parent._walletBalance.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} mevcut', style: TextStyle(color: Colors.green[700], fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                            Switch.adaptive(
+                              value: parent._useWallet,
+                              activeTrackColor: Colors.green,
+                              onChanged: (val) {
+                                setState(() => parent._useWallet = val);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          // Dine-in: payLater
+                          if (parent._isDineIn && parent._butcherData?['dineInPaymentMode'] != 'payFirst') ...[
+                            GestureDetector(
+                              onTap: () {
+                                setState(() => parent._paymentMethod = 'payLater');
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: parent._paymentMethod == 'payLater' ? accentColor : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.schedule, size: 18, color: parent._paymentMethod == 'payLater' ? Colors.white : Colors.grey[600]),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Sonra Ödeyeceğim',
+                                      style: TextStyle(
+                                        color: parent._paymentMethod == 'payLater' ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                          ],
+                          // Cash / Card pill toggle
+                          ThreeDimensionalPillTabBar(
+                            selectedIndex: parent._paymentMethod == 'card' ? 1 : 0,
+                            onTabSelected: (index) {
+                              setState(() => parent._paymentMethod = index == 0 ? 'cash' : 'card');
+                            },
+                            tabs: [
+                              TabItem(
+                                title: (parent._isPickUp || parent._isDineIn) ? 'İşletmede Öde' : 'Kapıda Nakit',
+                                icon: (parent._isPickUp || parent._isDineIn) ? Icons.store_outlined : Icons.payments_outlined,
+                              ),
+                              TabItem(
+                                title: 'marketplace.pay_by_card'.tr(),
+                                icon: Icons.credit_card,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 6️⃣ KUPON / PROMO KODU
+                    parent._buildCheckoutSectionHeader('', 'Kupon / Promo Kodu'),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: widget.couponController,
+                            textCapitalization: TextCapitalization.characters,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                            enabled: parent._appliedCoupon?.isValid != true,
+                            decoration: InputDecoration(
+                              hintText: 'marketplace.enter_coupon'.tr(),
+                              hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+                              filled: true,
+                              fillColor: Theme.of(context).colorScheme.surface,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accentColor)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              prefixIcon: Icon(Icons.local_offer_outlined, color: Colors.grey[500], size: 20),
+                            ),
+                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, letterSpacing: 1.2),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        if (parent._appliedCoupon?.isValid == true)
+                          SizedBox(
+                            height: 48,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                setState(() {
+                                  parent._appliedCoupon = null;
+                                  widget.couponController.clear();
+                                });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: const Icon(Icons.close, size: 20),
+                            ),
+                          )
+                        else
+                          SizedBox(
+                            height: 48,
+                            child: ElevatedButton(
+                              onPressed: parent._isValidatingCoupon ? null : () async {
+                                final code = widget.couponController.text.trim();
+                                if (code.isEmpty) return;
+                                setState(() => parent._isValidatingCoupon = true);
+                                final result = await parent._couponService.validateCoupon(
+                                  code: code,
+                                  orderAmount: widget.total,
+                                  businessId: widget.cart.butcherId,
+                                  userId: FirebaseAuth.instance.currentUser?.uid,
+                                );
+                                setState(() {
+                                  parent._isValidatingCoupon = false;
+                                  parent._appliedCoupon = result;
+                                });
+                                if (!result.isValid && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(result.errorMessage ?? 'Geçersiz kupon'), backgroundColor: Colors.red),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accentColor,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: parent._isValidatingCoupon
+                                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : const Text('Uygula'),
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (parent._appliedCoupon?.isValid == true)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${parent._appliedCoupon!.code} uygulandı! -${parent._appliedCoupon!.calculatedDiscount!.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                                style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+
+                    // 7️⃣ SİPARİŞ NOTU (Order Note - last)
+                    parent._buildCheckoutSectionHeader('', 'Sipariş Notu (opsiyonel)'),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: widget.noteController,
+                      maxLines: 3,
+                      minLines: 2,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                      decoration: InputDecoration(
+                        hintText: 'Ör: Kapı zili çalışmıyor, lütfen arayın…',
+                        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+                        filled: true,
+                        fillColor: Theme.of(context).colorScheme.surface,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accentColor)),
+                        contentPadding: const EdgeInsets.all(14),
+                      ),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Bottom submit button
+          Container(
+            padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            child: GestureDetector(
+              onTap: parent._isSubmitting ? null : () {
+                // Gel Al: require pickup time
+                if (parent._isPickUp && !parent._isDineIn && parent._selectedPickupSlot == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Lütfen bir teslim alma saati seçin'),
+                      backgroundColor: Colors.amber,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                  return;
+                }
+                // Dine-in: require table number
+                if (parent._isDineIn && (parent._scannedTableNumber ?? parent._tableNumberController.text.trim()).isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(tr('orders.please_enter_table_number')),
+                      backgroundColor: Colors.amber,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                  return;
+                }
+                parent._orderNote = widget.noteController.text;
+                Navigator.pop(context);
+                parent._submitOrder();
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: parent._isSubmitting ? Colors.grey : accentColor,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: parent._isSubmitting
+                      ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2.5))
+                      : Text(
+                          parent._isDineIn && parent._scannedTableNumber != null
+                            ? 'Siparişi Gönder · Masa ${parent._scannedTableNumber}'
+                            : 'Siparişi Gönder · ${widget.grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.surface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Step indicator: ● Sepet (done) → ● Ödeme (current) → ○ Onay
+  Widget _buildStepIndicator(BuildContext context, Color accentColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Row(
+        children: [
+          _buildStep(context, 'Sepet', 0, accentColor, isDone: true),
+          _buildStepConnector(context, accentColor, isDone: true),
+          _buildStep(context, 'Ödeme', 1, accentColor, isCurrent: true),
+          _buildStepConnector(context, accentColor, isDone: false),
+          _buildStep(context, 'Onay', 2, accentColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep(BuildContext context, String label, int index, Color accentColor, {bool isDone = false, bool isCurrent = false}) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDone ? accentColor : (isCurrent ? accentColor : Colors.grey.shade300),
+              boxShadow: isCurrent ? [
+                BoxShadow(color: accentColor.withValues(alpha: 0.3), blurRadius: 8, spreadRadius: 1),
+              ] : null,
+            ),
+            child: Center(
+              child: isDone
+                  ? const Icon(Icons.check, color: Colors.white, size: 16)
+                  : Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: isCurrent ? Colors.white : Colors.grey[600],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: (isDone || isCurrent) ? accentColor : Colors.grey[500],
+              fontSize: 11,
+              fontWeight: (isDone || isCurrent) ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepConnector(BuildContext context, Color accentColor, {required bool isDone}) {
+    return Container(
+      height: 2,
+      width: 24,
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: isDone ? accentColor : Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(1),
+      ),
+    );
+  }
+}
+

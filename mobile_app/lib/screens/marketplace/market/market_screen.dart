@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -672,7 +673,90 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             ),
           ),
           
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
+
+          // Bildirim zili (notification bell)
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push('/notification-history');
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseAuth.instance.currentUser != null
+                    ? FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser!.uid)
+                        .collection('notifications')
+                        .where('read', isEqualTo: false)
+                        .snapshots()
+                    : null,
+                builder: (context, snapshot) {
+                  final unreadCount = snapshot.data?.docs.length ?? 0;
+                  final isDark = Theme.of(context).brightness == Brightness.dark;
+
+                  return Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : Colors.grey.shade100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          unreadCount > 0
+                              ? Icons.notifications_rounded
+                              : Icons.notifications_outlined,
+                          color: isDark ? Colors.white70 : Colors.grey.shade700,
+                          size: 20,
+                        ),
+                      ),
+                      if (unreadCount > 0)
+                        Positioned(
+                          top: -2,
+                          right: -4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF9500), Color(0xFFFF6B00)],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Theme.of(context).scaffoldBackgroundColor,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFF9500).withValues(alpha: 0.4),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              unreadCount > 99 ? '99+' : '$unreadCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 2),
           
           // Favoriler (kalp ikonu)
           GestureDetector(
@@ -964,7 +1048,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          // TUNA Kasaplar pill toggle - hap şeklinde, kırmızı
+          // TUNA pill toggle - hap şeklinde
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
@@ -973,31 +1057,21 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: _onlyTuna ? const Color(0xFFFB335B) : Colors.transparent,
+                color: _onlyTuna ? const Color(0xFFA01E22) : Colors.transparent,
                 borderRadius: BorderRadius.circular(20), // Pill shape
                 border: Border.all(
-                  color: _onlyTuna ? const Color(0xFFFB335B) : Colors.grey.shade400,
+                  color: _onlyTuna ? const Color(0xFFA01E22) : Colors.grey.shade400,
                   width: 1.5,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _onlyTuna ? Icons.check_box : Icons.check_box_outline_blank,
-                    color: _onlyTuna ? Colors.white : Colors.grey[600],
-                    size: 18,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'TUNA Kasaplar',
-                    style: TextStyle(
-                      color: _onlyTuna ? Colors.white : Colors.grey[600],
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+              child: Text(
+                'TUNA',
+                style: TextStyle(
+                  color: _onlyTuna ? const Color(0xFF69B445) : Colors.grey[600],
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ),
@@ -1021,31 +1095,21 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: _onlyTuna ? const Color(0xFFFB335B) : Colors.transparent,
+                color: _onlyTuna ? const Color(0xFFA01E22) : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: _onlyTuna ? const Color(0xFFFB335B) : Colors.grey.shade400,
+                  color: _onlyTuna ? const Color(0xFFA01E22) : Colors.grey.shade400,
                   width: 1.5,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _onlyTuna ? Icons.check_box : Icons.check_box_outline_blank,
-                    color: _onlyTuna ? Colors.white : Colors.grey[600],
-                    size: 18,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'TUNA Marketler',
-                    style: TextStyle(
-                      color: _onlyTuna ? Colors.white : Colors.grey[600],
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+              child: Text(
+                'TUNA',
+                style: TextStyle(
+                  color: _onlyTuna ? const Color(0xFF69B445) : Colors.grey[600],
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
           ),
@@ -1324,7 +1388,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFB335B), // TUNA red
+                        color: const Color(0xFFA01E22), // TUNA dark red
                         borderRadius: BorderRadius.circular(16), // Pill shape
                         boxShadow: [
                           BoxShadow(
@@ -1337,7 +1401,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       child: const Text(
                         'TUNA',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: Color(0xFF69B445), // TUNA green
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,

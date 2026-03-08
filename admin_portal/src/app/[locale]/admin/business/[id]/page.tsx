@@ -1488,7 +1488,9 @@ export default function BusinessDetailsPage() {
         if (ef.appPrice !== undefined) updateData.appPrice = parseFloat(ef.appPrice) || 0;
         if (ef.eslPrice !== undefined) updateData.eslPrice = parseFloat(ef.eslPrice) || 0;
         if (ef.courierPrice !== undefined) updateData.courierPrice = parseFloat(ef.courierPrice) || 0;
-        if (ef.storePrice !== undefined) updateData.storePrice = parseFloat(ef.storePrice) || 0;
+        // ESL = Dükkan = Gel-Al: storePrice always syncs with eslPrice
+        if (ef.eslPrice !== undefined) updateData.storePrice = parseFloat(ef.eslPrice) || 0;
+        else if (ef.storePrice !== undefined) updateData.storePrice = parseFloat(ef.storePrice) || 0;
         // Product details
         if (ef.ingredients !== undefined) updateData.ingredients = ef.ingredients;
         if (ef.consumptionInfo !== undefined) updateData.consumptionInfo = ef.consumptionInfo;
@@ -4675,21 +4677,20 @@ export default function BusinessDetailsPage() {
                                                         )}
                                                       </div>
 
-                                                      {/* 🏪 ESL + 🚚 Kanal Fiyatları */}
+                                                      {/* 🏷️ Kanal Fiyatları (Konsolide) */}
                                                       <div className="pb-4">
-                                                        <h3 className="text-sm font-medium text-emerald-400 mb-3">🏪 Kanal Fiyatları <span className="text-xs text-gray-500">(ESL, Kurye, Dükkan)</span></h3>
-                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                        <h3 className="text-sm font-medium text-emerald-400 mb-3">🏷️ Kanal Fiyatları</h3>
+                                                        <p className="text-xs text-gray-500 mb-3">ESL etiketi = Dükkan fiyatı = Gel-Al fiyatı. Müşteri mağazaya geldiğinde etiketteki fiyatı görür.</p>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                           <div>
-                                                            <label className="text-xs text-gray-400 mb-1 block">ESL Fiyatı (€)</label>
-                                                            <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
+                                                            <label className="text-xs text-gray-400 mb-1 block">🏷️ ESL / Dükkan & Gel-Al Fiyatı (€)</label>
+                                                            <input type="number" step="0.01" value={editFormFull.eslPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, eslPrice: e.target.value, storePrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
+                                                            <span className="text-[10px] text-gray-600 mt-1 block">ESL etiketinde, gel-al ve dükkan siparişlerinde bu fiyat gösterilir</span>
                                                           </div>
                                                           <div>
-                                                            <label className="text-xs text-gray-400 mb-1 block">Kurye Fiyatı (€)</label>
+                                                            <label className="text-xs text-gray-400 mb-1 block">🛵 Kurye Fiyatı (€)</label>
                                                             <input type="number" step="0.01" value={editFormFull.courierPrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, courierPrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
-                                                          </div>
-                                                          <div>
-                                                            <label className="text-xs text-gray-400 mb-1 block">Dükkan Fiyatı (€)</label>
-                                                            <input type="number" step="0.01" value={editFormFull.storePrice || ''} onChange={e => setEditFormFull((p: any) => ({ ...p, storePrice: e.target.value }))} className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-emerald-500 focus:outline-none" placeholder="Boş = Satış fiyatı" />
+                                                            <span className="text-[10px] text-gray-600 mt-1 block">Kurye ile teslimat siparişlerinde bu fiyat gösterilir</span>
                                                           </div>
                                                         </div>
                                                       </div>

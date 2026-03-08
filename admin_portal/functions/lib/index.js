@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.onShiftEnd = exports.iotGateway = exports.onScheduledReservationReminders = exports.onReservationStatusChange = exports.onNewReservation = exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
+exports.preOrderReminder = exports.onShiftEnd = exports.iotGateway = exports.onScheduledReservationReminders = exports.onReservationStatusChange = exports.onNewReservation = exports.onScheduledFeedbackRequests = exports.onScheduledMonthlyDeliveryPauseReport = exports.onScheduledMonthlyInvoicing = exports.onOrderStatusChange = exports.onNewOrder = void 0;
 const admin = __importStar(require("firebase-admin"));
 const firestore_1 = require("firebase-functions/v2/firestore");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
@@ -45,11 +45,16 @@ const params_1 = require("firebase-functions/params");
 const stripe_1 = __importDefault(require("stripe"));
 const resend_1 = require("resend");
 const invoicePdf_1 = require("./invoicePdf");
+const lexwareService_1 = require("./services/lexwareService");
+const billingDataCollector_1 = require("./services/billingDataCollector");
 const iot_gateway_1 = require("./iot-gateway");
 const translation_1 = require("./utils/translation");
 // Define secrets for secure key management
 const stripeSecretKey = (0, params_1.defineSecret)("STRIPE_SECRET_KEY");
+const stripeTestSecretKey = (0, params_1.defineSecret)("STRIPE_TEST_SECRET_KEY");
+const useStripeTestMode = (0, params_1.defineBoolean)("NEXT_PUBLIC_USE_STRIPE_TEST_MODE", { default: false });
 const resendApiKey = (0, params_1.defineSecret)("RESEND_API_KEY");
+const lexwareApiKey = (0, params_1.defineSecret)("LEXWARE_API_KEY");
 admin.initializeApp();
 const messaging = admin.messaging();
 const db = admin.firestore();
@@ -74,6 +79,51 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
     const orderNumber = rawOrderNum ? `${orderPrefix} #${rawOrderNum}` : "Yeni Sipariş";
     const totalAmount = order.totalAmount || 0;
     const customerName = order.customerName || "Müşteri";
+    // ── Pre-Order Detection ──────────────────────────────────────────────
+    const isPickupOrder = order.deliveryMethod === "pickup";
+    const isDeliveryOrder = order.deliveryMethod === "delivery";
+    const pickupTimestamp = order.pickupTime; // Firestore Timestamp (Gel Al)
+    const scheduledDeliveryTimestamp = order.scheduledDeliveryTime || order.scheduledDateTime; // Kurye scheduled
+    const isScheduledOrder = order.isScheduledOrder === true;
+    let isPreOrder = false;
+    let pickupTimeStr = "";
+    let pickupDate = null;
+    // Helper to format a date nicely
+    const formatScheduledDate = (d) => {
+        const hours = d.getHours().toString().padStart(2, "0");
+        const minutes = d.getMinutes().toString().padStart(2, "0");
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        if (d.toDateString() === today.toDateString()) {
+            return `Bugün ${hours}:${minutes}`;
+        }
+        else if (d.toDateString() === tomorrow.toDateString()) {
+            return `Yarın ${hours}:${minutes}`;
+        }
+        else {
+            const dayNames = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+            return `${dayNames[d.getDay()]} ${hours}:${minutes}`;
+        }
+    };
+    // Case 1: Gel Al (pickup) pre-order
+    if (isPickupOrder && pickupTimestamp) {
+        const pd = pickupTimestamp.toDate();
+        pickupDate = pd;
+        const now = new Date();
+        isPreOrder = (pd.getTime() - now.getTime()) > 30 * 60 * 1000;
+        pickupTimeStr = formatScheduledDate(pd);
+    }
+    // Case 2: Kurye (delivery) scheduled/pre-order
+    if (isDeliveryOrder && (isScheduledOrder || scheduledDeliveryTimestamp)) {
+        const sd = scheduledDeliveryTimestamp ? scheduledDeliveryTimestamp.toDate() : null;
+        if (sd) {
+            pickupDate = sd;
+            const now = new Date();
+            isPreOrder = (sd.getTime() - now.getTime()) > 30 * 60 * 1000;
+            pickupTimeStr = formatScheduledDate(sd);
+        }
+    }
     // Get butcher admin FCM tokens (mobile)
     try {
         const butcherDoc = await admin.firestore()
@@ -83,15 +133,22 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
         const butcherData = butcherDoc.data();
         const fcmTokens = butcherData?.fcmTokens || [];
         if (fcmTokens.length > 0) {
+            const notifTitle = isPreOrder
+                ? `📋 Ön Sipariş (Gel Al)!`
+                : "🔔 Yeni Sipariş!";
+            const notifBody = isPreOrder && pickupTimeStr
+                ? `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€ — Teslim: ${pickupTimeStr}`
+                : `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`;
             const message = {
                 notification: {
-                    title: "🔔 Yeni Sipariş!",
-                    body: `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`,
+                    title: notifTitle,
+                    body: notifBody,
                 },
                 data: {
-                    type: "new_order",
+                    type: isPreOrder ? "pre_order" : "new_order",
                     orderId: event.params.orderId,
                     orderNumber: orderNumber,
+                    ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
                 },
                 tokens: fcmTokens,
             };
@@ -134,15 +191,22 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
             .get();
         superSnapshot.docs.forEach(processDoc);
         if (webTokens.length > 0) {
+            const webNotifTitle = isPreOrder
+                ? `📋 Ön Sipariş (Gel Al)!`
+                : "🔔 Yeni Sipariş!";
+            const webNotifBody = isPreOrder && pickupTimeStr
+                ? `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€ — Teslim: ${pickupTimeStr}`
+                : `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`;
             const webMessage = {
                 notification: {
-                    title: "🔔 Yeni Sipariş!",
-                    body: `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`,
+                    title: webNotifTitle,
+                    body: webNotifBody,
                 },
                 data: {
-                    type: "new_order",
+                    type: isPreOrder ? "pre_order" : "new_order",
                     orderId: event.params.orderId,
                     orderNumber: orderNumber,
+                    ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
                 },
                 tokens: webTokens,
             };
@@ -200,6 +264,131 @@ exports.onNewOrder = (0, firestore_1.onDocumentCreated)("meat_orders/{orderId}",
     }
     catch (iotError) {
         console.error("[IoT Gateway] Error:", iotError);
+    }
+    // ── Save "pending" notification to customer's notification history ────
+    // This ensures the notification timeline starts from order placement
+    const customerId = order.userId || order.customerId;
+    if (customerId) {
+        try {
+            const businessName2 = order.butcherName || order.businessName || "İşletme";
+            const pendingTitle = `⏳ ${orderNumber}`;
+            const deliveryLabel = isPickupOrder ? "Gel Al" : "Kurye Teslimat";
+            const pendingBody = isPreOrder && pickupTimeStr
+                ? `Ön siparişiniz alındı — ${deliveryLabel}: ${pickupTimeStr}`
+                : `Siparişiniz alındı — ${businessName2} onayını bekliyor.`;
+            // Fetch business address info
+            let businessCity = "";
+            let businessPostalCode = "";
+            try {
+                const bDoc = await db.collection("butcher_admins").doc(butcherId).get();
+                const bData = bDoc.data();
+                if (bData) {
+                    businessCity = bData.city || bData.ort || "";
+                    businessPostalCode = bData.postalCode || bData.plz || "";
+                }
+            }
+            catch (e) { /* ignore */ }
+            const notificationData = {
+                title: pendingTitle,
+                body: pendingBody,
+                type: "order_status",
+                orderId: event.params.orderId,
+                status: "pending",
+                rawOrderNumber: rawOrderNum || event.params.orderId.substring(0, 6).toUpperCase(),
+                businessName: businessName2,
+                totalAmount: totalAmount,
+                businessCity: businessCity,
+                businessPostalCode: businessPostalCode,
+                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                read: false,
+            };
+            // Include scheduled delivery info for pre-orders
+            if (isPreOrder && pickupTimeStr) {
+                notificationData.isPreOrder = true;
+                notificationData.pickupTimeStr = pickupTimeStr;
+            }
+            await db.collection("users").doc(customerId).collection("notifications").add(notificationData);
+            console.log(`[Customer Notify] Saved pending notification for user ${customerId}, order ${rawOrderNum}${isPreOrder ? " (pre-order)" : ""}`);
+            // ── Send FCM Push to Customer Device ────────────────────────
+            // Get the customer's FCM token from the order or from user doc
+            const customerFcmTokens = [];
+            if (order.fcmToken)
+                customerFcmTokens.push(order.fcmToken);
+            if (order.customerFcmToken)
+                customerFcmTokens.push(order.customerFcmToken);
+            // Also check user doc for additional tokens
+            try {
+                const userDoc = await db.collection("users").doc(customerId).get();
+                const userData = userDoc.data();
+                if (userData?.fcmToken && !customerFcmTokens.includes(userData.fcmToken)) {
+                    customerFcmTokens.push(userData.fcmToken);
+                }
+                if (userData?.fcmTokens && Array.isArray(userData.fcmTokens)) {
+                    userData.fcmTokens.forEach((t) => {
+                        if (t && !customerFcmTokens.includes(t))
+                            customerFcmTokens.push(t);
+                    });
+                }
+            }
+            catch (e) { /* ignore */ }
+            if (customerFcmTokens.length > 0) {
+                try {
+                    const customerPush = {
+                        notification: {
+                            title: pendingTitle,
+                            body: pendingBody,
+                        },
+                        data: {
+                            type: "order_status",
+                            orderId: event.params.orderId,
+                            status: "pending",
+                            ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
+                        },
+                        tokens: customerFcmTokens,
+                    };
+                    const pushResponse = await messaging.sendEachForMulticast(customerPush);
+                    console.log(`[Customer Push] Sent order confirmation to ${pushResponse.successCount}/${customerFcmTokens.length} customer devices`);
+                }
+                catch (pushErr) {
+                    console.error("[Customer Push] Error sending FCM to customer:", pushErr);
+                }
+            }
+            else {
+                console.log(`[Customer Push] No FCM tokens found for customer ${customerId}`);
+            }
+        }
+        catch (notifError) {
+            console.error("[Customer Notify] Error saving pending notification:", notifError);
+        }
+    }
+    // ── Schedule Pre-Order Reminder (20 min before pickup) ───────────────
+    if (isPreOrder && pickupDate) {
+        try {
+            const reminderTime = new Date(pickupDate.getTime() - 20 * 60 * 1000);
+            // Only schedule if reminder time is in the future
+            if (reminderTime.getTime() > Date.now()) {
+                await db.collection("scheduled_notifications").add({
+                    type: "pre_order_reminder",
+                    orderId: event.params.orderId,
+                    orderNumber: rawOrderNum || null,
+                    businessId: butcherId,
+                    customerName,
+                    totalAmount,
+                    pickupTime: admin.firestore.Timestamp.fromDate(pickupDate),
+                    pickupTimeStr,
+                    sendAt: admin.firestore.Timestamp.fromDate(reminderTime),
+                    sent: false,
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                console.log(`[Pre-Order] Scheduled reminder for order ${rawOrderNum} at ${reminderTime.toISOString()} (pickup: ${pickupDate.toISOString()})`);
+            }
+            else {
+                console.log(`[Pre-Order] Reminder time already passed for order ${rawOrderNum}, skipping`);
+            }
+        }
+        catch (reminderErr) {
+            console.error("[Pre-Order] Error scheduling reminder:", reminderErr);
+        }
     }
 });
 /**
@@ -461,6 +650,10 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
     let title = "";
     let body = "";
     switch (newStatus) {
+        case "pending":
+            title = `${orderPrefix} Güncellendi${orderTag}`;
+            body = `${orderNumber} - Siparişiniz tekrar bekleme durumunda.`;
+            break;
         case "accepted":
             title = `${trans.orderAcceptedTitle}${orderTag}`;
             body = `${orderNumber} - ${businessName} ${trans.orderAcceptedBody.toLowerCase()}`;
@@ -685,6 +878,70 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
             console.log(`[Feedback] Scheduled feedback request for ${orderNumber} at ${feedbackSendAt.toISOString()}`);
             // Create commission record on delivery
             await createCommissionRecord(event.params.orderId, after);
+            // =====================================================================
+            // PROMOTION SYSTEM: Increment Order Count & Process Referral Reward
+            // =====================================================================
+            const deliveredUserId = after.userId || after.customerId;
+            if (deliveredUserId) {
+                try {
+                    // 1. Increment completedOrderCount for first-order discount tier progression
+                    await db.collection("users").doc(deliveredUserId).set({
+                        completedOrderCount: admin.firestore.FieldValue.increment(1),
+                    }, { merge: true });
+                    console.log(`[Promo] Incremented completedOrderCount for user ${deliveredUserId}`);
+                    // 2. Process referral reward on first completed order
+                    const userDoc = await db.collection("users").doc(deliveredUserId).get();
+                    const userData = userDoc.data();
+                    const newCount = userData?.completedOrderCount || 1;
+                    if (newCount === 1 && userData?.referredBy && !userData?.referralRewardProcessed) {
+                        const referrerId = userData.referredBy;
+                        const referrerReward = 5.0; // €5 for referrer
+                        const refereeReward = 3.0; // €3 for referee
+                        const rewardBatch = db.batch();
+                        // Credit referrer wallet
+                        const referrerRef = db.collection("users").doc(referrerId);
+                        rewardBatch.set(referrerRef, {
+                            walletBalance: admin.firestore.FieldValue.increment(referrerReward),
+                        }, { merge: true });
+                        // Credit referrer wallet transaction
+                        const referrerTxRef = db.collection("users").doc(referrerId).collection("wallet_transactions").doc();
+                        rewardBatch.set(referrerTxRef, {
+                            type: "referral_reward",
+                            amount: referrerReward,
+                            description: "Arkadaş davet ödülü",
+                            referredUserId: deliveredUserId,
+                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                        });
+                        // Credit referee wallet
+                        const refereeRef = db.collection("users").doc(deliveredUserId);
+                        rewardBatch.set(refereeRef, {
+                            walletBalance: admin.firestore.FieldValue.increment(refereeReward),
+                            referralRewardProcessed: true,
+                        }, { merge: true });
+                        // Credit referee wallet transaction
+                        const refereeTxRef = db.collection("users").doc(deliveredUserId).collection("wallet_transactions").doc();
+                        rewardBatch.set(refereeTxRef, {
+                            type: "referral_welcome",
+                            amount: refereeReward,
+                            description: "Hoş geldin ödülü",
+                            referrerId: referrerId,
+                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                        });
+                        // Update referral stats
+                        const referralRef = db.collection("users").doc(referrerId).collection("referrals").doc(deliveredUserId);
+                        rewardBatch.set(referralRef, {
+                            status: "completed",
+                            completedAt: admin.firestore.FieldValue.serverTimestamp(),
+                            rewardAmount: referrerReward,
+                        }, { merge: true });
+                        await rewardBatch.commit();
+                        console.log(`[Promo] Processed referral reward: referrer=${referrerId} (+€${referrerReward}), referee=${deliveredUserId} (+€${refereeReward})`);
+                    }
+                }
+                catch (promoError) {
+                    console.error(`[Promo] Error processing promotion hooks for user ${deliveredUserId}:`, promoError);
+                }
+            }
             break;
         case "completed":
             title = `${trans.orderDeliveredTitle}${orderTag}`;
@@ -774,6 +1031,7 @@ exports.onOrderStatusChange = (0, firestore_1.onDocumentUpdated)("meat_orders/{o
                     orderId: event.params.orderId,
                     status: newStatus,
                     rawOrderNumber,
+                    businessName,
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
                     read: false,
                 };
@@ -907,17 +1165,19 @@ async function syncInvoiceToStripe(invoiceId, businessId, invoiceNumber, descrip
     }
 }
 /**
- * Monthly Subscription Invoicing
- * Creates invoices for all active businesses with paid subscriptions
+ * Monthly Subscription & Commission Invoicing (Lexware + Stripe SEPA Hybrid)
+ * Creates GoBD-compliant invoices via Lexware API, then collects payment via Stripe.
+ * Lexware handles: invoice numbering, PDF, DATEV export, XRechnung
+ * Stripe handles: SEPA payment collection
  */
 exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
     schedule: "0 2 1 * *", // 1st of every month at 02:00
     timeZone: "Europe/Berlin",
     memory: "1GiB",
     timeoutSeconds: 540, // 9 minutes
-    secrets: [stripeSecretKey, resendApiKey],
+    secrets: [stripeSecretKey, stripeTestSecretKey, resendApiKey, lexwareApiKey],
 }, async () => {
-    console.log("[Monthly Invoicing] Starting monthly invoice generation...");
+    console.log("[Monthly Invoicing] Starting Lexware + Stripe SEPA hybrid invoicing...");
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth(); // 0-indexed, current month
@@ -928,25 +1188,34 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
     // Due date: 14 days from now
     const dueDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
     const stats = {
-        subscriptionGenerated: 0,
-        subscriptionFailed: 0,
-        commissionGenerated: 0,
-        commissionFailed: 0,
-        totalAmount: 0,
+        total: 0,
+        lexwareCreated: 0,
+        lexwareFailed: 0,
+        stripeCharged: 0,
+        stripeFailed: 0,
         emailsSent: 0,
         emailsFailed: 0,
+        skipped: 0,
+        totalAmount: 0,
     };
-    // Initialize Resend for email delivery
+    // Initialize services
     const resend = new resend_1.Resend(resendApiKey.value());
-    // Helper: Generate PDF and send invoice email
-    const sendInvoiceEmail = async (invoiceData, recipientEmail) => {
+    const lxKey = lexwareApiKey.value();
+    const stripeKey = useStripeTestMode.value() ? stripeTestSecretKey.value() : stripeSecretKey.value();
+    // Helper: Send invoice email with Lexware PDF
+    const sendInvoiceEmail = async (recipientEmail, invoiceNumber, period, grandTotal, taxAmount, taxRate, pdfBuffer) => {
         try {
-            const pdfBuffer = await (0, invoicePdf_1.generateInvoicePDF)(invoiceData);
-            const pdfBase64 = pdfBuffer.toString("base64");
+            const attachments = [];
+            if (pdfBuffer) {
+                attachments.push({
+                    filename: `Rechnung_${invoiceNumber}.pdf`,
+                    content: pdfBuffer.toString("base64"),
+                });
+            }
             await resend.emails.send({
                 from: "LOKMA Marketplace <noreply@lokma.shop>",
                 to: recipientEmail,
-                subject: `Rechnung ${invoiceData.invoiceNumber} – ${invoiceData.period}`,
+                subject: `Rechnung ${invoiceNumber} – ${period}`,
                 html: `
                         <div style="font-family: Arial, sans-serif; background: #1a1a1a; color: #ffffff; padding: 30px;">
                             <div style="max-width: 600px; margin: 0 auto;">
@@ -956,12 +1225,13 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
                                 </div>
                                 <div style="background: #2a2a2a; padding: 25px; border-radius: 0 0 8px 8px;">
                                     <p style="color: #ccc; margin: 0 0 15px;">Sehr geehrte/r Geschäftspartner/in,</p>
-                                    <p style="color: #ccc; margin: 0 0 20px;">anbei erhalten Sie Ihre Rechnung <strong style="color: #E65100;">${invoiceData.invoiceNumber}</strong> für den Zeitraum <strong>${invoiceData.period}</strong>.</p>
+                                    <p style="color: #ccc; margin: 0 0 20px;">anbei erhalten Sie Ihre Rechnung <strong style="color: #E65100;">${invoiceNumber}</strong> für den Zeitraum <strong>${period}</strong>.</p>
                                     <div style="background: #333; border-radius: 8px; padding: 15px; margin: 15px 0;">
                                         <table style="width: 100%; color: #ccc; font-size: 14px;">
-                                            <tr><td>Rechnungsbetrag:</td><td style="text-align: right; font-weight: bold; color: #E65100; font-size: 18px;">€${invoiceData.grandTotal.toFixed(2)}</td></tr>
-                                            <tr><td style="color: #999;">davon USt. ${invoiceData.taxRate}%:</td><td style="text-align: right; color: #999;">€${invoiceData.taxAmount.toFixed(2)}</td></tr>
-                                            <tr><td style="color: #999;">Fällig am:</td><td style="text-align: right; color: #ff9800;">${invoiceData.dueDate instanceof Date ? invoiceData.dueDate.toLocaleDateString("de-DE") : "14 Tage"}</td></tr>
+                                            <tr><td>Rechnungsbetrag:</td><td style="text-align: right; font-weight: bold; color: #E65100; font-size: 18px;">€${grandTotal.toFixed(2)}</td></tr>
+                                            <tr><td style="color: #999;">${taxRate > 0 ? `davon USt. ${taxRate}%:` : "Netto (steuerfrei):"}</td><td style="text-align: right; color: #999;">€${taxAmount.toFixed(2)}</td></tr>
+                                            <tr><td style="color: #999;">Fällig am:</td><td style="text-align: right; color: #ff9800;">${dueDate.toLocaleDateString("de-DE")}</td></tr>
+                                            <tr><td style="color: #999;">Zahlung:</td><td style="text-align: right; color: #4CAF50;">SEPA-Lastschrift</td></tr>
                                         </table>
                                     </div>
                                     <p style="color: #999; font-size: 12px; margin: 20px 0 0;">Die Rechnung finden Sie als PDF im Anhang.</p>
@@ -970,265 +1240,237 @@ exports.onScheduledMonthlyInvoicing = (0, scheduler_1.onSchedule)({
                             </div>
                         </div>
                     `,
-                attachments: [
-                    {
-                        filename: `Rechnung_${invoiceData.invoiceNumber}.pdf`,
-                        content: pdfBase64,
-                    },
-                ],
+                attachments,
             });
             stats.emailsSent++;
-            console.log(`[Monthly Invoicing] Email sent to ${recipientEmail} for ${invoiceData.invoiceNumber}`);
+            console.log(`[Monthly Invoicing] Email sent to ${recipientEmail} for ${invoiceNumber}`);
         }
         catch (emailError) {
             stats.emailsFailed++;
-            console.error(`[Monthly Invoicing] Email failed for ${invoiceData.invoiceNumber}:`, emailError);
+            console.error(`[Monthly Invoicing] Email failed for ${invoiceNumber}:`, emailError);
         }
     };
     try {
         // =================================================================
-        // 1. SUBSCRIPTION INVOICES
+        // COLLECT BILLING DATA FOR ALL BUSINESSES
         // =================================================================
         const businessesSnapshot = await db.collection("butcher_partners")
             .where("subscriptionStatus", "==", "active")
             .get();
         console.log(`[Monthly Invoicing] Found ${businessesSnapshot.size} active businesses`);
         for (const businessDoc of businessesSnapshot.docs) {
+            const businessId = businessDoc.id;
+            stats.total++;
             try {
-                const business = businessDoc.data();
-                const businessId = businessDoc.id;
-                // Get subscription plan details
-                const planId = business.subscriptionPlan || "basic";
-                const planDoc = await db.collection("subscription_plans").doc(planId).get();
-                const plan = planDoc.exists ? planDoc.data() : null;
-                const monthlyFee = plan?.monthlyFee || business.monthlyFee || 29;
-                // Skip free plans
-                if (monthlyFee <= 0) {
-                    console.log(`[Monthly Invoicing] Skipping ${businessId} - Free plan`);
+                // Collect all billing data for this business
+                const billingData = await (0, billingDataCollector_1.collectMonthlyBillingData)(businessId, periodStart, periodEnd);
+                // Skip if nothing to charge
+                if (!billingData.hasChargeableItems) {
+                    console.log(`[Monthly Invoicing] Skipping ${billingData.businessName} - no chargeable items`);
+                    stats.skipped++;
                     continue;
                 }
-                // Check if invoice already exists for this period
+                // Check for existing invoice this period
                 const existingInvoice = await db.collection("invoices")
                     .where("businessId", "==", businessId)
                     .where("period", "==", periodString)
-                    .where("type", "==", "subscription")
                     .limit(1)
                     .get();
                 if (!existingInvoice.empty) {
-                    console.log(`[Monthly Invoicing] Invoice already exists for ${businessId} period ${periodString}`);
+                    console.log(`[Monthly Invoicing] Invoice already exists for ${billingData.businessName} period ${periodString}`);
+                    stats.skipped++;
                     continue;
                 }
-                // Generate invoice number
-                const invoiceNumber = await getNextInvoiceNumber();
-                // Calculate VAT (19% for services in Germany)
-                const vatRate = 19;
-                const netAmount = monthlyFee;
-                const taxAmount = netAmount * (vatRate / 100);
-                const grandTotal = netAmount + taxAmount;
-                // Create invoice document
+                // =============================================================
+                // STEP 0: Classify VAT (DE/EU/Drittland)
+                // =============================================================
+                const vatClassification = await (0, lexwareService_1.classifyTaxType)({
+                    countryCode: billingData.businessAddress.countryCode,
+                    vatId: billingData.vatId || undefined,
+                });
+                console.log(`[Monthly Invoicing] VAT classification for ${billingData.businessName}: ` +
+                    `country=${billingData.businessAddress.countryCode}, ` +
+                    `taxType=${vatClassification.taxType}, ` +
+                    `rate=${vatClassification.taxRatePercentage}%, ` +
+                    `reverseCharge=${vatClassification.reverseCharge}`);
+                // =============================================================
+                // STEP 1: Create Lexware Invoice
+                // =============================================================
+                const lexwarePayload = (0, lexwareService_1.buildMonthlyInvoicePayload)({
+                    businessName: billingData.businessName,
+                    businessAddress: billingData.businessAddress,
+                    vatId: billingData.vatId,
+                    periodStart,
+                    periodEnd,
+                    subscriptionPlanName: billingData.subscriptionPlanName,
+                    subscriptionFee: billingData.subscriptionFee,
+                    commissionAmount: billingData.commissionAmount,
+                    commissionDetails: billingData.commissionDetails,
+                    activeModules: billingData.activeModules,
+                    sponsoredFee: billingData.sponsoredFee,
+                    sponsoredConversions: billingData.sponsoredConversions,
+                    vatClassification,
+                });
+                const lexwareResult = await (0, lexwareService_1.createLexwareInvoice)(lxKey, lexwarePayload, true);
+                if (!lexwareResult.success) {
+                    console.error(`[Monthly Invoicing] Lexware failed for ${billingData.businessName}: ${lexwareResult.error}`);
+                    stats.lexwareFailed++;
+                    // Fallback: create invoice in Firestore only (without Lexware)
+                    const fallbackNumber = await getNextInvoiceNumber();
+                    await db.collection("invoices").add({
+                        invoiceNumber: fallbackNumber,
+                        type: "combined",
+                        status: "pending",
+                        businessId,
+                        butcherName: billingData.businessName,
+                        period: periodString,
+                        periodStart: admin.firestore.Timestamp.fromDate(periodStart),
+                        periodEnd: admin.firestore.Timestamp.fromDate(periodEnd),
+                        grandTotal: billingData.totalGrossAmount,
+                        source: "fallback_no_lexware",
+                        error: lexwareResult.error,
+                        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                    });
+                    continue;
+                }
+                stats.lexwareCreated++;
+                const invoiceNumber = lexwareResult.voucherNumber || "UNKNOWN";
+                const grandTotal = lexwareResult.totalGross || billingData.totalGrossAmount;
+                const actualTaxRate = vatClassification.taxRatePercentage;
+                const taxAmount = lexwareResult.totalTax || (actualTaxRate > 0
+                    ? Math.round((grandTotal - grandTotal / (1 + actualTaxRate / 100)) * 100) / 100
+                    : 0);
+                console.log(`[Monthly Invoicing] Lexware invoice ${invoiceNumber} created for ${billingData.businessName} - €${grandTotal.toFixed(2)} (${actualTaxRate}% MwSt)`);
+                // =============================================================
+                // STEP 2: Save to Firestore
+                // =============================================================
                 const invoiceData = {
                     invoiceNumber,
-                    type: "subscription",
+                    type: "combined",
                     status: "pending",
-                    // Business info
+                    // Business
                     businessId,
-                    butcherName: business.companyName || business.brand || "Unbekannt",
-                    butcherAddress: business.address ?
-                        `${business.address.street}, ${business.address.postalCode} ${business.address.city}` : "",
+                    butcherName: billingData.businessName,
+                    butcherAddress: `${billingData.businessAddress.street}, ${billingData.businessAddress.zip} ${billingData.businessAddress.city}`,
+                    countryCode: billingData.businessAddress.countryCode,
+                    vatId: billingData.vatId || null,
                     // Period
                     period: periodString,
                     periodStart: admin.firestore.Timestamp.fromDate(periodStart),
                     periodEnd: admin.firestore.Timestamp.fromDate(periodEnd),
-                    // Amounts
-                    description: `LOKMA ${plan?.name || "Abonnement"} - ${periodString}`,
-                    subtotal: netAmount,
-                    taxRate: vatRate,
+                    // Breakdown
+                    subscriptionFee: billingData.subscriptionFee,
+                    subscriptionPlanName: billingData.subscriptionPlanName,
+                    commissionAmount: billingData.commissionAmount,
+                    commissionDetails: billingData.commissionDetails,
+                    activeModules: billingData.activeModules,
+                    sponsoredFee: billingData.sponsoredFee,
+                    sponsoredConversions: billingData.sponsoredConversions,
+                    // Totals (dynamic tax rate)
+                    subtotal: lexwareResult.totalNet || (actualTaxRate > 0
+                        ? Math.round((grandTotal / (1 + actualTaxRate / 100)) * 100) / 100
+                        : grandTotal),
+                    taxRate: actualTaxRate,
                     taxAmount,
                     grandTotal,
-                    currency: plan?.currency || business.currency || "EUR",
+                    currency: "EUR",
+                    // VAT Classification (audit trail for §13b/Finanzamt)
+                    vatClassification: {
+                        taxType: vatClassification.taxType,
+                        taxRatePercentage: vatClassification.taxRatePercentage,
+                        reverseCharge: vatClassification.reverseCharge,
+                        legalNote: vatClassification.legalNote || null,
+                        vatIdValid: vatClassification.vatIdValid ?? null,
+                        vatIdCheckedAt: vatClassification.vatIdCheckedAt || null,
+                    },
+                    // Lexware
+                    lexwareId: lexwareResult.lexwareId,
+                    lexwareNumber: invoiceNumber,
+                    lexwarePdfFileId: lexwareResult.pdfFileId,
+                    source: "lexware",
                     // Dates
                     issueDate: admin.firestore.FieldValue.serverTimestamp(),
                     dueDate: admin.firestore.Timestamp.fromDate(dueDate),
                     createdAt: admin.firestore.FieldValue.serverTimestamp(),
                     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    // Meta
-                    generatedBy: "cron_job",
-                    planId,
+                    generatedBy: "cron_lexware_hybrid",
+                    commissionRecordIds: billingData.commissionRecordIds,
+                    sponsoredRecordIds: billingData.sponsoredRecordIds,
                 };
                 const invoiceRef = await db.collection("invoices").add(invoiceData);
-                const invoiceId = invoiceRef.id;
-                // Sync to Stripe for automatic collection
-                const stripeResult = await syncInvoiceToStripe(invoiceId, businessId, invoiceNumber, `LOKMA ${plan?.name || "Abonnement"} - ${periodString}`, grandTotal, plan?.currency || business.currency || "EUR", dueDate, stripeSecretKey.value());
-                stats.subscriptionGenerated++;
-                stats.totalAmount += grandTotal;
-                console.log(`[Monthly Invoicing] Created subscription invoice ${invoiceNumber} for ${business.companyName} - €${grandTotal.toFixed(2)}${stripeResult.stripeInvoiceId ? " (Stripe: " + stripeResult.stripeInvoiceId + ")" : ""}`);
-                // Send invoice email with PDF
-                const recipientEmail = business.email || business.contactEmail || business.adminEmail;
-                if (recipientEmail) {
-                    await sendInvoiceEmail({ ...invoiceData, dueDate }, recipientEmail);
-                }
-            }
-            catch (error) {
-                console.error(`[Monthly Invoicing] Error processing business ${businessDoc.id}:`, error);
-                stats.subscriptionFailed++;
-            }
-        }
-        // =================================================================
-        // 2. COMMISSION INVOICES (from commission_records collection)
-        // =================================================================
-        const commRecordsSnapshot = await db.collection("commission_records")
-            .where("period", "==", periodString)
-            .get();
-        // Group commission records by business
-        const businessCommissions = {};
-        for (const recDoc of commRecordsSnapshot.docs) {
-            const rec = recDoc.data();
-            const businessId = rec.businessId;
-            if (!businessId)
-                continue;
-            if (!businessCommissions[businessId]) {
-                businessCommissions[businessId] = {
-                    totalCommission: 0,
-                    netCommission: 0,
-                    vatAmount: 0,
-                    cardCommission: 0,
-                    cashCommission: 0,
-                    orderCount: 0,
-                    businessName: rec.businessName || "Unbekannt",
-                    currency: rec.currency || "EUR",
-                    recordIds: [],
-                };
-            }
-            const bc = businessCommissions[businessId];
-            bc.totalCommission += rec.totalCommission || 0;
-            bc.netCommission += rec.netCommission || 0;
-            bc.vatAmount += rec.vatAmount || 0;
-            bc.orderCount++;
-            bc.recordIds.push(recDoc.id);
-            const isCard = rec.paymentMethod === "card" || rec.paymentMethod === "stripe";
-            if (isCard) {
-                bc.cardCommission += rec.totalCommission || 0;
-            }
-            else {
-                bc.cashCommission += rec.totalCommission || 0;
-            }
-        }
-        console.log(`[Monthly Invoicing] Found commission records for ${Object.keys(businessCommissions).length} businesses in ${periodString}`);
-        // Create commission invoices (including sponsored fees)
-        for (const [businessId, commData] of Object.entries(businessCommissions)) {
-            if (commData.totalCommission <= 0)
-                continue;
-            try {
-                // Check for existing commission invoice
-                const existingCommInvoice = await db.collection("invoices")
-                    .where("businessId", "==", businessId)
-                    .where("period", "==", periodString)
-                    .where("type", "==", "commission")
-                    .limit(1)
-                    .get();
-                if (!existingCommInvoice.empty) {
-                    console.log(`[Monthly Invoicing] Commission invoice already exists for ${businessId}`);
-                    continue;
-                }
-                const invoiceNumber = await getNextInvoiceNumber();
-                // Aggregate sponsored conversion fees for this business
-                let sponsoredFeeTotal = 0;
-                let sponsoredConversionCount = 0;
-                const sponsoredRecordIds = [];
-                try {
-                    const sponsoredSnapshot = await db.collection("sponsored_conversions")
-                        .where("businessId", "==", businessId)
-                        .where("period", "==", periodString)
-                        .get();
-                    for (const sDoc of sponsoredSnapshot.docs) {
-                        const sData = sDoc.data();
-                        sponsoredFeeTotal += sData.totalFee || 0;
-                        sponsoredConversionCount += sData.sponsoredItemCount || 0;
-                        sponsoredRecordIds.push(sDoc.id);
-                    }
-                    sponsoredFeeTotal = Math.round(sponsoredFeeTotal * 100) / 100;
-                }
-                catch (sponsoredErr) {
-                    console.error(`[Monthly Invoicing] Error aggregating sponsored fees for ${businessId}:`, sponsoredErr);
-                }
-                // Grand total = commission + sponsored fees
-                const grandTotalWithSponsored = Math.round((commData.totalCommission + sponsoredFeeTotal) * 100) / 100;
-                const netWithSponsored = Math.round((grandTotalWithSponsored / 1.19) * 100) / 100;
-                const vatWithSponsored = Math.round((grandTotalWithSponsored - netWithSponsored) * 100) / 100;
-                const sponsoredDescription = sponsoredFeeTotal > 0
-                    ? ` + ${sponsoredConversionCount} Öne Çıkan (€${sponsoredFeeTotal.toFixed(2)})`
-                    : "";
-                const commissionInvoiceData = {
-                    invoiceNumber,
-                    type: "commission",
-                    status: "pending",
-                    businessId,
-                    butcherName: commData.businessName,
-                    period: periodString,
-                    periodStart: admin.firestore.Timestamp.fromDate(periodStart),
-                    periodEnd: admin.firestore.Timestamp.fromDate(periodEnd),
-                    description: `LOKMA Provision - ${commData.orderCount} Bestellungen${sponsoredDescription} - ${periodString}`,
-                    subtotal: netWithSponsored,
-                    taxRate: 19,
-                    taxAmount: vatWithSponsored,
-                    grandTotal: grandTotalWithSponsored,
-                    currency: commData.currency,
-                    orderCount: commData.orderCount,
-                    cardCommission: commData.cardCommission,
-                    cashCommission: commData.cashCommission,
-                    sponsoredFee: sponsoredFeeTotal,
-                    sponsoredConversionCount,
-                    issueDate: admin.firestore.FieldValue.serverTimestamp(),
-                    dueDate: admin.firestore.Timestamp.fromDate(dueDate),
-                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    generatedBy: "cron_job",
-                    commissionRecordIds: commData.recordIds,
-                    sponsoredRecordIds,
-                };
-                const commInvoiceRef = await db.collection("invoices").add(commissionInvoiceData);
-                const commInvoiceId = commInvoiceRef.id;
                 // Mark commission records as invoiced
-                const batch = db.batch();
-                for (const recordId of commData.recordIds) {
-                    batch.update(db.collection("commission_records").doc(recordId), {
-                        collectionStatus: "invoiced",
-                        invoiceId: commInvoiceId,
-                        invoicedAt: admin.firestore.FieldValue.serverTimestamp(),
-                    });
+                if (billingData.commissionRecordIds.length > 0) {
+                    const batch = db.batch();
+                    for (const recordId of billingData.commissionRecordIds) {
+                        batch.update(db.collection("commission_records").doc(recordId), {
+                            collectionStatus: "invoiced",
+                            invoiceId: invoiceRef.id,
+                            invoicedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        });
+                    }
+                    await batch.commit();
                 }
-                await batch.commit();
-                // Sync commission invoice to Stripe for automatic collection
-                const stripeResult = await syncInvoiceToStripe(commInvoiceId, businessId, invoiceNumber, commissionInvoiceData.description, grandTotalWithSponsored, commData.currency, dueDate, stripeSecretKey.value());
-                stats.commissionGenerated++;
-                stats.totalAmount += commData.totalCommission;
-                console.log(`[Monthly Invoicing] Created commission invoice ${invoiceNumber} for ${commData.businessName} - €${commData.totalCommission.toFixed(2)} (${commData.orderCount} orders, Card: €${commData.cardCommission.toFixed(2)}, Cash: €${commData.cashCommission.toFixed(2)})${stripeResult.stripeInvoiceId ? " (Stripe: " + stripeResult.stripeInvoiceId + ")" : ""}`);
-                // Send commission invoice email with PDF
-                const businessDoc = await db.collection("butcher_partners").doc(businessId).get();
-                const biz = businessDoc.exists ? businessDoc.data() : null;
-                const recipientEmail = biz?.email || biz?.contactEmail || biz?.adminEmail;
-                if (recipientEmail) {
-                    await sendInvoiceEmail({ ...commissionInvoiceData, dueDate }, recipientEmail);
+                // =============================================================
+                // STEP 3: Stripe SEPA Payment Collection
+                // =============================================================
+                try {
+                    const stripeResult = await syncInvoiceToStripe(invoiceRef.id, businessId, invoiceNumber, `LOKMA Plattform-Abrechnung ${periodString}`, grandTotal, "EUR", dueDate, stripeKey);
+                    if (stripeResult.stripeInvoiceId) {
+                        stats.stripeCharged++;
+                        await db.collection("invoices").doc(invoiceRef.id).update({
+                            stripeInvoiceId: stripeResult.stripeInvoiceId,
+                            stripeInvoiceUrl: stripeResult.stripeInvoiceUrl,
+                            paymentStatus: "processing",
+                        });
+                        console.log(`[Monthly Invoicing] Stripe charge created: ${stripeResult.stripeInvoiceId}`);
+                    }
+                    else {
+                        stats.stripeFailed++;
+                        console.log(`[Monthly Invoicing] Stripe sync skipped for ${billingData.businessName} - no Stripe customer`);
+                    }
                 }
+                catch (stripeError) {
+                    stats.stripeFailed++;
+                    console.error(`[Monthly Invoicing] Stripe error for ${billingData.businessName}:`, stripeError);
+                }
+                stats.totalAmount += grandTotal;
+                // =============================================================
+                // STEP 4: Download Lexware PDF & Send Email
+                // =============================================================
+                if (billingData.businessEmail) {
+                    let pdfBuffer = null;
+                    try {
+                        pdfBuffer = await (0, lexwareService_1.downloadLexwareInvoicePDF)(lxKey, lexwareResult.lexwareId);
+                    }
+                    catch (pdfErr) {
+                        console.error(`[Monthly Invoicing] Lexware PDF download failed, using fallback:`, pdfErr);
+                        // Fallback: generate PDF with our own service
+                        pdfBuffer = await (0, invoicePdf_1.generateInvoicePDF)(invoiceData);
+                    }
+                    await sendInvoiceEmail(billingData.businessEmail, invoiceNumber, periodString, grandTotal, taxAmount, actualTaxRate, pdfBuffer);
+                }
+                console.log(`[Monthly Invoicing] ✅ ${billingData.businessName}: ${invoiceNumber} → €${grandTotal.toFixed(2)}`);
             }
             catch (error) {
-                console.error(`[Monthly Invoicing] Error creating commission invoice for ${businessId}:`, error);
-                stats.commissionFailed++;
+                console.error(`[Monthly Invoicing] Error processing business ${businessId}:`, error);
+                stats.lexwareFailed++;
             }
         }
         // =================================================================
         // LOG SUMMARY
         // =================================================================
         console.log("========================================");
-        console.log("[Monthly Invoicing] COMPLETED");
-        console.log(`  Subscription Invoices: ${stats.subscriptionGenerated} created, ${stats.subscriptionFailed} failed`);
-        console.log(`  Commission Invoices: ${stats.commissionGenerated} created, ${stats.commissionFailed} failed`);
+        console.log("[Monthly Invoicing] COMPLETED (Lexware + Stripe Hybrid)");
+        console.log(`  Total Businesses: ${stats.total}`);
+        console.log(`  Lexware Invoices: ${stats.lexwareCreated} created, ${stats.lexwareFailed} failed`);
+        console.log(`  Stripe Charges: ${stats.stripeCharged} charged, ${stats.stripeFailed} failed`);
         console.log(`  Emails: ${stats.emailsSent} sent, ${stats.emailsFailed} failed`);
+        console.log(`  Skipped: ${stats.skipped}`);
         console.log(`  Total Amount: €${stats.totalAmount.toFixed(2)}`);
         console.log("========================================");
         // Store run log
         await db.collection("system_logs").add({
-            type: "monthly_invoicing",
+            type: "monthly_invoicing_lexware",
             runAt: admin.firestore.FieldValue.serverTimestamp(),
             period: periodString,
             stats,
@@ -2221,6 +2463,99 @@ exports.onShiftEnd = (0, firestore_1.onDocumentUpdated)("admins/{adminId}", asyn
     }
     catch (err) {
         console.error(`[Shift End] Error during orphan table check:`, err);
+    }
+});
+/**
+ * Pre-Order Reminder: Runs every 5 min, sends push 20 min before pickup time
+ */
+exports.preOrderReminder = (0, scheduler_1.onSchedule)({
+    schedule: "*/5 * * * *", // Every 5 minutes
+    timeZone: "Europe/Berlin",
+    memory: "256MiB",
+    timeoutSeconds: 60,
+}, async () => {
+    const now = new Date();
+    let sentCount = 0;
+    try {
+        // Find scheduled_notifications where sendAt <= now and not yet sent
+        const pendingReminders = await db.collection("scheduled_notifications")
+            .where("type", "==", "pre_order_reminder")
+            .where("sent", "==", false)
+            .where("sendAt", "<=", admin.firestore.Timestamp.fromDate(now))
+            .limit(30)
+            .get();
+        if (pendingReminders.empty)
+            return;
+        console.log(`[Pre-Order Reminder] Found ${pendingReminders.size} pending reminders`);
+        for (const reminderDoc of pendingReminders.docs) {
+            const reminder = reminderDoc.data();
+            const orderId = reminder.orderId;
+            const businessId = reminder.businessId;
+            // Check if order is still active (not cancelled/rejected)
+            const orderDoc = await db.collection("meat_orders").doc(orderId).get();
+            if (!orderDoc.exists) {
+                await reminderDoc.ref.update({ sent: true, skipped: true, reason: "order_not_found" });
+                continue;
+            }
+            const orderStatus = orderDoc.data()?.status;
+            if (["cancelled", "rejected", "delivered", "completed"].includes(orderStatus)) {
+                await reminderDoc.ref.update({ sent: true, skipped: true, reason: `order_${orderStatus}` });
+                continue;
+            }
+            // Collect FCM tokens for the business
+            const allTokens = [];
+            // Mobile tokens from butcher_admins
+            try {
+                const butcherDoc = await db.collection("butcher_admins").doc(businessId).get();
+                const mobileTokens = butcherDoc.data()?.fcmTokens || [];
+                allTokens.push(...mobileTokens);
+            }
+            catch (e) { /* ignore */ }
+            // Web tokens from admins
+            try {
+                const adminsSnapshot = await db.collection("admins")
+                    .where("businessId", "==", businessId)
+                    .get();
+                adminsSnapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    if (data.webFcmTokens && Array.isArray(data.webFcmTokens)) {
+                        allTokens.push(...data.webFcmTokens);
+                    }
+                    if (data.fcmToken)
+                        allTokens.push(data.fcmToken);
+                    if (data.fcmTokens && Array.isArray(data.fcmTokens)) {
+                        allTokens.push(...data.fcmTokens);
+                    }
+                });
+            }
+            catch (e) { /* ignore */ }
+            if (allTokens.length > 0) {
+                const orderNum = reminder.orderNumber ? `#${reminder.orderNumber}` : "";
+                const pickupStr = reminder.pickupTimeStr || "";
+                const message = {
+                    notification: {
+                        title: `⏰ Ön Sipariş Hatırlatma! ${orderNum}`,
+                        body: `${reminder.customerName || "Müşteri"} - ${(reminder.totalAmount || 0).toFixed(2)}€ — ${pickupStr} teslim alınacak`,
+                    },
+                    data: {
+                        type: "pre_order_reminder",
+                        orderId: orderId,
+                        businessId: businessId,
+                    },
+                    tokens: allTokens,
+                };
+                const response = await messaging.sendEachForMulticast(message);
+                console.log(`[Pre-Order Reminder] Sent for order ${orderNum} to ${response.successCount}/${allTokens.length} devices`);
+                sentCount++;
+            }
+            await reminderDoc.ref.update({ sent: true, sentAt: admin.firestore.FieldValue.serverTimestamp() });
+        }
+        if (sentCount > 0) {
+            console.log(`[Pre-Order Reminder] Total: ${sentCount} reminders sent`);
+        }
+    }
+    catch (error) {
+        console.error("[Pre-Order Reminder] Error:", error);
     }
 });
 //# sourceMappingURL=index.js.map

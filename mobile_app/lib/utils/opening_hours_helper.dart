@@ -263,8 +263,8 @@ class OpeningHoursHelper {
   }
 
   // New Helper for 2-Column Picker
-  Map<DateTime, List<DateTime>> getAvailableSlotsGroupedByDay({bool isPickup = true, int daysToCheck = 7, int prepTimeMinutes = 60, DateTime? startFrom}) {
-    final rawSlots = getAvailableSlots(isPickup: isPickup, daysToCheck: daysToCheck, prepTimeMinutes: prepTimeMinutes, startFrom: startFrom);
+  Map<DateTime, List<DateTime>> getAvailableSlotsGroupedByDay({bool isPickup = true, int daysToCheck = 7, int prepTimeMinutes = 60, int slotIntervalMinutes = 15, DateTime? startFrom}) {
+    final rawSlots = getAvailableSlots(isPickup: isPickup, daysToCheck: daysToCheck, prepTimeMinutes: prepTimeMinutes, slotIntervalMinutes: slotIntervalMinutes, startFrom: startFrom);
     
     Map<DateTime, List<DateTime>> grouped = {};
     

@@ -112,7 +112,10 @@ class AppRouter {
           ),
           GoRoute(
             path: '/cart',
-            builder: (context, state) => const CartScreen(),
+            builder: (context, state) {
+              final tab = int.tryParse(state.uri.queryParameters['tab'] ?? '0') ?? 0;
+              return CartScreen(initialTab: tab);
+            },
           ),
           GoRoute(
             path: '/profile',
