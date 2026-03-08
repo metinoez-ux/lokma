@@ -2482,8 +2482,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                       value: _onlyTuna,
                                       activeColor: Colors.white,
                                       activeTrackColor: lokmaPink,
-                                      inactiveThumbColor: Colors.white,
-                                      inactiveTrackColor: Theme.of(context).dividerColor,
                                       onChanged: (val) {
                                         HapticFeedback.lightImpact();
                                         setState(() => _onlyTuna = val);
