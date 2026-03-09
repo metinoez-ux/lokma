@@ -220,7 +220,7 @@ export default function AdminHeader() {
                             <div className="relative group">
                                 <Link
                                     href="/admin/invoices"
-                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans') || isActiveNav('/admin/coupons') || isActiveNav('/admin/deals')
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans') || isActiveNav('/admin/coupons') || isActiveNav('/admin/deals') || isActiveNav('/admin/promotions') || isActiveNav('/admin/promotion-templates')
                                         ? 'bg-white/15 text-white'
                                         : 'text-red-100 hover:text-white hover:bg-white/10'
                                         }`}
@@ -246,6 +246,13 @@ export default function AdminHeader() {
                                         </Link>
                                         <Link href="/admin/deals" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
                                             🔥 Fırsatlar
+                                        </Link>
+                                        <div className="border-t border-gray-600 my-1"></div>
+                                        <Link href="/admin/promotion-templates" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            📋 Kampanya Şablonları
+                                        </Link>
+                                        <Link href="/admin/promotions" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            🎯 İşletme Kampanyaları
                                         </Link>
                                     </div>
                                 </div>
@@ -435,6 +442,7 @@ export default function AdminHeader() {
                                     { href: '/admin/dashboard?view=customers', label: t('customers') },
                                     { href: '/admin/orders/suppliers', label: t('suppliers') },
                                     { href: '/admin/products', label: t('productsCategories') },
+                                    { href: '/admin/promotions', label: '🎯 Kampanyalar' },
                                     { href: '/admin/reports', label: '🚩 Meldungen' },
                                 ].map(({ href, label }) => (
                                     <Link

@@ -181,7 +181,7 @@ export const subscriptionService = {
                     clickAndCollect: true,
                     delivery: false,
                     onlinePayment: false,
-                    campaigns: false,
+                    campaigns: true, // campaignLimit: 1 ile sınırlı — 1 kampanya hakkı
                     basicStatsOnly: true,
                     marketing: false,
                     prioritySupport: false,
