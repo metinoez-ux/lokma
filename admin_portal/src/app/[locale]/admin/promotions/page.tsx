@@ -319,7 +319,7 @@ function PromotionsPageContent() {
                 saveData.clicks = 0;
                 saveData.redemptions = 0;
                 saveData.totalDiscountGiven = 0;
-                saveData.createdBy = admin?.uid || '';
+                saveData.createdBy = admin?.id || '';
                 await addDoc(promoCol, saveData);
             }
 
