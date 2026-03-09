@@ -503,13 +503,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge,
-              expandedHeight: 220, // Genişletilmiş yükseklik - Yemek ile aynı
+              expandedHeight: _deliveryMode == 'gelal' ? 220 : 195,
               collapsedHeight: 110, // Daraltılmış yükseklik (sadece konum + arama)
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
                   // Scroll oranını hesapla (0 = tamamen açık, 1 = tamamen kapalı)
-                  final expandedHeight = 220.0;
+                  final expandedHeight = _deliveryMode == 'gelal' ? 220.0 : 195.0;
                   final collapsedHeight = 110.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) / 
@@ -539,11 +539,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                     // Search bar (teslimat/gel al altında)
                                     _buildSearchBar(),
                                     
-                                    // Sadece gel-al modunda Mesafe, diğerlerinde TUNA toggle
+                                    // Sadece gel-al modunda Mesafe slider
                                     if (_deliveryMode == 'gelal')
-                                      _buildDistanceSliderWithTuna()
-                                    else if (_deliveryMode == 'teslimat' || _deliveryMode == 'masa')
-                                      _buildTunaToggleOnly(),
+                                      _buildDistanceSliderWithTuna(),
                                   ],
                                 ),
                               ),
@@ -1044,34 +1042,6 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 color: Theme.of(context).colorScheme.onSurface, 
                 fontSize: 12, 
                 fontWeight: hasBusinessAtCurrent ? FontWeight.bold : FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // TUNA pill toggle - hap şeklinde
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              setState(() => _onlyTuna = !_onlyTuna);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: _onlyTuna ? const Color(0xFFA01E22) : Colors.transparent,
-                borderRadius: BorderRadius.circular(20), // Pill shape
-                border: Border.all(
-                  color: _onlyTuna ? const Color(0xFFA01E22) : Colors.grey.shade400,
-                  width: 1.5,
-                ),
-              ),
-              child: Text(
-                'TUNA',
-                style: TextStyle(
-                  color: _onlyTuna ? const Color(0xFF69B445) : Colors.grey[600],
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                ),
               ),
             ),
           ),
@@ -1697,30 +1667,24 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // İptal Button
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            'İptal',
-                            style: TextStyle(color: lokmaPink, fontSize: 16),
-                          ),
-                        ),
-                        // Results Count
-                        const Text(
+                        const SizedBox(width: 48),
+                        // Title
+                        Text(
                           'Filtrele',
                           style: TextStyle(
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        // Sıfırla Button
-                        TextButton(
+                        // Sıfırla Icon Button
+                        IconButton(
                           onPressed: () {
                             setState(() {
                               _sortOption = 'nearest';
                               _categoryFilter = 'all';
-                              // 🆕 Reset quick filters
+                              _onlyTuna = false;
+                              // Reset quick filters
                               _filterDiscounts = false;
                               _filterCash = false;
                               _filterFreeDelivery = false;
@@ -1732,16 +1696,16 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             });
                             setStateSheet(() {});
                           },
-                          child: const Text(
-                            'Sıfırla',
-                            style: TextStyle(color: lokmaPink, fontSize: 16),
+                          icon: Icon(
+                            Icons.restart_alt_rounded,
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
                     ),
                   ),
                   
-                  Divider(color: Colors.grey[300], height: 1),
+                  Divider(color: Theme.of(context).dividerColor, height: 1),
                   
                   // Scrollable Content
                   Expanded(
@@ -1750,13 +1714,74 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 16),
+
+                          // 🆕 TUNA Filter - Premium first item (matching Yemek segment)
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: _onlyTuna
+                                  ? lokmaPink.withValues(alpha: 0.08)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                // TUNA branded pill
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFA01E22),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Text(
+                                    'TUNA',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Description text
+                                Expanded(
+                                  child: Text(
+                                    'Sadece TUNA sertifikalı onaylı işletmeleri göster',
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                // Switch toggle
+                                SizedBox(
+                                  height: 28,
+                                  child: Switch.adaptive(
+                                    value: _onlyTuna,
+                                    activeColor: Colors.white,
+                                    activeTrackColor: lokmaPink,
+                                    onChanged: (val) {
+                                      HapticFeedback.lightImpact();
+                                      setState(() => _onlyTuna = val);
+                                      setStateSheet(() {});
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
                           
                           // Sıralama Section Header
                           Text(
                             'Sıralama',
                             style: TextStyle(
-                              color: Colors.grey[800],
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
@@ -1799,7 +1824,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           Text(
                             'Hızlı Filtreler',
                             style: TextStyle(
-                              color: Colors.grey[800],
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
@@ -1897,7 +1922,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           Text(
                             'İşletme Türü',
                             style: TextStyle(
-                              color: Colors.grey[800],
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
