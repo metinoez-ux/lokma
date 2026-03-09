@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../orders/courier_tracking_screen.dart';
 import '../../services/order_service.dart';
+import '../../services/chat_service.dart';
 
 class NotificationHistoryScreen extends StatefulWidget {
   const NotificationHistoryScreen({super.key});
@@ -53,9 +54,10 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
   static final _statusMeta = <String, Map<String, dynamic>>{
     'pending':   {'label': 'Sipariş Verildi',    'icon': '', 'color': 0xFFFF9800, 'iconData': Icons.receipt_long_rounded},
     'accepted':  {'label': 'Onaylandı',          'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.check_circle_outline_rounded},
-    'preparing': {'label': 'Hazırlanıyor',       'icon': '', 'color': 0xFF2196F3, 'iconData': Icons.room_service, 'assetIcon': 'assets/icons/chef_preparing.png'},
-    'ready':     {'label': 'Hazır',              'icon': '', 'color': 0xFF9C27B0, 'iconData': Icons.inventory_2_rounded},
-    'onTheWay':  {'label': 'Yola Çıktı',        'icon': '', 'color': 0xFF00BCD4, 'iconData': Icons.delivery_dining},
+    'preparing': {'label': 'Hazırlanıyor',       'icon': '', 'color': 0xFF2196F3, 'iconData': Icons.room_service, 'assetIcon': 'assets/icons/food_preparing.png'},
+    'ready':     {'label': 'Hazır',              'icon': '', 'color': 0xFF9C27B0, 'iconData': Icons.inventory_2_rounded, 'assetIcon': 'assets/icons/food_ready.png'},
+    'onTheWay':       {'label': 'Yola Çıktı',          'icon': '', 'color': 0xFF00BCD4, 'iconData': Icons.delivery_dining},
+    'readyForPickup': {'label': 'Alınmaya Hazır',      'icon': '', 'color': 0xFF007AFF, 'iconData': Icons.storefront_rounded},
     'delivered': {'label': 'Teslim Edildi',      'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.done_all_rounded},
     'served':    {'label': 'Servis Edildi',      'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.restaurant_rounded},
     'completed': {'label': 'Tamamlandı',         'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.verified_rounded},
@@ -79,16 +81,26 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
-        title: Text(
-          'Bildirimler',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.notifications_rounded, size: 20, color: Theme.of(context).colorScheme.onSurface),
+            const SizedBox(width: 6),
+            Text(
+              'Bildirimler',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         leading: IconButton(
@@ -193,9 +205,29 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
               (s) => s['status'] == 'pending',
               orElse: () => statuses.first,
             );
-            final totalAmt = (pendingData['totalAmount'] as num?)?.toDouble();
+            // Try to get totalAmount from any status notification
+            double? totalAmt = (pendingData['totalAmount'] as num?)?.toDouble();
+            if (totalAmt == null) {
+              for (final s in statuses) {
+                final amt = (s['totalAmount'] as num?)?.toDouble();
+                if (amt != null && amt > 0) {
+                  totalAmt = amt;
+                  break;
+                }
+              }
+            }
             final bCity = pendingData['businessCity'] as String? ?? '';
             final bPostal = pendingData['businessPostalCode'] as String? ?? '';
+
+            // Detect order type from notification data
+            String oType = 'delivery';
+            for (final s in statuses) {
+              final dm = s['deliveryMethod'] as String? ?? s['orderType'] as String? ?? '';
+              if (dm.isNotEmpty) {
+                oType = dm;
+                break;
+              }
+            }
 
             orderGroups.add(_OrderGroup(
               orderId: entry.key,
@@ -206,6 +238,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
               totalAmount: totalAmt,
               businessCity: bCity,
               businessPostalCode: bPostal,
+              orderType: oType,
             ));
           }
 
@@ -282,6 +315,7 @@ class _OrderGroup {
   final double? totalAmount;
   final String businessCity;
   final String businessPostalCode;
+  final String orderType; // 'delivery', 'pickup', 'dineIn'
 
   _OrderGroup({
     required this.orderId,
@@ -292,6 +326,7 @@ class _OrderGroup {
     this.totalAmount,
     this.businessCity = '',
     this.businessPostalCode = '',
+    this.orderType = 'delivery',
   });
 }
 
@@ -316,8 +351,31 @@ class _OrderTimelineCard extends StatefulWidget {
 class _OrderTimelineCardState extends State<_OrderTimelineCard> {
   late bool _expanded;
 
-  // Full delivery pipeline steps
-  static const _pipelineSteps = ['pending', 'accepted', 'preparing', 'ready', 'onTheWay', 'delivered'];
+  // Full pipeline steps (dynamic based on order type)
+  static const _deliveryPipeline = ['pending', 'accepted', 'preparing', 'ready', 'onTheWay', 'delivered'];
+  static const _pickupPipeline = ['pending', 'accepted', 'preparing', 'ready', 'readyForPickup', 'delivered'];
+
+  List<String> get _pipelineSteps {
+    final ot = widget.group.orderType.toLowerCase();
+    return ot == 'pickup' ? _pickupPipeline : _deliveryPipeline;
+  }
+
+  static String _orderTypeLabel(String orderType) {
+    switch (orderType.toLowerCase()) {
+      case 'delivery':
+        return 'Kurye Siparişi';
+      case 'pickup':
+        return 'Gel-Al Siparişi';
+      case 'dine-in':
+      case 'masa':
+        return 'Masa Siparişi';
+      case 'group':
+      case 'group_table':
+        return 'Toplu Masa Siparişi';
+      default:
+        return 'Sipariş';
+    }
+  }
 
   @override
   void initState() {
@@ -397,8 +455,16 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
     }
 
     // Determine which steps are ACTUALLY completed based on latestStatus position
-    // (not all historical notifications — admin may have reverted the status)
-    final latestPipelineIndex = _pipelineSteps.indexOf(latestStatus);
+    // For pickup orders, map Firestore status to pickup pipeline
+    final isPickup = widget.group.orderType.toLowerCase() == 'pickup';
+    
+    // For pickup orders, 'onTheWay' from Firestore maps to 'readyForPickup' in our pipeline
+    String effectiveLatestStatus = latestStatus;
+    if (isPickup && latestStatus == 'onTheWay') {
+      effectiveLatestStatus = 'readyForPickup';
+    }
+    
+    final latestPipelineIndex = _pipelineSteps.indexOf(effectiveLatestStatus);
     final completedStatuses = <String>{};
     final statusTimestamps = <String, String>{};
 
@@ -406,8 +472,11 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
       // Only statuses up to and including the current position are completed
       for (var i = 0; i <= latestPipelineIndex; i++) {
         completedStatuses.add(_pipelineSteps[i]);
-        if (allStatusTimestamps.containsKey(_pipelineSteps[i])) {
-          statusTimestamps[_pipelineSteps[i]] = allStatusTimestamps[_pipelineSteps[i]]!;
+        final step = _pipelineSteps[i];
+        // For readyForPickup, use the 'ready' timestamp
+        final tsKey = (step == 'readyForPickup') ? 'ready' : step;
+        if (allStatusTimestamps.containsKey(tsKey)) {
+          statusTimestamps[step] = allStatusTimestamps[tsKey]!;
         }
       }
     } else {
@@ -426,6 +495,13 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
             statusTimestamps[st] = allStatusTimestamps[st]!;
           }
         }
+        // For pickup cancelled orders: if 'ready' is in data, also complete 'readyForPickup'
+        if (isPickup && st == 'ready') {
+          completedStatuses.add('readyForPickup');
+          if (allStatusTimestamps.containsKey('ready')) {
+            statusTimestamps['readyForPickup'] = allStatusTimestamps['ready']!;
+          }
+        }
       }
     }
 
@@ -440,18 +516,84 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
     // Determine if cancelled/rejected (use different pipeline)
     final isCancelled = latestStatus == 'cancelled' || latestStatus == 'rejected';
 
+    // Extract cancellation reason from notification data
+    String cancellationReason = '';
+    if (isCancelled) {
+      for (final s in effectiveStatuses) {
+        final st = s['status'] as String? ?? '';
+        if (st == 'cancelled' || st == 'rejected') {
+          // Try direct fields first
+          cancellationReason = s['cancellationReason'] as String?
+              ?? s['cancelReason'] as String?
+              ?? s['reason'] as String?
+              ?? '';
+          if (cancellationReason.isNotEmpty) break;
+          
+          // Fallback: parse reason from notification body text
+          // Body format: "... - Sebep: {reason}. ..." or "... - Sebep: {reason}"
+          final body = s['body'] as String? ?? '';
+          if (body.contains('Sebep: ')) {
+            final start = body.indexOf('Sebep: ') + 7;
+            var end = body.indexOf('.', start);
+            if (end < 0 || end > start + 100) end = body.length;
+            cancellationReason = body.substring(start, end).trim();
+            if (cancellationReason.isNotEmpty) break;
+          }
+        }
+      }
+    }
+
     // For cancelled/rejected, just show completed steps + the cancel step
     final stepsToShow = isCancelled
         ? [..._pipelineSteps.where((s) => completedStatuses.contains(s)), latestStatus]
         : List<String>.from(_pipelineSteps);
 
+    // ── Card surface: mode-adaptive for harmony ──
+    // Light: soft warm gray (iOS grouped bg style) — Dark: elevated surface
+    final cardBg = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFEBEBEF);
+    final cardTextColor = isDark ? Colors.white : const Color(0xFF4A4A4C);
+    final cardSubtleColor = isDark
+        ? Colors.white.withValues(alpha: 0.55)
+        : const Color(0xFF3A3A3C).withValues(alpha: 0.55);
+    final dividerColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : const Color(0xFF3A3A3C).withValues(alpha: 0.08);
+    final inactiveDotColor = isDark
+        ? Colors.white.withValues(alpha: 0.2)
+        : const Color(0xFF3A3A3C).withValues(alpha: 0.18);
+    final inactiveTextColor = isDark
+        ? Colors.white.withValues(alpha: 0.3)
+        : const Color(0xFF3A3A3C).withValues(alpha: 0.35);
+    final timelineLineColor = isDark
+        ? Colors.white.withValues(alpha: 0.1)
+        : const Color(0xFF3A3A3C).withValues(alpha: 0.08);
+    final timestampColor = isDark
+        ? Colors.white.withValues(alpha: 0.5)
+        : const Color(0xFF3A3A3C).withValues(alpha: 0.5);
+
+    // ── Format order date for header ──
+    String headerDateStr = '';
+    final pendingDt = allStatusDateTimes['pending'];
+    final headerDt = pendingDt ?? (allStatusDateTimes.isNotEmpty ? allStatusDateTimes.values.first : null);
+    if (headerDt != null) {
+      const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+      headerDateStr = '${headerDt.day} ${months[headerDt.month - 1]} ${headerDt.year}  |  ${headerDt.hour.toString().padLeft(2, '0')}:${headerDt.minute.toString().padLeft(2, '0')}';
+    }
+
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? Colors.grey[800]!.withValues(alpha: 0.5) : Colors.grey[200]!,
+        border: isDark ? null : Border.all(
+          color: const Color(0xFF3A3A3C).withValues(alpha: 0.08),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.06),
+            blurRadius: isDark ? 8 : 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -460,19 +602,19 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
             onTap: widget.isFirst ? null : () => setState(() => _expanded = !_expanded),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+              padding: const EdgeInsets.fromLTRB(16, 10, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Row 1: Order number (left) + Business name (right) + chevron
+                  // ── Row 1: Order type + number (left) + Date (right)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
                         child: Text(
-                          'Sipariş $orderLabel',
+                          '${_orderTypeLabel(group.orderType)} $orderLabel',
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
+                            color: cardTextColor,
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                           ),
@@ -480,39 +622,48 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      if (group.businessName.isNotEmpty)
-                        Flexible(
-                          flex: 0,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 150),
-                            child: Text(
-                              group.businessName,
-                              style: TextStyle(
-                                color: isDark ? Colors.grey[300] : Colors.grey[600],
-                                fontSize: 13,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.end,
-                            ),
+                      if (headerDateStr.isNotEmpty)
+                        Text(
+                          headerDateStr,
+                          style: TextStyle(
+                            color: cardSubtleColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       if (!widget.isFirst) ...[
-                        const SizedBox(width: 2),
+                        const SizedBox(width: 4),
                         Icon(
                           _expanded
                               ? Icons.keyboard_arrow_up_rounded
                               : Icons.keyboard_arrow_down_rounded,
-                          color: isDark ? Colors.grey[500] : Colors.grey[400],
+                          color: cardSubtleColor,
                           size: 22,
                         ),
                       ],
                     ],
                   ),
-                  const SizedBox(height: 7),
-                  // ── Row 2: Status badge (left) + total amount (right)
+                  // ── Row 2: Business name (right-aligned)
+                  if (group.businessName.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          group.businessName,
+                          style: TextStyle(
+                            color: cardSubtleColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 5),
+                  // ── Row 3: Status badge (left) + total amount (right)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -568,7 +719,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                             decoration: BoxDecoration(
                               color: allDone
                                   ? const Color(0xFF22C55E).withValues(alpha: 0.15)
-                                  : (isDark ? Colors.grey[700]!.withValues(alpha: 0.4) : Colors.grey[300]!),
+                                  : cardSubtleColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
@@ -577,7 +728,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                 Icon(
                                   Icons.check_rounded,
                                   size: 11,
-                                  color: allDone ? const Color(0xFF22C55E) : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                                  color: allDone ? const Color(0xFF22C55E) : cardSubtleColor,
                                 ),
                                 const SizedBox(width: 2),
                                 Text(
@@ -585,7 +736,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: allDone ? const Color(0xFF22C55E) : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                                    color: allDone ? const Color(0xFF22C55E) : cardSubtleColor,
                                   ),
                                 ),
                               ],
@@ -612,7 +763,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
           if (_expanded) ...[
             Divider(
               height: 1,
-              color: isDark ? Colors.grey[800]!.withValues(alpha: 0.5) : Colors.grey[200]!,
+              color: dividerColor,
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
@@ -652,16 +803,16 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                     width: isCurrentStep ? 16 : 12,
                                     height: isCurrentStep ? 16 : 12,
                                     decoration: BoxDecoration(
-                                      color: isCompleted ? stepColor : Colors.transparent,
+                                      color: isCompleted ? const Color(0xFFFB335B) : Colors.transparent,
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: isCompleted
-                                            ? stepColor
-                                            : (isDark ? Colors.grey[700]! : Colors.grey[350]!),
+                                            ? const Color(0xFFFB335B)
+                                            : inactiveDotColor,
                                         width: isCompleted ? 0 : 2,
                                       ),
                                       boxShadow: isCurrentStep
-                                          ? [BoxShadow(color: stepColor.withValues(alpha: 0.4), blurRadius: 8, spreadRadius: 1)]
+                                          ? [BoxShadow(color: const Color(0xFFFB335B).withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 1)]
                                           : null,
                                     ),
                                     child: isCompleted
@@ -677,13 +828,13 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                               child: Row(
                                 children: [
                                   if ((stepMeta['assetIcon'] as String?)?.isNotEmpty == true) ...[
-                                    Image.asset(
-                                      stepMeta['assetIcon'] as String,
-                                      width: 16,
-                                      height: 16,
-                                      color: isCompleted
-                                          ? Color(stepMeta['color'] as int)
-                                          : (isDark ? Colors.grey[600] : Colors.grey[400]),
+                                    Opacity(
+                                      opacity: isCompleted ? 1.0 : 0.35,
+                                      child: Image.asset(
+                                        stepMeta['assetIcon'] as String,
+                                        width: 16,
+                                        height: 16,
+                                      ),
                                     ),
                                     const SizedBox(width: 4),
                                   ] else if (stepMeta['iconData'] != null) ...[
@@ -691,8 +842,10 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                       stepMeta['iconData'] as IconData,
                                       size: 16,
                                       color: isCompleted
-                                          ? Color(stepMeta['color'] as int)
-                                          : (isDark ? Colors.grey[600] : Colors.grey[400]),
+                                          ? (stepStatus == 'cancelled' || stepStatus == 'rejected'
+                                              ? const Color(0xFFF44336)
+                                              : cardTextColor)
+                                          : inactiveTextColor,
                                     ),
                                     const SizedBox(width: 4),
                                   ] else if ((stepMeta['icon'] as String).isNotEmpty) ...[
@@ -706,8 +859,10 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                     stepMeta['label'] as String,
                                     style: TextStyle(
                                       color: isCompleted
-                                          ? Theme.of(context).colorScheme.onSurface
-                                          : (isDark ? Colors.grey[600] : Colors.grey[400]),
+                                          ? (stepStatus == 'cancelled' || stepStatus == 'rejected'
+                                              ? const Color(0xFFF44336)
+                                              : cardTextColor)
+                                          : inactiveTextColor,
                                       fontSize: 13,
                                       fontWeight: isCurrentStep ? FontWeight.w700 : (isCompleted ? FontWeight.w500 : FontWeight.w400),
                                     ),
@@ -720,7 +875,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                               Text(
                                 timeStr,
                                 style: TextStyle(
-                                  color: isDark ? Colors.grey[500] : Colors.grey[500],
+                                  color: timestampColor,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -729,12 +884,28 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                               Text(
                                 '—',
                                 style: TextStyle(
-                                  color: isDark ? Colors.grey[700] : Colors.grey[350],
+                                  color: inactiveDotColor,
                                   fontSize: 12,
                                 ),
                               ),
                           ],
                         ),
+                        // Cancellation reason subtitle
+                        if ((stepStatus == 'cancelled' || stepStatus == 'rejected') && cancellationReason.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 42, top: 3, bottom: 2),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Sebep: $cancellationReason',
+                                style: const TextStyle(
+                                  color: Color(0xFFF44336),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ),
+                          ),
                         // Connecting line between steps
                         if (!isLast || showScheduled)
                           Row(
@@ -746,8 +917,8 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                     width: 2,
                                     height: showScheduled ? 16 : 20,
                                     color: isCompleted && (i + 1 < stepsToShow.length && completedStatuses.contains(stepsToShow[i + 1]))
-                                        ? stepColor.withValues(alpha: 0.4)
-                                        : (isDark ? Colors.grey[800] : Colors.grey[300]),
+                                        ? const Color(0xFFFB335B).withValues(alpha: 0.4)
+                                        : timelineLineColor,
                                   ),
                                 ),
                               ),
@@ -757,32 +928,30 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                         if (showScheduled) ...[
                           Row(
                             children: [
-                              SizedBox(
-                                width: 32,
-                                child: Center(
-                                  child: Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFFF9800).withValues(alpha: 0.3),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: const Color(0xFFFF9800),
-                                        width: 1.5,
+                              const SizedBox(width: 32),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      const TextSpan(
+                                        text: 'Planlanan Teslimat: ',
+                                        style: TextStyle(
+                                          color: Color(0xFFFB335B),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
-                                    ),
+                                      TextSpan(
+                                        text: pickupTimeStr,
+                                        style: TextStyle(
+                                          color: cardTextColor,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ),
-                              const Icon(Icons.calendar_today, size: 13, color: Color(0xFFFF9800)),
-                              const SizedBox(width: 5),
-                              Text(
-                                'Planlanan Teslimat: $pickupTimeStr',
-                                style: const TextStyle(
-                                  color: Color(0xFFFF9800),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  fontStyle: FontStyle.italic,
                                 ),
                               ),
                             ],
@@ -796,7 +965,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                     child: Container(
                                       width: 2,
                                       height: 16,
-                                      color: isDark ? Colors.grey[800] : Colors.grey[300],
+                                      color: timelineLineColor,
                                     ),
                                   ),
                                 ),
@@ -813,7 +982,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
           // ── Action buttons (ALWAYS visible) ───────────────────────
           Divider(
             height: 1,
-            color: isDark ? Colors.grey[800]!.withValues(alpha: 0.5) : Colors.grey[200]!,
+            color: dividerColor,
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
@@ -835,8 +1004,10 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                       icon: const Icon(Icons.receipt_long_rounded, size: 16),
                       label: const Text('Siparişi Göster'),
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFFFB335B),
-                        backgroundColor: const Color(0xFFFB335B).withValues(alpha: 0.08),
+                        foregroundColor: Colors.white,
+                        backgroundColor: isDark
+                            ? Colors.white.withValues(alpha: 0.12)
+                            : const Color(0xFF2C2C2E),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -845,6 +1016,59 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                     ),
                   ),
                 ),
+                // "Mesaj" — chat button for active delivery orders
+                if (['onTheWay', 'accepted', 'preparing', 'ready'].contains(latestStatus)) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: StreamBuilder<int>(
+                        stream: ChatService().getUnreadCountStream(
+                          group.orderId,
+                          FirebaseAuth.instance.currentUser?.uid ?? '',
+                        ),
+                        builder: (ctx, snap) {
+                          final unread = snap.data ?? 0;
+                          return TextButton.icon(
+                            onPressed: () => _showChatBottomSheet(
+                              context,
+                              group.orderId,
+                              group.rawOrderNumber.isNotEmpty
+                                  ? group.rawOrderNumber
+                                  : group.orderId.substring(0, 6).toUpperCase(),
+                              group.businessName,
+                            ),
+                            icon: Badge(
+                              isLabelVisible: unread > 0,
+                              backgroundColor: const Color(0xFFFF3B30),
+                              label: Text(
+                                '$unread',
+                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                              ),
+                              child: Icon(
+                                unread > 0 ? Icons.chat_bubble : Icons.chat_bubble_outline,
+                                size: 16,
+                              ),
+                            ),
+                            label: Text(unread > 0 ? 'Mesaj ($unread)' : 'Mesaj'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: unread > 0
+                                  ? const Color(0xFF4CAF50)
+                                  : Colors.white.withValues(alpha: 0.7),
+                              backgroundColor: unread > 0
+                                  ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
+                                  : Colors.white.withValues(alpha: 0.08),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
                 // "Harita Aç" — only when onTheWay
                 if (latestStatus == 'onTheWay') ...[
                   const SizedBox(width: 8),
@@ -864,7 +1088,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                         label: const Text('Harita Aç'),
                         style: TextButton.styleFrom(
                           foregroundColor: const Color(0xFF00BCD4),
-                          backgroundColor: const Color(0xFF00BCD4).withValues(alpha: 0.08),
+                          backgroundColor: const Color(0xFF00BCD4).withValues(alpha: 0.12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -878,6 +1102,42 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Chat Bottom Sheet ───────────────────────────────────────────────
+  void _showChatBottomSheet(
+    BuildContext ctx,
+    String orderId,
+    String orderNumber,
+    String businessName,
+  ) {
+    final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final chatService = ChatService();
+
+    // Mark messages as read when opening
+    if (userId.isNotEmpty) {
+      chatService.markAllAsRead(orderId, userId);
+    }
+
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.95,
+        minChildSize: 0.4,
+        builder: (sheetCtx, scrollController) {
+          return _ChatBottomSheetContent(
+            orderId: orderId,
+            orderNumber: orderNumber,
+            businessName: businessName,
+            userId: userId,
+            chatService: chatService,
+          );
+        },
       ),
     );
   }
@@ -1268,6 +1528,390 @@ class _GenericNotificationCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// ── Chat Bottom Sheet Content ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════
+
+class _ChatBottomSheetContent extends StatefulWidget {
+  final String orderId;
+  final String orderNumber;
+  final String businessName;
+  final String userId;
+  final ChatService chatService;
+
+  const _ChatBottomSheetContent({
+    required this.orderId,
+    required this.orderNumber,
+    required this.businessName,
+    required this.userId,
+    required this.chatService,
+  });
+
+  @override
+  State<_ChatBottomSheetContent> createState() => _ChatBottomSheetContentState();
+}
+
+class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
+  final TextEditingController _msgController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
+
+  String _userName = '';
+  String _userRole = 'customer';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    if (widget.userId.isEmpty) return;
+    try {
+      final orderDoc = await FirebaseFirestore.instance
+          .collection('meat_orders')
+          .doc(widget.orderId)
+          .get();
+      if (orderDoc.exists) {
+        final data = orderDoc.data()!;
+        if (data['courierId'] == widget.userId) {
+          _userRole = 'courier';
+          _userName = data['courierName'] ?? 'Kurye';
+        } else if (data['butcherId'] == widget.userId) {
+          _userRole = 'business';
+          _userName = data['butcherName'] ?? 'İşletme';
+        } else {
+          _userRole = 'customer';
+          _userName = data['userName'] ?? FirebaseAuth.instance.currentUser?.displayName ?? 'Müşteri';
+        }
+      }
+    } catch (_) {}
+    if (mounted) setState(() {});
+  }
+
+  void _send() {
+    final text = _msgController.text.trim();
+    if (text.isEmpty || widget.userId.isEmpty) return;
+
+    widget.chatService.sendMessage(
+      orderId: widget.orderId,
+      senderId: widget.userId,
+      senderName: _userName,
+      senderRole: _userRole,
+      text: text,
+    );
+
+    _msgController.clear();
+    _focusNode.requestFocus();
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _msgController.dispose();
+    _scrollController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF1A1A2E),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // ── Handle bar ──
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          // ── Header ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.chat_bubble, color: Color(0xFF4CAF50), size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sipariş #${widget.orderNumber}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        widget.businessName,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.close, color: Colors.white.withValues(alpha: 0.5), size: 22),
+                ),
+              ],
+            ),
+          ),
+
+          Divider(height: 1, color: Colors.white.withValues(alpha: 0.1)),
+
+          // ── Messages ──
+          Expanded(
+            child: StreamBuilder<List<ChatMessage>>(
+              stream: widget.chatService.getMessagesStream(widget.orderId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+                  );
+                }
+
+                final messages = snapshot.data ?? [];
+
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 48,
+                          color: Colors.white.withValues(alpha: 0.15),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Henüz mesaj yok',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Kuryenize mesaj gönderin',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                // Mark as read
+                widget.chatService.markAllAsRead(widget.orderId, widget.userId);
+
+                // Auto-scroll
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (_scrollController.hasClients) {
+                    _scrollController.animateTo(
+                      _scrollController.position.maxScrollExtent,
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOut,
+                    );
+                  }
+                });
+
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  itemCount: messages.length,
+                  itemBuilder: (_, i) => _bubble(messages[i]),
+                );
+              },
+            ),
+          ),
+
+          // ── Input area ──
+          Container(
+            padding: EdgeInsets.only(
+              left: 12, right: 8, top: 8,
+              bottom: bottomInset > 0 ? 8 : MediaQuery.of(context).padding.bottom + 8,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF12122A),
+              border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.08))),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: TextField(
+                      controller: _msgController,
+                      focusNode: _focusNode,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      maxLines: 3,
+                      minLines: 1,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _send(),
+                      decoration: InputDecoration(
+                        hintText: 'Mesaj yazın...',
+                        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.25)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                    onPressed: _send,
+                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bubble(ChatMessage msg) {
+    final isMe = msg.senderId == widget.userId;
+
+    Color bubbleColor;
+    switch (msg.senderRole) {
+      case 'courier':
+        bubbleColor = isMe ? const Color(0xFF2D8B4E) : const Color(0xFF1A3D2A);
+        break;
+      case 'business':
+        bubbleColor = isMe ? const Color(0xFF8B2D2D) : const Color(0xFF3D1A1A);
+        break;
+      default:
+        bubbleColor = isMe ? const Color(0xFF2D4A8B) : const Color(0xFF1A2A3D);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.7,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: bubbleColor,
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(14),
+                topRight: const Radius.circular(14),
+                bottomLeft: Radius.circular(isMe ? 14 : 4),
+                bottomRight: Radius.circular(isMe ? 4 : 14),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (!isMe)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          msg.senderRole == 'courier' ? Icons.delivery_dining : Icons.store,
+                          size: 11,
+                          color: msg.senderRole == 'courier'
+                              ? const Color(0xFF4CAF50)
+                              : const Color(0xFFFF9800),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          msg.senderName,
+                          style: TextStyle(
+                            color: msg.senderRole == 'courier'
+                                ? const Color(0xFF4CAF50)
+                                : const Color(0xFFFF9800),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                Text(
+                  msg.text,
+                  style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.3),
+                ),
+                const SizedBox(height: 3),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${msg.createdAt.hour.toString().padLeft(2, '0')}:${msg.createdAt.minute.toString().padLeft(2, '0')}',
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10),
+                    ),
+                    if (isMe) ...[
+                      const SizedBox(width: 3),
+                      Icon(
+                        msg.read ? Icons.done_all : Icons.done,
+                        size: 13,
+                        color: msg.read ? const Color(0xFF42A5F5) : Colors.white.withValues(alpha: 0.4),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
