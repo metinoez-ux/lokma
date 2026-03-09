@@ -633,7 +633,7 @@
     "location_failed": "Standort konnte nicht ermittelt werden",
     "currently_closed": "Zurzeit geschlossen",
     "courier_not_available": "Kurier ist momentan nicht verfügbar",
-    "closed_but_preorder": "Dieses Geschäft ist zurzeit geschlossen, nimmt aber Vorbestellungen an. Sie können das Menü durchstöbern und bestellen — die Bestellung wird bei Öffnung zubereitet.",
+    "closed_but_preorder": "Dieses Geschäft ist zurzeit geschlossen, nimmt aber Vorbestellungen an. Sie können das Menü durchstöbern und bestellen — Ihre Bestellung wird nach Öffnung zum gewünschten Zeitfenster zubereitet.",
     "closed_but_browse": "Zurzeit geschlossen, aber Sie können das Menü durchstöbern.",
     "no_business_in_category": "Kein Geschäft in dieser Kategorie gefunden",
     "no_business_nearby": "Kein Geschäft in Ihrer Nähe gefunden",

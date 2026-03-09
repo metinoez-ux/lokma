@@ -633,7 +633,7 @@
     "location_failed": "Konum alınamadı",
     "currently_closed": "Şu an kapalı",
     "courier_not_available": "Kurye şu an hizmet vermiyor",
-    "closed_but_preorder": "Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Menüye göz atıp sipariş verebilirsiniz — işletme açıldığında hazırlanacaktır.",
+    "closed_but_preorder": "Bu işletme şu an kapalı, fakat ön sipariş kabul ediyor. Menüye göz atıp sipariş verebilirsiniz — işletme açıldığında, istediğiniz zaman diliminde siparişiniz hazırlanacaktır.",
     "closed_but_browse": "Şu an kapalı, ama yine de menüye göz atabilirsiniz.",
     "no_business_in_category": "Bu kategoride işletme bulunamadı",
     "no_business_nearby": "Yakınızda işletme bulunamadı",

@@ -504,13 +504,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               floating: false,
               clipBehavior: Clip.hardEdge,
               expandedHeight: _deliveryMode == 'gelal' ? 220 : 195,
-              collapsedHeight: 110, // Daraltılmış yükseklik (sadece konum + arama)
+              collapsedHeight: 120, // Daraltılmış yükseklik (sadece konum + arama)
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
                   // Scroll oranını hesapla (0 = tamamen açık, 1 = tamamen kapalı)
                   final expandedHeight = _deliveryMode == 'gelal' ? 220.0 : 195.0;
-                  final collapsedHeight = 110.0;
+                  final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) / 
                                        (expandedHeight - collapsedHeight)).clamp(0.0, 1.0);
