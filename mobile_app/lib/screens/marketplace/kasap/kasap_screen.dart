@@ -381,6 +381,7 @@ class _KasapScreenState extends State<KasapScreen> {
               sectorIcon: sectorInfo['icon'] as String,
               sectorLabel: sectorInfo['label'] as String,
               sectorColor: Color(sectorInfo['color'] as int),
+              businessId: doc.id, // 🎯 For promo badge lookup
               onTap: () {
                 // Navigate based on business type
                 if (businessType == 'kasap') {
@@ -410,6 +411,7 @@ class _BusinessCard extends StatelessWidget {
   final String sectorIcon;
   final String sectorLabel;
   final Color sectorColor;
+  final String businessId; // 🎯 For promo badge lookup
   final VoidCallback onTap;
 
   const _BusinessCard({
@@ -425,6 +427,7 @@ class _BusinessCard extends StatelessWidget {
     required this.sectorIcon,
     required this.sectorLabel,
     required this.sectorColor,
+    required this.businessId, // 🎯
     required this.onTap,
   });
 
@@ -493,6 +496,57 @@ class _BusinessCard extends StatelessWidget {
                         ],
                       ),
                     ),
+                  ),
+                  // 🎯 Promo Badge (TOP LEFT) - Discovery kampanya gösterimi
+                  FutureBuilder<QuerySnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('businesses')
+                        .doc(businessId)
+                        .collection('promotions')
+                        .where('isActive', isEqualTo: true)
+                        .where('showInDiscovery', isEqualTo: true)
+                        .limit(1)
+                        .get(),
+                    builder: (context, promoSnap) {
+                      if (promoSnap.hasData && promoSnap.data!.docs.isNotEmpty) {
+                        return Positioned(
+                          top: 12,
+                          left: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF00C853), Color(0xFF00E676)],
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF00C853).withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('🎯', style: TextStyle(fontSize: 12)),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Kampanya',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
                   ),
                   // 🆕 Business Logo (BOTTOM LEFT - Lieferando style)
                   if (logoUrl != null && logoUrl!.isNotEmpty)

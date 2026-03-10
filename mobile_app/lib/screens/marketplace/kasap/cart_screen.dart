@@ -34,6 +34,8 @@ import '../../../utils/currency_utils.dart';
 import '../../../services/stripe_payment_service.dart';
 import '../../../services/coupon_service.dart';
 import '../../../services/first_order_service.dart';
+import '../../../services/promotion_engine.dart';
+import '../../../models/promotion_models.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
@@ -93,6 +95,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   double _walletBalance = 0.0;
   bool _useWallet = false;
 
+  // 📢 Bağış Yuvarlama (Donation Round-Up)
+  double _donationAmount = 0.0; // 0 = kapalı, >0 = seçilen bağış tutarı
+  bool _donationEnabled = false; // İşletme planında bağış modülü aktif mi?
+
+  // 🎯 Promotion Engine: user segment + live preview
+  String? _userSegment; // 'vip', 'new', 'returning' etc.
+  PromotionResult? _promoPreviewResult; // live preview for cart UI
+  bool _loadingPromoPreview = false;
+
   // ❄️ Cold Chain Banner
   bool _showColdChainBanner = false; // true = show full expanded banner
 
@@ -148,6 +159,18 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       _updateEarliestPickupTime();
       _fetchSponsoredProducts();
       _fetchFreeDrinkProducts();
+
+      // 🎯 M-3: Listen to cart changes and refresh promo preview
+      ref.listen<CartState>(cartProvider, (prev, next) {
+        final prevCount = prev?.items.length ?? 0;
+        final nextCount = next.items.length;
+        final prevTotal = prev?.totalAmount ?? 0;
+        final nextTotal = next.totalAmount;
+        // Only refresh if item count or total changed meaningfully
+        if (prevCount != nextCount || (prevTotal - nextTotal).abs() > 0.01) {
+          _refreshPromoPreview();
+        }
+      });
     });
   }
 
@@ -162,6 +185,25 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final doc = await FirebaseFirestore.instance.collection('businesses').doc(cart.butcherId).get();
       if (doc.exists && mounted) {
         final data = doc.data();
+
+        // 💚 Check if donation round-up module is enabled via subscription plan
+        bool donationFlag = false;
+        final planCode = data?['subscriptionPlan'] ?? 'basic';
+        try {
+          final planQuery = await FirebaseFirestore.instance
+              .collection('subscription_plans')
+              .where('code', isEqualTo: planCode)
+              .limit(1)
+              .get();
+          if (planQuery.docs.isNotEmpty) {
+            final planData = planQuery.docs.first.data();
+            donationFlag = planData['features']?['donationRoundUp'] == true;
+          }
+        } catch (e) {
+          debugPrint('Error loading plan features: $e');
+        }
+
+        if (!mounted) return;
         setState(() {
           _butcherData = data;
           _loadingButcherParams = false;
@@ -173,12 +215,77 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           if (_isDineIn && data?['dineInPaymentMode'] == 'payFirst' && _paymentMethod == 'payLater') {
             _paymentMethod = 'cash';
           }
+          _donationEnabled = donationFlag;
         });
+
+        // 🎯 Fetch user segment for promotion targeting (CUST-3)
+        try {
+          final userId = FirebaseAuth.instance.currentUser?.uid;
+          if (userId != null) {
+            final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+            if (userDoc.exists && mounted) {
+              setState(() {
+                _userSegment = userDoc.data()?['segment'] as String?;
+              });
+            }
+          }
+        } catch (e) {
+          debugPrint('Error fetching user segment: $e');
+        }
+
+        // 🎯 Trigger initial promo preview (CUST-4)
+        _refreshPromoPreview();
       }
     } catch (e) {
       debugPrint('Error fetching butcher details: $e');
       if (mounted) setState(() => _loadingButcherParams = false);
     }
+  }
+
+  /// 🎯 Refresh promotion preview for the current cart (CUST-4)
+  Future<void> _refreshPromoPreview() async {
+    final cart = ref.read(cartProvider);
+    final butcherId = cart.butcherId;
+    if (butcherId == null || butcherId.isEmpty || cart.items.isEmpty) {
+      if (mounted) setState(() => _promoPreviewResult = null);
+      return;
+    }
+
+    setState(() => _loadingPromoPreview = true);
+    try {
+      final activePromos = await PromotionEngine.fetchActivePromotions(butcherId);
+      if (activePromos.isNotEmpty && mounted) {
+        final cartItemInfos = cart.items.map((item) => CartItemInfo(
+          productId: item.product.sku,
+          productName: item.product.name,
+          unitPrice: item.unitPrice,
+          quantity: item.quantity.toInt(),
+          category: item.product.category,
+        )).toList();
+
+        final deliveryMethod = _isDineIn ? 'dineIn' : (_isPickUp ? 'pickup' : 'delivery');
+        final deliveryFee = (!_isPickUp && !_isDineIn ? (_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50 : 0.0);
+        final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+
+        final result = await PromotionEngine.calculateDiscount(
+          promotions: activePromos,
+          cartItems: cartItemInfos,
+          orderSubtotal: cart.totalAmount,
+          deliveryFee: deliveryFee,
+          deliveryMethod: deliveryMethod,
+          businessId: butcherId,
+          userId: userId,
+          userSegment: _userSegment,
+        );
+
+        if (mounted) setState(() => _promoPreviewResult = result);
+      } else {
+        if (mounted) setState(() => _promoPreviewResult = null);
+      }
+    } catch (e) {
+      debugPrint('PromoPreview error: $e');
+    }
+    if (mounted) setState(() => _loadingPromoPreview = false);
   }
 
   /// 🌟 Fetch sponsored products for the current business
@@ -431,10 +538,46 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       // First-order discount: check eligibility and apply
       final firstOrderDiscountObj = await FirstOrderService.checkDiscount(FirebaseAuth.instance.currentUser!.uid);
       final double firstOrderDiscount = firstOrderDiscountObj?.discountAmount ?? 0.0;
-      final double subtotalAfterDiscounts = cart.totalAmount + deliveryFee - couponDiscount - firstOrderDiscount;
+
+      // ─── Promotion Engine: aktif kampanyaları uygula ───────────────────
+      PromotionResult promotionResult = const PromotionResult();
+      if (cart.butcherId != null && cart.butcherId!.isNotEmpty) {
+        try {
+          final activePromos = await PromotionEngine.fetchActivePromotions(cart.butcherId!);
+          if (activePromos.isNotEmpty) {
+            final cartItemInfos = cart.items.map((item) => CartItemInfo(
+              productId: item.product.sku,
+              productName: item.product.name,
+              unitPrice: item.unitPrice,
+              quantity: item.quantity.toInt(),
+              category: item.product.category,
+            )).toList();
+
+            final deliveryMethod = _isDineIn ? 'dineIn' : (_isPickUp ? 'pickup' : 'delivery');
+            promotionResult = await PromotionEngine.calculateDiscount(
+              promotions: activePromos,
+              cartItems: cartItemInfos,
+              orderSubtotal: cart.totalAmount,
+              deliveryFee: deliveryFee,
+              deliveryMethod: deliveryMethod,
+              businessId: cart.butcherId!,
+              userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+              isFirstOrder: firstOrderDiscount > 0,
+              userSegment: _userSegment, // CUST-3: segment-based campaigns
+            );
+          }
+        } catch (e) {
+          debugPrint('PromotionEngine error: $e');
+        }
+      }
+
+      final double promoDiscount = promotionResult.discount;
+      final double effectiveDeliveryFee = promotionResult.freeDelivery ? 0.0 : deliveryFee;
+      final double subtotalAfterDiscounts = cart.totalAmount + effectiveDeliveryFee - couponDiscount - firstOrderDiscount - promoDiscount;
       // Apply wallet balance if enabled
       final double walletUsed = _useWallet ? (_walletBalance >= subtotalAfterDiscounts ? subtotalAfterDiscounts : _walletBalance) : 0.0;
       final double grandTotal = (subtotalAfterDiscounts - walletUsed).clamp(0.0, double.infinity);
+      final double grandTotalWithDonation = grandTotal + _donationAmount;
 
       // Build order data
       // Use selected pickup slot for Gel Al, otherwise build from date/time
@@ -599,6 +742,19 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         if (walletUsed > 0) ...{
           'walletUsed': walletUsed,
         },
+        // 💚 Bağış Yuvarlama (Donation Round-Up)
+        if (_donationAmount > 0) ...{
+          'donationAmount': _donationAmount,
+          'hasDonation': true,
+        },
+        // 🎯 Promotion Engine data
+        if (promoDiscount > 0) ...{
+          'promotionDiscount': promoDiscount,
+          'appliedPromotions': promotionResult.appliedPromotions.map((p) => p.toMap()).toList(),
+        },
+        if (promotionResult.freeDelivery) 'freeDeliveryByPromotion': true,
+        if (promotionResult.cashbackAmount > 0) 'cashbackAmount': promotionResult.cashbackAmount,
+        'grandTotal': grandTotalWithDonation,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -616,6 +772,16 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           couponId: _appliedCoupon!.couponId!,
           orderId: orderRef.id,
           userId: userId,
+        );
+      }
+
+      // 🎯 Promotion usage tracking + cashback credit
+      if (promotionResult.hasAnyPromotion && cart.butcherId != null) {
+        await PromotionEngine.recordUsage(
+          businessId: cart.butcherId!,
+          orderId: orderRef.id,
+          userId: userId,
+          result: promotionResult,
         );
       }
 
@@ -638,7 +804,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         if (mounted) Navigator.pop(context); // Close initial loading dialog before Stripe sheet
 
         final paymentResult = await StripePaymentService.processPayment(
-          amount: grandTotal,
+          amount: grandTotalWithDonation,
           businessId: cart.butcherId!,
           orderId: orderRef.id,
           customerEmail: userEmail.isNotEmpty ? userEmail : null,
@@ -2195,6 +2361,64 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ...cart.items.asMap().entries.map((entry) => _buildLieferandoCartItem(entry.value, entry.key + 1)),
                 SizedBox(height: 16),
               ],
+              // 🎯 Promo Preview Banner (CUST-4) — show discount before placing order
+              if (_promoPreviewResult != null && _promoPreviewResult!.hasAnyPromotion) ...[
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF00C853), Color(0xFF00E676)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF00C853).withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('🎯', style: TextStyle(fontSize: 22)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${_promoPreviewResult!.appliedPromotions.length} kampanya uygulandı',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              [
+                                if (_promoPreviewResult!.discount > 0)
+                                  '-${_promoPreviewResult!.discount.toStringAsFixed(2)}€ indirim',
+                                if (_promoPreviewResult!.freeDelivery)
+                                  'Ücretsiz teslimat',
+                                if (_promoPreviewResult!.cashbackAmount > 0)
+                                  '+${_promoPreviewResult!.cashbackAmount.toStringAsFixed(2)}€ cashback',
+                              ].join(' · '),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               // ⭐ Sponsored Products ("Bir şey mi unuttun?")
               if (_sponsoredProductsList.isNotEmpty) ...[
                 SizedBox(height: 8),
@@ -2203,16 +2427,44 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ],
 
               // 🥤 Gratis İçecek (Free Drink Promotion)
-              if (_freeDrinkProducts.isNotEmpty) ...[
-                SizedBox(height: 8),
-                _buildFreeDrinkSection(),
-                SizedBox(height: 16),
-              ],
+              // -- Threshold logic --
+              // freeDrinkEnabled: business data'dan, false ise hiç gösterme
+              // freeDrinkMinimumOrder: 0 = her zaman, >0 = eşii aşınca göster
+              () {
+                final bool freeDrinkEnabled = _butcherData?['freeDrinkEnabled'] != false;
+                final double threshold = ((_butcherData?['freeDrinkMinimumOrder'] as num?) ?? 0).toDouble();
+                final double cartAmount = kasapTotal;
+
+                if (!freeDrinkEnabled || _freeDrinkProducts.isEmpty) return const SizedBox.shrink();
+
+                // Eşiğe ulaşıldı mı?
+                final bool thresholdMet = threshold <= 0 || cartAmount >= threshold;
+
+                // Eşiğe yaklaşılıyor mu? (son 5€ veya tutarın %30'u, hangisi küçüksä)
+                final double nudgeWindow = threshold > 0 ? (threshold * 0.3).clamp(1.0, 5.0) : 0;
+                final bool nearThreshold = !thresholdMet && threshold > 0 && (threshold - cartAmount) <= nudgeWindow;
+
+                return Column(
+                  children: [
+                    const SizedBox(height: 8),
+                    if (!thresholdMet && threshold > 0)
+                      _buildFreeDrinkNudgeBanner(
+                        remaining: threshold - cartAmount,
+                        threshold: threshold,
+                        nearThreshold: nearThreshold,
+                      ),
+                    if (thresholdMet) ...[
+                      _buildFreeDrinkSection(),
+                      const SizedBox(height: 16),
+                    ],
+                  ],
+                );
+              }(),
               
               // 💰 Price Summary
               _buildLieferandoPriceSummary(kermesTotal, kasapTotal, grandTotal),
               
-              SizedBox(height: 100), // Space for button
+              SizedBox(height: 120), // Space for button
             ],
           ),
         ),
@@ -2221,7 +2473,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         Positioned(
           left: 16,
           right: 16,
-          bottom: 16,
+          bottom: MediaQuery.of(context).padding.bottom + 16,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -3196,8 +3448,97 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
 
+  /// 🥤 FREE DRINK NUDGE BANNER — Eşiğe ulaşılmadığında "X daha ekle" banner'ı
+  Widget _buildFreeDrinkNudgeBanner({
+    required double remaining,
+    required double threshold,
+    required bool nearThreshold,
+  }) {
+    final locale = context.locale.languageCode;
+    final currency = CurrencyUtils.getCurrencySymbol();
+    final remainingStr = remaining.toStringAsFixed(2);
+
+    final msgMap = {
+      'tr': '🥤 ${remainingStr}$currency daha ekle → siparişine bizden bedava içecek!',
+      'de': '🥤 Noch ${remainingStr}$currency hinzufügen → Gratis Getränk inklusive!',
+      'en': '🥤 Add ${remainingStr}$currency more → get a free drink on us!',
+      'es': '🥤 Añade ${remainingStr}$currency más → ¡bebida gratis incluida!',
+      'fr': '🥤 Ajoutez encore ${remainingStr}$currency → boisson gratuite offerte!',
+      'it': '🥤 Aggiungi ancora ${remainingStr}$currency → bibita gratis inclusa!',
+      'nl': '🥤 Voeg nog ${remainingStr}$currency toe → gratis drankje inbegrepen!',
+    };
+    final msg = msgMap[locale] ?? msgMap['de']!;
+    final progress = (1.0 - (remaining / threshold)).clamp(0.0, 1.0);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOut,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: nearThreshold
+              ? [const Color(0xFF064E3B), const Color(0xFF065F46)]
+              : [const Color(0xFF1F2937), const Color(0xFF111827)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: nearThreshold
+              ? const Color(0xFF10B981).withValues(alpha: 0.8)
+              : const Color(0xFF374151),
+          width: nearThreshold ? 1.5 : 1.0,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            msg,
+            style: TextStyle(
+              color: nearThreshold ? const Color(0xFF6EE7B7) : const Color(0xFF9CA3AF),
+              fontSize: 13,
+              fontWeight: nearThreshold ? FontWeight.w600 : FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 5,
+              backgroundColor: const Color(0xFF374151),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                nearThreshold ? const Color(0xFF10B981) : const Color(0xFF4B5563),
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${(progress * 100).toStringAsFixed(0)}%',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: nearThreshold ? const Color(0xFF10B981) : const Color(0xFF6B7280),
+                ),
+              ),
+              Text(
+                '€${threshold.toStringAsFixed(2)}',
+                style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 🥤 FREE DRINK SECTION — "Her siparişe 1 içecek bedava!"
   Widget _buildFreeDrinkSection() {
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cart = ref.read(cartProvider);
     final butcherId = cart.butcherId ?? '';
@@ -6763,6 +7104,153 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     ),
                     const SizedBox(height: 20),
 
+                    // 5.5️⃣ 💚 BAĞIŞ YUVARLAMA (Donation Round-Up)
+                    if (parent._donationEnabled && parent._paymentMethod == 'card') ...[
+                      parent._buildCheckoutSectionHeader('', '💚 Topluluk Bağışı'),
+                      const SizedBox(height: 8),
+                      Builder(builder: (ctx) {
+                        // Dinamik yuvarlama hesaplaması
+                        final baseTotal = widget.grandTotal;
+                        final roundTo1 = (baseTotal.ceil()).toDouble(); // Bir sonraki 1€
+                        final roundTo5 = ((baseTotal / 5).ceil() * 5).toDouble(); // Bir sonraki 5€
+                        final donation1 = double.parse((roundTo1 - baseTotal).toStringAsFixed(2));
+                        final donation5 = double.parse((roundTo5 - baseTotal).toStringAsFixed(2));
+                        final currency = CurrencyUtils.getCurrencySymbol();
+
+                        // Eğer tam sayıysa yuvarlama anlamsız — 1€ ekleme yerine bir sonraki tam sayıya
+                        final show1 = donation1 > 0.0; // Zaten tam sayıysa gösterme
+                        final show5 = donation5 > 0.0 && donation5 != donation1; // 5€ yuvarlama farklıysa göster
+
+                        final options = <Map<String, dynamic>>[
+                          {'label': 'Hayır', 'donation': 0.0, 'roundedTotal': baseTotal},
+                          if (show1) {'label': '${roundTo1.toStringAsFixed(0)}$currency', 'donation': donation1, 'roundedTotal': roundTo1},
+                          if (show5) {'label': '${roundTo5.toStringAsFixed(0)}$currency', 'donation': donation5, 'roundedTotal': roundTo5},
+                        ];
+
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: parent._donationAmount > 0
+                                ? Border.all(color: Colors.green.withValues(alpha: 0.4), width: 1.5)
+                                : null,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Text('🌱', style: TextStyle(fontSize: 20)),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Tutarınızı yuvarlayıp bağış yapın',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.onSurface,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Sipariş: ${baseTotal.toStringAsFixed(2)}$currency',
+                                style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  for (int i = 0; i < options.length; i++) ...[
+                                    if (i > 0) const SizedBox(width: 8),
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            final newDonation = options[i]['donation'] as double;
+                                            parent._donationAmount = parent._donationAmount == newDonation ? 0.0 : newDonation;
+                                          });
+                                        },
+                                        child: AnimatedContainer(
+                                          duration: const Duration(milliseconds: 200),
+                                          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+                                          decoration: BoxDecoration(
+                                            color: parent._donationAmount == (options[i]['donation'] as double)
+                                                ? ((options[i]['donation'] as double) == 0 ? Colors.grey.shade700 : Colors.green)
+                                                : Theme.of(context).colorScheme.surface,
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: parent._donationAmount == (options[i]['donation'] as double)
+                                                  ? ((options[i]['donation'] as double) == 0 ? Colors.grey : Colors.green)
+                                                  : Colors.grey.shade600,
+                                              width: parent._donationAmount == (options[i]['donation'] as double) ? 1.5 : 1,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                options[i]['label'] as String,
+                                                style: TextStyle(
+                                                  color: parent._donationAmount == (options[i]['donation'] as double)
+                                                      ? Colors.white
+                                                      : Theme.of(context).colorScheme.onSurface,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              if ((options[i]['donation'] as double) > 0) ...[
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  '+${(options[i]['donation'] as double).toStringAsFixed(2)}$currency bağış',
+                                                  style: TextStyle(
+                                                    color: parent._donationAmount == (options[i]['donation'] as double)
+                                                        ? Colors.white70
+                                                        : Colors.green[400],
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              if (parent._donationAmount > 0) ...[
+                                const SizedBox(height: 10),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.favorite, color: Colors.green, size: 16),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          '${parent._donationAmount.toStringAsFixed(2)}$currency bağış eklendi 💚 Teşekkürler!',
+                                          style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 20),
+                    ],
+
                     // 6️⃣ KUPON / PROMO KODU
                     parent._buildCheckoutSectionHeader('', 'Kupon / Promo Kodu'),
                     const SizedBox(height: 8),
@@ -6958,7 +7446,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       : Text(
                           parent._isDineIn && parent._scannedTableNumber != null
                             ? 'Siparişi Gönder · Masa ${parent._scannedTableNumber}'
-                            : 'Siparişi Gönder · ${widget.grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                            : 'Siparişi Gönder · ${(widget.grandTotal + parent._donationAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.surface,
                             fontSize: 16,
