@@ -1196,12 +1196,20 @@ function PromotionsPageContent() {
                             ) : (
                                 <div className="space-y-3">
                                     {templates.map(tpl => {
-                                        const tierAllowed = (tpl as any).availablePlans
-                                            ? (tpl as any).availablePlans.includes(businessPlanCode)
+                                        // Plan gating: check if business plan is in availablePlans,
+                                        // normalize both sides to handle alias mismatches (standard/pro, premium/ultra)
+                                        const normalizeCode = (c: string) => {
+                                            if (c === 'standard') return 'pro';
+                                            if (c === 'premium') return 'ultra';
+                                            return c.toLowerCase();
+                                        };
+                                        const plans: string[] = (tpl as any).availablePlans;
+                                        const tierAllowed = plans
+                                            ? plans.map(normalizeCode).includes(normalizeCode(businessPlanCode))
                                             : meetsMinTier(businessPlanCode, tpl.minPlanTier);
                                         const tierLabel = !tierAllowed
-                                            ? ((tpl as any).availablePlans
-                                                ? `🔒 ${(tpl as any).availablePlans.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')}`
+                                            ? (plans
+                                                ? `🔒 ${plans.map((p: string) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')}`
                                                 : (tpl.minPlanTier === 'premium' || tpl.minPlanTier === 'ultra' ? '👑 Ultra' :
                                                     tpl.minPlanTier === 'standard' || tpl.minPlanTier === 'pro' ? '⭐ Pro' : null))
                                             : null;
