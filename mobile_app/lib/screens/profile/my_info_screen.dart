@@ -361,7 +361,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
     if (_isLoading && _nameController.text.isEmpty) {
       return Scaffold(
         backgroundColor: scaffoldBg,
-        body: const Center(child: CircularProgressIndicator(color: Color(0xFFE30A17))),
+        body: const Center(child: CircularProgressIndicator(color: Colors.grey)),
       );
     }
 
@@ -592,7 +592,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                   ),
                   child: _isSaving 
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Bilgileri Güncelle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    : const Text('Bilgileri Güncelle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
                 ),
               ),
               
@@ -663,7 +663,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: Padding(
             padding: EdgeInsets.all(24),
-            child: CircularProgressIndicator(color: Color(0xFFFB335B), strokeWidth: 2),
+            child: CircularProgressIndicator(color: Colors.grey, strokeWidth: 2),
           ));
         }
         
@@ -746,7 +746,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                             style: TextStyle(
                               color: _getLabelColor(label),
                               fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -910,7 +910,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+                    Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: textColor)),
                     const SizedBox(height: 20),
                     
                     // Quick label chips
@@ -1018,7 +1018,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                         ),
                         child: Text(
                           initialData != null ? 'Güncelle' : 'Kaydet',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
                         ),
                       ),
                     ),
@@ -1051,7 +1051,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
           children: [
             Icon(icon, size: 14, color: isSelected ? color : Colors.grey[500]),
             const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 11, color: isSelected ? color : Colors.grey[600], fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500)),
+            Text(label, style: TextStyle(fontSize: 11, color: isSelected ? color : Colors.grey[600], fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500)),
           ],
         ),
       ),
@@ -1084,7 +1084,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
       style: TextStyle(
         color: textColor,
         fontSize: 18,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w600,
       ),
     );
   }

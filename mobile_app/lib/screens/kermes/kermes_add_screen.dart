@@ -299,7 +299,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
         title: const Column(
           children: [
             Text('HADEF', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w300, letterSpacing: 2)),
-            Text('Yeni Kermes Ekle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('Yeni Kermes Ekle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -394,7 +394,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
                           Text(
                             _selectedOrganization!['name'] ?? '',
                             style: const TextStyle(
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
                           ),
@@ -671,7 +671,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
                         children: [
                           Icon(Icons.save),
                           SizedBox(width: 8),
-                          Text('KERMESİ KAYDET', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text('KERMESİ KAYDET', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                         ],
                       ),
               ),
@@ -698,7 +698,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
         const SizedBox(width: 12),
         Text(
           title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1976D2)),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF1976D2)),
         ),
       ],
     );
@@ -720,7 +720,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
             const SizedBox(height: 4),
             Text(
               DateFormat('dd.MM.yyyy').format(date),
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -744,7 +744,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
             const SizedBox(height: 4),
             Text(
               '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ],
         ),

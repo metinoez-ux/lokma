@@ -234,7 +234,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Geri Bildirim', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Geri Bildirim', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: _hasSubmittedThisMonth
@@ -254,7 +254,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
             const SizedBox(height: 24),
             const Text(
               'Bu Ay Zaten Değerlendirdiniz',
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -286,7 +286,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
             children: [
               const Text(
                 '📝 Görüşleriniz Bizim İçin Değerli',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Text(
@@ -346,7 +346,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
               const SizedBox(width: 8),
               const Text(
                 'Kurye Değerlendirmesi',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -421,7 +421,7 @@ class _FeedbackFormScreenState extends State<FeedbackFormScreen> {
                     )
                   : const Text(
                       'Gönder',
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                     ),
             ),
           ),

@@ -199,7 +199,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 icon: const Icon(Icons.person_add_rounded),
                 label: Text(
                   tr('customer.hesap_olustur'),
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor: _accent, // LOKMA brand rose
@@ -260,7 +260,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     Expanded(
                       child: Text(
                         title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
@@ -306,7 +306,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   Expanded(
                     child: Text(
                       tr('customer.grup_yoneticisi_tarafindan_otu'),
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
@@ -361,7 +361,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             Flexible(
               child: Text(
                 widget.businessName,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -381,7 +381,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     'Masa ${widget.tableNumber}',
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: _accent,
                     ),
                   ),
@@ -422,7 +422,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         session.groupPin!,
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: 1.5,
                           color: isDark ? Colors.white : Colors.black87,
                         ),
@@ -541,7 +541,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 children: [
                   TextSpan(
                     text: 'Toplam: ${CurrencyUtils.getCurrencySymbol()}${session.grandTotal.toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   if (session.paidTotal > 0) ...[
                     const TextSpan(text: '  ·  '),
@@ -564,7 +564,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               'Kalan: ${CurrencyUtils.getCurrencySymbol()}${session.remainingBalance.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: Colors.white,
               ),
             ),
@@ -776,7 +776,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)} / ${product.unitType}',
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: _accent,
                   ),
                 ),
@@ -805,7 +805,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     product.unitType == 'kg'
                         ? cartQty.toDouble().toStringAsFixed(1)
                         : '$cartQty',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
                 _circleButton(Icons.add, () {
@@ -886,7 +886,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               'Benim Toplamım',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),
@@ -986,7 +986,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             children: [
               Text(
                 '${CurrencyUtils.getCurrencySymbol()}${item.totalPrice.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
               ),
               const SizedBox(height: 4),
               if (item.isSubmitted) ...[
@@ -1040,7 +1040,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                         statusText,
                         style: TextStyle(
                           fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: statusColor,
                         ),
                       ),
@@ -1063,7 +1063,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       child: Text('${item.quantity}',
-                          style: const TextStyle(fontWeight: FontWeight.w700)),
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
                     ),
                     _miniCircleButton(Icons.add, () {
                       HapticFeedback.lightImpact();
@@ -1106,7 +1106,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
           tr('customer.kisi_bazli'),
           style: TextStyle(
             fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : Colors.black87,
           ),
         ),
@@ -1135,7 +1135,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     'Masa Toplam',
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
@@ -1170,7 +1170,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   children: [
                     const Text(
                       'Kalan Hesap',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                     ),
                     Text(
                       '${CurrencyUtils.getCurrencySymbol()}${session.remainingBalance.toStringAsFixed(2)}',
@@ -1218,7 +1218,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               Text(
                 session.allReady ? 'Herkes hazır! 🎉' : tr('customer.masa_siparis_durumu'),
                 style: TextStyle(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   fontSize: 14,
                   color: session.allReady ? Colors.green.shade700 : (isDark ? Colors.white : Colors.black87),
                 ),
@@ -1235,7 +1235,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   '$ready/$total hazır',
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: session.allReady ? Colors.green.shade700 : Colors.amber.shade700,
                   ),
                 ),
@@ -1285,7 +1285,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
             tr('customer.toplam_urunler'),
             style: TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
@@ -1360,7 +1360,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               child: Text(
                 participant.name.isNotEmpty ? participant.name[0].toUpperCase() : '?',
                 style: TextStyle(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: participant.isHost ? Colors.white : Colors.black87,
                 ),
               ),
@@ -1514,7 +1514,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                   const SizedBox(width: 6),
                 ],
                 Text('${item.quantity}×',
-                    style: TextStyle(fontSize: 12, color: _accent, fontWeight: FontWeight.w700)),
+                    style: TextStyle(fontSize: 12, color: _accent, fontWeight: FontWeight.w600)),
                 const SizedBox(width: 8),
                 Expanded(child: Text(item.productName, style: const TextStyle(fontSize: 13))),
                 Text('${CurrencyUtils.getCurrencySymbol()}${item.totalPrice.toStringAsFixed(2)}',
@@ -1581,7 +1581,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                 ),
                 Text(
                   '${CurrencyUtils.getCurrencySymbol()}${session.grandTotal.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
               ],
             ),

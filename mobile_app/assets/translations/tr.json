@@ -134,7 +134,8 @@
     "delivery_fee": "Teslimat Ücreti",
     "error_loading_cart": "Sepet yüklenirken hata oluştu",
     "no_products_added_yet": "Henüz ürün eklemediniz",
-    "total_products": "Toplam Ürünler"
+    "total_products": "Toplam Ürünler",
+    "legal_disclaimer": "Siparişinizi göndererek, kullanım koşullarımızı ve gizlilik politikamızı kabul etmiş olursunuz."
   },
   "common": {
     "ok": "Tamam",
@@ -647,6 +648,7 @@
     "filter_campaigns": "Aktif kampanyası olan işletmeler",
     "filter_cash": "Nakit ödeme kabul eden işletmeler",
     "filter_free_delivery": "Teslimat ücreti olmayan işletmeler",
+    "free_delivery_label": "Teslimat Bedava",
     "filter_open_now": "Şu anda açık olan işletmeler",
     "filter_tuna_verified": "Tuna tarafından onaylı işletmeler",
     "filter_vegetarian": "Vejetaryen menü sunan işletmeler",

@@ -116,7 +116,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
                     style: TextStyle(
                       color: textColor,
                       fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
@@ -193,7 +193,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
                       style: TextStyle(
                         color: textColor,
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
@@ -222,7 +222,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
         style: TextStyle(
           color: textColor,
           fontSize: 13,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           letterSpacing: 0.3,
         ),
       ),
@@ -239,7 +239,7 @@ class GroupOrderHistoryCard extends StatelessWidget {
             style: TextStyle(
               color: _accent,
               fontSize: 13,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(width: 8),

@@ -169,7 +169,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 28),
             SizedBox(width: 12),
-            Text('Dikkat!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text('Dikkat!', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
           ],
         ),
         content: const Text(
@@ -220,7 +220,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Bildirim Ayarları', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Bildirim Ayarları', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: _isLoading
@@ -322,7 +322,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                     child: const Center(
                       child: Text(
                         'Kaydet',
-                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -341,7 +341,7 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ],
     );

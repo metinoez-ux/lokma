@@ -25,7 +25,7 @@ class HelpScreen extends StatelessWidget {
           icon: Icon(Icons.arrow_back, color: textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(tr('profile.help'), style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold)),
+        title: Text(tr('profile.help'), style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: ListView(
@@ -58,7 +58,7 @@ class HelpScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   tr('profile.faq'),
-                  style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -104,11 +104,11 @@ class HelpScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                const Icon(Icons.support_agent, color: lokmaRed, size: 40),
+                Icon(Icons.support_agent, color: isDark ? Colors.grey[400] : Colors.grey[700], size: 40),
                 const SizedBox(height: 12),
                 Text(
                   tr('profile.need_help'),
-                  style: TextStyle(color: textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: textPrimary, fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -137,7 +137,7 @@ class HelpScreen extends StatelessWidget {
                         SizedBox(width: 8),
                         Text(
                           'info@lokma.shop',
-                          style: TextStyle(color: lokmaRed, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: lokmaRed, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),

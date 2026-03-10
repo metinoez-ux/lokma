@@ -134,7 +134,8 @@
     "delivery_fee": "Delivery Fee",
     "error_loading_cart": "Error loading cart",
     "no_products_added_yet": "You haven't added any products yet",
-    "total_products": "Total Products"
+    "total_products": "Total Products",
+    "legal_disclaimer": "By placing your order, you agree to our terms of service and privacy policy."
   },
   "common": {
     "ok": "OK",
@@ -661,6 +662,7 @@
     "filter_campaigns": "Businesses with active campaigns",
     "filter_cash": "Businesses accepting cash payment",
     "filter_free_delivery": "Businesses with free delivery",
+    "free_delivery_label": "Free Delivery",
     "filter_open_now": "Currently open businesses",
     "filter_tuna_verified": "Tuna verified businesses",
     "filter_vegetarian": "Businesses offering vegetarian menu",

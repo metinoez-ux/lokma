@@ -16,7 +16,7 @@ class KermesScreen extends StatelessWidget {
             const Text('🎪 ', style: TextStyle(fontSize: 24)),
             Text('Kermes', style: TextStyle(
               color: isDark ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             )),
           ],
         ),

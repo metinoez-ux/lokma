@@ -162,6 +162,8 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
     final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
     final screenHeight = MediaQuery.of(context).size.height;
 
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+
     return Container(
       constraints: BoxConstraints(
         maxHeight: screenHeight * 0.90, // Limit to 90% of screen height
@@ -178,54 +180,58 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
           mainAxisSize: MainAxisSize.min, // Avoid expanding more than needed
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header Row (Matches "Standort eingeben | Abbrechen")
+            // Header Row — drag handle + title + close button
             Padding(
-              padding: const EdgeInsets.only(top: 20, left: 20, right: 20, bottom: 20),
-              child: Row(
+              padding: const EdgeInsets.only(top: 8, left: 16, right: 16, bottom: 8),
+              child: Column(
                 children: [
-                  const SizedBox(width: 80), // Balance right button to keep title centered
-                  Expanded(
-                    child: Text(
-                      'Adres girin',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
+                  // Drag handle
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: 80,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isDark ? Colors.grey[800] : Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.grey[200]!),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            'İptal',
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.grey[700],
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const SizedBox(width: 36), // Balance close button width
+                      Expanded(
+                        child: Text(
+                          'Adres girin',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
-                    ),
+                      // Close button
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey[800] : Colors.grey[200],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            color: isDark ? Colors.white : Colors.grey[700],
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -243,7 +249,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                   hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
                   filled: true,
                   fillColor: bgColor,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[400]!, width: 1),
@@ -292,7 +298,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
             // Current Location Indicator (Matches "Aktueller Standort")
             ListTile(
@@ -309,14 +315,14 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                 : Icon(
                     Icons.near_me, 
                     color: Theme.of(context).colorScheme.onSurface, 
-                    size: 26
+                    size: 22
                   ),
               title: Text(
                 'Mevcut Konum',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500, // Slightly less bold than street name
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
               subtitle: _actualGpsLocation != null 
@@ -354,7 +360,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
               },
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
 
             // ═══════════ KAYITLI ADRESLER (Saved Addresses) ═══════════
             _buildSavedAddressesSection(isDark),
@@ -368,8 +374,8 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                   Text(
                     'Son Aramalar',
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
@@ -402,20 +408,20 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                   itemBuilder: (context, index) {
                     final loc = _recentSearches[index];
                     return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
                       leading: Icon(
                         Icons.location_on, 
                         color: const Color(0xFFFB335B), // LOKMA brand color
-                        size: 26
+                         size: 22
                       ),
                       title: Padding(
                         padding: const EdgeInsets.only(bottom: 2.0),
                         child: Text(
                           loc.street.isNotEmpty ? loc.street : loc.city,
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold, // Bold street name matching screenshot
+                             color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ),
@@ -491,8 +497,8 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
               child: Text(
                 'Kayıtlı Adresler',
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
@@ -537,7 +543,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
                 subtitle: Text(

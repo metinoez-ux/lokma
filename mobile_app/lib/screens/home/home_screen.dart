@@ -215,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFulfillmentPill(int index, String label) {
     final isSelected = _selectedFulfillmentType == index;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+    final accent = Theme.of(context).colorScheme.primary;
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -281,6 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ===== QUICK REORDER SECTION =====
   Widget _buildReorderSection() {
+    final accent = Theme.of(context).colorScheme.primary;
     // TODO: Replace with actual Firebase data from butcher_orders
     final recentOrders = [
       {'vendor': 'Tuna Kasap', 'items': '2x Kuşbaşı, 1x Kıyma', 'total': '${CurrencyUtils.getCurrencySymbol()}45.90', 'date': 'Bugün'},
@@ -348,6 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildReorderCard(String vendor, String items, String total, String date) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: () {
         HapticFeedback.mediumImpact();
@@ -389,7 +391,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.black87,
                           fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -423,7 +425,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     color: accent,
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Container(
@@ -432,17 +434,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: accent,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.add_shopping_cart_rounded, color: Colors.white, size: 14),
-                      SizedBox(width: 4),
+                      const Icon(Icons.add_shopping_cart_rounded, color: Colors.white, size: 14),
+                      const SizedBox(width: 4),
                       Text(
                         'home.repeat'.tr(),
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],

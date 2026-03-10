@@ -100,7 +100,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                     style: TextStyle(
                       color: textColor,
                       fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   if (item.secondaryName != null) ...[
@@ -123,7 +123,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                     style: const TextStyle(
                       color: Colors.greenAccent,
                       fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   
@@ -237,7 +237,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                               cartQuantity.toString(),
                               style: TextStyle(
                                 color: textColor,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 18,
                               ),
                             ),
@@ -282,7 +282,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
                                 ? 'Bir Tane Daha Ekle' 
                                 : 'Sepete Ekle • ${item.price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                               style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 16,
                               ),
                             ),
@@ -424,7 +424,7 @@ class _KermesProductDetailSheetState extends State<KermesProductDetailSheet> {
       style: TextStyle(
         color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
         fontSize: 16,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w600,
       ),
     );
   }

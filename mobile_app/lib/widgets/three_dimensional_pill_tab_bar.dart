@@ -12,18 +12,20 @@ class ThreeDimensionalPillTabBar extends StatefulWidget {
   final int selectedIndex;
   final Function(int) onTabSelected;
   final List<TabItem> tabs;
+  final bool compact;
 
   const ThreeDimensionalPillTabBar({
     super.key,
     required this.selectedIndex,
     required this.onTabSelected,
     required this.tabs,
+    this.compact = false,
   });
 
-  // 🎨 LOKMA Marka Rengi (#F85E7D)
-  static const Color lokmaPink      = Color(0xFFF85E7D);
-  static const Color lokmaPinkLight = Color(0xFFFA8097); // üst ışık
-  static const Color lokmaPinkDark  = Color(0xFFD44060); // alt gölge
+  // 🎨 LOKMA Marka Rengi (#FB335B)
+  static const Color lokmaPink      = Color(0xFFFB335B);
+  static const Color lokmaPinkLight = Color(0xFFFC5C7A); // üst ışık
+  static const Color lokmaPinkDark  = Color(0xFFD92A4C); // alt gölge
 
   @override
   State<ThreeDimensionalPillTabBar> createState() =>
@@ -44,6 +46,16 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
       _containerWidth > 0 && widget.tabs.isNotEmpty
           ? _containerWidth / widget.tabs.length
           : 0;
+
+  // Compact vs normal dimensions
+  double get _height => widget.compact ? 36 : 48;
+  double get _borderRadius => _height / 2;
+  double get _pillRadius => (_height - 6) / 2;
+  double get _iconSize => widget.compact ? 13 : 17;
+  double get _fontSize => widget.compact ? 12 : 14;
+  EdgeInsets get _margin => widget.compact
+      ? const EdgeInsets.symmetric(horizontal: 4, vertical: 4)
+      : const EdgeInsets.symmetric(horizontal: 16, vertical: 6);
 
   @override
   void initState() {
@@ -95,14 +107,15 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
     final unselTextColor = isDark ? Colors.grey[300]! : Colors.grey[600]!;
 
     return LayoutBuilder(builder: (ctx, constraints) {
-      _containerWidth = constraints.maxWidth - 24; // minus horizontal margin
+      final hMargin = _margin.horizontal;
+      _containerWidth = constraints.maxWidth - hMargin;
 
       return Container(
-        height: 42,
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        height: _height,
+        margin: _margin,
         decoration: BoxDecoration(
           color: trackColor,
-          borderRadius: BorderRadius.circular(21),
+          borderRadius: BorderRadius.circular(_borderRadius),
           boxShadow: [
             BoxShadow(
               color: isDark
@@ -167,7 +180,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                                   ThreeDimensionalPillTabBar.lokmaPinkDark,
                                 ],
                               ),
-                              borderRadius: BorderRadius.circular(18),
+                              borderRadius: BorderRadius.circular(_pillRadius),
                               boxShadow: [
                                 BoxShadow(
                                   color: isDark
@@ -217,31 +230,35 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
 
   Widget _buildLabel(int index, Color textColor, bool isActive) {
     final tab = widget.tabs[index];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (tab.icon != null) ...[
-          Icon(tab.icon, color: textColor, size: 15),
-          const SizedBox(width: 5),
-        ],
-        Flexible(
-          child: Text(
-            tab.title,
-            style: TextStyle(
-              color: textColor,
-              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-              fontSize: 13,
-              overflow: TextOverflow.ellipsis,
-              shadows: isActive
-                  ? const [Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 2)]
-                  : null,
+    return Center(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (tab.icon != null) ...[
+            Icon(tab.icon, color: textColor, size: _iconSize),
+            SizedBox(width: widget.compact ? 3 : 5),
+          ],
+          Flexible(
+            child: Text(
+              tab.title,
+              style: TextStyle(
+                color: textColor,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                fontSize: _fontSize,
+                overflow: TextOverflow.ellipsis,
+                height: 1.0,
+                shadows: isActive
+                    ? const [Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 2)]
+                    : null,
+              ),
+              maxLines: 1,
+              textAlign: TextAlign.center,
             ),
-            maxLines: 1,
-            textAlign: TextAlign.center,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -253,7 +253,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                 style: TextStyle(
                   color: Theme.of(dialogContext).brightness == Brightness.dark ? Colors.white : Colors.black87,
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -373,7 +373,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                   style: const TextStyle(
                     color: lokmaPink,
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -421,7 +421,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
               style: TextStyle(
                 color: textColor,
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 letterSpacing: 1.2,
               ),
             ),
@@ -462,7 +462,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.surface,
                         fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -514,7 +514,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                         category,
                         style: TextStyle(
                           color: isSelected ? Colors.white : subtleTextColor,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                           fontSize: 14,
                         ),
                       ),
@@ -598,7 +598,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.surface,
                                 fontSize: 22,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -622,7 +622,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                               'Sepeti Görüntüle',
                               style: TextStyle(
                                 fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             SizedBox(width: 8),
@@ -743,7 +743,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                              item.name,
                              style: TextStyle(
                                color: textColor,
-                               fontWeight: FontWeight.bold,
+                               fontWeight: FontWeight.w600,
                                fontSize: 16,
                              ),
                           ),
@@ -777,7 +777,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                           style: const TextStyle(
                             color: Colors.greenAccent,
                             fontSize: 17,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         // Alerjen uyarısı (varsa)
@@ -823,7 +823,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                     style: TextStyle(
                       color: Colors.red,
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 )
@@ -893,7 +893,7 @@ class _KermesMenuScreenState extends ConsumerState<KermesMenuScreen> {
                           cartQuantity.toString(),
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.surface,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 16,
                           ),
                         ),

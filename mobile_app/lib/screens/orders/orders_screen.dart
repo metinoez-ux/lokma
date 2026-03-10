@@ -125,8 +125,8 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: lokmaRed),
+          return Center(
+            child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!),
           );
         }
 
@@ -461,10 +461,10 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
               Center(
                 child: Text(
                   'orders.order_detail'.tr(),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : Colors.black,
+                   style: TextStyle(
+                     fontSize: 18,
+                     fontWeight: FontWeight.w600,
+                     color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
               ),
@@ -542,12 +542,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                 margin: const EdgeInsets.only(right: 8, top: 1),
                                 decoration: BoxDecoration(
-                                  color: isUnavailable ? Colors.red[400] : const Color(0xFFFB335B),
+                                  color: isUnavailable ? Colors.red[400] : (isDark ? Colors.grey[700] : Colors.grey[800]),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   '#$posNum',
-                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                   style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
                                 ),
                               ),
                               SizedBox(
@@ -566,7 +566,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                                   item.name,
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: isUnavailable ? Colors.red[400] : const Color(0xFFFB335B),
+                                    color: isUnavailable ? Colors.red[400] : (isDark ? Colors.grey[700] : Colors.grey[800]),
                                   decoration: isUnavailable ? TextDecoration.lineThrough : null,
                                   ),
                                 ),
@@ -614,10 +614,10 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('orders.total'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                             Text('orders.total'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                             Text(
                               '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
-                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -656,9 +656,9 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         padding: const EdgeInsets.only(bottom: 8, top: 4),
                         child: Row(
                           children: [
-                            const Icon(Icons.person, size: 16, color: Color(0xFFFB335B)),
-                            const SizedBox(width: 6),
-                            Text('orders.my_order'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFFB335B))),
+                             Icon(Icons.person, size: 16, color: isDark ? Colors.grey[400] : Colors.grey[700]),
+                             const SizedBox(width: 6),
+                             Text('orders.my_order'.tr(), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: isDark ? Colors.white : Colors.black87)),
                           ],
                         ),
                       )
@@ -680,7 +680,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                             children: [
                               Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
                               const SizedBox(width: 6),
-                              Text('orders.their_order'.tr(namedArgs: {'name': pName}), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey[700])),
+                               Text('orders.their_order'.tr(namedArgs: {'name': pName}), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: isDark ? Colors.grey[400] : Colors.grey[700])),
                             ],
                           ),
                         )
@@ -724,10 +724,10 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('orders.total_group'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFB335B))),
-                        Text(
-                          '${CurrencyUtils.getCurrencySymbol()}${(myTotal < order.totalAmount ? order.totalAmount : myTotal).toStringAsFixed(2)}', // Fallback for total
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFFB335B)),
+                                       Text('orders.total_group'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87)),
+                         Text(
+                           '${CurrencyUtils.getCurrencySymbol()}${(myTotal < order.totalAmount ? order.totalAmount : myTotal).toStringAsFixed(2)}', // Fallback for total
+                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black87),
                         ),
                       ],
                     )
@@ -794,7 +794,11 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                               Icon(Icons.payment, size: 16, color: Colors.grey[600]),
                               const SizedBox(width: 8),
                               Text(
-                                order.paymentMethod == 'cash' ? 'orders.pay_cash'.tr() : order.paymentMethod == 'card' ? 'orders.pay_card'.tr() : 'orders.pay_online'.tr(),
+                                order.paymentMethod == 'cash' ? 'orders.pay_cash'.tr() 
+                                    : order.paymentMethod == 'card_on_delivery' || order.paymentMethod == 'kapidakart' ? 'Kapıda Kart' 
+                                    : order.paymentMethod == 'card_nfc' ? 'Kapıda Kart (NFC)' 
+                                    : order.paymentMethod == 'card' ? 'orders.pay_card'.tr() 
+                                    : 'orders.pay_online'.tr(),
                                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black87),
                               ),
                             ],
@@ -825,7 +829,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                               _getStatusTextCustom(order),
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: _getStatusColor(order.status),
                               ),
                             ),
@@ -898,7 +902,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
             style: TextStyle(
               color: color,
               fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
             ),
           ),
@@ -1012,7 +1016,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         style: TextStyle(
                           color: textColor,
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -1059,7 +1063,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                     style: TextStyle(
                       color: _getStatusColor(order.status),
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -1094,7 +1098,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                           _getDeliveryTypeText(order.deliveryProof!['type'] as String?),
                           style: TextStyle(
                             color: isDark ? Colors.green.shade300 : Colors.green.shade700,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
                         ),
@@ -1175,8 +1179,8 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                       icon: const Text('💝', style: TextStyle(fontSize: 18)),
                       label: const Text('Bahşiş Bırak'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFFB335B),
-                        side: const BorderSide(color: Color(0xFFFB335B)),
+                         foregroundColor: isDark ? Colors.teal[300] : Colors.teal[700],
+                         side: BorderSide(color: isDark ? Colors.teal[300]! : Colors.teal[700]!),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
@@ -1219,7 +1223,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                               ),
                               child: Text(
                                 '~${order.etaMinutes} dk',
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ],

@@ -75,7 +75,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
           style: TextStyle(
             color: textPrimary,
             fontSize: 18,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -141,7 +141,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: lokmaRed));
+          return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -350,7 +350,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                             style: TextStyle(
                               color: textPrimary,
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -398,7 +398,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                         style: TextStyle(
                           color: statusColor,
                           fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -545,7 +545,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
       future: _fetchBusinessDocs(favoriteIds),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: lokmaRed));
+          return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -619,7 +619,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                 children: [
                   Text(
                     name,
-                    style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -627,7 +627,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.location_on, color: lokmaRed, size: 14),
+                        const Icon(Icons.location_on, color: Colors.grey, size: 14),
                         const SizedBox(width: 4),
                         Text(city, style: TextStyle(color: textSubtle, fontSize: 12)),
                       ],
@@ -665,7 +665,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
       future: _fetchProductsBySku(favoriteSkus),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: lokmaRed));
+          return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -775,7 +775,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                 children: [
                   Text(
                     name,
-                    style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600, fontSize: 16),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -784,7 +784,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                     children: [
                       Text(
                         '${CurrencyUtils.getCurrencySymbol()}${price.toStringAsFixed(2)}',
-                        style: const TextStyle(color: lokmaRed, fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w600, fontSize: 14),
                       ),
                       if (butcherName.isNotEmpty) ...[
                         const SizedBox(width: 8),
@@ -830,7 +830,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
               borderRadius: BorderRadius.circular(40),
               border: Border.all(color: borderSubtle),
             ),
-            child: Icon(icon, color: lokmaRed, size: 40),
+            child: Icon(icon, color: isDark ? Colors.grey[500] : Colors.grey[600], size: 40),
           ),
           const SizedBox(height: 24),
           Text(
@@ -838,7 +838,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
             style: TextStyle(
               color: textPrimary,
               fontSize: 20,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),

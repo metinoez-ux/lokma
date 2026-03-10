@@ -164,7 +164,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
             style: const TextStyle(
               color: Colors.white,
               fontSize: 42,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               letterSpacing: -1,
             ),
           ),
@@ -229,7 +229,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
               onPressed: _startPayment,
-              child: const Text('Tekrar Dene', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('Tekrar Dene', style: TextStyle(fontWeight: FontWeight.w600)),
             ),
         ],
       ),

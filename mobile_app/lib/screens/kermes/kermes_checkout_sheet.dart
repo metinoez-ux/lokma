@@ -299,7 +299,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       style: TextStyle(
                         color: textColor,
                         fontSize: 17,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
@@ -541,7 +541,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           style: const TextStyle(
                             color: Colors.greenAccent,
                             fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -573,7 +573,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                           item.name,
                           style: TextStyle(
                             color: textColor,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 15,
                           ),
                         ),
@@ -614,7 +614,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                             quantity.toString(),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.surface,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               fontSize: 15,
                             ),
                           ),
@@ -869,7 +869,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
             style: TextStyle(
                 color: isDark ? Colors.white : Colors.black87,
               fontSize: 22,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
           ),
@@ -1100,7 +1100,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       style: const TextStyle(
                         color: Colors.greenAccent,
                         fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -1226,7 +1226,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                               style: TextStyle(
                                 color: isDark ? Colors.white : Colors.black87,
                                 fontSize: 9,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -1334,7 +1334,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black87,
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -1375,7 +1375,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.surface,
                               fontSize: 15,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           if (!isLastStep) ...[

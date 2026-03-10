@@ -134,7 +134,8 @@
     "delivery_fee": "Liefergebühr",
     "error_loading_cart": "Fehler beim Laden des Warenkorbs",
     "no_products_added_yet": "Sie haben noch keine Produkte hinzugefügt",
-    "total_products": "Gesamte Produkte"
+    "total_products": "Gesamte Produkte",
+    "legal_disclaimer": "Mit Ihrer Bestellung akzeptieren Sie unsere Nutzungsbedingungen und Datenschutzrichtlinie."
   },
   "common": {
     "ok": "OK",
@@ -647,6 +648,7 @@
     "filter_campaigns": "Geschäfte mit aktiven Aktionen",
     "filter_cash": "Geschäfte mit Barzahlung",
     "filter_free_delivery": "Geschäfte ohne Liefergebühr",
+    "free_delivery_label": "Kostenlose Lieferung",
     "filter_open_now": "Jetzt geöffnete Geschäfte",
     "filter_tuna_verified": "Von Tuna verifizierte Geschäfte",
     "filter_vegetarian": "Geschäfte mit vegetarischem Menü",

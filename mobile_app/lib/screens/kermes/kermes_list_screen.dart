@@ -449,7 +449,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
             const SizedBox(height: 16),
             Text(
               'Sıralama',
-              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),
             
@@ -723,7 +723,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                         style: TextStyle(
                           color: subtleTextColor,
                           fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -735,7 +735,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                               style: TextStyle(
                                 color: textColor,
                                 fontSize: 13,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -786,7 +786,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -911,7 +911,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
                 style: TextStyle(
                   color: primaryRose,
                   fontSize: 11,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

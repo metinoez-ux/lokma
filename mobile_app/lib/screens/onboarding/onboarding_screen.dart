@@ -236,7 +236,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         _currentPage == _slides.length - 1 ? 'Başlayalım! 🎉' : 'Devam',
                         style: const TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
                         ),
                       ),

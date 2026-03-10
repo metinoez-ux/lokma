@@ -121,7 +121,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         'LOKMA',
                         style: TextStyle(
                           fontSize: 28,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: lokmaRed,
                         ),
                       ),
@@ -152,7 +152,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       'Uygulama Dili / Language',
                       style: TextStyle(
                         fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: lokmaDark,
                       ),
                     ),
@@ -239,7 +239,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             'Devam Et', // Do not translate since they haven't confirmed language
                             style: TextStyle(
                               fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),

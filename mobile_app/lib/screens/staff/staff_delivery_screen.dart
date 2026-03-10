@@ -11,6 +11,7 @@ import '../../services/shift_service.dart';
 import '../../services/location_tracking_service.dart';
 import '../../utils/currency_utils.dart';
 import '../orders/order_chat_screen.dart';
+import '../shared/tap_to_pay_sheet.dart';
 
 /// Staff Delivery Screen - Shows pending deliveries for staff to claim
 class StaffDeliveryScreen extends StatefulWidget {
@@ -384,6 +385,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
     }
 
     final isCash = order.paymentMethod == 'cash' || order.paymentMethod == 'nakit';
+    final isCardOnDelivery = order.paymentMethod == 'card_on_delivery' || order.paymentMethod == 'kapidakart' || order.paymentMethod == 'card_nfc';
     final orderNum = order.orderNumber ?? '#${order.id.substring(0, 6).toUpperCase()}';
     
     return Container(
@@ -397,8 +399,8 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
         dense: true,
         tilePadding: const EdgeInsets.symmetric(horizontal: 12),
         leading: Icon(
-          isCash ? Icons.payments : Icons.credit_card,
-          color: isCash ? Colors.green : Colors.blue,
+          isCardOnDelivery ? Icons.contactless : isCash ? Icons.payments : Icons.credit_card,
+          color: isCardOnDelivery ? const Color(0xFF6A0DAD) : isCash ? Colors.green : Colors.blue,
           size: 20,
         ),
         title: Row(
@@ -688,7 +690,61 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
     
     final paymentMethod = orderSnapshot.paymentMethod ?? 'cash';
     final isCash = paymentMethod == 'cash' || paymentMethod == 'nakit';
+    final isCardOnDelivery = paymentMethod == 'card_on_delivery' || paymentMethod == 'kapidakart';
     final amount = orderSnapshot.totalAmount.toStringAsFixed(2);
+    
+    // GUARD: Block completion if card_on_delivery payment not yet collected
+    if (isCardOnDelivery) {
+      final currentStatus = orderSnapshot.paymentStatus;
+      if (currentStatus != 'collected') {
+        if (mounted) {
+          await showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('⚠️ Ödeme Tahsil Edilmedi'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6A0DAD).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF6A0DAD), width: 2),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.contactless, color: Color(0xFF6A0DAD), size: 32),
+                        const SizedBox(width: 12),
+                        Text(
+                          '$amount${CurrencyUtils.getCurrencySymbol()}',
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF6A0DAD)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Önce kart ödemesini NFC ile tahsil etmeniz gerekiyor.',
+                    style: TextStyle(fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF6A0DAD)),
+                  child: const Text('Tamam', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
+    }
     
     // STEP 1: Cash collection confirmation (only if cash payment)
     if (isCash) {
@@ -1109,6 +1165,8 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
           // Payment info
           final paymentMethod = order.paymentMethod ?? 'cash';
           final isPaid = paymentMethod == 'card' || paymentMethod == 'online';
+          final isCardOnDelivery = paymentMethod == 'card_on_delivery' || paymentMethod == 'kapidakart';
+          final isNfcCollected = paymentMethod == 'card_nfc';
           
           // Use Column with Expanded ScrollView + fixed bottom button
           return Column(
@@ -1288,18 +1346,41 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           child: Row(
                             children: [
-                              Icon(isPaid ? Icons.credit_card : Icons.payments, color: isPaid ? Colors.green : Colors.amber, size: 24),
+                              Icon(
+                                isCardOnDelivery ? Icons.contactless 
+                                    : isNfcCollected ? Icons.check_circle
+                                    : isPaid ? Icons.credit_card 
+                                    : Icons.payments, 
+                                color: isCardOnDelivery ? const Color(0xFF6A0DAD)
+                                    : isNfcCollected ? Colors.green
+                                    : isPaid ? Colors.green 
+                                    : Colors.amber, 
+                                size: 24,
+                              ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      isPaid ? '✅ ÖDENDİ' : '💵 KAPIDA ÖDEME',
-                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isPaid ? Colors.green : Colors.amber),
+                                      isNfcCollected ? '✅ KART İLE ALINDI'
+                                          : isCardOnDelivery ? '📱 KAPIDA KART'
+                                          : isPaid ? '✅ ÖDENDİ' 
+                                          : '💵 KAPIDA NAKİT',
+                                      style: TextStyle(
+                                        fontSize: 13, 
+                                        fontWeight: FontWeight.bold, 
+                                        color: isCardOnDelivery ? const Color(0xFF6A0DAD)
+                                            : isNfcCollected ? Colors.green
+                                            : isPaid ? Colors.green 
+                                            : Colors.amber,
+                                      ),
                                     ),
                                     Text(
-                                      isPaid ? 'Online ödeme yapıldı' : 'Müşteriden tahsil edilecek',
+                                      isNfcCollected ? 'NFC ile tahsil edildi'
+                                          : isCardOnDelivery ? 'NFC ile tahsil edilecek'
+                                          : isPaid ? 'Online ödeme yapıldı' 
+                                          : 'Müşteriden nakit tahsil edilecek',
                                       style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
                                     ),
                                   ],
@@ -1307,7 +1388,14 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                               ),
                               Text(
                                 '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
-                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isPaid ? Colors.green : Colors.amber),
+                                style: TextStyle(
+                                  fontSize: 22, 
+                                  fontWeight: FontWeight.bold, 
+                                  color: isCardOnDelivery ? const Color(0xFF6A0DAD)
+                                      : isNfcCollected ? Colors.green
+                                      : isPaid ? Colors.green 
+                                      : Colors.amber,
+                                ),
                               ),
                             ],
                           ),
@@ -1368,52 +1456,106 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                 ),
               ),
               
-              // Fixed Bottom Action Button
+              // Fixed Bottom Action Area
               SafeArea(
                 top: false,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
-                  child: SizedBox(
-                    height: 52,
-                    width: double.infinity,
-                    child: isOnTheWay 
-                      ? ElevatedButton.icon(
-                          onPressed: _completeDelivery,
-                          icon: const Icon(Icons.check_circle, color: Colors.white, size: 24),
-                          label: const Text(
-                            '✅ TESLİMAT TAMAMLANDI',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-                          ),
-                        )
-                      : isReady
-                        ? ElevatedButton.icon(
-                            onPressed: _startDelivery,
-                            icon: const Icon(Icons.motorcycle, color: Colors.white, size: 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // NFC Payment button for card_on_delivery (only when on-the-way)
+                      if (isOnTheWay && isCardOnDelivery && !isNfcCollected) ...[
+                        SizedBox(
+                          height: 52,
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              final result = await TapToPaySheet.show(
+                                context: context,
+                                amount: order.totalAmount,
+                                businessId: order.butcherId,
+                                orderId: order.id,
+                                courierId: FirebaseAuth.instance.currentUser?.uid,
+                                label: 'Kapıda Kart Ödemesi',
+                              );
+                              if (result != null && result.success && mounted) {
+                                await FirebaseFirestore.instance
+                                    .collection('orders')
+                                    .doc(order.id)
+                                    .update({
+                                  'paymentStatus': 'collected',
+                                  'paymentMethod': 'card_nfc',
+                                  'terminalPaymentIntentId': result.paymentIntentId,
+                                  'tapToPayAt': FieldValue.serverTimestamp(),
+                                });
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('✅ Kart ödemesi alındı!'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.contactless, color: Colors.white, size: 24),
                             label: const Text(
-                              '🚗 YOL AL',
+                              '📱 Kart ile Tahsil Et',
                               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFB335B),
+                              backgroundColor: const Color(0xFF6A0DAD),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                             ),
-                          )
-                        : Container(
-                            decoration: BoxDecoration(
-                              color: isDark ? Colors.grey[800] : Colors.grey[300],
-                              borderRadius: BorderRadius.circular(26),
-                            ),
-                            child: Center(
-                              child: Text(
-                                isPreparing ? '🍳 Hazırlanıyor...' : '⏳ Sipariş Bekleniyor...',
-                                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 15),
-                              ),
-                            ),
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      // Main action button
+                      SizedBox(
+                        height: 52,
+                        width: double.infinity,
+                        child: isOnTheWay 
+                          ? ElevatedButton.icon(
+                              onPressed: _completeDelivery,
+                              icon: const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                              label: const Text(
+                                '✅ TESLİMAT TAMAMLANDI',
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                              ),
+                            )
+                          : isReady
+                            ? ElevatedButton.icon(
+                                onPressed: _startDelivery,
+                                icon: const Icon(Icons.motorcycle, color: Colors.white, size: 24),
+                                label: const Text(
+                                  '🚗 YOL AL',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFB335B),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+                                ),
+                              )
+                            : Container(
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.grey[800] : Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(26),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    isPreparing ? '🍳 Hazırlanıyor...' : '⏳ Sipariş Bekleniyor...',
+                                    style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ],
                   ),
                 ),
               ),

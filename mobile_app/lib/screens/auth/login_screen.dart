@@ -257,7 +257,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             SizedBox(height: 16),
             Text(
               tr('auth.ulke_secin'),
-              style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 16),
             ...countries.map((c) => ListTile(
@@ -386,7 +386,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   'LOKMA',
                   style: TextStyle(
                     fontSize: 28,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: lokmaRed,
                   ),
                 ),
@@ -549,7 +549,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               label,
               style: TextStyle(
                 color: isSelected ? lokmaRed : Colors.white,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 fontSize: 15,
               ),
             ),
@@ -663,7 +663,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 'G',
                 style: TextStyle(
                   fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: Colors.red,
                 ),
               ),
@@ -699,7 +699,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           style: TextStyle(
             color: Theme.of(context).colorScheme.surface,
             fontSize: 24,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
         
@@ -794,7 +794,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           style: TextStyle(
             color: Theme.of(context).colorScheme.surface,
             fontSize: 24,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
           ),
         ),
         
@@ -889,7 +889,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             style: TextStyle(
               fontSize: 28,
               letterSpacing: 12,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.surface,
             ),
           ),
@@ -942,7 +942,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               style: TextStyle(
                 color: _passwordStrengthColor,
                 fontSize: 12,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -1057,7 +1057,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             style: const TextStyle(
               color: lokmaRed,
               fontSize: 17,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),

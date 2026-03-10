@@ -123,7 +123,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -246,7 +246,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                                   style: TextStyle(
                                     color: cardGold,
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     letterSpacing: 1,
                                   ),
                                 ),
@@ -467,7 +467,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
@@ -550,7 +550,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
             style: TextStyle(
               color: Colors.white,
               fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 16),
@@ -660,7 +660,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
         SnackBar(
           content: Text(
             tr('wallet.kod_aktif_edildi', namedArgs: {'code': _promoCode}),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
           ),
           backgroundColor: const Color(0xFF00C851),
         ),

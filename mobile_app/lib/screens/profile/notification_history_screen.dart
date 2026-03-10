@@ -96,7 +96,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
               'Bildirimler',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 17,
               ),
             ),
@@ -126,7 +126,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFFB335B)));
+            return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
           }
 
           if (snapshot.hasError) {
@@ -619,7 +619,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                               style: TextStyle(
                                 color: cardTextColor,
                                 fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -627,10 +627,10 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                             const SizedBox(height: 2),
                             Text(
                               orderLabel,
-                              style: const TextStyle(
-                                color: Color(0xFFF85E7D),
+                              style: TextStyle(
+                                color: isDark ? Colors.grey[400] : Colors.grey[600],
                                 fontSize: 13,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
@@ -705,7 +705,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                               style: TextStyle(
                                 color: statusColor,
                                 fontSize: 12,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -761,10 +761,10 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                       if (group.totalAmount != null && group.totalAmount! > 0)
                         Text(
                           '${group.totalAmount!.toStringAsFixed(2)} €',
-                          style: const TextStyle(
-                            color: Color(0xFFF85E7D),
+                          style: TextStyle(
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                     ],
@@ -817,16 +817,16 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                     width: isCurrentStep ? 16 : 12,
                                     height: isCurrentStep ? 16 : 12,
                                     decoration: BoxDecoration(
-                                      color: isCompleted ? const Color(0xFFFB335B) : Colors.transparent,
+                                      color: isCompleted ? const Color(0xFF4CAF50) : Colors.transparent,
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: isCompleted
-                                            ? const Color(0xFFFB335B)
+                                            ? const Color(0xFF4CAF50)
                                             : inactiveDotColor,
                                         width: isCompleted ? 0 : 2,
                                       ),
                                       boxShadow: isCurrentStep
-                                          ? [BoxShadow(color: const Color(0xFFFB335B).withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 1)]
+                                          ? [BoxShadow(color: const Color(0xFF4CAF50).withValues(alpha: 0.5), blurRadius: 8, spreadRadius: 1)]
                                           : null,
                                     ),
                                     child: isCompleted
@@ -878,7 +878,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                               : cardTextColor)
                                           : inactiveTextColor,
                                       fontSize: 13,
-                                      fontWeight: isCurrentStep ? FontWeight.w700 : (isCompleted ? FontWeight.w500 : FontWeight.w400),
+                                      fontWeight: isCurrentStep ? FontWeight.w600 : (isCompleted ? FontWeight.w500 : FontWeight.w400),
                                     ),
                                   ),
                                 ],
@@ -931,7 +931,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                     width: 2,
                                     height: showScheduled ? 16 : 20,
                                     color: isCompleted && (i + 1 < stepsToShow.length && completedStatuses.contains(stepsToShow[i + 1]))
-                                        ? const Color(0xFFFB335B).withValues(alpha: 0.4)
+                                        ? const Color(0xFF4CAF50).withValues(alpha: 0.4)
                                         : timelineLineColor,
                                   ),
                                 ),
@@ -951,9 +951,9 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                       const TextSpan(
                                         text: 'Planlanan Teslimat: ',
                                         style: TextStyle(
-                                          color: Color(0xFFFB335B),
+                                          color: Color(0xFF4CAF50),
                                           fontSize: 12,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                       TextSpan(
@@ -1057,7 +1057,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                               backgroundColor: const Color(0xFFFF3B30),
                               label: Text(
                                 '$unread',
-                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600),
                               ),
                               child: Icon(
                                 unread > 0 ? Icons.chat_bubble : Icons.chat_bubble_outline,
@@ -1162,7 +1162,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
     showDialog(
       context: ctx,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator(color: Color(0xFFFB335B))),
+      builder: (_) => Center(child: CircularProgressIndicator(color: Colors.grey[500]!)),
     );
 
     try {
@@ -1218,7 +1218,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                               style: TextStyle(
                                 color: colorScheme.onSurface,
                                 fontSize: 18,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -1288,12 +1288,12 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                 margin: const EdgeInsets.only(right: 8, top: 1),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFB335B),
+                                  color: isDark ? Colors.grey[700] : Colors.grey[800],
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   '#$posNum',
-                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
                                 ),
                               ),
                               Expanded(
@@ -1343,15 +1343,15 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                             style: TextStyle(
                               color: colorScheme.onSurface,
                               fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
                             '${order.totalAmount.toStringAsFixed(2)} €',
-                            style: const TextStyle(
-                              color: Color(0xFFFB335B),
+                            style: TextStyle(
+                              color: colorScheme.onSurface,
                               fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -1484,7 +1484,7 @@ class _GenericNotificationCard extends StatelessWidget {
         border: Border.all(
           color: isRead
               ? (isDark ? Colors.grey[800]!.withValues(alpha: 0.5) : Colors.grey[200]!)
-              : const Color(0xFFFB335B).withValues(alpha: 0.3),
+              : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
           width: isRead ? 1 : 1.5,
         ),
       ),
@@ -1496,12 +1496,12 @@ class _GenericNotificationCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFFB335B).withValues(alpha: 0.1),
+                color: isDark ? Colors.grey[800] : Colors.grey[100],
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.notifications_active_rounded,
-                color: Color(0xFFFB335B),
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
                 size: 20,
               ),
             ),
@@ -1515,7 +1515,7 @@ class _GenericNotificationCard extends StatelessWidget {
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 15,
-                      fontWeight: isRead ? FontWeight.w600 : FontWeight.bold,
+                      fontWeight: isRead ? FontWeight.w500 : FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1687,7 +1687,7 @@ class _ChatBottomSheetContentState extends State<_ChatBottomSheetContent> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(

@@ -110,7 +110,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Ödeme Yöntemleri', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Ödeme Yöntemleri', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: _isLoading
@@ -197,7 +197,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                             )
                           : const Text(
                               'Kaydet',
-                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                             ),
                     ),
                   ),
@@ -216,7 +216,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -264,7 +264,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                       title,
                       style: TextStyle(
                         color: isEnabled ? Colors.white : Colors.grey,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
                     ),
@@ -311,7 +311,7 @@ class _PaymentMethodsScreenState extends ConsumerState<PaymentMethodsScreen> {
                       style: TextStyle(
                         color: isDefault ? lokmaRed : textSubtle,
                         fontSize: 12,
-                        fontWeight: isDefault ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isDefault ? FontWeight.w600 : FontWeight.normal,
                       ),
                     ),
                   ],

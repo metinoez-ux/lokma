@@ -45,7 +45,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: Text('profile.my_account'.tr(),
             style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold)),
+                fontWeight: FontWeight.w600)),
         centerTitle: true,
       ),
       body: user == null ? _buildLoginPrompt() : _buildProfile(user),
@@ -87,7 +87,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               style: TextStyle(
                 color: Color(0xFFFB335B),
                 fontSize: 28,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
@@ -133,7 +133,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 17,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -226,7 +226,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -244,7 +244,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.notifications_outlined,
-                                color: const Color(0xFFFB335B), size: 22),
+                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[700], size: 22),
                           ),
                         ),
                       ],
@@ -333,31 +333,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 14, horizontal: 16),
                                     decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          const Color(0xFFFB335B)
-                                              .withValues(alpha: 0.08),
-                                          const Color(0xFFFB335B)
-                                              .withValues(alpha: 0.03),
-                                        ],
-                                      ),
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? const Color(0xFF2A2A2A)
+                                          : Colors.grey[50],
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                          color: const Color(0xFFFB335B),
-                                          width: 1.5),
+                                          color: Theme.of(context).brightness == Brightness.dark
+                                              ? Colors.grey[700]!
+                                              : Colors.grey[300]!,
+                                          width: 1),
                                     ),
                                     child: Row(
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFFB335B)
-                                                .withValues(alpha: 0.1),
+                                            color: Theme.of(context).brightness == Brightness.dark
+                                                ? Colors.grey[800]
+                                                : Colors.grey[100],
                                             borderRadius:
                                                 BorderRadius.circular(10),
                                           ),
-                                          child: const Icon(Icons.badge,
-                                              color: Color(0xFFFB335B),
+                                          child: Icon(Icons.badge,
+                                              color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[700],
                                               size: 22),
                                         ),
                                         const SizedBox(width: 12),
@@ -368,10 +366,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                             children: [
                                               Text(
                                                 'profile.staff_login'.tr(),
-                                                style: const TextStyle(
-                                                  color: Color(0xFFFB335B),
+                                                style: TextStyle(
+                                                  color: Theme.of(context).colorScheme.onSurface,
                                                   fontSize: 15,
-                                                  fontWeight: FontWeight.w700,
+                                                  fontWeight: FontWeight.w600,
                                                 ),
                                               ),
                                               Text(
@@ -390,8 +388,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                         ),
                                         Icon(Icons.arrow_forward_ios,
                                             size: 16,
-                                            color: const Color(0xFFFB335B)
-                                                .withValues(alpha: 0.5)),
+                                            color: Colors.grey[400]),
                                       ],
                                     ),
                                   ),
@@ -428,7 +425,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
@@ -454,16 +451,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFFFB335B).withValues(alpha: 0.08),
-                          const Color(0xFFFF6B6B).withValues(alpha: 0.05),
-                        ],
-                      ),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF2A2520)
+                          : const Color(0xFFF5F0E8),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFFFB335B).withValues(alpha: 0.3),
-                      ),
                     ),
                     child: Row(
                       children: [
@@ -471,7 +462,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFB335B).withValues(alpha: 0.1),
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFF3A3530)
+                                : const Color(0xFFEDE5D8),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Center(
@@ -488,7 +481,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.onSurface,
                                   fontSize: 15,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                               const SizedBox(height: 2),
@@ -503,7 +496,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                         Icon(Icons.share_rounded,
-                            color: const Color(0xFFFB335B), size: 22),
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600], size: 22),
                       ],
                     ),
                   ),
@@ -638,7 +631,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: const Color(0xFFFB335B), size: 22),
+              Icon(icon, color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[700], size: 22),
               const SizedBox(height: 6),
               Text(
                 label,
@@ -712,7 +705,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 18,
-            fontWeight: FontWeight.bold),
+            fontWeight: FontWeight.w600),
       ),
     );
   }

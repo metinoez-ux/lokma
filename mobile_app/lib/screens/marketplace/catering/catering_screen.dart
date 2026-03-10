@@ -100,7 +100,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                       style: TextStyle(
                         color: textColor,
                         fontSize: 26,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -149,7 +149,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                             'Fiyatları Görmek İçin Giriş Yapın',
                             style: TextStyle(
                               color: textColor,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
@@ -215,7 +215,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                               style: TextStyle(
                                 color: textColor,
                                 fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -331,7 +331,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
                     companyName,
                     style: TextStyle(
                       color: textColor,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),
                   ),
@@ -408,7 +408,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
             style: TextStyle(
               color: textColor,
               fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
@@ -457,7 +457,7 @@ class _CateringScreenState extends ConsumerState<CateringScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+                  Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
                   Text(value, style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white.withValues(alpha: 0.7) : Colors.black54, fontSize: 12)),
                 ],
               ),

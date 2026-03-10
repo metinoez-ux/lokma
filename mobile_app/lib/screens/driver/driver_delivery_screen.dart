@@ -656,7 +656,15 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           0, (sum, o) => sum + o.totalAmount
         );
 
-        // Calculate card total
+        // Calculate NFC card total
+        final nfcOrders = completedOrders.where((o) => 
+          o.paymentMethod == 'card_on_delivery' || o.paymentMethod == 'kapidakart' || o.paymentMethod == 'card_nfc'
+        ).toList();
+        final nfcTotal = nfcOrders.fold<double>(
+          0, (sum, o) => sum + o.totalAmount
+        );
+
+        // Calculate online card total
         final cardOrders = completedOrders.where((o) => 
           o.paymentMethod == 'card' || o.paymentMethod == 'kart' || o.paymentMethod == 'online'
         ).toList();
@@ -1052,13 +1060,17 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       const Spacer(),
                       // Payment method
                       Icon(
-                        order.paymentMethod == 'cash' || order.paymentMethod == 'nakit'
-                            ? Icons.payments
-                            : Icons.credit_card,
+                        order.paymentMethod == 'card_on_delivery' || order.paymentMethod == 'kapidakart' || order.paymentMethod == 'card_nfc'
+                            ? Icons.contactless
+                            : order.paymentMethod == 'cash' || order.paymentMethod == 'nakit'
+                                ? Icons.payments
+                                : Icons.credit_card,
                         size: 18,
-                        color: order.paymentMethod == 'cash' || order.paymentMethod == 'nakit'
-                            ? Colors.green
-                            : Colors.purple,
+                        color: order.paymentMethod == 'card_on_delivery' || order.paymentMethod == 'kapidakart' || order.paymentMethod == 'card_nfc'
+                            ? const Color(0xFF6A0DAD)
+                            : order.paymentMethod == 'cash' || order.paymentMethod == 'nakit'
+                                ? Colors.green
+                                : Colors.purple,
                       ),
                     ],
                   ),

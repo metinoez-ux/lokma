@@ -11,7 +11,6 @@ import 'package:path_provider/path_provider.dart';
 class MyReservationsScreen extends StatelessWidget {
   const MyReservationsScreen({super.key});
 
-  static const Color _accent = Color(0xFFFB335B);
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +31,7 @@ class MyReservationsScreen extends StatelessWidget {
         ),
         title: Text(
           'Masa Rezervasyonlarım',
-          style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.w700),
+          style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
       ),
@@ -51,7 +50,7 @@ class MyReservationsScreen extends StatelessWidget {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: _accent));
+                  return Center(child: CircularProgressIndicator(color: isDark ? Colors.grey[400]! : Colors.grey[600]!));
                 }
 
                 if (snapshot.hasError) {
@@ -134,7 +133,7 @@ class MyReservationsScreen extends StatelessWidget {
                           style: TextStyle(
                             color: textPrimary,
                             fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -234,7 +233,7 @@ class MyReservationsScreen extends StatelessWidget {
                     style: TextStyle(
                       color: statusInfo.color,
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -305,7 +304,7 @@ class MyReservationsScreen extends StatelessWidget {
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               )).toList(),
@@ -377,7 +376,7 @@ class MyReservationsScreen extends StatelessWidget {
   Widget _buildInfoRow(IconData icon, String text, Color color) {
     return Row(
       children: [
-        Icon(icon, size: 15, color: _accent),
+        Icon(icon, size: 15, color: Colors.grey),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -486,7 +485,7 @@ class MyReservationsScreen extends StatelessWidget {
                 'Takvime Ekle',
                 style: TextStyle(
                   fontSize: 17,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),

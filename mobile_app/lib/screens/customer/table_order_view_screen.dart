@@ -320,7 +320,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
       appBar: AppBar(
         title: Text(
           _tableNumber != null ? 'Masa $_tableNumber' : tr('customer.masa_siparisi'),
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: scaffoldBg,
         surfaceTintColor: scaffoldBg,
@@ -492,7 +492,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                     keyboardType: TextInputType.number,
                     maxLength: 4,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 6),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 6),
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     decoration: InputDecoration(
                       hintText: '• • • •',
@@ -727,7 +727,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                   '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)} / ${product.unitType}',
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: Colors.amber.shade700,
                   ),
                 ),
@@ -747,7 +747,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                     product.unitType == 'kg'
                         ? cartQty.toStringAsFixed(1)
                         : '${cartQty.toInt()}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
                 _circleButton(Icons.add, () => _addToCart(product)),
@@ -858,7 +858,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
@@ -922,7 +922,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                               ),
                             Text(
                               '#${(data['orderNumber'] ?? filtered[index].id.substring(0, 6)).toString().toUpperCase()}',
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                             ),
                             const Spacer(),
                             _statusChip(status),
@@ -1069,7 +1069,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
               const SizedBox(width: 8),
               Text(
                 'Sipariş Ver • $_cartItemCount ürün • ${CurrencyUtils.getCurrencySymbol()}${_cartTotal.toStringAsFixed(2)}',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ],
           ),

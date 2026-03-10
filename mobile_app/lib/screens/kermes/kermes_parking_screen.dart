@@ -285,7 +285,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
               SizedBox(height: 20),
               Text(
                 'Haritayı Seç',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.surface),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.surface),
               ),
               const SizedBox(height: 20),
               
@@ -507,7 +507,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                               children: [
                                 Text(
                                   'Park İmkanları',
-                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.surface),
+                                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.surface),
                                 ),
                                 Text(
                                   '${_parkingList.length} park alanı',
@@ -1054,7 +1054,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                     Expanded(
                       child: Text(
                         'Yeni Park Alanı',
-                        style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -1594,7 +1594,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
                       Expanded(
                         child: Text(
                           'Park Alanı ${index + 1} Düzenle',
-                          style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600),
                           textAlign: TextAlign.center,
                         ),
                       ),

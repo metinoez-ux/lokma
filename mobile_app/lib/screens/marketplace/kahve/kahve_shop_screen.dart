@@ -19,7 +19,7 @@ class KahveShopScreen extends ConsumerWidget {
             const Text('☕ ', style: TextStyle(fontSize: 24)),
             Text('Kahve Shop', style: TextStyle(
               color: isDark ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             )),
           ],
         ),
@@ -57,7 +57,7 @@ class KahveShopScreen extends ConsumerWidget {
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                           textAlign: TextAlign.center,
                         ),

@@ -133,7 +133,8 @@
     "delivery_fee": "Tassa di consegna",
     "error_loading_cart": "Errore durante il caricamento del carrello",
     "no_products_added_yet": "Non hai ancora aggiunto alcun prodotto",
-    "total_products": "Prodotti in totale"
+    "total_products": "Prodotti in totale",
+    "legal_disclaimer": "Effettuando l'ordine, accetti i nostri termini di servizio e la nostra informativa sulla privacy."
   },
   "common": {
     "cancel": "Annulla",
@@ -660,6 +661,7 @@
     "filter_campaigns": "Attività con campagne attive",
     "filter_cash": "Attività che accettano contanti",
     "filter_free_delivery": "Attività con consegna gratuita",
+    "free_delivery_label": "Consegna Gratuita",
     "filter_open_now": "Attività aperte ora",
     "filter_tuna_verified": "Attività verificate da Tuna",
     "filter_vegetarian": "Attività con menu vegetariano",

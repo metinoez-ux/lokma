@@ -968,7 +968,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.surface,
                                 fontSize: 9,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -1274,7 +1274,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
               fontSize: 13,
               fontWeight:
-                  hasBusinessAtCurrent ? FontWeight.bold : FontWeight.w500,
+                  hasBusinessAtCurrent ? FontWeight.w600 : FontWeight.w500,
             ),
           ),
         ],
@@ -1988,7 +1988,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 13,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 letterSpacing: 1.2,
                               ),
                             ),
@@ -2081,7 +2081,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                                   .colorScheme
                                                   .surface,
                                               fontSize: 10,
-                                              fontWeight: FontWeight.bold,
+                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                         ),
@@ -2213,19 +2213,17 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                                 .withValues(alpha: 0.7),
                                             size: 16),
                                         const SizedBox(width: 6),
-                                        if (hasFreeDelivery && deliveryFee == 0)
+                                        if (deliveryFee == 0)
                                           Text(
-                                            'Ücretsiz',
+                                            tr('marketplace.free_delivery_label'),
                                             style: TextStyle(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withValues(alpha: 0.7),
-                                                fontSize: 13),
+                                                color: tunaGreen,
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600),
                                           )
                                         else
                                           Text(
-                                            '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} Teslimat',
+                                            '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} ${tr('common.delivery')}',
                                             style: TextStyle(
                                               color: Theme.of(context)
                                                   .colorScheme
@@ -2911,7 +2909,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             tr('home.return_active_order'),
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                               color:
                                   Theme.of(context).colorScheme.surface,
                               letterSpacing: -0.2,
@@ -3006,7 +3004,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     tr('home.order_with_qr'),
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.surface,
                       letterSpacing: -0.3,
                     ),
@@ -3072,7 +3070,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   Text(
                     'Masa $_scannedTableNumber${_scannedBusinessName != null ? ' — $_scannedBusinessName' : ''}',
                     style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 15,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
@@ -3162,7 +3160,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 'Masanızdaki QR Kodu Okutun',
                 style: TextStyle(
                   fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
@@ -3285,7 +3283,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               'Masa Numarası',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),
@@ -3500,7 +3498,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               Text(
                 'Masa $tableNum — Aktif Grup Siparişi',
                 style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Text(
@@ -3825,7 +3823,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             const SizedBox(height: 12),
             Text(
               'Masa $tableNum — $businessName',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Text(
@@ -3969,7 +3967,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 'Grup PIN Kodu',
                 style: TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),

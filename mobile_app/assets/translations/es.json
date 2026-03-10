@@ -133,7 +133,8 @@
     "delivery_fee": "Gastos de envío",
     "error_loading_cart": "Error al cargar el carrito",
     "no_products_added_yet": "Aún no has agregado ningún producto",
-    "total_products": "Productos totales"
+    "total_products": "Productos totales",
+    "legal_disclaimer": "Al realizar su pedido, acepta nuestros términos de servicio y política de privacidad."
   },
   "common": {
     "cancel": "Cancelar",
@@ -660,6 +661,7 @@
     "filter_campaigns": "Negocios con campañas activas",
     "filter_cash": "Negocios que aceptan efectivo",
     "filter_free_delivery": "Negocios con envío gratuito",
+    "free_delivery_label": "Envío Gratis",
     "filter_open_now": "Negocios abiertos ahora",
     "filter_tuna_verified": "Negocios verificados por Tuna",
     "filter_vegetarian": "Negocios con menú vegetariano",

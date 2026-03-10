@@ -792,7 +792,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 9,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -1041,7 +1041,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface, 
                 fontSize: 12, 
-                fontWeight: hasBusinessAtCurrent ? FontWeight.bold : FontWeight.w600,
+                fontWeight: hasBusinessAtCurrent ? FontWeight.w600 : FontWeight.w600,
               ),
             ),
           ),
@@ -1077,7 +1077,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 style: TextStyle(
                   color: _onlyTuna ? const Color(0xFF69B445) : Colors.grey[600],
                   fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -1370,7 +1370,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                         style: TextStyle(
                           color: Colors.white, // TUNA badge — white text
                           fontSize: 13,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: 1.2,
                         ),
                       ),

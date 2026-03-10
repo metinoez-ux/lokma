@@ -179,7 +179,7 @@ class _RatingScreenState extends State<RatingScreen> {
                           'İşletmeyi Puanla',
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: colorScheme.onSurface,
                           ),
                         ),
@@ -235,7 +235,7 @@ class _RatingScreenState extends State<RatingScreen> {
                           widget.isDelivery ? 'Kurye Deneyimi' : 'Gel Al Deneyimi',
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             color: colorScheme.onSurface,
                           ),
                         ),

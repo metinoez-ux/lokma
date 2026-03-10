@@ -284,7 +284,7 @@ class _TipBottomSheetState extends State<TipBottomSheet> {
                                 autofocus: true,
                                 style: TextStyle(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w600,
                                   color: textPrimary,
                                 ),
                                 decoration: InputDecoration(
@@ -335,7 +335,7 @@ class _TipBottomSheetState extends State<TipBottomSheet> {
                         )
                       : const Text(
                           'Bahşiş Gönder 💝',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                         ),
                 ),
               ),

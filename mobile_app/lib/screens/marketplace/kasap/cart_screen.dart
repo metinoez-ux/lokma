@@ -20,6 +20,7 @@ import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/widgets/order_confirmation_dialog.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
+import 'package:lokma_app/widgets/simple_segmented_toggle.dart';
 import 'package:lokma_app/services/fcm_service.dart';
 import 'package:lokma_app/services/order_service.dart';
 import 'package:lokma_app/services/table_group_service.dart';
@@ -2542,43 +2543,42 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     
     if (isMarketSegment) {
       // Market: only Kurye + Gel Al (no Masa)
-      return ThreeDimensionalPillTabBar(
+      return SimpleSegmentedToggle(
         selectedIndex: _isPickUp ? 1 : 0,
-        onTabSelected: (index) {
+        onChanged: (index) {
           setState(() {
             _isPickUp = index == 1;
             _isDineIn = false;
             if (_paymentMethod == 'payLater') _paymentMethod = 'cash';
           });
         },
-        tabs: const [
-          TabItem(title: 'Kurye', icon: Icons.delivery_dining),
-          TabItem(title: 'Gel Al', icon: Icons.store_outlined),
+        items: const [
+          SimpleSegmentItem(label: 'Kurye', icon: Icons.delivery_dining),
+          SimpleSegmentItem(label: 'Gel Al', icon: Icons.store_outlined),
         ],
       );
     }
     
-    // 3D Switch for Kurye / Gel Al / Masa
-    return ThreeDimensionalPillTabBar(
-      selectedIndex: _isDineIn ? 2 : (_isPickUp ? 1 : 0), // Kurye=0, Gel Al=1, Masa=2
-      onTabSelected: (index) {
+    // Simple segmented toggle for Kurye / Gel Al / Masa
+    return SimpleSegmentedToggle(
+      selectedIndex: _isDineIn ? 2 : (_isPickUp ? 1 : 0),
+      onChanged: (index) {
         setState(() {
           _isPickUp = index == 1;
           _isDineIn = index == 2;
           if (_isDineIn) {
-            // Respect business payment mode setting
             _paymentMethod = (_butcherData?['dineInPaymentMode'] == 'payFirst') ? 'cash' : 'payLater';
           } else {
-            _scannedTableNumber = null; // Reset QR on mode switch
+            _scannedTableNumber = null;
             _tableNumberController.clear();
             if (_paymentMethod == 'payLater') _paymentMethod = 'cash';
           }
         });
       },
-      tabs: const [
-        TabItem(title: 'Kurye', icon: Icons.delivery_dining), // LEFT
-        TabItem(title: 'Gel Al', icon: Icons.store_outlined), // MIDDLE
-        TabItem(title: 'Masa', icon: Icons.restaurant),       // RIGHT
+      items: const [
+        SimpleSegmentItem(label: 'Kurye', icon: Icons.delivery_dining),
+        SimpleSegmentItem(label: 'Gel Al', icon: Icons.store_outlined),
+        SimpleSegmentItem(label: 'Masa', icon: Icons.restaurant),
       ],
     );
   }
@@ -2848,31 +2848,64 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   
   /// Section header (e.g., restaurant name)
   Widget _buildLieferandoSectionHeader(String title, {String? subtitle}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[900] : const Color(0xFFF8F8F8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? Colors.grey[800]! : const Color(0xFFEEEEEE),
+        ),
+      ),
+      child: Row(
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          if (subtitle != null && subtitle.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Text(
-                subtitle,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                ),
+          // Store icon
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey[800] : Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0),
               ),
             ),
+            child: Icon(
+              Icons.storefront_outlined,
+              size: 18,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (subtitle != null && subtitle.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -2960,200 +2993,269 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final unitType = item.product.unitType.toLowerCase();
     final isKg = unitType == 'kg';
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final imageUrl = item.product.imageUrl;
     
     // Quantity display text
     final qtyText = isKg 
         ? '${(quantity * 1000).toInt()}g'
         : '${quantity.toInt()}';
     
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A1A) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-        ),
-      ),
-      child: Row(
-        children: [
-          // LEFT: Category icon
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.restaurant_menu,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          // CENTER: Name + Quantity controls
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  productName,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                // Selected options (if any)
-                if (item.selectedOptions.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      item.selectedOptions.map((o) => o.optionName).join(', '),
-                      style: TextStyle(color: Colors.grey[500], fontSize: 11),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+    return Column(
+      children: [
+        // ── Spacious row with image: Lieferando-inspired ──
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 🖼️ Product Image Thumbnail
+              if (imageUrl != null && imageUrl.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    width: 64,
+                    height: 64,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[800] : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
+                    ),
+                    errorWidget: (_, __, ___) => Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[800] : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
                     ),
                   ),
-                // Per-item note display / add button
-                GestureDetector(
-                  onTap: () => _showNoteDialog(item),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                ),
+              if (imageUrl != null && imageUrl.isNotEmpty)
+                const SizedBox(width: 14),
+              
+              // Product Info + Controls
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Row 1: Product name + Price
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          item.note != null && item.note!.isNotEmpty
-                              ? Icons.edit_note
-                              : Icons.note_add_outlined,
-                          size: 14,
-                          color: item.note != null && item.note!.isNotEmpty
-                              ? const Color(0xFFFB335B)
-                              : Colors.grey[500],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                productName,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              // Selected options (if any)
+                              if (item.selectedOptions.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 3),
+                                  child: Text(
+                                    item.selectedOptions.map((o) => o.optionName).join(', '),
+                                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              // 🥤 Free drink badge
+                              if (item.isFreeDrink)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: const Text(
+                                      '🎁 Gratis',
+                                      style: TextStyle(fontSize: 11, color: Color(0xFF4CAF50), fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            item.note != null && item.note!.isNotEmpty
-                                ? item.note!
-                                : 'Not ekle',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: item.note != null && item.note!.isNotEmpty
-                                  ? (isDark ? Colors.grey[300] : Colors.grey[700])
-                                  : Colors.grey[500],
-                              fontStyle: item.note != null && item.note!.isNotEmpty
-                                  ? FontStyle.normal
-                                  : FontStyle.italic,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        const SizedBox(width: 12),
+                        Text(
+                          '${totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Quantity controls: [—]  qty  [+]
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // MINUS button (dark)
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        final step = isKg ? 0.5 : 1.0;
-                        final minQty = isKg ? 0.5 : 1.0;
-                        if (quantity > minQty) {
-                          ref.read(cartProvider.notifier).updateQuantity(item.uniqueKey, quantity - step);
-                        } else {
-                          ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey);
-                        }
-                      },
-                      child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[800] : Colors.grey[900],
-                          borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 10),
+                    // Row 2: Note button (left) + Quantity pill (right)
+                    Row(
+                      children: [
+                        // Note button — subtle chip style
+                        GestureDetector(
+                          onTap: () => _showNoteDialog(item),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.grey[900] : Colors.grey[50],
+                              border: Border.all(
+                                color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  item.note != null && item.note!.isNotEmpty
+                                      ? Icons.edit_note
+                                      : Icons.note_add_outlined,
+                                  size: 14,
+                                  color: Colors.grey[500],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  item.note != null && item.note!.isNotEmpty
+                                      ? item.note!
+                                      : 'cart.add_note'.tr(),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: item.note != null && item.note!.isNotEmpty
+                                        ? (isDark ? Colors.grey[300] : Colors.grey[700])
+                                        : Colors.grey[500],
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        alignment: Alignment.center,
-                        child: Icon(Icons.remove, color: Colors.white, size: 16),
-                      ),
-                    ),
-                    // Quantity text
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        qtyText,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                        const Spacer(),
+                        // 🗑️ Delete icon
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.grey[800] : Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.delete_outline,
+                              color: isDark ? Colors.grey[400] : Colors.grey[500],
+                              size: 18,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    // PLUS button (accent red)
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        ref.read(cartProvider.notifier).updateQuantity(
-                          item.uniqueKey,
-                          isKg ? quantity + 0.5 : quantity + 1,
-                        );
-                      },
-                      child: Container(
-                        width: 30,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFB335B),
-                          borderRadius: BorderRadius.circular(8),
+                        const SizedBox(width: 8),
+                        // 🔢 Quantity Pill — Lieferando style rounded container
+                        Container(
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey[800] : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Minus button
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  final step = isKg ? 0.5 : 1.0;
+                                  final minQty = isKg ? 0.5 : 1.0;
+                                  if (quantity > minQty) {
+                                    ref.read(cartProvider.notifier).updateQuantity(item.uniqueKey, quantity - step);
+                                  } else {
+                                    ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey);
+                                  }
+                                },
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isDark ? Colors.grey[700] : Colors.grey[200],
+                                  ),
+                                  child: Icon(
+                                    Icons.remove,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                child: Text(
+                                  qtyText,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              // Plus button
+                              GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.lightImpact();
+                                  ref.read(cartProvider.notifier).updateQuantity(
+                                    item.uniqueKey,
+                                    isKg ? quantity + 0.5 : quantity + 1,
+                                  );
+                                },
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: isDark ? Colors.grey[700] : Colors.grey[200],
+                                  ),
+                                  child: Icon(
+                                    Icons.add,
+                                    size: 16,
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.add, color: Colors.white, size: 16),
-                      ),
+                      ],
                     ),
                   ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // RIGHT: Price + Delete icon
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.mediumImpact();
-                  ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey);
-                },
-                child: Icon(
-                  Icons.delete_outline,
-                  color: isDark ? Colors.grey[500] : Colors.grey[400],
-                  size: 22,
                 ),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        // Subtle divider between items
+        Divider(
+          height: 1,
+          thickness: 1,
+          color: isDark ? Colors.grey[800] : const Color(0xFFEEEEEE),
+        ),
+      ],
     );
   }
 
@@ -3220,178 +3322,173 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final cart = ref.read(cartProvider);
     final butcherId = cart.butcherId ?? '';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Section Header — Lieferando style
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              Text(
-                'marketplace.forgot_something_de'.tr(),
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : Colors.black87,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF2A2520) : const Color(0xFFF5F0E8),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Header — Lieferando "Schon gesehen?" style
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'marketplace.forgot_something_de'.tr(),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
                 ),
-              ),
-              Spacer(),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                ),
-                child: Text(
+                Text(
                   'Gesponsert',
                   style: TextStyle(
                     fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.grey[400] : Colors.grey[500],
+                    fontWeight: FontWeight.w400,
+                    color: isDark ? Colors.grey[500] : Colors.grey[400],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
 
-        // Horizontal Product Cards — Lieferando layout
-        SizedBox(
-          height: 200,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _sponsoredProductsList.length,
-            separatorBuilder: (_, __) => SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final product = _sponsoredProductsList[index];
-              final nameRaw = product['name'];
-              final name = nameRaw is String ? nameRaw : (nameRaw is Map ? (nameRaw['tr'] ?? nameRaw.values.first ?? '').toString() : '');
-              final price = (product['price'] ?? 0) is double ? product['price'] as double : (product['price'] ?? 0).toDouble();
-              final unit = (product['unit'] ?? 'adet').toString();
-              final imageUrl = (product['imageUrl'] ?? '').toString();
+          // Horizontal Product Cards
+          SizedBox(
+            height: 200,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _sponsoredProductsList.length,
+              separatorBuilder: (_, __) => SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final product = _sponsoredProductsList[index];
+                final nameRaw = product['name'];
+                final name = nameRaw is String ? nameRaw : (nameRaw is Map ? (nameRaw['tr'] ?? nameRaw.values.first ?? '').toString() : '');
+                final price = (product['price'] ?? 0) is double ? product['price'] as double : (product['price'] ?? 0).toDouble();
+                final unit = (product['unit'] ?? 'adet').toString();
+                final imageUrl = (product['imageUrl'] ?? '').toString();
 
-              return Container(
-                width: 145,
-                decoration: BoxDecoration(
-                  color: isDark ? Color(0xFF1E1E1E) : Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.06),
-                      blurRadius: 10,
-                      offset: Offset(0, 3),
+                return Container(
+                  width: 145,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
                     ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Product Image with + overlay button (Lieferando style)
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-                          child: imageUrl.isNotEmpty
-                              ? CachedNetworkImage(
-                                  imageUrl: imageUrl,
-                                  width: 145,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                  placeholder: (_, __) => Container(
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Product Image with + overlay button
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+                            child: imageUrl.isNotEmpty
+                                ? CachedNetworkImage(
+                                    imageUrl: imageUrl,
+                                    width: 145,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => Container(
+                                      width: 145,
+                                      height: 100,
+                                      color: isDark ? Colors.grey[800] : Colors.grey[100],
+                                      child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28),
+                                    ),
+                                    errorWidget: (_, __, ___) => Container(
+                                      width: 145,
+                                      height: 100,
+                                      color: isDark ? Colors.grey[800] : Colors.grey[100],
+                                      child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28),
+                                    ),
+                                  )
+                                : Container(
                                     width: 145,
                                     height: 100,
                                     color: isDark ? Colors.grey[800] : Colors.grey[100],
                                     child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28),
                                   ),
-                                  errorWidget: (_, __, ___) => Container(
-                                    width: 145,
-                                    height: 100,
-                                    color: isDark ? Colors.grey[800] : Colors.grey[100],
-                                    child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28),
-                                  ),
-                                )
-                              : Container(
-                                  width: 145,
-                                  height: 100,
-                                  color: isDark ? Colors.grey[800] : Colors.grey[100],
-                                  child: Icon(Icons.restaurant, color: Colors.grey[400], size: 28),
+                          ),
+                          // + button overlay on top-right of image
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: GestureDetector(
+                              onTap: () => _addSponsoredProduct(product, index, butcherId),
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.grey[700] : Colors.grey[800],
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                        ),
-                        // + button overlay on top-right of image
-                        Positioned(
-                          top: 6,
-                          right: 6,
-                          child: GestureDetector(
-                            onTap: () => _addSponsoredProduct(product, index, butcherId),
-                            child: Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                color: _accentColor,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
+                                child: Icon(Icons.add, color: Colors.white, size: 18),
                               ),
-                              child: Icon(Icons.add, color: Colors.white, size: 18),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    // Product Info
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(10, 8, 10, 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white : Colors.black87,
-                                height: 1.2,
-                              ),
-                            ),
-                            Spacer(),
-                            Text(
-                              '${price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: isDark ? Colors.white : Colors.black87,
-                              ),
-                            ),
-                            if (unit.isNotEmpty && unit != 'adet')
+                        ],
+                      ),
+                      // Product Info
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(10, 8, 10, 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                '/$unit',
+                                name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey[500],
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                  height: 1.2,
                                 ),
                               ),
-                          ],
+                              Spacer(),
+                              Text(
+                                'ab ${price.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              ),
+                              if (unit.isNotEmpty && unit != 'adet')
+                                Text(
+                                  '/$unit',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -5989,7 +6086,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           children: [
             Row(
               children: [
-                Icon(Icons.schedule, color: _accentColor, size: 18),
+                Icon(Icons.schedule, color: isDark ? Colors.grey[400] : Colors.grey[700], size: 18),
                 const SizedBox(width: 8),
                 Text(
                   'Teslim Alma Saati',
@@ -6004,7 +6101,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _accentColor.withValues(alpha: 0.12),
+                      color: (isDark ? Colors.white : const Color(0xFF1A1A1A)).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -6012,7 +6109,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: _accentColor,
+                        color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                       ),
                     ),
                   ),
@@ -6157,7 +6254,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       children: [
         Row(
           children: [
-            Icon(Icons.schedule, color: _accentColor, size: 18),
+            Icon(Icons.schedule, color: isDark ? Colors.grey[400] : Colors.grey[700], size: 18),
             const SizedBox(width: 8),
             Text(
               'Teslimat Zamanı',
@@ -6171,9 +6268,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         ),
         const SizedBox(height: 10),
         // ASAP / Scheduled 3D pill toggle
-        ThreeDimensionalPillTabBar(
+        SimpleSegmentedToggle(
           selectedIndex: isScheduled ? 1 : 0,
-          onTabSelected: (index) {
+          onChanged: (index) {
             if (index == 0) {
               // ASAP
               _scheduledDeliverySlot = null;
@@ -6198,9 +6295,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               }
             }
           },
-          tabs: const [
-            TabItem(title: 'En kısa sürede', icon: Icons.bolt),
-            TabItem(title: 'İleri tarih', icon: Icons.calendar_today),
+          items: const [
+            SimpleSegmentItem(label: 'En kısa sürede', icon: Icons.bolt),
+            SimpleSegmentItem(label: 'İleri tarih', icon: Icons.calendar_today),
           ],
         ),
         // Show wheel picker only when scheduled
@@ -6532,13 +6629,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   Widget _buildCheckoutSectionHeader(String emoji, String title) {
     return Row(
       children: [
-        Text(emoji, style: const TextStyle(fontSize: 16)),
-        const SizedBox(width: 6),
+        if (emoji.isNotEmpty) ...[
+          Text(emoji, style: const TextStyle(fontSize: 16)),
+          const SizedBox(width: 6),
+        ],
         Text(
           title,
           style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -6635,10 +6734,16 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
     final accentColor = parent._accentColor;
 
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final checkoutBg = isDark ? Theme.of(context).scaffoldBackgroundColor : const Color(0xFFF7F5F0);
+    final cardColor = isDark ? Theme.of(context).colorScheme.surface : Colors.white;
+    final cardBorder = isDark ? BorderSide.none : BorderSide(color: const Color(0xFFE8E4DE), width: 0.5);
+    final neutralIcon = isDark ? Colors.grey[400]! : Colors.grey[700]!;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: checkoutBg,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: checkoutBg,
         elevation: 0,
         scrolledUnderElevation: 0.5,
         leading: IconButton(
@@ -6648,8 +6753,8 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
         title: Text(
           'Sipariş Özeti',
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -6692,7 +6797,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   Expanded(
                                     child: Text(
                                       snap.data!,
-                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.w600),
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.w500),
                                     ),
                                   ),
                                 ],
@@ -6710,8 +6815,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: cardColor,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.fromBorderSide(cardBorder),
                       ),
                       child: Column(
                         children: [
@@ -6719,7 +6825,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
                               children: [
-                                Text('${item.quantity}x', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                                Text('${item.quantity}x', style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w500, fontSize: 14)),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -6729,7 +6835,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                 ),
                                 Text(
                                   '${item.totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 14),
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 14),
                                 ),
                               ],
                             ),
@@ -6795,7 +6901,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('Toplam', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
-                              Text('${widget.grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: accentColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                              Text('${widget.grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
                             ],
                           ),
                         ],
@@ -6814,8 +6920,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             return Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surface,
+                                color: cardColor,
                                 borderRadius: BorderRadius.circular(12),
+                                border: Border.fromBorderSide(cardBorder),
                               ),
                               child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
                             );
@@ -6854,15 +6961,15 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surface,
+                                color: cardColor,
                                 borderRadius: BorderRadius.circular(12),
-                                border: !hasAddress ? Border.all(color: Colors.amber.shade300) : null,
+                                border: !hasAddress ? Border.all(color: Colors.amber.shade300) : Border.fromBorderSide(cardBorder),
                               ),
                               child: Row(
                                 children: [
                                   Icon(
                                     hasAddress ? Icons.location_on : Icons.warning_amber_rounded,
-                                    color: hasAddress ? accentColor : Colors.amber,
+                                    color: hasAddress ? neutralIcon : Colors.amber,
                                     size: 22,
                                   ),
                                   const SizedBox(width: 12),
@@ -6897,8 +7004,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
+                          color: cardColor,
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.fromBorderSide(cardBorder),
                         ),
                         child: parent._buildDeliveryTimePicker(setState),
                       ),
@@ -6912,14 +7020,15 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
+                          color: cardColor,
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.fromBorderSide(cardBorder),
                         ),
                         child: Column(
                           children: [
                             Row(
                               children: [
-                                Icon(parent._isDineIn ? Icons.restaurant : Icons.store, color: accentColor, size: 22),
+                                Icon(parent._isDineIn ? Icons.restaurant : Icons.store, color: neutralIcon, size: 22),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -6930,7 +7039,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                         style: TextStyle(
                                           color: Theme.of(context).colorScheme.onSurface,
                                           fontSize: 14,
-                                          fontWeight: FontWeight.w500,
+                                          fontWeight: FontWeight.w400,
                                         ),
                                       ),
                                       if (parent._isDineIn && parent._scannedTableNumber != null)
@@ -6978,14 +7087,14 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
                                   prefixIcon: Icon(
                                     parent._scannedTableNumber != null ? Icons.lock : Icons.table_bar,
-                                    color: parent._scannedTableNumber != null ? Colors.green : accentColor,
+                                    color: parent._scannedTableNumber != null ? Colors.green : neutralIcon,
                                     size: 20,
                                   ),
                                   filled: true,
                                   fillColor: Theme.of(context).colorScheme.surface,
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
                                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: accentColor)),
+                                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1A1A))),
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                                   isDense: true,
                                 ),
@@ -7015,8 +7124,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
+                          color: cardColor,
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.fromBorderSide(cardBorder),
                         ),
                         child: Row(
                           children: [
@@ -7045,8 +7155,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: cardColor,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.fromBorderSide(cardBorder),
                       ),
                       child: Column(
                         children: [
@@ -7060,19 +7171,23 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                 width: double.infinity,
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: parent._paymentMethod == 'payLater' ? accentColor : Colors.transparent,
+                                  color: parent._paymentMethod == 'payLater'
+                                      ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1A1A))
+                                      : Colors.transparent,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.schedule, size: 18, color: parent._paymentMethod == 'payLater' ? Colors.white : Colors.grey[600]),
+                                    Icon(Icons.schedule, size: 18, color: parent._paymentMethod == 'payLater' ? (Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white) : Colors.grey[600]),
                                     const SizedBox(width: 6),
                                     Text(
                                       'Sonra Ödeyeceğim',
                                       style: TextStyle(
-                                        color: parent._paymentMethod == 'payLater' ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                        fontWeight: FontWeight.w600,
+                                        color: parent._paymentMethod == 'payLater'
+                                            ? (Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white)
+                                            : Theme.of(context).colorScheme.onSurface,
+                                        fontWeight: FontWeight.w500,
                                         fontSize: 13,
                                       ),
                                     ),
@@ -7082,21 +7197,27 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             ),
                             const SizedBox(height: 2),
                           ],
-                          // Cash / Card pill toggle
-                          ThreeDimensionalPillTabBar(
-                            selectedIndex: parent._paymentMethod == 'card' ? 1 : 0,
-                            onTabSelected: (index) {
-                              setState(() => parent._paymentMethod = index == 0 ? 'cash' : 'card');
+                          // Cash / Card / Card-on-Delivery pill toggle
+                          SimpleSegmentedToggle(
+                            selectedIndex: parent._paymentMethod == 'card' ? 1 : parent._paymentMethod == 'card_on_delivery' ? 2 : 0,
+                            onChanged: (index) {
+                              setState(() => parent._paymentMethod = index == 0 ? 'cash' : index == 1 ? 'card' : 'card_on_delivery');
                             },
-                            tabs: [
-                              TabItem(
-                                title: (parent._isPickUp || parent._isDineIn) ? 'İşletmede Öde' : 'Kapıda Nakit',
+                            items: [
+                              SimpleSegmentItem(
+                                label: (parent._isPickUp || parent._isDineIn) ? 'İşletmede Öde' : 'Kapıda Nakit',
                                 icon: (parent._isPickUp || parent._isDineIn) ? Icons.store_outlined : Icons.payments_outlined,
                               ),
-                              TabItem(
-                                title: 'marketplace.pay_by_card'.tr(),
+                              SimpleSegmentItem(
+                                label: 'marketplace.pay_by_card'.tr(),
                                 icon: Icons.credit_card,
                               ),
+                              // 3rd tab: Card at door (only for delivery, not pickup/dine-in)
+                              if (!parent._isPickUp && !parent._isDineIn)
+                                SimpleSegmentItem(
+                                  label: 'Kapıda Kart',
+                                  icon: Icons.contactless,
+                                ),
                             ],
                           ),
                         ],
@@ -7130,11 +7251,11 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         return Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
+                            color: cardColor,
                             borderRadius: BorderRadius.circular(12),
                             border: parent._donationAmount > 0
                                 ? Border.all(color: Colors.green.withValues(alpha: 0.4), width: 1.5)
-                                : null,
+                                : Border.fromBorderSide(cardBorder),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -7149,7 +7270,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       style: TextStyle(
                                         color: Theme.of(context).colorScheme.onSurface,
                                         fontSize: 13,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w400,
                                       ),
                                     ),
                                   ),
@@ -7197,7 +7318,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                                   color: parent._donationAmount == (options[i]['donation'] as double)
                                                       ? Colors.white
                                                       : Theme.of(context).colorScheme.onSurface,
-                                                  fontWeight: FontWeight.bold,
+                                                  fontWeight: FontWeight.w600,
                                                   fontSize: 14,
                                                 ),
                                               ),
@@ -7237,7 +7358,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       Expanded(
                                         child: Text(
                                           '${parent._donationAmount.toStringAsFixed(2)}$currency bağış eklendi 💚 Teşekkürler!',
-                                          style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w600),
+                                          style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w500),
                                         ),
                                       ),
                                     ],
@@ -7270,7 +7391,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               fillColor: Theme.of(context).colorScheme.surface,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accentColor)),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1A1A))),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                               prefixIcon: Icon(Icons.local_offer_outlined, color: Colors.grey[500], size: 20),
                             ),
@@ -7348,7 +7469,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               const SizedBox(width: 6),
                               Text(
                                 '${parent._appliedCoupon!.code} uygulandı! -${parent._appliedCoupon!.calculatedDiscount!.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
-                                style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600),
+                                style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w500),
                               ),
                             ],
                           ),
@@ -7372,7 +7493,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         fillColor: Theme.of(context).colorScheme.surface,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: accentColor)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1A1A))),
                         contentPadding: const EdgeInsets.all(14),
                       ),
                       style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
@@ -7387,7 +7508,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
           Container(
             padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
             decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
+              color: checkoutBg,
               boxShadow: [
                 BoxShadow(
                   color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
@@ -7457,6 +7578,19 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
               ),
             ),
           ),
+          // ─── Legal disclaimer ─────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Text(
+              'cart.legal_disclaimer'.tr(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDark ? Colors.grey[500] : Colors.grey[500],
+                fontSize: 11,
+                height: 1.4,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -7464,21 +7598,24 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
 
   /// Step indicator: ● Sepet (done) → ● Ödeme (current) → ○ Onay
   Widget _buildStepIndicator(BuildContext context, Color accentColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeStepColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
+    final inactiveStepColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
         children: [
-          _buildStep(context, 'Sepet', 0, accentColor, isDone: true),
-          _buildStepConnector(context, accentColor, isDone: true),
-          _buildStep(context, 'Ödeme', 1, accentColor, isCurrent: true),
-          _buildStepConnector(context, accentColor, isDone: false),
-          _buildStep(context, 'Onay', 2, accentColor),
+          _buildStep(context, 'Sepet', 0, activeStepColor, inactiveColor: inactiveStepColor, isDone: true),
+          _buildStepConnector(context, activeStepColor, isDone: true),
+          _buildStep(context, 'Ödeme', 1, activeStepColor, inactiveColor: inactiveStepColor, isCurrent: true),
+          _buildStepConnector(context, activeStepColor, isDone: false),
+          _buildStep(context, 'Onay', 2, activeStepColor, inactiveColor: inactiveStepColor),
         ],
       ),
     );
   }
 
-  Widget _buildStep(BuildContext context, String label, int index, Color accentColor, {bool isDone = false, bool isCurrent = false}) {
+  Widget _buildStep(BuildContext context, String label, int index, Color activeColor, {Color inactiveColor = Colors.grey, bool isDone = false, bool isCurrent = false}) {
     return Expanded(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -7488,20 +7625,19 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
             height: 28,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isDone ? accentColor : (isCurrent ? accentColor : Colors.grey.shade300),
-              boxShadow: isCurrent ? [
-                BoxShadow(color: accentColor.withValues(alpha: 0.3), blurRadius: 8, spreadRadius: 1),
-              ] : null,
+              color: (isDone || isCurrent) ? activeColor : inactiveColor,
             ),
             child: Center(
               child: isDone
-                  ? const Icon(Icons.check, color: Colors.white, size: 16)
+                  ? Icon(Icons.check, color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white, size: 16)
                   : Text(
                       '${index + 1}',
                       style: TextStyle(
-                        color: isCurrent ? Colors.white : Colors.grey[600],
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                        color: isCurrent
+                            ? (Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white)
+                            : Colors.grey[600],
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
                       ),
                     ),
             ),
@@ -7510,9 +7646,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
           Text(
             label,
             style: TextStyle(
-              color: (isDone || isCurrent) ? accentColor : Colors.grey[500],
+              color: (isDone || isCurrent) ? activeColor : Colors.grey[500],
               fontSize: 11,
-              fontWeight: (isDone || isCurrent) ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: (isDone || isCurrent) ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
         ],
@@ -7520,13 +7656,13 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
     );
   }
 
-  Widget _buildStepConnector(BuildContext context, Color accentColor, {required bool isDone}) {
+  Widget _buildStepConnector(BuildContext context, Color activeColor, {required bool isDone}) {
     return Container(
       height: 2,
       width: 24,
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isDone ? accentColor : Colors.grey.shade300,
+        color: isDone ? activeColor : Colors.grey.shade300,
         borderRadius: BorderRadius.circular(1),
       ),
     );
