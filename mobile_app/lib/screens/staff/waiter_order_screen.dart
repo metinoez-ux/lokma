@@ -298,7 +298,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                             children: [
                               Text(
                                 'Masa $tableNumber',
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 'Garson: ${session.waiterName} • PIN: ${session.pin}',
@@ -362,7 +362,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                           allPaid ? 'Hesap Ödendi ✓' : 'Hesap Açık',
                                           style: TextStyle(
                                             fontSize: 16,
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight: FontWeight.w600,
                                             color: allPaid ? Colors.green.shade800 : brandColor,
                                           ),
                                         ),
@@ -417,7 +417,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                       children: [
                                         Text(
                                           '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
-                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                                         ),
                                         const SizedBox(width: 8),
                                         // Order status badge
@@ -441,7 +441,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                         const SizedBox(width: 6),
                                         Text(
                                           '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
-                                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: brandColor),
+                                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: brandColor),
                                         ),
                                       ],
                                     ),
@@ -461,7 +461,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                                           width: double.infinity,
                                           child: FilledButton.icon(
                                             icon: const Icon(Icons.restaurant, size: 16),
-                                            label: const Text('Servis Edildi', style: TextStyle(fontWeight: FontWeight.w700)),
+                                            label: const Text('Servis Edildi', style: TextStyle(fontWeight: FontWeight.w600)),
                                             style: FilledButton.styleFrom(
                                               backgroundColor: Colors.teal.shade600,
                                               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -633,7 +633,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFFFB335B),
             ),
-            child: const Text('Tamam'),
+            child: Text('common.ok'.tr()),
           ),
         ],
       ),
@@ -753,7 +753,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           _currentStep == _WaiterStep.selectTable
               ? 'Masa Seçin'
               : 'Masa $_selectedTable',
-          style: const TextStyle(fontWeight: FontWeight.w700),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: scaffoldBg,
         surfaceTintColor: scaffoldBg,
@@ -836,7 +836,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
           // Business name header
           Text(
             _businessName ?? 'İşletme',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
@@ -1076,7 +1076,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                       '$tableNum',
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: textColor,
                       ),
                     ),
@@ -1267,7 +1267,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                   '${CurrencyUtils.getCurrencySymbol()}${product.price.toStringAsFixed(2)} / ${product.unitType}',
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: Colors.amber.shade700,
                   ),
                 ),
@@ -1287,7 +1287,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
                     product.unitType == 'kg'
                         ? cartQty.toStringAsFixed(1)
                         : '${cartQty.toInt()}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
                 _circleButton(Icons.add, () => _addToCart(product)),
@@ -1350,7 +1350,7 @@ class _WaiterOrderScreenState extends State<WaiterOrderScreen> {
               const SizedBox(width: 8),
               Text(
                 'Mutfağa Gönder • $_cartItemCount ürün • ${CurrencyUtils.getCurrencySymbol()}${_cartTotal.toStringAsFixed(2)}',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -1455,7 +1455,7 @@ class _TableBillView extends StatelessWidget {
                         children: [
                           Text(
                             'Masa ${session.tableNumber} • ${session.waiterName}',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: allPaid ? Colors.green.shade900 : Colors.amber.shade900),
+                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: allPaid ? Colors.green.shade900 : Colors.amber.shade900),
                           ),
                           Text(
                             allPaid
@@ -1503,7 +1503,7 @@ class _TableBillView extends StatelessWidget {
                             children: [
                               Text(
                                 '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(width: 6),
                               // Payment status badge
@@ -1566,7 +1566,7 @@ class _TableBillView extends StatelessWidget {
                               '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w600,
                                 color: Colors.amber.shade700,
                               ),
                             ),

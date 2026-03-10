@@ -134,7 +134,12 @@
     "error_loading_cart": "Erreur lors du chargement du panier",
     "no_products_added_yet": "Vous n'avez pas encore ajouté de produits",
     "total_products": "Total de produits",
-    "legal_disclaimer": "En passant votre commande, vous acceptez nos conditions d'utilisation et notre politique de confidentialité."
+    "legal_disclaimer": "En passant votre commande, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.",
+    "apply": "Appliquer",
+    "privacy_coming_soon": "Politique de confidentialité bientôt disponible",
+    "terms_coming_soon": "Conditions d'utilisation bientôt disponibles",
+    "please_select_pickup_time": "Veuillez sélectionner une heure de retrait",
+    "please_enter_street_city": "Veuillez entrer la rue et la ville"
   },
   "common": {
     "cancel": "Annuler",
@@ -716,7 +721,12 @@
     "what_if_unavailable": "Que se passe-t-il si un produit n'est pas disponible ?",
     "your_cart_is_empty": "Votre panier est vide",
     "yuksek_et_orani": "Haute Teneur en Viande",
-    "yuksek_et_orani_desc": "Utilisation de viande de qualité"
+    "yuksek_et_orani_desc": "Utilisation de viande de qualité",
+    "session_timeout_warning": "Avertissement d'expiration",
+    "join_group": "Rejoindre le groupe",
+    "single_order": "Commander seul",
+    "yes_close_session": "Oui, fermer la session",
+    "start_group_order": "Démarrer commande de groupe"
   },
   "navigation": {
     "food": "Repas",
@@ -880,7 +890,10 @@
     "order_name": "Votre nom dans la commande",
     "order_duration": "Durée de Commande",
     "duration_desc": "Les participants peuvent commander dans ce délai",
-    "view_menu_order": "Voir le Menu & Commander"
+    "view_menu_order": "Voir le Menu & Commander",
+    "leave_tip": "Laisser un pourboire",
+    "send_message": "Envoyer un message",
+    "tip_send_failed": "Échec de l'envoi du pourboire, veuillez réessayer"
   },
   "payments": {
     "step1_payment_collection": "💵 Étape 1 : Collecte de paiement",
@@ -995,7 +1008,9 @@
     "faq_payment": "Comment Payer ?",
     "faq_payment_answer": "Vous pouvez payer en espèces à la porte ou par carte. Vous pouvez modifier vos préférences de paiement dans Profil > Moyens de paiement.",
     "faq_what_is_lokma": "Qu'est-ce que LOKMA ?",
-    "faq_what_is_lokma_answer": "LOKMA est une plateforme où vous pouvez commander en ligne auprès de boucheries, restaurants et marchés locaux. Nous livrons de la viande fraîche, des plats faits maison et des produits du marché à votre porte."
+    "faq_what_is_lokma_answer": "LOKMA est une plateforme où vous pouvez commander en ligne auprès de boucheries, restaurants et marchés locaux. Nous livrons de la viande fraîche, des plats faits maison et des produits du marché à votre porte.",
+    "delete_address": "Supprimer l'adresse",
+    "street_city_required": "Rue et ville sont obligatoires"
   },
   "search": {
     "restoran_mi_ariyorsunuz": "Restoran mı arıyorsunuz?",
@@ -1085,7 +1100,11 @@
     "account_open": "Compte ouvert",
     "business_not_found": "Entreprise non trouvée",
     "need_assignment": "Vous devez être affecté à une entreprise.",
-    "business": "Entreprise"
+    "business": "Entreprise",
+    "payment_not_collected": "⚠️ Paiement non perçu",
+    "yes_on_my_way": "Oui, en route",
+    "address_wrong_unreachable": "Adresse incorrecte / Client injoignable",
+    "card_payment_received": "✅ Paiement par carte reçu !"
   },
   "wallet": {
     "lokma_wallet": "Portefeuille LOKMA",
@@ -1244,5 +1263,8 @@
     "rate_delivery": "Évaluer la livraison",
     "rate_food": "Évaluer la nourriture",
     "rate_service": "Évaluer le service"
+  },
+  "notification": {
+    "open_map": "Ouvrir la carte"
   }
 }

@@ -143,7 +143,7 @@ class _OrganizationSearchSheetState extends State<OrganizationSearchSheet> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const Spacer(),
@@ -353,7 +353,7 @@ class _OrganizationSearchSheetState extends State<OrganizationSearchSheet> {
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),

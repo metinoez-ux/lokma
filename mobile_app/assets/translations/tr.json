@@ -135,7 +135,12 @@
     "error_loading_cart": "Sepet yüklenirken hata oluştu",
     "no_products_added_yet": "Henüz ürün eklemediniz",
     "total_products": "Toplam Ürünler",
-    "legal_disclaimer": "Siparişinizi göndererek, kullanım koşullarımızı ve gizlilik politikamızı kabul etmiş olursunuz."
+    "legal_disclaimer": "Siparişinizi göndererek, kullanım koşullarımızı ve gizlilik politikamızı kabul etmiş olursunuz.",
+    "apply": "Uygula",
+    "privacy_coming_soon": "Gizlilik Politikası yakında eklenecek",
+    "terms_coming_soon": "Kullanım Koşulları yakında eklenecek",
+    "please_select_pickup_time": "Lütfen bir teslim alma saati seçin",
+    "please_enter_street_city": "Lütfen sokak ve şehir bilgisi girin"
   },
   "common": {
     "ok": "Tamam",
@@ -717,7 +722,12 @@
     "open": "Açık",
     "closed": "Kapalı",
     "see_menu_and_order": "Menüyü Gör & Sipariş Ver",
-    "weekly_hours": "Haftalık Çalışma Saatleri"
+    "weekly_hours": "Haftalık Çalışma Saatleri",
+    "session_timeout_warning": "Zaman Aşımı Uyarısı",
+    "join_group": "Gruba Katıl",
+    "single_order": "Tek Kişi Sipariş",
+    "yes_close_session": "Evet, Oturumu Kapat",
+    "start_group_order": "Grup Siparişi Başlat"
   },
   "navigation": {
     "food": "Yemek",
@@ -881,7 +891,10 @@
     "order_name": "Siparişte görünecek isminiz",
     "order_duration": "Sipariş Süresi",
     "duration_desc": "Katılımcılar bu süre içinde sipariş verebilir",
-    "view_menu_order": "Menüyü Gör & Sipariş Ver"
+    "view_menu_order": "Menüyü Gör & Sipariş Ver",
+    "leave_tip": "Bahşiş Bırak",
+    "send_message": "Mesaj Gönder",
+    "tip_send_failed": "Bahşiş gönderilemedi, lütfen tekrar deneyin"
   },
   "payments": {
     "step1_payment_collection": "💵 Adım 1: Ödeme Tahsili",
@@ -996,7 +1009,9 @@
     "invite_reward": "Sen 5€, arkadaşın 5€ kazan!",
     "theme_auto": "Oto",
     "theme_light": "Gün",
-    "theme_dark": "Gece"
+    "theme_dark": "Gece",
+    "delete_address": "Adresi Sil",
+    "street_city_required": "Sokak ve şehir zorunlu"
   },
   "search": {
     "restoran_mi_ariyorsunuz": "Restoran mı arıyorsunuz?",
@@ -1086,7 +1101,11 @@
     "account_open": "Hesap Açık",
     "business_not_found": "İşletme bulunamadı",
     "need_assignment": "Sipariş almak için bir işletmeye atanmış olmanız gerekir.",
-    "business": "İşletme"
+    "business": "İşletme",
+    "payment_not_collected": "⚠️ Ödeme Tahsil Edilmedi",
+    "yes_on_my_way": "Evet, Yola Çıkıyorum",
+    "address_wrong_unreachable": "Adres doğru değil / Müşteriye ulaşılamadı",
+    "card_payment_received": "✅ Kart ödemesi alındı!"
   },
   "wallet": {
     "lokma_wallet": "LOKMA Cüzdan",
@@ -1244,5 +1263,8 @@
     "rate_delivery": "Teslimatı değerlendirin",
     "rate_food": "Yemeği değerlendirin",
     "rate_service": "Hizmeti değerlendirin"
+  },
+  "notification": {
+    "open_map": "Harita Aç"
   }
 }

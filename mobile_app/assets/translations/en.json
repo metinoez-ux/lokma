@@ -135,7 +135,12 @@
     "error_loading_cart": "Error loading cart",
     "no_products_added_yet": "You haven't added any products yet",
     "total_products": "Total Products",
-    "legal_disclaimer": "By placing your order, you agree to our terms of service and privacy policy."
+    "legal_disclaimer": "By placing your order, you agree to our terms of service and privacy policy.",
+    "apply": "Apply",
+    "privacy_coming_soon": "Privacy Policy coming soon",
+    "terms_coming_soon": "Terms of Use coming soon",
+    "please_select_pickup_time": "Please select a pickup time",
+    "please_enter_street_city": "Please enter street and city"
   },
   "common": {
     "ok": "OK",
@@ -717,7 +722,12 @@
     "what_if_unavailable": "What happens if a product is unavailable?",
     "your_cart_is_empty": "Your cart is empty",
     "yuksek_et_orani": "High Meat Content",
-    "yuksek_et_orani_desc": "Quality meat usage"
+    "yuksek_et_orani_desc": "Quality meat usage",
+    "session_timeout_warning": "Session Timeout Warning",
+    "join_group": "Join Group",
+    "single_order": "Order Alone",
+    "yes_close_session": "Yes, Close Session",
+    "start_group_order": "Start Group Order"
   },
   "navigation": {
     "food": "Food",
@@ -881,7 +891,10 @@
     "order_name": "Your name in the order",
     "order_duration": "Order Duration",
     "duration_desc": "Participants can order within this time",
-    "view_menu_order": "View Menu & Order"
+    "view_menu_order": "View Menu & Order",
+    "leave_tip": "Leave a Tip",
+    "send_message": "Send Message",
+    "tip_send_failed": "Failed to send tip, please try again"
   },
   "payments": {
     "step1_payment_collection": "💵 Step 1: Payment Collection",
@@ -996,7 +1009,9 @@
     "faq_payment": "How Do I Pay?",
     "faq_payment_answer": "You can pay by cash at the door or by card. You can change your payment preferences under Profile > Payment Methods.",
     "faq_what_is_lokma": "What Is LOKMA?",
-    "faq_what_is_lokma_answer": "LOKMA is a platform where you can order online from local butchers, restaurants and markets. We deliver fresh meat, home-cooked meals and market products to your door."
+    "faq_what_is_lokma_answer": "LOKMA is a platform where you can order online from local butchers, restaurants and markets. We deliver fresh meat, home-cooked meals and market products to your door.",
+    "delete_address": "Delete Address",
+    "street_city_required": "Street and city are required"
   },
   "search": {
     "restoran_mi_ariyorsunuz": "Restoran mı arıyorsunuz?",
@@ -1086,7 +1101,11 @@
     "account_open": "Account open",
     "business_not_found": "Business not found",
     "need_assignment": "You need to be assigned to a business.",
-    "business": "Business"
+    "business": "Business",
+    "payment_not_collected": "⚠️ Payment Not Collected",
+    "yes_on_my_way": "Yes, On My Way",
+    "address_wrong_unreachable": "Address incorrect / Customer unreachable",
+    "card_payment_received": "✅ Card payment received!"
   },
   "wallet": {
     "lokma_wallet": "LOKMA Wallet",
@@ -1244,5 +1263,8 @@
     "rate_delivery": "Rate delivery",
     "rate_food": "Rate food",
     "rate_service": "Rate service"
+  },
+  "notification": {
+    "open_map": "Open Map"
   }
 }

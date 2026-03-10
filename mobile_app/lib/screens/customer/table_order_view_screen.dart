@@ -383,7 +383,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
             const SizedBox(height: 24),
             Text(
               tr('customer.masanizdan_siparis_verin'),
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -953,7 +953,7 @@ class _TableOrderViewScreenState extends State<TableOrderViewScreen>
                             '${CurrencyUtils.getCurrencySymbol()}${(data['totalAmount'] ?? 0).toStringAsFixed(2)}',
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w600,
                               color: Colors.amber.shade700,
                             ),
                           ),

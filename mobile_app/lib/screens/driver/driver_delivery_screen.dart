@@ -219,7 +219,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                     'Teslimatlarım',
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: !_showAllOrders ? brandBottom : Colors.white,
                     ),
                   ),
@@ -237,7 +237,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                     tr('driver.tum_siparisler'),
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: _showAllOrders ? brandBottom : Colors.white,
                     ),
                   ),
@@ -275,7 +275,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   children: [
                     Text(
                       '${businessIds.length}',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(width: 2),
                     const Icon(Icons.store, size: 16),
@@ -453,7 +453,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   const SizedBox(width: 8),
                   Text(
                     '${orders.length} aktif sipariş',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber),
+                    style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.amber),
                   ),
                   const Spacer(),
                   ..._buildStatusSummaryChips(statusGroups),
@@ -490,7 +490,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           ),
           child: Text(
             '${entry.value.$1} $count',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: entry.value.$2),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: entry.value.$2),
           ),
         ));
       }
@@ -542,7 +542,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   '${statusConfig.$1} ${statusConfig.$3}',
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: statusConfig.$2,
                   ),
                 ),
@@ -558,7 +558,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                   style: const TextStyle(
                     fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: Colors.amber,
                   ),
                 ),
@@ -574,7 +574,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               Expanded(
                 child: Text(
                   businessName,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -593,7 +593,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               const SizedBox(width: 16),
               Text(
                 '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.green),
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.green),
               ),
               const Spacer(),
               // Claimed indicator
@@ -608,7 +608,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                     isMyOrder ? '👤 Benim' : '👤 Alındı',
                     style: TextStyle(
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: isMyOrder ? Colors.blue : Colors.purple,
                     ),
                   ),
@@ -706,7 +706,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
             title: Text(
               'Bugün: ${completedOrders.length} teslimat',
               style: const TextStyle(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 14,
               ),
             ),
@@ -725,7 +725,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       '🛣️ ${totalKm.toStringAsFixed(1)} km',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         fontSize: 11,
                       ),
                     ),
@@ -744,7 +744,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       '💵 ${cashTotal.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         fontSize: 11,
                       ),
                     ),
@@ -763,7 +763,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       '💳 ${cardTotal.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         fontSize: 11,
                       ),
                     ),
@@ -847,7 +847,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                         '#$orderNumber',
                         style: TextStyle(
                           fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: Colors.amber.shade800,
                         ),
                       ),
@@ -890,7 +890,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           Text(
             '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
             style: TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               fontSize: 14,
               color: isCash ? Colors.green[700] : Colors.purple[700],
             ),
@@ -1005,7 +1005,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         fontSize: 11,
                       ),
                     ),
@@ -1023,7 +1023,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                   Text(
                     order.butcherName,
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 15,
                     ),
                     maxLines: 1,
@@ -1052,7 +1052,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                       Text(
                         '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                         style: const TextStyle(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           fontSize: 18,
                           color: Colors.green,
                         ),
@@ -1119,7 +1119,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                         Expanded(
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.contactless, size: 18),
-                            label: const Text('NFC Ödeme', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            label: const Text('NFC Ödeme', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF6A0DAD),
                               foregroundColor: Colors.white,
@@ -1148,8 +1148,8 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                                 });
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('✅ Kart ödemesi alındı!'),
+                                    SnackBar(
+                                      content: Text('staff.card_payment_received'.tr()),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -1196,7 +1196,7 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                                     : isPreparing 
                                         ? '👨\u200d🍳 Hazırlanıyor' 
                                         : '⏳ Bekliyor',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                           ),
                         ),
                       ),
@@ -1253,7 +1253,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
                   tr('driver.harita_uygulamasi_secin'),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
               ListTile(
@@ -1310,7 +1310,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
             tr('driver.atanmis_i_sletmeler'),
             style: TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 16),
@@ -1490,7 +1490,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
                   children: [
                     Icon(Icons.navigation, color: Colors.white, size: 14),
                     SizedBox(width: 4),
-                    Text(tr('driver.gi_t'), style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                    Text(tr('driver.gi_t'), style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
                   ],
                 ),
               )
@@ -1505,7 +1505,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
                   '${biz['total']}',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 12,
                   ),
                 ),
@@ -1534,7 +1534,7 @@ class _BusinessListSheetState extends State<_BusinessListSheet> {
             '$count',
             style: TextStyle(
               fontSize: 11,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: HSLColor.fromColor(color).withLightness(0.3).toColor(),
             ),
           ),

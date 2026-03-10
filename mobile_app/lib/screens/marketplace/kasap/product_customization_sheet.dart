@@ -302,7 +302,7 @@ class _ProductCustomizationSheetState
                                   : _quantity.toStringAsFixed(0),
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: textPrimary,
                               ),
                             ),
@@ -336,7 +336,7 @@ class _ProductCustomizationSheetState
                           ),
                           child: Text(
                             '${widget.existingItem != null ? 'marketplace.update_item'.tr() : 'marketplace.add_to_cart'.tr()}  ${CurrencyUtils.getCurrencySymbol()}${_totalPrice.toStringAsFixed(2)}',
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ),
@@ -378,7 +378,7 @@ class _ProductCustomizationSheetState
           I18nUtils.getLocalizedText(context, product.nameData),
           style: TextStyle(
             fontSize: 20,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: textPrimary,
           ),
         ),
@@ -476,7 +476,7 @@ class _ProductCustomizationSheetState
               group.name,
               style: TextStyle(
                 fontSize: 15,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: textPrimary,
               ),
             ),
@@ -636,13 +636,13 @@ class _ProductCustomizationSheetState
                     // Product name
                     Text(
                       I18nUtils.getLocalizedText(context, product.nameData),
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary),
                     ),
                     const SizedBox(height: 24),
                     // Allergene Section
                     Row(
                       children: [
-                        Text('marketplace.allergens'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary)),
+                        Text('marketplace.allergens'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary)),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Container(
@@ -686,7 +686,7 @@ class _ProductCustomizationSheetState
                     // Zusatzstoffe Section
                     Row(
                       children: [
-                        Text('marketplace.additives'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary)),
+                        Text('marketplace.additives'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary)),
                         const SizedBox(width: 8),
                         Flexible(
                           child: Container(

@@ -51,7 +51,7 @@ class OrderTypeSelectionDialog extends ConsumerWidget {
               'Sipariş Türü',
               style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
@@ -190,7 +190,7 @@ class _OrderTypeCard extends StatelessWidget {
                               style: const TextStyle(
                                 fontSize: 9,
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -293,7 +293,7 @@ class _CreateGroupOrderDialogState
                     'Ailecek Sipariş Başlat',
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
                   ),

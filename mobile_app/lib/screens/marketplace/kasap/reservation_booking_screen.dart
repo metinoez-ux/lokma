@@ -412,7 +412,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
               Navigator.of(ctx).pop();
               Navigator.of(context).pop();
             },
-            child: const Text('Tamam', style: TextStyle(color: _accent, fontWeight: FontWeight.bold)),
+            child: const Text('Tamam', style: TextStyle(color: _accent, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -463,7 +463,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
           children: [
             Text(
               'Masa Rezervasyonu',
-              style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(color: textPrimary, fontSize: 18, fontWeight: FontWeight.w600),
             ),
             Text(
               widget.businessName,
@@ -544,7 +544,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                 style: TextStyle(
                                   color: isSelected ? Colors.white : textPrimary,
                                   fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
@@ -645,7 +645,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                     style: TextStyle(
                                       color: isSelected ? Colors.white : textPrimary,
                                       fontSize: 20,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   Text(
@@ -803,7 +803,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                             : isSelected
                                                 ? Colors.white
                                                 : textPrimary,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                                     fontSize: 14,
                                     decoration: isFull ? TextDecoration.lineThrough : null,
                                   ),
@@ -814,7 +814,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                     style: TextStyle(
                                       color: Colors.red[400],
                                       fontSize: 9,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   )
                                 else if (_maxReservationTables > 0 && remaining <= 3)
@@ -955,7 +955,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                   'Rezervasyon Talebi Gönder',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],

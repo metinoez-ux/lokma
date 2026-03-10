@@ -169,7 +169,7 @@ class _GroupOrderShareSheetState extends State<GroupOrderShareSheet> {
             'Grup Siparişi Oluşturuldu!',
             style: TextStyle(
               fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),

@@ -787,7 +787,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Adresi Sil'),
+        title: Text('profile.delete_address'.tr()),
         content: Text('"$label" adresini silmek istediğinize emin misiniz?'),
         actions: [
           TextButton(
@@ -999,7 +999,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                         onPressed: () async {
                           if (streetCtrl.text.trim().isEmpty || cityCtrl.text.trim().isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Sokak ve şehir zorunlu'), backgroundColor: Colors.red),
+                              SnackBar(content: Text('profile.street_city_required'.tr()), backgroundColor: Colors.red),
                             );
                             return;
                           }

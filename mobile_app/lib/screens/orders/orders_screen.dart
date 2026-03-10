@@ -985,7 +985,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 9,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -1177,7 +1177,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         }
                       },
                       icon: const Text('💝', style: TextStyle(fontSize: 18)),
-                      label: const Text('Bahşiş Bırak'),
+                      label: Text('orders.leave_tip'.tr()),
                       style: OutlinedButton.styleFrom(
                          foregroundColor: isDark ? Colors.teal[300] : Colors.teal[700],
                          side: BorderSide(color: isDark ? Colors.teal[300]! : Colors.teal[700]!),
@@ -1260,7 +1260,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                         );
                       },
                       icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                      label: const Text('Mesaj Gönder'),
+                      label: Text('orders.send_message'.tr()),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.blueGrey,
                         side: BorderSide(color: Colors.blueGrey.withValues(alpha: 0.3)),

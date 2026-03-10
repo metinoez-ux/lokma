@@ -218,7 +218,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                 // Title
                 const Text(
                   '🃏 Masa Kart Numarası Seçin',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -298,7 +298,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                             '$num',
                             style: TextStyle(
                               fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: isOccupied
                                   ? Colors.red[300]
                                   : isSelected
@@ -340,7 +340,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                           selected.isEmpty
                               ? 'Numara Seçin'
                               : 'Onayla (${selected.length} masa)',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
@@ -443,7 +443,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Vazgeç'),
+            child: Text('common.give_up'.tr()),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -529,7 +529,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Rezervasyonlar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: -0.3)),
+            const Text('Rezervasyonlar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: -0.3)),
             if (_businessName != null)
               Text(
                 _businessName!,
@@ -822,7 +822,7 @@ class _StaffReservationsScreenState extends State<StaffReservationsScreen> {
                 Expanded(
                   child: Text(
                     customerName,
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17, color: textPrimary, letterSpacing: -0.2),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 17, color: textPrimary, letterSpacing: -0.2),
                   ),
                 ),
                 if (customerPhone != null && customerPhone.isNotEmpty)

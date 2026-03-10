@@ -134,7 +134,12 @@
     "error_loading_cart": "Errore durante il caricamento del carrello",
     "no_products_added_yet": "Non hai ancora aggiunto alcun prodotto",
     "total_products": "Prodotti in totale",
-    "legal_disclaimer": "Effettuando l'ordine, accetti i nostri termini di servizio e la nostra informativa sulla privacy."
+    "legal_disclaimer": "Effettuando l'ordine, accetti i nostri termini di servizio e la nostra informativa sulla privacy.",
+    "apply": "Applica",
+    "privacy_coming_soon": "Informativa sulla privacy in arrivo",
+    "terms_coming_soon": "Termini di utilizzo in arrivo",
+    "please_select_pickup_time": "Seleziona un orario di ritiro",
+    "please_enter_street_city": "Inserisci via e città"
   },
   "common": {
     "cancel": "Annulla",
@@ -716,7 +721,12 @@
     "what_if_unavailable": "Cosa succede se un prodotto non è disponibile?",
     "your_cart_is_empty": "Il tuo carrello è vuoto",
     "yuksek_et_orani": "Alto Contenuto di Carne",
-    "yuksek_et_orani_desc": "Utilizzo di carne di qualità"
+    "yuksek_et_orani_desc": "Utilizzo di carne di qualità",
+    "session_timeout_warning": "Avviso di scadenza sessione",
+    "join_group": "Unisciti al gruppo",
+    "single_order": "Ordine singolo",
+    "yes_close_session": "Sì, chiudi sessione",
+    "start_group_order": "Avvia ordine di gruppo"
   },
   "navigation": {
     "food": "Cibo",
@@ -880,7 +890,10 @@
     "order_name": "Il tuo nome nell'ordine",
     "order_duration": "Durata Ordine",
     "duration_desc": "I partecipanti possono ordinare in questo tempo",
-    "view_menu_order": "Vedi Menu & Ordina"
+    "view_menu_order": "Vedi Menu & Ordina",
+    "leave_tip": "Lascia una mancia",
+    "send_message": "Invia messaggio",
+    "tip_send_failed": "Invio mancia fallito, riprova"
   },
   "payments": {
     "step1_payment_collection": "💵 Fase 1: Incasso pagamento",
@@ -995,7 +1008,9 @@
     "faq_payment": "Come Pago?",
     "faq_payment_answer": "Puoi pagare in contanti alla porta o con carta. Puoi modificare le tue preferenze di pagamento in Profilo > Metodi di pagamento.",
     "faq_what_is_lokma": "Cos'è LOKMA?",
-    "faq_what_is_lokma_answer": "LOKMA è una piattaforma dove puoi ordinare online da macellerie, ristoranti e mercati locali. Consegniamo carne fresca, piatti fatti in casa e prodotti del mercato alla tua porta."
+    "faq_what_is_lokma_answer": "LOKMA è una piattaforma dove puoi ordinare online da macellerie, ristoranti e mercati locali. Consegniamo carne fresca, piatti fatti in casa e prodotti del mercato alla tua porta.",
+    "delete_address": "Elimina indirizzo",
+    "street_city_required": "Via e città sono obbligatorie"
   },
   "search": {
     "restoran_mi_ariyorsunuz": "Restoran mı arıyorsunuz?",
@@ -1085,7 +1100,11 @@
     "account_open": "Conto aperto",
     "business_not_found": "Attività non trovata",
     "need_assignment": "Devi essere assegnato a un'attività.",
-    "business": "Attività"
+    "business": "Attività",
+    "payment_not_collected": "⚠️ Pagamento non riscosso",
+    "yes_on_my_way": "Sì, sono in arrivo",
+    "address_wrong_unreachable": "Indirizzo errato / Cliente irraggiungibile",
+    "card_payment_received": "✅ Pagamento con carta ricevuto!"
   },
   "wallet": {
     "lokma_wallet": "Portafoglio LOKMA",
@@ -1244,5 +1263,8 @@
     "rate_delivery": "Valuta la consegna",
     "rate_food": "Valuta il cibo",
     "rate_service": "Valuta il servizio"
+  },
+  "notification": {
+    "open_map": "Apri mappa"
   }
 }

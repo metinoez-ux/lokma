@@ -344,7 +344,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     fontFamily: 'Courier',
                                     letterSpacing: 2,
                                   ),
@@ -493,7 +493,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> with SingleTickerPr
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         letterSpacing: 2,
                       ),
                       textCapitalization: TextCapitalization.characters,

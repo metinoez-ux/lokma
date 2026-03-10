@@ -742,7 +742,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 9,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -1747,7 +1747,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 13,
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.w600,
                                       letterSpacing: 1.0,
                                     ),
                                   ),

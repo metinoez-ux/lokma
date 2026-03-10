@@ -297,7 +297,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                 Text(
                   'Bugün: ${completedOrders.length}',
                   style: const TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
                 ),
@@ -315,7 +315,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                       '🛣️ ${totalKm.toStringAsFixed(1)} km',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         fontSize: 11,
                       ),
                     ),
@@ -333,7 +333,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                       '💰 ${cashTotal.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         fontSize: 11,
                       ),
                     ),
@@ -408,7 +408,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
             Text(
               orderNum,
               style: const TextStyle(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
             ),
@@ -417,7 +417,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
               '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
               style: TextStyle(
                 color: isCash ? Colors.green[700] : Colors.grey[600],
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
             ),
@@ -505,7 +505,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                   child: Text(
                     '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFFFB335B),
                     ),
                   ),
@@ -521,7 +521,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                     statusText,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: statusColor,
                     ),
                   ),
@@ -531,7 +531,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                   '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                   style: const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: Colors.green,
                   ),
                 ),
@@ -614,7 +614,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
                           : '⏳ Sipariş bekleniyor',
                   style: TextStyle(
                     color: isReady ? Colors.white : Colors.grey[600],
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),
                 ),
@@ -701,7 +701,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
           await showDialog(
             context: context,
             builder: (ctx) => AlertDialog(
-              title: const Text('⚠️ Ödeme Tahsil Edilmedi'),
+              title: Text('staff.payment_not_collected'.tr()),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -719,7 +719,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                         const SizedBox(width: 12),
                         Text(
                           '$amount${CurrencyUtils.getCurrencySymbol()}',
-                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF6A0DAD)),
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Color(0xFF6A0DAD)),
                         ),
                       ],
                     ),
@@ -770,7 +770,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                     const SizedBox(width: 12),
                     Text(
                       '$amount${CurrencyUtils.getCurrencySymbol()}',
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFFFB335B)),
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w600, color: Color(0xFFFB335B)),
                     ),
                   ],
                 ),
@@ -887,7 +887,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFB335B)),
-            child: const Text('Evet, Yola Çıkıyorum', 
+            child: Text('staff.yes_on_my_way'.tr(), 
                               style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -930,7 +930,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                 
                 // Option 1: Address/Customer issue
                 RadioListTile<String>(
-                  title: const Text('Adres doğru değil / Müşteriye ulaşılamadı', 
+                  title: Text('staff.address_wrong_unreachable'.tr(), 
                     style: TextStyle(fontSize: 14)),
                   value: 'address_issue',
                   groupValue: selectedReason,
@@ -987,7 +987,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: selectedReason != null ? Colors.red : Colors.grey,
               ),
-              child: const Text('Evet, İptal Et', 
+              child: Text('common.yes_cancel'.tr(), 
                                 style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -1058,7 +1058,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
                   'Harita Uygulaması Seçin',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
               // Apple Maps
@@ -1205,7 +1205,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                 child: Text(
                                   isPreparing ? '👨‍🍳 Hazırlanıyor - Bekle...' : '⏳ Sipariş Bekleniyor',
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     fontSize: 14,
                                     color: theme.colorScheme.onSurface,
                                   ),
@@ -1233,7 +1233,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                       'Sipariş #${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
                                       style: TextStyle(
                                         fontSize: 17,
-                                        fontWeight: FontWeight.bold,
+                                        fontWeight: FontWeight.w600,
                                         color: theme.colorScheme.onSurface,
                                       ),
                                     ),
@@ -1272,7 +1272,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                     children: [
                                       Text('👤 Müşteri', style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface.withValues(alpha: 0.6))),
                                       const SizedBox(height: 4),
-                                      Text(order.userPhone, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: theme.colorScheme.onSurface)),
+                                      Text(order.userPhone, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: theme.colorScheme.onSurface)),
                                       const SizedBox(height: 6),
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -1282,7 +1282,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                           children: [
                                             Icon(Icons.phone, color: Colors.white, size: 14),
                                             SizedBox(width: 4),
-                                            Text('ARA', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                            Text('ARA', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
                                           ],
                                         ),
                                       ),
@@ -1323,7 +1323,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                           children: [
                                             Icon(Icons.navigation, color: Colors.white, size: 14),
                                             SizedBox(width: 4),
-                                            Text('GİT', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                            Text('GİT', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
                                           ],
                                         ),
                                       ),
@@ -1369,7 +1369,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                           : '💵 KAPIDA NAKİT',
                                       style: TextStyle(
                                         fontSize: 13, 
-                                        fontWeight: FontWeight.bold, 
+                                        fontWeight: FontWeight.w600, 
                                         color: isCardOnDelivery ? const Color(0xFF6A0DAD)
                                             : isNfcCollected ? Colors.green
                                             : isPaid ? Colors.green 
@@ -1390,7 +1390,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                 '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                                 style: TextStyle(
                                   fontSize: 22, 
-                                  fontWeight: FontWeight.bold, 
+                                  fontWeight: FontWeight.w600, 
                                   color: isCardOnDelivery ? const Color(0xFF6A0DAD)
                                       : isNfcCollected ? Colors.green
                                       : isPaid ? Colors.green 
@@ -1442,7 +1442,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                             padding: const EdgeInsets.only(bottom: 4),
                             child: Row(
                               children: [
-                                Text('${item.quantity}x', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber)),
+                                Text('${item.quantity}x', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.amber)),
                                 const SizedBox(width: 8),
                                 Expanded(child: Text(item.name, style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurface))),
                                 Text('${(item.price * item.quantity).toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurface.withValues(alpha: 0.7))),
@@ -1491,8 +1491,8 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                 });
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('✅ Kart ödemesi alındı!'),
+                                    SnackBar(
+                                      content: Text('staff.card_payment_received'.tr()),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -1502,7 +1502,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                             icon: const Icon(Icons.contactless, color: Colors.white, size: 24),
                             label: const Text(
                               '📱 Kart ile Tahsil Et',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF6A0DAD),
@@ -1522,7 +1522,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                               icon: const Icon(Icons.check_circle, color: Colors.white, size: 24),
                               label: const Text(
                                 '✅ TESLİMAT TAMAMLANDI',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
@@ -1535,7 +1535,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                 icon: const Icon(Icons.motorcycle, color: Colors.white, size: 24),
                                 label: const Text(
                                   '🚗 YOL AL',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16),
                                 ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFFFB335B),
@@ -1550,7 +1550,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                                 child: Center(
                                   child: Text(
                                     isPreparing ? '🍳 Hazırlanıyor...' : '⏳ Sipariş Bekleniyor...',
-                                    style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 15),
+                                    style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontWeight: FontWeight.w600, fontSize: 15),
                                   ),
                                 ),
                               ),
@@ -1597,7 +1597,7 @@ class _DeliveryTypeSheet extends StatelessWidget {
           const SizedBox(height: 20),
           Text(
             isCash ? '📦 Adım 2: Teslimat Türü' : '📦 Teslimat Türü',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text(
@@ -1690,7 +1690,7 @@ class _DeliveryTypeSheet extends StatelessWidget {
                       title,
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: color,
                       ),
                     ),

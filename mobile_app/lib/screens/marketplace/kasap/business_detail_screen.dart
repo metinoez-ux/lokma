@@ -490,7 +490,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         businessName,
                         style: TextStyle(
                           fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: textPrimary,
                           letterSpacing: -0.3,
                         ),
@@ -585,7 +585,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             'marketplace.pre_order_active'.tr(),
                             style: const TextStyle(
                               color: Colors.green,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               fontSize: 14,
                             ),
                           ),
@@ -605,7 +605,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 52),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   child: Text(
                     preOrderEnabled
@@ -715,7 +715,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               margin: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
             ),
-            Text('marketplace.weekly_hours'.tr(), style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('marketplace.weekly_hours'.tr(), style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w600)),
             const SizedBox(height: 24),
             ..._buildHoursListThemed(isDark),
             const SizedBox(height: 24),
@@ -775,7 +775,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                          children: [
                            Row(
                              children: [
-                               Text('$rating', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 42, fontWeight: FontWeight.bold)),
+                               Text('$rating', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 42, fontWeight: FontWeight.w600)),
                                const SizedBox(width: 8),
                                Column(
                                  crossAxisAlignment: CrossAxisAlignment.start,
@@ -803,7 +803,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Yorumlar', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('Yorumlar', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600)),
                       PopupMenuButton<String>(
                         initialValue: selectedSort,
                         color: const Color(0xFF2C2C2C),
@@ -812,7 +812,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           children: [
                             Icon(Icons.sort, color: _getAccent(context), size: 16),
                             const SizedBox(width: 8),
-                            Text(selectedSort, style: TextStyle(color: _getAccent(context), fontSize: 13, fontWeight: FontWeight.bold)),
+                            Text(selectedSort, style: TextStyle(color: _getAccent(context), fontSize: 13, fontWeight: FontWeight.w600)),
                           ],
                         ),
                         itemBuilder: (context) => sortOptions.map((opt) => PopupMenuItem(
@@ -850,7 +850,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(review['author_name'] ?? 'Misafir', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.bold)),
+                                        Text(review['author_name'] ?? 'Misafir', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600)),
                                         const SizedBox(height: 2),
                                         Text(review['relative_time_description'] ?? '', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
                                       ],
@@ -861,7 +861,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
                                     child: Row(
                                       children: [
-                                        Text('${review['rating']}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 12)),
+                                        Text('${review['rating']}', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.w600, fontSize: 12)),
                                         const SizedBox(width: 4),
                                         const Icon(Icons.star, color: Colors.amber, size: 10),
                                       ],
@@ -930,7 +930,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             // Title
             Padding(
               padding: const EdgeInsets.only(left: 20, bottom: 12),
-              child: Text('Kategoriler', style: TextStyle(color: textPrimary, fontSize: 22, fontWeight: FontWeight.bold)),
+              child: Text('Kategoriler', style: TextStyle(color: textPrimary, fontSize: 22, fontWeight: FontWeight.w600)),
             ),
             // Category list
             Expanded(
@@ -973,7 +973,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   catName,
                                   style: TextStyle(
                                     color: textPrimary,
-                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                                     fontSize: 17,
                                   ),
                                 ),
@@ -1035,12 +1035,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       margin: EdgeInsets.only(bottom: 20),
                       decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                     ),
-                    Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.bold))),
+                    Image.asset('assets/images/tuna_logo.png', height: 60, errorBuilder: (_,__,___) => Text('TUNA', style: TextStyle(fontFamily: 'Cursive', fontSize: 40, color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600))),
                     SizedBox(height: 16),
                     Text(
                       'Avrupa\'nın En Güvenilir Helal Et Markası',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -1070,7 +1070,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      SizedBox(height: 32),
                      
                      // Standards List
-                     Text('Tedarik Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold)),
+                     Text('Tedarik Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600)),
                      const SizedBox(height: 16),
                      _buildCheckItem('marketplace.helal_kesim'.tr(), 'marketplace.helal_kesim_desc'.tr()),
                      _buildCheckItem('marketplace.elle_kesim'.tr(), 'marketplace.elle_kesim_desc'.tr()),
@@ -1094,7 +1094,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                              children: [
                                Icon(Icons.info_outline, color: Colors.amber[800], size: 20),
                                const SizedBox(width: 8),
-                               Text('Kuru Yolum Nedir?', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.bold)),
+                               Text('Kuru Yolum Nedir?', style: TextStyle(color: Colors.amber[800], fontWeight: FontWeight.w600)),
                              ],
                            ),
                            const SizedBox(height: 8),
@@ -1107,7 +1107,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      ),
                      
                      SizedBox(height: 24),
-                     Text('Üretim Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.bold)),
+                     Text('Üretim Standartları', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 18, fontWeight: FontWeight.w600)),
                      const SizedBox(height: 16),
                      _buildCheckItem('marketplace.yuksek_et_orani'.tr(), 'marketplace.yuksek_et_orani_desc'.tr()),
                      _buildCheckItem('E621 İçermez', 'Glutamat/Çin tuzu yok'),
@@ -1136,7 +1136,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           child: Icon(icon, color: color, size: 28),
         ),
         const SizedBox(height: 8),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -1153,7 +1153,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.bold, fontSize: 15)),
+                Text(title, style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600, fontSize: 15)),
                 Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 13)),
               ],
             ),
@@ -1198,7 +1198,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       // Title
                       Text(
                         _butcherDoc?['companyName'] ?? 'İşletme Bilgileri',
-                        style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w600),
                       ),
                       const SizedBox(height: 4),
                       
@@ -1222,7 +1222,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 children: [
                                   Text(
                                    _getBrandLabel(_butcherDoc?['brand']),
-                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 12, fontWeight: FontWeight.bold),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 12, fontWeight: FontWeight.w600),
                                   ),
                                   const SizedBox(width: 4),
                                   const Icon(Icons.info, color: Colors.white70, size: 14),
@@ -1250,7 +1250,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       _buildInfoRow(Icons.phone, 'Telefon', _butcherDoc?['shopPhone']?.toString() ?? 'Belirtilmemiş', isAction: true, onTap: _callStore, isDark: isDark),
                       
                       const SizedBox(height: 12),
-                      Text('Çalışma Saatleri', style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.bold)),
+                      Text('Çalışma Saatleri', style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       
                       // Hours List - wrapped in try-catch builder
@@ -1490,8 +1490,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(dayName, style: TextStyle(color: dayColor, fontSize: 14, fontWeight: isToday ? FontWeight.bold : FontWeight.w500)),
-              Text(content, style: TextStyle(color: hoursColor, fontSize: 14, fontWeight: isToday ? FontWeight.bold : FontWeight.w500)),
+              Text(dayName, style: TextStyle(color: dayColor, fontSize: 14, fontWeight: isToday ? FontWeight.w600 : FontWeight.w500)),
+              Text(content, style: TextStyle(color: hoursColor, fontSize: 14, fontWeight: isToday ? FontWeight.w600 : FontWeight.w500)),
             ],
           ),
         );
@@ -1811,7 +1811,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   style: TextStyle(
                                     color: Theme.of(context).colorScheme.surface,
                                     fontSize: 12,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
@@ -1865,7 +1865,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                style: TextStyle(
                                  color: Theme.of(context).colorScheme.onSurface,
                                  fontSize: 24,
-                                 fontWeight: FontWeight.w800,
+                                 fontWeight: FontWeight.w600,
                                  letterSpacing: -0.5,
                                ),
                                maxLines: 2,
@@ -2026,7 +2026,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                       color: isSelected 
                                                         ? (isDark ? Colors.black : Colors.white) 
                                                         : (isDark ? Colors.white70 : Colors.black54),
-                                                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                                                       fontSize: 13,
                                                     ),
                                                   ),
@@ -2046,7 +2046,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                         '$catCartCount',
                                                         style: TextStyle(
                                                           fontSize: 11,
-                                                          fontWeight: FontWeight.bold,
+                                                          fontWeight: FontWeight.w600,
                                                           color: isSelected
                                                               ? (isDark ? Colors.white : Colors.black87)
                                                               : Colors.white,
@@ -2094,7 +2094,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   sliver: SliverToBoxAdapter(
                     child: Text(
                       'Arama Sonuçları (${searchResults.length})', 
-                      style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -2174,7 +2174,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               style: TextStyle(
                                 color: textPrimary,
                                 fontSize: 22,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 letterSpacing: -0.5,
                               ),
                             ),
@@ -2280,7 +2280,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
              crossAxisAlignment: CrossAxisAlignment.start,
              children: [
                Text('${cart.items.length} Ürün', style: TextStyle(color: subtitleColor, fontSize: 12)),
-               Text('${CurrencyUtils.getCurrencySymbol()}${cart.totalAmount.toStringAsFixed(2)}', style: TextStyle(color: priceColor, fontSize: 18, fontWeight: FontWeight.bold)),
+               Text('${CurrencyUtils.getCurrencySymbol()}${cart.totalAmount.toStringAsFixed(2)}', style: TextStyle(color: priceColor, fontSize: 18, fontWeight: FontWeight.w600)),
              ],
            ),
            const Spacer(),
@@ -2298,7 +2298,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
              ),
              child: Row(
                children: [
-                 Text(_isMasaMode ? 'Siparişi Gönder' : 'Sepete Git', style: const TextStyle(fontWeight: FontWeight.bold)),
+                 Text(_isMasaMode ? 'Siparişi Gönder' : 'Sepete Git', style: const TextStyle(fontWeight: FontWeight.w600)),
                  const SizedBox(width: 8),
                  Icon(_isMasaMode ? Icons.restaurant : Icons.arrow_forward, size: 16),
                ],
@@ -2410,7 +2410,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             product.name,
                             style: TextStyle(
                               fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: textPrimary,
                             ),
                           ),
@@ -2488,12 +2488,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               // Product name
-                                              Text(product.name, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textPrimary)),
+                                              Text(product.name, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary)),
                                               const SizedBox(height: 24),
                                               // Allergene Section
                                               Row(
                                                 children: [
-                                                  Text('marketplace.allergens'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary)),
+                                                  Text('marketplace.allergens'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary)),
                                                   const SizedBox(width: 8),
                                                   Container(
                                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -2528,7 +2528,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               // Zusatzstoffe Section
                                               Row(
                                                 children: [
-                                                  Text('marketplace.additives'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textPrimary)),
+                                                  Text('marketplace.additives'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textPrimary)),
                                                   const SizedBox(width: 8),
                                                   Container(
                                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -2707,7 +2707,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                       : selectedQty.toStringAsFixed(0),
                                   style: TextStyle(
                                     fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: textPrimary,
                                   ),
                                 ),
@@ -2761,7 +2761,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               ),
                               child: Text(
                                 '${isEditing ? 'marketplace.update_item'.tr() : 'marketplace.add_to_cart'.tr()}  ${CurrencyUtils.getCurrencySymbol()}${totalPrice.toStringAsFixed(2)}',
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ),
@@ -2844,7 +2844,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           style: TextStyle(
                             color: isAvailable ? textPrimary : textSecondary,
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             height: 1.2,
                           ),
                           maxLines: 2,
@@ -2893,7 +2893,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           style: TextStyle(
                             color: isAvailable ? textPrimary : textSecondary,
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         
@@ -2970,7 +2970,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               '${ci.quantity.toInt()}',
                                               style: TextStyle(
                                                 fontSize: 10,
-                                                fontWeight: FontWeight.bold,
+                                                fontWeight: FontWeight.w600,
                                                 color: Theme.of(context).colorScheme.surface,
                                               ),
                                             ),
@@ -3082,7 +3082,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   style: TextStyle(
                                     color: isDark ? Colors.black : Colors.white,
                                     fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               )
@@ -3269,7 +3269,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               style: const TextStyle(
                                 color: Colors.white, 
                                 fontSize: 11, 
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 letterSpacing: 0.3,
                               ),
                             ),
@@ -3293,7 +3293,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         style: TextStyle(
                           color: textPrimary,
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           height: 1.2,
                         ),
                         maxLines: 2,
@@ -3308,7 +3308,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             style: TextStyle(
                               color: accent,
                               fontSize: 15,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(width: 4),
@@ -3376,7 +3376,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 style: TextStyle(
                                   color: (inCart || (selectedQty > defaultQty)) ? textPrimary : textSecondary.withValues(alpha: 0.3),
                                   fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
@@ -3390,7 +3390,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 style: TextStyle(
                                   color: textPrimary,
                                   fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                               Text(
@@ -3443,7 +3443,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 style: TextStyle(
                                   color: accent,
                                   fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
@@ -3508,7 +3508,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
@@ -3913,7 +3913,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                       style: TextStyle(
                         color: textPrimary,
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],

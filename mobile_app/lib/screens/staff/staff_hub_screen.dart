@@ -228,7 +228,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       children: [
                         const Text(
                           'Görev Seçimi',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -329,7 +329,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                 '$tableNum',
                                                 style: TextStyle(
                                                   fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
+                                                  fontWeight: FontWeight.w600,
                                                   color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
                                                 ),
                                               ),
@@ -621,7 +621,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
             const SizedBox(height: 16),
             Text(
               '$label Duraklat',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             Text(
@@ -648,7 +648,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     ),
                     child: Text(
                       d['label'] as String,
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                     ),
                   ),
                 );
@@ -700,7 +700,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                   const SizedBox(width: 6),
                   const Text(
                     'Kurye',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                   if (_deliveryPaused && _deliveryCountdown.isNotEmpty) ...[
                     const SizedBox(width: 8),
@@ -714,7 +714,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         _deliveryCountdown,
                         style: const TextStyle(
                           color: Colors.white, fontSize: 12,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                           fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
@@ -766,7 +766,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                   const SizedBox(width: 6),
                   const Text(
                     'Gel-Al',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                   if (_pickupPaused && _pickupCountdown.isNotEmpty) ...[
                     const SizedBox(width: 8),
@@ -780,7 +780,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         _pickupCountdown,
                         style: const TextStyle(
                           color: Colors.white, fontSize: 12,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                           fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
@@ -890,7 +890,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       children: [
                         const Text(
                           'Masa Seçimi',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -969,7 +969,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                   '$tableNum',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                     color: isSelected
                                         ? Colors.white
                                         : (isDark ? Colors.white70 : Colors.black87),
@@ -1128,7 +1128,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         actions: [
           FilledButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Tamam'),
+            child: Text('common.ok'.tr()),
           ),
         ],
       ),
@@ -1211,7 +1211,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         const SizedBox(width: 10),
                         const Text(
                           'Çalışma Saatlerim',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -1402,7 +1402,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               dateStr,
                               style: TextStyle(
                                 fontSize: 14,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                                 color: isDark ? Colors.white : Colors.black87,
                               ),
                             ),
@@ -1422,7 +1422,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                 '$firstStartStr – $lastEndStr',
                                 style: TextStyle(
                                   fontSize: 15,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w600,
                                   color: isDark ? Colors.white : Colors.black87,
                                 ),
                               ),
@@ -1508,7 +1508,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                 const SizedBox(width: 8),
                                 Text(
                                   'Mola',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.amber[700]),
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.amber[700]),
                                 ),
                               ],
                             ),
@@ -1829,7 +1829,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           children: [
             Text(
               _staffName.isNotEmpty ? _staffName : 'Personel Girişi',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17),
             ),
             if (_businessName.isNotEmpty)
               Text(
@@ -1859,7 +1859,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
               child: FilledButton.icon(
                 onPressed: _businessId != null ? _handleStartShift : null,
                 icon: const Icon(Icons.play_arrow, size: 20),
-                label: const Text('BAŞLA', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                label: const Text('BAŞLA', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF4CAF50),
                   foregroundColor: Colors.white,
@@ -1902,7 +1902,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     _formatElapsed(_shiftElapsed),
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontFeatures: const [FontFeature.tabularFigures()],
                       color: _shiftService.shiftStatus == 'paused'
                           ? Colors.amber
@@ -2001,7 +2001,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         ),
                                         child: const Text(
                                           'Mola',
-                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.amber),
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.amber),
                                         ),
                                       ),
                                   ],
@@ -2041,7 +2041,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           _formatElapsed(Duration(minutes: _pastShiftMinutes) + _shiftElapsed),
                                           style: TextStyle(
                                             fontSize: 14,
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight: FontWeight.w600,
                                             color: accentColor,
                                             fontFeatures: const [FontFeature.tabularFigures()],
                                           ),
@@ -2282,7 +2282,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
           ),
         ],
       ),
@@ -2374,7 +2374,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     'Kurye Siparişleri',
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -2449,7 +2449,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
         label,
         style: TextStyle(
           fontSize: 11,
-          fontWeight: active ? FontWeight.bold : FontWeight.w500,
+          fontWeight: active ? FontWeight.w600 : FontWeight.w500,
           color: active ? color : Colors.grey[600],
         ),
       ),
@@ -2517,7 +2517,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       title,
                       style: const TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     SizedBox(height: 2),
@@ -2543,7 +2543,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                     '$badgeCount',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.surface,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
                   ),
@@ -2692,7 +2692,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                           'Benim Masalarım',
                           style: TextStyle(
                             color: isDark ? Colors.amber.shade200 : Colors.amber.shade800,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 15,
                           ),
                         ),
@@ -2708,7 +2708,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             style: TextStyle(
                               color: Colors.amber.shade400,
                               fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -2756,7 +2756,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                               style: TextStyle(
                                 color: Colors.grey.shade500,
                                 fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -2804,7 +2804,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                 section,
                                 style: TextStyle(
                                   color: isDark ? Colors.amber.shade200 : Colors.amber.shade800,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   fontSize: 14,
                                 ),
                               ),
@@ -2992,7 +2992,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         Expanded(
                           child: Text(
                             'Masa $tableNum — Siparişler',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                           ),
                         ),
                         // Add new order button
@@ -3115,7 +3115,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         '#$orderId',
                                         style: TextStyle(
                                           fontSize: 14,
-                                          fontWeight: FontWeight.w800,
+                                          fontWeight: FontWeight.w600,
                                           color: brandColor,
                                         ),
                                       ),
@@ -3130,7 +3130,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           statusText,
                                           style: TextStyle(
                                             fontSize: 11,
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight: FontWeight.w600,
                                             color: statusColor,
                                           ),
                                         ),
@@ -3168,7 +3168,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         '${CurrencyUtils.getCurrencySymbol()}${total.toStringAsFixed(2)}',
                                         style: TextStyle(
                                           fontSize: 16,
-                                          fontWeight: FontWeight.w800,
+                                          fontWeight: FontWeight.w600,
                                           color: isDark ? Colors.white : Colors.black87,
                                         ),
                                       ),
@@ -3189,7 +3189,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           '🍽️ Servis Ettim',
                                           style: TextStyle(
                                             color: Theme.of(context).colorScheme.surface,
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight: FontWeight.w600,
                                             fontSize: 14,
                                           ),
                                         ),
@@ -3229,7 +3229,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         Expanded(
                                           child: FilledButton.icon(
                                             icon: const Icon(Icons.money, size: 16),
-                                            label: const Text('💵 Nakit', style: TextStyle(fontWeight: FontWeight.w700)),
+                                            label: const Text('💵 Nakit', style: TextStyle(fontWeight: FontWeight.w600)),
                                             style: FilledButton.styleFrom(
                                               backgroundColor: Colors.green.shade700,
                                               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -3267,7 +3267,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         Expanded(
                                           child: FilledButton.icon(
                                             icon: const Icon(Icons.credit_card, size: 16),
-                                            label: const Text('💳 Kart', style: TextStyle(fontWeight: FontWeight.w700)),
+                                            label: const Text('💳 Kart', style: TextStyle(fontWeight: FontWeight.w600)),
                                             style: FilledButton.styleFrom(
                                               backgroundColor: Colors.blue.shade700,
                                               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -3327,7 +3327,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                               '✅ Ödendi${data['paymentMethod'] == 'card' ? ' (Kart)' : data['paymentMethod'] == 'cash' ? ' (Nakit)' : ''}',
                                               style: const TextStyle(
                                                 color: Colors.green,
-                                                fontWeight: FontWeight.bold,
+                                                fontWeight: FontWeight.w600,
                                                 fontSize: 12,
                                               ),
                                             ),
@@ -3417,7 +3417,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         children: [
                           Text(
                             'Masa $tableNum',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                           ),
                           Text(
                             'Boş masa',
@@ -3438,7 +3438,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                       context.push('/waiter-order?businessId=$_businessId&businessName=${Uri.encodeComponent(_businessName)}&tableNumber=$tableNum');
                     },
                     icon: const Icon(Icons.receipt_long, size: 20),
-                    label: const Text('Sipariş Başlat', style: TextStyle(fontWeight: FontWeight.bold)),
+                    label: const Text('Sipariş Başlat', style: TextStyle(fontWeight: FontWeight.w600)),
                     style: FilledButton.styleFrom(
                       backgroundColor: brandColor,
                       foregroundColor: Colors.white,
@@ -3656,7 +3656,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             '$tableNum',
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w600,
                               color: textColor,
                             ),
                           ),
@@ -3810,7 +3810,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                           '$tableNum',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w600,
                             color: textColor,
                           ),
                         ),
@@ -3865,7 +3865,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           child: Center(
             child: Text(
               '$tableNum',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: textColor),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: textColor),
             ),
           ),
         ),
@@ -4002,7 +4002,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           '#$displayId',
                                           style: TextStyle(
                                             fontSize: 12,
-                                            fontWeight: FontWeight.w800,
+                                            fontWeight: FontWeight.w600,
                                             color: Theme.of(context).colorScheme.surface,
                                           ),
                                         ),
@@ -4025,7 +4025,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                             : 'Hazır',
                                           style: TextStyle(
                                             fontSize: 10,
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight: FontWeight.w600,
                                             color: order.status == OrderStatus.served
                                                 ? Colors.teal
                                                 : order.status == OrderStatus.delivered
@@ -4048,7 +4048,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           '${item.quantity == item.quantity.roundToDouble() ? item.quantity.toInt() : item.quantity}x',
                                           style: TextStyle(
                                             fontSize: 13,
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight: FontWeight.w600,
                                             color: Colors.amber.shade700,
                                           ),
                                         ),
@@ -4080,7 +4080,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
                                         style: TextStyle(
                                           fontSize: 14,
-                                          fontWeight: FontWeight.w800,
+                                          fontWeight: FontWeight.w600,
                                           color: textColor,
                                         ),
                                       ),
@@ -4138,7 +4138,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                     icon: const Icon(Icons.payments, size: 20),
                                     label: Text(
                                       isProcessing ? 'İşleniyor...' : '💵 Nakit Öde',
-                                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                                     ),
                                     style: FilledButton.styleFrom(
                                       backgroundColor: Colors.green.shade700,
@@ -4184,7 +4184,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                     icon: const Icon(Icons.credit_card, size: 20),
                                     label: Text(
                                       isProcessing ? 'İşleniyor...' : '💳 Kart Öde',
-                                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                                     ),
                                     style: FilledButton.styleFrom(
                                       backgroundColor: Colors.blue.shade700,
@@ -4285,7 +4285,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             children: [
                               Text(
                                 'Masa $tableNumber',
-                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                               ),
                               Text(
                                 'Garson: ${session.waiterName} • PIN: ${session.pin}',
@@ -4362,7 +4362,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           allPaid ? 'Hesap Ödendi ✓' : 'Hesap Açık',
                                           style: TextStyle(
                                             fontSize: 16,
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight: FontWeight.w600,
                                             color: allPaid ? Colors.green.shade800 : brandColor,
                                           ),
                                         ),
@@ -4500,7 +4500,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                       children: [
                                         Text(
                                           '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
-                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                                         ),
                                         const SizedBox(width: 8),
                                         if (sc != null)
@@ -4523,7 +4523,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                         const SizedBox(width: 6),
                                         Text(
                                           '${CurrencyUtils.getCurrencySymbol()}${order.totalAmount.toStringAsFixed(2)}',
-                                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: brandColor),
+                                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: brandColor),
                                         ),
                                       ],
                                     ),
@@ -4543,7 +4543,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                           width: double.infinity,
                                           child: FilledButton.icon(
                                             icon: const Icon(Icons.restaurant, size: 16),
-                                            label: const Text('🍽️ Servis Et', style: TextStyle(fontWeight: FontWeight.w700)),
+                                            label: const Text('🍽️ Servis Et', style: TextStyle(fontWeight: FontWeight.w600)),
                                             style: FilledButton.styleFrom(
                                               backgroundColor: Colors.teal.shade600,
                                               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -4589,7 +4589,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                             Expanded(
                                               child: FilledButton.icon(
                                                 icon: const Icon(Icons.money, size: 16),
-                                                label: const Text('💵 Nakit', style: TextStyle(fontWeight: FontWeight.w700)),
+                                                label: const Text('💵 Nakit', style: TextStyle(fontWeight: FontWeight.w600)),
                                                 style: FilledButton.styleFrom(
                                                   backgroundColor: Colors.green.shade700,
                                                   padding: const EdgeInsets.symmetric(vertical: 10),
@@ -4627,7 +4627,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                             Expanded(
                                               child: FilledButton.icon(
                                                 icon: const Icon(Icons.credit_card, size: 16),
-                                                label: const Text('💳 Kart', style: TextStyle(fontWeight: FontWeight.w700)),
+                                                label: const Text('💳 Kart', style: TextStyle(fontWeight: FontWeight.w600)),
                                                 style: FilledButton.styleFrom(
                                                   backgroundColor: Colors.blue.shade700,
                                                   padding: const EdgeInsets.symmetric(vertical: 10),
@@ -4707,7 +4707,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                                                   '✅ Ödendi${order.paymentMethod == 'card' ? ' (Kart)' : order.paymentMethod == 'cash' ? ' (Nakit)' : ''}',
                                                   style: const TextStyle(
                                                     color: Colors.green,
-                                                    fontWeight: FontWeight.bold,
+                                                    fontWeight: FontWeight.w600,
                                                     fontSize: 12,
                                                   ),
                                                 ),
@@ -4740,7 +4740,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                         width: double.infinity,
                         child: FilledButton.icon(
                           icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Sipariş Ekle', style: TextStyle(fontWeight: FontWeight.w700)),
+                          label: const Text('Sipariş Ekle', style: TextStyle(fontWeight: FontWeight.w600)),
                           style: FilledButton.styleFrom(
                             backgroundColor: brandColor,
                             padding: const EdgeInsets.symmetric(vertical: 14),

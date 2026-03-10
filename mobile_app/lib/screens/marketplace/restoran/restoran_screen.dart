@@ -242,11 +242,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                SizedBox(width: 8),
-                Text('Zaman Aşımı Uyarısı'),
+                const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                const SizedBox(width: 8),
+                Text('marketplace.session_timeout_warning'.tr()),
               ],
             ),
             content: const Text(
@@ -254,7 +254,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Tamam'),
+                child: Text('common.ok'.tr()),
               ),
             ],
           ),
@@ -710,7 +710,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       tr('home.table_reservation'),
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         color: Theme.of(context).brightness == Brightness.dark
                             ? Colors.white
                             : Colors.black87,
@@ -914,7 +914,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 9,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
@@ -2458,7 +2458,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
-                                        fontWeight: FontWeight.w800,
+                                        fontWeight: FontWeight.w600,
                                         letterSpacing: 1.5,
                                       ),
                                     ),
@@ -3575,7 +3575,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   maxLength: 4,
                   style: TextStyle(
                     fontSize: 28,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 12,
                     color: isDark ? Colors.white : Colors.black87,
                   ),
@@ -3675,7 +3675,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     }
                   },
                   icon: const Icon(Icons.group_add),
-                  label: const Text('Gruba Katıl',
+                  label: Text('marketplace.join_group'.tr(),
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   style: FilledButton.styleFrom(
@@ -3708,7 +3708,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: Text('Tek Kişi Sipariş',
+                  child: Text('marketplace.single_order'.tr(),
                       style: TextStyle(fontSize: 16, color: Colors.grey[600])),
                 ),
               ),
@@ -3727,7 +3727,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(confirmCtx),
-                          child: const Text('Vazgeç',
+                          child: Text('common.give_up'.tr(),
                               style: TextStyle(color: Colors.grey)),
                         ),
                         TextButton(
@@ -3763,7 +3763,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               }
                             }
                           },
-                          child: const Text('Evet, Oturumu Kapat',
+                          child: Text('marketplace.yes_close_session'.tr(),
                               style: TextStyle(
                                   color: Colors.red,
                                   fontWeight: FontWeight.w600)),
@@ -3843,7 +3843,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       tableNum, businessId, businessName);
                 },
                 icon: const Icon(Icons.groups),
-                label: const Text('Grup Siparişi Başlat',
+                label: Text('marketplace.start_group_order'.tr(),
                     style:
                         TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 style: FilledButton.styleFrom(
@@ -4006,7 +4006,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 child: FilledButton.icon(
                   onPressed: () => Navigator.pop(ctx),
                   icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('Tamam, Anladım',
+                  label: Text('common.ok_got_it'.tr(),
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   style: FilledButton.styleFrom(

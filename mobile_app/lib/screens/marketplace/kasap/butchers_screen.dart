@@ -316,7 +316,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -486,7 +486,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                           _isPickup ? 'GEL AL' : 'KURYE',
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight: FontWeight.w600,
                                             fontSize: 14,
                                             letterSpacing: 1.2,
                                           ),
@@ -510,7 +510,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                         children: [
                                           Icon(Icons.store_mall_directory, color: Colors.white, size: 16),
                                           const SizedBox(width: 6),
-                                          const Text('GEL AL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                                          const Text('GEL AL', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
                                         ],
                                       ),
                                     ),
@@ -526,7 +526,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                         children: [
                                           Image.asset('assets/images/courier_icon.png', color: Colors.white, width: 16, height: 16),
                                           const SizedBox(width: 6),
-                                          const Text('KURYE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                                          const Text('KURYE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
                                         ],
                                       ),
                                     ),
@@ -655,7 +655,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                     '${_maxDistance.toInt()} km',
                                     style: const TextStyle(
                                       color: Colors.white,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -868,7 +868,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                          if (type == 'header') {
                            return Padding(
                              padding: const EdgeInsets.only(top: 16, bottom: 12),
-                             child: Text(item['text'], style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                             child: Text(item['text'], style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
                            );
                          }
                          if (type == 'header_small') {
@@ -877,7 +877,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                              child: Row(
                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                children: [
-                                 Text(item['text'], style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                 Text(item['text'], style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
                                  Text('${item['count']} sonuç', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
                                ],
                              ),
@@ -890,7 +890,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                                 children: [
                                   const Icon(Icons.travel_explore, color: accent, size: 18),
                                   const SizedBox(width: 8),
-                                  Text(item['text'], style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
+                                  Text(item['text'], style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600)),
                                   const SizedBox(width: 8),
                                   Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
                                 ],
@@ -1058,7 +1058,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -1084,7 +1084,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16, // Larger Title
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -1099,7 +1099,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                           '${butcher['rating']} (${butcher['reviews']})',
                           style: const TextStyle(
                             color: Colors.amber, 
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 13
                           ),
                         ),
@@ -1137,7 +1137,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -1170,7 +1170,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                         style: const TextStyle(
                           color: Color(0xFFFB335B),
                           fontSize: 13,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const Spacer(),
@@ -1267,7 +1267,7 @@ class _ButcherBannerCarouselState extends State<_ButcherBannerCarousel> {
                           banner['title'],
                           style: const TextStyle(
                             color: Colors.white, // White Title
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                             fontSize: 18,
                           ),
                         ),

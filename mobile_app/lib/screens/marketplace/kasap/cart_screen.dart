@@ -1963,7 +1963,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.bold,
                                 color: const Color(0xFF3E2723),
                               ),
                             ),
@@ -1975,7 +1975,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.bold,
                                 color: const Color(0xFF3E2723),
                               ),
                               textAlign: TextAlign.center,
@@ -1988,7 +1988,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.bold,
                                 color: const Color(0xFF3E2723),
                               ),
                               textAlign: TextAlign.right,
@@ -2057,7 +2057,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             style: TextStyle(
                               fontFamily: 'Courier',
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
                               color: const Color(0xFF3E2723),
                             ),
                           ),
@@ -2066,7 +2066,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             style: TextStyle(
                               fontFamily: 'Courier',
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
                               color: const Color(0xFF3E2723),
                             ),
                           ),
@@ -2082,7 +2082,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         style: TextStyle(
                           fontFamily: 'Courier',
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                           color: const Color(0xFF3E2723),
                           letterSpacing: 2,
                         ),
@@ -2169,7 +2169,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           style: TextStyle(
             fontFamily: 'Courier',
             fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
             color: const Color(0xFF3E2723),
           ),
         ),
@@ -4825,14 +4825,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   void _openPrivacyPolicy() {
     // TODO: Navigate to privacy policy page or open web URL
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Gizlilik Politikası yakında eklenecek')),
+      SnackBar(content: Text('cart.privacy_coming_soon'.tr())),
     );
   }
   
   void _openTermsOfUse() {
     // TODO: Navigate to terms of use page or open web URL
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Kullanım Koşulları yakında eklenecek')),
+      SnackBar(content: Text('cart.terms_coming_soon'.tr())),
     );
   }
   
@@ -5413,7 +5413,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             onPressed: () {
                               if (streetController.text.trim().isEmpty || cityController.text.trim().isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Lütfen sokak ve şehir bilgisi girin'), backgroundColor: Colors.red),
+                                  SnackBar(content: Text('cart.please_enter_street_city'.tr()), backgroundColor: Colors.red),
                                 );
                                 return;
                               }
@@ -5446,7 +5446,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             onPressed: () async {
                               if (streetController.text.trim().isEmpty || cityController.text.trim().isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Lütfen sokak ve şehir bilgisi girin'), backgroundColor: Colors.red),
+                                  SnackBar(content: Text('cart.please_enter_street_city'.tr()), backgroundColor: Colors.red),
                                 );
                                 return;
                               }
@@ -6175,7 +6175,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 dayLabels[index],
                                 style: TextStyle(
                                   fontSize: isSelected ? 18 : 15,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                                   color: isSelected
                                       ? Theme.of(context).colorScheme.onSurface
                                       : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
@@ -6560,7 +6560,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 dayLabels[index],
                                 style: TextStyle(
                                   fontSize: isSelected ? 18 : 15,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                                   color: isSelected
                                       ? Theme.of(context).colorScheme.onSurface
                                       : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
@@ -7448,7 +7448,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               ),
                               child: parent._isValidatingCoupon
                                   ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : const Text('Uygula'),
+                                  : Text('cart.apply'.tr()),
                             ),
                           ),
                       ],
@@ -7523,7 +7523,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                 if (parent._isPickUp && !parent._isDineIn && parent._selectedPickupSlot == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Lütfen bir teslim alma saati seçin'),
+                      content: Text('cart.please_select_pickup_time'.tr()),
                       backgroundColor: Colors.amber,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

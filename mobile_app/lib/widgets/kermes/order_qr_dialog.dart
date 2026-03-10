@@ -176,7 +176,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 22,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
@@ -185,7 +185,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               style: const TextStyle(
                 color: Colors.greenAccent,
                 fontSize: 28,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 24),
@@ -205,7 +205,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -241,7 +241,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 16),
@@ -271,7 +271,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                     style: const TextStyle(
                       color: Colors.greenAccent,
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
@@ -294,7 +294,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                   'Anladım',
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -447,7 +447,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 12),
@@ -495,7 +495,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                 ),
                 child: const Text(
                   'Tamam',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -530,7 +530,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 12),
@@ -560,7 +560,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                 ),
                 child: const Text(
                   'Anladım',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -678,7 +678,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 22,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   letterSpacing: 3,
                                 ),
                               ),
@@ -718,7 +718,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                               style: TextStyle(
                                 color: _isPaid ? Colors.green : Colors.amber,
                                 fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 letterSpacing: 0.5,
                               ),
                             ),
@@ -759,7 +759,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                         style: const TextStyle(
                           color: Colors.greenAccent,
                           fontSize: 24,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       
@@ -786,7 +786,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                               _isProcessingPayment ? 'İşleniyor...' : 'Online Öde',
                               style: const TextStyle(
                                 fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
@@ -812,7 +812,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                               '💵 Nakit Ödeme',
                               style: TextStyle(
                                 fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             style: OutlinedButton.styleFrom(
@@ -873,7 +873,7 @@ class _OrderQRDialogState extends State<OrderQRDialog> {
                                 style: TextStyle(
                                   color: Colors.red,
                                   fontSize: 15,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   letterSpacing: 0.5,
                                 ),
                               ),

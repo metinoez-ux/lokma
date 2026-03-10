@@ -185,7 +185,7 @@ class _LegalReportSheetState extends State<LegalReportSheet> {
                     'marketplace.report_legal_concerns'.tr(),
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       color: textPrimary,
                     ),
                   ),
@@ -426,7 +426,7 @@ class _LegalReportSheetState extends State<LegalReportSheet> {
           const SizedBox(height: 16),
           Text(
             'marketplace.legal_report_success_title'.tr(),
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: textPrimary),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: textPrimary),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),

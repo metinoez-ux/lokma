@@ -219,7 +219,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: -0.3,
                   ),
                 ),
@@ -365,7 +365,7 @@ class GlassBottomBar extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 9, // Badge font küçüldü
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),

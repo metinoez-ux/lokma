@@ -237,7 +237,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                         style: TextStyle(
                           color: isDark ? Colors.white : Colors.grey[800],
                           fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -294,7 +294,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -329,7 +329,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                               widget.event.title,
                               style: TextStyle(
                                 fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 height: 1.2,
                                 color: isDark ? Colors.white : textDark,
                               ),
@@ -499,7 +499,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -552,7 +552,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -568,7 +568,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                     style: TextStyle(
                       color: isDark ? Colors.white : textDark,
                       fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -632,7 +632,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                 style: TextStyle(
                   color: isDark ? Colors.white : textDark,
                   fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -650,7 +650,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                     style: TextStyle(
                       color: isDark ? Colors.white : textDark,
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
@@ -719,7 +719,7 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                   style: TextStyle(
                     color: isDark ? Colors.white : textDark,
                     fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 if (phone.isNotEmpty)

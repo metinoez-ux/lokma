@@ -51,7 +51,7 @@ class _DistanceSliderState extends State<DistanceSlider> {
           'Mesafe:',
           style: TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontSize: 16,
           ),
         ),
@@ -98,7 +98,7 @@ class _DistanceSliderState extends State<DistanceSlider> {
             '${_currentValue.toInt()} km',
             style: const TextStyle(
               color: Colors.white,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               fontSize: 13,
             ),
           ),

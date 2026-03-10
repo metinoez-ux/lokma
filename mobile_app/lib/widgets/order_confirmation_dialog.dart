@@ -61,7 +61,7 @@ class OrderConfirmationDialog extends StatelessWidget {
                 style: TextStyle(
                   color: textColor,
                   fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 8),
@@ -134,7 +134,7 @@ class OrderConfirmationDialog extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text('Tamam', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: const Text('Tamam', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                 ),
               ),
             ],

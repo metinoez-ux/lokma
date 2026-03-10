@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -104,7 +105,7 @@ class _TipBottomSheetState extends State<TipBottomSheet> {
         setState(() => _isSending = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Bahşiş gönderilemedi, lütfen tekrar deneyin'),
+            content: Text('orders.tip_send_failed'.tr()),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.red[400],
           ),
@@ -159,7 +160,7 @@ class _TipBottomSheetState extends State<TipBottomSheet> {
                 'Siparişin teslim edildi!',
                 style: TextStyle(
                   fontSize: 22,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                   color: textPrimary,
                 ),
               ),
@@ -227,7 +228,7 @@ class _TipBottomSheetState extends State<TipBottomSheet> {
                                 '${CurrencyUtils.getCurrencySymbol()}${amount.toStringAsFixed(2)}',
                                 style: TextStyle(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w600,
                                   color: isActive ? accent : textPrimary,
                                 ),
                               ),
@@ -272,7 +273,7 @@ class _TipBottomSheetState extends State<TipBottomSheet> {
                               CurrencyUtils.getCurrencySymbol(),
                               style: TextStyle(
                                 fontSize: 18,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w600,
                                 color: accent,
                               ),
                             ),

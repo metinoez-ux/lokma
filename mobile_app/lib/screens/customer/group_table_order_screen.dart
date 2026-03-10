@@ -174,7 +174,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               style: TextStyle(
                 color: isDark ? Colors.white : Colors.black87,
                 fontSize: 20,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 10),
@@ -894,7 +894,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               '${CurrencyUtils.getCurrencySymbol()}${myParticipant!.subtotal.toStringAsFixed(2)}',
               style: TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
                 color: _accent,
               ),
             ),
@@ -1143,7 +1143,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     '${CurrencyUtils.getCurrencySymbol()}${session.grandTotal.toStringAsFixed(2)}',
                     style: TextStyle(
                       fontSize: 22,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                       color: _accent,
                     ),
                   ),
@@ -1175,7 +1175,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                     Text(
                       '${CurrencyUtils.getCurrencySymbol()}${session.remainingBalance.toStringAsFixed(2)}',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         fontSize: 18,
                         color: _accent,
                       ),
@@ -1308,7 +1308,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
                       '${data['quantity']}×',
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         color: _accent,
                       ),
                     ),
@@ -1919,7 +1919,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               const SizedBox(height: 16),
               Text(
                 tr('customer.hesabimi_ode'),
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -2078,7 +2078,7 @@ class _GroupTableOrderScreenState extends ConsumerState<GroupTableOrderScreen>
               const SizedBox(height: 16),
               Text(
                 tr('customer.masa_hesabini_ode'),
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),

@@ -29,7 +29,7 @@ class GradientAppBar extends StatelessWidget implements PreferredSizeWidget {
             ? DefaultTextStyle(
                 style: const TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   fontSize: 20,
                 ),
                 child: title,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/tap_to_pay_service.dart';
@@ -217,7 +218,7 @@ class _TapToPaySheetState extends State<TapToPaySheet>
                 TapToPayService.disconnect();
                 Navigator.pop(context, TapToPayResult(success: false, wasCancelled: true));
               },
-              child: const Text('İptal'),
+              child: Text('common.cancel'.tr()),
             ),
 
           if (_state == _PayState.error)

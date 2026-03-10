@@ -1016,7 +1016,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                           _showOrderDetail(context, group.orderId, pendingTs?.toDate());
                         },
                       icon: const Icon(Icons.receipt_long_rounded, size: 16),
-                      label: const Text('Siparişi Göster'),
+                      label: Text('common.siparisi_goruntule'.tr()),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
                         backgroundColor: isDark
@@ -1099,7 +1099,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                           );
                         },
                         icon: const Icon(Icons.map_rounded, size: 16),
-                        label: const Text('Harita Aç'),
+                        label: Text('notification.open_map'.tr()),
                         style: TextButton.styleFrom(
                           foregroundColor: const Color(0xFF00BCD4),
                           backgroundColor: const Color(0xFF00BCD4).withValues(alpha: 0.12),
@@ -1172,7 +1172,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
 
       if (order == null) {
         ScaffoldMessenger.of(ctx).showSnackBar(
-          const SnackBar(content: Text('Sipariş bulunamadı')),
+          SnackBar(content: Text('common.no_results'.tr())),
         );
         return;
       }

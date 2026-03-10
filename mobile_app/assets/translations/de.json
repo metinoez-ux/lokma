@@ -135,7 +135,12 @@
     "error_loading_cart": "Fehler beim Laden des Warenkorbs",
     "no_products_added_yet": "Sie haben noch keine Produkte hinzugefügt",
     "total_products": "Gesamte Produkte",
-    "legal_disclaimer": "Mit Ihrer Bestellung akzeptieren Sie unsere Nutzungsbedingungen und Datenschutzrichtlinie."
+    "legal_disclaimer": "Mit Ihrer Bestellung akzeptieren Sie unsere Nutzungsbedingungen und Datenschutzrichtlinie.",
+    "apply": "Anwenden",
+    "privacy_coming_soon": "Datenschutzrichtlinie kommt bald",
+    "terms_coming_soon": "Nutzungsbedingungen kommen bald",
+    "please_select_pickup_time": "Bitte wählen Sie eine Abholzeit",
+    "please_enter_street_city": "Bitte Straße und Stadt eingeben"
   },
   "common": {
     "ok": "OK",
@@ -717,7 +722,12 @@
     "open": "Geöffnet",
     "closed": "Geschlossen",
     "see_menu_and_order": "Menü ansehen & bestellen",
-    "weekly_hours": "Wöchentliche Öffnungszeiten"
+    "weekly_hours": "Wöchentliche Öffnungszeiten",
+    "session_timeout_warning": "Sitzungszeitüberschreitung",
+    "join_group": "Gruppe beitreten",
+    "single_order": "Einzelbestellung",
+    "yes_close_session": "Ja, Sitzung schließen",
+    "start_group_order": "Gruppenbestellung starten"
   },
   "navigation": {
     "food": "Essen",
@@ -881,7 +891,10 @@
     "order_name": "Ihr Name in der Bestellung",
     "order_duration": "Bestelldauer",
     "duration_desc": "Teilnehmer können in diesem Zeitraum bestellen",
-    "view_menu_order": "Menü ansehen & bestellen"
+    "view_menu_order": "Menü ansehen & bestellen",
+    "leave_tip": "Trinkgeld geben",
+    "send_message": "Nachricht senden",
+    "tip_send_failed": "Trinkgeld konnte nicht gesendet werden, bitte versuchen Sie es erneut"
   },
   "payments": {
     "step1_payment_collection": "💵 Schritt 1: Zahlungseinzug",
@@ -996,7 +1009,9 @@
     "invite_reward": "Du 5€, dein Freund 5€ verdienen!",
     "theme_auto": "Auto",
     "theme_light": "Tag",
-    "theme_dark": "Nacht"
+    "theme_dark": "Nacht",
+    "delete_address": "Adresse löschen",
+    "street_city_required": "Straße und Stadt sind erforderlich"
   },
   "search": {
     "restoran_mi_ariyorsunuz": "Restoran mı arıyorsunuz?",
@@ -1086,7 +1101,11 @@
     "account_open": "Konto offen",
     "business_not_found": "Unternehmen nicht gefunden",
     "need_assignment": "Sie müssen einem Unternehmen zugewiesen sein.",
-    "business": "Unternehmen"
+    "business": "Unternehmen",
+    "payment_not_collected": "⚠️ Zahlung nicht eingezogen",
+    "yes_on_my_way": "Ja, ich bin unterwegs",
+    "address_wrong_unreachable": "Adresse falsch / Kunde nicht erreichbar",
+    "card_payment_received": "✅ Kartenzahlung erhalten!"
   },
   "wallet": {
     "lokma_wallet": "LOKMA Wallet",
@@ -1244,5 +1263,8 @@
     "rate_delivery": "Lieferung bewerten",
     "rate_food": "Essen bewerten",
     "rate_service": "Service bewerten"
+  },
+  "notification": {
+    "open_map": "Karte öffnen"
   }
 }

@@ -319,7 +319,7 @@ class _FavoritesScreenState extends ConsumerState<FavoritesScreen> with SingleTi
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 9,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   letterSpacing: 0.5,
                                 ),
                               ),

@@ -58,7 +58,7 @@ class _KasapScreenState extends State<KasapScreen> {
         title: Row(
           children: [
             const Text('🛒 ', style: TextStyle(fontSize: 24)),
-            Text('marketplace.markets'.tr(), style: TextStyle(color: textPrimary, fontWeight: FontWeight.bold)),
+            Text('marketplace.markets'.tr(), style: TextStyle(color: textPrimary, fontWeight: FontWeight.w600)),
           ],
         ),
         actions: [
@@ -78,7 +78,7 @@ class _KasapScreenState extends State<KasapScreen> {
                       ),
                       child: Text(
                         '${_selectedSectors.length}',
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -136,7 +136,7 @@ class _KasapScreenState extends State<KasapScreen> {
                               'Mağaza Türleri',
                               style: TextStyle(
                                 fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             SizedBox(height: 4),
@@ -213,7 +213,7 @@ class _KasapScreenState extends State<KasapScreen> {
                                     style: TextStyle(
                                       color: isSelected ? Colors.white : Colors.grey[300],
                                       fontSize: 16,
-                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                                     ),
                                   ),
                                 ),
@@ -252,7 +252,7 @@ class _KasapScreenState extends State<KasapScreen> {
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -490,7 +490,7 @@ class _BusinessCard extends StatelessWidget {
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -537,7 +537,7 @@ class _BusinessCard extends StatelessWidget {
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 11,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
@@ -624,7 +624,7 @@ class _BusinessCard extends StatelessWidget {
                                         style: const TextStyle(
                                           color: Colors.white,
                                           fontSize: 10,
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),
@@ -662,7 +662,7 @@ class _BusinessCard extends StatelessWidget {
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: 18,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: FontWeight.w600,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -696,7 +696,7 @@ class _BusinessCard extends StatelessWidget {
                             style: TextStyle(
                               color: textColor,
                               fontSize: 15,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(

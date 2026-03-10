@@ -339,7 +339,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                       order.courierName ?? 'Kurye',
                       style: const TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -642,7 +642,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                   const SizedBox(width: 10),
                   Text(
                     '#${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -654,7 +654,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                     '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
                     style: const TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Colors.green,
                     ),
                   ),
@@ -696,7 +696,7 @@ class _CourierTrackingScreenState extends State<CourierTrackingScreen>
                               '${item.quantity}x',
                               style: const TextStyle(
                                 fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: _brandColor,
                               ),
                             ),

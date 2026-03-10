@@ -549,7 +549,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.surface,
                   fontSize: 11,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                   letterSpacing: 1.5,
                   fontFeatures: [FontFeature.tabularFigures()],
                 ),
@@ -613,7 +613,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                         style: TextStyle(
                           color: mutedGray,
                           fontSize: 9,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: 1.5,
                         ),
                       ),
@@ -655,7 +655,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                       style: TextStyle(
                         color: mutedGray,
                         fontSize: 9,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         letterSpacing: 1.5,
                       ),
                     ),
@@ -835,7 +835,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                           style: TextStyle(
                             color: primaryRuby,
                             fontSize: 10,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w600,
                             letterSpacing: 2,
                           ),
                         ),
@@ -979,7 +979,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
             style: TextStyle(
               color: Theme.of(context).colorScheme.surface,
               fontSize: 9,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
             ),
           ),
@@ -1254,7 +1254,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.surface,
                             fontSize: 18,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -1430,7 +1430,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                         style: TextStyle(
                           color: isSelected ? Colors.blue.shade100.withValues(alpha: 0.8) : mutedGray,
                           fontSize: 9,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -1534,7 +1534,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
               style: TextStyle(
                 color: mutedGray.withValues(alpha: 0.5),
                 fontSize: 9,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
                 letterSpacing: 1.5,
               ),
             ),
@@ -1583,7 +1583,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.surface,
                           fontSize: 12,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -1651,7 +1651,7 @@ Gel, birlikte güzel vakit geçirelim! 🤝
                       style: TextStyle(
                         color: Colors.blue.shade100.withValues(alpha: 0.8),
                         fontSize: 10,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     SizedBox(height: 16),
