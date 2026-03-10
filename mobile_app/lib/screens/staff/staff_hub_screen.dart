@@ -40,6 +40,16 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   List<String> _tableSections = []; // section names
   final Set<String> _expandedShiftDays = {}; // tracks expanded days in shift history
 
+  // ── Service Pause System ──
+  bool _deliveryPaused = false;
+  bool _pickupPaused = false;
+  DateTime? _deliveryPauseUntil;
+  DateTime? _pickupPauseUntil;
+  String _deliveryCountdown = '';
+  String _pickupCountdown = '';
+  Timer? _pauseCountdownTimer;
+  StreamSubscription? _businessPauseSub;
+
   // Live counters
   int _pendingReservations = 0;
   int _activeTableSessions = 0;
@@ -60,11 +70,14 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
     super.initState();
     _loadCapabilities();
     _restoreShift();
+    _startPauseCountdownTimer();
   }
 
   @override
   void dispose() {
     _shiftTimer?.cancel();
+    _pauseCountdownTimer?.cancel();
+    _businessPauseSub?.cancel();
     super.dispose();
   }
 
@@ -463,6 +476,327 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // ── Service Pause System Methods ──
+
+  void _startPauseCountdownTimer() {
+    _pauseCountdownTimer?.cancel();
+    _pauseCountdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      String fmt(DateTime? target) {
+        if (target == null) return '';
+        final diff = target.difference(DateTime.now()).inSeconds;
+        if (diff <= 0) return '';
+        final m = diff ~/ 60;
+        final s = diff % 60;
+        return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+      }
+      final dc = fmt(_deliveryPauseUntil);
+      final pc = fmt(_pickupPauseUntil);
+
+      // Auto-resume when timer expires
+      if (_deliveryPaused && _deliveryPauseUntil != null && _deliveryPauseUntil!.isBefore(DateTime.now())) {
+        _handleServiceResume('delivery');
+      }
+      if (_pickupPaused && _pickupPauseUntil != null && _pickupPauseUntil!.isBefore(DateTime.now())) {
+        _handleServiceResume('pickup');
+      }
+
+      if (dc != _deliveryCountdown || pc != _pickupCountdown) {
+        setState(() {
+          _deliveryCountdown = dc;
+          _pickupCountdown = pc;
+        });
+      }
+    });
+  }
+
+  void _listenToPauseState() {
+    if (_businessId == null) return;
+    _businessPauseSub?.cancel();
+    _businessPauseSub = FirebaseFirestore.instance
+        .collection('businesses')
+        .doc(_businessId)
+        .snapshots()
+        .listen((snap) {
+      if (!snap.exists || !mounted) return;
+      final d = snap.data()!;
+      setState(() {
+        _deliveryPaused = d['temporaryDeliveryPaused'] ?? false;
+        _pickupPaused = d['temporaryPickupPaused'] ?? false;
+        _deliveryPauseUntil = (d['deliveryPauseUntil'] as Timestamp?)?.toDate();
+        _pickupPauseUntil = (d['pickupPauseUntil'] as Timestamp?)?.toDate();
+      });
+    });
+  }
+
+  Future<void> _handleServicePause(String type, int? minutes) async {
+    if (_businessId == null) return;
+    final pauseField = type == 'delivery' ? 'temporaryDeliveryPaused' : 'temporaryPickupPaused';
+    final untilField = type == 'delivery' ? 'deliveryPauseUntil' : 'pickupPauseUntil';
+    final untilDate = minutes != null ? DateTime.now().add(Duration(minutes: minutes)) : null;
+
+    try {
+      await FirebaseFirestore.instance.collection('businesses').doc(_businessId).update({
+        pauseField: true,
+        untilField: untilDate != null ? Timestamp.fromDate(untilDate) : null,
+      });
+      await FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(_businessId)
+          .collection('deliveryPauseLogs')
+          .add({
+        'action': 'paused',
+        'type': type,
+        'duration': minutes != null ? '${minutes}min' : 'indefinite',
+        'timestamp': FieldValue.serverTimestamp(),
+        'staffName': _staffName,
+      });
+      HapticFeedback.heavyImpact();
+    } catch (e) {
+      debugPrint('Pause error: $e');
+    }
+  }
+
+  Future<void> _handleServiceResume(String type) async {
+    if (_businessId == null) return;
+    final pauseField = type == 'delivery' ? 'temporaryDeliveryPaused' : 'temporaryPickupPaused';
+    final untilField = type == 'delivery' ? 'deliveryPauseUntil' : 'pickupPauseUntil';
+
+    try {
+      await FirebaseFirestore.instance.collection('businesses').doc(_businessId).update({
+        pauseField: false,
+        untilField: null,
+      });
+      await FirebaseFirestore.instance
+          .collection('businesses')
+          .doc(_businessId)
+          .collection('deliveryPauseLogs')
+          .add({
+        'action': 'resumed',
+        'type': type,
+        'timestamp': FieldValue.serverTimestamp(),
+        'staffName': _staffName,
+      });
+      HapticFeedback.mediumImpact();
+    } catch (e) {
+      debugPrint('Resume error: $e');
+    }
+  }
+
+  void _showPauseTimerSheet(String type) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDelivery = type == 'delivery';
+    final color = isDelivery ? Colors.amber : Colors.red;
+    final label = isDelivery ? '🛵 Kurye' : '🛍️ Gel-Al';
+    final durations = [
+      {'label': '15 dk', 'minutes': 15},
+      {'label': '30 dk', 'minutes': 30},
+      {'label': '1 saat', 'minutes': 60},
+      {'label': '2 saat', 'minutes': 120},
+      {'label': 'Süresiz', 'minutes': null},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              '$label Duraklat',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Ne kadar süre durdurmak istiyorsunuz?',
+              style: TextStyle(fontSize: 13, color: Colors.grey[500]),
+            ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: durations.map((d) {
+                return SizedBox(
+                  width: (MediaQuery.of(ctx).size.width - 70) / 3,
+                  child: FilledButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _handleServicePause(type, d['minutes'] as int?);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: color.withValues(alpha: 0.15),
+                      foregroundColor: color,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      d['label'] as String,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            SizedBox(height: MediaQuery.of(ctx).padding.bottom + 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPausePills() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      children: [
+        // Delivery Pill
+        Expanded(
+          child: GestureDetector(
+            onTap: () {
+              if (_deliveryPaused) {
+                _handleServiceResume('delivery');
+              } else {
+                _showPauseTimerSheet('delivery');
+              }
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _deliveryPaused
+                      ? [Colors.amber.shade600, Colors.amber.shade700]
+                      : [Colors.blue.shade500, Colors.blue.shade600],
+                ),
+                borderRadius: BorderRadius.circular(50),
+                boxShadow: [
+                  BoxShadow(
+                    color: (_deliveryPaused ? Colors.amber : Colors.blue).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🛵', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Kurye',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                  ),
+                  if (_deliveryPaused && _deliveryCountdown.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _deliveryCountdown,
+                        style: const TextStyle(
+                          color: Colors.white, fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (_deliveryPaused && _deliveryCountdown.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 6),
+                      child: Text('⏸', style: TextStyle(fontSize: 12)),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        // Pickup Pill
+        Expanded(
+          child: GestureDetector(
+            onTap: () {
+              if (_pickupPaused) {
+                _handleServiceResume('pickup');
+              } else {
+                _showPauseTimerSheet('pickup');
+              }
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: _pickupPaused
+                      ? [Colors.red.shade500, Colors.red.shade600]
+                      : [Colors.green.shade500, Colors.green.shade600],
+                ),
+                borderRadius: BorderRadius.circular(50),
+                boxShadow: [
+                  BoxShadow(
+                    color: (_pickupPaused ? Colors.red : Colors.green).withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🛍️', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Gel-Al',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                  ),
+                  if (_pickupPaused && _pickupCountdown.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _pickupCountdown,
+                        style: const TextStyle(
+                          color: Colors.white, fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (_pickupPaused && _pickupCountdown.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 6),
+                      child: Text('⏸', style: TextStyle(fontSize: 12)),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1433,6 +1767,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
       // Load active table session count for waiter view
       if (_businessId != null) {
         _loadActiveTableSessionCount();
+        _listenToPauseState();
       }
     } catch (e) {
       debugPrint('[StaffHub] Error: $e');
@@ -1761,6 +2096,12 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
                             ),
                           );
                         }),
+                        const SizedBox(height: 16),
+
+                        // ─── Service Pause Pills ───
+                        if (_businessId != null)
+                          _buildPausePills(),
+
                         const SizedBox(height: 24),
                       ],
 

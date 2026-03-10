@@ -803,7 +803,10 @@
     "teslimat": "Lieferung",
     "gelAl": "Abholung",
     "yerinde": "Vor Ort",
-    "rezervasyon": "Reservierung"
+    "rezervasyon": "Reservierung",
+    "kurye_aktif": "🛵 Kurier aktiv",
+    "kurye_durduruldu": "⏸️ Kurier pausiert",
+    "kurye_kapali": "❌ Kurier geschlossen"
   },
   "AdminBusiness[id": {
     "adet": "Menge",

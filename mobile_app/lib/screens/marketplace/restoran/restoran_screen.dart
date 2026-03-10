@@ -884,7 +884,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           size: 20,
                         ),
                       ),
-                      // Badge - bright amber/orange to distinguish from red
+                      // Badge - red to match other badges
                       if (unreadCount > 0)
                         Positioned(
                           top: -2,
@@ -894,7 +894,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 horizontal: 5, vertical: 2),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [Color(0xFFFF9500), Color(0xFFFF6B00)],
+                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
                               ),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
@@ -903,7 +903,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFF9500).withValues(alpha: 0.4),
+                                  color: const Color(0xFFFF3B30).withValues(alpha: 0.4),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -1210,7 +1210,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final hasBusinessAtCurrent = businessKms.contains(currentKm.toInt());
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Row(
         children: [
           Icon(Icons.location_on_outlined, color: lokmaPink, size: 18),
@@ -1265,24 +1265,16 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               ),
             ),
           ),
-          // Km badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: hasBusinessAtCurrent ? lokmaPink.withValues(alpha: 0.3) : cardBg,
-              borderRadius: BorderRadius.circular(8),
-              border: hasBusinessAtCurrent
-                  ? Border.all(color: lokmaPink, width: 1)
-                  : Border.all(color: Colors.grey.shade300),
-            ),
-            child: Text(
-              '${currentKm.toInt()} km',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 12,
-                fontWeight:
-                    hasBusinessAtCurrent ? FontWeight.bold : FontWeight.w600,
-              ),
+          // Km label — sadece metin, çerçeve/arka plan yok
+          Text(
+            '${currentKm.toInt()} km',
+            style: TextStyle(
+              color: hasBusinessAtCurrent
+                  ? lokmaPink
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              fontSize: 13,
+              fontWeight:
+                  hasBusinessAtCurrent ? FontWeight.bold : FontWeight.w500,
             ),
           ),
         ],
@@ -1406,7 +1398,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           // İlk item: Count header
           if (index == 0) {
             return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(top: 12, bottom: 12),
               child: Text(
                 tr('discovery.businesses_at_service',
                     namedArgs: {'count': restaurants.length.toString()}),
@@ -1487,6 +1479,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     // Check temporary pause for delivery mode
     final temporaryDeliveryPaused =
         data['temporaryDeliveryPaused'] as bool? ?? false;
+    final temporaryPickupPaused =
+        data['temporaryPickupPaused'] as bool? ?? false;
 
     if (mode == 'teslimat') {
       if (temporaryDeliveryPaused) {
@@ -1515,6 +1509,15 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         pickupTime: pickupStartTime
       );
     } else if (mode == 'gelal') {
+      if (temporaryPickupPaused) {
+        return (
+          isAvailable: false,
+          reason: 'Gel-Al geçici durduruldu',
+          startTime: null,
+          deliveryTime: deliveryStartTime,
+          pickupTime: pickupStartTime
+        );
+      }
       if (pickupUnavailable) {
         return (
           isAvailable: false,
@@ -1954,13 +1957,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         ),
                       ),
 
-                    // 🆕 TUNA brand badge (TOP LEFT - four-corner quadrant system)
+                    // 🏷️ TUNA brand badge (TOP LEFT) — kapalı banner ile birlikte dinamik hizalı
+                    // Kapalı banner yüksekliği: padding 6 * 2 + fontSize 12 ≈ 34px
                     if (isTunaPartner)
                       Positioned(
                         left: 12,
-                        top: isAvailable ? 12 : 36,
+                        top: isAvailable ? 12 : 42,
                         child: Opacity(
-                          opacity: 1.0, // Always fully visible, even when closed
+                          opacity: 1.0, // Her durumda tam görünür
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 14, vertical: 6),
@@ -1982,7 +1986,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             child: const Text(
                               'TUNA',
                               style: TextStyle(
-                                color: Color(0xFF69B445), // TUNA green
+                                color: Colors.white,
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2,
@@ -1992,9 +1996,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         ),
                       ),
 
-                    // 🆕 Favorite button (TOP RIGHT - fixed position)
+                    // ♥️ Favorite button (TOP RIGHT) — TUNA ile aynı top hizası (her iki durumda da eşit)
                     Positioned(
-                      top: isAvailable ? 12 : 36,
+                      top: isAvailable ? 12 : 42,
                       right: 12,
                       child: GestureDetector(
                         onTap: () {
@@ -2132,8 +2136,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                           .colorScheme
                                           .onSurface
                                           .withValues(alpha: 0.9),
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600, // Reduced from w700
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                   if (reviewText.isNotEmpty) ...[
@@ -2144,8 +2148,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withValues(alpha: 0.9),
-                                        fontSize: 15,
+                                            .withValues(alpha: 0.7),
+                                        fontSize: 13,
                                         fontWeight: FontWeight.w400,
                                       ),
                                     ),
@@ -2156,8 +2160,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withValues(alpha: 0.9),
-                                        fontSize: 15),
+                                            .withValues(alpha: 0.7),
+                                        fontSize: 13),
                                   ),
                                   Expanded(
                                     child: Text(
@@ -2169,8 +2173,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                         color: Theme.of(context)
                                             .colorScheme
                                             .onSurface
-                                            .withValues(alpha: 0.9),
-                                        fontSize: 15,
+                                            .withValues(alpha: 0.7),
+                                        fontSize: 13,
                                         fontWeight: FontWeight.w400,
                                       ),
                                       maxLines: 1,
@@ -2202,11 +2206,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
                                     return Row(
                                       children: [
-                                        Icon(Icons.directions_bike,
+                                        Icon(Icons.delivery_dining,
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withValues(alpha: 0.9),
+                                                .withValues(alpha: 0.7),
                                             size: 16),
                                         const SizedBox(width: 6),
                                         if (hasFreeDelivery && deliveryFee == 0)
@@ -2216,8 +2220,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .onSurface
-                                                    .withValues(alpha: 0.9),
-                                                fontSize: 15),
+                                                    .withValues(alpha: 0.7),
+                                                fontSize: 13),
                                           )
                                         else
                                           Text(
@@ -2226,8 +2230,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withValues(alpha: 0.9),
-                                              fontSize: 15,
+                                                  .withValues(alpha: 0.7),
+                                              fontSize: 13,
                                               fontWeight: FontWeight.w400,
                                             ),
                                           ),
@@ -2237,14 +2241,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                                   color: Theme.of(context)
                                                       .colorScheme
                                                       .onSurface
-                                                      .withValues(alpha: 0.9),
-                                                  fontSize: 15)),
+                                                      .withValues(alpha: 0.7),
+                                                  fontSize: 13)),
                                           Icon(Icons.shopping_basket_outlined,
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withValues(alpha: 0.9),
-                                              size: 16),
+                                                  .withValues(alpha: 0.7),
+                                              size: 14),
                                           const SizedBox(width: 6),
                                           Text(
                                             'Min. ${minOrderAmount.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
@@ -2252,8 +2256,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withValues(alpha: 0.9),
-                                              fontSize: 15,
+                                                  .withValues(alpha: 0.7),
+                                              fontSize: 13,
                                               fontWeight: FontWeight.w400,
                                             ),
                                           ),
@@ -2267,8 +2271,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withValues(alpha: 0.9),
-                                            size: 16),
+                                                .withValues(alpha: 0.7),
+                                            size: 14),
                                         const SizedBox(width: 4),
                                         Text(
                                           distanceText.isNotEmpty
@@ -2278,8 +2282,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                             color: Theme.of(context)
                                                 .colorScheme
                                                 .onSurface
-                                                .withValues(alpha: 0.9),
-                                            fontSize: 15,
+                                                .withValues(alpha: 0.7),
+                                            fontSize: 13,
                                             fontWeight: FontWeight.w400,
                                           ),
                                         ),
@@ -2454,7 +2458,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                     child: const Text(
                                       'TUNA',
                                       style: TextStyle(
-                                        color: Color(0xFF69B445),
+                                        color: Colors.white,
                                         fontSize: 14,
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: 1.5,

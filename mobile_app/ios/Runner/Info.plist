@@ -53,6 +53,12 @@
 		<string>LOKMA needs camera access to scan product barcodes and take photos.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>LOKMA needs photo library access to select profile pictures and product images.</string>
+		<key>NFCReaderUsageDescription</key>
+		<string>LOKMA temassız kart ödemesi almak için NFC kullanır.</string>
+		<key>NSBluetoothPeripheralUsageDescription</key>
+		<string>LOKMA kart okuyucu bağlantısı için Bluetooth kullanır.</string>
+		<key>NSBluetoothAlwaysUsageDescription</key>
+		<string>LOKMA kart okuyucu bağlantısı için Bluetooth kullanır.</string>
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>

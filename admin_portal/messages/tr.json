@@ -803,7 +803,10 @@
     "teslimat": "Teslimat",
     "gelAl": "Gel Al",
     "yerinde": "Yerinde",
-    "rezervasyon": "Rezervasyon"
+    "rezervasyon": "Rezervasyon",
+    "kurye_aktif": "🛵 Kurye Aktif",
+    "kurye_durduruldu": "⏸️ Kurye Durduruldu",
+    "kurye_kapali": "❌ Kurye Kapalı"
   },
   "AdminBusiness[id": {
     "adet": "Adet",

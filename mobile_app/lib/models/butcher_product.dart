@@ -125,4 +125,77 @@ class ButcherProduct {
     }
     return fallback;
   }
+
+  /// Serialize to a plain Map for JSON persistence (SharedPreferences)
+  Map<String, dynamic> toMap() {
+    return {
+      'butcherId': butcherId,
+      'id': id,
+      'sku': sku,
+      'masterId': masterId,
+      'name': name,
+      'nameData': nameData,
+      'description': description,
+      'descriptionData': descriptionData,
+      'category': category,
+      'categoryData': categoryData,
+      'price': price,
+      'unitType': unitType,
+      'imageUrl': imageUrl,
+      'tags': tags,
+      'inStock': inStock,
+      'minQuantity': minQuantity,
+      'stepQuantity': stepQuantity,
+      'isCustom': isCustom,
+      'allowBackorder': allowBackorder,
+      'expectedRestockDate': expectedRestockDate?.toIso8601String(),
+      'optionGroups': optionGroups.map((g) => g.toMap()).toList(),
+      'allergens': allergens,
+      'additives': additives,
+      'outOfStock': outOfStock,
+      'appSellingPrice': appSellingPrice,
+      'inStorePrice': inStorePrice,
+    };
+  }
+
+  /// Deserialize from a plain Map (loaded from SharedPreferences)
+  factory ButcherProduct.fromMap(Map<String, dynamic> map) {
+    return ButcherProduct(
+      butcherId: map['butcherId'] ?? '',
+      id: map['id'] ?? '',
+      sku: map['sku'] ?? map['id'] ?? '',
+      masterId: map['masterId'] ?? '',
+      name: _extractString(map['nameData'] ?? map['name']),
+      nameData: map['nameData'],
+      description: _extractString(map['descriptionData'] ?? map['description']),
+      descriptionData: map['descriptionData'],
+      category: _extractString(map['categoryData'] ?? map['category'], fallback: 'Diğer'),
+      categoryData: map['categoryData'],
+      price: (map['price'] ?? 0).toDouble(),
+      unitType: map['unitType'] ?? 'adet',
+      imageUrl: map['imageUrl'],
+      tags: List<String>.from(map['tags'] ?? []),
+      inStock: map['inStock'] ?? true,
+      minQuantity: (map['minQuantity'] ?? 1.0).toDouble(),
+      stepQuantity: (map['stepQuantity'] ?? 1.0).toDouble(),
+      isCustom: map['isCustom'] ?? false,
+      allowBackorder: map['allowBackorder'] ?? false,
+      expectedRestockDate: map['expectedRestockDate'] != null
+          ? DateTime.tryParse(map['expectedRestockDate'])
+          : null,
+      optionGroups: (map['optionGroups'] as List<dynamic>?)
+          ?.map((g) => OptionGroup.fromMap(g as Map<String, dynamic>))
+          .toList() ?? [],
+      allergens: List<String>.from(map['allergens'] ?? []),
+      additives: List<String>.from(map['additives'] ?? []),
+      outOfStock: map['outOfStock'] ?? false,
+      appSellingPrice: map['appSellingPrice'] != null
+          ? (map['appSellingPrice']).toDouble()
+          : null,
+      inStorePrice: map['inStorePrice'] != null
+          ? (map['inStorePrice']).toDouble()
+          : null,
+    );
+  }
 }
+

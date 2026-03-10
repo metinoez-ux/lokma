@@ -59,6 +59,7 @@ dependencies:
   timezone: ^0.10.1
   share_plus: ^12.0.1
   flutter_stripe: ^11.3.0
+  mek_stripe_terminal: ^4.6.3
   screen_brightness: ^2.1.7
   flutter_svg: ^2.2.3
   path_provider: ^2.1.5

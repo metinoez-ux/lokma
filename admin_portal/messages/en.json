@@ -803,7 +803,10 @@
     "teslimat": "Delivery",
     "gelAl": "Pickup",
     "yerinde": "Dine In",
-    "rezervasyon": "Reservation"
+    "rezervasyon": "Reservation",
+    "kurye_aktif": "🛵 Courier Active",
+    "kurye_durduruldu": "⏸️ Courier Paused",
+    "kurye_kapali": "❌ Courier Closed"
   },
   "AdminBusiness[id": {
     "adet": "quantity",

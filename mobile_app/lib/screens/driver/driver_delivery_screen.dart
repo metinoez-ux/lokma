@@ -9,6 +9,8 @@ import '../../services/order_service.dart';
 import '../../services/shift_service.dart';
 import '../staff/staff_delivery_screen.dart';
 import '../../utils/currency_utils.dart';
+import '../shared/tap_to_pay_sheet.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore, FieldValue;
 
 /// Driver Delivery Screen - Shows pending deliveries from ALL assigned businesses
 /// This screen is for couriers (drivers) who are assigned to multiple businesses
@@ -1093,46 +1095,100 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                     ),
                     const SizedBox(height: 8),
                   ],
-                  // Action button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: isClaimedByMe 
-                          ? () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ActiveDeliveryScreen(orderId: order.id),
-                              ),
-                            )
-                          : isReady 
-                              ? () => _claimDelivery(order) 
-                              : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isClaimedByMe 
-                            ? Colors.blue 
-                            : isReady 
-                                ? Colors.purple 
-                                : Colors.grey[200],
-                        foregroundColor: isClaimedByMe || isReady 
-                            ? Colors.white 
-                            : Colors.grey[500],
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                  // Action button row
+                  Row(
+                    children: [
+                      // NFC Ödeme butonu — kapıda kart ödemesi gereken siparişlerde
+                      if (isClaimedByMe &&
+                          isOnTheWay &&
+                          (order.paymentMethod == 'cash_on_delivery' ||
+                           order.paymentMethod == 'card_on_delivery' ||
+                           order.paymentMethod == 'kapidakart')) ...[
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.contactless, size: 18),
+                            label: const Text('NFC Ödeme', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF6A0DAD),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: () async {
+                              final result = await TapToPaySheet.show(
+                                context: context,
+                                amount: order.totalAmount,
+                                businessId: order.butcherId,
+                                orderId: order.id,
+                                courierId: FirebaseAuth.instance.currentUser?.uid,
+                                label: 'Kapıda Kart Ödemesi',
+                              );
+                              if (result != null && result.success && mounted) {
+                                // Firestore'da ödeme durumunu güncelle
+                                await FirebaseFirestore.instance
+                                    .collection('orders')
+                                    .doc(order.id)
+                                    .update({
+                                  'paymentStatus': 'collected',
+                                  'paymentMethod': 'card_nfc',
+                                  'terminalPaymentIntentId': result.paymentIntentId,
+                                  'tapToPayAt': FieldValue.serverTimestamp(),
+                                });
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('✅ Kart ödemesi alındı!'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                          ),
                         ),
-                        elevation: isClaimedByMe || isReady ? 2 : 0,
+                        const SizedBox(width: 8),
+                      ],
+                      // Ana aksiyon butonu
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: isClaimedByMe 
+                              ? () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ActiveDeliveryScreen(orderId: order.id),
+                                  ),
+                                )
+                              : isReady 
+                                  ? () => _claimDelivery(order) 
+                                  : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isClaimedByMe 
+                                ? Colors.blue 
+                                : isReady 
+                                    ? Colors.purple 
+                                    : Colors.grey[200],
+                            foregroundColor: isClaimedByMe || isReady 
+                                ? Colors.white 
+                                : Colors.grey[500],
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: isClaimedByMe || isReady ? 2 : 0,
+                          ),
+                          child: Text(
+                            isClaimedByMe 
+                                ? '🚗 Devam Et' 
+                                : isReady 
+                                    ? tr('driver.ustlen') 
+                                    : isPreparing 
+                                        ? '👨\u200d🍳 Hazırlanıyor' 
+                                        : '⏳ Bekliyor',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                        ),
                       ),
-                      child: Text(
-                        isClaimedByMe 
-                            ? '🚗 Devam Et' 
-                            : isReady 
-                                ? tr('driver.ustlen') 
-                                : isPreparing 
-                                    ? '👨‍🍳 Hazırlanıyor' 
-                                    : '⏳ Bekliyor',
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-                      ),
-                    ),
+                    ],
                   ),
                 ],
               ),

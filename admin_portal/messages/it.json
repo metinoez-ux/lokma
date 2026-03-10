@@ -803,7 +803,10 @@
     "teslimat": "Consegna",
     "gelAl": "Ritiro",
     "yerinde": "Sul Posto",
-    "rezervasyon": "Prenotazione"
+    "rezervasyon": "Prenotazione",
+    "kurye_aktif": "🛵 Corriere attivo",
+    "kurye_durduruldu": "⏸️ Corriere in pausa",
+    "kurye_kapali": "❌ Corriere chiuso"
   },
   "AdminBusiness[id": {
     "adet": "quantità",

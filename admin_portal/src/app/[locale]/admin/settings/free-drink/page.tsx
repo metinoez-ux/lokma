@@ -1,58 +1,166 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import {
+    doc, getDoc, setDoc, serverTimestamp,
+    collection, getDocs, query, where,
+} from 'firebase/firestore';
 import { useTranslations } from 'next-intl';
+
+interface Product {
+    id: string;
+    name: string;
+    imageUrl?: string;
+    price?: number;
+    category?: string;
+}
+
+const MAX_DRINKS = 5;
 
 export default function FreeDrinkSettingsPage() {
     const t = useTranslations('AdminSettings');
     const { admin } = useAdmin();
 
-    // Form State — Free Drink Promotion
-    const [freeDrinkEnabled, setFreeDrinkEnabled] = useState(true);
-    const [maxDrinksPerOrder, setMaxDrinksPerOrder] = useState(1);
+    // Resolve business ID (works across all business types)
+    const businessId = (admin as any)?.businessId
+        || (admin as any)?.butcherId
+        || (admin as any)?.restaurantId
+        || null;
+
+    // Form State
+    const [freeDrinkEnabled, setFreeDrinkEnabled] = useState(false);
+    const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(false);
+    const [loadingProducts, setLoadingProducts] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [dataLoaded, setDataLoaded] = useState(false);
 
-    // Load settings from Firestore
-    useEffect(() => {
-        const loadSettings = async () => {
-            try {
-                const settingsDoc = await getDoc(doc(db, 'platformSettings', 'freeDrink'));
-                if (settingsDoc.exists()) {
-                    const data = settingsDoc.data();
-                    setFreeDrinkEnabled(data.enabled ?? true);
-                    setMaxDrinksPerOrder(data.maxDrinksPerOrder ?? 1);
-                }
-            } catch (error) {
-                console.error('Error loading free drink settings:', error);
+    // ------------------------------------------------------------------
+    // Load existing settings from businesses/{businessId}
+    // ------------------------------------------------------------------
+    const loadSettings = useCallback(async () => {
+        if (!businessId) return;
+        try {
+            const bizDoc = await getDoc(doc(db, 'businesses', businessId));
+            if (bizDoc.exists()) {
+                const data = bizDoc.data();
+                setFreeDrinkEnabled(data.freeDrinkEnabled ?? false);
+                setSelectedProductIds(data.freeDrinkProducts ?? []);
             }
-        };
-        loadSettings();
-    }, []);
+        } catch (err) {
+            console.error('Error loading free drink settings:', err);
+        } finally {
+            setDataLoaded(true);
+        }
+    }, [businessId]);
 
+    // ------------------------------------------------------------------
+    // Load drink products from businesses/{businessId}/products
+    // ------------------------------------------------------------------
+    const loadProducts = useCallback(async () => {
+        if (!businessId) return;
+        setLoadingProducts(true);
+        try {
+            // Try subcollection first
+            const subRef = collection(db, 'businesses', businessId, 'products');
+            const subSnap = await getDocs(subRef);
+
+            let prods: Product[] = [];
+
+            if (!subSnap.empty) {
+                prods = subSnap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+            } else {
+                // Fallback: top-level products collection filtered by business
+                const topRef = query(
+                    collection(db, 'products'),
+                    where('businessId', '==', businessId),
+                );
+                const topSnap = await getDocs(topRef);
+                prods = topSnap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+            }
+
+            // Filter: keep only drink-category products (category includes "icecek" / "getränk" / "drink" etc.)
+            const drinks = prods.filter(p => {
+                const cat = (p.category || '').toLowerCase();
+                return (
+                    cat.includes('içecek') ||
+                    cat.includes('icecek') ||
+                    cat.includes('drink') ||
+                    cat.includes('getränk') ||
+                    cat.includes('beverage') ||
+                    cat.includes('boire')
+                );
+            });
+
+            // If no category match, show all products so admin can still pick
+            setProducts(drinks.length > 0 ? drinks : prods);
+        } catch (err) {
+            console.error('Error loading products:', err);
+        } finally {
+            setLoadingProducts(false);
+        }
+    }, [businessId]);
+
+    useEffect(() => {
+        loadSettings();
+        loadProducts();
+    }, [loadSettings, loadProducts]);
+
+    // ------------------------------------------------------------------
+    // Toggle a product selection (max MAX_DRINKS)
+    // ------------------------------------------------------------------
+    const toggleProduct = (id: string) => {
+        setSelectedProductIds(prev => {
+            if (prev.includes(id)) return prev.filter(x => x !== id);
+            if (prev.length >= MAX_DRINKS) return prev; // max reached
+            return [...prev, id];
+        });
+    };
+
+    // ------------------------------------------------------------------
+    // Save
+    // ------------------------------------------------------------------
     const handleSave = async () => {
-        if (!admin?.id) return;
+        if (!admin?.id || !businessId) return;
         setLoading(true);
         try {
-            await setDoc(doc(db, 'platformSettings', 'freeDrink'), {
-                enabled: freeDrinkEnabled,
-                maxDrinksPerOrder,
-                updatedAt: serverTimestamp(),
-                updatedBy: admin.id,
-            }, { merge: true });
+            await setDoc(
+                doc(db, 'businesses', businessId),
+                {
+                    freeDrinkEnabled,
+                    freeDrinkProducts: selectedProductIds,
+                    freeDrinkUpdatedAt: serverTimestamp(),
+                    freeDrinkUpdatedBy: admin.id,
+                },
+                { merge: true },
+            );
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
-        } catch (error) {
-            console.error('Error saving free drink settings:', error);
+        } catch (err) {
+            console.error('Error saving free drink settings:', err);
             alert(t('hata_olustu') || 'Hata oluştu');
         } finally {
             setLoading(false);
         }
     };
+
+    // ------------------------------------------------------------------
+    // UI helpers
+    // ------------------------------------------------------------------
+    if (!businessId) {
+        return (
+            <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-2xl mb-2">⚠️</p>
+                    <p className="text-gray-400">Bu ayar yalnızca işletmeye bağlı admin hesapları için geçerlidir.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-900 p-6 md:p-12 font-sans text-white">
@@ -64,84 +172,164 @@ export default function FreeDrinkSettingsPage() {
                     <span className="text-white">🥤 {t('gratis_icecek') || 'Gratis İçecek'}</span>
                 </div>
 
-                <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8">
-                    <div className="flex items-center gap-3 mb-6">
+                <div className="bg-gray-800 border border-gray-700 rounded-2xl p-8 space-y-6">
+                    {/* Header */}
+                    <div className="flex items-center gap-3">
                         <span className="text-3xl">🥤</span>
                         <div>
                             <h2 className="text-xl font-bold">{t('gratis_icecek') || 'Gratis İçecek'}</h2>
-                            <p className="text-gray-400 text-sm">{t('gratis_icecek_desc') || 'Her siparişe 1 içecek bedava — platformun USP özelliği'}</p>
+                            <p className="text-gray-400 text-sm">
+                                {t('gratis_icecek_desc') || 'Müşterilerinize siparişlerinde bedava içecek sunun — sizin seçiminizle.'}
+                            </p>
                         </div>
                     </div>
 
-                    <div className="space-y-6">
-                        {/* Global Toggle */}
-                        <div className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700">
-                            <div>
-                                <h3 className="font-bold">{t('ozelligi_aktif_et') || 'Özelliği Aktif Et'}</h3>
-                                <p className="text-xs text-gray-500">{t('gratis_icecek_toggle_desc') || 'Tüm işletmelerde sepette bedava içecek bölümü gösterilir'}</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked={freeDrinkEnabled} onChange={e => setFreeDrinkEnabled(e.target.checked)} className="sr-only peer" />
-                                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                            </label>
-                        </div>
-
-                        {/* Max Drinks Per Order */}
-                        <div className={`${!freeDrinkEnabled && 'opacity-50'}`}>
-                            <label className="block text-sm font-bold mb-2">{t('siparis_basi_max_icecek') || 'Sipariş başı max bedava içecek'}</label>
-                            <div className="flex items-center gap-3">
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="3"
-                                    value={maxDrinksPerOrder}
-                                    onChange={e => setMaxDrinksPerOrder(parseInt(e.target.value) || 1)}
-                                    className="w-24 bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:border-emerald-500 outline-none font-mono text-lg text-center"
-                                    disabled={!freeDrinkEnabled}
-                                />
-                                <span className="text-gray-400 text-sm">{t('icecek_siparis') || 'İçecek / Sipariş'}</span>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-2">
-                                {t('gratis_icecek_max_desc') || 'Müşteri her siparişte bu kadar bedava içecek seçebilir'}
+                    {/* ── Toggle ── */}
+                    <div className="flex items-center justify-between p-4 bg-gray-900 rounded-xl border border-gray-700">
+                        <div>
+                            <h3 className="font-bold">{t('ozelligi_aktif_et') || 'Özelliği Aktif Et'}</h3>
+                            <p className="text-xs text-gray-500">
+                                {t('gratis_icecek_toggle_desc') || 'Müşteriler sepette bedava içecek seçim bölümünü görür'}
                             </p>
                         </div>
+                        {/* Larger toggle switch */}
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={freeDrinkEnabled}
+                                onChange={e => setFreeDrinkEnabled(e.target.checked)}
+                                className="sr-only peer"
+                            />
+                            <div className="w-16 h-8 bg-gray-700 peer-focus:outline-none rounded-full peer
+                peer-checked:after:translate-x-8
+                peer-checked:after:border-white
+                after:content-['']
+                after:absolute
+                after:top-[4px]
+                after:left-[4px]
+                after:bg-white
+                after:border-gray-300
+                after:border
+                after:rounded-full
+                after:h-6
+                after:w-6
+                after:transition-all
+                peer-checked:bg-emerald-600" />
+                        </label>
+                    </div>
 
-                        {/* Preview */}
-                        {freeDrinkEnabled && (
-                            <div className="p-4 bg-emerald-950/30 border border-emerald-800/40 rounded-xl">
-                                <p className="text-emerald-300 text-sm font-medium">{t('onizleme') || 'Önizleme'}</p>
-                                <p className="text-emerald-200/70 text-xs mt-1">
-                                    {t('gratis_icecek_preview_1') || 'Müşteriler sepetlerinde'} <strong>{maxDrinksPerOrder}</strong> {t('gratis_icecek_preview_2') || 'adet bedava içecek seçebilir. İçecek kategorisindeki tüm ürünler sunulur.'}
+                    {/* ── Product Selection ── (only when enabled) */}
+                    <div className={!freeDrinkEnabled ? 'opacity-40 pointer-events-none' : ''}>
+                        <div className="flex items-center justify-between mb-3">
+                            <div>
+                                <h3 className="font-bold text-sm">
+                                    🧃 {t('icecek_sec') || 'Bedava Sunulacak İçecekler'}
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                    {t('icecek_sec_desc') || `En fazla ${MAX_DRINKS} ürün seçebilirsiniz`}
                                 </p>
                             </div>
+                            <span className="text-xs font-mono bg-gray-700 px-2 py-1 rounded-lg">
+                                {selectedProductIds.length} / {MAX_DRINKS}
+                            </span>
+                        </div>
+
+                        {loadingProducts ? (
+                            <div className="flex items-center justify-center py-10 text-gray-500 text-sm">
+                                <span className="animate-spin mr-2">⏳</span> Ürünler yükleniyor…
+                            </div>
+                        ) : products.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500 text-sm border border-dashed border-gray-700 rounded-xl">
+                                <p className="text-2xl mb-2">🧃</p>
+                                <p>Menünüzde henüz içecek ürünü yok.</p>
+                                <p className="text-xs mt-1 text-gray-600">Menü &gt; Ürünler bölümünden içecek ekleyin.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {products.map(product => {
+                                    const isSelected = selectedProductIds.includes(product.id);
+                                    const isMaxed = !isSelected && selectedProductIds.length >= MAX_DRINKS;
+                                    return (
+                                        <button
+                                            key={product.id}
+                                            onClick={() => toggleProduct(product.id)}
+                                            disabled={isMaxed}
+                                            className={`
+                        relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-left
+                        ${isSelected
+                                                    ? 'border-emerald-500 bg-emerald-950/40 shadow-lg shadow-emerald-900/20'
+                                                    : isMaxed
+                                                        ? 'border-gray-700 bg-gray-900/40 opacity-40 cursor-not-allowed'
+                                                        : 'border-gray-700 bg-gray-900/40 hover:border-gray-500 cursor-pointer'
+                                                }
+                      `}
+                                        >
+                                            {/* Checkmark */}
+                                            {isSelected && (
+                                                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-xs">
+                                                    ✓
+                                                </div>
+                                            )}
+
+                                            {/* Product image / emoji fallback */}
+                                            {product.imageUrl ? (
+                                                <img
+                                                    src={product.imageUrl}
+                                                    alt={product.name}
+                                                    className="w-14 h-14 object-cover rounded-lg"
+                                                />
+                                            ) : (
+                                                <div className="w-14 h-14 rounded-lg bg-gray-700 flex items-center justify-center text-2xl">
+                                                    🧃
+                                                </div>
+                                            )}
+
+                                            <p className="text-xs font-semibold text-center leading-tight line-clamp-2 text-white">
+                                                {product.name}
+                                            </p>
+                                            {product.price != null && (
+                                                <p className="text-xs text-gray-400">€{product.price.toFixed(2)}</p>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         )}
-
-                        {/* How it works info */}
-                        <div className="p-4 bg-blue-950/30 border border-blue-800/40 rounded-xl">
-                            <p className="text-blue-300 text-sm font-bold mb-2">ℹ️ {t('nasil_calisir') || 'Nasıl çalışır?'}</p>
-                            <ul className="text-blue-200/70 text-xs space-y-1 list-disc list-inside">
-                                <li>{t('gratis_icecek_info_1') || 'Müşteri sepete ürün ekledikten sonra İçecek kategorisinden bedava seçim yapar'}</li>
-                                <li>{t('gratis_icecek_info_2') || 'Seçilen içecek 0,00 € ile sepete eklenir, orijinal fiyat üstü çizili gösterilir'}</li>
-                                <li>{t('gratis_icecek_info_3') || 'Siparişte \"Gratis İçecek\" olarak işaretlenir, işletme siparişi hazırlarken görür'}</li>
-                                <li>{t('gratis_icecek_info_4') || 'İçecek maliyeti platform tarafından karşılanır (restoran komisyon farkından düşülür)'}</li>
-                            </ul>
-                        </div>
-
-                        {/* USP Marketing Info */}
-                        <div className="p-4 bg-purple-950/30 border border-purple-800/40 rounded-xl">
-                            <p className="text-purple-300 text-sm font-bold mb-2">🎯 {t('pazarlama_notu') || 'Pazarlama Notu'}</p>
-                            <p className="text-purple-200/70 text-xs">
-                                {t('gratis_icecek_usp') || '\"LOKMA\'da her siparişe 1 içecek bedava!\" — Bu özellik, rakiplerden farklı olarak platform tarafından yönetilir ve tüm işletmelerde geçerlidir. App Store, Google Play ve sosyal medya kampanyalarında USP olarak kullanılabilir.'}
-                            </p>
-                        </div>
                     </div>
 
+                    {/* ── Preview ── */}
+                    {freeDrinkEnabled && selectedProductIds.length > 0 && (
+                        <div className="p-4 bg-emerald-950/30 border border-emerald-800/40 rounded-xl">
+                            <p className="text-emerald-300 text-sm font-medium">✅ {t('onizleme') || 'Önizleme'}</p>
+                            <p className="text-emerald-200/70 text-xs mt-1">
+                                Müşteriler sepetlerinde <strong>{selectedProductIds.length}</strong> adet içecekten seçim yapabilir.
+                                Seçilen içecek <strong>0,00 €</strong> ile sepete eklenir.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* ── Info box ── */}
+                    <div className="p-4 bg-blue-950/30 border border-blue-800/40 rounded-xl">
+                        <p className="text-blue-300 text-sm font-bold mb-2">ℹ️ {t('nasil_calisir') || 'Nasıl çalışır?'}</p>
+                        <ul className="text-blue-200/70 text-xs space-y-1 list-disc list-inside">
+                            <li>{t('gratis_icecek_info_1') || 'Müşteri seçtiğiniz içeceklerden birini bedavaya sepete ekler'}</li>
+                            <li>{t('gratis_icecek_info_2') || 'Seçilen içecek 0,00 € ile görünür, orijinal fiyat üstü çizili'}</li>
+                            <li>{t('gratis_icecek_info_3') || 'Sipariş "Gratis İçecek" etiketiyle işaretlenir'}</li>
+                            <li>{t('gratis_icecek_info_4') || 'Bu özellik sadece sizin işletmenize özel geçerlidir'}</li>
+                        </ul>
+                    </div>
+
+                    {/* ── Save button ── */}
                     <button
                         onClick={handleSave}
-                        disabled={loading}
-                        className="w-full mt-6 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-emerald-900/20 disabled:opacity-50"
+                        disabled={loading || !dataLoaded}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-emerald-900/20 disabled:opacity-50"
                     >
-                        {loading ? t('kaydediliyor') || 'Kaydediliyor...' : success ? '✅ Kaydedildi!' : t('gratis_icecek_kaydet') || 'Gratis İçecek Ayarlarını Kaydet'}
+                        {loading
+                            ? (t('kaydediliyor') || 'Kaydediliyor...')
+                            : success
+                                ? '✅ Kaydedildi!'
+                                : (t('gratis_icecek_kaydet') || 'Gratis İçecek Ayarlarını Kaydet')}
                     </button>
                 </div>
             </div>

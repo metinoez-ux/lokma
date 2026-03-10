@@ -403,7 +403,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
   }
 
-  // 🆕 Kapalı işletme uyarı popup'ı — Yemek segmenti stili
+  // 🆕 Kapalı işletme uyarı popup'ı — Beautiful Bottom Sheet
   void _showClosedBusinessDialog({bool preOrderEnabled = false}) {
     // Get business name
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
@@ -432,69 +432,161 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
-      showDialog(
+
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final sheetBg = isDark ? const Color(0xFF1C1C1E) : Colors.white;
+      final textPrimary = isDark ? Colors.white : Colors.black87;
+      final textSecondary = isDark ? Colors.white70 : Colors.black54;
+      final handleColor = isDark ? Colors.white24 : Colors.black12;
+      final accent = _getAccent(context);
+
+      showModalBottomSheet(
         context: context,
-        barrierDismissible: true,
-        builder: (dialogContext) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Row(
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        barrierColor: Colors.black54,
+        builder: (sheetCtx) {
+          return Container(
+            decoration: BoxDecoration(
+              color: sheetBg,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 0,
+              bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 32,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.schedule, color: Colors.amber, size: 28),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    businessName,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                // ── Drag handle ──
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 20),
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: handleColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Amber reason badge
+
+                // ── Clock icon + Business name ──
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.schedule_rounded, color: Colors.amber, size: 26),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        businessName,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: textPrimary,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── "Şu an kapalı" badge ──
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.amber.withValues(alpha: isDark ? 0.15 : 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.access_time, color: Colors.amber, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'marketplace.currently_closed'.tr(),
-                          style: TextStyle(fontWeight: FontWeight.w500, color: Colors.amber),
+                      const Icon(Icons.access_time_filled_rounded, color: Colors.amber, size: 18),
+                      const SizedBox(width: 10),
+                      Text(
+                        'marketplace.currently_closed'.tr(),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.amber,
+                          fontSize: 14,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Next opening time
+
+                // ── Next opening time badge ──
                 if (nextOpenText != null) ...[
                   const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.blue.withValues(alpha: isDark ? 0.15 : 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blue.withValues(alpha: 0.25)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.schedule, color: Colors.blue, size: 18),
-                        const SizedBox(width: 8),
+                        const Icon(Icons.event_available_rounded, color: Colors.blue, size: 18),
+                        const SizedBox(width: 10),
+                        Text(
+                          nextOpenText,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 16),
+
+                // ── Body text ──
+                Text(
+                  preOrderEnabled
+                      ? 'marketplace.closed_but_preorder'.tr()
+                      : 'marketplace.closed_but_browse'.tr(),
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: textSecondary,
+                  ),
+                ),
+
+                // ── Pre-order active badge ──
+                if (preOrderEnabled) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: isDark ? 0.15 : 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle_rounded, color: Colors.green, size: 18),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            nextOpenText,
+                            'marketplace.pre_order_active'.tr(),
                             style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blue,
-                              fontSize: 13,
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
                             ),
                           ),
                         ),
@@ -502,55 +594,43 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
-                Text(
-                  preOrderEnabled
-                      ? 'marketplace.closed_but_preorder'.tr()
-                      : 'marketplace.closed_but_browse'.tr(),
-                  style: const TextStyle(fontSize: 15, height: 1.4),
-                ),
-                if (preOrderEnabled) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green, size: 18),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'marketplace.pre_order_active'.tr(),
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
-                          ),
-                        ),
-                      ],
-                    ),
+
+                const SizedBox(height: 28),
+
+                // ── Primary CTA: See menu ──
+                FilledButton(
+                  onPressed: () => Navigator.pop(sheetCtx),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: accent,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                ],
+                  child: Text(
+                    preOrderEnabled
+                        ? 'marketplace.see_menu_and_order'.tr()
+                        : 'marketplace.see_menu'.tr(),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // ── Secondary: Go back ──
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(sheetCtx);
+                    context.pop();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: textSecondary,
+                    minimumSize: const Size(double.infinity, 44),
+                    textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                  child: Text('common.close'.tr()),
+                ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext); // Close dialog
-                  context.pop(); // Go back to list
-                },
-                child: Text(tr('common.close')),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _getAccent(context),
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(preOrderEnabled ? 'marketplace.see_menu_and_order'.tr() : tr('marketplace.see_menu')),
-              ),
-            ],
           );
         },
       );

@@ -803,7 +803,10 @@
     "teslimat": "Entrega",
     "gelAl": "Recogida",
     "yerinde": "Para Comer Aquí",
-    "rezervasyon": "Reserva"
+    "rezervasyon": "Reserva",
+    "kurye_aktif": "🛵 Mensajero activo",
+    "kurye_durduruldu": "⏸️ Mensajero pausado",
+    "kurye_kapali": "❌ Mensajero cerrado"
   },
   "AdminBusiness[id": {
     "adet": "cantidad",

@@ -61,8 +61,8 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
     'delivered': {'label': 'Teslim Edildi',      'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.done_all_rounded},
     'served':    {'label': 'Servis Edildi',      'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.restaurant_rounded},
     'completed': {'label': 'Tamamlandı',         'icon': '', 'color': 0xFF4CAF50, 'iconData': Icons.verified_rounded},
-    'rejected':  {'label': 'Reddedildi',         'icon': '', 'color': 0xFFF44336, 'iconData': Icons.cancel_outlined},
-    'cancelled': {'label': 'İptal Edildi',       'icon': '', 'color': 0xFFF44336, 'iconData': Icons.block_rounded},
+    'rejected':  {'label': 'Reddedildi',         'icon': '', 'color': 0xFFFB335B, 'iconData': Icons.cancel_outlined},
+    'cancelled': {'label': 'İptal Edildi',       'icon': '', 'color': 0xFFFB335B, 'iconData': Icons.block_rounded},
   };
 
   Map<String, dynamic> _meta(String status) =>
@@ -611,15 +611,29 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
-                        child: Text(
-                          '${_orderTypeLabel(group.orderType)} $orderLabel',
-                          style: TextStyle(
-                            color: cardTextColor,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _orderTypeLabel(group.orderType),
+                              style: TextStyle(
+                                color: cardTextColor,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              orderLabel,
+                              style: const TextStyle(
+                                color: Color(0xFFF85E7D),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       if (headerDateStr.isNotEmpty)
@@ -748,7 +762,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                         Text(
                           '${group.totalAmount!.toStringAsFixed(2)} €',
                           style: const TextStyle(
-                            color: Color(0xFFFB335B),
+                            color: Color(0xFFF85E7D),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1405,7 +1419,7 @@ class _OrderStatusRow extends StatelessWidget {
       OrderStatus.onTheWay: const Color(0xFF00BCD4),
       OrderStatus.delivered: const Color(0xFF4CAF50),
       OrderStatus.served: const Color(0xFF4CAF50),
-      OrderStatus.cancelled: const Color(0xFFF44336),
+      OrderStatus.cancelled: const Color(0xFFFB335B),
     }[order.status] ?? Colors.grey;
 
     final statusIcon = {

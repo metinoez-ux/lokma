@@ -414,6 +414,9 @@ export default function BusinessDetailsPage() {
     freeDeliveryThreshold: 0,          // Bu tutarın üzerinde teslimat ücretsiz (€)
     // 🆕 Geçici Kurye Kapatma
     temporaryDeliveryPaused: false,    // Kurye hizmeti geçici olarak durduruldu mu?
+    temporaryPickupPaused: false,      // Gel-Al hizmeti geçici olarak durduruldu mu?
+    deliveryPauseUntil: null as any,   // Kurye pause bitiş zamanı
+    pickupPauseUntil: null as any,     // Gel-Al pause bitiş zamanı
     acceptsCardPayment: false,
     vatNumber: "",
     imageUrl: "",
@@ -449,7 +452,9 @@ export default function BusinessDetailsPage() {
     dineInPaymentMode: 'payLater' as string,  // 'payFirst' = Hemen öde (fast food), 'payLater' = Çıkışta öde (restoran)
     hasTableService: false,   // Garson servisi var mı?
     // 🎁 Promosyon
-    freeDrinkEnabled: true,   // Bedava içecek promosyonu aktif mi? (default: true — platform default)
+    freeDrinkEnabled: true,
+    freeDrinkProducts: [] as string[],
+    freeDrinkMinimumOrder: 0,  // 0 = her siparişte aktif, >0 = min. sipariş tutarında aktif
   });
 
   // Google Places search states
@@ -693,6 +698,9 @@ export default function BusinessDetailsPage() {
           freeDeliveryThreshold: d.freeDeliveryThreshold || 0,
           // 🆕 Geçici Kurye Kapatma
           temporaryDeliveryPaused: d.temporaryDeliveryPaused || false,
+          temporaryPickupPaused: d.temporaryPickupPaused || false,
+          deliveryPauseUntil: d.deliveryPauseUntil || null,
+          pickupPauseUntil: d.pickupPauseUntil || null,
           acceptsCardPayment: d.acceptsCardPayment || false,
           vatNumber: d.vatNumber || "",
           imageUrl: d.imageUrl || "",
@@ -728,7 +736,9 @@ export default function BusinessDetailsPage() {
           dineInPaymentMode: d.dineInPaymentMode || 'payLater',
           hasTableService: d.hasTableService || false,
           // 🎁 Promosyon
-          freeDrinkEnabled: d.freeDrinkEnabled !== false,  // default true
+          freeDrinkEnabled: d.freeDrinkEnabled !== false,
+          freeDrinkProducts: d.freeDrinkProducts ?? [],
+          freeDrinkMinimumOrder: d.freeDrinkMinimumOrder ?? 0,
         });
 
         // 🆕 Resolve plan features from subscription_plans collection
@@ -1026,7 +1036,10 @@ export default function BusinessDetailsPage() {
 
   // Category CRUD
   const handleSaveCategory = async () => {
-    if (!businessId || !categoryForm.name.trim()) return;
+    const nameStr = typeof categoryForm.name === 'object'
+      ? (getLocalizedText(categoryForm.name) ?? '').trim()
+      : (categoryForm.name ?? '').toString().trim();
+    if (!businessId || !nameStr) return;
     setSavingCategory(true);
     try {
       const catRef = collection(db, `businesses/${businessId}/categories`);
@@ -1999,6 +2012,9 @@ export default function BusinessDetailsPage() {
         freeDeliveryThreshold: Number(formData.freeDeliveryThreshold) || 0,
         // 🆕 Geçici Kurye Kapatma
         temporaryDeliveryPaused: formData.temporaryDeliveryPaused || false,
+        temporaryPickupPaused: formData.temporaryPickupPaused || false,
+        deliveryPauseUntil: formData.deliveryPauseUntil || null,
+        pickupPauseUntil: formData.pickupPauseUntil || null,
         // 🆕 Masa Rezervasyonu
         hasReservation: formData.hasReservation || false,
         tableCapacity: Number(formData.tableCapacity) || 0,
@@ -2011,6 +2027,8 @@ export default function BusinessDetailsPage() {
         hasTableService: formData.hasTableService || false,
         // 🎁 Promosyon
         freeDrinkEnabled: formData.freeDrinkEnabled !== false,
+        freeDrinkProducts: (formData as any).freeDrinkProducts ?? [],
+        freeDrinkMinimumOrder: (formData as any).freeDrinkMinimumOrder ?? 0,
         acceptsCardPayment: formData.acceptsCardPayment || false,
         vatNumber: formData.vatNumber || "", // Added missing vatNumber
         imageUrl: downloadURL || "",
@@ -3242,26 +3260,57 @@ export default function BusinessDetailsPage() {
                         try {
                           await updateDoc(doc(db, "businesses", businessId), {
                             temporaryDeliveryPaused: newValue,
+                            deliveryPauseUntil: null,
                           });
                           await addDoc(collection(db, "businesses", businessId, "deliveryPauseLogs"), {
                             action: newValue ? "paused" : "resumed",
+                            type: 'delivery',
                             timestamp: serverTimestamp(),
                             adminEmail: admin?.email || "unknown",
                             adminId: admin?.id || "unknown",
                             adminName: (admin as any)?.name || (admin as any)?.displayName || admin?.email || "unknown",
                           });
-                          setFormData({ ...formData, temporaryDeliveryPaused: newValue });
+                          setFormData({ ...formData, temporaryDeliveryPaused: newValue, deliveryPauseUntil: null });
                           showToast(newValue ? t('kurye_hizmeti_durduruldu') : t('kurye_hizmeti_aktif'), "success");
                         } catch (e) {
                           showToast(t('hataOlustu1'), "error");
                         }
                       }}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${formData.temporaryDeliveryPaused
-                        ? "bg-amber-600 hover:bg-amber-500 text-white"
-                        : "bg-blue-600 hover:bg-blue-500 text-white"
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shadow-lg ${formData.temporaryDeliveryPaused
+                        ? "bg-gradient-to-r from-amber-500 to-amber-600 text-white ring-2 ring-amber-400/50"
+                        : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-400 hover:to-blue-500"
                         }`}
                     >
-                      {formData.temporaryDeliveryPaused ? t('kurye_durduruldu') : t('kurye_aktif')}
+                      🛵 {formData.temporaryDeliveryPaused ? t('kurye_durduruldu') : t('kurye_aktif')}
+                    </button>
+                  )}
+                  {settingsSubTab === "teslimat" && (
+                    <button
+                      onClick={async () => {
+                        const newValue = !formData.temporaryPickupPaused;
+                        try {
+                          await updateDoc(doc(db, "businesses", businessId), {
+                            temporaryPickupPaused: newValue,
+                            pickupPauseUntil: null,
+                          });
+                          await addDoc(collection(db, "businesses", businessId, "deliveryPauseLogs"), {
+                            action: newValue ? "paused" : "resumed",
+                            type: 'pickup',
+                            timestamp: serverTimestamp(),
+                            adminEmail: admin?.email || "unknown",
+                          });
+                          setFormData({ ...formData, temporaryPickupPaused: newValue, pickupPauseUntil: null });
+                          showToast(newValue ? '🛍️ Gel-Al durduruldu' : '🛍️ Gel-Al aktif', "success");
+                        } catch (e) {
+                          showToast(t('hataOlustu1'), "error");
+                        }
+                      }}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 shadow-lg ${formData.temporaryPickupPaused
+                        ? "bg-gradient-to-r from-red-500 to-red-600 text-white ring-2 ring-red-400/50"
+                        : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-400 hover:to-green-500"
+                        }`}
+                    >
+                      🛍️ {formData.temporaryPickupPaused ? 'Gel-Al Durduruldu' : 'Gel-Al Aktif'}
                     </button>
                   )}
                   {/* Active/Deactive Toggle */}
@@ -6304,84 +6353,25 @@ export default function BusinessDetailsPage() {
                 )
               }
 
-              {/* 🎁 Promosyon Sub-Tab */}
+
+              {/* 🎁 Promosyon Sub-Tab → direkt yönlendirme */}
               {
-                settingsSubTab === "promosyon" && (
-                  <div className="space-y-6">
-                    {/* Bedava İçecek Toggle */}
-                    <div className="p-5 bg-gray-900 rounded-xl border border-gray-700">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">🥤</span>
-                          <div>
-                            <h4 className="text-white font-bold">Bedava İçecek</h4>
-                            <p className="text-gray-400 text-xs">Her siparişe 1 içecek bedava — bu işletme için aktif/deaktif</p>
-                          </div>
-                        </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={formData.freeDrinkEnabled}
-                            onChange={async (e) => {
-                              const newVal = e.target.checked;
-                              setFormData({ ...formData, freeDrinkEnabled: newVal });
-                              // Instant save to Firestore
-                              if (businessId && businessId !== 'new') {
-                                try {
-                                  await updateDoc(doc(db, "businesses", businessId), {
-                                    freeDrinkEnabled: newVal,
-                                  });
-                                  showToast(
-                                    newVal ? 'Bedava içecek promosyonu aktif edildi' : 'Bedava içecek promosyonu deaktif edildi',
-                                    'success'
-                                  );
-                                } catch (err) {
-                                  console.error('Error updating freeDrinkEnabled:', err);
-                                  showToast('Hata oluştu', 'error');
-                                }
-                              }
-                            }}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                        </label>
+                settingsSubTab === "promosyon" && (() => {
+                  // Promosyon sekmesi açılınca direkt promotions sayfasına git
+                  if (typeof window !== 'undefined') {
+                    window.location.href = `/${params.locale}/admin/promotions?businessId=${businessId}`;
+                  }
+                  return (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center">
+                        <span className="text-4xl">🎁</span>
+                        <p className="text-gray-400 mt-3 text-sm">Promosyon sayfasına yönlendiriliyor...</p>
                       </div>
                     </div>
-
-                    {/* Status Info */}
-                    <div className={`p-4 rounded-xl border ${formData.freeDrinkEnabled ? 'bg-emerald-950/30 border-emerald-800/40' : 'bg-red-950/30 border-red-800/40'}`}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{formData.freeDrinkEnabled ? '✅' : '🚫'}</span>
-                        <p className={`text-sm font-medium ${formData.freeDrinkEnabled ? 'text-emerald-300' : 'text-red-300'}`}>
-                          {formData.freeDrinkEnabled
-                            ? 'Bu işletmede bedava içecek promosyonu aktif — müşteriler sepette 1 bedava içecek seçebilir'
-                            : 'Bu işletmede bedava içecek promosyonu deaktif — müşterilere bedava içecek sunulmayacak'
-                          }
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Info Box */}
-                    <div className="p-4 bg-blue-950/30 border border-blue-800/40 rounded-xl">
-                      <p className="text-blue-300 text-sm font-bold mb-2">ℹ️ Nasıl çalışır?</p>
-                      <ul className="text-blue-200/70 text-xs space-y-1 list-disc list-inside">
-                        <li>Platform genelinde bedava içecek aktif olsa bile, bu toggle ile tek tek işletmeleri devre dışı bırakabilirsiniz</li>
-                        <li>Deaktif edilen işletmelerin sepetinde "Gratis İçecek" bölümü gösterilmez</li>
-                        <li>İçecek maliyeti platform tarafından karşılanır (komisyon farkından düşülür)</li>
-                        <li>Müşteri en fazla 1 bedava içecek seçebilir (İçecek/Getränke kategorisinden)</li>
-                      </ul>
-                    </div>
-
-                    {/* Future Promos Placeholder */}
-                    <div className="p-4 bg-gray-900/50 border border-gray-700/50 rounded-xl border-dashed">
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <span>🔮</span>
-                        <p className="text-sm">Daha fazla promosyon türü yakında eklenecek...</p>
-                      </div>
-                    </div>
-                  </div>
-                )
+                  );
+                })()
               }
+
 
               {/* Reviews Section - shown in İşletme sub-tab */}
               {
@@ -7118,399 +7108,405 @@ export default function BusinessDetailsPage() {
       {/* ═══════════════════════════════════════════════════════ */}
       {/* ═══ SUPPLIER MODAL ═══ */}
       {/* ═══════════════════════════════════════════════════════ */}
-      {showSupplierModal && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowSupplierModal(false)}>
-          <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">{editingSupplier ? '✏️ Tedarikçi Düzenle' : '🏭 Yeni Tedarikçi Ekle'}</h2>
-              <button onClick={() => setShowSupplierModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="text-xs text-gray-400 mb-1 block">Firma Adı *</label>
-                  <input value={supplierForm.name} onChange={e => setSupplierForm((p: any) => ({ ...p, name: e.target.value }))}
-                    placeholder="Metro Großhandel, TUNA Fleisch GmbH..."
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Yetkili Kişi</label>
-                  <input value={supplierForm.contactPerson} onChange={e => setSupplierForm((p: any) => ({ ...p, contactPerson: e.target.value }))}
-                    placeholder="İsim Soyisim"
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Telefon</label>
-                  <input value={supplierForm.phone} onChange={e => setSupplierForm((p: any) => ({ ...p, phone: e.target.value }))}
-                    placeholder="+49 ..."
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">E-Posta</label>
-                  <input value={supplierForm.email} onChange={e => setSupplierForm((p: any) => ({ ...p, email: e.target.value }))}
-                    placeholder="info@firma.de"
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Vergi No (USt-IdNr)</label>
-                  <input value={supplierForm.taxId} onChange={e => setSupplierForm((p: any) => ({ ...p, taxId: e.target.value }))}
-                    placeholder="DE123456789"
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-xs text-gray-400 mb-1 block">Adres</label>
-                  <input value={supplierForm.address} onChange={e => setSupplierForm((p: any) => ({ ...p, address: e.target.value }))}
-                    placeholder="Straße, PLZ Stadt"
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Ödeme Koşulları</label>
-                  <input value={supplierForm.paymentTerms} onChange={e => setSupplierForm((p: any) => ({ ...p, paymentTerms: e.target.value }))}
-                    placeholder="30 Tage netto, Sofortzahlung..."
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Teslimat Süresi (gün)</label>
-                  <input type="number" value={supplierForm.deliveryDays} onChange={e => setSupplierForm((p: any) => ({ ...p, deliveryDays: e.target.value }))}
-                    placeholder="2"
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Min. Sipariş Tutarı (€)</label>
-                  <input type="number" value={supplierForm.minOrderValue} onChange={e => setSupplierForm((p: any) => ({ ...p, minOrderValue: e.target.value }))}
-                    placeholder="100"
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Durum</label>
-                  <select value={supplierForm.isActive ? 'active' : 'inactive'} onChange={e => setSupplierForm((p: any) => ({ ...p, isActive: e.target.value === 'active' }))}
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
-                    <option value="active">✅ Aktif</option>
-                    <option value="inactive">⏸ Pasif</option>
-                  </select>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-xs text-gray-400 mb-1 block">Notlar</label>
-                  <textarea value={supplierForm.notes} onChange={e => setSupplierForm((p: any) => ({ ...p, notes: e.target.value }))}
-                    rows={2} placeholder="Özel koşullar, sabit sipariş günleri vb..."
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
-                </div>
+      {
+        showSupplierModal && (
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowSupplierModal(false)}>
+            <div className="bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white">{editingSupplier ? '✏️ Tedarikçi Düzenle' : '🏭 Yeni Tedarikçi Ekle'}</h2>
+                <button onClick={() => setShowSupplierModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
               </div>
-            </div>
-            <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
-              <button onClick={() => setShowSupplierModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
-              <button onClick={saveSupplier} disabled={savingSupplier || !supplierForm.name.trim()}
-                className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                {savingSupplier ? '⏳ Kaydediliyor...' : editingSupplier ? '✅ Güncelle' : '✅ Kaydet'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════ */}
-      {/* ═══ ORDER CREATION MODAL ═══ */}
-      {/* ═══════════════════════════════════════════════════════ */}
-      {showOrderModal && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowOrderModal(false)}>
-          <div className="bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-700 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">{editingOrder ? '✏️ Sipariş Düzenle' : '📋 Yeni Tedarik Siparişi'}</h2>
-              <button onClick={() => setShowOrderModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
-            </div>
-            <div className="p-6 space-y-5">
-              {/* Supplier Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Tedarikçi *</label>
-                  <select
-                    value={orderForm.supplierId}
-                    onChange={e => {
-                      const s = suppliers.find((s: any) => s.id === e.target.value);
-                      setOrderForm((p: any) => ({ ...p, supplierId: e.target.value, supplierName: s?.name || '' }));
-                    }}
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
-                    {suppliers.map((s: any) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Beklenen Teslimat</label>
-                  <input type="date" value={orderForm.expectedDeliveryDate} onChange={e => setOrderForm((p: any) => ({ ...p, expectedDeliveryDate: e.target.value }))}
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 mb-1 block">Fatura No</label>
-                  <input value={orderForm.invoiceNumber} onChange={e => setOrderForm((p: any) => ({ ...p, invoiceNumber: e.target.value }))}
-                    placeholder="RE-2026-001"
-                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
-                </div>
-              </div>
-
-              {/* Order Lines */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-sm font-semibold text-white">📦 Sipariş Kalemleri</h3>
-                  <button
-                    onClick={() => setOrderForm((p: any) => ({
-                      ...p,
-                      items: [...p.items, { productId: '', productName: '', sku: '', orderedQuantity: 1, receivedQuantity: 0, unit: 'kg', purchasePrice: 0, batchNumber: '', productionDate: '', expirationDate: '' }]
-                    }))}
-                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium"
-                  >
-                    + Kalem Ekle
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {orderForm.items.map((item: any, idx: number) => (
-                    <div key={idx} className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs text-gray-500 font-semibold">Kalem #{idx + 1}</span>
-                        {orderForm.items.length > 1 && (
-                          <button
-                            onClick={() => setOrderForm((p: any) => ({ ...p, items: p.items.filter((_: any, i: number) => i !== idx) }))}
-                            className="text-red-400 hover:text-red-300 text-xs"
-                          >
-                            🗑 Kaldır
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div className="col-span-2">
-                          <label className="text-xs text-gray-400 mb-1 block">Ürün Adı *</label>
-                          <div className="relative">
-                            <input
-                              value={item.productName}
-                              onChange={e => {
-                                const newItems = [...orderForm.items];
-                                newItems[idx] = { ...newItems[idx], productName: e.target.value };
-                                setOrderForm((p: any) => ({ ...p, items: newItems }));
-                              }}
-                              placeholder="Ürün adı yazın veya listeden seçin..."
-                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-                              list={`product-list-${idx}`}
-                            />
-                            <datalist id={`product-list-${idx}`}>
-                              {inlineProducts.map((prod: any) => (
-                                <option key={prod.id} value={typeof prod.name === 'object' ? (prod.name.tr || prod.name.de || Object.values(prod.name)[0]) : prod.name}>
-                                  {prod.id}
-                                </option>
-                              ))}
-                            </datalist>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-400 mb-1 block">SKU / Artikelnr</label>
-                          <input
-                            value={item.sku || ''}
-                            onChange={e => {
-                              const newItems = [...orderForm.items];
-                              newItems[idx] = { ...newItems[idx], sku: e.target.value };
-                              setOrderForm((p: any) => ({ ...p, items: newItems }));
-                            }}
-                            placeholder="Art.Nr."
-                            className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-400 mb-1 block">Birim</label>
-                          <select
-                            value={item.unit}
-                            onChange={e => {
-                              const newItems = [...orderForm.items];
-                              newItems[idx] = { ...newItems[idx], unit: e.target.value };
-                              setOrderForm((p: any) => ({ ...p, items: newItems }));
-                            }}
-                            className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600">
-                            <option value="kg">kg</option>
-                            <option value="adet">Adet (Stück)</option>
-                            <option value="paket">Paket</option>
-                            <option value="kutu">Kutu (Karton)</option>
-                            <option value="lt">Litre</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-400 mb-1 block">Sipariş Miktarı *</label>
-                          <input
-                            type="number"
-                            min="0" step="0.1"
-                            value={item.orderedQuantity}
-                            onChange={e => {
-                              const newItems = [...orderForm.items];
-                              newItems[idx] = { ...newItems[idx], orderedQuantity: e.target.value };
-                              setOrderForm((p: any) => ({ ...p, items: newItems }));
-                            }}
-                            className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-400 mb-1 block">Birim Fiyat (EK) *</label>
-                          <input
-                            type="number"
-                            min="0" step="0.01"
-                            value={item.purchasePrice}
-                            onChange={e => {
-                              const newItems = [...orderForm.items];
-                              newItems[idx] = { ...newItems[idx], purchasePrice: e.target.value };
-                              setOrderForm((p: any) => ({ ...p, items: newItems }));
-                            }}
-                            placeholder="€"
-                            className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs text-gray-400 mb-1 block">Satır Toplam</label>
-                          <p className="text-white text-sm font-semibold py-2">
-                            {formatCurrency(Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0), (business as any)?.currency || 'EUR')}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {/* Total */}
-                <div className="mt-4 text-right">
-                  <span className="text-gray-400 text-sm">Toplam: </span>
-                  <span className="text-white text-lg font-bold">
-                    {formatCurrency(
-                      orderForm.items.reduce((sum: number, item: any) => sum + (Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0)), 0),
-                      (business as any)?.currency || 'EUR'
-                    )}
-                  </span>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">Notlar</label>
-                <textarea value={orderForm.notes} onChange={e => setOrderForm((p: any) => ({ ...p, notes: e.target.value }))}
-                  rows={2} placeholder="Sipariş notları..."
-                  className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
-              <button onClick={() => setShowOrderModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
-              <button onClick={saveSupplierOrder} disabled={savingOrder || !orderForm.supplierId}
-                className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                {savingOrder ? '⏳ Kaydediliyor...' : editingOrder ? '✅ Güncelle' : '✅ Sipariş Oluştur'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════ */}
-      {/* ═══ GOODS RECEIPT MODAL (Wareneingang / Mal Kabul) ═══ */}
-      {/* ═══════════════════════════════════════════════════════ */}
-      {showGoodsReceiptModal && goodsReceiptOrder && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowGoodsReceiptModal(false)}>
-          <div className="bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-700">
-              <h2 className="text-xl font-bold text-white">📥 Mal Kabul (Wareneingang)</h2>
-              <p className="text-gray-400 text-sm mt-1">
-                Sipariş: <span className="text-blue-400 font-mono">{goodsReceiptOrder.orderNumber}</span> — {goodsReceiptOrder.supplierName}
-              </p>
-            </div>
-            <div className="p-6 space-y-4">
-              {goodsReceiptOrder.items.map((item: any, idx: number) => (
-                <div key={idx} className={`rounded-lg p-4 border ${item.isFullyReceived ? 'bg-green-900/20 border-green-700/50' : 'bg-gray-900/50 border-gray-700'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <span className="text-white font-semibold">{item.productName}</span>
-                      {item.sku && <span className="text-gray-500 text-xs ml-2">(#{item.sku})</span>}
-                    </div>
-                    <span className="text-gray-400 text-sm">
-                      Sipariş: <strong className="text-white">{item.orderedQuantity} {item.unit}</strong>
-                    </span>
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-gray-400 mb-1 block">Firma Adı *</label>
+                    <input value={supplierForm.name} onChange={e => setSupplierForm((p: any) => ({ ...p, name: e.target.value }))}
+                      placeholder="Metro Großhandel, TUNA Fleisch GmbH..."
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <div>
-                      <label className="text-xs text-gray-400 mb-1 block">Teslim Alınan Miktar</label>
-                      <input
-                        type="number" min="0" step="0.1"
-                        value={item.receivedQuantity || ''}
-                        onChange={e => {
-                          const newItems = [...goodsReceiptOrder.items];
-                          newItems[idx] = { ...newItems[idx], receivedQuantity: e.target.value };
-                          setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
-                        }}
-                        placeholder="0"
-                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-400 mb-1 block">Parti / Charge No</label>
-                      <input
-                        value={item.batchNumber || ''}
-                        onChange={e => {
-                          const newItems = [...goodsReceiptOrder.items];
-                          newItems[idx] = { ...newItems[idx], batchNumber: e.target.value };
-                          setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
-                        }}
-                        placeholder="LOT-001"
-                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-400 mb-1 block">Üretim Tarihi</label>
-                      <input
-                        type="date"
-                        value={item.productionDate || ''}
-                        onChange={e => {
-                          const newItems = [...goodsReceiptOrder.items];
-                          newItems[idx] = { ...newItems[idx], productionDate: e.target.value };
-                          setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
-                        }}
-                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-400 mb-1 block">Son Kullanma (MHD)</label>
-                      <input
-                        type="date"
-                        value={item.expirationDate || ''}
-                        onChange={e => {
-                          const newItems = [...goodsReceiptOrder.items];
-                          newItems[idx] = { ...newItems[idx], expirationDate: e.target.value };
-                          setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
-                        }}
-                        className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
-                      />
-                    </div>
-                    <div className="flex items-end">
-                      <div className={`w-full text-center py-2 rounded text-xs font-semibold ${Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity)
-                        ? 'bg-green-600/30 text-green-300'
-                        : Number(item.receivedQuantity || 0) > 0
-                          ? 'bg-yellow-600/30 text-yellow-300'
-                          : 'bg-gray-700 text-gray-400'
-                        }`}>
-                        {Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity)
-                          ? '✅ Tam'
-                          : Number(item.receivedQuantity || 0) > 0
-                            ? `📦 Kısmi (${item.receivedQuantity}/${item.orderedQuantity})`
-                            : '⏳ Bekliyor'}
-                      </div>
-                    </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Yetkili Kişi</label>
+                    <input value={supplierForm.contactPerson} onChange={e => setSupplierForm((p: any) => ({ ...p, contactPerson: e.target.value }))}
+                      placeholder="İsim Soyisim"
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Telefon</label>
+                    <input value={supplierForm.phone} onChange={e => setSupplierForm((p: any) => ({ ...p, phone: e.target.value }))}
+                      placeholder="+49 ..."
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">E-Posta</label>
+                    <input value={supplierForm.email} onChange={e => setSupplierForm((p: any) => ({ ...p, email: e.target.value }))}
+                      placeholder="info@firma.de"
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Vergi No (USt-IdNr)</label>
+                    <input value={supplierForm.taxId} onChange={e => setSupplierForm((p: any) => ({ ...p, taxId: e.target.value }))}
+                      placeholder="DE123456789"
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-gray-400 mb-1 block">Adres</label>
+                    <input value={supplierForm.address} onChange={e => setSupplierForm((p: any) => ({ ...p, address: e.target.value }))}
+                      placeholder="Straße, PLZ Stadt"
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Ödeme Koşulları</label>
+                    <input value={supplierForm.paymentTerms} onChange={e => setSupplierForm((p: any) => ({ ...p, paymentTerms: e.target.value }))}
+                      placeholder="30 Tage netto, Sofortzahlung..."
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Teslimat Süresi (gün)</label>
+                    <input type="number" value={supplierForm.deliveryDays} onChange={e => setSupplierForm((p: any) => ({ ...p, deliveryDays: e.target.value }))}
+                      placeholder="2"
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Min. Sipariş Tutarı (€)</label>
+                    <input type="number" value={supplierForm.minOrderValue} onChange={e => setSupplierForm((p: any) => ({ ...p, minOrderValue: e.target.value }))}
+                      placeholder="100"
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Durum</label>
+                    <select value={supplierForm.isActive ? 'active' : 'inactive'} onChange={e => setSupplierForm((p: any) => ({ ...p, isActive: e.target.value === 'active' }))}
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                      <option value="active">✅ Aktif</option>
+                      <option value="inactive">⏸ Pasif</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="text-xs text-gray-400 mb-1 block">Notlar</label>
+                    <textarea value={supplierForm.notes} onChange={e => setSupplierForm((p: any) => ({ ...p, notes: e.target.value }))}
+                      rows={2} placeholder="Özel koşullar, sabit sipariş günleri vb..."
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="p-6 border-t border-gray-700 flex justify-between items-center">
-              <div className="text-sm text-gray-400">
-                {goodsReceiptOrder.items.filter((it: any) => Number(it.receivedQuantity || 0) >= Number(it.orderedQuantity)).length} / {goodsReceiptOrder.items.length} kalem tam teslim
               </div>
-              <div className="flex gap-3">
-                <button onClick={() => setShowGoodsReceiptModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
-                <button onClick={processGoodsReceipt} disabled={savingOrder}
+              <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
+                <button onClick={() => setShowSupplierModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
+                <button onClick={saveSupplier} disabled={savingSupplier || !supplierForm.name.trim()}
                   className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                  {savingOrder ? '⏳ Kaydediliyor...' : '📥 Mal Kabulü Kaydet'}
+                  {savingSupplier ? '⏳ Kaydediliyor...' : editingSupplier ? '✅ Güncelle' : '✅ Kaydet'}
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* ═══ ORDER CREATION MODAL ═══ */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {
+        showOrderModal && (
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowOrderModal(false)}>
+            <div className="bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white">{editingOrder ? '✏️ Sipariş Düzenle' : '📋 Yeni Tedarik Siparişi'}</h2>
+                <button onClick={() => setShowOrderModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+              </div>
+              <div className="p-6 space-y-5">
+                {/* Supplier Selection */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Tedarikçi *</label>
+                    <select
+                      value={orderForm.supplierId}
+                      onChange={e => {
+                        const s = suppliers.find((s: any) => s.id === e.target.value);
+                        setOrderForm((p: any) => ({ ...p, supplierId: e.target.value, supplierName: s?.name || '' }));
+                      }}
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700">
+                      {suppliers.map((s: any) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Beklenen Teslimat</label>
+                    <input type="date" value={orderForm.expectedDeliveryDate} onChange={e => setOrderForm((p: any) => ({ ...p, expectedDeliveryDate: e.target.value }))}
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Fatura No</label>
+                    <input value={orderForm.invoiceNumber} onChange={e => setOrderForm((p: any) => ({ ...p, invoiceNumber: e.target.value }))}
+                      placeholder="RE-2026-001"
+                      className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none" />
+                  </div>
+                </div>
+
+                {/* Order Lines */}
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-sm font-semibold text-white">📦 Sipariş Kalemleri</h3>
+                    <button
+                      onClick={() => setOrderForm((p: any) => ({
+                        ...p,
+                        items: [...p.items, { productId: '', productName: '', sku: '', orderedQuantity: 1, receivedQuantity: 0, unit: 'kg', purchasePrice: 0, batchNumber: '', productionDate: '', expirationDate: '' }]
+                      }))}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium"
+                    >
+                      + Kalem Ekle
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {orderForm.items.map((item: any, idx: number) => (
+                      <div key={idx} className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs text-gray-500 font-semibold">Kalem #{idx + 1}</span>
+                          {orderForm.items.length > 1 && (
+                            <button
+                              onClick={() => setOrderForm((p: any) => ({ ...p, items: p.items.filter((_: any, i: number) => i !== idx) }))}
+                              className="text-red-400 hover:text-red-300 text-xs"
+                            >
+                              🗑 Kaldır
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className="col-span-2">
+                            <label className="text-xs text-gray-400 mb-1 block">Ürün Adı *</label>
+                            <div className="relative">
+                              <input
+                                value={item.productName}
+                                onChange={e => {
+                                  const newItems = [...orderForm.items];
+                                  newItems[idx] = { ...newItems[idx], productName: e.target.value };
+                                  setOrderForm((p: any) => ({ ...p, items: newItems }));
+                                }}
+                                placeholder="Ürün adı yazın veya listeden seçin..."
+                                className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                                list={`product-list-${idx}`}
+                              />
+                              <datalist id={`product-list-${idx}`}>
+                                {inlineProducts.map((prod: any) => (
+                                  <option key={prod.id} value={typeof prod.name === 'object' ? (prod.name.tr || prod.name.de || Object.values(prod.name)[0]) : prod.name}>
+                                    {prod.id}
+                                  </option>
+                                ))}
+                              </datalist>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-400 mb-1 block">SKU / Artikelnr</label>
+                            <input
+                              value={item.sku || ''}
+                              onChange={e => {
+                                const newItems = [...orderForm.items];
+                                newItems[idx] = { ...newItems[idx], sku: e.target.value };
+                                setOrderForm((p: any) => ({ ...p, items: newItems }));
+                              }}
+                              placeholder="Art.Nr."
+                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-400 mb-1 block">Birim</label>
+                            <select
+                              value={item.unit}
+                              onChange={e => {
+                                const newItems = [...orderForm.items];
+                                newItems[idx] = { ...newItems[idx], unit: e.target.value };
+                                setOrderForm((p: any) => ({ ...p, items: newItems }));
+                              }}
+                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600">
+                              <option value="kg">kg</option>
+                              <option value="adet">Adet (Stück)</option>
+                              <option value="paket">Paket</option>
+                              <option value="kutu">Kutu (Karton)</option>
+                              <option value="lt">Litre</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-400 mb-1 block">Sipariş Miktarı *</label>
+                            <input
+                              type="number"
+                              min="0" step="0.1"
+                              value={item.orderedQuantity}
+                              onChange={e => {
+                                const newItems = [...orderForm.items];
+                                newItems[idx] = { ...newItems[idx], orderedQuantity: e.target.value };
+                                setOrderForm((p: any) => ({ ...p, items: newItems }));
+                              }}
+                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-400 mb-1 block">Birim Fiyat (EK) *</label>
+                            <input
+                              type="number"
+                              min="0" step="0.01"
+                              value={item.purchasePrice}
+                              onChange={e => {
+                                const newItems = [...orderForm.items];
+                                newItems[idx] = { ...newItems[idx], purchasePrice: e.target.value };
+                                setOrderForm((p: any) => ({ ...p, items: newItems }));
+                              }}
+                              placeholder="€"
+                              className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-400 mb-1 block">Satır Toplam</label>
+                            <p className="text-white text-sm font-semibold py-2">
+                              {formatCurrency(Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0), (business as any)?.currency || 'EUR')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Total */}
+                  <div className="mt-4 text-right">
+                    <span className="text-gray-400 text-sm">Toplam: </span>
+                    <span className="text-white text-lg font-bold">
+                      {formatCurrency(
+                        orderForm.items.reduce((sum: number, item: any) => sum + (Number(item.purchasePrice || 0) * Number(item.orderedQuantity || 0)), 0),
+                        (business as any)?.currency || 'EUR'
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Notlar</label>
+                  <textarea value={orderForm.notes} onChange={e => setOrderForm((p: any) => ({ ...p, notes: e.target.value }))}
+                    rows={2} placeholder="Sipariş notları..."
+                    className="w-full bg-gray-900/50 text-white text-sm rounded px-3 py-2 border border-gray-700 focus:border-blue-500 focus:outline-none resize-none" />
+                </div>
+              </div>
+              <div className="p-6 border-t border-gray-700 flex justify-end gap-3">
+                <button onClick={() => setShowOrderModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
+                <button onClick={saveSupplierOrder} disabled={savingOrder || !orderForm.supplierId}
+                  className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                  {savingOrder ? '⏳ Kaydediliyor...' : editingOrder ? '✅ Güncelle' : '✅ Sipariş Oluştur'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* ═══ GOODS RECEIPT MODAL (Wareneingang / Mal Kabul) ═══ */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {
+        showGoodsReceiptModal && goodsReceiptOrder && (
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setShowGoodsReceiptModal(false)}>
+            <div className="bg-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <div className="p-6 border-b border-gray-700">
+                <h2 className="text-xl font-bold text-white">📥 Mal Kabul (Wareneingang)</h2>
+                <p className="text-gray-400 text-sm mt-1">
+                  Sipariş: <span className="text-blue-400 font-mono">{goodsReceiptOrder.orderNumber}</span> — {goodsReceiptOrder.supplierName}
+                </p>
+              </div>
+              <div className="p-6 space-y-4">
+                {goodsReceiptOrder.items.map((item: any, idx: number) => (
+                  <div key={idx} className={`rounded-lg p-4 border ${item.isFullyReceived ? 'bg-green-900/20 border-green-700/50' : 'bg-gray-900/50 border-gray-700'}`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <span className="text-white font-semibold">{item.productName}</span>
+                        {item.sku && <span className="text-gray-500 text-xs ml-2">(#{item.sku})</span>}
+                      </div>
+                      <span className="text-gray-400 text-sm">
+                        Sipariş: <strong className="text-white">{item.orderedQuantity} {item.unit}</strong>
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Teslim Alınan Miktar</label>
+                        <input
+                          type="number" min="0" step="0.1"
+                          value={item.receivedQuantity || ''}
+                          onChange={e => {
+                            const newItems = [...goodsReceiptOrder.items];
+                            newItems[idx] = { ...newItems[idx], receivedQuantity: e.target.value };
+                            setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
+                          }}
+                          placeholder="0"
+                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Parti / Charge No</label>
+                        <input
+                          value={item.batchNumber || ''}
+                          onChange={e => {
+                            const newItems = [...goodsReceiptOrder.items];
+                            newItems[idx] = { ...newItems[idx], batchNumber: e.target.value };
+                            setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
+                          }}
+                          placeholder="LOT-001"
+                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Üretim Tarihi</label>
+                        <input
+                          type="date"
+                          value={item.productionDate || ''}
+                          onChange={e => {
+                            const newItems = [...goodsReceiptOrder.items];
+                            newItems[idx] = { ...newItems[idx], productionDate: e.target.value };
+                            setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
+                          }}
+                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-400 mb-1 block">Son Kullanma (MHD)</label>
+                        <input
+                          type="date"
+                          value={item.expirationDate || ''}
+                          onChange={e => {
+                            const newItems = [...goodsReceiptOrder.items];
+                            newItems[idx] = { ...newItems[idx], expirationDate: e.target.value };
+                            setGoodsReceiptOrder({ ...goodsReceiptOrder, items: newItems });
+                          }}
+                          className="w-full bg-gray-800 text-white text-sm rounded px-3 py-2 border border-gray-600 focus:border-green-500 focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <div className={`w-full text-center py-2 rounded text-xs font-semibold ${Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity)
+                          ? 'bg-green-600/30 text-green-300'
+                          : Number(item.receivedQuantity || 0) > 0
+                            ? 'bg-yellow-600/30 text-yellow-300'
+                            : 'bg-gray-700 text-gray-400'
+                          }`}>
+                          {Number(item.receivedQuantity || 0) >= Number(item.orderedQuantity)
+                            ? '✅ Tam'
+                            : Number(item.receivedQuantity || 0) > 0
+                              ? `📦 Kısmi (${item.receivedQuantity}/${item.orderedQuantity})`
+                              : '⏳ Bekliyor'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="p-6 border-t border-gray-700 flex justify-between items-center">
+                <div className="text-sm text-gray-400">
+                  {goodsReceiptOrder.items.filter((it: any) => Number(it.receivedQuantity || 0) >= Number(it.orderedQuantity)).length} / {goodsReceiptOrder.items.length} kalem tam teslim
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => setShowGoodsReceiptModal(false)} className="px-4 py-2 bg-gray-700 text-white rounded-lg text-sm">İptal</button>
+                  <button onClick={processGoodsReceipt} disabled={savingOrder}
+                    className="px-6 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                    {savingOrder ? '⏳ Kaydediliyor...' : '📥 Mal Kabulü Kaydet'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
 
     </div >
   );

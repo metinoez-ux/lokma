@@ -640,6 +640,12 @@ export interface ButcherSubscriptionPlan {
         aiBestPrice?: boolean;         // AI Fiyat Önerisi (ortalama + satış günü bazlı)
         tableReservation?: boolean;    // Masa Rezervasyonu
         staffShiftTracking?: boolean;  // İşçi Çalışma Saatleri Takibi & Export
+        // 🎯 Promosyon & Pazarlama Modülleri (Plan aktif eder → İşletme kontrol eder)
+        couponSystem?: boolean;        // 🎟️ Kupon/Promo Code sistemi
+        referralSystem?: boolean;      // 🤝 Referral (Davet Et Kazan)
+        firstOrderDiscount?: boolean;  // 🎁 İlk Sipariş İndirimi
+        freeDrink?: boolean;           // 🍺 Gratis İçecek Modülü
+        donationRoundUp?: boolean;     // 💚 Bağış Yuvarlama Modülü
         [key: string]: boolean | string | number | undefined;
     };
 

@@ -172,9 +172,7 @@ export default function DealsTab({ businessId, isSuperAdmin, businesses, deals, 
                     <span className="text-5xl">🔥</span>
                     <h3 className="text-lg font-medium text-white mt-4">Henüz fırsat yok</h3>
                     <p className="text-gray-400 mt-2">Müşterilerinizi cezbeden fırsatlar oluşturun!</p>
-                    <button onClick={openAdd} className="mt-4 px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-500 transition">
-                        + İlk Fırsatı Oluştur
-                    </button>
+                    <p className="text-gray-500 text-sm mt-3">Sağ üstteki <span className="text-amber-400 font-medium">+ Fırsat Ekle</span> butonunu kullanın</p>
                 </div>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2">

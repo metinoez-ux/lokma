@@ -1,12 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/butcher_product.dart';
 import '../models/product_option.dart';
+
+// ─── Storage key ───────────────────────────────────────────────────────────
+const _kCartKey = 'lokma_cart_v2';
 
 class CartItem {
   final ButcherProduct product;
   final double quantity;
   final List<SelectedOption> selectedOptions;
-  final String? note; // Per-item note (e.g. "Hasan Usta", "Yonca Hanım")
+  final String? note; // Per-item note
   final bool isFreeDrink; // 🥤 Gratis İçecek — platform promotion
 
   CartItem({
@@ -17,8 +23,7 @@ class CartItem {
     this.isFreeDrink = false,
   });
 
-  /// Unique key: SKU + sorted option IDs (same product, different options = different cart items)
-  /// Free drink items get a special prefix to avoid merging with paid items
+  /// Unique key: SKU + sorted option IDs
   String get uniqueKey {
     final prefix = isFreeDrink ? 'FREE_DRINK|' : '';
     if (selectedOptions.isEmpty) return '$prefix${product.sku}';
@@ -31,11 +36,34 @@ class CartItem {
 
   double get unitPrice => product.price + optionsTotal;
 
-  /// Original price (before free drink discount)
   double get originalPrice => unitPrice * quantity;
 
   /// Effective price: 0.00 for free drinks
   double get totalPrice => isFreeDrink ? 0.0 : unitPrice * quantity;
+
+  // ─── Serialization ────────────────────────────────────────────────────────
+
+  Map<String, dynamic> toMap() {
+    return {
+      'product': product.toMap(),
+      'quantity': quantity,
+      'selectedOptions': selectedOptions.map((o) => o.toMap()).toList(),
+      'note': note,
+      'isFreeDrink': isFreeDrink,
+    };
+  }
+
+  factory CartItem.fromMap(Map<String, dynamic> map) {
+    return CartItem(
+      product: ButcherProduct.fromMap(map['product'] as Map<String, dynamic>),
+      quantity: (map['quantity'] ?? 1).toDouble(),
+      selectedOptions: (map['selectedOptions'] as List<dynamic>?)
+          ?.map((o) => SelectedOption.fromMap(o as Map<String, dynamic>))
+          .toList() ?? [],
+      note: map['note'] as String?,
+      isFreeDrink: map['isFreeDrink'] ?? false,
+    );
+  }
 }
 
 class CartState {
@@ -55,36 +83,98 @@ class CartState {
 
   /// 🥤 Free drink helpers
   bool get hasFreeDrink => items.any((item) => item.isFreeDrink);
-  CartItem? get freeDrinkItem => items.cast<CartItem?>().firstWhere((item) => item!.isFreeDrink, orElse: () => null);
+  CartItem? get freeDrinkItem =>
+      items.cast<CartItem?>().firstWhere((item) => item!.isFreeDrink, orElse: () => null);
+
+  // ─── Serialization ────────────────────────────────────────────────────────
+
+  Map<String, dynamic> toMap() {
+    return {
+      'butcherId': butcherId,
+      'butcherName': butcherName,
+      'items': items.map((i) => i.toMap()).toList(),
+    };
+  }
+
+  factory CartState.fromMap(Map<String, dynamic> map) {
+    return CartState(
+      butcherId: map['butcherId'] as String?,
+      butcherName: map['butcherName'] as String?,
+      items: (map['items'] as List<dynamic>?)
+          ?.map((i) => CartItem.fromMap(i as Map<String, dynamic>))
+          .toList() ?? [],
+    );
+  }
 }
 
 class CartNotifier extends Notifier<CartState> {
   @override
   CartState build() {
+    // Start with empty state — _loadFromDisk() is called immediately after
+    _loadFromDisk();
     return CartState();
   }
 
-  void addToCart(ButcherProduct product, double quantity, String currentButcherId, String currentButcherName, {List<SelectedOption> selectedOptions = const [], String? note}) {
+  // ─── Persistence ─────────────────────────────────────────────────────────
+
+  /// Restore cart from SharedPreferences on startup
+  Future<void> _loadFromDisk() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_kCartKey);
+      if (raw != null && raw.isNotEmpty) {
+        final map = jsonDecode(raw) as Map<String, dynamic>;
+        final loaded = CartState.fromMap(map);
+        if (loaded.isNotEmpty) {
+          state = loaded;
+        }
+      }
+    } catch (e) {
+      // Corrupt cache — ignore and start fresh
+    }
+  }
+
+  /// Save current cart to SharedPreferences
+  Future<void> _persist() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (state.isEmpty) {
+        await prefs.remove(_kCartKey);
+      } else {
+        await prefs.setString(_kCartKey, jsonEncode(state.toMap()));
+      }
+    } catch (_) {
+      // persist failures are non-fatal
+    }
+  }
+
+  // ─── Cart Mutations ───────────────────────────────────────────────────────
+
+  void addToCart(
+    ButcherProduct product,
+    double quantity,
+    String currentButcherId,
+    String currentButcherName, {
+    List<SelectedOption> selectedOptions = const [],
+    String? note,
+  }) {
     if (quantity <= 0) return;
 
-    // Check if adding from a different butcher
+    // Different business → clear and start fresh
     if (state.butcherId != null && state.butcherId != currentButcherId) {
-       state = CartState(
-         butcherId: currentButcherId,
-         butcherName: currentButcherName,
-         items: [CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions, note: note)],
-       );
-       return;
+      state = CartState(
+        butcherId: currentButcherId,
+        butcherName: currentButcherName,
+        items: [CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions, note: note)],
+      );
+      _persist();
+      return;
     }
 
-    // Build a temporary item to get its unique key
     final newItem = CartItem(product: product, quantity: quantity, selectedOptions: selectedOptions, note: note);
-
-    // Check if same product + same options already exists
     final existingIndex = state.items.indexWhere((item) => item.uniqueKey == newItem.uniqueKey);
 
     if (existingIndex >= 0) {
-      // Update quantity
       final updatedItems = List<CartItem>.from(state.items);
       final existingItem = updatedItems[existingIndex];
       updatedItems[existingIndex] = CartItem(
@@ -99,13 +189,13 @@ class CartNotifier extends Notifier<CartState> {
         butcherName: state.butcherName ?? currentButcherName,
       );
     } else {
-      // Add new item
       state = CartState(
         items: [...state.items, newItem],
         butcherId: state.butcherId ?? currentButcherId,
         butcherName: state.butcherName ?? currentButcherName,
       );
     }
+    _persist();
   }
 
   void removeFromCart(String uniqueKey) {
@@ -115,15 +205,16 @@ class CartNotifier extends Notifier<CartState> {
       butcherId: newItems.isEmpty ? null : state.butcherId,
       butcherName: newItems.isEmpty ? null : state.butcherName,
     );
+    _persist();
   }
 
   void clearCart() {
     state = CartState(items: []);
+    _persist();
   }
 
-  /// 🥤 Add a free drink to cart (max 1 per order, quantity locked at 1)
+  /// 🥤 Add a free drink (max 1 per order, replaces existing free drink)
   void addFreeDrinkItem(ButcherProduct product, String currentButcherId, String currentButcherName) {
-    // Already have a free drink? Replace it
     final itemsWithoutFreeDrink = state.items.where((item) => !item.isFreeDrink).toList();
     final freeDrinkItem = CartItem(
       product: product,
@@ -135,9 +226,10 @@ class CartNotifier extends Notifier<CartState> {
       butcherId: state.butcherId ?? currentButcherId,
       butcherName: state.butcherName ?? currentButcherName,
     );
+    _persist();
   }
 
-  /// 🥤 Remove the free drink from cart
+  /// 🥤 Remove free drink from cart
   void removeFreeDrinkItem() {
     final newItems = state.items.where((item) => !item.isFreeDrink).toList();
     state = CartState(
@@ -145,6 +237,7 @@ class CartNotifier extends Notifier<CartState> {
       butcherId: newItems.isEmpty ? null : state.butcherId,
       butcherName: newItems.isEmpty ? null : state.butcherName,
     );
+    _persist();
   }
 
   void updateQuantity(String uniqueKey, double quantity) {
@@ -152,23 +245,23 @@ class CartNotifier extends Notifier<CartState> {
       removeFromCart(uniqueKey);
       return;
     }
-
     final index = state.items.indexWhere((item) => item.uniqueKey == uniqueKey);
     if (index >= 0) {
-       final updatedItems = List<CartItem>.from(state.items);
-       final existing = updatedItems[index];
-       updatedItems[index] = CartItem(
-         product: existing.product,
-         quantity: quantity,
-         selectedOptions: existing.selectedOptions,
-         note: existing.note,
-         isFreeDrink: existing.isFreeDrink,
-       );
-       state = CartState(
-         items: updatedItems,
-         butcherId: state.butcherId,
-         butcherName: state.butcherName,
-       );
+      final updatedItems = List<CartItem>.from(state.items);
+      final existing = updatedItems[index];
+      updatedItems[index] = CartItem(
+        product: existing.product,
+        quantity: quantity,
+        selectedOptions: existing.selectedOptions,
+        note: existing.note,
+        isFreeDrink: existing.isFreeDrink,
+      );
+      state = CartState(
+        items: updatedItems,
+        butcherId: state.butcherId,
+        butcherName: state.butcherName,
+      );
+      _persist();
     }
   }
 
@@ -189,6 +282,7 @@ class CartNotifier extends Notifier<CartState> {
         butcherId: state.butcherId,
         butcherName: state.butcherName,
       );
+      _persist();
     }
   }
 }

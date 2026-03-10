@@ -298,7 +298,7 @@ class _KermesCheckoutSheetState extends ConsumerState<KermesCheckoutSheet> {
                       _stepTitles[_currentStep],
                       style: TextStyle(
                         color: textColor,
-                        fontSize: 22,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

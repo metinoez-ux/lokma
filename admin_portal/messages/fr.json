@@ -803,7 +803,10 @@
     "teslimat": "Livraison",
     "gelAl": "À Emporter",
     "yerinde": "Sur Place",
-    "rezervasyon": "Réservation"
+    "rezervasyon": "Réservation",
+    "kurye_aktif": "🛵 Livreur actif",
+    "kurye_durduruldu": "⏸️ Livreur en pause",
+    "kurye_kapali": "❌ Livreur fermé"
   },
   "AdminBusiness[id": {
     "adet": "quantité",

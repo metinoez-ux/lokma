@@ -136,7 +136,14 @@ export const subscriptionService = {
                     posIntegration: false,
                     scaleIntegration: false,
                     accountingIntegration: false,
-                    aiSupplierOrdering: false
+                    aiSupplierOrdering: false,
+                    // 🎯 Promosyon Modülleri
+                    sponsoredProducts: false,
+                    couponSystem: false,
+                    referralSystem: false,
+                    firstOrderDiscount: false,
+                    freeDrink: false,
+                    donationRoundUp: false,
                 },
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -190,7 +197,14 @@ export const subscriptionService = {
                     posIntegration: false,
                     scaleIntegration: false,
                     accountingIntegration: false,
-                    aiSupplierOrdering: false
+                    aiSupplierOrdering: false,
+                    // 🎯 Promosyon Modülleri
+                    sponsoredProducts: false,
+                    couponSystem: false,
+                    referralSystem: false,
+                    firstOrderDiscount: false,
+                    freeDrink: true,        // Basic'te gratis içecek aktif
+                    donationRoundUp: true,   // Basic'te bağış yuvarlama aktif
                 },
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -244,7 +258,14 @@ export const subscriptionService = {
                     posIntegration: true, // Planned
                     scaleIntegration: true, // Planned
                     accountingIntegration: true, // Planned
-                    aiSupplierOrdering: true // B2B Sipariş
+                    aiSupplierOrdering: true, // B2B Sipariş
+                    // 🎯 Promosyon Modülleri
+                    sponsoredProducts: true,
+                    couponSystem: true,
+                    referralSystem: true,
+                    firstOrderDiscount: true,
+                    freeDrink: true,
+                    donationRoundUp: true,
                 },
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -298,7 +319,14 @@ export const subscriptionService = {
                     posIntegration: true,
                     scaleIntegration: true,
                     accountingIntegration: true,
-                    aiSupplierOrdering: true
+                    aiSupplierOrdering: true,
+                    // 🎯 Promosyon Modülleri — Ultra: Hepsi açık
+                    sponsoredProducts: true,
+                    couponSystem: true,
+                    referralSystem: true,
+                    firstOrderDiscount: true,
+                    freeDrink: true,
+                    donationRoundUp: true,
                 },
                 createdAt: new Date(),
                 updatedAt: new Date()

@@ -722,7 +722,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                 horizontal: 5, vertical: 2),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [Color(0xFFFF9500), Color(0xFFFF6B00)],
+                                colors: [Color(0xFFFF3B30), Color(0xFFE5222D)],
                               ),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
@@ -731,7 +731,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFFF9500).withValues(alpha: 0.4),
+                                  color: const Color(0xFFFF3B30).withValues(alpha: 0.4),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -1174,6 +1174,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     final pickupStartTime = data['pickupStartTime'] as String?;
     // 🆕 Geçici Kurye Kapatma
     final temporaryDeliveryPaused = data['temporaryDeliveryPaused'] as bool? ?? false;
+    final temporaryPickupPaused = data['temporaryPickupPaused'] as bool? ?? false;
     
     final rating = (data['rating'] as num?)?.toDouble() ?? 4.0;
     final reviewCount = (data['reviewCount'] as num?)?.toInt() ?? 0;
@@ -1367,7 +1368,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       child: const Text(
                         'TUNA',
                         style: TextStyle(
-                          color: Color(0xFF69B445), // TUNA green
+                          color: Colors.white, // TUNA badge — white text
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
@@ -1423,8 +1424,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ),
                   ),
                 
-                // 🆕 Geçici Kurye Kapatma Banner
-                if (temporaryDeliveryPaused)
+                // 🆕 Geçici Kurye/Gel-Al Kapatma Banner
+                if (temporaryDeliveryPaused || temporaryPickupPaused)
                   Positioned(
                     left: 0,
                     right: 0,
@@ -1432,16 +1433,24 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.amber.shade700,
+                        color: temporaryDeliveryPaused && temporaryPickupPaused
+                            ? Colors.red.shade700
+                            : temporaryDeliveryPaused
+                                ? Colors.amber.shade700
+                                : Colors.orange.shade700,
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.pause_circle_outline, color: Colors.white, size: 16),
-                          SizedBox(width: 6),
+                          const Icon(Icons.pause_circle_outline, color: Colors.white, size: 16),
+                          const SizedBox(width: 6),
                           Text(
-                            '🚚 Kurye şu an hizmet vermiyor',
-                            style: TextStyle(
+                            temporaryDeliveryPaused && temporaryPickupPaused
+                                ? '⚠️ Kurye ve Gel-Al geçici durduruldu'
+                                : temporaryDeliveryPaused
+                                    ? '🚚 Kurye şu an hizmet vermiyor'
+                                    : '🛍️ Gel-Al geçici durduruldu',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -1503,6 +1512,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     builder: (context) {
                       final isDark = Theme.of(context).brightness == Brightness.dark;
                       final textColor = isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87;
+                      final subtleTextColor = isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black54;
                       final starColor = isDark ? Color(0xFFFF9529) : Color(0xFFFF9529);
 
                       return Column(
@@ -1516,8 +1526,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                 rating.toStringAsFixed(1).replaceAll('.', ','),
                                 style: TextStyle(
                                   color: textColor,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600, // Reduced from w700
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                               if (reviewText.isNotEmpty) ...[
@@ -1525,21 +1535,21 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                 Text(
                                   reviewText,
                                   style: TextStyle(
-                                    color: textColor,
-                                    fontSize: 15,
+                                    color: subtleTextColor,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ],
                               Text(
                                 ' · ',
-                                style: TextStyle(color: textColor, fontSize: 15),
+                                style: TextStyle(color: subtleTextColor, fontSize: 13),
                               ),
                               Text(
                                 typeLabel,
                                 style: TextStyle(
-                                  color: textColor,
-                                  fontSize: 15,
+                                  color: subtleTextColor,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
@@ -1563,33 +1573,33 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                 return Row(
                                   children: [
                                     // Delivery fee
-                                    Icon(Icons.directions_bike, color: textColor, size: 16),
+                                    Icon(Icons.delivery_dining, color: subtleTextColor, size: 16),
                                     const SizedBox(width: 6),
                                     if (hasFreeDelivery && deliveryFee == 0)
                                       Text(
                                         'Ücretsiz',
-                                        style: TextStyle(color: textColor, fontSize: 15),
+                                        style: TextStyle(color: subtleTextColor, fontSize: 13),
                                       )
                                     else
                                       Text(
                                         '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} Teslimat',
                                         style: TextStyle(
-                                          color: textColor,
-                                          fontSize: 15,
+                                          color: subtleTextColor,
+                                          fontSize: 13,
                                           fontWeight: FontWeight.w400,
                                         ),
                                       ),
                                     
                                     // Min order
                                     if (hasMinOrder) ...[
-                                      Text(' · ', style: TextStyle(color: textColor, fontSize: 15)),
-                                      Icon(Icons.shopping_basket_outlined, color: textColor, size: 16),
+                                      Text(' · ', style: TextStyle(color: subtleTextColor, fontSize: 13)),
+                                      Icon(Icons.shopping_basket_outlined, color: subtleTextColor, size: 14),
                                       const SizedBox(width: 6),
                                       Text(
                                         'Min. ${minOrderAmount.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
                                         style: TextStyle(
-                                          color: textColor,
-                                          fontSize: 15,
+                                          color: subtleTextColor,
+                                          fontSize: 13,
                                           fontWeight: FontWeight.w400,
                                         ),
                                       ),
@@ -1601,13 +1611,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                 if (distanceText.isEmpty) return const SizedBox.shrink();
                                 return Row(
                                   children: [
-                                    Icon(Icons.location_on_outlined, color: textColor, size: 16),
+                                    Icon(Icons.location_on_outlined, color: subtleTextColor, size: 14),
                                     const SizedBox(width: 4),
                                     Text(
                                       distanceText,
                                       style: TextStyle(
-                                        color: textColor,
-                                        fontSize: 15,
+                                        color: subtleTextColor,
+                                        fontSize: 13,
                                         fontWeight: FontWeight.w400,
                                       ),
                                     ),
@@ -1717,13 +1727,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           const SizedBox(height: 16),
 
                           // 🆕 TUNA Filter - Premium first item (matching Yemek segment)
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
+                          Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
-                              color: _onlyTuna
-                                  ? lokmaPink.withValues(alpha: 0.08)
-                                  : Colors.transparent,
+                              color: Colors.transparent,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(

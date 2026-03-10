@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { collection, getDocs, doc, updateDoc, deleteField, query, orderBy, where, onSnapshot, Timestamp, increment } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteField, query, orderBy, where, onSnapshot, Timestamp, increment, addDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import Link from 'next/link';
 import { useAdmin } from '@/components/providers/AdminProvider';
@@ -118,6 +118,18 @@ export default function OrdersPage() {
 
     // KDS Checklist state
     const [checkedItems, setCheckedItems] = useState<Record<string, Record<number, boolean>>>({});
+
+    // ─── Pause System State ───
+    const [deliveryPaused, setDeliveryPaused] = useState(false);
+    const [pickupPaused, setPickupPaused] = useState(false);
+    const [deliveryPauseUntil, setDeliveryPauseUntil] = useState<Date | null>(null);
+    const [pickupPauseUntil, setPickupPauseUntil] = useState<Date | null>(null);
+    const [deliveryCountdown, setDeliveryCountdown] = useState('');
+    const [pickupCountdown, setPickupCountdown] = useState('');
+    const [showDeliveryTimerMenu, setShowDeliveryTimerMenu] = useState(false);
+    const [showPickupTimerMenu, setShowPickupTimerMenu] = useState(false);
+    const deliveryTimerRef = useRef<HTMLDivElement>(null);
+    const pickupTimerRef = useRef<HTMLDivElement>(null);
 
     // Toggle item checked state and persist to Firestore
     const toggleItemChecked = async (orderId: string, itemIdx: number) => {
@@ -239,6 +251,118 @@ export default function OrdersPage() {
             }
         }
     }, [admin]);
+
+    // ─── Pause System: Firestore Listener ───
+    useEffect(() => {
+        if (businessFilter === 'all' || !businessFilter) return;
+        const unsub = onSnapshot(doc(db, 'businesses', businessFilter), (snap) => {
+            if (!snap.exists()) return;
+            const d = snap.data();
+            setDeliveryPaused(d.temporaryDeliveryPaused || false);
+            setPickupPaused(d.temporaryPickupPaused || false);
+            const dpUntil = d.deliveryPauseUntil?.toDate?.() || null;
+            const ppUntil = d.pickupPauseUntil?.toDate?.() || null;
+            setDeliveryPauseUntil(dpUntil);
+            setPickupPauseUntil(ppUntil);
+        });
+        return () => unsub();
+    }, [businessFilter]);
+
+    // ─── Pause System: Countdown Timer ───
+    useEffect(() => {
+        const fmt = (target: Date | null): string => {
+            if (!target) return '';
+            const diff = target.getTime() - Date.now();
+            if (diff <= 0) return '';
+            const m = Math.floor(diff / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        };
+
+        const tick = () => {
+            const dc = fmt(deliveryPauseUntil);
+            const pc = fmt(pickupPauseUntil);
+            setDeliveryCountdown(dc);
+            setPickupCountdown(pc);
+            // Auto-resume when timer expires
+            if (deliveryPaused && deliveryPauseUntil && deliveryPauseUntil.getTime() <= Date.now()) {
+                handleResumePause('delivery');
+            }
+            if (pickupPaused && pickupPauseUntil && pickupPauseUntil.getTime() <= Date.now()) {
+                handleResumePause('pickup');
+            }
+        };
+
+        tick();
+        const interval = setInterval(tick, 1000);
+        return () => clearInterval(interval);
+    }, [deliveryPauseUntil, pickupPauseUntil, deliveryPaused, pickupPaused]);
+
+    // ─── Pause System: Click Outside Handlers ───
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (deliveryTimerRef.current && !deliveryTimerRef.current.contains(e.target as Node)) setShowDeliveryTimerMenu(false);
+            if (pickupTimerRef.current && !pickupTimerRef.current.contains(e.target as Node)) setShowPickupTimerMenu(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    // ─── Pause System: Pause / Resume Functions ───
+    const handlePause = async (type: 'delivery' | 'pickup', minutes: number | null) => {
+        if (businessFilter === 'all') return;
+        const pauseField = type === 'delivery' ? 'temporaryDeliveryPaused' : 'temporaryPickupPaused';
+        const untilField = type === 'delivery' ? 'deliveryPauseUntil' : 'pickupPauseUntil';
+
+        const untilDate = minutes ? new Date(Date.now() + minutes * 60000) : null;
+        try {
+            await updateDoc(doc(db, 'businesses', businessFilter), {
+                [pauseField]: true,
+                [untilField]: untilDate ? Timestamp.fromDate(untilDate) : null,
+            });
+            await addDoc(collection(db, 'businesses', businessFilter, 'deliveryPauseLogs'), {
+                action: 'paused',
+                type,
+                duration: minutes ? `${minutes}min` : 'indefinite',
+                timestamp: serverTimestamp(),
+                adminEmail: admin?.email || 'unknown',
+            });
+            showToast(`${type === 'delivery' ? '🛵 Kurye' : '🛍️ Gel-Al'} durduruldu${minutes ? ` (${minutes} dk)` : ''}`, 'success');
+        } catch (e) {
+            showToast('Hata oluştu', 'error');
+        }
+        setShowDeliveryTimerMenu(false);
+        setShowPickupTimerMenu(false);
+    };
+
+    const handleResumePause = async (type: 'delivery' | 'pickup') => {
+        if (businessFilter === 'all') return;
+        const pauseField = type === 'delivery' ? 'temporaryDeliveryPaused' : 'temporaryPickupPaused';
+        const untilField = type === 'delivery' ? 'deliveryPauseUntil' : 'pickupPauseUntil';
+        try {
+            await updateDoc(doc(db, 'businesses', businessFilter), {
+                [pauseField]: false,
+                [untilField]: null,
+            });
+            await addDoc(collection(db, 'businesses', businessFilter, 'deliveryPauseLogs'), {
+                action: 'resumed',
+                type,
+                timestamp: serverTimestamp(),
+                adminEmail: admin?.email || 'unknown',
+            });
+            showToast(`${type === 'delivery' ? '🛵 Kurye' : '🛍️ Gel-Al'} tekrar aktif`, 'success');
+        } catch (e) {
+            showToast('Hata oluştu', 'error');
+        }
+    };
+
+    const PAUSE_DURATIONS = [
+        { label: '15 dk', minutes: 15 },
+        { label: '30 dk', minutes: 30 },
+        { label: '1 saat', minutes: 60 },
+        { label: '2 saat', minutes: 120 },
+        { label: 'Süresiz', minutes: null },
+    ] as const;
 
     // Load printer settings
     useEffect(() => {
@@ -799,23 +923,103 @@ export default function OrdersPage() {
                         </div>
                     </div>
 
-                    {/* Quick Stats */}
-                    <div className="flex gap-2 shrink-0">
-                        <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl px-3 py-1.5 text-center">
-                            <p className="text-xl font-bold text-blue-400">{stats.total}</p>
-                            <p className="text-[10px] text-blue-300">{t('toplam')}</p>
-                        </div>
-                        <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-3 py-1.5 text-center">
-                            <p className="text-xl font-bold text-yellow-400">{stats.pending}</p>
-                            <p className="text-[10px] text-yellow-300">{t('bekleyen')}</p>
-                        </div>
-                        <div className="bg-amber-600/20 border border-amber-500/30 rounded-xl px-3 py-1.5 text-center">
-                            <p className="text-xl font-bold text-amber-400">{stats.preparing}</p>
-                            <p className="text-[10px] text-amber-300">{t('hazirlanan')}</p>
-                        </div>
-                        <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-3 py-1.5 text-center">
-                            <p className="text-xl font-bold text-green-400">{formatCurrency(stats.revenue, filteredOrders[0]?.currency)}</p>
-                            <p className="text-[10px] text-green-300">Ciro</p>
+                    {/* Pause Pills + Quick Stats */}
+                    <div className="flex items-center gap-3 shrink-0">
+                        {/* ─── Pause Pill Buttons (only when business selected) ─── */}
+                        {businessFilter !== 'all' && (
+                            <div className="flex items-center gap-2">
+                                {/* Delivery Pause Pill */}
+                                <div ref={deliveryTimerRef} className="relative">
+                                    <button
+                                        onClick={() => deliveryPaused ? handleResumePause('delivery') : setShowDeliveryTimerMenu(!showDeliveryTimerMenu)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg ${deliveryPaused
+                                            ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white ring-2 ring-amber-400/50 animate-pulse'
+                                            : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-400 hover:to-blue-500'
+                                            }`}
+                                    >
+                                        <span>{deliveryPaused ? '⏸' : '🛵'}</span>
+                                        <span>Kurye</span>
+                                        {deliveryPaused && deliveryCountdown && (
+                                            <span className="ml-1 bg-white/20 px-2 py-0.5 rounded-full text-xs font-mono">
+                                                {deliveryCountdown}
+                                            </span>
+                                        )}
+                                    </button>
+                                    {/* Timer Selection Dropdown */}
+                                    {showDeliveryTimerMenu && (
+                                        <div className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50 p-2 min-w-[180px]">
+                                            <p className="text-gray-400 text-xs px-2 pb-2 border-b border-gray-700 mb-2">Kurye süre seçin</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {PAUSE_DURATIONS.map(d => (
+                                                    <button
+                                                        key={d.label}
+                                                        onClick={() => handlePause('delivery', d.minutes)}
+                                                        className="px-3 py-1.5 bg-gray-700 hover:bg-amber-600 text-white text-xs rounded-lg transition font-medium"
+                                                    >
+                                                        {d.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Pickup Pause Pill */}
+                                <div ref={pickupTimerRef} className="relative">
+                                    <button
+                                        onClick={() => pickupPaused ? handleResumePause('pickup') : setShowPickupTimerMenu(!showPickupTimerMenu)}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 shadow-lg ${pickupPaused
+                                            ? 'bg-gradient-to-r from-red-500 to-red-600 text-white ring-2 ring-red-400/50 animate-pulse'
+                                            : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-400 hover:to-green-500'
+                                            }`}
+                                    >
+                                        <span>{pickupPaused ? '⏸' : '🛍️'}</span>
+                                        <span>Gel-Al</span>
+                                        {pickupPaused && pickupCountdown && (
+                                            <span className="ml-1 bg-white/20 px-2 py-0.5 rounded-full text-xs font-mono">
+                                                {pickupCountdown}
+                                            </span>
+                                        )}
+                                    </button>
+                                    {/* Timer Selection Dropdown */}
+                                    {showPickupTimerMenu && (
+                                        <div className="absolute top-full left-0 mt-2 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl z-50 p-2 min-w-[180px]">
+                                            <p className="text-gray-400 text-xs px-2 pb-2 border-b border-gray-700 mb-2">Gel-Al süre seçin</p>
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {PAUSE_DURATIONS.map(d => (
+                                                    <button
+                                                        key={d.label}
+                                                        onClick={() => handlePause('pickup', d.minutes)}
+                                                        className="px-3 py-1.5 bg-gray-700 hover:bg-red-600 text-white text-xs rounded-lg transition font-medium"
+                                                    >
+                                                        {d.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Quick Stats */}
+                        <div className="flex gap-2">
+                            <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl px-3 py-1.5 text-center">
+                                <p className="text-xl font-bold text-blue-400">{stats.total}</p>
+                                <p className="text-[10px] text-blue-300">{t('toplam')}</p>
+                            </div>
+                            <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-xl px-3 py-1.5 text-center">
+                                <p className="text-xl font-bold text-yellow-400">{stats.pending}</p>
+                                <p className="text-[10px] text-yellow-300">{t('bekleyen')}</p>
+                            </div>
+                            <div className="bg-amber-600/20 border border-amber-500/30 rounded-xl px-3 py-1.5 text-center">
+                                <p className="text-xl font-bold text-amber-400">{stats.preparing}</p>
+                                <p className="text-[10px] text-amber-300">{t('hazirlanan')}</p>
+                            </div>
+                            <div className="bg-green-600/20 border border-green-500/30 rounded-xl px-3 py-1.5 text-center">
+                                <p className="text-xl font-bold text-green-400">{formatCurrency(stats.revenue, filteredOrders[0]?.currency)}</p>
+                                <p className="text-[10px] text-green-300">Ciro</p>
+                            </div>
                         </div>
                     </div>
                 </div>

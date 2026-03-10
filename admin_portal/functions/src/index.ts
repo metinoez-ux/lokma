@@ -1058,7 +1058,7 @@ export const onOrderStatusChange = onDocumentUpdated(
 
                 if (userIds.size > 0) {
                     const batch = db.batch();
-                    const notificationData = {
+                    const notificationData: Record<string, any> = {
                         title,
                         body,
                         type: "order_status",
@@ -1066,9 +1066,22 @@ export const onOrderStatusChange = onDocumentUpdated(
                         status: newStatus,
                         rawOrderNumber,
                         businessName,
+                        deliveryMethod: after.orderType || after.deliveryMethod || '',
                         createdAt: admin.firestore.FieldValue.serverTimestamp(),
                         read: false,
                     };
+
+                    // Add cancellation reason for cancelled/rejected orders
+                    if (newStatus === 'cancelled') {
+                        notificationData.cancellationReason = after.cancellationReason || '';
+                    } else if (newStatus === 'rejected') {
+                        notificationData.cancellationReason = after.rejectionReason || '';
+                    }
+
+                    // Add totalAmount if available
+                    if (after.totalAmount) {
+                        notificationData.totalAmount = after.totalAmount;
+                    }
 
                     userIds.forEach(uid => {
                         const ref = db.collection("users").doc(uid).collection("notifications").doc();

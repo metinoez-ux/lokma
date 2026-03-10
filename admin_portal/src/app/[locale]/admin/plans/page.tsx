@@ -337,11 +337,23 @@ export default function PlansPage() {
                                                 ✓ Teslimat
                                             </span>
                                         )}
-                                        {plan.features?.campaigns && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-purple-900/20 text-purple-400 border border-purple-700/30">
-                                                ✓ Kampanya
-                                            </span>
-                                        )}
+                                        {/* 🎯 Birleşik Promosyon Chip */}
+                                        {(() => {
+                                            const promoCount = [
+                                                plan.features?.campaigns,
+                                                (plan.features as any)?.sponsoredProducts,
+                                                (plan.features as any)?.couponSystem,
+                                                (plan.features as any)?.referralSystem,
+                                                (plan.features as any)?.firstOrderDiscount,
+                                                (plan.features as any)?.freeDrink,
+                                                (plan.features as any)?.donationRoundUp,
+                                            ].filter(Boolean).length;
+                                            return promoCount > 0 ? (
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-orange-900/20 text-orange-400 border border-orange-700/30">
+                                                    🎯 Promosyon {promoCount}/7
+                                                </span>
+                                            ) : null;
+                                        })()}
                                         {plan.features?.onlinePayment && (
                                             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-amber-900/20 text-amber-400 border border-amber-700/30">
                                                 ✓ {t('odeme')}
@@ -360,12 +372,6 @@ export default function PlansPage() {
                                         {(plan.features as any)?.staffShiftTracking && (
                                             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-cyan-900/20 text-cyan-400 border border-cyan-700/30">
                                                 ✓ Vardiya
-                                            </span>
-                                        )}
-                                        {(plan.features as any)?.sponsoredProducts && (
-                                            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium bg-yellow-900/20 text-yellow-400 border border-yellow-700/30">
-                                                <span>✓ {t('one_cikan')}</span>
-                                                <span className="opacity-70 px-1 py-0.5 bg-yellow-400/10 rounded">{globalFormatCurrency((plan as any).sponsoredFeePerConversion ?? 0.40, plan.currency || 'EUR')}</span>
                                             </span>
                                         )}
                                     </div>
@@ -794,14 +800,12 @@ export default function PlansPage() {
                                                         { key: 'clickAndCollect', label: 'Click & Collect (Gel-Al)', color: 'text-purple-400' },
                                                         { key: 'delivery', label: t('kurye_teslimat'), color: 'text-purple-400' },
                                                         { key: 'onlinePayment', label: t('online_odeme_kart_apple'), color: 'text-purple-400' },
-                                                        { key: 'campaigns', label: t('kampanya_yonetimi'), color: 'text-purple-400' },
                                                         { key: 'marketing', label: 'Marketing (Banner/Vitrin)', color: 'text-purple-400' },
                                                         { key: 'liveCourierTracking', label: t('canli_kurye_takibi'), color: 'text-purple-400' },
                                                         { key: 'dineInQR', label: t('masada_siparis_qr_kod'), color: 'text-amber-400' },
                                                         { key: 'waiterOrder', label: t('garson_siparis'), color: 'text-teal-400' },
                                                         { key: 'staffShiftTracking', label: '⏱️ Vardiya Takibi & Export', color: 'text-cyan-400' },
-                                                        { key: 'sponsoredProducts', label: t('one_cikan_urunler'), color: 'text-yellow-400', hasSubFields: true },
-                                                        { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-gray-400', invert: true }, // Logic invert handled in render
+                                                        { key: 'basicStatsOnly', label: 'Sadece Temel Raporlar', color: 'text-gray-400', invert: true },
                                                     ].map((feature) => (
                                                         <label key={feature.key} className="flex items-center p-3 rounded-lg bg-gray-900 border border-gray-800 hover:border-gray-600 hover:bg-gray-800 transition-all cursor-pointer group">
                                                             <div className="relative flex items-center">
@@ -821,49 +825,107 @@ export default function PlansPage() {
                                                     ))}
                                                 </div>
 
-                                                {/* Sponsored Products Sub-Settings */}
-                                                {(formData.features as any)?.sponsoredProducts && (
-                                                    <div className="mt-4 bg-yellow-900/10 border border-yellow-700/30 rounded-xl p-4">
-                                                        <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">{t('one_cikan_urun_ayarlari')}</h4>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div>
-                                                                <label className="block text-xs text-gray-400 mb-1.5">{t('siparis_basi_ucret')}</label>
-                                                                <input
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    min="0"
-                                                                    value={(formData as any).sponsoredFeePerConversion ?? 0.40}
-                                                                    onChange={e => setFormData({ ...formData, sponsoredFeePerConversion: parseFloat(e.target.value) || 0 } as any)}
-                                                                    className="w-full bg-gray-900 border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
-                                                                    placeholder="0.40"
-                                                                />
-                                                                <p className="text-xs text-gray-500 mt-1">{t('0_bedava_bu_plan_icin_sponsored_ucretsiz')}</p>
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-xs text-gray-400 mb-1.5">{t('max_urun_sayisi')}</label>
-                                                                <input
-                                                                    type="number"
-                                                                    min="1"
-                                                                    max="50"
-                                                                    value={(formData as any).sponsoredMaxProducts ?? 5}
-                                                                    onChange={e => setFormData({ ...formData, sponsoredMaxProducts: parseInt(e.target.value) || 5 } as any)}
-                                                                    className="w-full bg-gray-900 border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
-                                                                    placeholder="5"
-                                                                />
-                                                                <p className="text-xs text-gray-500 mt-1">{t('bu_plandaki_isletme_kac_urun_one_cikarab')}</p>
-                                                            </div>
+                                                {/* 🎯 PROMOSYON & PAZARLAMA — Collapsible Section */}
+                                                <div className="mt-6 border border-orange-700/30 rounded-xl overflow-hidden">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, _promoExpanded: !(formData as any)._promoExpanded } as any)}
+                                                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-900/20 to-amber-900/10 hover:from-orange-900/30 transition-all"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-lg">🎯</span>
+                                                            <span className="text-sm font-bold text-orange-300 uppercase tracking-wide">Promosyon & Pazarlama</span>
+                                                            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-600/20 text-orange-400 border border-orange-700/30">
+                                                                {[
+                                                                    (formData.features as any)?.campaigns,
+                                                                    (formData.features as any)?.sponsoredProducts,
+                                                                    (formData.features as any)?.couponSystem,
+                                                                    (formData.features as any)?.referralSystem,
+                                                                    (formData.features as any)?.firstOrderDiscount,
+                                                                    (formData.features as any)?.freeDrink,
+                                                                    (formData.features as any)?.donationRoundUp,
+                                                                ].filter(Boolean).length}/7 aktif
+                                                            </span>
                                                         </div>
-                                                        <div className="mt-3 bg-gray-900/50 rounded-lg px-3 py-2">
-                                                            <p className="text-xs text-yellow-300/80">
-                                                                {t('bu_plandaki_isletmeler_max')} <strong>{(formData as any).sponsoredMaxProducts ?? 5}</strong> {t('urun_secebilir')}
-                                                                {((formData as any).sponsoredFeePerConversion ?? 0.40) > 0
-                                                                    ? <> {t('her_siparis_basi')} <strong>{globalFormatCurrency((formData as any).sponsoredFeePerConversion ?? 0.40, formData.currency || 'EUR')}</strong> {t('ucretlendirilir')}</>
-                                                                    : <> {t('sponsored_urunler')} <strong className="text-green-400">{t('ucretsiz')}</strong> olarak sunulur.</>
-                                                                }
-                                                            </p>
+                                                        <span className={`text-orange-400 text-sm transition-transform ${(formData as any)._promoExpanded ? 'rotate-180' : ''}`}>▼</span>
+                                                    </button>
+
+                                                    {(formData as any)._promoExpanded !== false && (
+                                                        <div className="p-4 bg-gray-900/50 space-y-3">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                {[
+                                                                    { key: 'campaigns', label: '📢 Kampanya Yönetimi', color: 'text-purple-400', desc: 'İndirim/fırsat kampanyaları' },
+                                                                    { key: 'sponsoredProducts', label: '⭐ Sponsorlu Ürünler', color: 'text-yellow-400', desc: 'Öne çıkan ürünler', hasSubFields: true },
+                                                                    { key: 'couponSystem', label: '🎟️ Kupon Sistemi', color: 'text-blue-400', desc: 'Promo kodları & kuponlar' },
+                                                                    { key: 'referralSystem', label: '🤝 Referral (Davet Et)', color: 'text-pink-400', desc: 'Davet et kazan sistemi' },
+                                                                    { key: 'firstOrderDiscount', label: '🎁 İlk Sipariş İndirimi', color: 'text-green-400', desc: 'Yeni müşteri teşviki' },
+                                                                    { key: 'freeDrink', label: '🍺 Gratis İçecek', color: 'text-cyan-400', desc: 'Ücretsiz içecek modülü' },
+                                                                    { key: 'donationRoundUp', label: '💚 Bağış Yuvarlama', color: 'text-emerald-400', desc: 'Checkout bağış yuvarlama' },
+                                                                ].map((promo) => (
+                                                                    <label key={promo.key} className="flex items-start p-3 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:border-orange-700/30 hover:bg-gray-800 transition-all cursor-pointer group">
+                                                                        <div className="relative flex items-center mt-0.5">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                className="peer sr-only"
+                                                                                checked={(formData.features as any)?.[promo.key]}
+                                                                                onChange={e => setFormData({ ...formData, features: { ...formData.features!, [promo.key]: e.target.checked } })}
+                                                                            />
+                                                                            <div className="w-10 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600"></div>
+                                                                        </div>
+                                                                        <div className="ml-3">
+                                                                            <span className={`text-sm font-medium ${promo.color} group-hover:text-white transition-colors`}>{promo.label}</span>
+                                                                            <p className="text-[10px] text-gray-500 mt-0.5">{promo.desc}</p>
+                                                                        </div>
+                                                                    </label>
+                                                                ))}
+                                                            </div>
+
+                                                            {/* Sponsored Products Sub-Settings — inside promo accordion */}
+                                                            {(formData.features as any)?.sponsoredProducts && (
+                                                                <div className="bg-yellow-900/10 border border-yellow-700/30 rounded-xl p-4">
+                                                                    <h4 className="text-xs font-bold text-yellow-400 uppercase tracking-widest mb-3">⭐ {t('one_cikan_urun_ayarlari')}</h4>
+                                                                    <div className="grid grid-cols-2 gap-4">
+                                                                        <div>
+                                                                            <label className="block text-xs text-gray-400 mb-1.5">{t('siparis_basi_ucret')}</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                step="0.01"
+                                                                                min="0"
+                                                                                value={(formData as any).sponsoredFeePerConversion ?? 0.40}
+                                                                                onChange={e => setFormData({ ...formData, sponsoredFeePerConversion: parseFloat(e.target.value) || 0 } as any)}
+                                                                                className="w-full bg-gray-900 border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
+                                                                                placeholder="0.40"
+                                                                            />
+                                                                            <p className="text-xs text-gray-500 mt-1">{t('0_bedava_bu_plan_icin_sponsored_ucretsiz')}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="block text-xs text-gray-400 mb-1.5">{t('max_urun_sayisi')}</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                min="1"
+                                                                                max="50"
+                                                                                value={(formData as any).sponsoredMaxProducts ?? 5}
+                                                                                onChange={e => setFormData({ ...formData, sponsoredMaxProducts: parseInt(e.target.value) || 5 } as any)}
+                                                                                className="w-full bg-gray-900 border border-yellow-700/40 rounded-lg px-3 py-2.5 text-white text-sm font-bold focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 outline-none"
+                                                                                placeholder="5"
+                                                                            />
+                                                                            <p className="text-xs text-gray-500 mt-1">{t('bu_plandaki_isletme_kac_urun_one_cikarab')}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="mt-3 bg-gray-900/50 rounded-lg px-3 py-2">
+                                                                        <p className="text-xs text-yellow-300/80">
+                                                                            {t('bu_plandaki_isletmeler_max')} <strong>{(formData as any).sponsoredMaxProducts ?? 5}</strong> {t('urun_secebilir')}
+                                                                            {((formData as any).sponsoredFeePerConversion ?? 0.40) > 0
+                                                                                ? <> {t('her_siparis_basi')} <strong>{globalFormatCurrency((formData as any).sponsoredFeePerConversion ?? 0.40, formData.currency || 'EUR')}</strong> {t('ucretlendirilir')}</>
+                                                                                : <> {t('sponsored_urunler')} <strong className="text-green-400">{t('ucretsiz')}</strong> olarak sunulur.</>
+                                                                            }
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )}
+                                                </div>
 
                                                 <div className="mt-8">
                                                     <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 ml-1">Gelecek Entegrasyonlar</h4>

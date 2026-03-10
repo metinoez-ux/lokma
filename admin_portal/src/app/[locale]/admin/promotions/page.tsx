@@ -326,11 +326,7 @@ function PromotionsPageContent() {
         const load = async () => {
             try {
                 const queryList: Promise<any>[] = [
-                    getDocs(query(
-                        collection(db, 'promotionTemplates'),
-                        where('isActive', '==', true),
-                        orderBy('sortOrder')
-                    )),
+                    getDocs(collection(db, 'promotionTemplates')),
                 ];
 
                 // businessId varsa o işletmenin verilerini de yükle
@@ -346,7 +342,12 @@ function PromotionsPageContent() {
 
                 const [tplSnap, promoSnap, bizDoc] = await Promise.all(queryList);
 
-                setTemplates(tplSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as PromotionTemplate[]);
+                const allTemplates = tplSnap.docs.map((d: any) => ({ id: d.id, ...d.data() })) as PromotionTemplate[];
+                // Client-side filter (active only for business admins) and sort
+                const filteredTemplates = isSuperAdmin
+                    ? allTemplates.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+                    : allTemplates.filter(t => t.isActive !== false).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+                setTemplates(filteredTemplates);
 
                 if (promoSnap) {
                     setPromotions(promoSnap.docs.map((d: any) => ({
@@ -442,8 +443,8 @@ function PromotionsPageContent() {
     // ─── Plan Gating Helpers ─────────────────────────────────────────────────
 
     const activePromoCount = promotions.filter(p => p.isActive).length;
-    const isAtCampaignLimit = campaignLimit !== null && activePromoCount >= campaignLimit;
-    const canCreateCampaign = hasCampaignFeature && !isAtCampaignLimit;
+    const isAtCampaignLimit = !isSuperAdmin && campaignLimit !== null && campaignLimit > 0 && activePromoCount >= campaignLimit;
+    const canCreateCampaign = isSuperAdmin || (hasCampaignFeature && !isAtCampaignLimit);
 
     // ─── Template Activation ─────────────────────────────────────────────────
 
@@ -473,7 +474,18 @@ function PromotionsPageContent() {
     // ─── Save ────────────────────────────────────────────────────────────────
 
     const handleSave = async () => {
-        if (!formData.title.trim() || !businessId) return;
+        if (!formData.title.trim()) {
+            alert('Kampanya başlığı gereklidir.');
+            return;
+        }
+
+        // Resolve the target businessId — for Super Admin, allow using admin.managedBusinessId or first available
+        const targetBusinessId = businessId || (isSuperAdmin ? admin?.businessId : null);
+        if (!targetBusinessId) {
+            alert('İşletme bulunamadı. Lütfen bir işletme seçili olduğundan emin olun.');
+            console.error('handleSave: No businessId available.', { businessId, adminBusinessId: admin?.businessId, isSuperAdmin });
+            return;
+        }
 
         // ─── Çakışma kontrolü ─────────────────────────────────────────
         const conflict = checkConflicts(formData.type, promotions, editingPromo?.id);
@@ -488,7 +500,7 @@ function PromotionsPageContent() {
         if (conflict && forceOverrideConflict) {
             try {
                 for (const cp of conflict.conflictingPromos) {
-                    await updateDoc(doc(db, 'businesses', businessId, 'promotions', cp.id), { isActive: false });
+                    await updateDoc(doc(db, 'businesses', targetBusinessId, 'promotions', cp.id), { isActive: false });
                 }
                 // Lokal state'i de güncelle
                 setPromotions(prev => prev.map(p =>
@@ -564,10 +576,10 @@ function PromotionsPageContent() {
                 saveData.validUntil = Timestamp.fromDate(new Date(formData.validUntil));
             }
 
-            const promoCol = collection(db, 'businesses', businessId, 'promotions');
+            const promoCol = collection(db, 'businesses', targetBusinessId, 'promotions');
 
             if (editingPromo) {
-                await updateDoc(doc(db, 'businesses', businessId, 'promotions', editingPromo.id), saveData);
+                await updateDoc(doc(db, 'businesses', targetBusinessId, 'promotions', editingPromo.id), saveData);
             } else {
                 saveData.createdAt = new Date();
                 saveData.impressions = 0;
@@ -592,6 +604,7 @@ function PromotionsPageContent() {
             setFormData(defaultForm);
         } catch (error) {
             console.error('Error saving promotion:', error);
+            alert('Kampanya kaydedilirken hata oluştu. Konsolu kontrol edin.');
         }
         setSaving(false);
     };
@@ -754,22 +767,19 @@ function PromotionsPageContent() {
 
                     {/* Plan Gating Warning */}
                     {mainTab === 'kampanya' && !hasCampaignFeature && (
-                        <div className="mt-3 p-3 bg-amber-900/40 rounded-lg border border-amber-600/50">
-                            <p className="text-amber-200 text-sm flex items-center gap-2">
-                                🔒 Mevcut planınız (<strong>{businessPlanName}</strong>) kampanya özelliğini içermiyor.
-                            </p>
-                            <p className="text-amber-300/70 text-xs mt-1">
-                                Kampanya oluşturmak için planınızı yükseltin &rarr;
-                                <a href={`/${locale}/admin/account`} className="underline ml-1 hover:text-amber-200">Plan Değiştir</a>
-                            </p>
+                        <div className="mt-3 flex items-center gap-2 text-amber-400 text-xs">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 rounded-md border border-amber-700/40">
+                                🔒 {businessPlanName}
+                            </span>
+                            <span className="text-amber-400/60">Kampanya özelliği yok · <a href={`/${locale}/admin/account`} className="underline hover:text-amber-300">Plan Yükselt</a></span>
                         </div>
                     )}
                     {mainTab === 'kampanya' && hasCampaignFeature && isAtCampaignLimit && (
-                        <div className="mt-3 p-3 bg-amber-900/40 rounded-lg border border-amber-600/50">
-                            <p className="text-amber-200 text-sm flex items-center gap-2">
-                                ⚠️ Kampanya limitine ulaştınız ({activePromoCount}/{campaignLimit}).
-                                Yeni kampanya oluşturmak için mevcut birini deaktif edin veya planınızı yükseltin.
-                            </p>
+                        <div className="mt-3 flex items-center gap-2 text-amber-400 text-xs">
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 rounded-md border border-amber-700/40">
+                                ⚠️ Limit: {activePromoCount}/{campaignLimit}
+                            </span>
+                            <span className="text-amber-400/60">Mevcut birini deaktif edin veya <a href={`/${locale}/admin/account`} className="underline hover:text-amber-300">planınızı yükseltin</a>.</span>
                         </div>
                     )}
                 </div>
@@ -781,7 +791,6 @@ function PromotionsPageContent() {
                     <div className="flex gap-0 overflow-x-auto">
                         {([
                             { key: 'kampanya', label: 'Kampanya', icon: '🎯', desc: 'Aktif kampanyalar' },
-                            { key: 'firsatlar', label: 'Fırsatlar', icon: '🔥', desc: 'Global fırsatlar' },
                             { key: 'kuponlar', label: 'Kuponlar', icon: '🎫', desc: 'Kupon kodları' },
                             ...(isSuperAdmin ? [{ key: 'sablonlar', label: 'Şablonlar', icon: '📋', desc: 'Kampanya şablonları' }] : []),
                             ...(isRestaurantSegment(businessType) ? [{ key: 'bedava_icecek', label: 'Bedava İçecek', icon: '🥤', desc: 'Restoran promosyonu' }] : []),
@@ -1251,7 +1260,7 @@ function PromotionsPageContent() {
             {
                 showModal && (
                     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
-                        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-lg my-8">
+                        <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl my-8">
                             <h2 className="text-xl font-bold text-white mb-4">
                                 {editingPromo ? 'Kampanya Düzenle' : 'Yeni Kampanya'}
                             </h2>

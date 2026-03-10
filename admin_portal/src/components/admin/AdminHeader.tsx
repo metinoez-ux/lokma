@@ -216,11 +216,11 @@ export default function AdminHeader() {
                                 </div>
                             </div>
 
-                            {/* Accounting Nav */}
+                            {/* Accounting Nav — Sadece Muhasebe */}
                             <div className="relative group">
                                 <Link
                                     href="/admin/invoices"
-                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans') || isActiveNav('/admin/coupons') || isActiveNav('/admin/deals') || isActiveNav('/admin/promotions') || isActiveNav('/admin/promotion-templates')
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/invoices') || isActiveNav('/admin/commissions') || isActiveNav('/admin/plans')
                                         ? 'bg-white/15 text-white'
                                         : 'text-red-100 hover:text-white hover:bg-white/10'
                                         }`}
@@ -240,7 +240,28 @@ export default function AdminHeader() {
                                         <Link href="/admin/plans" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
                                             {t('plans')}
                                         </Link>
-                                        <div className="border-t border-gray-600 my-1"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Promosyon Nav — Bağımsız Menü */}
+                            <div className="relative group">
+                                <Link
+                                    href="/admin/promotions"
+                                    className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-all ${isActiveNav('/admin/promotions') || isActiveNav('/admin/coupons') || isActiveNav('/admin/deals') || isActiveNav('/admin/promotion-templates')
+                                        ? 'bg-white/15 text-white'
+                                        : 'text-red-100 hover:text-white hover:bg-white/10'
+                                        }`}
+                                >
+                                    🎯 Promosyon
+                                    <span className="text-[10px]">▼</span>
+                                </Link>
+                                {/* Dropdown */}
+                                <div className="absolute left-0 top-full mt-2 bg-gray-800 rounded-lg shadow-xl border border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 min-w-[200px] overflow-hidden">
+                                    <div className="py-1">
+                                        <Link href="/admin/promotions" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                                            🎯 İşletme Kampanyaları
+                                        </Link>
                                         <Link href="/admin/coupons" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
                                             🎟️ Kuponlar
                                         </Link>
@@ -250,9 +271,6 @@ export default function AdminHeader() {
                                         <div className="border-t border-gray-600 my-1"></div>
                                         <Link href="/admin/promotion-templates" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
                                             📋 Kampanya Şablonları
-                                        </Link>
-                                        <Link href="/admin/promotions" className="flex items-center gap-2 px-4 py-2.5 text-xs transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
-                                            🎯 İşletme Kampanyaları
                                         </Link>
                                     </div>
                                 </div>

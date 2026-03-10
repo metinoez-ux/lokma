@@ -404,7 +404,10 @@
     "rezervasyon": "Reservering",
     "toplam": "Totaal",
     "isletmeden": "bedrijven",
-    "gosteriliyor": "weergegeven"
+    "gosteriliyor": "weergegeven",
+    "kurye_aktif": "🛵 Koerier actief",
+    "kurye_durduruldu": "⏸️ Koerier gepauzeerd",
+    "kurye_kapali": "❌ Koerier gesloten"
   },
   "AdminDashboard": {
     "yonlendiriliyor": "Yönlendiriliyor..."
