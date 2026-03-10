@@ -905,7 +905,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         ),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFFFB335B),
+          indicatorColor: _accentColor,
           indicatorWeight: 3,
           labelColor: colorScheme.onSurface,
           unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.5),
@@ -962,7 +962,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         }
         
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFFFB335B)));
+          return Center(child: CircularProgressIndicator(color: _accentColor));
         }
         
         final allOrders = snapshot.data ?? [];
@@ -1205,7 +1205,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                         style: TextStyle(
                                           color: Theme.of(context).colorScheme.surface,
                                           fontSize: 9,
-                                          fontWeight: FontWeight.bold,
+                                          fontWeight: FontWeight.w600,
                                           letterSpacing: 0.5,
                                         ),
                                       ),
@@ -1247,7 +1247,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         SizedBox(height: 4),
@@ -1288,7 +1288,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       style: TextStyle(
                         color: _getStatusColor(order.status),
                         fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -1423,7 +1423,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 32,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         SizedBox(height: 16),
@@ -1506,7 +1506,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         SizedBox(height: 8),
@@ -1560,7 +1560,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     style: TextStyle(
                                       color: colorScheme.onSurface,
                                       fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   SizedBox(height: 4),
@@ -1629,7 +1629,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 color: colorScheme.onSurface,
                                 fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             Text(
@@ -1637,7 +1637,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 color: colorScheme.onSurface,
                                 fontSize: 15,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
@@ -1674,7 +1674,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     style: TextStyle(
                                       color: colorScheme.onSurface,
                                       fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   SizedBox(height: 4),
@@ -1963,7 +1963,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: const Color(0xFF3E2723),
                               ),
                             ),
@@ -1975,7 +1975,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: const Color(0xFF3E2723),
                               ),
                               textAlign: TextAlign.center,
@@ -1988,7 +1988,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: const Color(0xFF3E2723),
                               ),
                               textAlign: TextAlign.right,
@@ -2057,7 +2057,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             style: TextStyle(
                               fontFamily: 'Courier',
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: const Color(0xFF3E2723),
                             ),
                           ),
@@ -2066,7 +2066,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             style: TextStyle(
                               fontFamily: 'Courier',
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
                               color: const Color(0xFF3E2723),
                             ),
                           ),
@@ -2082,7 +2082,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         style: TextStyle(
                           fontFamily: 'Courier',
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color: const Color(0xFF3E2723),
                           letterSpacing: 2,
                         ),
@@ -2169,7 +2169,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           style: TextStyle(
             fontFamily: 'Courier',
             fontSize: 12,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: const Color(0xFF3E2723),
           ),
         ),
@@ -2395,7 +2395,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -2650,7 +2650,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 12),
@@ -2727,7 +2727,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -2830,12 +2830,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 children: [
                   TextSpan(
                     text: '${remaining.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const TextSpan(text: ' daha ekle, min. sipariş '),
                   TextSpan(
                     text: '${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -3898,7 +3898,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     '0,00 €',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      fontWeight: FontWeight.w800,
+                                      fontWeight: FontWeight.w600,
                                       color: Color(0xFF10B981),
                                     ),
                                   ),
@@ -4117,7 +4117,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.surface,
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               if (!(_isDineIn && _scannedTableNumber == null)) ...[
@@ -4178,7 +4178,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 'Masanızdaki QR Kodu Okutun',
                 style: TextStyle(
                   fontSize: 20, 
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
@@ -4298,7 +4298,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           autofocus: true,
           style: TextStyle(
             fontSize: 24, 
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : Colors.black87,
           ),
           textAlign: TextAlign.center,
@@ -4418,7 +4418,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               'Masa $tableNum — Aktif Grup Siparişi',
               style: const TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
@@ -4545,7 +4545,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               'Masa $tableNum',
               style: const TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
@@ -4731,7 +4731,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 Text(
                   'Masa $_scannedTableNumber',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     fontSize: 16,
                     color: isDark ? Colors.white : Colors.black87,
                   ),
@@ -4994,7 +4994,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       children: [
                         Text(
                           'Teslimat Adresi Seç',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black),
                         ),
                         const Spacer(),
                         IconButton(
@@ -5285,7 +5285,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     const SizedBox(height: 16),
                     Text(
                       'Yeni Adres Ekle',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black),
                     ),
                     const SizedBox(height: 16),
 
@@ -5588,7 +5588,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     Expanded(
                                       child: Text(
                                         'marketplace.what_if_unavailable'.tr(),
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black),
                                       ),
                                     ),
                                   ],
@@ -5799,7 +5799,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         TextSpan(text: 'Alerjiniz varsa, '),
                         TextSpan(
                           text: '"Ürün ücretini iade et"',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                         TextSpan(text: ' seçeneğini öneriyoruz.'),
                       ],
@@ -6108,7 +6108,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       selectedDisplay,
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                       ),
                     ),
@@ -6223,7 +6223,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 timeStr,
                                 style: TextStyle(
                                   fontSize: isSelected ? 18 : 15,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                                   color: isSelected
                                       ? Theme.of(context).colorScheme.onSurface
                                       : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
@@ -6500,7 +6500,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       selectedDisplay,
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: _accentColor,
                       ),
                     ),
@@ -6604,7 +6604,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 timeStr,
                                 style: TextStyle(
                                   fontSize: isSelected ? 18 : 15,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w400,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                                   color: isSelected
                                       ? Theme.of(context).colorScheme.onSurface
                                       : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
@@ -6900,8 +6900,8 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Toplam', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
-                              Text('${widget.grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.bold, fontSize: 16)),
+                              Text('Toplam', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 16)),
+                              Text('${widget.grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 16)),
                             ],
                           ),
                         ],
@@ -7571,7 +7571,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.surface,
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                 ),

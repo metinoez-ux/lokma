@@ -184,7 +184,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final userData = snapshot.data?.data() as Map<String, dynamic>?;
 
         // Construct display name
-        String displayName = 'Kullanıcı';
+        String displayName = 'profile.default_user'.tr();
         String firstName = '';
         if (userData != null) {
           firstName = userData['firstName'] as String? ?? '';
@@ -193,7 +193,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             displayName = '$firstName $lastName'.trim();
           }
         }
-        if (displayName == 'Kullanıcı' &&
+        if (displayName == 'profile.default_user'.tr() &&
             user.displayName != null &&
             user.displayName!.isNotEmpty) {
           displayName = user.displayName!;
@@ -421,7 +421,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   const Icon(Icons.account_balance_wallet, color: Colors.white, size: 22),
                                   const SizedBox(width: 12),
                                   Text(
-                                    'Bakiye: ${balance.toStringAsFixed(2)}\u20ac',
+                                    'profile.wallet_balance'.tr(namedArgs: {'amount': balance.toStringAsFixed(2)}),
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
@@ -477,7 +477,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Arkada\u015f\u0131n\u0131 Davet Et',
+                                'profile.invite_friend'.tr(),
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.onSurface,
                                   fontSize: 15,
@@ -486,7 +486,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Sen 5\u20ac, arkada\u015f\u0131n 5\u20ac kazan!',
+                                'profile.invite_reward'.tr(),
                                 style: TextStyle(
                                   color: Colors.grey[500],
                                   fontSize: 12,
@@ -785,11 +785,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   child: Row(
                     children: [
-                      _buildPillSegment('Oto', ThemePreference.system,
+                      _buildPillSegment('profile.theme_auto'.tr(), ThemePreference.system,
                           currentTheme, primaryColor, isDark, ref),
-                      _buildPillSegment('Gün', ThemePreference.light,
+                      _buildPillSegment('profile.theme_light'.tr(), ThemePreference.light,
                           currentTheme, primaryColor, isDark, ref),
-                      _buildPillSegment('Gece', ThemePreference.dark,
+                      _buildPillSegment('profile.theme_dark'.tr(), ThemePreference.dark,
                           currentTheme, primaryColor, isDark, ref),
                     ],
                   ),

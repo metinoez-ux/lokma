@@ -989,7 +989,14 @@
     "select_country": "Land auswählen",
     "my_favorites": "Meine Favoriten",
     "notification_settings_saved": "Benachrichtigungseinstellungen gespeichert",
-    "disable_order_notifications_warning": "Wenn Sie Bestellbenachrichtigungen deaktivieren, erhalten Sie keine wichtigen Aktualisierungen mehr zu Ihren Bestellungen.\\n\\nMöchten Sie fortfahren?"
+    "disable_order_notifications_warning": "Wenn Sie Bestellbenachrichtigungen deaktivieren, erhalten Sie keine wichtigen Aktualisierungen mehr zu Ihren Bestellungen.\\n\\nMöchten Sie fortfahren?",
+    "default_user": "Benutzer",
+    "wallet_balance": "Guthaben: {amount}€",
+    "invite_friend": "Freund einladen",
+    "invite_reward": "Du 5€, dein Freund 5€ verdienen!",
+    "theme_auto": "Auto",
+    "theme_light": "Tag",
+    "theme_dark": "Nacht"
   },
   "search": {
     "restoran_mi_ariyorsunuz": "Restoran mı arıyorsunuz?",

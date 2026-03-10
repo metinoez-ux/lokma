@@ -989,7 +989,14 @@
     "select_country": "Ülke Seçin",
     "my_favorites": "Favorilerim",
     "notification_settings_saved": "Bildirim ayarları kaydedildi",
-    "disable_order_notifications_warning": "Sipariş bildirimlerini kapatırsanız, siparişleriniz hakkında önemli güncellemeleri alamazsınız.\\n\\nDevam etmek istiyor musunuz?"
+    "disable_order_notifications_warning": "Sipariş bildirimlerini kapatırsanız, siparişleriniz hakkında önemli güncellemeleri alamazsınız.\\n\\nDevam etmek istiyor musunuz?",
+    "default_user": "Kullanıcı",
+    "wallet_balance": "Bakiye: {amount}€",
+    "invite_friend": "Arkadaşını Davet Et",
+    "invite_reward": "Sen 5€, arkadaşın 5€ kazan!",
+    "theme_auto": "Oto",
+    "theme_light": "Gün",
+    "theme_dark": "Gece"
   },
   "search": {
     "restoran_mi_ariyorsunuz": "Restoran mı arıyorsunuz?",
