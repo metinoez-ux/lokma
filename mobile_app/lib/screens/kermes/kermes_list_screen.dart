@@ -23,12 +23,10 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   // Light Mode
   static const Color lightBg = Color(0xFFE8E8EC); // Light gray for better contrast with white cards
   static const Color cardLight = Colors.white;
-  static const Color subtleLight = Color(0xFFF3F4F6); // gray-100
   
   // Dark Mode (ileride kullanılmak üzere)
   static const Color darkBg = Color(0xFF111827); // Gray-900
   static const Color cardDark = Color(0xFF1F2937); // Gray-800
-  static const Color subtleDark = Color(0xFF374151); // Gray-700
   
   // Brand Colors
   static const Color primaryRose = Color(0xFFFB335B); // Rose-500
@@ -46,7 +44,7 @@ class _KermesListScreenState extends ConsumerState<KermesListScreen> {
   String? _expandedCardId;
   
   String _userAddress = 'Konum alınıyor...';
-  bool _isLoadingLocation = true;
+  bool _isLoadingLocation = true; // ignore: unused_field
   
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _kermesSubscription;
   

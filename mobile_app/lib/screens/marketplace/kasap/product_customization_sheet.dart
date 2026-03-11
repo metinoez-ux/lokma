@@ -231,7 +231,7 @@ class _ProductCustomizationSheetState
                         fontSize: 14,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'Not ekle (opsiyonel)  Ör: Hasan Usta',
+                        hintText: tr('marketplace.add_note_hint'),
                         hintStyle: TextStyle(color: textSecondary, fontSize: 13),
                         prefixIcon: Icon(Icons.edit_note_rounded, color: accent, size: 20),
                         filled: true,

@@ -33,7 +33,7 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   String _staffName = '';
   String _businessName = '';
   String? _businessId;
-  int _assignedBusinessCount = 0;
+  int _assignedBusinessCount = 0; // ignore: unused_field
   int _maxTables = 0;
   List<int> _assignedTables = []; // waiter's assigned tables
   List<Map<String, dynamic>> _tables = []; // custom table definitions {label, section, sortOrder}
@@ -52,10 +52,11 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
 
   // Live counters
   int _pendingReservations = 0;
-  int _activeTableSessions = 0;
+  int _activeTableSessions = 0; // ignore: unused_field
   int _pastShiftMinutes = 0;
 
   // Services for table dashboard
+  // ignore: unused_field
   final _sessionService = TableSessionService();
   final _orderService = OrderService();
 
@@ -662,7 +663,6 @@ class _StaffHubScreenState extends ConsumerState<StaffHubScreen> {
   }
 
   Widget _buildPausePills() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       children: [
         // Delivery Pill

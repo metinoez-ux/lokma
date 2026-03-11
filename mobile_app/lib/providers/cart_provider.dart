@@ -12,7 +12,8 @@ class CartItem {
   final ButcherProduct product;
   final double quantity;
   final List<SelectedOption> selectedOptions;
-  final String? note; // Per-item note
+  final String? note; // Per-item note (food-related)
+  final String? recipientName; // "Kimin için?" — person this item is for
   final bool isFreeDrink; // 🥤 Gratis İçecek — platform promotion
 
   CartItem({
@@ -20,6 +21,7 @@ class CartItem {
     required this.quantity,
     this.selectedOptions = const [],
     this.note,
+    this.recipientName,
     this.isFreeDrink = false,
   });
 
@@ -49,6 +51,7 @@ class CartItem {
       'quantity': quantity,
       'selectedOptions': selectedOptions.map((o) => o.toMap()).toList(),
       'note': note,
+      'recipientName': recipientName,
       'isFreeDrink': isFreeDrink,
     };
   }
@@ -61,6 +64,7 @@ class CartItem {
           ?.map((o) => SelectedOption.fromMap(o as Map<String, dynamic>))
           .toList() ?? [],
       note: map['note'] as String?,
+      recipientName: map['recipientName'] as String?,
       isFreeDrink: map['isFreeDrink'] ?? false,
     );
   }
@@ -182,6 +186,7 @@ class CartNotifier extends Notifier<CartState> {
         quantity: existingItem.quantity + quantity,
         selectedOptions: selectedOptions,
         note: existingItem.note,
+        recipientName: existingItem.recipientName,
       );
       state = CartState(
         items: updatedItems,
@@ -254,6 +259,7 @@ class CartNotifier extends Notifier<CartState> {
         quantity: quantity,
         selectedOptions: existing.selectedOptions,
         note: existing.note,
+        recipientName: existing.recipientName,
         isFreeDrink: existing.isFreeDrink,
       );
       state = CartState(
@@ -275,6 +281,29 @@ class CartNotifier extends Notifier<CartState> {
         quantity: existing.quantity,
         selectedOptions: existing.selectedOptions,
         note: (note != null && note.trim().isNotEmpty) ? note.trim() : null,
+        recipientName: existing.recipientName,
+        isFreeDrink: existing.isFreeDrink,
+      );
+      state = CartState(
+        items: updatedItems,
+        butcherId: state.butcherId,
+        butcherName: state.butcherName,
+      );
+      _persist();
+    }
+  }
+
+  void updateRecipientName(String uniqueKey, String? name) {
+    final index = state.items.indexWhere((item) => item.uniqueKey == uniqueKey);
+    if (index >= 0) {
+      final updatedItems = List<CartItem>.from(state.items);
+      final existing = updatedItems[index];
+      updatedItems[index] = CartItem(
+        product: existing.product,
+        quantity: existing.quantity,
+        selectedOptions: existing.selectedOptions,
+        note: existing.note,
+        recipientName: (name != null && name.trim().isNotEmpty) ? name.trim() : null,
         isFreeDrink: existing.isFreeDrink,
       );
       state = CartState(

@@ -3,16 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lokma_app/widgets/mira_3d_switch.dart';
-import 'package:lokma_app/widgets/distance_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'business_detail_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
-import 'package:lokma_app/utils/butcher_data_seeder.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 class ButchersScreen extends ConsumerStatefulWidget {
@@ -25,11 +21,9 @@ class ButchersScreen extends ConsumerStatefulWidget {
 class _ButchersScreenState extends ConsumerState<ButchersScreen> {
   // Dark theme colors
   static const Color darkBg = Color(0xFF121212);
-  static const Color cardBg = Color(0xFF1E1E1E);
   static const Color accent = Color(0xFFFB335B);
   
   bool _isPickup = true; // Gel Al vs Kurye
-  final bool _showKuryeInfo = true;
   bool _showOnlyTuna = true; // Default
   double _maxDistance = 50.0; // Default 50km as per screenshot
   final TextEditingController _searchController = TextEditingController();
@@ -160,7 +154,6 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
   
   // Location
   Position? _userPosition;
-  final Map<String, Location> _coordinateCache = {};
   
   // Dummy Banners
   final List<Map<String, dynamic>> _banners = [
@@ -687,9 +680,9 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                 );
               }
               if (snapshot.hasError) {
-                return const SliverFillRemaining(
+                return SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(child: Text('marketplace.error_occurred'.tr(), style: TextStyle(color: Colors.white))),
+                  child: Center(child: Text('marketplace.error_occurred'.tr(), style: const TextStyle(color: Colors.white))),
                 );
               }
 
@@ -1035,9 +1028,6 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                     ],
                   ),
                 ),
-                    ],
-                  ),
-                ),
                 
                 // Prominent TUNA Badge
                 if (badgeText != null)
@@ -1189,13 +1179,11 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                 ],
               ),
             ),
-              ],
-            ),
+            ],
           ),
-          ],
         ),
       ),
-    )
+    );
   }
 }
 
@@ -1206,6 +1194,7 @@ class _ButcherBannerCarousel extends StatefulWidget {
 
   const _ButcherBannerCarousel({
     required this.banners,
+    this.height = 140,
   });
 
   @override

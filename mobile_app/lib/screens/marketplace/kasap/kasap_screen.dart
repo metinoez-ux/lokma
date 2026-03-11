@@ -48,7 +48,6 @@ class _KasapScreenState extends State<KasapScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
     final cardBgColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final accent = Theme.of(context).colorScheme.primary;
     final textPrimary = Theme.of(context).colorScheme.onSurface;
     
     return Scaffold(

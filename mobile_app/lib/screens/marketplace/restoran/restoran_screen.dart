@@ -21,30 +21,21 @@ import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:lokma_app/widgets/address_selection_sheet.dart';
 import '../../../utils/currency_utils.dart';
+import '../../../providers/search_provider.dart';
 
 /// Business type labels for display
-const Map<String, String> BUSINESS_TYPE_LABELS = {
-  'kasap': 'Kasap',
-  'market': 'Market',
-  'restoran': 'Restoran',
-  'fastfood': 'Fastfood',
-  'pastane': 'Pastane & Tatlıcı',
-  'cicekci': 'Çiçekçi',
-  'cigkofte': 'Çiğ Köfteci',
-  'cafe': 'Kafe',
-  'catering': 'Catering',
-  'firin': 'Fırın',
-  'kermes': 'Kermes',
-  'aktar': 'Aktar',
-  'icecek': 'İçecek',
-  'kozmetik': 'Kozmetik',
-  'sarkuteri': 'Şarküteri',
-  'petshop': 'Pet Shop',
-  'tursu': 'Turşu',
-  'balik': 'Balık',
-  'kuruyemis': 'Kuru Yemiş',
-  'ciftci': 'Çiftçi',
-};
+/// Business type keys for i18n lookup
+const List<String> BUSINESS_TYPE_KEYS = [
+  'kasap', 'market', 'restoran', 'fastfood', 'pastane', 'cicekci',
+  'cigkofte', 'cafe', 'catering', 'firin', 'kermes', 'aktar',
+  'icecek', 'kozmetik', 'sarkuteri', 'petshop', 'tursu', 'balik',
+  'kuruyemis', 'ciftci',
+];
+
+/// Get localized business type label
+String getBusinessTypeLabel(String typeKey) {
+  return tr('marketplace.business_type_$typeKey');
+}
 
 /// Yemek/Restoran Keşif Ekranı - LOKMA
 /// Dinamik sektörler - Firestore'dan çekilir
@@ -69,7 +60,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
   // QR scan state for Masa mode
   String? _scannedTableNumber;
-  String? _scannedBusinessId;
+  String? _scannedBusinessId; // ignore: unused_field
   String? _scannedBusinessName;
 
   // Category filter - 'all' or specific businessType
@@ -79,8 +70,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   bool _onlyTuna = false;
 
   // Location
-  final String _userAddress = 'marketplace.getting_location'.tr();
-  bool _isLoadingLocation = true;
+  final String _userAddress = 'marketplace.getting_location'.tr(); // ignore: unused_field
+  bool _isLoadingLocation = true; // ignore: unused_field
   double? _userLat;
   double? _userLng;
 
@@ -89,7 +80,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   bool _sliderAutoSet = false; // Auto-snap slider to nearest business once
 
   // Dynamic categories from Firestore
-  Map<String, int> _businessTypeCounts = {};
+  Map<String, int> _businessTypeCounts = {}; // ignore: unused_field
   List<DocumentSnapshot> _allBusinesses = [];
   bool _isLoading = true;
 
@@ -203,6 +194,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           _businessTypeCounts = typeCounts;
           _isLoading = false;
         });
+        // 🚀 PERFORMANCE: Pre-seed search provider with loaded businesses
+        // This eliminates the need for search to fetch from Firestore separately
+        ref.read(searchProvider.notifier).seedBusinessData(snapshot.docs);
         // Auto-snap slider to nearest business (only once)
         if (!_sliderAutoSet) {
           _autoSetSliderToNearestBusiness();
@@ -782,13 +776,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     );
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 2),
       child: Row(
         children: [
 
-          // Location info (şehir + sokak alt satırda)
+          // Location info — compact pill shape
           Expanded(
             child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () {
                 HapticFeedback.lightImpact();
                 showModalBottomSheet(
@@ -801,31 +796,30 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.location_on, color: lokmaPink, size: 16),
+                  Icon(Icons.location_on, color: lokmaPink, size: 14),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Şehir (ana satır)
                         Text(
                           isLoading ? 'marketplace.getting_location'.tr() : cityName,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
-                        // Sokak (alt satır - varsa)
                         if (streetInfo.isNotEmpty)
                           Text(
                             streetInfo,
                             style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 11,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
                             ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
@@ -835,7 +829,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   ),
                   const SizedBox(width: 2),
                   Icon(Icons.keyboard_arrow_down,
-                      color: Colors.grey[400], size: 16),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), size: 14),
                 ],
               ),
             ),
@@ -998,7 +992,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.grey[800]
-                : Colors.grey[200],
+                : const Color(0xFFF2EEE9),
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
@@ -1015,8 +1009,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Yemek, restoran veya mutfak ara...',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                  tr('discovery.search_food_restaurant_cuisine'),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w200),
                 ),
               ),
               const SizedBox(width: 8),
@@ -1048,8 +1042,11 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     if (_deliveryMode == 'gelal') selectedIndex = 1;
     if (_deliveryMode == 'masa') selectedIndex = 2;
 
+    final accent = Theme.of(context).colorScheme.primary;
+
     return ThreeDimensionalPillTabBar(
       selectedIndex: selectedIndex,
+      activeColor: accent,
       tabs: [
         TabItem(
             title: tr('delivery_modes.delivery'), icon: Icons.delivery_dining),
@@ -1122,7 +1119,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
   }
 
   int _currentStepIndex = 9; // Varsayılan: 10 km (index 9)
-  final double _lastSliderValue = 10.0;
+  final double _lastSliderValue = 10.0; // ignore: unused_field
 
   /// Auto-snap slider to nearest business distance (respects delivery mode)
   void _autoSetSliderToNearestBusiness() {
@@ -1210,7 +1207,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final hasBusinessAtCurrent = businessKms.contains(currentKm.toInt());
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Row(
         children: [
           Icon(Icons.location_on_outlined, color: lokmaPink, size: 18),
@@ -1224,6 +1221,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                         : Colors.grey[400],
                 thumbColor: lokmaPink,
                 overlayColor: lokmaPink.withValues(alpha: 0.2),
+                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
                 // Her km adımını göster - daha büyük ve görünür
@@ -1398,7 +1396,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
           // İlk item: Count header
           if (index == 0) {
             return Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 12),
+              padding: const EdgeInsets.only(top: 8, bottom: 12),
               child: Text(
                 tr('discovery.businesses_at_service',
                     namedArgs: {'count': restaurants.length.toString()}),
@@ -1495,7 +1493,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       if (deliveryUnavailable) {
         return (
           isAvailable: false,
-          reason: 'Teslimat $deliveryStartTime\'ten sonra',
+          reason: tr('marketplace.delivery_from', namedArgs: {'time': deliveryStartTime!}),
           startTime: deliveryStartTime,
           deliveryTime: deliveryStartTime,
           pickupTime: pickupStartTime
@@ -1512,7 +1510,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       if (temporaryPickupPaused) {
         return (
           isAvailable: false,
-          reason: 'Gel-Al geçici durduruldu',
+          reason: tr('marketplace.pickup_paused'),
           startTime: null,
           deliveryTime: deliveryStartTime,
           pickupTime: pickupStartTime
@@ -1521,7 +1519,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       if (pickupUnavailable) {
         return (
           isAvailable: false,
-          reason: 'Gel Al $pickupStartTime\'dan',
+          reason: tr('marketplace.pickup_from', namedArgs: {'time': pickupStartTime!}),
           startTime: pickupStartTime,
           deliveryTime: deliveryStartTime,
           pickupTime: pickupStartTime
@@ -1565,7 +1563,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
     String? nextOpenText;
     if (nextOpen != null) {
-      final dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
       final now = DateTime.now();
       final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
       final tomorrow = now.add(const Duration(days: 1));
@@ -1573,11 +1570,14 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
       
       final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
       if (isToday) {
-        nextOpenText = 'Bugün $timeStr\'de açılıyor';
+        nextOpenText = tr('marketplace.opens_today', namedArgs: {'time': timeStr});
       } else if (isTomorrow) {
-        nextOpenText = 'Yarın $timeStr\'de açılıyor';
+        nextOpenText = tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr});
       } else {
-        nextOpenText = '${dayNames[nextOpen.weekday - 1]} $timeStr\'de açılıyor';
+        // Use localized day names
+        final dayKeys = ['day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday', 'day_sunday'];
+        final dayName = tr('common.${dayKeys[nextOpen.weekday - 1]}');
+        nextOpenText = tr('marketplace.opens_on_day', namedArgs: {'day': dayName, 'time': timeStr});
       }
     }
     
@@ -1591,24 +1591,46 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: theme.dialogBackgroundColor,
-          title: Row(
+          title: Stack(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: surfaceVariant.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Icons.storefront_outlined, color: onSurface.withValues(alpha: 0.7), size: 22),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: surfaceVariant.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.storefront_outlined, color: onSurface.withValues(alpha: 0.7), size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 28),
+                      child: Text(
+                        businessName,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  businessName,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: onSurface,
+              Positioned(
+                top: 4,
+                right: 4,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(ctx),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: onSurface.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.close, size: 18, color: onSurface.withValues(alpha: 0.5)),
                   ),
                 ),
               ),
@@ -1618,7 +1640,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Status info row - reason + next opening combined
+              // Status info row - reason + next opening + pre-order pill combined
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -1637,7 +1659,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             child: Text(
                               reason,
                               style: TextStyle(
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w400,
                                 color: onSurface.withValues(alpha: 0.7),
                                 fontSize: 13,
                               ),
@@ -1645,9 +1667,30 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
                         ],
                       ),
-                    if (reason != null && nextOpenText != null)
+                    // Pre-order pill right under the status
+                    if (preOrderEnabled) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3E3E40),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
+                            const SizedBox(width: 6),
+                            Text(
+                              tr('marketplace.pre_order_active'),
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (nextOpenText != null) ...[
                       Divider(color: onSurface.withValues(alpha: 0.1), height: 16),
-                    if (nextOpenText != null)
                       Row(
                         children: [
                           Icon(Icons.event_available_outlined, color: lokmaPink, size: 16),
@@ -1656,7 +1699,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             child: Text(
                               nextOpenText,
                               style: TextStyle(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                                 color: lokmaPink,
                                 fontSize: 13,
                               ),
@@ -1664,6 +1707,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
                         ],
                       ),
+                    ],
                   ],
                 ),
               ),
@@ -1675,57 +1719,39 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.5,
-                  color: onSurface.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w300,
+                  color: onSurface.withValues(alpha: 0.6),
                 ),
               ),
-              if (preOrderEnabled) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: lokmaPink.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
+              const SizedBox(height: 20),
+              // Full-width CTA pill button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    final businessId = _currentBusinessIdForDialog;
+                    if (businessId != null) {
+                      context.push('/business/$businessId?mode=$_deliveryMode&closedAck=true');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: lokmaPink,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.shopping_bag_outlined, color: lokmaPink, size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Ön Sipariş Aktif',
-                        style: TextStyle(color: lokmaPink, fontWeight: FontWeight.w600, fontSize: 13),
-                      ),
-                    ],
+                  child: Text(
+                    preOrderEnabled ? tr('marketplace.see_menu_and_order') : tr('marketplace.see_menu'),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                   ),
                 ),
-              ],
+              ),
             ],
           ),
-          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                tr('common.close'),
-                style: TextStyle(color: onSurface.withValues(alpha: 0.5)),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                final businessId = _currentBusinessIdForDialog;
-                if (businessId != null) {
-                  context.push('/business/$businessId?mode=$_deliveryMode&closedAck=true');
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: lokmaPink,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              ),
-              child: Text(preOrderEnabled ? 'Menüyü Gör & Sipariş Ver' : tr('marketplace.see_menu')),
-            ),
-          ],
+          actionsPadding: EdgeInsets.zero,
+          actions: const [],
         );
       },
     );
@@ -1752,6 +1778,15 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final isAvailable = availability.isAvailable;
     final unavailableReason = availability.reason;
 
+    // Compute banner height offset for overlay icons (TUNA, favorite)
+    // 1-line banner ≈ 28px, 2-line banner ≈ 42px, add 10px gap
+    double bannerTopOffset = 12;
+    if (!isAvailable) {
+      final hasTimeInfo = (availability.deliveryTime != null && availability.deliveryTime!.isNotEmpty) ||
+          (availability.pickupTime != null && availability.pickupTime!.isNotEmpty);
+      bannerTopOffset = hasTimeInfo ? 52 : 36;
+    }
+
     final rating = (data['rating'] as num?)?.toDouble() ?? 4.0;
     final reviewCount = (data['reviewCount'] as num?)?.toInt() ?? 0;
     final imageUrl = data['imageUrl'] as String?;
@@ -1759,7 +1794,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     final cuisineType = data['cuisineType'] as String?;
 
     // Business type label
-    final typeLabel = BUSINESS_TYPE_LABELS[businessType] ?? businessType;
+    final typeLabel = getBusinessTypeLabel(businessType);
 
     // Calculate distance
     String distanceText = '';
@@ -1890,33 +1925,70 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                       ),
 
                     // 🆕 Thin top-aligned banner for unavailable businesses (Overlying the image)
-                    if (!isAvailable)
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF2C2C2E), // Dark grey background
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(12),
-                              topRight: Radius.circular(12),
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              unavailableReason ?? 'marketplace.currently_closed'.tr(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                letterSpacing: 0.2,
+                    if (!isAvailable) ...[
+                      // Build time info string like Lieferando: "Lieferung ab 16:15 · Abholen ab 12:00"
+                      () {
+                        final deliveryTime = availability.deliveryTime;
+                        final pickupTime = availability.pickupTime;
+                        final preOrderEnabled = data['preOrderEnabled'] as bool? ?? false;
+                        
+                        // Build time parts
+                        final timeParts = <String>[];
+                        if (deliveryTime != null && deliveryTime.isNotEmpty) {
+                          timeParts.add('${tr('marketplace.delivery_from_short', namedArgs: {'time': deliveryTime})}');
+                        }
+                        if (pickupTime != null && pickupTime.isNotEmpty) {
+                          timeParts.add('${tr('marketplace.pickup_from_short', namedArgs: {'time': pickupTime})}');
+                        }
+                        final timeInfo = timeParts.isNotEmpty ? timeParts.join(' · ') : null;
+                        
+                        // Main status text
+                        final statusText = preOrderEnabled
+                            ? '${unavailableReason ?? 'marketplace.currently_closed'.tr()} (${tr('marketplace.pre_order_active')})'
+                            : unavailableReason ?? 'marketplace.currently_closed'.tr();
+                        
+                        return Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: timeInfo != null ? 5 : 6),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF2C2C2E),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                topRight: Radius.circular(12),
                               ),
                             ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  statusText,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                                if (timeInfo != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    timeInfo,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.7),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      }(),
+                    ],
 
                     // 🆕 Business logo (BOTTOM LEFT - Lieferando style)
                     if (logoUrl != null && logoUrl.isNotEmpty)
@@ -1962,7 +2034,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     if (isTunaPartner)
                       Positioned(
                         left: 12,
-                        top: isAvailable ? 12 : 42,
+                        top: bannerTopOffset,
                         child: Opacity(
                           opacity: 1.0, // Her durumda tam görünür
                           child: Container(
@@ -1983,14 +2055,21 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 ),
                               ],
                             ),
-                            child: const Text(
-                              'TUNA',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1.2,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(Icons.verified, color: Colors.white, size: 14),
+                                SizedBox(width: 4),
+                                Text(
+                                  'TUNA',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -1998,7 +2077,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
                     // ♥️ Favorite button (TOP RIGHT) — TUNA ile aynı top hizası (her iki durumda da eşit)
                     Positioned(
-                      top: isAvailable ? 12 : 42,
+                      top: bannerTopOffset,
                       right: 12,
                       child: GestureDetector(
                         onTap: () {
@@ -2194,15 +2273,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                       (data['minOrderAmount'] as num?)
                                               ?.toDouble() ??
                                           10.0;
+                                  // ignore: unused_local_variable
                                   final freeDeliveryThreshold =
                                       (data['freeDeliveryThreshold'] as num?)
                                           ?.toDouble();
 
                                   if (_deliveryMode == 'teslimat') {
                                     final hasMinOrder = minOrderAmount > 0;
-                                    final hasFreeDelivery =
-                                        freeDeliveryThreshold != null &&
-                                            freeDeliveryThreshold > 0;
 
                                     return Row(
                                       children: [
@@ -2366,7 +2443,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header Bar
+                  // Header Bar — Lieferando style with text buttons
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
@@ -2378,20 +2455,49 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Empty space to balance Sıfırla on right
-                        const SizedBox(width: 60),
-                        // Results Count
-                        Text(
-                          'Filtrele',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
+                        // Cancel pill button
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+                              ),
+                            ),
+                            child: Text(
+                              tr('marketplace.filter_cancel'),
+                              style: const TextStyle(
+                                color: Color(0xFF3E3E40),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
                           ),
                         ),
-                        // Reset icon button
-                        IconButton(
-                          onPressed: () {
+                        // Results Count in center
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              tr('marketplace.show_businesses', args: ['$totalResults']),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        // Reset pill button
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
                             setState(() {
                               _sortOption = 'nearest';
                               _categoryFilter = 'all';
@@ -2407,10 +2513,22 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             });
                             setStateSheet(() {});
                           },
-                          icon: Icon(
-                            Icons.restart_alt_rounded,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                            size: 22,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+                              ),
+                            ),
+                            child: Text(
+                              tr('marketplace.filter_reset'),
+                              style: const TextStyle(
+                                color: Color(0xFF3E3E40),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -2441,7 +2559,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 children: [
                                   // TUNA branded pill badge
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFA01E22),
                                       borderRadius: BorderRadius.circular(20),
@@ -2453,21 +2571,28 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                         ),
                                       ] : null,
                                     ),
-                                    child: const Text(
-                                      'TUNA',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 1.5,
-                                      ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.verified, color: Colors.white, size: 16),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'TUNA',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 1.5,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                   const SizedBox(width: 12),
                                   // Descriptive text
                                   Expanded(
                                     child: Text(
-                                      'Sadece TUNA sertifikalı onaylı işletmeleri göster',
+                                      tr('marketplace.filter_tuna_description'),
                                       style: TextStyle(
                                         color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                         fontSize: 13,
@@ -2502,7 +2627,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Text(
-                              'Sıralama',
+                              tr('marketplace.sort_section'),
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme
@@ -2515,20 +2640,22 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             ),
                           ),
 
-                          // Sıralama Options (List style with checkbox)
+                          // Sıralama Options (radio style — single select)
                           _buildFilterListItem(
-                            title: 'En Yakın',
+                            title: tr('marketplace.sort_nearest'),
                             subtitle: 'marketplace.sort_by_distance'.tr(),
                             isSelected: _sortOption == 'nearest',
+                            useRadio: true,
                             onTap: () {
                               setState(() => _sortOption = 'nearest');
                               setStateSheet(() {});
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'En İyi Puan',
-                            subtitle: 'Yüksek puanlı işletmeler',
+                            title: tr('marketplace.sort_best_rating'),
+                            subtitle: tr('marketplace.filter_high_rating_subtitle'),
                             isSelected: _sortOption == 'rating',
+                            useRadio: true,
                             onTap: () {
                               setState(() => _sortOption = 'rating');
                               setStateSheet(() {});
@@ -2541,7 +2668,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Text(
-                              'İşletme Türü',
+                              tr('marketplace.business_type_section'),
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme
@@ -2554,11 +2681,12 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             ),
                           ),
 
-                          // Tümü Option
+                          // Tümü Option (radio — single select)
                           _buildFilterListItem(
-                            title: 'Tümü',
+                            title: tr('marketplace.filter_all'),
                             subtitle: 'marketplace.sort_show_all'.tr(),
                             isSelected: _categoryFilter == 'all',
+                            useRadio: true,
                             onTap: () {
                               setState(() => _categoryFilter = 'all');
                               setStateSheet(() {});
@@ -2570,12 +2698,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             final typeKey = entry.key;
                             final count = entry.value;
                             final label =
-                                BUSINESS_TYPE_LABELS[typeKey] ?? typeKey;
+                                getBusinessTypeLabel(typeKey);
 
                             return _buildFilterListItem(
                               title: label,
-                              subtitle: '$count işletme',
+                              subtitle: tr('marketplace.business_count', args: ['$count']),
                               isSelected: _categoryFilter == typeKey,
+                              useRadio: true,
                               onTap: () {
                                 setState(() => _categoryFilter = typeKey);
                                 setStateSheet(() {});
@@ -2589,7 +2718,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Text(
-                              'Hızlı Filtreler',
+                              tr('marketplace.quick_filters_section'),
                               style: TextStyle(
                                 color: Theme.of(context)
                                     .colorScheme
@@ -2603,7 +2732,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
 
                           _buildFilterListItem(
-                            title: 'İndirimler',
+                            title: tr('marketplace.filter_campaigns_title'),
                             subtitle: 'marketplace.filter_campaigns'.tr(),
                             isSelected: _filterDiscounts,
                             onTap: () {
@@ -2613,7 +2742,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'Nakit Ödeme',
+                            title: tr('marketplace.filter_cash_title'),
                             subtitle: 'marketplace.filter_cash'.tr(),
                             isSelected: _filterCash,
                             onTap: () {
@@ -2622,7 +2751,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'Ücretsiz Teslimat',
+                            title: tr('marketplace.filter_free_delivery_title'),
                             subtitle: 'marketplace.filter_free_delivery'.tr(),
                             isSelected: _filterFreeDelivery,
                             onTap: () {
@@ -2632,9 +2761,9 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'Yemek Kartı',
+                            title: tr('marketplace.filter_meal_cards_title'),
                             subtitle:
-                                'Sodexo, Ticket vb. kabul eden işletmeler',
+                                tr('marketplace.filter_meal_cards_subtitle'),
                             isSelected: _filterMealCards,
                             onTap: () {
                               setState(
@@ -2643,8 +2772,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: '4+ Yıldız',
-                            subtitle: 'Yüksek puanlı işletmeler',
+                            title: tr('marketplace.filter_high_rating_title'),
+                            subtitle: tr('marketplace.filter_high_rating_subtitle'),
                             isSelected: _filterHighRating,
                             onTap: () {
                               setState(
@@ -2653,7 +2782,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'Şimdi Açık',
+                            title: tr('marketplace.filter_open_now_title'),
                             subtitle: 'marketplace.filter_open_now'.tr(),
                             isSelected: _filterOpenNow,
                             onTap: () {
@@ -2663,7 +2792,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                           ),
 
                           _buildFilterListItem(
-                            title: 'Vejetaryen',
+                            title: tr('marketplace.filter_vegetarian_title'),
                             subtitle: 'marketplace.filter_vegetarian'.tr(),
                             isSelected: _filterVegetarian,
                             onTap: () {
@@ -2709,7 +2838,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                             ),
                           ),
                           child: Text(
-                            '$totalResults İşletme Göster',
+                            tr('marketplace.show_businesses', args: ['$totalResults']),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.surface,
                               fontSize: 16,
@@ -2735,6 +2864,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     required bool isSelected,
     required VoidCallback onTap,
     bool isPremium = false,
+    bool useRadio = false,
   }) {
     return Builder(
       builder: (context) {
@@ -2774,10 +2904,10 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                                 color: tunaGreen.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: const Text(
-                                'Önerilen',
+                              child: Text(
+                                tr('marketplace.filter_recommended'),
                                 style:
-                                    TextStyle(color: tunaGreen, fontSize: 10),
+                                    const TextStyle(color: tunaGreen, fontSize: 10),
                               ),
                             ),
                           ],
@@ -2795,24 +2925,48 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     ],
                   ),
                 ),
-                // Round Checkbox
-                Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: isSelected ? lokmaPink : Colors.transparent,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected ? lokmaPink : subtitleColor,
-                      width: 2,
+                // Radio (round) or Checkbox (square) based on useRadio
+                useRadio
+                  ? Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? lokmaPink : subtitleColor,
+                          width: 2,
+                        ),
+                      ),
+                      child: isSelected
+                          ? Center(
+                              child: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: lokmaPink,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            )
+                          : null,
+                    )
+                  : Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: isSelected ? lokmaPink : Colors.transparent,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: isSelected ? lokmaPink : subtitleColor,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: isSelected
+                          ? Icon(Icons.check,
+                              color: Theme.of(context).colorScheme.surface,
+                              size: 16)
+                          : null,
                     ),
-                  ),
-                  child: isSelected
-                      ? Icon(Icons.check,
-                          color: Theme.of(context).colorScheme.surface,
-                          size: 14)
-                      : null,
-                ),
               ],
             ),
           ),

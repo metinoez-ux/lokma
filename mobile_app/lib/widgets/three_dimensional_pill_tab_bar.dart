@@ -3,9 +3,10 @@ import 'package:flutter/services.dart';
 
 class TabItem {
   final String title;
+  final String? subtitle;
   final IconData? icon;
 
-  const TabItem({required this.title, this.icon});
+  const TabItem({required this.title, this.subtitle, this.icon});
 }
 
 class ThreeDimensionalPillTabBar extends StatefulWidget {
@@ -13,6 +14,8 @@ class ThreeDimensionalPillTabBar extends StatefulWidget {
   final Function(int) onTabSelected;
   final List<TabItem> tabs;
   final bool compact;
+  final Color? activeColor;
+  final EdgeInsets? margin;
 
   const ThreeDimensionalPillTabBar({
     super.key,
@@ -20,12 +23,14 @@ class ThreeDimensionalPillTabBar extends StatefulWidget {
     required this.onTabSelected,
     required this.tabs,
     this.compact = false,
+    this.activeColor,
+    this.margin,
   });
 
-  // 🎨 LOKMA Marka Rengi (#FB335B)
-  static const Color lokmaPink      = Color(0xFFFB335B);
-  static const Color lokmaPinkLight = Color(0xFFFC5C7A); // üst ışık
-  static const Color lokmaPinkDark  = Color(0xFFD92A4C); // alt gölge
+  // 🎨 Koyu gri toggle renkleri (#3E3E40)
+  static const Color pillDark     = Color(0xFF3E3E40);
+  static const Color pillLight    = Color(0xFF5A5A5C); // üst ışık
+  static const Color pillDarker   = Color(0xFF2C2C2E); // alt gölge
 
   @override
   State<ThreeDimensionalPillTabBar> createState() =>
@@ -53,9 +58,9 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
   double get _pillRadius => (_height - 6) / 2;
   double get _iconSize => widget.compact ? 13 : 17;
   double get _fontSize => widget.compact ? 12 : 14;
-  EdgeInsets get _margin => widget.compact
+  EdgeInsets get _margin => widget.margin ?? (widget.compact
       ? const EdgeInsets.symmetric(horizontal: 4, vertical: 4)
-      : const EdgeInsets.symmetric(horizontal: 16, vertical: 6);
+      : const EdgeInsets.symmetric(horizontal: 16, vertical: 6));
 
   @override
   void initState() {
@@ -103,8 +108,8 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final trackColor = isDark ? const Color(0xFF2D2D2D) : const Color(0xFFEEEEEE);
-    final unselTextColor = isDark ? Colors.grey[300]! : Colors.grey[600]!;
+    final trackColor = isDark ? const Color(0xFF2D2D2D) : const Color(0xFFF2EEE9);
+    final unselTextColor = isDark ? Colors.grey[300]! : const Color(0xFF3E3E40);
 
     return LayoutBuilder(builder: (ctx, constraints) {
       final hMargin = _margin.horizontal;
@@ -171,15 +176,25 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                           widthFactor: 1 / widget.tabs.length,
                           child: Container(
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  ThreeDimensionalPillTabBar.lokmaPinkLight,
-                                  ThreeDimensionalPillTabBar.lokmaPink,
-                                  ThreeDimensionalPillTabBar.lokmaPinkDark,
-                                ],
-                              ),
+                              gradient: widget.activeColor != null
+                                  ? LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        HSLColor.fromColor(widget.activeColor!).withLightness((HSLColor.fromColor(widget.activeColor!).lightness + 0.12).clamp(0.0, 1.0)).toColor(),
+                                        widget.activeColor!,
+                                        HSLColor.fromColor(widget.activeColor!).withLightness((HSLColor.fromColor(widget.activeColor!).lightness - 0.10).clamp(0.0, 1.0)).toColor(),
+                                      ],
+                                    )
+                                  : const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        ThreeDimensionalPillTabBar.pillLight,
+                                        ThreeDimensionalPillTabBar.pillDark,
+                                        ThreeDimensionalPillTabBar.pillDarker,
+                                      ],
+                                    ),
                               borderRadius: BorderRadius.circular(_pillRadius),
                               boxShadow: [
                                 BoxShadow(
@@ -190,7 +205,7 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
                                   offset: const Offset(0, 3),
                                 ),
                                 BoxShadow(
-                                  color: ThreeDimensionalPillTabBar.lokmaPink
+                                  color: ThreeDimensionalPillTabBar.pillDark
                                       .withValues(alpha: isDark ? 0.35 : 0.20),
                                   blurRadius: 10,
                                   spreadRadius: -2,
@@ -230,6 +245,8 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
 
   Widget _buildLabel(int index, Color textColor, bool isActive) {
     final tab = widget.tabs[index];
+    final hasSubtitle = tab.subtitle != null && tab.subtitle!.isNotEmpty;
+    
     return Center(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -238,24 +255,59 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
         children: [
           if (tab.icon != null) ...[
             Icon(tab.icon, color: textColor, size: _iconSize),
-            SizedBox(width: widget.compact ? 3 : 5),
+            SizedBox(width: widget.compact ? 3 : 4),
           ],
           Flexible(
-            child: Text(
-              tab.title,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                fontSize: _fontSize,
-                overflow: TextOverflow.ellipsis,
-                height: 1.0,
-                shadows: isActive
-                    ? const [Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 2)]
-                    : null,
-              ),
-              maxLines: 1,
-              textAlign: TextAlign.center,
-            ),
+            child: hasSubtitle
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        tab.title,
+                        style: TextStyle(
+                          color: textColor,
+                          fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                          fontSize: widget.compact ? 11 : 12.5,
+                          overflow: TextOverflow.ellipsis,
+                          height: 1.0,
+                          shadows: isActive
+                              ? const [Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 2)]
+                              : null,
+                        ),
+                        maxLines: 1,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        tab.subtitle!,
+                        style: TextStyle(
+                          color: textColor.withValues(alpha: isActive ? 0.85 : 0.7),
+                          fontWeight: FontWeight.w400,
+                          fontSize: widget.compact ? 9 : 10,
+                          overflow: TextOverflow.ellipsis,
+                          height: 1.0,
+                        ),
+                        maxLines: 1,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  )
+                : Text(
+                    tab.title,
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                      fontSize: _fontSize,
+                      overflow: TextOverflow.ellipsis,
+                      height: 1.0,
+                      shadows: isActive
+                          ? const [Shadow(color: Colors.black26, offset: Offset(0, 1), blurRadius: 2)]
+                          : null,
+                    ),
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                  ),
           ),
         ],
       ),

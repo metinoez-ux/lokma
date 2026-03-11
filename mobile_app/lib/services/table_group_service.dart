@@ -14,17 +14,22 @@ class TableGroupService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   static const String _collection = 'table_group_sessions';
 
-  /// Create a new group session for a table
+  /// Create a new group session for a table or delivery group order
   Future<TableGroupSession> createSession({
     required String businessId,
     required String businessName,
     required String tableNumber,
     required String hostUserId,
     required String hostName,
+    GroupSessionType sessionType = GroupSessionType.dineIn,
+    GroupInviteMethod inviteMethod = GroupInviteMethod.qr,
+    Map<String, dynamic>? deliveryAddress,
+    DateTime? deadline,
+    double? spendingLimitPerPerson,
   }) async {
     final participantId = const Uuid().v4();
     
-    // Generate 4-digit PIN (1000-9999)
+    // Generate 4-digit PIN (only for dineIn, optional for link-based)
     final pin = (1000 + Random.secure().nextInt(9000)).toString();
     
     // Fetch FCM Token for the host
@@ -44,6 +49,8 @@ class TableGroupService {
     );
 
     final docRef = _db.collection(_collection).doc();
+    final shareLink = 'https://lokma.shop/group/${docRef.id}';
+    
     final session = TableGroupSession(
       id: docRef.id,
       businessId: businessId,
@@ -55,10 +62,18 @@ class TableGroupService {
       groupPin: pin,
       participants: [participant],
       createdAt: DateTime.now(),
+      sessionType: sessionType,
+      inviteMethod: inviteMethod,
+      shareLink: shareLink,
+      deliveryAddress: deliveryAddress,
+      deadline: deadline,
+      spendingLimitPerPerson: spendingLimitPerPerson,
     );
 
     await docRef.set(session.toMap());
-    debugPrint('📋 Created group session ${docRef.id} for table $tableNumber at $businessName (PIN: $pin)');
+    debugPrint('📋 Created ${sessionType.name} group session ${docRef.id} '
+        '${sessionType == GroupSessionType.dineIn ? "for table $tableNumber" : "(link-based)"} '
+        'at $businessName (PIN: $pin)');
     
     return session.copyWith();
   }
@@ -197,6 +212,92 @@ class TableGroupService {
 
     debugPrint('👤 User $userName joined session $sessionId (participantId: $actualParticipantId)');
     return actualParticipantId;
+  }
+
+  /// Join a group session via link (no PIN required)
+  /// Used for delivery/pickup group orders shared via link
+  Future<String> joinViaLink({
+    required String sessionId,
+    required String userId,
+    required String userName,
+  }) async {
+    final docRef = _db.collection(_collection).doc(sessionId);
+    
+    final currentDoc = await docRef.get();
+    if (!currentDoc.exists) throw Exception('SESSION_NOT_FOUND');
+    
+    final currentSession = TableGroupSession.fromFirestore(currentDoc);
+    
+    // Validate session is active and link-based
+    if (currentSession.status != GroupSessionStatus.active) {
+      throw Exception('SESSION_NOT_ACTIVE');
+    }
+    
+    // Check deadline (if set)
+    if (currentSession.isDeadlineExpired) {
+      throw Exception('SESSION_EXPIRED');
+    }
+    
+    // If already joined, return existing participantId
+    final existingParticipant = currentSession.participants.cast<TableGroupParticipant?>().firstWhere(
+      (p) => p?.userId == userId,
+      orElse: () => null,
+    );
+    if (existingParticipant != null) {
+      debugPrint('⚠️ User $userId already in session $sessionId via link, returning existing participantId');
+      return existingParticipant.participantId;
+    }
+    
+    final participantId = const Uuid().v4();
+    
+    String? fcmToken;
+    try {
+      fcmToken = await FCMService().refreshToken();
+    } catch (e) {
+      debugPrint('Error getting FCM token for link join: $e');
+    }
+    
+    final participant = TableGroupParticipant(
+      participantId: participantId,
+      userId: userId,
+      name: userName,
+      isHost: false,
+      fcmToken: fcmToken,
+    );
+    
+    String actualParticipantId = participantId;
+    
+    await _db.runTransaction((tx) async {
+      final snapshot = await tx.get(docRef);
+      if (!snapshot.exists) throw Exception('SESSION_NOT_FOUND');
+      
+      final session = TableGroupSession.fromFirestore(snapshot);
+      
+      // Double-check in transaction
+      final existingInTx = session.participants.cast<TableGroupParticipant?>().firstWhere(
+        (p) => p?.userId == userId,
+        orElse: () => null,
+      );
+      if (existingInTx != null) {
+        actualParticipantId = existingInTx.participantId;
+        return;
+      }
+      
+      final updatedParticipants = [...session.participants, participant];
+      tx.update(docRef, {
+        'participants': updatedParticipants.map((p) => p.toMap()).toList(),
+      });
+    });
+    
+    debugPrint('🔗 User $userName joined via link session $sessionId (participantId: $actualParticipantId)');
+    return actualParticipantId;
+  }
+
+  /// Get a session by ID (for deep link resolution)
+  Future<TableGroupSession?> getSessionById(String sessionId) async {
+    final doc = await _db.collection(_collection).doc(sessionId).get();
+    if (!doc.exists) return null;
+    return TableGroupSession.fromFirestore(doc);
   }
 
   /// Update a participant's items in the session (real-time sync)

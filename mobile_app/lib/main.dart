@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -49,12 +50,20 @@ void main() async {
       await initializeDateFormatting('tr');
       // Future: add more locales here (de, en, ar, etc.)
       
-      // Removed blocking Geolocator request from main() to prevent white screen delay
-      // Permissions should be requested asynchronously in the UI (e.g. SplashScreen)
-      
+      // Auto-detect system language — no manual language selection on first launch
+      // Users can change language later in Profile settings
       final prefs = await SharedPreferences.getInstance();
-      final hasSeenSplash = prefs.getBool('has_seen_splash') ?? false;
-      AppRouter.initializeRouter(hasSeenSplash);
+      final hasSeenOnboarding = prefs.getBool('onboarding_seen') ?? false;
+      
+      // Detect system locale (reserved for future use)
+      try {
+        final systemLang = Platform.localeName.split('_')[0].toLowerCase();
+        const supportedCodes = ['tr', 'en', 'de', 'it', 'fr', 'es'];
+        // Future: use detected locale for auto-language selection
+        debugPrint('System language detected: $systemLang, supported: ${supportedCodes.contains(systemLang)}');
+      } catch (_) {}
+      
+      AppRouter.initializeRouter(hasSeenOnboarding);
       
     } catch (e, stack) {
       _initError = 'Firebase Error: $e';
@@ -75,7 +84,7 @@ void main() async {
           path: 'assets/translations',
           assetLoader: const FirestoreAssetLoader(), // Live translations
           fallbackLocale: const Locale('tr'),
-          startLocale: const Locale('tr'),
+          // Use device system language automatically (user can change in Profile)
           child: LokmaApp(initError: _initError),
         ),
       ),

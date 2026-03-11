@@ -386,7 +386,6 @@ class BusinessPromotion {
 
     // Daily limit check (reset if lastDailyReset is not today)
     if (dailyLimit != null) {
-      final today = DateTime(now.year, now.month, now.day);
       final isToday = lastDailyReset != null &&
           lastDailyReset!.year == now.year &&
           lastDailyReset!.month == now.month &&

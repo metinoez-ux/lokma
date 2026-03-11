@@ -268,7 +268,6 @@ class _OrderCard extends ConsumerStatefulWidget {
 }
 
 class _OrderCardState extends ConsumerState<_OrderCard> {
-  static const Color lokmaRed = Color(0xFFFB335B);
   String? _businessImageUrl;
   bool? _isTuna;
 
@@ -1166,7 +1165,7 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         final courierName = tipData?['courierName'] as String? ?? 'Kurye';
-                        final tipAmount = await TipBottomSheet.show(
+                        await TipBottomSheet.show(
                           context,
                           orderId: order.id,
                           courierName: courierName,

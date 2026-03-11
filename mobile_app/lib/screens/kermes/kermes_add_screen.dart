@@ -60,7 +60,7 @@ class _KermesAddScreenState extends State<KermesAddScreen> {
   Map<String, dynamic>? _selectedOrganization;
   
   bool _isLoading = false;
-  bool _isAdmin = false;
+  bool _isAdmin = false; // ignore: unused_field
   
   @override
   void initState() {

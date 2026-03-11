@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -38,7 +39,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   // Theme-aware colors (resolved in build method)
   // 🎨 BRAND COLOUR: Fallback when no brandColor in Firestore
   static const Color _defaultBrandColor = Color(0xFFFB335B);  // LOKMA brand color
-  static const Color _accentRed = Color(0xFFFB335B);    // Legacy red accent
   
   // 🎨 BRAND COLOUR: Get merchant's brand color from Firestore
   // Reads 'brandColor' field (hex string like '#FF5733') from business document
@@ -76,12 +76,16 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   final Map<String, GlobalKey> _categoryKeys = {};
   final Map<String, GlobalKey> _tabKeys = {};
   bool _isUserScrolling = true;
+  final ScrollController _chipScrollController = ScrollController();
 
   /// Select a category and scroll to its section
   void _selectCategory(String category) {
     if (_selectedCategory == category) return;
     setState(() => _selectedCategory = category);
     _isUserScrolling = false;
+    
+    // Auto-scroll the chip bar to show the selected chip fully
+    _scrollChipBarToSelected(category);
     
     if (category == 'Tümü') {
       if (_scrollController.hasClients) {
@@ -96,8 +100,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         
         if (targetBox != null && scrollableBox != null) {
           final targetPosition = targetBox.localToGlobal(Offset.zero, ancestor: scrollableBox);
-          // Offset by current scroll position minus sticky header height (~52px)
-          final scrollTarget = _scrollController.offset + targetPosition.dy - 52;
+          // Offset by current scroll position minus sticky header height (status bar + search bar + category tabs)
+          final scrollTarget = _scrollController.offset + targetPosition.dy - 190;
           _scrollController.animateTo(
             scrollTarget.clamp(0.0, _scrollController.position.maxScrollExtent),
             duration: const Duration(milliseconds: 300),
@@ -112,8 +116,51 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     });
   }
 
+  /// Auto-scroll the horizontal chip bar so the selected chip is fully visible and centered
+  void _scrollChipBarToSelected(String category) {
+    if (!_chipScrollController.hasClients) return;
+    final tabKey = _tabKeys[category];
+    if (tabKey == null || tabKey.currentContext == null) return;
+    
+    final RenderBox? chipBox = tabKey.currentContext!.findRenderObject() as RenderBox?;
+    if (chipBox == null) return;
+    
+    // Get the chip's position relative to the viewport
+    final chipPosition = chipBox.localToGlobal(Offset.zero);
+    final chipWidth = chipBox.size.width;
+    final screenWidth = MediaQuery.of(context).size.width;
+    
+    // Calculate where this chip should be scrolled to (centered)
+    final chipCenter = chipPosition.dx + chipWidth / 2;
+    final viewportCenter = screenWidth / 2;
+    final scrollDelta = chipCenter - viewportCenter;
+    
+    final targetOffset = (_chipScrollController.offset + scrollDelta).clamp(
+      0.0,
+      _chipScrollController.position.maxScrollExtent,
+    );
+    
+    _chipScrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   void _onMenuScroll() {
     if (!_isUserScrolling || _menuSearchQuery.isNotEmpty) return;
+
+    // When scrolled to the very top, always select 'Tümü'
+    if (_scrollController.hasClients && _scrollController.offset < 10) {
+      if (_selectedCategory != 'Tümü') {
+        setState(() => _selectedCategory = 'Tümü');
+        // Delay chip scroll to avoid conflicting with main scroll
+        Future.delayed(const Duration(milliseconds: 50), () {
+          if (mounted) _scrollChipBarToSelected('Tümü');
+        });
+      }
+      return;
+    }
 
     String? visibleCategory;
 
@@ -136,17 +183,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       setState(() {
         _selectedCategory = visibleCategory!;
       });
-      
-      final tabKey = _tabKeys[visibleCategory];
-      if (tabKey != null && tabKey.currentContext != null) {
-        Scrollable.ensureVisible(
-          tabKey.currentContext!,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
-          alignment: 0.5,
-        );
-      }
+      // Delay chip scroll to avoid conflicting with main scroll
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (mounted) _scrollChipBarToSelected(visibleCategory!);
+      });
     }
   }
   
@@ -176,7 +216,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
   // 🔍 Menu Search
   String _menuSearchQuery = '';
-  final bool _isSearching = false;
   
   // 📜 Scroll Controller for Lieferando-style search bar
   final ScrollController _scrollController = ScrollController();
@@ -187,7 +226,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   List<Map<String, dynamic>> _categories = [
     {'name': 'Tümü', 'icon': Icons.grid_view, 'emoji': '🏠'},
   ];
-  bool _categoriesLoaded = false;
 
   Map<String, dynamic>? _placeDetails;
   DocumentSnapshot? _butcherDoc;
@@ -223,6 +261,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   @override
   void dispose() {
     _businessSubscription?.cancel();
+    _chipScrollController.dispose();
     super.dispose();
   }
   // 🔄 Real-time subscription for categories
@@ -286,7 +325,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         if (mounted) {
           setState(() {
             _categories = dynamicCategories;
-            _categoriesLoaded = true;
           });
         }
       } else {
@@ -298,13 +336,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               {'name': 'Tümü', 'icon': Icons.grid_view, 'emoji': '🏠'},
               {'name': 'Tüm Ürünler', 'icon': Icons.shopping_bag, 'emoji': '🛒'},
             ];
-            _categoriesLoaded = true;
           });
         }
       }
     }, onError: (e) {
       debugPrint('🔴 [LOKMA] Error in categories listener: $e');
-      if (mounted) setState(() => _categoriesLoaded = true);
     });
   }
   
@@ -414,7 +450,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
     String? nextOpenText;
     if (nextOpen != null) {
-      final dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+      final dayNames = [
+        'common.day_monday'.tr(),
+        'common.day_tuesday'.tr(),
+        'common.day_wednesday'.tr(),
+        'common.day_thursday'.tr(),
+        'common.day_friday'.tr(),
+        'common.day_saturday'.tr(),
+        'common.day_sunday'.tr(),
+      ];
       final now = DateTime.now();
       final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
       final tomorrow = now.add(const Duration(days: 1));
@@ -422,11 +466,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       
       final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
       if (isToday) {
-        nextOpenText = 'Bugün $timeStr\'de açılıyor';
+        nextOpenText = tr('marketplace.opens_today', namedArgs: {'time': timeStr});
       } else if (isTomorrow) {
-        nextOpenText = 'Yarın $timeStr\'de açılıyor';
+        nextOpenText = tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr});
       } else {
-        nextOpenText = '${dayNames[nextOpen.weekday - 1]} $timeStr\'de açılıyor';
+        nextOpenText = tr('marketplace.opens_on_day', namedArgs: {'day': dayNames[nextOpen.weekday - 1], 'time': timeStr});
       }
     }
     
@@ -435,7 +479,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
       final isDark = Theme.of(context).brightness == Brightness.dark;
       final sheetBg = isDark ? const Color(0xFF1C1C1E) : Colors.white;
-      final textPrimary = isDark ? Colors.white : Colors.black87;
+      final textPrimary = isDark ? Colors.white : const Color(0xFF3E3E40);
       final textSecondary = isDark ? Colors.white70 : Colors.black54;
       final handleColor = isDark ? Colors.white24 : Colors.black12;
       final accent = _getAccent(context);
@@ -680,6 +724,43 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       case 'independent': return 'marketplace.independent_butcher'.tr();
       default: return 'marketplace.independent_butcher'.tr();
     }
+  }
+
+  // 🕐 Lieferando-style: Estimated delivery/pickup time for chip subtitles
+  String? _getEstimatedDeliveryTime() {
+    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+    if (data == null) return null;
+    
+    // Check Firestore fields first (future Admin Portal support)
+    final deliveryMin = data['estimatedDeliveryMin'] as int?;
+    final deliveryMax = data['estimatedDeliveryMax'] as int?;
+    final unit = tr('delivery_modes.minutes_short');
+    
+    if (deliveryMin != null && deliveryMax != null) {
+      return '$deliveryMin-$deliveryMax $unit';
+    }
+    if (deliveryMin != null) {
+      return '~$deliveryMin $unit';
+    }
+    
+    // Smart default
+    return '20-40 $unit';
+  }
+  
+  String? _getEstimatedPickupTime() {
+    final data = _butcherDoc?.data() as Map<String, dynamic>?;
+    if (data == null) return null;
+    
+    // Check Firestore fields first
+    final pickupMin = data['estimatedPickupMinutes'] as int?;
+    final unit = tr('delivery_modes.minutes_short');
+    
+    if (pickupMin != null) {
+      return '~$pickupMin $unit';
+    }
+    
+    // Smart default
+    return '~15 $unit';
   }
 
   // --- Actions ---
@@ -1250,7 +1331,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       _buildInfoRow(Icons.phone, 'Telefon', _butcherDoc?['shopPhone']?.toString() ?? 'Belirtilmemiş', isAction: true, onTap: _callStore, isDark: isDark),
                       
                       const SizedBox(height: 12),
-                      Text('Çalışma Saatleri', style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text('marketplace.business_hours'.tr(), style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       
                       // Hours List - wrapped in try-catch builder
@@ -1359,14 +1440,25 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
 
     if (hours == null || hours.toString().trim().isEmpty) {
       return [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Text('Çalışma saatleri bilgisi girilmemiş.', style: TextStyle(color: Colors.white54)),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text('marketplace.business_hours_not_entered'.tr(), style: const TextStyle(color: Colors.white54)),
         )
       ];
     }
 
-    final dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+    // Display names (i18n) and internal keys for matching Firebase data
+    final dayNamesDisplay = [
+      'common.day_monday'.tr(),
+      'common.day_tuesday'.tr(),
+      'common.day_wednesday'.tr(),
+      'common.day_thursday'.tr(),
+      'common.day_friday'.tr(),
+      'common.day_saturday'.tr(),
+      'common.day_sunday'.tr(),
+    ];
+    // Internal keys for matching raw data from Firebase (Turkish or English)
+    final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
     final now = DateTime.now();
     final todayIndex = now.weekday - 1;
 
@@ -1382,17 +1474,17 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         // Handle Map (e.g. {"monday": "09:00", ...} though this is rarer for our schema)
         // Try to convert to list implicitly by iterating days
         // This is a complex fallback, usually our schema is String or List
-        return [const Text('Detaylı saat bilgisi için işletmeyi arayın.', style: TextStyle(color: Colors.white54))];
+        return [Text('marketplace.call_store_for_hours'.tr(), style: const TextStyle(color: Colors.white54))];
     } else {
          // Fallback for unknown data types
-         return [const Text('Saat formatı desteklenmiyor.', style: TextStyle(color: Colors.white54))];
+         return [Text('marketplace.time_format_not_supported'.tr(), style: const TextStyle(color: Colors.white54))];
     }
 
     // Filter out empty lines just in case
     lines = lines.where((l) => l.trim().isNotEmpty).toList();
     
     // --- STANDARDIZATION LOGIC ---
-    // Map English days to Turkish if detected
+    // Map English days to Turkish (internal key format) for matching
     final Map<String, String> enToTr = {
       'Monday': 'Pazartesi',
       'Tuesday': 'Salı',
@@ -1431,7 +1523,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       // 3. Normalize Separators (en-dash, em-dash -> hyphen)
       cleanLine = cleanLine.replaceAll('–', '-').replaceAll('—', '-');
       
-      // 4. Translate "Closed" -> "Kapalı"
+      // 4. Translate "Closed" -> internal Turkish key "Kapalı" for matching
       cleanLine = cleanLine.replaceAll(RegExp(r'Closed', caseSensitive: false), 'Kapalı');
 
       standardizedLines.add(cleanLine);
@@ -1441,11 +1533,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // ----------------------------
 
     if (lines.isEmpty) {
-       return [const Text('Saat bilgisi boş.', style: TextStyle(color: Colors.white54))];
+       return [Text('marketplace.time_info_empty'.tr(), style: const TextStyle(color: Colors.white54))];
     }
 
-    // Check if lines align with day names, if not just show lines as is
-    bool structureMatch = lines.any((l) => dayNames.any((d) => l.startsWith(d)));
+    // Check if lines align with day names (using internal Turkish keys for matching)
+    bool structureMatch = lines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
 
     if (!structureMatch) {
        return lines.map((line) => Padding(
@@ -1454,22 +1546,22 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
        )).toList();
     }
 
-    return dayNames.map((dayName) {
-        final isToday = dayNames[todayIndex] == dayName;
+    return List.generate(7, (i) {
+        final dayNameTr = dayNamesTr[i]; // Internal key for matching
+        final dayNameDisplay = dayNamesDisplay[i]; // i18n display name
+        final isToday = todayIndex == i;
         
-        // Find line with better matching - STRICT MATCHING
+        // Find line with better matching - STRICT MATCHING (using internal Turkish keys)
         final line = lines.firstWhere(
           (l) {
-             // Strict match: Must start with dayName followed by colon or space, 
-             // OR be exactly the dayName (though unlikely given the data format)
-             return l.startsWith('$dayName:') || l.startsWith('$dayName ');
+             return l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr ');
           },
-          orElse: () => '$dayName: Kapalı'
+          orElse: () => '$dayNameTr: Kapalı'
         );
         
         // Clean content
-        String content = line.replaceAll('$dayName:', '').replaceAll(dayName, '').trim();
-        if (content.isEmpty) content = 'Kapalı';
+        String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
+        if (content.isEmpty || content == 'Kapalı') content = 'common.closed'.tr();
 
         // Theme-aware colors
         final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1490,7 +1582,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(dayName, style: TextStyle(color: dayColor, fontSize: 14, fontWeight: isToday ? FontWeight.w600 : FontWeight.w500)),
+              Text(dayNameDisplay, style: TextStyle(color: dayColor, fontSize: 14, fontWeight: isToday ? FontWeight.w600 : FontWeight.w500)),
               Text(content, style: TextStyle(color: hoursColor, fontSize: 14, fontWeight: isToday ? FontWeight.w600 : FontWeight.w500)),
             ],
           ),
@@ -1499,9 +1591,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     } catch (e) {
       debugPrint('Error building hours list: $e');
       return [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Text('Çalışma saatleri görüntülenemiyor.', style: TextStyle(color: Colors.white54)),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text('marketplace.business_hours_cannot_be_displayed'.tr(), style: const TextStyle(color: Colors.white54)),
         )
       ];
     }
@@ -1538,8 +1630,14 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final brand = data?['brand'];
     final openingHelper = OpeningHoursHelper(data?['openingHours']);
     final isOpen = openingHelper.isOpenAt(DateTime.now());
-    final showBrandBadge = (data?['brandLabelActive'] ?? false) && 
-                           (brand?.toString().toLowerCase() == 'tuna' || brand?.toString().toLowerCase() == 'akdeniz_toros');
+    final brandLabel = data?['brandLabel'] as String?;
+    final tags = data?['tags'] as List<dynamic>?;
+    final hasTunaTag = tags?.any((t) => t.toString().toLowerCase() == 'tuna') ?? false;
+    final isTunaPartner = (data?['isTunaPartner'] as bool? ?? false) ||
+        (brandLabel?.toLowerCase() == 'tuna') ||
+        (brand?.toString().toLowerCase() == 'tuna') ||
+        hasTunaTag;
+    final showBrandBadge = isTunaPartner || (brand?.toString().toLowerCase() == 'akdeniz_toros');
     
     // 🎨 BRAND COLOR SYSTEM: Use brand-specific colors when available
     Color accent;
@@ -1671,10 +1769,19 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         ),
                       )
                     : ThreeDimensionalPillTabBar(
+                        margin: EdgeInsets.zero,
                         selectedIndex: _deliveryModeIndex,
                         tabs: [
-                          TabItem(title: tr('delivery_modes.delivery'), icon: Icons.delivery_dining),
-                          TabItem(title: tr('delivery_modes.pickup'), icon: Icons.shopping_bag_outlined),
+                          TabItem(
+                            title: tr('delivery_modes.delivery'),
+                            subtitle: _getEstimatedDeliveryTime(),
+                            icon: Icons.delivery_dining,
+                          ),
+                          TabItem(
+                            title: tr('delivery_modes.pickup'),
+                            subtitle: _getEstimatedPickupTime(),
+                            icon: Icons.shopping_bag_outlined,
+                          ),
                           // Show Masa tab if business supports dine-in or reservations
                           if ((data?['hasReservation'] as bool? ?? false) ||
                               (_planFeatures['dineInQR'] == true) ||
@@ -1685,6 +1792,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           setState(() => _deliveryModeIndex = index);
                         },
                       ),
+                titleSpacing: 0,
                 centerTitle: true,
                 actions: [
                   // Search Icon with white circular background
@@ -1709,6 +1817,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 ],
               ),
               
+              // Small spacer between toggle and card content
+              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
               // 🔥 ACTIVE DEALS BANNER
               SliverToBoxAdapter(
                 child: (_butcherDoc != null)
@@ -1792,28 +1903,39 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 ),
                               ),
                             ),
-                          // Brand Badge (Top Left - matching list view)
+                          // Brand Badge (Top Left - standardized pill matching list view)
                           if (showBrandBadge)
                             Positioned(
                               top: 12,
-                              left: 0,
+                              left: 12,
                               child: Container(
-                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFFB335B),
-                                  borderRadius: BorderRadius.only(
-                                    topRight: Radius.circular(8),
-                                    bottomRight: Radius.circular(8),
-                                  ),
+                                  color: const Color(0xFFA01E22),
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.3),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                                child: Text(
-                                  _getBrandLabel(brand).toUpperCase(),
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.surface,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.5,
-                                  ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.verified, color: Colors.white, size: 14),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      isTunaPartner ? 'TUNA' : _getBrandLabel(brand).toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -1992,6 +2114,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     // Only show categories that have products (or 'Tümü')
                                     final visibleCategories = _categories.where((c) => c['name'] == 'Tümü' || _allProducts.any((p) => p.category == c['name'])).toList();
                                     return ListView.builder(
+                                      controller: _chipScrollController,
                                       scrollDirection: Axis.horizontal,
                                       padding: const EdgeInsets.only(left: 16, right: 4, top: 8, bottom: 8),
                                       itemCount: visibleCategories.length,
@@ -2010,12 +2133,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                             onTap: () => _selectCategory(catName),
                                             child: Container(
                                               key: _tabKeys.putIfAbsent(catName, () => GlobalKey()),
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                                               decoration: BoxDecoration(
                                                 color: isSelected 
-                                                  ? (isDark ? Colors.white : Colors.black87) 
+                                                  ? (isDark ? Colors.white : const Color(0xFF3E3E3F)) 
                                                   : Colors.transparent,
-                                                borderRadius: BorderRadius.circular(16),
+                                                borderRadius: BorderRadius.circular(50),
                                               ),
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
@@ -2164,21 +2287,49 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Category Header
-                          Container(
-                            width: double.infinity,
-                            color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF5F5F5),
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                            child: Text(
-                              catName,
-                              style: TextStyle(
-                                color: textPrimary,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.5,
+                          // Category Header with cart count badge
+                          Builder(builder: (context) {
+                            final catCartCount = ref.watch(cartProvider).items
+                                .where((ci) => ci.product.category == catName).length;
+                            return Container(
+                              width: double.infinity,
+                              color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFE2E2E2),
+                              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      catName,
+                                      style: TextStyle(
+                                        color: isDark ? textPrimary : const Color(0xFF3E3E40),
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: -0.5,
+                                      ),
+                                    ),
+                                  ),
+                                  if (catCartCount > 0)
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      decoration: BoxDecoration(
+                                        color: isDark ? Colors.white : Colors.black87,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        '$catCartCount',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark ? Colors.black : Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
-                            ),
-                          ),
+                            );
+                          }),
                           // Products: Grid for market, List for restoran
                           _isMarketType
                             // 🛒 MARKET: 2-column grid
@@ -2253,59 +2404,99 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      final iconColor = isDark ? Colors.white : Colors.black87;
      final subtitleColor = isDark ? Colors.grey : Colors.grey.shade600;
      final priceColor = isDark ? Colors.white : Colors.black87;
+     final currency = CurrencyUtils.getCurrencySymbol();
 
-     return Container(
-       padding: EdgeInsets.only(
-         left: 16, right: 16, top: 16, 
-         bottom: MediaQuery.of(context).padding.bottom + 16
-       ),
-       decoration: BoxDecoration(
-         color: barBg,
-         boxShadow: [BoxShadow(color: barShadow, blurRadius: 10, offset: const Offset(0, -5))],
-         border: Border(top: BorderSide(color: barBorder)),
-       ),
-       child: Row(
-         children: [
+     // Min order value from business data
+     final butcherData = _butcherDoc?.data() as Map<String, dynamic>?;
+     final minOrder = (butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 0.0;
+     final cartTotal = cart.totalAmount;
+     final remaining = minOrder - cartTotal;
+     final isDeliveryMode = _deliveryModeIndex == 0 && !_isMasaMode;
+
+     return Column(
+       mainAxisSize: MainAxisSize.min,
+       children: [
+         // Minimum order value banner (Lieferando-style) — only in delivery mode
+         if (minOrder > 0 && remaining > 0 && isDeliveryMode)
            Container(
-             padding: const EdgeInsets.all(12),
-             decoration: BoxDecoration(
-               color: iconBg,
-               borderRadius: BorderRadius.circular(12),
-             ),
-             child: Icon(Icons.shopping_bag, color: iconColor, size: 24),
-           ),
-           const SizedBox(width: 16),
-           Column(
-             mainAxisSize: MainAxisSize.min,
-             crossAxisAlignment: CrossAxisAlignment.start,
-             children: [
-               Text('${cart.items.length} Ürün', style: TextStyle(color: subtitleColor, fontSize: 12)),
-               Text('${CurrencyUtils.getCurrencySymbol()}${cart.totalAmount.toStringAsFixed(2)}', style: TextStyle(color: priceColor, fontSize: 18, fontWeight: FontWeight.w600)),
-             ],
-           ),
-           const Spacer(),
-           ElevatedButton(
-             onPressed: () {
-               Navigator.of(context).push(
-                 MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber)),
-               );
-             },
-             style: ElevatedButton.styleFrom(
-               backgroundColor: _getAccent(context),
-               foregroundColor: Colors.white,
-               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-             ),
+             width: double.infinity,
+             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+             color: isDark ? const Color(0xFF2A2A2C) : const Color(0xFFF5F5F5),
              child: Row(
                children: [
-                 Text(_isMasaMode ? 'Siparişi Gönder' : 'Sepete Git', style: const TextStyle(fontWeight: FontWeight.w600)),
+                 Icon(Icons.pedal_bike, size: 18, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                  const SizedBox(width: 8),
-                 Icon(_isMasaMode ? Icons.restaurant : Icons.arrow_forward, size: 16),
+                 Expanded(
+                   child: Text(
+                     'checkout.min_order_remaining'.tr(namedArgs: {
+                       'amount': remaining.toStringAsFixed(2),
+                       'currency': currency,
+                     }),
+                     style: TextStyle(
+                       fontSize: 13,
+                       fontWeight: FontWeight.w500,
+                       color: isDark ? Colors.grey[300] : Colors.grey[700],
+                     ),
+                   ),
+                 ),
                ],
              ),
            ),
-         ],
-       ),
+         // Cart bar
+         Container(
+           padding: EdgeInsets.only(
+             left: 16, right: 16, top: 16, 
+             bottom: MediaQuery.of(context).padding.bottom + 16,
+           ),
+           decoration: BoxDecoration(
+             color: barBg,
+             boxShadow: [BoxShadow(color: barShadow, blurRadius: 10, offset: const Offset(0, -5))],
+             border: Border(top: BorderSide(color: barBorder)),
+           ),
+           child: Row(
+             children: [
+               Container(
+                 padding: const EdgeInsets.all(12),
+                 decoration: BoxDecoration(
+                   color: iconBg,
+                   borderRadius: BorderRadius.circular(12),
+                 ),
+                 child: Icon(Icons.shopping_bag, color: iconColor, size: 24),
+               ),
+               const SizedBox(width: 16),
+               Column(
+                 mainAxisSize: MainAxisSize.min,
+                 crossAxisAlignment: CrossAxisAlignment.start,
+                 children: [
+                   Text('${cart.items.length} Ürün', style: TextStyle(color: subtitleColor, fontSize: 12)),
+                   Text('$currency${cart.totalAmount.toStringAsFixed(2)}', style: TextStyle(color: priceColor, fontSize: 18, fontWeight: FontWeight.w600)),
+                 ],
+               ),
+               const Spacer(),
+               ElevatedButton(
+                 onPressed: () {
+                   Navigator.of(context).push(
+                     MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber)),
+                   );
+                 },
+                 style: ElevatedButton.styleFrom(
+                   backgroundColor: _getAccent(context),
+                   foregroundColor: Colors.white,
+                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                 ),
+                 child: Row(
+                   children: [
+                     Text(_isMasaMode ? 'Siparişi Gönder' : 'Sepete Git', style: const TextStyle(fontWeight: FontWeight.w600)),
+                     const SizedBox(width: 8),
+                     Icon(_isMasaMode ? Icons.restaurant : Icons.arrow_forward, size: 16),
+                   ],
+                 ),
+               ),
+             ],
+           ),
+         ),
+       ],
      );
   }
 
@@ -2741,6 +2932,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 final data = _butcherDoc?.data() as Map<String, dynamic>?;
                                 final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
                                 final noteText = noteController.text.trim().isNotEmpty ? noteController.text.trim() : null;
+                                HapticFeedback.mediumImpact();
                                 ref.read(cartProvider.notifier).addToCart(product, selectedQty, widget.businessId, butcherName, note: noteText);
                                 setState(() => _selections[product.sku] = selectedQty);
                                 Navigator.pop(context);
@@ -3058,6 +3250,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               // No options → add directly to cart
                               final data = _butcherDoc?.data() as Map<String, dynamic>?;
                               final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                              HapticFeedback.mediumImpact();
                               ref.read(cartProvider.notifier).addToCart(
                                 product,
                                 isByWeight ? product.minQuantity : 1,
@@ -3412,6 +3605,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 } else {
                                   final data = _butcherDoc?.data() as Map<String, dynamic>?;
                                   final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                                  HapticFeedback.mediumImpact();
                                   ref.read(cartProvider.notifier).addToCart(
                                     product,
                                     isByWeight ? stepQty : 1,
@@ -3467,6 +3661,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               final data = _butcherDoc?.data() as Map<String, dynamic>?;
                               final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
                               final qtyToAdd = _selections[product.sku] ?? defaultQty;
+                              HapticFeedback.mediumImpact();
                               ref.read(cartProvider.notifier).addToCart(
                                 product,
                                 qtyToAdd,

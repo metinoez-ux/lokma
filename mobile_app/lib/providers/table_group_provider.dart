@@ -96,6 +96,11 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     required String businessId,
     required String businessName,
     required String tableNumber,
+    GroupSessionType sessionType = GroupSessionType.dineIn,
+    GroupInviteMethod inviteMethod = GroupInviteMethod.qr,
+    Map<String, dynamic>? deliveryAddress,
+    DateTime? deadline,
+    double? spendingLimitPerPerson,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception('Giriş yapmanız gerekli');
@@ -112,6 +117,11 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
         tableNumber: tableNumber,
         hostUserId: hostUserId,
         hostName: hostName,
+        sessionType: sessionType,
+        inviteMethod: inviteMethod,
+        deliveryAddress: deliveryAddress,
+        deadline: deadline,
+        spendingLimitPerPerson: spendingLimitPerPerson,
       );
 
       final participantId = session.participants.first.participantId;
@@ -133,6 +143,27 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
       state = state.copyWith(isLoading: false, error: e.toString());
       return null;
     }
+  }
+
+  /// Create a link-based delivery/pickup group session
+  Future<TableGroupSession?> createLinkSession({
+    required String businessId,
+    required String businessName,
+    required GroupSessionType sessionType,
+    Map<String, dynamic>? deliveryAddress,
+    DateTime? deadline,
+    double? spendingLimitPerPerson,
+  }) async {
+    return createSession(
+      businessId: businessId,
+      businessName: businessName,
+      tableNumber: sessionType == GroupSessionType.delivery ? 'delivery' : 'pickup',
+      sessionType: sessionType,
+      inviteMethod: GroupInviteMethod.link,
+      deliveryAddress: deliveryAddress,
+      deadline: deadline,
+      spendingLimitPerPerson: spendingLimitPerPerson,
+    );
   }
 
   /// Find active session for a table
@@ -226,6 +257,51 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
       _startListening(sessionId);
       
       // Cache session ID for quick access
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('table_group_session_id', sessionId);
+      
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  /// Join a group session via shared link (no PIN required)
+  Future<bool> joinViaLink(String sessionId, {String? displayName}) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Giriş yapmanız gerekli');
+    
+    final userId = user.uid;
+    final userName = displayName?.isNotEmpty == true 
+        ? displayName! 
+        : (user.displayName ?? user.email?.split('@').first ?? 'Misafir');
+    
+    state = state.copyWith(isLoading: true, error: null);
+    
+    try {
+      final participantId = await _service.joinViaLink(
+        sessionId: sessionId,
+        userId: userId,
+        userName: userName,
+      );
+      
+      final doc = await FirebaseFirestore.instance
+          .collection('table_group_sessions')
+          .doc(sessionId)
+          .get();
+      
+      if (!doc.exists) throw Exception('Session not found after join');
+      final session = TableGroupSession.fromFirestore(doc);
+      
+      state = state.copyWith(
+        session: session,
+        myParticipantId: participantId,
+        isLoading: false,
+      );
+      
+      _startListening(sessionId);
+      
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('table_group_session_id', sessionId);
       

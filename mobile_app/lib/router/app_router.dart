@@ -28,6 +28,7 @@ import '../screens/staff/staff_reservations_screen.dart';
 import '../screens/staff/staff_hub_screen.dart';
 import '../screens/staff/waiter_order_screen.dart';
 import '../screens/customer/table_order_view_screen.dart';
+import '../screens/customer/group_link_join_screen.dart';
 import '../widgets/main_scaffold.dart';
 
 
@@ -37,10 +38,10 @@ class AppRouter {
   
   static late final GoRouter router;
 
-  static void initializeRouter(bool hasSeenSplash) {
+  static void initializeRouter(bool hasSeenOnboarding) {
     router = GoRouter(
       navigatorKey: navigatorKey,
-      initialLocation: hasSeenSplash ? '/restoran' : '/splash',  // Open directly to Yemek (food) page or splash
+      initialLocation: '/splash',  // Always show quick animated brand splash first
     // Handle Firebase Auth callback URLs - redirect to login and let Firebase SDK handle internally
     redirect: (context, state) {
       final location = state.uri.toString();
@@ -172,6 +173,14 @@ class AppRouter {
           final id = state.pathParameters['id']!;
           final query = state.uri.query.isNotEmpty ? '?${state.uri.query}' : '';
           return '/kasap/$id$query';
+        },
+      ),
+      // GROUP ORDER Deep Link: Join via shared link
+      GoRoute(
+        path: '/group/:sessionId',
+        builder: (context, state) {
+          final sessionId = state.pathParameters['sessionId']!;
+          return GroupLinkJoinScreen(sessionId: sessionId);
         },
       ),
       GoRoute(

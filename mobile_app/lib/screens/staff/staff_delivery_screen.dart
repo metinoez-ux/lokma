@@ -28,7 +28,7 @@ class _StaffDeliveryScreenState extends State<StaffDeliveryScreen> {
   String? _staffName;
   String? _staffPhone;
   bool _isLoading = false;
-  bool _checkedActiveDelivery = false;
+  bool _checkedActiveDelivery = false; // ignore: unused_field
 
   @override
   void initState() {

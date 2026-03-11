@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/driver_provider.dart';
@@ -27,9 +26,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
-  final ImagePicker _imagePicker = ImagePicker();
-  bool _isLoading = false;
-  bool _isUploadingPhoto = false;
+  bool _isLoading = false; // ignore: unused_field
+  bool _isUploadingPhoto = false; // ignore: unused_field
 
   @override
   Widget build(BuildContext context) {

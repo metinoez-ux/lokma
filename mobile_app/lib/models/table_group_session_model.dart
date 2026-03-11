@@ -9,6 +9,19 @@ enum GroupSessionStatus {
   cancelled,  // Host tarafından iptal edildi
 }
 
+/// Grup oturum türü — Masa (QR) veya Delivery/Pickup (Link)
+enum GroupSessionType {
+  dineIn,     // Masa bazlı (QR kod ile katılım)
+  delivery,   // Teslimat (link ile katılım)
+  pickup,     // Gel-Al (link ile katılım)
+}
+
+/// Davet yöntemi
+enum GroupInviteMethod {
+  qr,    // QR kod okutma (masa)
+  link,  // Link paylaşımı (delivery/pickup)
+}
+
 /// Grup masasındaki bir ürün
 class TableGroupItem {
   final String productId;
@@ -188,7 +201,7 @@ class TableGroupParticipant {
   }
 }
 
-/// Masa Grup Oturumu ana modeli
+/// Masa / Delivery Grup Oturumu ana modeli
 class TableGroupSession {
   final String id;
   final String businessId;
@@ -209,6 +222,14 @@ class TableGroupSession {
   final String? cancelledBy;
   final String? activePendingOrderId; // ID of the currently 'pending' consolidated order
 
+  // ─── Link-bazlı Grup Sipariş alanları ────────────────────────
+  final GroupSessionType sessionType;
+  final GroupInviteMethod inviteMethod;
+  final String? shareLink;              // https://lokma.shop/group/[ID]
+  final Map<String, dynamic>? deliveryAddress; // {street, city, postalCode, lat, lng}
+  final DateTime? deadline;             // Son ekleme süresi (Faz 2)
+  final double? spendingLimitPerPerson; // Kişi başı limit (Faz 2)
+
   TableGroupSession({
     required this.id,
     required this.businessId,
@@ -228,6 +249,12 @@ class TableGroupSession {
     this.cancelReason,
     this.cancelledBy,
     this.activePendingOrderId,
+    this.sessionType = GroupSessionType.dineIn,
+    this.inviteMethod = GroupInviteMethod.qr,
+    this.shareLink,
+    this.deliveryAddress,
+    this.deadline,
+    this.spendingLimitPerPerson,
   });
 
   /// Kalan hesap tutarı
@@ -299,6 +326,19 @@ class TableGroupSession {
 
   bool get isActive => status == GroupSessionStatus.active;
 
+  /// Link-bazlı mı? (delivery veya pickup)
+  bool get isLinkBased => sessionType != GroupSessionType.dineIn;
+
+  /// Delivery modunda mı?
+  bool get isDelivery => sessionType == GroupSessionType.delivery;
+
+  /// Deadline geçti mi?
+  bool get isDeadlineExpired =>
+      deadline != null && DateTime.now().isAfter(deadline!);
+
+  /// Paylaşım linki oluştur
+  String get generatedShareLink => shareLink ?? 'https://lokma.shop/group/$id';
+
   Map<String, dynamic> toMap() {
     return {
       'businessId': businessId,
@@ -318,6 +358,13 @@ class TableGroupSession {
       'cancelReason': cancelReason,
       'cancelledBy': cancelledBy,
       'activePendingOrderId': activePendingOrderId,
+      'sessionType': sessionType.name,
+      'inviteMethod': inviteMethod.name,
+      if (shareLink != null) 'shareLink': shareLink,
+      if (deliveryAddress != null) 'deliveryAddress': deliveryAddress,
+      if (deadline != null) 'deadline': Timestamp.fromDate(deadline!),
+      if (spendingLimitPerPerson != null)
+        'spendingLimitPerPerson': spendingLimitPerPerson,
     };
   }
 
@@ -348,6 +395,20 @@ class TableGroupSession {
       cancelReason: data['cancelReason'],
       cancelledBy: data['cancelledBy'],
       activePendingOrderId: data['activePendingOrderId'],
+      sessionType: GroupSessionType.values.firstWhere(
+        (e) => e.name == data['sessionType'],
+        orElse: () => GroupSessionType.dineIn,
+      ),
+      inviteMethod: GroupInviteMethod.values.firstWhere(
+        (e) => e.name == data['inviteMethod'],
+        orElse: () => GroupInviteMethod.qr,
+      ),
+      shareLink: data['shareLink'],
+      deliveryAddress: data['deliveryAddress'] != null
+          ? Map<String, dynamic>.from(data['deliveryAddress'] as Map)
+          : null,
+      deadline: (data['deadline'] as Timestamp?)?.toDate(),
+      spendingLimitPerPerson: (data['spendingLimitPerPerson'] as num?)?.toDouble(),
     );
   }
 
@@ -363,6 +424,12 @@ class TableGroupSession {
     String? cancelReason,
     String? cancelledBy,
     String? activePendingOrderId,
+    GroupSessionType? sessionType,
+    GroupInviteMethod? inviteMethod,
+    String? shareLink,
+    Map<String, dynamic>? deliveryAddress,
+    DateTime? deadline,
+    double? spendingLimitPerPerson,
   }) {
     return TableGroupSession(
       id: id,
@@ -383,6 +450,12 @@ class TableGroupSession {
       cancelReason: cancelReason ?? this.cancelReason,
       cancelledBy: cancelledBy ?? this.cancelledBy,
       activePendingOrderId: activePendingOrderId ?? this.activePendingOrderId,
+      sessionType: sessionType ?? this.sessionType,
+      inviteMethod: inviteMethod ?? this.inviteMethod,
+      shareLink: shareLink ?? this.shareLink,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      deadline: deadline ?? this.deadline,
+      spendingLimitPerPerson: spendingLimitPerPerson ?? this.spendingLimitPerPerson,
     );
   }
 }

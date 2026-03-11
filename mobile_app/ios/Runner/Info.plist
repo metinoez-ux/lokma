@@ -51,6 +51,10 @@
 		<string>LOKMA teslimat sırasında kuryenin konumunu müşteriye iletmek için arka planda konum erişimine ihtiyaç duyar.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>LOKMA needs camera access to scan product barcodes and take photos.</string>
+		<key>NSCalendarsUsageDescription</key>
+		<string>LOKMA tarihli siparişlerinizi ve masa rezervasyonlarınızı telefonunuzun takvimine kaydetmek için takvim erişimine ihtiyaç duyar.</string>
+		<key>NSCalendarsFullAccessUsageDescription</key>
+		<string>LOKMA tarihli siparişlerinizi ve masa rezervasyonlarınızı telefonunuzun takvimine kaydetmek için takvim erişimine ihtiyaç duyar.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>LOKMA needs photo library access to select profile pictures and product images.</string>
 		<key>NFCReaderUsageDescription</key>

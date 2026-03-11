@@ -13,14 +13,16 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/providers/kermes_cart_provider.dart';
 import 'package:lokma_app/providers/auth_provider.dart';
 import 'package:lokma_app/models/butcher_product.dart';
 import 'package:lokma_app/widgets/order_confirmation_dialog.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/widgets/simple_segmented_toggle.dart';
+import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:lokma_app/services/fcm_service.dart';
 import 'package:lokma_app/services/order_service.dart';
 import 'package:lokma_app/services/table_group_service.dart';
@@ -29,14 +31,13 @@ import 'package:lokma_app/providers/table_group_provider.dart';
 import 'package:lokma_app/screens/customer/group_table_order_screen.dart';
 import 'package:lokma_app/screens/orders/rating_screen.dart';
 import 'package:lokma_app/utils/opening_hours_helper.dart';
-import 'package:lokma_app/screens/marketplace/kasap/product_customization_sheet.dart';
 import 'package:lokma_app/models/product_option.dart';
 import '../../../utils/currency_utils.dart';
 import '../../../services/stripe_payment_service.dart';
 import '../../../services/coupon_service.dart';
 import '../../../services/first_order_service.dart';
 import '../../../services/promotion_engine.dart';
-import '../../../models/promotion_models.dart';
+import '../../../services/calendar_service.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   final bool initialPickUp;
@@ -50,20 +51,21 @@ class CartScreen extends ConsumerStatefulWidget {
 }
 
 class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStateMixin {
-  late TabController _tabController;
+
   late AnimationController _pulseController;
+  // ignore: unused_field
   late Animation<double> _pulseAnimation;
   late bool _isPickUp;
   late bool _isDineIn;
   String? _scannedTableNumber; // QR-scanned table number for dine-in
   bool _canDeliver = false;
-  bool _checkingDelivery = true;
-  String _paymentMethod = 'cash';
+  bool _checkingDelivery = true; // ignore: unused_field
+  String? _paymentMethod; // null = not yet selected (user must choose)
   final TextEditingController _tableNumberController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
   Map<String, dynamic>? _butcherData;
-  bool _loadingButcherParams = true;
+  bool _loadingButcherParams = true; // ignore: unused_field
   bool _isSubmitting = false;
   OpeningHoursHelper? _hoursHelper;
   String _orderNote = '';
@@ -73,12 +75,16 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
   // 🌟 Sponsored Products ("Bir şey mi unuttun?")
   List<Map<String, dynamic>> _sponsoredProductsList = [];
-  bool _loadingSponsoredProducts = false;
+  bool _loadingSponsoredProducts = false; // ignore: unused_field
   final Set<String> _sponsoredItemIds = {}; // Track IDs added from sponsored section
 
   // 🥤 Gratis İçecek (Free Drink Promotion)
   List<Map<String, dynamic>> _freeDrinkProducts = [];
-  bool _loadingFreeDrinks = false;
+  bool _loadingFreeDrinks = false; // ignore: unused_field
+
+  // 🎯 Promo Preview loading state
+  // ignore: unused_field
+  bool _loadingPromoPreview = false;
 
   // 📦 Item Unavailability Preferences ("Falls Artikel nicht verfügbar")
   String _unavailabilityPreference = 'refund'; // 'substitute' | 'refund' | 'perItem'
@@ -100,10 +106,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   double _donationAmount = 0.0; // 0 = kapalı, >0 = seçilen bağış tutarı
   bool _donationEnabled = false; // İşletme planında bağış modülü aktif mi?
 
+  // 🪙 Driver Tip
+  double _tipAmount = 0.0;
+
   // 🎯 Promotion Engine: user segment + live preview
   String? _userSegment; // 'vip', 'new', 'returning' etc.
   PromotionResult? _promoPreviewResult; // live preview for cart UI
-  bool _loadingPromoPreview = false;
 
   // ❄️ Cold Chain Banner
   bool _showColdChainBanner = false; // true = show full expanded banner
@@ -137,7 +145,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       _isPickUp = false;
       _paymentMethod = 'payLater'; // Default for dine-in
     }
-    _tabController = TabController(length: 2, vsync: this, initialIndex: widget.initialTab.clamp(0, 1));
+
     _checkColdChainBanner();
     
     // Pulse animation for active orders indicator
@@ -214,7 +222,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           }
           // If dine-in and business requires payFirst, reset payment method
           if (_isDineIn && data?['dineInPaymentMode'] == 'payFirst' && _paymentMethod == 'payLater') {
-            _paymentMethod = 'cash';
+            _paymentMethod = null;
           }
           _donationEnabled = donationFlag;
         });
@@ -505,14 +513,14 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     
     if (currentUser == null && firebaseUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('cart.login_required')),
+        SnackBar(content: Text('cart.login_required'.tr())),
       );
       return;
     }
 
     if (cart.items.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('cart.cart_empty')),
+        SnackBar(content: Text('cart.cart_empty'.tr())),
       );
       return;
     }
@@ -578,7 +586,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       // Apply wallet balance if enabled
       final double walletUsed = _useWallet ? (_walletBalance >= subtotalAfterDiscounts ? subtotalAfterDiscounts : _walletBalance) : 0.0;
       final double grandTotal = (subtotalAfterDiscounts - walletUsed).clamp(0.0, double.infinity);
-      final double grandTotalWithDonation = grandTotal + _donationAmount;
+      final double grandTotalWithDonation = grandTotal + _donationAmount + _tipAmount;
 
       // Build order data
       // Use selected pickup slot for Gel Al, otherwise build from date/time
@@ -606,7 +614,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         Navigator.pop(context); // Close loading dialog
         setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('cart.user_info_error')),
+          SnackBar(content: Text('cart.user_info_error'.tr())),
         );
         return;
       }
@@ -690,6 +698,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           if (item.isFreeDrink) 'isFreeDrink': true,
           if (item.isFreeDrink) 'originalPrice': item.originalPrice,
           if (item.note != null && item.note!.trim().isNotEmpty) 'itemNote': item.note!.trim(),
+          if (item.recipientName != null && item.recipientName!.trim().isNotEmpty) 'recipientName': item.recipientName!.trim(),
           if (item.selectedOptions.isNotEmpty)
             'selectedOptions': item.selectedOptions.map((o) => {
               'groupId': o.groupId,
@@ -747,6 +756,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         if (_donationAmount > 0) ...{
           'donationAmount': _donationAmount,
           'hasDonation': true,
+        },
+        // 🪙 Driver Tip
+        if (_tipAmount > 0) ...{
+          'tipAmount': _tipAmount,
+          'hasTip': true,
         },
         // 🎯 Promotion Engine data
         if (promoDiscount > 0) ...{
@@ -814,7 +828,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         if (!paymentResult.success) {
           if (!paymentResult.wasCancelled && mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Ödeme hatası: ${paymentResult.error}')),
+              SnackBar(content: Text('marketplace.payment_error'.tr(namedArgs: {'error': paymentResult.error ?? ''}))),
             );
           }
           await orderRef.update({'status': 'payment_failed', 'paymentStatus': 'failed'});
@@ -848,6 +862,34 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             isDineIn: _isDineIn,
           ),
         );
+
+        // 📅 Takvim Entegrasyonu — tüm ileri tarihli siparişlerde native takvime ekle
+        // Kurye, Gel-Al, Masa Rezervasyonu, Kermes — hepsi destekleniyor
+        if (_scheduledDeliverySlot != null) {
+          // Small delay so confirmation dialog renders first
+          Future.delayed(const Duration(milliseconds: 800), () {
+            if (mounted) {
+              if (_isDineIn) {
+                // Masa rezervasyonu → özel reservation event
+                CalendarService.addReservationEvent(
+                  context: context,
+                  reservationTime: _scheduledDeliverySlot!,
+                  businessName: cart.butcherName ?? _butcherData?['companyName'] ?? 'LOKMA',
+                  partySize: 1,
+                  tableCardNumbers: _scannedTableNumber != null ? [_scannedTableNumber!] : null,
+                );
+              } else {
+                // Kurye / Gel-Al / Kermes → standard order event
+                CalendarService.addOrderEvent(
+                  context: context,
+                  deliveryTime: _scheduledDeliverySlot!,
+                  businessName: cart.butcherName ?? _butcherData?['companyName'] ?? 'LOKMA',
+                  orderNumber: orderNumber,
+                );
+              }
+            }
+          });
+        }
       }
 
     } catch (e) {
@@ -863,7 +905,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
 
   @override
   void dispose() {
-    _tabController.dispose();
+
     _pulseController.dispose();
     _tableNumberController.dispose();
     super.dispose();
@@ -885,46 +927,140 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         backgroundColor: colorScheme.surface,
         elevation: 0,
         scrolledUnderElevation: 0,
-        toolbarHeight: 38,
-        leadingWidth: 56,
+        surfaceTintColor: Colors.transparent,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: IconButton(
-            padding: const EdgeInsets.all(12),
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: colorScheme.onSurface, size: 22),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              if (GoRouter.of(context).canPop()) {
-                context.pop();
-              } else {
-                context.go('/');
-              }
-            },
+          padding: const EdgeInsets.only(left: 8),
+          child: Center(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                if (GoRouter.of(context).canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/');
+                }
+              },
+              child: Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: theme.brightness == Brightness.dark ? Colors.grey[800] : const Color(0xFFF5F5F5),
+                  shape: BoxShape.circle,
+                  boxShadow: theme.brightness == Brightness.dark ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))],
+                ),
+                child: Icon(Icons.arrow_back_ios_new, color: colorScheme.onSurface, size: 18),
+              ),
+            ),
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: _accentColor,
-          indicatorWeight: 3,
-          labelColor: colorScheme.onSurface,
-          unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.5),
-          labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          tabs: [
-            Tab(text: 'cart.my_cart'.tr()),
-            Tab(text: 'cart.my_orders'.tr()),
-          ],
+        title: Text(
+          'checkout.cart_title'.tr(),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+        ),
+        centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(50),
+          child: _buildCheckoutStepIndicator(0),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Tab 1: Sepet
-          _buildCartTabContent(cart, kermesCart),
-          // Tab 2: Siparişlerim (unified chronological list)
-          _buildUnifiedOrdersTab(),
-        ],
+      body: _buildCartTabContent(cart, kermesCart),
+    );
+  }
+  
+  /// 🔢 Checkout Step Indicator (1-Sepet, 2-Ödeme, 3-Onay)
+  /// [onStepTap] is called when user taps a COMPLETED step to go back.
+  /// The tapped step index is passed to the callback.
+  Widget _buildCheckoutStepIndicator(int currentStep, {void Function(int)? onStepTap}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = _accentColor;
+    final labels = [
+      tr('checkout.step_cart'),
+      tr('checkout.step_payment'),
+      tr('checkout.step_confirm'),
+    ];
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Row(
+        children: List.generate(labels.length * 2 - 1, (i) {
+          // Odd indices are connecting lines
+          if (i.isOdd) {
+            final stepBefore = i ~/ 2;
+            final isCompleted = stepBefore < currentStep;
+            return Expanded(
+              child: Container(
+                height: 2,
+                color: isCompleted
+                    ? accent
+                    : (isDark ? Colors.grey[700] : Colors.grey[300]),
+              ),
+            );
+          }
+          
+          // Even indices are step circles
+          final step = i ~/ 2;
+          final isCompleted = step < currentStep;
+          final isActive = step == currentStep;
+          
+          Widget stepWidget = Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isCompleted
+                      ? accent
+                      : (isActive
+                          ? (isDark ? Colors.grey[800] : Colors.white)
+                          : Colors.transparent),
+                  border: Border.all(
+                    color: isCompleted || isActive
+                        ? accent
+                        : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
+                    width: isActive ? 2 : 1.5,
+                  ),
+                ),
+                child: Center(
+                  child: isCompleted
+                      ? Icon(Icons.check, color: Colors.white, size: 16)
+                      : Text(
+                          '${step + 1}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: isActive
+                                ? accent
+                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                labels[step],
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isActive || isCompleted ? FontWeight.w600 : FontWeight.w400,
+                  color: isActive || isCompleted
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          );
+          
+          // Only completed steps are tappable (to go back)
+          if (isCompleted && onStepTap != null) {
+            stepWidget = GestureDetector(
+              onTap: () => onStepTap(step),
+              behavior: HitTestBehavior.opaque,
+              child: stepWidget,
+            );
+          }
+          
+          return stepWidget;
+        }),
       ),
     );
   }
@@ -2321,16 +2457,34 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final kasapTotal = hasKasap ? cart.totalAmount : 0.0;
     final grandTotal = kermesTotal + kasapTotal;
     
-    return Stack(
+    return Column(
       children: [
         // Scrollable content
-        SingleChildScrollView(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 120),
+        Expanded(
+          child: SingleChildScrollView(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 🚴 Delivery Info Pill (Lieferando style)
               _buildLieferandoDeliveryPill(),
+              
+              // 🏪 Business name — simple right-aligned text (always visible)
+              if (hasKasap && _butcherData != null)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 6, bottom: 4, right: 2),
+                    child: Text(
+                      _butcherData!['companyName'] ?? 'Kasap',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                ),
               SizedBox(height: 16),
               
               // ❄️ Cold Chain Banner (Kasap + Kurye only)
@@ -2351,14 +2505,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               // 🥩 Kasap Items (if any)  
               if (hasKasap) ...[
                 if (hasKermes) const Divider(height: 32),
-                if (_butcherData != null)
-                  _buildLieferandoSectionHeader(
-                    _butcherData!['companyName'] ?? 'Kasap',
-                    subtitle: [
-                      _butcherData!['postalCode']?.toString() ?? '',
-                      _butcherData!['city']?.toString() ?? '',
-                    ].where((s) => s.isNotEmpty).join(' '),
-                  ),
                 ...cart.items.asMap().entries.map((entry) => _buildLieferandoCartItem(entry.value, entry.key + 1)),
                 SizedBox(height: 16),
               ],
@@ -2465,28 +2611,56 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               // 💰 Price Summary
               _buildLieferandoPriceSummary(kermesTotal, kasapTotal, grandTotal),
               
-              SizedBox(height: 120), // Space for button
+              const SizedBox(height: 40),
             ],
           ),
         ),
-        
-        // 🟠 Fixed Bottom Checkout Button + Legal Footer
-        Positioned(
-          left: 16,
-          right: 16,
-          bottom: MediaQuery.of(context).padding.bottom + 16,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildScannedTableBanner(),
-              _buildLieferandoCheckoutButton(grandTotal),
-            ],
-          ),
+      ),
+      // ─── Fixed Bottom Checkout Button + Legal ─────────────────────────
+      Container(
+        padding: EdgeInsets.fromLTRB(20, 10, 20, MediaQuery.of(context).padding.bottom),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          boxShadow: [
+            BoxShadow(
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, -4),
+            ),
+          ],
         ),
-      ],
-    );
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildScannedTableBanner(),
+            _buildLieferandoCheckoutButton(grandTotal),
+            const SizedBox(height: 6),
+            Text('cart.legal_disclaimer'.tr(), textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.3)),
+          ],
+        ),
+      ),
+    ],
+  );
   }
   
+  String? _getEstimatedDeliveryTime() {
+    if (_butcherData == null) return null;
+    final deliveryMin = _butcherData!['estimatedDeliveryMin'] as int?;
+    final deliveryMax = _butcherData!['estimatedDeliveryMax'] as int?;
+    final unit = tr('delivery_modes.minutes_short');
+    if (deliveryMin != null && deliveryMax != null) return '$deliveryMin-$deliveryMax $unit';
+    if (deliveryMin != null) return '~$deliveryMin $unit';
+    return '20-40 $unit';
+  }
+
+  String? _getEstimatedPickupTime() {
+    if (_butcherData == null) return null;
+    final pickupMin = _butcherData!['estimatedPickupMinutes'] as int?;
+    final unit = tr('delivery_modes.minutes_short');
+    if (pickupMin != null) return '~$pickupMin $unit';
+    return '~15 $unit';
+  }
+
   /// 😴 3D Pill Tab Switch for Gel Al / Kurye
   Widget _buildLieferandoDeliveryPill() {
     if (!_canDeliver) {
@@ -2543,26 +2717,38 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     
     if (isMarketSegment) {
       // Market: only Kurye + Gel Al (no Masa)
-      return SimpleSegmentedToggle(
+      return ThreeDimensionalPillTabBar(
+        margin: EdgeInsets.zero,
+        activeColor: _accentColor, // 🎨 BRAND COLOUR toggle
         selectedIndex: _isPickUp ? 1 : 0,
-        onChanged: (index) {
+        onTabSelected: (index) {
           setState(() {
             _isPickUp = index == 1;
             _isDineIn = false;
-            if (_paymentMethod == 'payLater') _paymentMethod = 'cash';
+            if (_paymentMethod == 'payLater') _paymentMethod = null;
           });
         },
-        items: const [
-          SimpleSegmentItem(label: 'Kurye', icon: Icons.delivery_dining),
-          SimpleSegmentItem(label: 'Gel Al', icon: Icons.store_outlined),
+        tabs: [
+          TabItem(
+            title: tr('delivery_modes.delivery'),
+            subtitle: _getEstimatedDeliveryTime(),
+            icon: Icons.delivery_dining,
+          ),
+          TabItem(
+            title: tr('delivery_modes.pickup'),
+            subtitle: _getEstimatedPickupTime(),
+            icon: Icons.shopping_bag_outlined,
+          ),
         ],
       );
     }
     
-    // Simple segmented toggle for Kurye / Gel Al / Masa
-    return SimpleSegmentedToggle(
+    // Restaurant: Kurye / Gel Al / Masa
+    return ThreeDimensionalPillTabBar(
+      margin: EdgeInsets.zero,
+      activeColor: _accentColor, // 🎨 BRAND COLOUR toggle
       selectedIndex: _isDineIn ? 2 : (_isPickUp ? 1 : 0),
-      onChanged: (index) {
+      onTabSelected: (index) {
         setState(() {
           _isPickUp = index == 1;
           _isDineIn = index == 2;
@@ -2571,14 +2757,22 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           } else {
             _scannedTableNumber = null;
             _tableNumberController.clear();
-            if (_paymentMethod == 'payLater') _paymentMethod = 'cash';
+            if (_paymentMethod == 'payLater') _paymentMethod = null;
           }
         });
       },
-      items: const [
-        SimpleSegmentItem(label: 'Kurye', icon: Icons.delivery_dining),
-        SimpleSegmentItem(label: 'Gel Al', icon: Icons.store_outlined),
-        SimpleSegmentItem(label: 'Masa', icon: Icons.restaurant),
+      tabs: [
+        TabItem(
+          title: tr('delivery_modes.delivery'),
+          subtitle: _getEstimatedDeliveryTime(),
+          icon: Icons.delivery_dining,
+        ),
+        TabItem(
+          title: tr('delivery_modes.pickup'),
+          subtitle: _getEstimatedPickupTime(),
+          icon: Icons.shopping_bag_outlined,
+        ),
+        TabItem(title: tr('delivery_modes.dine_in'), icon: Icons.restaurant),
       ],
     );
   }
@@ -2676,7 +2870,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Anladım', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                  child: Text('common.understood'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
                 ),
               ),
             ],
@@ -3049,6 +3243,23 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // #N Position number badge
+                        Container(
+                          margin: const EdgeInsets.only(top: 2, right: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _accentColor.withValues(alpha: isDark ? 0.25 : 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '#$positionNumber',
+                            style: TextStyle(
+                              color: _accentColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -3124,25 +3335,27 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  item.note != null && item.note!.isNotEmpty
+                                  (item.note != null && item.note!.isNotEmpty) ||
+                                      (item.recipientName != null && item.recipientName!.isNotEmpty)
                                       ? Icons.edit_note
                                       : Icons.note_add_outlined,
                                   size: 14,
                                   color: Colors.grey[500],
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
-                                  item.note != null && item.note!.isNotEmpty
-                                      ? item.note!
-                                      : 'cart.add_note'.tr(),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: item.note != null && item.note!.isNotEmpty
-                                        ? (isDark ? Colors.grey[300] : Colors.grey[700])
-                                        : Colors.grey[500],
+                                Flexible(
+                                  child: Text(
+                                    _buildNoteDisplayText(item),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: (item.note != null && item.note!.isNotEmpty) ||
+                                              (item.recipientName != null && item.recipientName!.isNotEmpty)
+                                          ? (isDark ? Colors.grey[300] : Colors.grey[700])
+                                          : Colors.grey[500],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
@@ -3158,12 +3371,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: isDark ? Colors.grey[800] : Colors.grey[100],
+                              color: _accentColor.withValues(alpha: isDark ? 0.18 : 0.10),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.delete_outline,
-                              color: isDark ? Colors.grey[400] : Colors.grey[500],
+                              color: _accentColor,
                               size: 18,
                             ),
                           ),
@@ -3195,12 +3408,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   height: 32,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: isDark ? Colors.grey[700] : Colors.grey[200],
+                                    color: _accentColor.withValues(alpha: isDark ? 0.22 : 0.12),
                                   ),
                                   child: Icon(
                                     Icons.remove,
                                     size: 16,
-                                    color: Theme.of(context).colorScheme.onSurface,
+                                    color: _accentColor,
                                   ),
                                 ),
                               ),
@@ -3229,12 +3442,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   height: 32,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: isDark ? Colors.grey[700] : Colors.grey[200],
+                                    color: _accentColor.withValues(alpha: isDark ? 0.22 : 0.12),
                                   ),
                                   child: Icon(
                                     Icons.add,
                                     size: 16,
-                                    color: Theme.of(context).colorScheme.onSurface,
+                                    color: _accentColor,
                                   ),
                                 ),
                               ),
@@ -3259,59 +3472,265 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
 
-  /// 📝 Note dialog for a specific cart item
+  /// Helper to build combined note display text from recipient + food note
+  String _buildNoteDisplayText(CartItem item) {
+    final hasRecipient = item.recipientName != null && item.recipientName!.isNotEmpty;
+    final hasNote = item.note != null && item.note!.isNotEmpty;
+    if (hasRecipient && hasNote) {
+      return '${item.recipientName!} · ${item.note!}';
+    } else if (hasRecipient) {
+      return item.recipientName!;
+    } else if (hasNote) {
+      return item.note!;
+    }
+    return 'cart.add_note'.tr();
+  }
+
+  /// 📝 Note bottom sheet for a specific cart item — Cyg-inspired design
   void _showNoteDialog(CartItem item) {
-    final controller = TextEditingController(text: item.note ?? '');
+    final recipientController = TextEditingController(text: item.recipientName ?? '');
+    final noteController = TextEditingController(text: item.note ?? '');
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
+    
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Ürün Notu',
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        content: TextField(
-          controller: controller,
-          maxLength: 40,
-          autofocus: true,
-          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
-          decoration: InputDecoration(
-            hintText: 'Ör: Hasan Usta, Marulsuz...',
-            hintStyle: TextStyle(color: Colors.grey[500]),
-            filled: true,
-            fillColor: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
             ),
-            counterStyle: TextStyle(color: Colors.grey[500]),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              ref.read(cartProvider.notifier).updateNote(item.uniqueKey, null);
-              Navigator.pop(ctx);
-            },
-            child: Text('Sil', style: TextStyle(color: Colors.red[400])),
-          ),
-          FilledButton(
-            onPressed: () {
-              ref.read(cartProvider.notifier).updateNote(item.uniqueKey, controller.text);
-              Navigator.pop(ctx);
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: Color(0xFFFB335B),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
             ),
-            child: Text('Kaydet', style: TextStyle(color: Theme.of(context).colorScheme.surface)),
-          ),
-        ],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Drag handle ──
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[600] : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // ── Title ──
+                  Text(
+                    'cart.your_note'.tr(),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // ═══════════════════════════════════════
+                  // FIELD 1: Kimin için? (Recipient Name)
+                  // ═══════════════════════════════════════
+                  Text(
+                    'cart.note_recipient_label'.tr(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'cart.note_recipient_hint_desc'.tr(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[500],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: TextField(
+                      controller: recipientController,
+                      maxLength: 40,
+                      maxLines: 1,
+                      autofocus: false,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                      ),
+                      onChanged: (_) => setSheetState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'cart.note_recipient_placeholder'.tr(),
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[600] : Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.person_outline,
+                          color: isDark ? Colors.grey[500] : Colors.grey[400],
+                          size: 20,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        counterText: '',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // ═══════════════════════════════════════
+                  // FIELD 2: Yemek Notu (Food Note)
+                  // ═══════════════════════════════════════
+                  Text(
+                    'cart.note_food_label'.tr(),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'cart.note_allergy_disclaimer'.tr(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark ? Colors.grey[400] : Colors.grey[500],
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  
+                  // ── Character counter ──
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${noteController.text.length}/160',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.grey[500] : Colors.grey[400],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  
+                  // ── Text input ──
+                  Container(
+                    constraints: const BoxConstraints(minHeight: 80),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: TextField(
+                      controller: noteController,
+                      maxLength: 160,
+                      maxLines: 3,
+                      minLines: 2,
+                      autofocus: false,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                      ),
+                      onChanged: (_) => setSheetState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'cart.note_placeholder'.tr(),
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[600] : Colors.grey[400],
+                          fontSize: 14,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.all(16),
+                        counterText: '', // hide default counter
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // ── Action buttons ──
+                  Row(
+                    children: [
+                      // Cancel / Delete
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            if ((item.note != null && item.note!.isNotEmpty) ||
+                                (item.recipientName != null && item.recipientName!.isNotEmpty)) {
+                              ref.read(cartProvider.notifier).updateNote(item.uniqueKey, null);
+                              ref.read(cartProvider.notifier).updateRecipientName(item.uniqueKey, null);
+                            }
+                            Navigator.pop(ctx);
+                          },
+                          child: Container(
+                            height: 50,
+                            alignment: Alignment.center,
+                            child: Text(
+                              'common.cancel'.tr(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Save
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            final noteText = noteController.text.trim();
+                            final recipientText = recipientController.text.trim();
+                            ref.read(cartProvider.notifier).updateNote(
+                              item.uniqueKey,
+                              noteText.isEmpty ? null : noteText,
+                            );
+                            ref.read(cartProvider.notifier).updateRecipientName(
+                              item.uniqueKey,
+                              recipientText.isEmpty ? null : recipientText,
+                            );
+                            Navigator.pop(ctx);
+                          },
+                          child: Container(
+                            height: 50,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: (noteController.text.trim().isNotEmpty || recipientController.text.trim().isNotEmpty)
+                                  ? const Color(0xFF3E3E40)
+                                  : (isDark ? Colors.grey[800] : Colors.grey[200]),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Text(
+                              'common.save'.tr(),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: (noteController.text.trim().isNotEmpty || recipientController.text.trim().isNotEmpty)
+                                    ? Colors.white
+                                    : (isDark ? Colors.grey[500] : Colors.grey[400]),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -4079,7 +4498,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           if (total < minOrder) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Kurye için minimum sipariş tutarı: ${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}'),
+                content: Text('marketplace.min_order_for_courier'.tr(namedArgs: {'amount': minOrder.toStringAsFixed(0), 'currency': CurrencyUtils.getCurrencySymbol()})),
                 backgroundColor: Colors.amber,
               ),
             );
@@ -4112,8 +4531,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               ],
               Text(
                 (_isDineIn && _scannedTableNumber == null)
-                    ? 'Masa QR Kodunu Tara · ${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'
-                    : 'Ödemeye Geç · ${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                    ? tr('checkout.scan_table_qr', namedArgs: {'total': '${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'})
+                    : tr('checkout.proceed', namedArgs: {'total': '${total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'}),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.surface,
                   fontSize: 16,
@@ -4303,7 +4722,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           ),
           textAlign: TextAlign.center,
           decoration: InputDecoration(
-            hintText: 'Örn: 5',
+            hintText: 'cart.example_hint'.tr(),
             hintStyle: TextStyle(color: Colors.grey[500]),
             filled: true,
             fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
@@ -4320,7 +4739,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('İptal', style: TextStyle(color: Colors.grey[500])),
+            child: Text('common.cancel'.tr(), style: TextStyle(color: Colors.grey[500])),
           ),
           ElevatedButton(
             onPressed: () {
@@ -4595,7 +5014,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         children: [
                           Icon(Icons.check_circle, color: Theme.of(context).colorScheme.surface, size: 20),
                           const SizedBox(width: 8),
-                          Text('Masa $tableNum doğrulandı ✓'),
+                          Text('cart.table_verified'.tr(namedArgs: {'tableNum': tableNum})),
                         ],
                       ),
                       backgroundColor: Colors.green,
@@ -4652,7 +5071,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gruba katılırken hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('marketplace.join_group_error'.tr(namedArgs: {'error': e.toString()})), backgroundColor: Colors.red),
         );
       }
     }
@@ -4688,7 +5107,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Grup oluşturulurken hata: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('marketplace.create_group_error'.tr(namedArgs: {'error': e.toString()})), backgroundColor: Colors.red),
         );
       }
     }
@@ -4773,6 +5192,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   }
 
   /// 📜 Legal Terms Footer (Lieferando style)
+  // ignore: unused_element
   Widget _buildLegalTermsFooter() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -5029,7 +5449,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 parentSetSheetState: parentSetSheetState,
                                 sheetCtx: sheetCtx,
                                 address: profileAddress,
-                                label: 'Varsayılan Adres',
+                                label: 'cart.default_address'.tr(),
                                 isSelected: _selectedDeliveryAddress == null,
                                 isDefault: true,
                                 isDark: isDark,
@@ -5247,14 +5667,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     String userId,
     bool isDark,
   ) {
-    const String _placesApiKey = 'AIzaSyB8Pvs-P4580Wsk4mT46cvGT7TGlZiLkWo';
+    const String placesApiKey = 'AIzaSyB8Pvs-P4580Wsk4mT46cvGT7TGlZiLkWo';
     final searchController = TextEditingController();
     final streetController = TextEditingController();
     final houseNumberController = TextEditingController();
     final postalCodeController = TextEditingController();
     final cityController = TextEditingController();
     final labelController = TextEditingController();
-    bool _addressSelected = false;
+    // ignore: unused_local_variable
+    bool addressSelected = false;
 
     showModalBottomSheet(
       context: parentCtx,
@@ -5284,23 +5705,23 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Yeni Adres Ekle',
+                      'checkout.add_new_address'.tr(),
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black),
                     ),
                     const SizedBox(height: 16),
 
                     // 🔍 Google Places Autocomplete search
                     Text(
-                      'Adres Ara',
+                      'checkout.search_address'.tr(),
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                     ),
                     const SizedBox(height: 6),
                     GooglePlaceAutoCompleteTextField(
                       textEditingController: searchController,
-                      googleAPIKey: _placesApiKey,
+                      googleAPIKey: placesApiKey,
                       boxDecoration: const BoxDecoration(),
                       inputDecoration: InputDecoration(
-                        hintText: 'Adres aramak için yazın...',
+                        hintText: 'marketplace.search_address_hint'.tr(),
                         hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
                         prefixIcon: Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 20),
                         filled: true,
@@ -5328,7 +5749,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 houseNumberController.text = place.subThoroughfare ?? '';
                                 postalCodeController.text = place.postalCode ?? '';
                                 cityController.text = place.locality ?? place.administrativeArea ?? '';
-                                _addressSelected = true;
+                                addressSelected = true;
                               });
                             }
                           } catch (e) {
@@ -5350,7 +5771,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     cityController.text = plzCity;
                                   }
                                 }
-                                _addressSelected = true;
+                                addressSelected = true;
                               });
                             }
                           }
@@ -5369,7 +5790,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     const SizedBox(height: 8),
 
                     // Label (optional)
-                    _buildAddressTextField(labelController, 'Adres Adı (opsiyonel)', 'Ör: Ev, İş', isDark, textInputAction: TextInputAction.next),
+                    _buildAddressTextField(labelController, 'checkout.address_label_optional'.tr(), 'checkout.address_label_hint'.tr(), isDark, textInputAction: TextInputAction.next),
                     const SizedBox(height: 12),
 
                     // Street + House Number row (auto-filled or manual)
@@ -5377,12 +5798,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       children: [
                         Expanded(
                           flex: 3,
-                          child: _buildAddressTextField(streetController, 'Sokak / Cadde *', 'Ör: Hauptstraße', isDark, textInputAction: TextInputAction.next),
+                          child: _buildAddressTextField(streetController, 'checkout.street_name_required'.tr(), 'checkout.street_name_hint'.tr(), isDark, textInputAction: TextInputAction.next),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           flex: 1,
-                          child: _buildAddressTextField(houseNumberController, 'Nr.', '', isDark, textInputAction: TextInputAction.next),
+                          child: _buildAddressTextField(houseNumberController, 'checkout.house_number_short'.tr(), '', isDark, textInputAction: TextInputAction.next),
                         ),
                       ],
                     ),
@@ -5393,12 +5814,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       children: [
                         Expanded(
                           flex: 2,
-                          child: _buildAddressTextField(postalCodeController, 'PLZ *', '', isDark, keyboardType: TextInputType.number, textInputAction: TextInputAction.next),
+                          child: _buildAddressTextField(postalCodeController, 'checkout.postal_code_required'.tr(), '', isDark, keyboardType: TextInputType.number, textInputAction: TextInputAction.next),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           flex: 3,
-                          child: _buildAddressTextField(cityController, 'Şehir *', '', isDark, textInputAction: TextInputAction.done),
+                          child: _buildAddressTextField(cityController, 'checkout.city_required'.tr(), '', isDark, textInputAction: TextInputAction.done),
                         ),
                       ],
                     ),
@@ -5434,7 +5855,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             child: Text(
-                              'Sadece Kullan',
+                              'checkout.use_only'.tr(),
                               style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontWeight: FontWeight.w500),
                             ),
                           ),
@@ -5478,7 +5899,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
-                            child: const Text('Kaydet & Kullan', style: TextStyle(fontWeight: FontWeight.w600)),
+                            child: Text('checkout.save_and_use'.tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
                           ),
                         ),
                       ],
@@ -5540,7 +5961,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         selectedLabel = 'marketplace.product_unavailable_choose'.tr();
         break;
       default:
-        selectedLabel = 'Ürün ücretini iade et';
+        selectedLabel = 'marketplace.product_unavailable_refund'.tr();
     }
 
     return Container(
@@ -5594,11 +6015,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   ],
                                 ),
                                 content: Text(
-                                  'Ürünlerimiz genellikle her zaman stoklarımızda mevcuttur. '
-                                  'Ancak çok nadir durumlarda, bir ürün geçici olarak tükenmiş olabilir. '
-                                  'Siparişinizi mümkün olan en kısa sürede tamamlayabilmemiz için, '
-                                  'böyle bir durumda ne yapmamızı istediğinizi önceden bildirmenizi rica ediyoruz. '
-                                  'Bu sayede size ulaşmak zorunda kalmadan siparişinizi hızlıca hazırlayabiliriz.',
+                                  'marketplace.unavailability_info_text'.tr(),
                                   style: TextStyle(
                                     fontSize: 14,
                                     height: 1.5,
@@ -5608,7 +6025,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(dialogCtx),
-                                    child: Text('Anladım', style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600)),
+                                    child: Text('common.understood'.tr(), style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600)),
                                   ),
                                 ],
                               ),
@@ -5702,7 +6119,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             productId: productId,
                             chipValue: 'substitute',
                             currentValue: pref,
-                            label: 'Alternatif',
+                            label: 'marketplace.alternative_label'.tr(),
                             isDark: isDark,
                           ),
                           const SizedBox(width: 8),
@@ -5711,7 +6128,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             productId: productId,
                             chipValue: 'refund',
                             currentValue: pref,
-                            label: 'İade',
+                            label: 'marketplace.refund_label'.tr(),
                             isDark: isDark,
                           ),
                         ],
@@ -5728,6 +6145,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   }
 
   /// 📦 Unavailability Preference Section (Lieferando "Falls Artikel nicht verfügbar" style)
+  // ignore: unused_element
   Widget _buildUnavailabilityPreferenceSection(BuildContext ctx, StateSetter setSheetState, CartState cart) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -6295,9 +6713,9 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               }
             }
           },
-          items: const [
-            SimpleSegmentItem(label: 'En kısa sürede', icon: Icons.bolt),
-            SimpleSegmentItem(label: 'İleri tarih', icon: Icons.calendar_today),
+          items: [
+            SimpleSegmentItem(label: 'checkout.asap'.tr(), icon: Icons.bolt),
+            SimpleSegmentItem(label: 'checkout.scheduled'.tr(), icon: Icons.calendar_today),
           ],
         ),
         // Show wheel picker only when scheduled
@@ -6625,25 +7043,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     );
   }
 
-  /// Section header helper for checkout sheet
-  Widget _buildCheckoutSectionHeader(String emoji, String title) {
-    return Row(
-      children: [
-        if (emoji.isNotEmpty) ...[
-          Text(emoji, style: const TextStyle(fontSize: 16)),
-          const SizedBox(width: 6),
-        ],
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-      ],
-    );
-  }
+
 
 }
 
@@ -6690,8 +7090,13 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
   bool _hasScrolledForKeyboard = false;
 
   // Cached futures to prevent re-fetch on every setState (causes tremble)
-  late final Future<String?> _bannerTextFuture;
+
   late final Future<DocumentSnapshot> _userDocFuture;
+
+  // 📍 Address geocoding state for map preview
+  double? _addressLat;
+  double? _addressLng;
+  bool _addressGeocoded = false;
 
   // Convenience accessor
   _CartScreenState get parent => widget.cartScreenState;
@@ -6699,17 +7104,174 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
   @override
   void initState() {
     super.initState();
-    _bannerTextFuture = FirstOrderService.getBannerText();
+
     _userDocFuture = FirebaseFirestore.instance
         .collection('users')
         .doc(widget.firebaseUser?.uid ?? widget.authState.appUser?.uid)
         .get();
   }
 
+  /// Geocode an address string to lat/lng for the mini map preview
+  Future<void> _geocodeAddress(String addressString) async {
+    if (_addressGeocoded) return;
+    _addressGeocoded = true;
+    try {
+      final locations = await locationFromAddress(addressString);
+      if (locations.isNotEmpty && mounted) {
+        setState(() {
+          _addressLat = locations.first.latitude;
+          _addressLng = locations.first.longitude;
+        });
+      }
+    } catch (e) {
+      debugPrint('[Checkout] Geocoding failed for: $addressString — $e');
+    }
+  }
+
+  /// Show a legal information bottom sheet (Datenschutz / Nutzungsbedingungen)
+  void _showLegalSheet(BuildContext ctx, String title, String content) {
+    showModalBottomSheet(
+      context: ctx,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        final isDark = Theme.of(sheetCtx).brightness == Brightness.dark;
+        return DraggableScrollableSheet(
+          initialChildSize: 0.85,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (_, scrollController) => Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                // Drag handle
+                Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // Title
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(title, style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(sheetCtx).colorScheme.onSurface,
+                        )),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(sheetCtx),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.grey[800] : Colors.grey[200],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.close, size: 18, color: Theme.of(sheetCtx).colorScheme.onSurface),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(20),
+                    child: Text(content, style: TextStyle(
+                      fontSize: 13,
+                      height: 1.6,
+                      color: isDark ? Colors.grey[300] : Colors.grey[700],
+                    )),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Returns a user-friendly label for the currently selected payment method
+  String _getPaymentMethodLabel(String? method) {
+    switch (method) {
+      case 'card':
+        return 'checkout.card'.tr();
+      case 'cash':
+        return 'checkout.cash'.tr();
+      case 'payLater':
+        return 'checkout.pay_later'.tr();
+      case 'cardOnDelivery':
+        return 'checkout.card_on_delivery'.tr();
+      default:
+        return 'checkout.select_payment'.tr();
+    }
+  }
+
+  /// Reusable row pattern: [red icon] [title / subtitle] [trailing widget]
+  Widget _buildCheckoutRow(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+    Color? dividerColor,
+    VoidCallback? onTap,
+  }) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(icon, color: iconColor, size: 22),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w400)),
+                      if (subtitle != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(subtitle, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                        ),
+                    ],
+                  ),
+                ),
+                if (trailing != null) trailing,
+              ],
+            ),
+          ),
+        ),
+        if (dividerColor != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Divider(height: 1, color: dividerColor),
+          ),
+      ],
+    );
   }
 
   @override
@@ -6735,90 +7297,641 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
 
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final checkoutBg = isDark ? Theme.of(context).scaffoldBackgroundColor : const Color(0xFFF7F5F0);
-    final cardColor = isDark ? Theme.of(context).colorScheme.surface : Colors.white;
-    final cardBorder = isDark ? BorderSide.none : BorderSide(color: const Color(0xFFE8E4DE), width: 0.5);
+    final checkoutBg = isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white;
+
     final neutralIcon = isDark ? Colors.grey[400]! : Colors.grey[700]!;
+    const brandRed = Color(0xFFE30613);
+    final chevronColor = isDark ? Colors.grey[500]! : Colors.grey[400]!;
+    final dividerColor = isDark ? Colors.grey[800]! : const Color(0xFFF0F0F0);
+    final sectionDividerColor = isDark ? Colors.grey[900]! : const Color(0xFFF7F7F7);
 
     return Scaffold(
       backgroundColor: checkoutBg,
       appBar: AppBar(
         backgroundColor: checkoutBg,
         elevation: 0,
-        scrolledUnderElevation: 0.5,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface, size: 20),
-          onPressed: () => Navigator.pop(context),
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Center(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                width: 40, height: 40,
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[800] : const Color(0xFFF5F5F5),
+                  shape: BoxShape.circle,
+                  boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))],
+                ),
+                child: Icon(Icons.arrow_back_ios_new, color: Theme.of(context).colorScheme.onSurface, size: 18),
+              ),
+            ),
+          ),
         ),
         title: Text(
-          'Sipariş Özeti',
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+          'checkout.title'.tr(),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
         ),
         centerTitle: true,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(56),
-          child: _buildStepIndicator(context, accentColor),
+          preferredSize: const Size.fromHeight(50),
+          child: parent._buildCheckoutStepIndicator(1, onStepTap: (step) {
+            if (step == 0) {
+              Navigator.pop(context);
+            }
+          }),
         ),
       ),
       body: Column(
         children: [
-          // Scrollable content
           Expanded(
             child: GestureDetector(
               onTap: () => FocusScope.of(context).unfocus(),
               child: SingleChildScrollView(
                 controller: _scrollController,
-                padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottomInset),
+                padding: EdgeInsets.only(bottom: 20 + bottomInset),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 🎉 FIRST ORDER DISCOUNT BANNER (top priority)
-                    FutureBuilder<String?>(
-                      future: _bannerTextFuture,
-                      builder: (context, snap) {
-                        if (!snap.hasData || snap.data == null) return const SizedBox.shrink();
-                        return Column(
-                          children: [
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [const Color(0xFFFF6B6B).withValues(alpha: 0.1), const Color(0xFFFFD93D).withValues(alpha: 0.1)],
+                    // ═══════════════════════════════════════
+                    // SECTION 1: BESTELLDETAILS
+                    // ═══════════════════════════════════════
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: Text('checkout.order_details'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                    ),
+
+                    // ── User Info Row ──
+                    FutureBuilder<DocumentSnapshot>(
+                      future: _userDocFuture,
+                      builder: (context, snapshot) {
+                        final userData = snapshot.data?.data() as Map<String, dynamic>?;
+                        final userName = userData?['displayName'] ?? userData?['name'] ?? '';
+                        final userPhone = userData?['phone'] ?? userData?['phoneNumber'] ?? '';
+                        // Split name for first/last display
+                        final nameParts = userName.toString().trim().split(' ');
+                        final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+                        final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+                        return _buildCheckoutRow(
+                          context,
+                          icon: Icons.person_outline,
+                          iconColor: brandRed,
+                          title: userName.toString().isNotEmpty ? userName.toString() : 'checkout.user'.tr(),
+                          subtitle: userPhone.toString(),
+                          trailing: Icon(Icons.chevron_right, color: chevronColor, size: 22),
+                          dividerColor: dividerColor,
+                          onTap: () {
+                            final firstNameCtrl = TextEditingController(text: firstName);
+                            final lastNameCtrl = TextEditingController(text: lastName);
+                            final phoneCtrl = TextEditingController(text: userPhone.toString());
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                              builder: (ctx) => Padding(
+                                padding: EdgeInsets.fromLTRB(20, 24, 20, 24 + MediaQuery.of(ctx).viewInsets.bottom),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
+                                    const SizedBox(height: 20),
+                                    Text('checkout.your_details'.tr(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
+                                    const SizedBox(height: 16),
+                                    Text('checkout.first_name'.tr(), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                                    const SizedBox(height: 6),
+                                    TextField(
+                                      controller: firstNameCtrl,
+                                      textCapitalization: TextCapitalization.words,
+                                      decoration: InputDecoration(
+                                        filled: true, fillColor: isDark ? Colors.grey[850] : const Color(0xFFF7F7F7),
+                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                      ),
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text('checkout.last_name'.tr(), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                                    const SizedBox(height: 6),
+                                    TextField(
+                                      controller: lastNameCtrl,
+                                      textCapitalization: TextCapitalization.words,
+                                      decoration: InputDecoration(
+                                        filled: true, fillColor: isDark ? Colors.grey[850] : const Color(0xFFF7F7F7),
+                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                      ),
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text('checkout.phone'.tr(), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                                    const SizedBox(height: 6),
+                                    TextField(
+                                      controller: phoneCtrl,
+                                      keyboardType: TextInputType.phone,
+                                      decoration: InputDecoration(
+                                        filled: true, fillColor: isDark ? Colors.grey[850] : const Color(0xFFF7F7F7),
+                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                      ),
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: OutlinedButton(
+                                            onPressed: () => Navigator.pop(ctx),
+                                            style: OutlinedButton.styleFrom(
+                                              padding: const EdgeInsets.symmetric(vertical: 14),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                              side: BorderSide(color: Colors.grey[400]!),
+                                            ),
+                                            child: Text('checkout.cancel'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600)),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: () async {
+                                              final newName = '${firstNameCtrl.text.trim()} ${lastNameCtrl.text.trim()}'.trim();
+                                              final newPhone = phoneCtrl.text.trim();
+                                              final uid = widget.firebaseUser?.uid ?? widget.authState.appUser?.uid;
+                                              if (uid != null && newName.isNotEmpty) {
+                                                await FirebaseFirestore.instance.collection('users').doc(uid).update({
+                                                  'displayName': newName,
+                                                  'phone': newPhone,
+                                                });
+                                                // Refresh user data
+                                                setState(() {
+                                                  _userDocFuture = FirebaseFirestore.instance.collection('users').doc(uid).get();
+                                                });
+                                              }
+                                              if (ctx.mounted) Navigator.pop(ctx);
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: parent._accentColor,
+                                              foregroundColor: Colors.white,
+                                              padding: const EdgeInsets.symmetric(vertical: 14),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                              elevation: 0,
+                                            ),
+                                            child: Text('checkout.save'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Row(
+                            );
+                          },
+                        );
+                      },
+                    ),
+
+                    // ── Address Row + Map Preview (delivery only) ──
+                    if (!parent._isPickUp && !parent._isDineIn)
+                      FutureBuilder<DocumentSnapshot>(
+                        future: _userDocFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return _buildCheckoutRow(context, icon: Icons.location_on_outlined, iconColor: brandRed, title: '...', dividerColor: dividerColor);
+                          }
+                          final userData = snapshot.data?.data() as Map<String, dynamic>?;
+                          final profileStreet = userData?['address'] ?? '';
+                          final profileHouseNumber = userData?['houseNumber'] ?? '';
+                          final profilePostalCode = userData?['postalCode'] ?? '';
+                          final profileCity = userData?['city'] ?? '';
+                          final profileStreetFull = profileHouseNumber.toString().isNotEmpty ? '$profileStreet $profileHouseNumber' : profileStreet;
+
+                          final displayStreet = parent._selectedDeliveryAddress != null
+                              ? (parent._selectedDeliveryAddress!['houseNumber']!.isNotEmpty
+                                  ? '${parent._selectedDeliveryAddress!['street']} ${parent._selectedDeliveryAddress!['houseNumber']}'
+                                  : parent._selectedDeliveryAddress!['street'] ?? '')
+                              : profileStreetFull.toString();
+                          final displayCity = parent._selectedDeliveryAddress != null
+                              ? '${parent._selectedDeliveryAddress!['city']}, ${parent._selectedDeliveryAddress!['postalCode']}'
+                              : '$profileCity, $profilePostalCode';
+                          final hasAddress = displayStreet.toString().trim().isNotEmpty;
+
+                          // Trigger geocoding for map preview if we have an address
+                          if (hasAddress && !_addressGeocoded) {
+                            final fullAddress = '$displayStreet, $displayCity';
+                            _geocodeAddress(fullAddress);
+                          }
+
+                          // Determine address confirmation status
+                          // Level 1: No address at all → red
+                          // Level 2: Address exists but no geocoding (lat/lng) → orange warning
+                          // Level 3: Fully confirmed → no badge
+                          final bool isAddressUnconfirmed = hasAddress && (_addressLat == null || _addressLng == null);
+
+                          return GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              // Reset geocoding state so it can re-resolve after picker
+                              _addressGeocoded = false;
+                              _addressLat = null;
+                              _addressLng = null;
+                              parent._showAddressPickerSheet(
+                                context, setState,
+                                widget.firebaseUser?.uid ?? widget.authState.appUser?.uid ?? '',
+                                profileAddress: profileStreet.toString().trim().isNotEmpty ? {
+                                  'street': profileStreet.toString(), 'houseNumber': profileHouseNumber.toString(),
+                                  'postalCode': profilePostalCode.toString(), 'city': profileCity.toString(),
+                                } : null,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Column(
                                 children: [
-                                  Expanded(
-                                    child: Text(
-                                      snap.data!,
-                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13, fontWeight: FontWeight.w500),
+                                  // Address text row
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 2),
+                                          child: Icon(Icons.location_on_outlined, color: brandRed, size: 24),
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(hasAddress ? displayStreet.toString() : 'checkout.add_address'.tr(),
+                                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                                              if (hasAddress) ...[
+                                                const SizedBox(height: 2),
+                                                Text(displayCity.toString(), style: TextStyle(fontSize: 13, color: Colors.grey[500])),
+                                              ],
+                                              // Confirmation badge
+                                              if (!hasAddress) ...[
+                                                const SizedBox(height: 4),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                  decoration: BoxDecoration(color: const Color(0xFFFFF9C4), borderRadius: BorderRadius.circular(4)),
+                                                  child: Text('checkout.confirm_address'.tr(), style: const TextStyle(fontSize: 11, color: Color(0xFF5D5D5D))),
+                                                ),
+                                              ] else if (isAddressUnconfirmed) ...[
+                                                const SizedBox(height: 4),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(0xFFFFF3E0), // orange tint like Lieferando
+                                                    borderRadius: BorderRadius.circular(4),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      const Icon(Icons.info_outline, size: 12, color: Color(0xFFE65100)),
+                                                      const SizedBox(width: 4),
+                                                      Flexible(
+                                                        child: Text(
+                                                          'checkout.confirm_address_data'.tr(),
+                                                          style: const TextStyle(fontSize: 11, color: Color(0xFFE65100), fontWeight: FontWeight.w500),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                        Icon(Icons.chevron_right, color: chevronColor, size: 22),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // 🗺️ Mini Map Preview (only when geocoded)
+                                  if (_addressLat != null && _addressLng != null) ...[
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: SizedBox(
+                                        height: 120,
+                                        width: double.infinity,
+                                        child: IgnorePointer(
+                                          child: FlutterMap(
+                                            options: MapOptions(
+                                              initialCenter: LatLng(_addressLat!, _addressLng!),
+                                              initialZoom: 15,
+                                              interactionOptions: const InteractionOptions(
+                                                flags: InteractiveFlag.none,
+                                              ),
+                                            ),
+                                            children: [
+                                              TileLayer(
+                                                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                                userAgentPackageName: 'com.lokma.app',
+                                              ),
+                                              MarkerLayer(
+                                                markers: [
+                                                  Marker(
+                                                    point: LatLng(_addressLat!, _addressLng!),
+                                                    width: 40,
+                                                    height: 40,
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        color: brandRed,
+                                                        shape: BoxShape.circle,
+                                                        border: Border.all(color: Colors.white, width: 2),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: Colors.black.withValues(alpha: 0.3),
+                                                            blurRadius: 6,
+                                                            offset: const Offset(0, 2),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                      child: const Icon(Icons.location_on, color: Colors.white, size: 20),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+
+                                  Divider(height: 1, color: dividerColor),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                    // ── Delivery Notes Row ──
+                    _buildCheckoutRow(
+                      context,
+                      icon: Icons.description_outlined,
+                      iconColor: brandRed,
+                      title: 'checkout.delivery_notes'.tr(),
+                      trailing: Icon(Icons.add, color: neutralIcon, size: 24),
+                      dividerColor: dividerColor,
+                      onTap: () {
+                        // Show order note bottom sheet
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (ctx) => Padding(
+                            padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('checkout.delivery_notes'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 12),
+                                TextField(
+                                  controller: widget.noteController,
+                                  maxLines: 3, minLines: 2,
+                                  autofocus: true,
+                                  textInputAction: TextInputAction.done,
+                                  onSubmitted: (_) => Navigator.pop(ctx),
+                                  decoration: InputDecoration(
+                                    hintText: 'checkout.delivery_notes_hint'.tr(),
+                                    hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+                                    filled: true, fillColor: Theme.of(context).colorScheme.surface,
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                    contentPadding: const EdgeInsets.all(14),
+                                  ),
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: () => Navigator.pop(ctx),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: parent._accentColor,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                    ),
+                                    child: Text('cart.apply'.tr()),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+
+                    // ── Delivery Time Row ──
+                    if (!parent._isPickUp && !parent._isDineIn)
+                      _buildCheckoutRow(
+                        context,
+                        icon: Icons.access_time,
+                        iconColor: brandRed,
+                        title: 'checkout.delivery_time'.tr(),
+                        subtitle: parent._scheduledDeliverySlot != null
+                            ? '${parent._scheduledDeliverySlot!.day.toString().padLeft(2,'0')}.${parent._scheduledDeliverySlot!.month.toString().padLeft(2,'0')} — ${parent._scheduledDeliverySlot!.hour.toString().padLeft(2,'0')}:${parent._scheduledDeliverySlot!.minute.toString().padLeft(2,'0')}'
+                            : 'checkout.asap'.tr(),
+                        trailing: Icon(Icons.chevron_right, color: chevronColor, size: 22),
+                        dividerColor: null,
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (ctx) => Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('checkout.delivery_time'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 16),
+                                  parent._buildDeliveryTimePicker(setState),
+                                  const SizedBox(height: 16),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: parent._accentColor,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                      ),
+                                      child: Text('cart.apply'.tr()),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 16),
-                          ],
-                        );
-                      },
-                    ),
-
-                    // 1️⃣ SİPARİŞ DETAYI (Order Items - first)
-                    parent._buildCheckoutSectionHeader('', 'Sipariş Detayı'),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.fromBorderSide(cardBorder),
+                          );
+                        },
                       ),
+
+                    // ── Unavailability Preference Row (beneath delivery time) ──
+                    Builder(builder: (ctx) {
+                      String selectedLabel;
+                      switch (parent._unavailabilityPreference) {
+                        case 'substitute':
+                          selectedLabel = 'marketplace.product_unavailable_replace'.tr();
+                          break;
+                        case 'refund':
+                          selectedLabel = 'marketplace.product_unavailable_refund'.tr();
+                          break;
+                        case 'perItem':
+                          selectedLabel = 'marketplace.product_unavailable_choose'.tr();
+                          break;
+                        default:
+                          selectedLabel = 'marketplace.product_unavailable_refund'.tr();
+                      }
+                      return _buildCheckoutRow(
+                        context,
+                        icon: Icons.swap_horiz,
+                        iconColor: brandRed,
+                        title: 'marketplace.if_product_unavailable'.tr(),
+                        subtitle: selectedLabel,
+                        trailing: Icon(Icons.chevron_right, color: chevronColor, size: 22),
+                        dividerColor: null,
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                            ),
+                            builder: (ctx) => StatefulBuilder(
+                              builder: (ctx, setSheetState) => Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'marketplace.if_product_unavailable'.tr(),
+                                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Icon(Icons.info_outline, size: 16, color: Colors.grey[400]),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    parent._buildUnavailabilityOption(
+                                      title: 'marketplace.product_unavailable_replace'.tr(),
+                                      subtitle: 'marketplace.unavailable_replace_desc'.tr(),
+                                      value: 'substitute',
+                                      isDark: isDark,
+                                      setSheetState: (fn) { setSheetState(fn); setState(() {}); },
+                                    ),
+                                    const SizedBox(height: 8),
+                                    parent._buildUnavailabilityOption(
+                                      title: 'marketplace.product_unavailable_refund'.tr(),
+                                      subtitle: 'marketplace.unavailable_refund_desc'.tr(),
+                                      value: 'refund',
+                                      isDark: isDark,
+                                      setSheetState: (fn) { setSheetState(fn); setState(() {}); },
+                                    ),
+                                    const SizedBox(height: 8),
+                                    parent._buildUnavailabilityOption(
+                                      title: 'marketplace.product_unavailable_choose'.tr(),
+                                      subtitle: 'marketplace.unavailable_choose_desc'.tr(),
+                                      value: 'perItem',
+                                      isDark: isDark,
+                                      setSheetState: (fn) { setSheetState(fn); setState(() {}); },
+                                    ),
+                                    const SizedBox(height: 16),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: parent._accentColor,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                          padding: const EdgeInsets.symmetric(vertical: 14),
+                                        ),
+                                        child: Text('cart.apply'.tr()),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }),
+
+                    // ── Pickup / Dine-In Row ──
+                    if (parent._isPickUp || parent._isDineIn)
+                      _buildCheckoutRow(
+                        context,
+                        icon: parent._isDineIn ? Icons.restaurant : Icons.store,
+                        iconColor: brandRed,
+                        title: parent._isDineIn ? 'checkout.dine_in'.tr() : 'checkout.pickup'.tr(),
+                        subtitle: parent._butcherData?['companyName'] ?? widget.cart.butcherName ?? '',
+                        trailing: Icon(Icons.chevron_right, color: chevronColor, size: 22),
+                        dividerColor: null,
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (ctx) => Padding(
+                              padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(parent._isDineIn ? 'checkout.dine_in'.tr() : 'checkout.pickup'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 16),
+                                  if (parent._isPickUp && !parent._isDineIn)
+                                    parent._buildPickupTimePicker(setState),
+                                  if (parent._isDineIn) ...[
+                                    TextField(
+                                      controller: parent._tableNumberController,
+                                      readOnly: parent._scannedTableNumber != null,
+                                      keyboardType: TextInputType.number,
+                                      textInputAction: TextInputAction.done,
+                                      onSubmitted: (_) => Navigator.pop(ctx),
+                                      onChanged: parent._scannedTableNumber != null ? null : (val) => setState(() => parent._scannedTableNumber = val.trim().isNotEmpty ? val.trim() : null),
+                                      decoration: InputDecoration(
+                                        hintText: parent._scannedTableNumber != null ? 'QR ile belirlendi' : 'checkout.enter_table'.tr(),
+                                        filled: true, fillColor: Theme.of(context).colorScheme.surface,
+                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                        prefixIcon: Icon(parent._scannedTableNumber != null ? Icons.lock : Icons.table_bar, color: parent._scannedTableNumber != null ? Colors.green : neutralIcon, size: 20),
+                                      ),
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 16),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      style: ElevatedButton.styleFrom(backgroundColor: parent._accentColor, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)), padding: const EdgeInsets.symmetric(vertical: 14)),
+                                      child: Text('cart.apply'.tr()),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+
+                    // ═══ SECTION DIVIDER ═══
+                    Container(height: 8, color: sectionDividerColor),
+                    // ═══════════════════════════════════════
+                    // ORDER ITEMS SUMMARY (inside sectionDivider block)
+                    // ═══════════════════════════════════════
+                    Padding(
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
                           ...widget.cart.items.map<Widget>((item) => Padding(
@@ -6840,11 +7953,12 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               ],
                             ),
                           )),
-                          const Divider(),
+                          Divider(color: dividerColor),
+                          const SizedBox(height: 4),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Ara Toplam', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                              Text('checkout.subtotal'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                               Text('${widget.total.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
                             ],
                           ),
@@ -6853,7 +7967,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Teslimat Ücreti', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                                Text('checkout.delivery_fee'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 13)),
                                 Text('${widget.deliveryFee.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
                               ],
                             ),
@@ -6866,7 +7980,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                 Row(children: [
                                   const Icon(Icons.local_offer, size: 14, color: Colors.green),
                                   const SizedBox(width: 4),
-                                  Text('Kupon İndirimi', style: TextStyle(color: Colors.green[700], fontSize: 13)),
+                                  Text('checkout.coupon_discount'.tr(), style: TextStyle(color: Colors.green[700], fontSize: 13)),
                                 ]),
                                 Text('-${widget.couponDiscount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
                               ],
@@ -6877,7 +7991,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Hoş Geldin İndirimi', style: TextStyle(color: Colors.orange[700], fontSize: 13)),
+                                Text('checkout.welcome_discount'.tr(), style: TextStyle(color: Colors.orange[700], fontSize: 13)),
                                 Text('-${widget.firstOrderDiscountAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.orange[700], fontSize: 13, fontWeight: FontWeight.w600)),
                               ],
                             ),
@@ -6890,9 +8004,29 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                 Row(children: [
                                   const Text('💰', style: TextStyle(fontSize: 14)),
                                   const SizedBox(width: 4),
-                                  Text('Cüzdan Bakiyesi', style: TextStyle(color: Colors.green[700], fontSize: 13)),
+                                  Text('checkout.wallet'.tr(), style: TextStyle(color: Colors.green[700], fontSize: 13)),
                                 ]),
                                 Text('-${widget.walletApplied.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ],
+                          if (parent._tipAmount > 0) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('checkout.tip'.tr(), style: TextStyle(color: Colors.blue[700], fontSize: 13)),
+                                Text('+${parent._tipAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.blue[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ],
+                          if (parent._donationAmount > 0) ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('checkout.donation'.tr(), style: TextStyle(color: Colors.green[700], fontSize: 13)),
+                                Text('+${parent._donationAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
                               ],
                             ),
                           ],
@@ -6900,387 +8034,276 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Toplam', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 16)),
-                              Text('${widget.grandTotal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 16)),
+                              Text('checkout.total'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 16)),
+                              Text('${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 16)),
                             ],
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
 
-                    // 2️⃣ TESLİMAT ADRESİ (only for delivery)
-                    if (!parent._isPickUp && !parent._isDineIn) ...[
-                      parent._buildCheckoutSectionHeader('', 'Teslimat Adresi'),
-                      const SizedBox(height: 8),
-                      FutureBuilder<DocumentSnapshot>(
-                        future: _userDocFuture,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: cardColor,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.fromBorderSide(cardBorder),
-                              ),
-                              child: const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
-                            );
-                          }
-                          final userData = snapshot.data?.data() as Map<String, dynamic>?;
-                          final profileStreet = userData?['address'] ?? '';
-                          final profileHouseNumber = userData?['houseNumber'] ?? '';
-                          final profilePostalCode = userData?['postalCode'] ?? '';
-                          final profileCity = userData?['city'] ?? '';
-                          final profileStreetFull = profileHouseNumber.isNotEmpty ? '$profileStreet $profileHouseNumber' : profileStreet;
-                          final profileFullAddress = [profileStreetFull, '$profilePostalCode $profileCity'].where((s) => s.trim().isNotEmpty).join(', ');
-                          final hasProfileAddress = profileFullAddress.trim().isNotEmpty && profileStreet.toString().trim().isNotEmpty;
+                    // ═══ SECTION DIVIDER ═══
+                    Container(height: 8, color: sectionDividerColor),
 
-                          final displayAddress = parent._selectedDeliveryAddress != null
-                              ? [
-                                  parent._selectedDeliveryAddress!['houseNumber']!.isNotEmpty 
-                                      ? '${parent._selectedDeliveryAddress!['street']} ${parent._selectedDeliveryAddress!['houseNumber']}'
-                                      : parent._selectedDeliveryAddress!['street'] ?? '',
-                                  '${parent._selectedDeliveryAddress!['postalCode']} ${parent._selectedDeliveryAddress!['city']}'
-                                ].where((s) => s.trim().isNotEmpty).join(', ')
-                              : profileFullAddress;
-                          final hasAddress = parent._selectedDeliveryAddress != null || hasProfileAddress;
-
-                          return GestureDetector(
-                            onTap: () => parent._showAddressPickerSheet(
-                              context, 
-                              setState, 
-                              widget.firebaseUser?.uid ?? widget.authState.appUser?.uid ?? '',
-                              profileAddress: hasProfileAddress ? {
-                                'street': profileStreet.toString(),
-                                'houseNumber': profileHouseNumber.toString(),
-                                'postalCode': profilePostalCode.toString(),
-                                'city': profileCity.toString(),
-                              } : null,
-                            ),
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: cardColor,
-                                borderRadius: BorderRadius.circular(12),
-                                border: !hasAddress ? Border.all(color: Colors.amber.shade300) : Border.fromBorderSide(cardBorder),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    hasAddress ? Icons.location_on : Icons.warning_amber_rounded,
-                                    color: hasAddress ? neutralIcon : Colors.amber,
-                                    size: 22,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      hasAddress ? displayAddress : 'Adres bilgisi bulunamadı.\nAdres eklemek için dokunun.',
-                                      style: TextStyle(
-                                        color: hasAddress ? Theme.of(context).colorScheme.onSurface : Colors.amber.shade700,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  if (hasAddress)
-                                    Icon(Icons.edit_outlined, color: Colors.grey[500], size: 18),
-                                  if (!hasAddress)
-                                    Icon(Icons.add_circle_outline, color: Colors.amber, size: 20),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-
-                    // 3️⃣ TESLİMAT ZAMANI (Delivery time picker)
-                    if (!parent._isPickUp && !parent._isDineIn) ...[
-                      parent._buildCheckoutSectionHeader('', 'Teslimat Zamanı'),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.fromBorderSide(cardBorder),
-                        ),
-                        child: parent._buildDeliveryTimePicker(setState),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-
-                    // 3️⃣ GEL AL / MASA info
-                    if (parent._isPickUp || parent._isDineIn) ...[
-                      parent._buildCheckoutSectionHeader('', parent._isDineIn ? 'Masada Sipariş' : 'Gel Al'),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.fromBorderSide(cardBorder),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
+                    // ═══════════════════════════════════════
+                    // SECTION 2: GUTSCHEINE UND RABATTE
+                    // ═══════════════════════════════════════
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: Text('checkout.vouchers'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                    ),
+                    _buildCheckoutRow(
+                      context,
+                      icon: Icons.card_giftcard,
+                      iconColor: brandRed,
+                      title: parent._appliedCoupon?.isValid == true
+                          ? '${parent._appliedCoupon!.code} (-${parent._appliedCoupon!.calculatedDiscount?.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()})'
+                          : 'checkout.add_voucher'.tr(),
+                      trailing: parent._appliedCoupon?.isValid == true
+                          ? GestureDetector(
+                              onTap: () => setState(() { parent._appliedCoupon = null; widget.couponController.clear(); }),
+                              child: const Icon(Icons.close, color: Colors.red, size: 20),
+                            )
+                          : Icon(Icons.add, color: neutralIcon, size: 24),
+                      dividerColor: null,
+                      onTap: parent._appliedCoupon?.isValid == true ? null : () {
+                         showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                          builder: (ctx) => Padding(
+                            padding: EdgeInsets.fromLTRB(20, 24, 20, 24 + MediaQuery.of(ctx).viewInsets.bottom),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(parent._isDineIn ? Icons.restaurant : Icons.store, color: neutralIcon, size: 22),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        parent._butcherData?['companyName'] ?? widget.cart.butcherName ?? 'İşletme',
-                                        style: TextStyle(
-                                          color: Theme.of(context).colorScheme.onSurface,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                      if (parent._isDineIn && parent._scannedTableNumber != null)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 2),
-                                          child: Text(
-                                            'Masa ${parent._scannedTableNumber}  ✓',
-                                            style: TextStyle(
-                                              color: Colors.green[700],
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                    ],
+                                // Handle bar
+                                Center(
+                                  child: Container(
+                                    width: 40, height: 4,
+                                    decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
                                   ),
                                 ),
-                                const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                const SizedBox(height: 20),
+                                Text('checkout.vouchers'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                                const SizedBox(height: 16),
+                                TextField(
+                                  controller: widget.couponController,
+                                  textCapitalization: TextCapitalization.characters,
+                                  textInputAction: TextInputAction.done,
+                                  autofocus: true,
+                                  decoration: InputDecoration(
+                                    hintText: 'marketplace.enter_coupon'.tr(),
+                                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 15),
+                                    filled: true, fillColor: isDark ? Colors.grey[850] : const Color(0xFFF7F7F7),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: BorderSide(color: parent._accentColor, width: 2),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                    prefixIcon: Icon(Icons.local_offer_outlined, color: parent._accentColor, size: 22),
+                                  ),
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 1.5),
+                                ),
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 52,
+                                  child: ElevatedButton(
+                                    onPressed: parent._isValidatingCoupon ? null : () async {
+                                      final code = widget.couponController.text.trim();
+                                      if (code.isEmpty) return;
+                                      setState(() => parent._isValidatingCoupon = true);
+                                      final result = await parent._couponService.validateCoupon(
+                                        code: code, orderAmount: widget.total,
+                                        businessId: widget.cart.butcherId,
+                                        userId: FirebaseAuth.instance.currentUser?.uid,
+                                      );
+                                      setState(() { parent._isValidatingCoupon = false; parent._appliedCoupon = result; });
+                                      if (result.isValid && ctx.mounted) Navigator.pop(ctx);
+                                      if (!result.isValid && ctx.mounted) {
+                                        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(result.errorMessage ?? 'Geçersiz kupon'), backgroundColor: Colors.red));
+                                      }
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: parent._accentColor,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                                      elevation: 0,
+                                    ),
+                                    child: parent._isValidatingCoupon
+                                        ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                        : Text('cart.apply'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                                  ),
+                                ),
                               ],
                             ),
-                            // Gel Al: Pickup time
-                            if (parent._isPickUp && !parent._isDineIn) ...[
-                              const SizedBox(height: 14),
-                              const Divider(height: 1),
-                              const SizedBox(height: 14),
-                              parent._buildPickupTimePicker(setState),
-                            ],
-                            // Dine-in: Table number
-                            if (parent._isDineIn) ...[
-                              const SizedBox(height: 12),
-                              TextField(
-                                controller: parent._tableNumberController,
-                                readOnly: parent._scannedTableNumber != null,
-                                enabled: parent._scannedTableNumber == null,
-                                keyboardType: TextInputType.number,
-                                textInputAction: TextInputAction.done,
-                                onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                                onChanged: parent._scannedTableNumber != null ? null : (val) {
-                                  setState(() {
-                                    parent._scannedTableNumber = val.trim().isNotEmpty ? val.trim() : null;
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  hintText: parent._scannedTableNumber != null ? 'QR ile belirlendi' : 'Masa numaranızı girin',
-                                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
-                                  prefixIcon: Icon(
-                                    parent._scannedTableNumber != null ? Icons.lock : Icons.table_bar,
-                                    color: parent._scannedTableNumber != null ? Colors.green : neutralIcon,
-                                    size: 20,
-                                  ),
-                                  filled: true,
-                                  fillColor: Theme.of(context).colorScheme.surface,
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1A1A))),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                  isDense: true,
-                                ),
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
+                          ),
+                        );
+                      },
+                    ),
 
-                    // 4️⃣ ÜRÜN BULUNAMAZSA (Item Unavailability)
-                    parent._buildCollapsibleUnavailabilitySection(context, setState, widget.cart),
-                    const SizedBox(height: 20),
+                    // ═══ SECTION DIVIDER ═══
+                    Container(height: 8, color: sectionDividerColor),
 
-                    // 5️⃣ ÖDEME YÖNTEMİ (Payment Method)
-                    parent._buildCheckoutSectionHeader('', 'Ödeme Yöntemi'),
-                    const SizedBox(height: 8),
-                    // Wallet
-                    if (parent._walletBalance > 0) ...[
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.fromBorderSide(cardBorder),
-                        ),
+                    // ═══════════════════════════════════════
+                    // SECTION 3: DRIVER TIP (only for delivery)
+                    // ═══════════════════════════════════════
+                    if (!parent._isPickUp && !parent._isDineIn) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                         child: Row(
                           children: [
-                            const Text('💰', style: TextStyle(fontSize: 18)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Cüzdan Bakiyesi', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 13)),
-                                  Text('${parent._walletBalance.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()} mevcut', style: TextStyle(color: Colors.green[700], fontSize: 12)),
-                                ],
+                            Text('checkout.tip_title'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                            const SizedBox(width: 6),
+                            Icon(Icons.info_outline, size: 18, color: Colors.grey[400]),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('checkout.tip_subtitle'.tr(), style: TextStyle(fontSize: 13, color: Colors.grey[500], height: 1.4)),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            for (final tipVal in [1.50, 2.50, 3.50]) ...[
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () => setState(() => parent._tipAmount = parent._tipAmount == tipVal ? 0.0 : tipVal),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: parent._tipAmount == tipVal
+                                          ? parent._accentColor
+                                          : (isDark ? Colors.grey[800] : const Color(0xFFF5F5F5)),
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(
+                                        color: parent._tipAmount == tipVal ? parent._accentColor : (isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0)),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '${tipVal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                                        style: TextStyle(
+                                          color: parent._tipAmount == tipVal ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                            Switch.adaptive(
-                              value: parent._useWallet,
-                              activeTrackColor: Colors.green,
-                              onChanged: (val) {
-                                setState(() => parent._useWallet = val);
-                              },
+                              const SizedBox(width: 8),
+                            ],
+                            // "Andere / Diğer / Other" button
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  final controller = TextEditingController(text: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50 ? parent._tipAmount.toStringAsFixed(2) : '');
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    builder: (ctx) => Padding(
+                                      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text('checkout.tip_custom'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                                          const SizedBox(height: 12),
+                                          TextField(
+                                            controller: controller,
+                                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                            autofocus: true,
+                                            decoration: InputDecoration(
+                                              hintText: '0.00', filled: true, fillColor: Theme.of(context).colorScheme.surface,
+                                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                              suffixText: CurrencyUtils.getCurrencySymbol(),
+                                            ),
+                                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: ElevatedButton(
+                                              onPressed: () {
+                                                final val = double.tryParse(controller.text.replaceAll(',', '.')) ?? 0.0;
+                                                setState(() => parent._tipAmount = val);
+                                                Navigator.pop(ctx);
+                                              },
+                                              style: ElevatedButton.styleFrom(backgroundColor: parent._accentColor, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)), padding: const EdgeInsets.symmetric(vertical: 14)),
+                                              child: Text('cart.apply'.tr()),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
+                                        ? parent._accentColor
+                                        : (isDark ? Colors.grey[800] : const Color(0xFFF5F5F5)),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
+                                          ? parent._accentColor : (isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0)),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'checkout.tip_other'.tr(),
+                                      style: TextStyle(
+                                        color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
+                                            ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      Container(height: 8, color: sectionDividerColor),
                     ],
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.fromBorderSide(cardBorder),
-                      ),
-                      child: Column(
-                        children: [
-                          // Dine-in: payLater
-                          if (parent._isDineIn && parent._butcherData?['dineInPaymentMode'] != 'payFirst') ...[
-                            GestureDetector(
-                              onTap: () {
-                                setState(() => parent._paymentMethod = 'payLater');
-                              },
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: parent._paymentMethod == 'payLater'
-                                      ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1A1A))
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.schedule, size: 18, color: parent._paymentMethod == 'payLater' ? (Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white) : Colors.grey[600]),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Sonra Ödeyeceğim',
-                                      style: TextStyle(
-                                        color: parent._paymentMethod == 'payLater'
-                                            ? (Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white)
-                                            : Theme.of(context).colorScheme.onSurface,
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                          ],
-                          // Cash / Card / Card-on-Delivery pill toggle
-                          SimpleSegmentedToggle(
-                            selectedIndex: parent._paymentMethod == 'card' ? 1 : parent._paymentMethod == 'card_on_delivery' ? 2 : 0,
-                            onChanged: (index) {
-                              setState(() => parent._paymentMethod = index == 0 ? 'cash' : index == 1 ? 'card' : 'card_on_delivery');
-                            },
-                            items: [
-                              SimpleSegmentItem(
-                                label: (parent._isPickUp || parent._isDineIn) ? 'İşletmede Öde' : 'Kapıda Nakit',
-                                icon: (parent._isPickUp || parent._isDineIn) ? Icons.store_outlined : Icons.payments_outlined,
-                              ),
-                              SimpleSegmentItem(
-                                label: 'marketplace.pay_by_card'.tr(),
-                                icon: Icons.credit_card,
-                              ),
-                              // 3rd tab: Card at door (only for delivery, not pickup/dine-in)
-                              if (!parent._isPickUp && !parent._isDineIn)
-                                SimpleSegmentItem(
-                                  label: 'Kapıda Kart',
-                                  icon: Icons.contactless,
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
 
-                    // 5.5️⃣ 💚 BAĞIŞ YUVARLAMA (Donation Round-Up)
-                    if (parent._donationEnabled && parent._paymentMethod == 'card') ...[
-                      parent._buildCheckoutSectionHeader('', '💚 Topluluk Bağışı'),
-                      const SizedBox(height: 8),
-                      Builder(builder: (ctx) {
-                        // Dinamik yuvarlama hesaplaması
-                        final baseTotal = widget.grandTotal;
-                        final roundTo1 = (baseTotal.ceil()).toDouble(); // Bir sonraki 1€
-                        final roundTo5 = ((baseTotal / 5).ceil() * 5).toDouble(); // Bir sonraki 5€
-                        final donation1 = double.parse((roundTo1 - baseTotal).toStringAsFixed(2));
-                        final donation5 = double.parse((roundTo5 - baseTotal).toStringAsFixed(2));
+                    // ═══════════════════════════════════════
+                    // SECTION 4: DONATION (if enabled)
+                    // ═══════════════════════════════════════
+                    if (parent._donationEnabled) ...[
+                      Builder(builder: (context) {
                         final currency = CurrencyUtils.getCurrencySymbol();
-
-                        // Eğer tam sayıysa yuvarlama anlamsız — 1€ ekleme yerine bir sonraki tam sayıya
-                        final show1 = donation1 > 0.0; // Zaten tam sayıysa gösterme
-                        final show5 = donation5 > 0.0 && donation5 != donation1; // 5€ yuvarlama farklıysa göster
-
+                        final baseTotal = widget.grandTotal;
+                        final roundedUp = (baseTotal.ceil()).toDouble();
+                        final diff = roundedUp - baseTotal;
                         final options = <Map<String, dynamic>>[
-                          {'label': 'Hayır', 'donation': 0.0, 'roundedTotal': baseTotal},
-                          if (show1) {'label': '${roundTo1.toStringAsFixed(0)}$currency', 'donation': donation1, 'roundedTotal': roundTo1},
-                          if (show5) {'label': '${roundTo5.toStringAsFixed(0)}$currency', 'donation': donation5, 'roundedTotal': roundTo5},
+                          {'label': '${roundedUp.toStringAsFixed(2)}$currency', 'donation': diff > 0.01 ? diff : 0.0},
+                          {'label': '${(roundedUp + 0.50).toStringAsFixed(2)}$currency', 'donation': diff + 0.50},
+                          {'label': '${(roundedUp + 1.00).toStringAsFixed(2)}$currency', 'donation': diff + 1.00},
+                          {'label': 'checkout.no_donation'.tr(), 'donation': 0.0},
                         ];
-
-                        return Container(
+                        return Padding(
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(12),
-                            border: parent._donationAmount > 0
-                                ? Border.all(color: Colors.green.withValues(alpha: 0.4), width: 1.5)
-                                : Border.fromBorderSide(cardBorder),
-                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  const Text('🌱', style: TextStyle(fontSize: 20)),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      'Tutarınızı yuvarlayıp bağış yapın',
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.onSurface,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              Text('checkout.donation_title'.tr(), style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
                               const SizedBox(height: 4),
-                              Text(
-                                'Sipariş: ${baseTotal.toStringAsFixed(2)}$currency',
-                                style: TextStyle(color: Colors.grey[500], fontSize: 11),
-                              ),
+                              Text('checkout.donation_subtitle'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 11)),
                               const SizedBox(height: 12),
                               Row(
                                 children: [
@@ -7288,12 +8311,10 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                     if (i > 0) const SizedBox(width: 8),
                                     Expanded(
                                       child: GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            final newDonation = options[i]['donation'] as double;
-                                            parent._donationAmount = parent._donationAmount == newDonation ? 0.0 : newDonation;
-                                          });
-                                        },
+                                        onTap: () => setState(() {
+                                          final newDonation = options[i]['donation'] as double;
+                                          parent._donationAmount = parent._donationAmount == newDonation ? 0.0 : newDonation;
+                                        }),
                                         child: AnimatedContainer(
                                           duration: const Duration(milliseconds: 200),
                                           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
@@ -7312,28 +8333,14 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Text(
-                                                options[i]['label'] as String,
-                                                style: TextStyle(
-                                                  color: parent._donationAmount == (options[i]['donation'] as double)
-                                                      ? Colors.white
-                                                      : Theme.of(context).colorScheme.onSurface,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
+                                              Text(options[i]['label'] as String, style: TextStyle(
+                                                color: parent._donationAmount == (options[i]['donation'] as double) ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                                                fontWeight: FontWeight.w600, fontSize: 14)),
                                               if ((options[i]['donation'] as double) > 0) ...[
                                                 const SizedBox(height: 2),
-                                                Text(
-                                                  '+${(options[i]['donation'] as double).toStringAsFixed(2)}$currency bağış',
-                                                  style: TextStyle(
-                                                    color: parent._donationAmount == (options[i]['donation'] as double)
-                                                        ? Colors.white70
-                                                        : Colors.green[400],
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
+                                                Text('+${(options[i]['donation'] as double).toStringAsFixed(2)}$currency ${'checkout.donation_added_label'.tr()}', style: TextStyle(
+                                                  color: parent._donationAmount == (options[i]['donation'] as double) ? Colors.white70 : Colors.green[400],
+                                                  fontSize: 10, fontWeight: FontWeight.w500)),
                                               ],
                                             ],
                                           ),
@@ -7347,20 +8354,12 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                 const SizedBox(height: 10),
                                 Container(
                                   padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+                                  decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                                   child: Row(
                                     children: [
                                       const Icon(Icons.favorite, color: Colors.green, size: 16),
                                       const SizedBox(width: 6),
-                                      Expanded(
-                                        child: Text(
-                                          '${parent._donationAmount.toStringAsFixed(2)}$currency bağış eklendi 💚 Teşekkürler!',
-                                          style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w500),
-                                        ),
-                                      ),
+                                      Expanded(child: Text('checkout.donation_confirmed'.tr(namedArgs: {'amount': parent._donationAmount.toStringAsFixed(2) + currency}), style: TextStyle(color: Colors.green[700], fontSize: 12, fontWeight: FontWeight.w500))),
                                     ],
                                   ),
                                 ),
@@ -7369,144 +8368,80 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           ),
                         );
                       }),
-                      const SizedBox(height: 20),
+                      Container(height: 8, color: sectionDividerColor),
                     ],
 
-                    // 6️⃣ KUPON / PROMO KODU
-                    parent._buildCheckoutSectionHeader('', 'Kupon / Promo Kodu'),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: widget.couponController,
-                            textCapitalization: TextCapitalization.characters,
-                            textInputAction: TextInputAction.done,
-                            onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                            enabled: parent._appliedCoupon?.isValid != true,
-                            decoration: InputDecoration(
-                              hintText: 'marketplace.enter_coupon'.tr(),
-                              hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
-                              filled: true,
-                              fillColor: Theme.of(context).colorScheme.surface,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1A1A))),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              prefixIcon: Icon(Icons.local_offer_outlined, color: Colors.grey[500], size: 20),
-                            ),
-                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, letterSpacing: 1.2),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        if (parent._appliedCoupon?.isValid == true)
-                          SizedBox(
-                            height: 48,
-                            child: OutlinedButton(
-                              onPressed: () {
-                                setState(() {
-                                  parent._appliedCoupon = null;
-                                  widget.couponController.clear();
-                                });
-                              },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.red,
-                                side: const BorderSide(color: Colors.red),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: const Icon(Icons.close, size: 20),
-                            ),
-                          )
-                        else
-                          SizedBox(
-                            height: 48,
-                            child: ElevatedButton(
-                              onPressed: parent._isValidatingCoupon ? null : () async {
-                                final code = widget.couponController.text.trim();
-                                if (code.isEmpty) return;
-                                setState(() => parent._isValidatingCoupon = true);
-                                final result = await parent._couponService.validateCoupon(
-                                  code: code,
-                                  orderAmount: widget.total,
-                                  businessId: widget.cart.butcherId,
-                                  userId: FirebaseAuth.instance.currentUser?.uid,
-                                );
-                                setState(() {
-                                  parent._isValidatingCoupon = false;
-                                  parent._appliedCoupon = result;
-                                });
-                                if (!result.isValid && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(result.errorMessage ?? 'Geçersiz kupon'), backgroundColor: Colors.red),
-                                  );
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: accentColor,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              child: parent._isValidatingCoupon
-                                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : Text('cart.apply'.tr()),
-                            ),
-                          ),
-                      ],
-                    ),
-                    if (parent._appliedCoupon?.isValid == true)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.check_circle, color: Colors.green, size: 18),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${parent._appliedCoupon!.code} uygulandı! -${parent._appliedCoupon!.calculatedDiscount!.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
-                                style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 20),
+                    // ═══════════════════════════════════════
+                    // SECTION 5: PAYMENT METHOD (single row → full page)
+                    // ═══════════════════════════════════════
+                    _buildCheckoutRow(
+                      context,
+                      icon: Icons.payment,
+                      iconColor: brandRed,
+                      title: 'checkout.payment_title'.tr(),
+                      subtitle: _getPaymentMethodLabel(parent._paymentMethod),
+                      trailing: Icon(Icons.chevron_right, color: neutralIcon, size: 24),
+                      dividerColor: null,
+                      onTap: () async {
+                        final payMethodsSettings = (parent._butcherData?['paymentMethods'] as Map<String, dynamic>?) ?? {};
+                        final allowCard = payMethodsSettings['card'] != false;
+                        final allowCash = payMethodsSettings['cash'] != false;
+                        final allowPayLater = payMethodsSettings['payLater'] == true;
+                        final allowCardOnDelivery = payMethodsSettings['cardOnDelivery'] == true;
 
-                    // 7️⃣ SİPARİŞ NOTU (Order Note - last)
-                    parent._buildCheckoutSectionHeader('', 'Sipariş Notu (opsiyonel)'),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: widget.noteController,
-                      maxLines: 3,
-                      minLines: 2,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                      decoration: InputDecoration(
-                        hintText: 'Ör: Kapı zili çalışmıyor, lütfen arayın…',
-                        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
-                        filled: true,
-                        fillColor: Theme.of(context).colorScheme.surface,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : const Color(0xFF1A1A1A))),
-                        contentPadding: const EdgeInsets.all(14),
-                      ),
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
+                        final result = await Navigator.push<String>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => _PaymentMethodSelectionPage(
+                              currentMethod: parent._paymentMethod,
+                              accentColor: parent._accentColor,
+                              allowCard: allowCard,
+                              allowCash: allowCash,
+                              allowPayLater: allowPayLater,
+                              allowCardOnDelivery: allowCardOnDelivery,
+                            ),
+                          ),
+                        );
+                        if (result != null) {
+                          setState(() => parent._paymentMethod = result);
+                        }
+                      },
                     ),
-                    const SizedBox(height: 24),
+                    // Wallet toggle
+                    if (parent._walletBalance > 0) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.account_balance_wallet_outlined, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text('checkout.use_wallet'.tr(namedArgs: {'amount': parent._walletBalance.toStringAsFixed(2)}),
+                                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
+                            ),
+                            Switch.adaptive(
+                              value: parent._useWallet,
+                              onChanged: (v) => setState(() => parent._useWallet = v),
+                              activeTrackColor: parent._accentColor,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+
+                    // (Unavailability section moved to after Lieferzeit)
+
+                    // Extra spacing at bottom for safe scrolling
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
             ),
           ),
-          // Bottom submit button
+          // ─── Submit button + Legal ─────────────────────────
           Container(
-            padding: EdgeInsets.fromLTRB(20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
+            padding: EdgeInsets.fromLTRB(20, 10, 20, MediaQuery.of(context).padding.bottom),
             decoration: BoxDecoration(
               color: checkoutBg,
               boxShadow: [
@@ -7517,155 +8452,315 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                 ),
               ],
             ),
-            child: GestureDetector(
-              onTap: parent._isSubmitting ? null : () {
-                // Gel Al: require pickup time
-                if (parent._isPickUp && !parent._isDineIn && parent._selectedPickupSlot == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('cart.please_select_pickup_time'.tr()),
-                      backgroundColor: Colors.amber,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: parent._isSubmitting ? null : () {
+                    // Payment method check
+                    if (parent._paymentMethod == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.info_outline, color: Color(0xFFE65100), size: 18),
+                            const SizedBox(width: 8),
+                            Flexible(child: Text('checkout.select_payment_first'.tr(), style: const TextStyle(color: Color(0xFFE65100), fontWeight: FontWeight.w500, fontSize: 13))),
+                          ],
+                        ),
+                        backgroundColor: const Color(0xFFFFF3E0),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        duration: const Duration(seconds: 2),
+                      ));
+                      return;
+                    }
+                    if (parent._isPickUp && !parent._isDineIn && parent._selectedPickupSlot == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('cart.please_select_pickup_time'.tr()), backgroundColor: Colors.amber, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
+                      return;
+                    }
+                    if (parent._isDineIn && (parent._scannedTableNumber ?? parent._tableNumberController.text.trim()).isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('orders.please_enter_table_number')), backgroundColor: Colors.amber, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
+                      return;
+                    }
+                    parent._orderNote = widget.noteController.text;
+                    Navigator.pop(context);
+                    parent._submitOrder();
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: parent._isSubmitting
+                          ? Colors.grey
+                          : (parent._paymentMethod == null
+                              ? Colors.grey[400]
+                              : (parent._paymentMethod == 'card'
+                                  ? Colors.black
+                                  : accentColor)),
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: parent._paymentMethod != null
+                          ? [BoxShadow(color: (parent._paymentMethod == 'card' ? Colors.black : accentColor).withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                          : null,
                     ),
-                  );
-                  return;
-                }
-                // Dine-in: require table number
-                if (parent._isDineIn && (parent._scannedTableNumber ?? parent._tableNumberController.text.trim()).isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(tr('orders.please_enter_table_number')),
-                      backgroundColor: Colors.amber,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    child: Center(
+                      child: parent._isSubmitting
+                          ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2.5))
+                          : parent._paymentMethod == 'card'
+                              ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.apple, color: Colors.white, size: 22),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Pay · ${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  parent._isDineIn && parent._scannedTableNumber != null
+                                    ? '${'checkout.submit'.tr()} · Masa ${parent._scannedTableNumber}'
+                                    : '${'checkout.submit'.tr()} · ${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                                  style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
                     ),
-                  );
-                  return;
-                }
-                parent._orderNote = widget.noteController.text;
-                Navigator.pop(context);
-                parent._submitOrder();
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  color: parent._isSubmitting ? Colors.grey : accentColor,
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Legal disclaimer with tappable links
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  children: [
+                    Text('checkout.legal_disclaimer_prefix'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
+                    GestureDetector(
+                      onTap: () => _showLegalSheet(context, 'checkout.privacy_policy_title'.tr(), 'checkout.privacy_policy_content'.tr()),
+                      child: Text('checkout.legal_disclaimer_privacy'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 10, height: 1.4, decoration: TextDecoration.underline)),
                     ),
+                    Text('checkout.legal_disclaimer_and'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
+                    GestureDetector(
+                      onTap: () => _showLegalSheet(context, 'checkout.terms_title'.tr(), 'checkout.terms_content'.tr()),
+                      child: Text('checkout.legal_disclaimer_terms'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 10, height: 1.4, decoration: TextDecoration.underline)),
+                    ),
+                    Text('checkout.legal_disclaimer_suffix'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
                   ],
                 ),
-                child: Center(
-                  child: parent._isSubmitting
-                      ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2.5))
-                      : Text(
-                          parent._isDineIn && parent._scannedTableNumber != null
-                            ? 'Siparişi Gönder · Masa ${parent._scannedTableNumber}'
-                            : 'Siparişi Gönder · ${(widget.grandTotal + parent._donationAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.surface,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+}
+
+/// ────────────────────────────────────────────────────────────────
+/// Full-page payment method selection — Lieferando "Bezahlmethode wählen" style
+/// ────────────────────────────────────────────────────────────────
+class _PaymentMethodSelectionPage extends StatefulWidget {
+  final String? currentMethod;
+  final Color accentColor;
+  final bool allowCard;
+  final bool allowCash;
+  final bool allowPayLater;
+  final bool allowCardOnDelivery;
+
+  const _PaymentMethodSelectionPage({
+    required this.currentMethod,
+    required this.accentColor,
+    required this.allowCard,
+    required this.allowCash,
+    required this.allowPayLater,
+    required this.allowCardOnDelivery,
+  });
+
+  @override
+  State<_PaymentMethodSelectionPage> createState() => _PaymentMethodSelectionPageState();
+}
+
+class _PaymentMethodSelectionPageState extends State<_PaymentMethodSelectionPage> {
+  late String? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _selected = widget.currentMethod;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white;
+    final cardBg = isDark ? Colors.grey[900]! : Colors.white;
+    final borderColor = isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0);
+    final selectedBorderColor = widget.accentColor;
+
+    // Build payment options
+    final options = <({String key, String label, Widget icon})>[
+      if (widget.allowCard) (
+        key: 'card',
+        label: 'checkout.card'.tr(),
+        icon: Container(
+          width: 36, height: 24,
+          decoration: BoxDecoration(
+            border: Border.all(color: borderColor, width: 1),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Center(
+            child: Icon(Icons.credit_card, size: 16, color: isDark ? Colors.grey[300] : Colors.grey[700]),
+          ),
+        ),
+      ),
+      if (widget.allowCash) (
+        key: 'cash',
+        label: 'checkout.cash'.tr(),
+        icon: Container(
+          width: 36, height: 24,
+          decoration: BoxDecoration(
+            color: const Color(0xFF4CAF50),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: const Center(child: Icon(Icons.payments_outlined, size: 16, color: Colors.white)),
+        ),
+      ),
+      if (widget.allowCardOnDelivery) (
+        key: 'cardOnDelivery',
+        label: 'checkout.card_on_delivery'.tr(),
+        icon: Container(
+          width: 36, height: 24,
+          decoration: BoxDecoration(
+            color: const Color(0xFF2196F3),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: const Center(child: Icon(Icons.contactless, size: 16, color: Colors.white)),
+        ),
+      ),
+      if (widget.allowPayLater) (
+        key: 'payLater',
+        label: 'checkout.pay_later'.tr(),
+        icon: Container(
+          width: 36, height: 24,
+          decoration: BoxDecoration(
+            color: const Color(0xFF9C27B0),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: const Center(child: Icon(Icons.schedule, size: 16, color: Colors.white)),
+        ),
+      ),
+    ];
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      appBar: AppBar(
+        backgroundColor: bgColor,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
+          onPressed: () => Navigator.pop(context),
+        ),
+        centerTitle: true,
+        title: Text(
+          'checkout.select_payment_method'.tr(),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Subtle top divider
+            Container(height: 1, color: borderColor),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    // Section header
+                    Text(
+                      'checkout.payment_methods'.tr(),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Payment option cards
+                    ...options.map((opt) {
+                      final isSelected = _selected == opt.key;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => setState(() => _selected = opt.key),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            decoration: BoxDecoration(
+                              color: cardBg,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected ? selectedBorderColor : borderColor,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                opt.icon,
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    opt.label,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Icon(Icons.check_circle, color: widget.accentColor, size: 22),
+                              ],
+                            ),
                           ),
                         ),
+                      );
+                    }),
+                  ],
                 ),
               ),
             ),
-          ),
-          // ─── Legal disclaimer ─────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            child: Text(
-              'cart.legal_disclaimer'.tr(),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isDark ? Colors.grey[500] : Colors.grey[500],
-                fontSize: 11,
-                height: 1.4,
+            // Bottom confirm button
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: _selected != null ? () => Navigator.pop(context, _selected) : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.accentColor,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey[300],
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    'checkout.confirm'.tr(),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Step indicator: ● Sepet (done) → ● Ödeme (current) → ○ Onay
-  Widget _buildStepIndicator(BuildContext context, Color accentColor) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeStepColor = isDark ? Colors.white : const Color(0xFF1A1A1A);
-    final inactiveStepColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Row(
-        children: [
-          _buildStep(context, 'Sepet', 0, activeStepColor, inactiveColor: inactiveStepColor, isDone: true),
-          _buildStepConnector(context, activeStepColor, isDone: true),
-          _buildStep(context, 'Ödeme', 1, activeStepColor, inactiveColor: inactiveStepColor, isCurrent: true),
-          _buildStepConnector(context, activeStepColor, isDone: false),
-          _buildStep(context, 'Onay', 2, activeStepColor, inactiveColor: inactiveStepColor),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep(BuildContext context, String label, int index, Color activeColor, {Color inactiveColor = Colors.grey, bool isDone = false, bool isCurrent = false}) {
-    return Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: (isDone || isCurrent) ? activeColor : inactiveColor,
-            ),
-            child: Center(
-              child: isDone
-                  ? Icon(Icons.check, color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white, size: 16)
-                  : Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        color: isCurrent
-                            ? (Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.white)
-                            : Colors.grey[600],
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: (isDone || isCurrent) ? activeColor : Colors.grey[500],
-              fontSize: 11,
-              fontWeight: (isDone || isCurrent) ? FontWeight.w600 : FontWeight.w400,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepConnector(BuildContext context, Color activeColor, {required bool isDone}) {
-    return Container(
-      height: 2,
-      width: 24,
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: isDone ? activeColor : Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(1),
+          ],
+        ),
       ),
     );
   }
 }
-

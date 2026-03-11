@@ -34,6 +34,7 @@ class KermesParkingScreen extends StatefulWidget {
 
 class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTickerProviderStateMixin {
   late AnimationController _flashController;
+  // ignore: unused_field
   late Animation<double> _flashAnimation;
   
   // Collapsible state - hangi kartlar açık
@@ -41,7 +42,7 @@ class _KermesParkingScreenState extends State<KermesParkingScreen> with SingleTi
   
   // Admin/Personel kontrolü
   bool _isAdmin = false;
-  String? _userRole;
+  String? _userRole; // ignore: unused_field
   
   // Realtime parking data
   List<KermesParkingInfo> _parkingList = [];

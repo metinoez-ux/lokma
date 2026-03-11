@@ -43,7 +43,6 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
   static const Color cardLight = Colors.white;
   static const Color cardDark = Color(0xFF1F2937);
   static const Color textDark = Color(0xFF111827);
-  static const Color textLight = Color(0xFFF3F4F6);
   static const Color surfaceObsidian = Color(0xFF1E293B);
 
   @override
@@ -301,6 +300,43 @@ class _KermesCardState extends State<KermesCard> with SingleTickerProviderStateM
                   ),
                 ),
               ),
+
+              // TUNA Sponsor Badge (bottom-left, standardized style)
+              if (widget.event.sponsor == KermesSponsor.tuna)
+                Positioned(
+                  bottom: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFA01E22),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.verified, color: Colors.white, size: 13),
+                        SizedBox(width: 4),
+                        Text(
+                          'TUNA',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
 

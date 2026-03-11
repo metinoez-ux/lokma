@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
@@ -162,8 +163,6 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
     final bgColor = isDark ? const Color(0xFF1C1C1E) : Colors.white;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    final statusBarHeight = MediaQuery.of(context).padding.top;
-
     return Container(
       constraints: BoxConstraints(
         maxHeight: screenHeight * 0.90, // Limit to 90% of screen height
@@ -202,7 +201,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                       const SizedBox(width: 36), // Balance close button width
                       Expanded(
                         child: Text(
-                          'Adres girin',
+                          tr('address.enter_address'),
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
@@ -245,21 +244,22 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                 googleAPIKey: googleApiKey,
                 boxDecoration: const BoxDecoration(), // Eliminate random borders/shadows from package
                 inputDecoration: InputDecoration(
-                  hintText: 'Tam adres',
-                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
+                  hintText: tr('address.full_address'),
+                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14, fontWeight: FontWeight.w300),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey[400], size: 20),
                   filled: true,
                   fillColor: bgColor,
-                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[400]!, width: 1),
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(color: isDark ? Colors.grey[700]! : Colors.grey[300]!, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF2C55A6), width: 1.5), // matching the blue border from screenshot
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide(color: isDark ? Colors.grey[500]! : Colors.grey[400]!, width: 1.5),
                   ),
                 ),
-                textStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16),
+                textStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w400),
                 debounceTime: 400,
                 countries: const ['de'],
                 isLatLngRequired: true,
@@ -318,7 +318,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                     size: 22
                   ),
               title: Text(
-                'Mevcut Konum',
+                tr('address.current_location'),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 15,
@@ -342,7 +342,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                 : Padding(
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
-                      'Konum bulunuyor...',
+                      tr('address.finding_location'),
                       style: TextStyle(
                         color: Colors.grey[500], 
                         fontSize: 14,
@@ -372,7 +372,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Son Aramalar',
+                    tr('address.recent_searches'),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -386,7 +386,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
                         setState(() => _isEditing = !_isEditing);
                       },
                       child: Text(
-                        _isEditing ? 'Bitti' : 'Düzenle',
+                        _isEditing ? tr('address.done') : tr('address.edit'),
                         style: TextStyle(
                           fontSize: 14,
                           color: const Color(0xFFFB335B),
@@ -495,7 +495,7 @@ class _AddressSelectionSheetState extends ConsumerState<AddressSelectionSheet> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Text(
-                'Kayıtlı Adresler',
+                tr('address.saved_addresses'),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,

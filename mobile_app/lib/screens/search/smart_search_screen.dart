@@ -25,8 +25,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
   // 🔧 Track expanded state for each group
   final Set<String> _expandedGroups = {};
   
-  // 🆕 Sort type local selection (synced to provider on apply)
-  final String _selectedSort = 'En Yakın';
+
 
   @override
   void initState() {
@@ -88,7 +87,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
     final isDark = theme.brightness == Brightness.dark;
     
     // 🆕 Lieferando tarzı: Tema uyumlu arka plan
-    final backgroundColor = isDark ? const Color(0xFF0D0D0D) : Colors.white;
+    final backgroundColor = isDark ? const Color(0xFF0D0D0D) : const Color(0xFFF2EEE9);
     final textColor = isDark ? Colors.white : Colors.black87;
     final hintColor = isDark ? Colors.grey[500] : Colors.grey[400];
     final cardColor = isDark ? const Color(0xFF1A1A1A) : Colors.grey[100];
@@ -151,7 +150,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                   padding: const EdgeInsets.all(8),
                   child: Icon(
                     Icons.arrow_back_ios_new_rounded,
-                    color: lokmaPink,
+                    color: const Color(0xFF3E3E40),
                     size: 20,
                   ),
                 ),
@@ -179,11 +178,11 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                         child: TextField(
                           controller: _searchController,
                           focusNode: _focusNode,
-                          style: TextStyle(color: textColor, fontSize: 15),
+                          style: TextStyle(color: textColor, fontSize: 14, fontWeight: FontWeight.w400),
                           textInputAction: TextInputAction.search,
                           decoration: InputDecoration(
-                            hintText: tr('search.restoran_mi_ariyorsunuz'),
-                            hintStyle: TextStyle(color: hintColor, fontSize: 15),
+                            hintText: tr('discovery.search_food_restaurant_cuisine'),
+                            hintStyle: TextStyle(color: hintColor, fontSize: 14, fontWeight: FontWeight.w300),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
                             isDense: true,
@@ -249,11 +248,11 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                     context.pop();
                   },
                   child: Text(
-                    'Abbrechen',
-                    style: TextStyle(
-                      color: lokmaPink,
+                    tr('common.cancel'),
+                    style: const TextStyle(
+                      color: Color(0xFF3E3E40),
                       fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                 ),
@@ -372,11 +371,11 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                       GestureDetector(
                         onTap: () => Navigator.pop(sheetContext),
                         child: Text(
-                          tr('search.i_ptal'),
-                          style: TextStyle(
-                            color: lokmaPink,
+                          tr('common.cancel'),
+                          style: const TextStyle(
+                            color: Color(0xFF3E3E40),
                             fontSize: 15,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ),
@@ -394,11 +393,11 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                           setSheetState(() => localSelectedSort = 'En Yakın');
                         },
                         child: Text(
-                          'Sıfırla',
-                          style: TextStyle(
-                            color: lokmaPink,
+                          tr('common.reset'),
+                          style: const TextStyle(
+                            color: Color(0xFF3E3E40),
                             fontSize: 15,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ),
@@ -614,7 +613,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Aranıyor...',
+            tr('common.searching'),
             style: TextStyle(color: textColor, fontSize: 14),
           ),
         ],
@@ -635,7 +634,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Farklı bir arama terimi deneyin',
+            tr('common.try_different_search_term'),
             style: TextStyle(color: textColor.withValues(alpha: 0.4), fontSize: 13),
           ),
         ],
@@ -713,11 +712,11 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      tr('search.daha_fazla_goster'),
-                      style: TextStyle(color: lokmaPink, fontSize: 13, fontWeight: FontWeight.w500),
+                      tr('common.show_more'),
+                      style: TextStyle(color: const Color(0xFF3E3E40), fontSize: 13, fontWeight: FontWeight.w400),
                     ),
                     const SizedBox(width: 4),
-                    Icon(Icons.keyboard_arrow_down_rounded, color: lokmaPink, size: 18),
+                    Icon(Icons.keyboard_arrow_down_rounded, color: const Color(0xFF3E3E40), size: 18),
                   ],
                 ),
               ),
@@ -755,7 +754,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: lokmaPink.withValues(alpha: 0.1),
+                color: textColor.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: result.imageUrl != null
@@ -799,7 +798,7 @@ class _SmartSearchScreenState extends ConsumerState<SmartSearchScreen> {
             // 🆕 Sade buton - sadece ok ikonu
             Icon(
               Icons.chevron_right_rounded,
-              color: lokmaPink,
+              color: const Color(0xFF3E3E40),
               size: 24,
             ),
           ],

@@ -657,12 +657,10 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
         );
 
         // Calculate NFC card total
+        // ignore: unused_local_variable
         final nfcOrders = completedOrders.where((o) => 
           o.paymentMethod == 'card_on_delivery' || o.paymentMethod == 'kapidakart' || o.paymentMethod == 'card_nfc'
         ).toList();
-        final nfcTotal = nfcOrders.fold<double>(
-          0, (sum, o) => sum + o.totalAmount
-        );
 
         // Calculate online card total
         final cardOrders = completedOrders.where((o) => 

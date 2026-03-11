@@ -79,6 +79,12 @@ class PromotionPopupService {
         return 6;
       case PromotionType.loyaltyCard:
         return 7;
+      case PromotionType.flashSale:
+        return 0;
+      case PromotionType.cashback:
+        return 8;
+      default:
+        return 99;
     }
   }
 
@@ -389,6 +395,9 @@ class PromotionPopupService {
       case PromotionType.minOrderDiscount: return '💰';
       case PromotionType.happyHour: return '⏰';
       case PromotionType.loyaltyCard: return '🎖';
+      case PromotionType.flashSale: return '⚡';
+      case PromotionType.cashback: return '💸';
+      default: return '🎉';
     }
   }
 }

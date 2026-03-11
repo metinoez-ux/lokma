@@ -81,9 +81,9 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white,
+      backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : const Color(0xFFF2EEE9),
       appBar: AppBar(
-        backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white,
+        backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : const Color(0xFFF2EEE9),
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         elevation: 0,
@@ -93,7 +93,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
             Icon(Icons.notifications_rounded, size: 20, color: Theme.of(context).colorScheme.onSurface),
             const SizedBox(width: 6),
             Text(
-              'Bildirimler',
+              tr('profile.notifications'),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w600,
@@ -132,7 +132,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
           if (snapshot.hasError) {
             return Center(
               child: Text(
-                'Bir hata oluştu.',
+                'marketplace.error_occurred'.tr(),
                 style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               ),
             );
@@ -152,7 +152,7 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Henüz bildiriminiz yok.',
+                    tr('notifications.no_notifications_yet'),
                     style: TextStyle(
                       fontSize: 18,
                       color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -363,17 +363,34 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
   static String _orderTypeLabel(String orderType) {
     switch (orderType.toLowerCase()) {
       case 'delivery':
-        return 'Kurye Siparişi';
+        return tr('orders.courier_delivery_order');
       case 'pickup':
-        return 'Gel-Al Siparişi';
+        return tr('orders.pickup_order');
       case 'dine-in':
       case 'masa':
-        return 'Masa Siparişi';
+        return tr('orders.dine_in_order');
       case 'group':
       case 'group_table':
-        return 'Toplu Masa Siparişi';
+        return tr('orders.group_table_order');
       default:
-        return 'Sipariş';
+        return tr('orders.order_generic');
+    }
+  }
+
+  static IconData _orderTypeIcon(String orderType) {
+    switch (orderType.toLowerCase()) {
+      case 'delivery':
+        return Icons.delivery_dining;
+      case 'pickup':
+        return Icons.storefront_rounded;
+      case 'dine-in':
+      case 'masa':
+        return Icons.restaurant_rounded;
+      case 'group':
+      case 'group_table':
+        return Icons.groups_rounded;
+      default:
+        return Icons.receipt_long_rounded;
     }
   }
 
@@ -614,15 +631,27 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              _orderTypeLabel(group.orderType),
-                              style: TextStyle(
-                                color: cardTextColor,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Row(
+                              children: [
+                                Icon(
+                                  _orderTypeIcon(group.orderType),
+                                  size: 16,
+                                  color: cardTextColor,
+                                ),
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    _orderTypeLabel(group.orderType),
+                                    style: TextStyle(
+                                      color: cardTextColor,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -786,7 +815,6 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                   ...List.generate(stepsToShow.length, (i) {
                     final stepStatus = stepsToShow[i];
                     final stepMeta = widget.metaFn(stepStatus);
-                    final stepColor = Color(stepMeta['color'] as int);
                     final isCompleted = completedStatuses.contains(stepStatus);
                     final isLast = i == stepsToShow.length - 1;
                     // Only show timestamp for completed steps — prevents stale timestamps

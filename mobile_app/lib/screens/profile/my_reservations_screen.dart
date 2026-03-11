@@ -1,10 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:lokma_app/services/calendar_service.dart';
 
 /// Shows all reservations for the current user, ordered by date.
 /// Displays status (pending/confirmed/rejected/cancelled) with clear icons.
@@ -341,7 +339,13 @@ class MyReservationsScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
               child: OutlinedButton.icon(
-                onPressed: () => _showCalendarOptions(context, businessName, resDate, partySize, tableCardNumbers),
+                onPressed: () => CalendarService.addReservationEvent(
+                  context: context,
+                  reservationTime: resDate,
+                  businessName: businessName,
+                  partySize: partySize,
+                  tableCardNumbers: tableCardNumbers,
+                ),
                 icon: const Icon(Icons.calendar_month, size: 16),
                 label: Text(tr('profile.add_to_calendar')),
                 style: OutlinedButton.styleFrom(
@@ -458,189 +462,8 @@ class MyReservationsScreen extends StatelessWidget {
     }
   }
 
-  // ─── Calendar Integration ───
-
-  void _showCalendarOptions(
-    BuildContext context,
-    String businessName,
-    DateTime resDate,
-    int partySize,
-    List<int> tableCardNumbers,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Takvime Ekle',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _calendarOptionTile(
-                context: ctx,
-                icon: Icons.event,
-                iconColor: const Color(0xFF4285F4),
-                title: 'Google Takvim',
-                subtitle: 'Tarayıcıda açılır',
-                isDark: isDark,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _openGoogleCalendar(businessName, resDate, partySize, tableCardNumbers);
-                },
-              ),
-              const SizedBox(height: 8),
-              _calendarOptionTile(
-                context: ctx,
-                icon: Icons.apple,
-                iconColor: isDark ? Colors.white : Colors.black,
-                title: 'Apple Takvim / iCal',
-                subtitle: 'Cihaz takvim uygulamasında açılır',
-                isDark: isDark,
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _openICalFile(context, businessName, resDate, partySize, tableCardNumbers);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _calendarOptionTile({
-    required BuildContext context,
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required bool isDark,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: iconColor, size: 28),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: isDark ? Colors.white54 : Colors.black45,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right, color: isDark ? Colors.white38 : Colors.black26),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _openGoogleCalendar(
-    String businessName,
-    DateTime resDate,
-    int partySize,
-    List<int> tableCardNumbers,
-  ) {
-    final endDate = resDate.add(const Duration(hours: 2));
-    String formatGCalDate(DateTime d) => d.toUtc().toIso8601String().replaceAll(RegExp(r'[-:]'), '').replaceAll(RegExp(r'\.\d+'), '');
-    final start = formatGCalDate(resDate);
-    final end = formatGCalDate(endDate);
-    final title = Uri.encodeComponent('Masa Rezervasyonu – $businessName');
-    final tableInfo = tableCardNumbers.isNotEmpty ? '\nMasa Kart No: ${tableCardNumbers.join(", ")}' : '';
-    final details = Uri.encodeComponent('$partySize kişilik masa rezervasyonu$tableInfo\nLOKMA Marketplace ile rezerve edildi');
-    final location = Uri.encodeComponent(businessName);
-
-    final url = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=$title&dates=$start/$end&details=$details&location=$location';
-    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-  }
-
-  Future<void> _openICalFile(
-    BuildContext context,
-    String businessName,
-    DateTime resDate,
-    int partySize,
-    List<int> tableCardNumbers,
-  ) async {
-    final endDate = resDate.add(const Duration(hours: 2));
-    String formatICalDate(DateTime d) => d.toUtc().toIso8601String().replaceAll(RegExp(r'[-:]'), '').replaceAll(RegExp(r'\.\d+'), '');
-    final start = formatICalDate(resDate);
-    final end = formatICalDate(endDate);
-    final tableInfo = tableCardNumbers.isNotEmpty ? '. Masa Kart No: ${tableCardNumbers.join(", ")}' : '';
-
-    final icsContent = '''
-BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//LOKMA Marketplace//Reservation//TR
-BEGIN:VEVENT
-DTSTART:$start
-DTEND:$end
-SUMMARY:Masa Rezervasyonu – $businessName
-DESCRIPTION:$partySize kişilik masa rezervasyonu$tableInfo. LOKMA Marketplace ile rezerve edildi.
-LOCATION:$businessName
-STATUS:CONFIRMED
-END:VEVENT
-END:VCALENDAR''';
-
-    try {
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/rezervasyon.ics');
-      await file.writeAsString(icsContent);
-
-      // On iOS, this will open the native calendar invite screen
-      await launchUrl(
-        Uri.file(file.path),
-        mode: LaunchMode.externalApplication,
-      );
-    } catch (e) {
-      debugPrint('Error opening iCal file: $e');
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr('profile.could_not_open_calendar_file')),
-            backgroundColor: Colors.amber,
-          ),
-        );
-      }
-    }
-  }
+  // ─── Calendar Integration (Native via CalendarService) ───
+  // All calendar logic delegated to CalendarService.addReservationEvent()
 }
 
 class _StatusInfo {

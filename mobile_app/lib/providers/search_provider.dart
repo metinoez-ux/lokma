@@ -136,6 +136,43 @@ class SearchState {
 class SearchNotifier extends Notifier<SearchState> {
   Timer? _debounce;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
+  // 🚀 PERFORMANCE: Cache business data to avoid re-fetching on every keystroke
+  List<QueryDocumentSnapshot<Map<String, dynamic>>>? _cachedBusinessDocs;
+  DateTime? _cacheTimestamp;
+  static const _cacheDuration = Duration(minutes: 5);
+  
+  /// 🚀 PRE-SEED: Accept business data from the main screen (already loaded via stream)
+  /// This eliminates the need to fetch from Firestore during search entirely.
+  void seedBusinessData(List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    _cachedBusinessDocs = docs;
+    _cacheTimestamp = DateTime.now();
+    print('🔍 SearchProvider: Seeded ${docs.length} businesses from main screen');
+  }
+  
+  /// Get businesses from cache or Firestore (fallback only)
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> _getBusinesses({int limit = 200}) async {
+    // Return cache if available (seeded from main screen or previously fetched)
+    if (_cachedBusinessDocs != null && _cacheTimestamp != null &&
+        DateTime.now().difference(_cacheTimestamp!) < _cacheDuration) {
+      return _cachedBusinessDocs!;
+    }
+    
+    // Fallback: Fetch from Firestore only if not seeded
+    final snapshot = await _firestore
+        .collection('businesses')
+        .limit(limit)
+        .get();
+    _cachedBusinessDocs = snapshot.docs;
+    _cacheTimestamp = DateTime.now();
+    return _cachedBusinessDocs!;
+  }
+  
+  /// Invalidate cache (call when data may have changed)
+  void invalidateCache() {
+    _cachedBusinessDocs = null;
+    _cacheTimestamp = null;
+  }
 
   @override
   SearchState build() => SearchState();
@@ -158,7 +195,7 @@ class SearchNotifier extends Notifier<SearchState> {
 
     state = state.copyWith(query: query, isLoading: true);
 
-    _debounce = Timer(const Duration(milliseconds: 300), () {
+    _debounce = Timer(const Duration(milliseconds: 150), () {
       _performSearch(query);
     });
   }
@@ -296,33 +333,9 @@ class SearchNotifier extends Notifier<SearchState> {
         ));
       }
 
-      // 2. Search Products (segment-specific)
-      final productResults = await _searchProducts(queryLower);
-      if (productResults.isNotEmpty) {
-        // Segment-specific title and icon
-        String productTitle;
-        String productIcon;
-        switch (state.activeSegment) {
-          case SearchSegment.yemek:
-            productTitle = 'Yemekler';
-            productIcon = '🍕';
-            break;
-          case SearchSegment.market:
-            productTitle = 'Market Ürünleri';
-            productIcon = '📦';
-            break;
-          case SearchSegment.kermes:
-            productTitle = 'Kermes Menüsü';
-            productIcon = '🥘';
-            break;
-        }
-        
-        groups.add(SearchResultGroup(
-          title: productTitle,
-          icon: productIcon,
-          results: productResults,
-        ));
-      }
+      // 2. Skip expensive product subcollection queries
+      // Products are discovered when user taps a business result (like Lieferando/Wolt)
+      // This eliminates N+1 Firestore queries that caused 3-4 second delays
 
       // 3. Category matches (static)
       final categoryResults = _searchCategories(queryLower);
@@ -365,12 +378,9 @@ class SearchNotifier extends Notifier<SearchState> {
     };
 
     try {
-      final butchersSnapshot = await _firestore
-          .collection('businesses')
-          .limit(200)
-          .get();
+      final businessDocs = await _getBusinesses(limit: 200);
 
-      for (final doc in butchersSnapshot.docs) {
+      for (final doc in businessDocs) {
         final data = doc.data();
         // Use correct Firestore field names: companyName and brand
         // Apply Turkish character normalization for flexible search
@@ -537,6 +547,7 @@ class SearchNotifier extends Notifier<SearchState> {
   }
 
   /// Search products from business menus and kermes menus based on active segment
+  // ignore: unused_element
   Future<List<SearchResult>> _searchProducts(String query) async {
     final results = <SearchResult>[];
     final queryNormalized = _normalizeTurkish(query);
@@ -584,14 +595,11 @@ class SearchNotifier extends Notifier<SearchState> {
 
     try {
       // First get businesses matching the types
-      final businessesSnapshot = await _firestore
-          .collection('businesses')
-          .limit(50)
-          .get();
+      final businessDocs = await _getBusinesses(limit: 200);
 
       // Filter businesses by type
       final matchingBusinesses = <String, Map<String, dynamic>>{};
-      for (final doc in businessesSnapshot.docs) {
+      for (final doc in businessDocs) {
         final data = doc.data();
         
         // Check multiple possible field names for business type
@@ -841,14 +849,11 @@ class SearchNotifier extends Notifier<SearchState> {
     }
 
     try {
-      final snapshot = await _firestore
-          .collection('businesses')
-          .limit(50)
-          .get();
+      final businessDocs = await _getBusinesses(limit: 200);
 
       final results = <SearchResult>[];
 
-      for (final doc in snapshot.docs) {
+      for (final doc in businessDocs) {
         final data = doc.data();
         
         // Check if business matches the sector type

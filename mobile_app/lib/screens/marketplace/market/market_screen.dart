@@ -11,7 +11,9 @@ import 'package:lokma_app/widgets/three_dimensional_pill_tab_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lokma_app/providers/butcher_favorites_provider.dart';
 import 'package:lokma_app/providers/user_location_provider.dart';
+import 'package:lokma_app/providers/cart_provider.dart';
 import 'package:lokma_app/widgets/address_selection_sheet.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../utils/currency_utils.dart';
 
 /// Business type labels for display
@@ -57,8 +59,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   bool _onlyTuna = false;
   
   // Location
-  final String _userAddress = 'marketplace.getting_location'.tr();
-  bool _isLoadingLocation = true;
+  final String _userAddress = 'marketplace.getting_location'.tr(); // ignore: unused_field
+  bool _isLoadingLocation = true; // ignore: unused_field
   double? _userLat;
   double? _userLng;
   
@@ -67,7 +69,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   bool _sliderAutoSet = false; // Auto-snap slider to nearest business once
   
   // Dynamic categories from Firestore
-  Map<String, int> _businessTypeCounts = {};
+  Map<String, int> _businessTypeCounts = {}; // ignore: unused_field
   List<DocumentSnapshot> _allBusinesses = [];
   bool _isLoading = true;
   
@@ -218,6 +220,340 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   bool _isBusinessOpenNow(Map<String, dynamic> data) {
     final openingHelper = OpeningHoursHelper(data['openingHours']);
     return openingHelper.isOpenAt(DateTime.now());
+  }
+
+  String? _currentBusinessIdForDialog;
+
+  /// 🆕 Check if business is available for the currently selected mode (ported from restoran)
+  ({
+    bool isAvailable,
+    String? reason,
+    String? startTime,
+    String? deliveryTime,
+    String? pickupTime
+  }) _checkAvailabilityForMode(
+    Map<String, dynamic> data,
+    String mode,
+  ) {
+    final now = DateTime.now();
+    final currentHour = now.hour;
+    final currentMinute = now.minute;
+
+    final deliveryStartTime = data['deliveryStartTime'] as String?;
+    final pickupStartTime = data['pickupStartTime'] as String?;
+
+    // First check openingHours — if business is closed per its schedule, mark unavailable
+    if (!_isBusinessOpenNow(data)) {
+      return (
+        isAvailable: false,
+        reason: 'marketplace.currently_closed'.tr(),
+        startTime: null,
+        deliveryTime: deliveryStartTime,
+        pickupTime: pickupStartTime
+      );
+    }
+
+    // Check if current time is before delivery start
+    bool deliveryUnavailable = false;
+    if (deliveryStartTime != null && deliveryStartTime.isNotEmpty) {
+      final parsed = _parseTimeString(deliveryStartTime);
+      if (parsed != null) {
+        if (currentHour < parsed.$1 ||
+            (currentHour == parsed.$1 && currentMinute < parsed.$2)) {
+          deliveryUnavailable = true;
+        }
+      }
+    }
+
+    // Check if current time is before pickup start
+    bool pickupUnavailable = false;
+    if (pickupStartTime != null && pickupStartTime.isNotEmpty) {
+      final parsed = _parseTimeString(pickupStartTime);
+      if (parsed != null) {
+        if (currentHour < parsed.$1 ||
+            (currentHour == parsed.$1 && currentMinute < parsed.$2)) {
+          pickupUnavailable = true;
+        }
+      }
+    }
+
+    // Check temporary pause for delivery mode
+    final temporaryDeliveryPaused =
+        data['temporaryDeliveryPaused'] as bool? ?? false;
+    final temporaryPickupPaused =
+        data['temporaryPickupPaused'] as bool? ?? false;
+
+    if (mode == 'teslimat') {
+      if (temporaryDeliveryPaused) {
+        return (
+          isAvailable: false,
+          reason: 'marketplace.courier_not_available'.tr(),
+          startTime: null,
+          deliveryTime: deliveryStartTime,
+          pickupTime: pickupStartTime
+        );
+      }
+      if (deliveryUnavailable) {
+        return (
+          isAvailable: false,
+          reason: tr('marketplace.delivery_from', namedArgs: {'time': deliveryStartTime!}),
+          startTime: deliveryStartTime,
+          deliveryTime: deliveryStartTime,
+          pickupTime: pickupStartTime
+        );
+      }
+      return (
+        isAvailable: true,
+        reason: null,
+        startTime: null,
+        deliveryTime: deliveryStartTime,
+        pickupTime: pickupStartTime
+      );
+    } else if (mode == 'gelal') {
+      if (temporaryPickupPaused) {
+        return (
+          isAvailable: false,
+          reason: tr('marketplace.pickup_paused'),
+          startTime: null,
+          deliveryTime: deliveryStartTime,
+          pickupTime: pickupStartTime
+        );
+      }
+      if (pickupUnavailable) {
+        return (
+          isAvailable: false,
+          reason: tr('marketplace.pickup_from', namedArgs: {'time': pickupStartTime!}),
+          startTime: pickupStartTime,
+          deliveryTime: deliveryStartTime,
+          pickupTime: pickupStartTime
+        );
+      }
+      return (
+        isAvailable: true,
+        reason: null,
+        startTime: null,
+        deliveryTime: deliveryStartTime,
+        pickupTime: pickupStartTime
+      );
+    }
+
+    return (
+      isAvailable: true,
+      reason: null,
+      startTime: null,
+      deliveryTime: deliveryStartTime,
+      pickupTime: pickupStartTime
+    );
+  }
+
+  /// Parse time string like "11:00" into (hour, minute)
+  (int, int)? _parseTimeString(String timeStr) {
+    final regex = RegExp(r'(\d{1,2}):(\d{2})');
+    final match = regex.firstMatch(timeStr);
+    if (match != null) {
+      return (int.parse(match.group(1)!), int.parse(match.group(2)!));
+    }
+    return null;
+  }
+
+  /// 🆕 Show unified dialog for closed/unavailable business (ported from restoran)
+  void _showClosedBusinessDialog(
+      BuildContext context, String businessName, String? reason, Map<String, dynamic> businessData) {
+    final preOrderEnabled = businessData['preOrderEnabled'] as bool? ?? false;
+    
+    // Calculate next opening time
+    final openingHelper = OpeningHoursHelper(businessData['openingHours']);
+    final nextOpen = openingHelper.getNextOpenDateTime(DateTime.now());
+    String? nextOpenText;
+    if (nextOpen != null) {
+      final now = DateTime.now();
+      final isToday = nextOpen.day == now.day && nextOpen.month == now.month && nextOpen.year == now.year;
+      final tomorrow = now.add(const Duration(days: 1));
+      final isTomorrow = nextOpen.day == tomorrow.day && nextOpen.month == tomorrow.month && nextOpen.year == tomorrow.year;
+      
+      final timeStr = '${nextOpen.hour.toString().padLeft(2, '0')}:${nextOpen.minute.toString().padLeft(2, '0')}';
+      if (isToday) {
+        nextOpenText = tr('marketplace.opens_today', namedArgs: {'time': timeStr});
+      } else if (isTomorrow) {
+        nextOpenText = tr('marketplace.opens_tomorrow', namedArgs: {'time': timeStr});
+      } else {
+        final dayKeys = ['day_monday', 'day_tuesday', 'day_wednesday', 'day_thursday', 'day_friday', 'day_saturday', 'day_sunday'];
+        final dayName = tr('common.${dayKeys[nextOpen.weekday - 1]}');
+        nextOpenText = tr('marketplace.opens_on_day', namedArgs: {'day': dayName, 'time': timeStr});
+      }
+    }
+    
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        final onSurface = theme.colorScheme.onSurface;
+        final surfaceVariant = theme.colorScheme.surfaceContainerHighest;
+        
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: theme.dialogBackgroundColor,
+          title: Stack(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: surfaceVariant.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.storefront_outlined, color: onSurface.withValues(alpha: 0.7), size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 28),
+                      child: Text(
+                        businessName,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: onSurface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(ctx),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: onSurface.withValues(alpha: 0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.close, size: 18, color: onSurface.withValues(alpha: 0.5)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: surfaceVariant.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (reason != null)
+                      Row(
+                        children: [
+                          Icon(Icons.schedule_outlined, color: onSurface.withValues(alpha: 0.5), size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              reason,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w400,
+                                color: onSurface.withValues(alpha: 0.7),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    if (preOrderEnabled) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3E3E40),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
+                            const SizedBox(width: 6),
+                            Text(
+                              tr('marketplace.pre_order_active'),
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w400, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (nextOpenText != null) ...[
+                      Divider(color: onSurface.withValues(alpha: 0.1), height: 16),
+                      Row(
+                        children: [
+                          Icon(Icons.event_available_outlined, color: lokmaPink, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              nextOpenText,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: lokmaPink,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                preOrderEnabled
+                    ? 'marketplace.closed_but_preorder'.tr()
+                    : 'marketplace.closed_but_browse'.tr(),
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  fontWeight: FontWeight.w300,
+                  color: onSurface.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    final businessId = _currentBusinessIdForDialog;
+                    if (businessId != null) {
+                      context.push('/kasap/$businessId?mode=$_deliveryMode&closedAck=true');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: lokmaPink,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  ),
+                  child: Text(
+                    preOrderEnabled ? tr('marketplace.see_menu_and_order') : tr('marketplace.see_menu'),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actionsPadding: EdgeInsets.zero,
+          actions: const [],
+        );
+      },
+    );
   }
   
   // Filter businesses based on current filters
@@ -608,13 +944,14 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     );
     
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 2),
       child: Row(
         children: [
 
-          // Location info (şehir + sokak alt satırda)
+          // Location info — compact pill shape
           Expanded(
             child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () {
                 HapticFeedback.lightImpact();
                 showModalBottomSheet(
@@ -632,31 +969,30 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.location_on, color: lokmaPink, size: 16),
+                  Icon(Icons.location_on, color: lokmaPink, size: 14),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Şehir (ana satır)
                         Text(
                           isLoading ? 'marketplace.getting_location'.tr() : cityName,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
                           ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),
-                        // Sokak (alt satır - varsa)
                         if (streetInfo.isNotEmpty)
                           Text(
                             streetInfo,
                             style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 11,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
                             ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
@@ -665,7 +1001,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ),
                   ),
                   const SizedBox(width: 2),
-                  Icon(Icons.keyboard_arrow_down, color: Colors.grey[400], size: 16),
+                  Icon(Icons.keyboard_arrow_down,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3), size: 14),
                 ],
               ),
             ),
@@ -822,7 +1159,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           decoration: BoxDecoration(
             color: Theme.of(context).brightness == Brightness.dark 
                 ? Colors.grey[800] 
-                : Colors.grey[200],
+                : const Color(0xFFF2EEE9),
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
               BoxShadow(
@@ -839,7 +1176,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               Expanded(
                 child: Text(
                   'Market, ürün veya şehir ara...',
-                  style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14, fontWeight: FontWeight.w400),
                 ),
               ),
               const SizedBox(width: 8),
@@ -876,9 +1213,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   Widget _buildDeliveryModeTabs() {
     // Map current mode to index
     int selectedIndex = _deliveryMode == 'gelal' ? 1 : 0;
+    final accent = Theme.of(context).colorScheme.primary;
 
     return ThreeDimensionalPillTabBar(
       selectedIndex: selectedIndex,
+      activeColor: accent,
       tabs: [
         TabItem(title: tr('delivery_modes.delivery'), icon: Icons.delivery_dining),
         TabItem(title: tr('delivery_modes.pickup'), icon: Icons.shopping_bag_outlined),
@@ -1051,6 +1390,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   }
   
   // 🆕 TUNA Marketler toggle only (for Kurye mode - no distance slider)
+  // ignore: unused_element
   Widget _buildTunaToggleOnly() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1159,7 +1499,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   Widget _buildMarketCard(String id, Map<String, dynamic> data) {
     final name = data['businessName'] ?? data['companyName'] ?? 'İsimsiz';
     final businessType = _extractBusinessType(data);
-    // TUNA Partner check - use correct field name
+    // TUNA Partner check
     final brandLabel = data['brandLabel'] as String?;
     final brand = data['brand'] as String?;
     final tags = data['tags'] as List<dynamic>?;
@@ -1169,17 +1509,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           (brand?.toLowerCase() == 'tuna') ||
                           hasTunaTag;
     
-    // 🆕 Gelişmiş Sipariş Saatleri
-    final deliveryStartTime = data['deliveryStartTime'] as String?;
-    final pickupStartTime = data['pickupStartTime'] as String?;
-    // 🆕 Geçici Kurye Kapatma
-    final temporaryDeliveryPaused = data['temporaryDeliveryPaused'] as bool? ?? false;
-    final temporaryPickupPaused = data['temporaryPickupPaused'] as bool? ?? false;
-    
     final rating = (data['rating'] as num?)?.toDouble() ?? 4.0;
     final reviewCount = (data['reviewCount'] as num?)?.toInt() ?? 0;
     final imageUrl = data['imageUrl'] as String?;
     final logoUrl = data['logoUrl'] as String?;
+    final cuisineType = data['cuisineType'] as String?;
     
     // Business type label
     final typeLabel = MARKET_TYPE_LABELS[businessType] ?? businessType;
@@ -1212,8 +1546,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     final favorites = ref.watch(butcherFavoritesProvider);
     final isFavorite = favorites.contains(id);
     
-    // Availability state
-    final isOpen = _isBusinessOpenNow(data);
+    // 🆕 Mode-aware availability (ported from restoran)
+    final availability = _checkAvailabilityForMode(data, _deliveryMode);
+    final isAvailable = availability.isAvailable;
     
     // Review count text
     String reviewText = '';
@@ -1224,11 +1559,25 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
         reviewText = '($reviewCount)';
       }
     }
+
+    // 🆕 Dynamic banner top offset (same logic as restoran)
+    // Build the banner text to determine if a banner exists
+    String? bannerText;
+    if (!isAvailable && availability.reason != null) {
+      bannerText = availability.reason;
+    }
+    final bool hasBanner = bannerText != null;
+    final double bannerTopOffset = hasBanner ? 36.0 : 12.0;
     
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        context.push('/kasap/$id');
+        if (!isAvailable) {
+          _currentBusinessIdForDialog = id;
+          _showClosedBusinessDialog(context, name, availability.reason, data);
+        } else {
+          context.push('/kasap/$id');
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -1250,44 +1599,45 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             // Large image with overlays
             Stack(
               children: [
-                // Main image - Lieferando style (tall)
-                AspectRatio(
-                  aspectRatio: 16 / 10, // Taller like Lieferando
+                // Main image - fixed height like restoran (230px)
+                SizedBox(
+                  height: 230,
+                  width: double.infinity,
                   child: imageUrl != null && imageUrl.isNotEmpty
-                      ? Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
-                              color: Colors.grey[200],
-                              child: const Center(
-                                child: Icon(Icons.store, color: tunaGreen, size: 48),
-                              ),
-                            ),
-                          )
-                        : Container(
+                      ? CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => Container(
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                          ),
+                          errorWidget: (_, __, ___) => Container(
                             color: Colors.grey[200],
                             child: const Center(
                               child: Icon(Icons.store, color: tunaGreen, size: 48),
                             ),
                           ),
-                  ),
+                        )
+                      : Container(
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: Icon(Icons.store, color: tunaGreen, size: 48),
+                          ),
+                        ),
+                ),
                 
                 // 🆕 Darker overlay for unavailable businesses
-                if (!isOpen)
+                if (!isAvailable)
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.4), // Slightly lighter dark overlay
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(12),  // Match main card radius
-                          topRight: Radius.circular(12), // Match main card radius
-                        ),
+                        color: Colors.black.withValues(alpha: 0.4),
                       ),
                     ),
                   ),
                   
-                // 🆕 Thin top-aligned banner for unavailable businesses (Overlying the image)
-                if (!isOpen)
+                // 🆕 Top-aligned availability banner (matching restoran)
+                if (hasBanner)
                   Positioned(
                     top: 0,
                     left: 0,
@@ -1295,7 +1645,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       decoration: const BoxDecoration(
-                        color: Color(0xFF2C2C2E), // Dark grey background
+                        color: Color(0xFF2C2C2E),
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(12),
                           topRight: Radius.circular(12),
@@ -1303,7 +1653,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       ),
                       child: Center(
                         child: Text(
-                          'marketplace.currently_closed'.tr(),
+                          bannerText!,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -1315,7 +1665,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ),
                   ),
                 
-                // Business logo (bottom left, overlapping) - only show if logo exists
+                // Business logo (bottom left, overlapping)
                 if (logoUrl != null && logoUrl.isNotEmpty)
                   Positioned(
                     left: 12,
@@ -1336,10 +1686,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          logoUrl,
+                        child: CachedNetworkImage(
+                          imageUrl: logoUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Center(
+                          errorWidget: (_, __, ___) => const Center(
                             child: Icon(Icons.store, color: tunaGreen, size: 24),
                           ),
                         ),
@@ -1347,16 +1697,16 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ),
                   ),
                 
-                // TUNA brand badge (top left) - synced from admin panel
+                // 🆕 TUNA brand badge (dynamic offset)
                 if (isTunaPartner)
                   Positioned(
                     left: 12,
-                    top: isOpen ? 12 : 36, // Push below 'Şu an kapalı' banner when closed
+                    top: bannerTopOffset,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFA01E22), // TUNA dark red
-                        borderRadius: BorderRadius.circular(16), // Pill shape
+                        color: const Color(0xFFA01E22),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.3),
@@ -1365,95 +1715,18 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           ),
                         ],
                       ),
-                      child: const Text(
-                        'TUNA',
-                        style: TextStyle(
-                          color: Colors.white, // TUNA badge — white text
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                    ),
-                  ),
-                
-                // 🆕 Teslimat/Gel Al başlangıç saati badge'leri (Lieferando benzeri)
-                if (deliveryStartTime != null && deliveryStartTime.isNotEmpty ||
-                    pickupStartTime != null && pickupStartTime.isNotEmpty)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.85),
-                      ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          if (deliveryStartTime != null && deliveryStartTime.isNotEmpty) ...[
-                            const Icon(Icons.delivery_dining, color: Colors.white, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Teslimat $deliveryStartTime\'ten sonra',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                          if (deliveryStartTime != null && deliveryStartTime.isNotEmpty &&
-                              pickupStartTime != null && pickupStartTime.isNotEmpty)
-                            const Text(' • ', style: TextStyle(color: Colors.white70, fontSize: 11)),
-                          if (pickupStartTime != null && pickupStartTime.isNotEmpty) ...[
-                            const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Gel Al $pickupStartTime\'dan',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                
-                // 🆕 Geçici Kurye/Gel-Al Kapatma Banner
-                if (temporaryDeliveryPaused || temporaryPickupPaused)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: temporaryDeliveryPaused && temporaryPickupPaused
-                            ? Colors.red.shade700
-                            : temporaryDeliveryPaused
-                                ? Colors.amber.shade700
-                                : Colors.orange.shade700,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.pause_circle_outline, color: Colors.white, size: 16),
-                          const SizedBox(width: 6),
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.verified, color: Colors.white, size: 14),
+                          SizedBox(width: 4),
                           Text(
-                            temporaryDeliveryPaused && temporaryPickupPaused
-                                ? '⚠️ Kurye ve Gel-Al geçici durduruldu'
-                                : temporaryDeliveryPaused
-                                    ? '🚚 Kurye şu an hizmet vermiyor'
-                                    : '🛍️ Gel-Al geçici durduruldu',
-                            style: const TextStyle(
+                            'TUNA',
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 12,
+                              fontSize: 13,
                               fontWeight: FontWeight.w600,
+                              letterSpacing: 1.2,
                             ),
                           ),
                         ],
@@ -1461,9 +1734,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ),
                   ),
                 
-                // Favorite button (top right) - moved below banner
+                // 🆕 Favorite button (dynamic offset, matching restoran)
                 Positioned(
-                  top: 48,
+                  top: bannerTopOffset,
                   right: 12,
                   child: GestureDetector(
                     onTap: () {
@@ -1484,48 +1757,119 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ),
                   ),
                 ),
-              ],
-            ),
-            
-            // Info section (below image)
-            // Info section (below image)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 28, 16, 16), // Extra top padding for logo overlap
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Business name
-                  Text(
-                    name,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600, // Reduced from w700
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  
-                  // Rating + Type (Lieferando style: ★ 4.7 (220+) · Market)
+
+                // 🆕 Cart badge (bottom right) - only when available
+                if (isAvailable)
                   Builder(
                     builder: (context) {
-                      final isDark = Theme.of(context).brightness == Brightness.dark;
-                      final textColor = isDark ? Colors.white.withValues(alpha: 0.9) : Colors.black87;
-                      final subtleTextColor = isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black54;
-                      final starColor = isDark ? Color(0xFFFF9529) : Color(0xFFFF9529);
+                      final cartState = ref.watch(cartProvider);
+                      if (cartState.butcherId == id &&
+                          cartState.items.isNotEmpty) {
+                        return Positioned(
+                          right: 12,
+                          bottom: 12,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Icon(
+                                  Icons.shopping_cart_outlined,
+                                  color:
+                                      Theme.of(context).colorScheme.primary,
+                                  size: 24,
+                                ),
+                                Positioned(
+                                  right: -8,
+                                  top: -8,
+                                  child: Container(
+                                    padding: EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: BoxConstraints(
+                                        minWidth: 18, minHeight: 18),
+                                    child: Center(
+                                      child: Text(
+                                        '${cartState.items.length}',
+                                        style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surface,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+              ],
+            ),
 
-                      return Column(
+            // Info section (below image)
+            Builder(
+              builder: (context) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.star, color: starColor, size: 16),
+                              Icon(Icons.star,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .tertiary,
+                                  size: 16),
                               const SizedBox(width: 6),
                               Text(
-                                rating.toStringAsFixed(1).replaceAll('.', ','),
+                                rating
+                                    .toStringAsFixed(1)
+                                    .replaceAll('.', ','),
                                 style: TextStyle(
-                                  color: textColor,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.9),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -1535,7 +1879,10 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                 Text(
                                   reviewText,
                                   style: TextStyle(
-                                    color: subtleTextColor,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.7),
                                     fontSize: 13,
                                     fontWeight: FontWeight.w400,
                                   ),
@@ -1543,62 +1890,103 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                               ],
                               Text(
                                 ' · ',
-                                style: TextStyle(color: subtleTextColor, fontSize: 13),
-                              ),
-                              Text(
-                                typeLabel,
                                 style: TextStyle(
-                                  color: subtleTextColor,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w400,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.7),
+                                    fontSize: 13),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  cuisineType != null &&
+                                          cuisineType.isNotEmpty
+                                      ? cuisineType
+                                      : typeLabel,
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.7),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
                           ),
-                          
                           const SizedBox(height: 6),
-                          
-                          // Delivery Info Row
                           Builder(
                             builder: (context) {
-                              // Read business delivery settings
-                              final deliveryFee = (data['deliveryFee'] as num?)?.toDouble() ?? 0.0;
-                              final minOrderAmount = (data['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
-                              final freeDeliveryThreshold = (data['freeDeliveryThreshold'] as num?)?.toDouble();
-                              
+                              final deliveryFee =
+                                  (data['deliveryFee'] as num?)
+                                          ?.toDouble() ??
+                                      0.0;
+                              final minOrderAmount =
+                                  (data['minOrderAmount'] as num?)
+                                          ?.toDouble() ??
+                                      10.0;
+                              // ignore: unused_local_variable
+                              final freeDeliveryThreshold =
+                                  (data['freeDeliveryThreshold'] as num?)
+                                      ?.toDouble();
+
                               if (_deliveryMode == 'teslimat') {
-                                final hasFreeDelivery = freeDeliveryThreshold != null && freeDeliveryThreshold > 0;
                                 final hasMinOrder = minOrderAmount > 0;
-                                
+
                                 return Row(
                                   children: [
-                                    // Delivery fee
-                                    Icon(Icons.delivery_dining, color: subtleTextColor, size: 16),
+                                    Icon(Icons.delivery_dining,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.7),
+                                        size: 16),
                                     const SizedBox(width: 6),
-                                    if (hasFreeDelivery && deliveryFee == 0)
+                                    if (deliveryFee == 0)
                                       Text(
-                                        'Ücretsiz',
-                                        style: TextStyle(color: subtleTextColor, fontSize: 13),
+                                        tr('marketplace.free_delivery_label'),
+                                        style: TextStyle(
+                                            color: tunaGreen,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600),
                                       )
                                     else
                                       Text(
-                                        '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} Teslimat',
+                                        '${deliveryFee.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()} ${tr('common.delivery')}',
                                         style: TextStyle(
-                                          color: subtleTextColor,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.7),
                                           fontSize: 13,
                                           fontWeight: FontWeight.w400,
                                         ),
                                       ),
-                                    
-                                    // Min order
                                     if (hasMinOrder) ...[
-                                      Text(' · ', style: TextStyle(color: subtleTextColor, fontSize: 13)),
-                                      Icon(Icons.shopping_basket_outlined, color: subtleTextColor, size: 14),
+                                      Text(' · ',
+                                          style: TextStyle(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withValues(alpha: 0.7),
+                                              fontSize: 13)),
+                                      Icon(Icons.shopping_basket_outlined,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.7),
+                                          size: 14),
                                       const SizedBox(width: 6),
                                       Text(
                                         'Min. ${minOrderAmount.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
                                         style: TextStyle(
-                                          color: subtleTextColor,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withValues(alpha: 0.7),
                                           fontSize: 13,
                                           fontWeight: FontWeight.w400,
                                         ),
@@ -1611,12 +1999,20 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                                 if (distanceText.isEmpty) return const SizedBox.shrink();
                                 return Row(
                                   children: [
-                                    Icon(Icons.location_on_outlined, color: subtleTextColor, size: 14),
+                                    Icon(Icons.location_on_outlined,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.7),
+                                        size: 14),
                                     const SizedBox(width: 4),
                                     Text(
                                       distanceText,
                                       style: TextStyle(
-                                        color: subtleTextColor,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: 0.7),
                                         fontSize: 13,
                                         fontWeight: FontWeight.w400,
                                       ),
@@ -1627,12 +2023,11 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             },
                           ),
                         ],
-                      );
-                    }
+                      ),
+                    ],
                   ),
-
-                ],
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -1667,7 +2062,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header Bar
+                  // Header Bar — Lieferando style with pill buttons
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
@@ -1677,24 +2072,53 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const SizedBox(width: 48),
-                        // Title
-                        Text(
-                          'Filtrele',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                        // Cancel pill button
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+                              ),
+                            ),
+                            child: Text(
+                              tr('marketplace.filter_cancel'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
                           ),
                         ),
-                        // Sıfırla Icon Button
-                        IconButton(
-                          onPressed: () {
+                        // Results Count in center
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              tr('marketplace.show_businesses', args: ['$totalResults']),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        // Reset pill button
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
                             setState(() {
                               _sortOption = 'nearest';
                               _categoryFilter = 'all';
                               _onlyTuna = false;
-                              // Reset quick filters
                               _filterDiscounts = false;
                               _filterCash = false;
                               _filterFreeDelivery = false;
@@ -1706,9 +2130,22 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             });
                             setStateSheet(() {});
                           },
-                          icon: Icon(
-                            Icons.restart_alt_rounded,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+                              ),
+                            ),
+                            child: Text(
+                              tr('marketplace.filter_reset'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -1724,125 +2161,197 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 20),
 
-                          // 🆕 TUNA Filter - Premium first item (matching Yemek segment)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                // TUNA branded pill
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFA01E22),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Text(
-                                    'TUNA',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 1.0,
+                          // 🐟 TUNA Sertifika Filtresi - Premium toggle
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              setState(() => _onlyTuna = !_onlyTuna);
+                              setStateSheet(() {});
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  // TUNA branded pill badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFA01E22),
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: _onlyTuna ? [
+                                        BoxShadow(
+                                          color: const Color(0xFFA01E22).withValues(alpha: 0.4),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ] : null,
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.verified, color: Colors.white, size: 16),
+                                        SizedBox(width: 6),
+                                        Text(
+                                          'TUNA',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 1.5,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                // Description text
-                                Expanded(
-                                  child: Text(
-                                    'Sadece TUNA sertifikalı onaylı işletmeleri göster',
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.onSurface,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
+                                  const SizedBox(width: 12),
+                                  // Descriptive text
+                                  Expanded(
+                                    child: Text(
+                                      tr('marketplace.filter_tuna_description'),
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.3,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                // Switch toggle
-                                SizedBox(
-                                  height: 28,
-                                  child: Switch.adaptive(
-                                    value: _onlyTuna,
-                                    activeColor: Colors.white,
-                                    activeTrackColor: lokmaPink,
-                                    onChanged: (val) {
-                                      HapticFeedback.lightImpact();
-                                      setState(() => _onlyTuna = val);
-                                      setStateSheet(() {});
-                                    },
+                                  const SizedBox(width: 8),
+                                  // iOS-style Switch toggle
+                                  SizedBox(
+                                    height: 28,
+                                    child: Switch.adaptive(
+                                      value: _onlyTuna,
+                                      activeColor: Colors.white,
+                                      activeTrackColor: lokmaPink,
+                                      onChanged: (val) {
+                                        HapticFeedback.lightImpact();
+                                        setState(() => _onlyTuna = val);
+                                        setStateSheet(() {});
+                                      },
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
 
-                          const SizedBox(height: 16),
-                          
+                          const SizedBox(height: 24),
+
                           // Sıralama Section Header
-                          Text(
-                            'Sıralama',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              tr('marketplace.sort_section'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 12),
                           
-                          // Sıralama Options (List style with checkbox)
+                          // Sıralama Options (radio style — single select)
                           _buildFilterListItem(
-                            title: 'En Yakın',
+                            title: tr('marketplace.sort_nearest'),
                             subtitle: 'marketplace.sort_by_distance'.tr(),
                             isSelected: _sortOption == 'nearest',
+                            useRadio: true,
                             onTap: () {
                               setState(() => _sortOption = 'nearest');
                               setStateSheet(() {});
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'En İyi Puan',
-                            subtitle: 'marketplace.sort_high_rated'.tr(),
+                            title: tr('marketplace.sort_best_rating'),
+                            subtitle: tr('marketplace.filter_high_rating_subtitle'),
                             isSelected: _sortOption == 'rating',
+                            useRadio: true,
                             onTap: () {
                               setState(() => _sortOption = 'rating');
                               setStateSheet(() {});
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'Tuna Sıralaması',
-                            subtitle: 'Önerilen işletmeler',
+                            title: 'TUNA',
+                            subtitle: tr('marketplace.filter_recommended'),
                             isSelected: _sortOption == 'tuna',
+                            useRadio: true,
+                            isPremium: true,
                             onTap: () {
                               setState(() => _sortOption = 'tuna');
                               setStateSheet(() {});
                             },
-                            isPremium: true,
                           ),
+                          
+                          const SizedBox(height: 24),
+
+                          // İşletme Türü Section Header
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              tr('marketplace.business_type_section'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          
+                          // Tümü Option (radio — single select)
+                          _buildFilterListItem(
+                            title: tr('marketplace.filter_all'),
+                            subtitle: 'marketplace.sort_show_all'.tr(),
+                            isSelected: _categoryFilter == 'all',
+                            useRadio: true,
+                            onTap: () {
+                              setState(() => _categoryFilter = 'all');
+                              setStateSheet(() {});
+                            },
+                          ),
+                          
+                          // Dynamic Category Options
+                          ...sortedTypes.map((entry) {
+                            final typeKey = entry.key;
+                            final count = entry.value;
+                            final label = MARKET_TYPE_LABELS[typeKey] ?? typeKey;
+                            
+                            return _buildFilterListItem(
+                              title: label,
+                              subtitle: tr('marketplace.business_count', args: ['$count']),
+                              isSelected: _categoryFilter == typeKey,
+                              useRadio: true,
+                              onTap: () {
+                                setState(() => _categoryFilter = typeKey);
+                                setStateSheet(() {});
+                              },
+                            );
+                          }),
                           
                           const SizedBox(height: 24),
                           
                           // 🆕 Hızlı Filtreler Section Header
-                          Text(
-                            'Hızlı Filtreler',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Text(
+                              tr('marketplace.quick_filters_section'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 12),
                           
                           // 🔴 TUNA/Toros Ürünleri Filtresi (EN ÜSTTE)
                           Builder(
                             builder: (context) {
-                              // Bölge tespiti: işletmelerin çoğunluğu Türkiye'de ise Akdeniz Toros, değilse TUNA
-                              // Şimdilik basit: Türkiye için Toros, Avrupa için TUNA
                               final isTurkeyRegion = Localizations.localeOf(context).languageCode == 'tr';
                               return _buildFilterListItem(
                                 title: isTurkeyRegion ? 'Akdeniz Toros Ürünleri' : 'TUNA Ürünleri',
@@ -1860,7 +2369,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                           ),
                           
                           _buildFilterListItem(
-                            title: 'İndirimler',
+                            title: tr('marketplace.filter_campaigns_title'),
                             subtitle: 'marketplace.filter_campaigns'.tr(),
                             isSelected: _filterDiscounts,
                             onTap: () {
@@ -1869,7 +2378,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'Nakit Ödeme',
+                            title: tr('marketplace.filter_cash_title'),
                             subtitle: 'marketplace.filter_cash'.tr(),
                             isSelected: _filterCash,
                             onTap: () {
@@ -1878,7 +2387,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'Ücretsiz Teslimat',
+                            title: tr('marketplace.filter_free_delivery_title'),
                             subtitle: 'marketplace.filter_free_delivery'.tr(),
                             isSelected: _filterFreeDelivery,
                             onTap: () {
@@ -1887,8 +2396,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'Yemek Kartı',
-                            subtitle: 'Sodexo, Ticket vb. kabul eden işletmeler',
+                            title: tr('marketplace.filter_meal_cards_title'),
+                            subtitle: tr('marketplace.filter_meal_cards_subtitle'),
                             isSelected: _filterMealCards,
                             onTap: () {
                               setState(() => _filterMealCards = !_filterMealCards);
@@ -1896,8 +2405,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: '4+ Yıldız',
-                            subtitle: 'Yüksek puanlı işletmeler',
+                            title: tr('marketplace.filter_high_rating_title'),
+                            subtitle: tr('marketplace.filter_high_rating_subtitle'),
                             isSelected: _filterHighRating,
                             onTap: () {
                               setState(() => _filterHighRating = !_filterHighRating);
@@ -1905,7 +2414,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'Şimdi Açık',
+                            title: tr('marketplace.filter_open_now_title'),
                             subtitle: 'marketplace.filter_open_now'.tr(),
                             isSelected: _filterOpenNow,
                             onTap: () {
@@ -1914,56 +2423,15 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             },
                           ),
                           _buildFilterListItem(
-                            title: 'Vejetaryen',
-                            subtitle: 'Vejetaryen ürünler sunan işletmeler',
+                            title: tr('marketplace.filter_vegetarian_title'),
+                            subtitle: 'marketplace.filter_vegetarian'.tr(),
                             isSelected: _filterVegetarian,
                             onTap: () {
                               setState(() => _filterVegetarian = !_filterVegetarian);
                               setStateSheet(() {});
                             },
                           ),
-                          
-                          const SizedBox(height: 24),
-                          
-                          // İşletme Türü Section Header
-                          Text(
-                            'İşletme Türü',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          
-                          // Tümü Option
-                          _buildFilterListItem(
-                            title: 'Tümü',
-                            subtitle: 'marketplace.sort_show_all'.tr(),
-                            isSelected: _categoryFilter == 'all',
-                            onTap: () {
-                              setState(() => _categoryFilter = 'all');
-                              setStateSheet(() {});
-                            },
-                          ),
-                          
-                          // Dynamic Category Options
-                          ...sortedTypes.map((entry) {
-                            final typeKey = entry.key;
-                            final count = entry.value;
-                            final label = MARKET_TYPE_LABELS[typeKey] ?? typeKey;
-                            
-                            return _buildFilterListItem(
-                              title: label,
-                              subtitle: '$count işletme',
-                              isSelected: _categoryFilter == typeKey,
-                              onTap: () {
-                                setState(() => _categoryFilter = typeKey);
-                                setStateSheet(() {});
-                              },
-                            );
-                          }),
-                          
+
                           const SizedBox(height: 100), // Space for button
                         ],
                       ),
@@ -1977,7 +2445,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                       color: cardBg,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, -2),
                         ),
@@ -1997,9 +2465,9 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             ),
                           ),
                           child: Text(
-                            '$totalResults İşletme Göster',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            tr('marketplace.show_businesses', args: ['$totalResults']),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.surface,
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -2023,76 +2491,114 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     required bool isSelected,
     required VoidCallback onTap,
     bool isPremium = false,
+    bool useRadio = false,
   }) {
-    return InkWell(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+    return Builder(
+      builder: (context) {
+        final textColor = Theme.of(context).colorScheme.onSurface;
+        final subtitleColor =
+            Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5);
+
+        return InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        children: [
+                          Text(
+                            title,
+                            style: TextStyle(
+                              color: textColor,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          if (isPremium) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: tunaGreen.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                tr('marketplace.filter_recommended'),
+                                style:
+                                    const TextStyle(color: tunaGreen, fontSize: 10),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      SizedBox(height: 2),
                       Text(
-                        title,
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                        subtitle,
+                        style: TextStyle(
+                          color: subtitleColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
-                      if (isPremium) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: tunaGreen.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'Önerilen',
-                            style: TextStyle(color: lokmaPink, fontSize: 10),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Checkbox - Radio style (circle) for single select, checkbox for multi
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isSelected ? lokmaPink : Colors.transparent,
-                borderRadius: BorderRadius.circular(12), // Round like Yemek
-                border: Border.all(
-                  color: isSelected ? lokmaPink : Colors.grey[400]!,
-                  width: 2,
                 ),
-              ),
-              child: isSelected
-                  ? const Icon(Icons.check, color: Colors.white, size: 14)
-                  : null,
+                // Radio (round) or Checkbox (square) based on useRadio
+                useRadio
+                  ? Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? lokmaPink : subtitleColor,
+                          width: 2,
+                        ),
+                      ),
+                      child: isSelected
+                          ? Center(
+                              child: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: lokmaPink,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            )
+                          : null,
+                    )
+                  : Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        color: isSelected ? lokmaPink : Colors.transparent,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: isSelected ? lokmaPink : subtitleColor,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: isSelected
+                          ? Icon(Icons.check,
+                              color: Theme.of(context).colorScheme.surface,
+                              size: 16)
+                          : null,
+                    ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
