@@ -259,13 +259,13 @@ class GlassBottomBar extends StatelessWidget {
     
     // Gradient Colors
     final gradientColors = isDark 
-        ? [Colors.black.withOpacity(0.60), Colors.black.withOpacity(0.40)] // Dark Smoke
-        : [Colors.white.withOpacity(0.80), Colors.white.withOpacity(0.60)]; // Bright Ice
+        ? [Colors.black.withValues(alpha: 0.60), Colors.black.withValues(alpha: 0.40)] // Dark Smoke
+        : [Colors.white.withValues(alpha: 0.80), Colors.white.withValues(alpha: 0.60)]; // Bright Ice
 
     // Border Colors
     final borderColor = isDark 
-        ? Colors.white.withOpacity(0.15) 
-        : Colors.white.withOpacity(0.60);
+        ? Colors.white.withValues(alpha: 0.15) 
+        : Colors.white.withValues(alpha: 0.60);
 
     return SafeArea(
       top: false,
@@ -291,7 +291,7 @@ class GlassBottomBar extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.30 : 0.05),
+                    color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                     spreadRadius: -2,
@@ -321,7 +321,7 @@ class GlassBottomBar extends StatelessWidget {
   Widget _buildItemContent(_NavItemData item, bool isActive, BuildContext context, bool isDark) {
     // Brand Rose (Kermes Kırmızısı) - 0xFFFB335B
     const activeColor = Color(0xFFFB335B); 
-    final inactiveColor = (isDark ? Colors.white : Colors.black).withOpacity(0.6);
+    final inactiveColor = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.6);
     final color = isActive ? activeColor : inactiveColor;
     const iconSize = 24.0; // İkon biraz küçüldü metin için yer açıldı
 
@@ -350,7 +350,7 @@ class GlassBottomBar extends StatelessWidget {
                   border: Border.all(color: Colors.white, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 4,
                     )
                   ],

@@ -5527,7 +5527,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: _accentColor.withOpacity(0.5),
+                                    color: _accentColor.withValues(alpha: 0.5),
                                     style: BorderStyle.solid,
                                   ),
                                 ),
@@ -5537,7 +5537,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     Icon(Icons.add_circle_outline, color: _accentColor, size: 20),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Yeni adres ekle',
+                                      tr('checkout.add_new_address'),
                                       style: TextStyle(
                                         color: _accentColor,
                                         fontWeight: FontWeight.w600,
@@ -5589,7 +5589,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? _accentColor.withOpacity(0.15) : _accentColor.withOpacity(0.08))
+              ? (isDark ? _accentColor.withValues(alpha: 0.15) : _accentColor.withValues(alpha: 0.08))
               : (isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade50),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(

@@ -103,10 +103,10 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
     double? spendingLimitPerPerson,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception('Giriş yapmanız gerekli');
+    if (user == null) throw Exception('LOGIN_REQUIRED');
     
     final hostUserId = user.uid;
-    final hostName = user.displayName ?? user.email?.split('@').first ?? 'Misafir';
+    final hostName = user.displayName ?? user.email?.split('@').first ?? 'Guest';
     
     state = state.copyWith(isLoading: true, error: null);
 
@@ -224,10 +224,10 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
   /// Join an existing session (auto-resolves current user)
   Future<bool> joinSession(String sessionId, {required String pin, String? displayName}) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception('Giriş yapmanız gerekli');
+    if (user == null) throw Exception('LOGIN_REQUIRED');
     
     final userId = user.uid;
-    final userName = displayName?.isNotEmpty == true ? displayName! : (user.displayName ?? user.email?.split('@').first ?? 'Misafir');
+    final userName = displayName?.isNotEmpty == true ? displayName! : (user.displayName ?? user.email?.split('@').first ?? 'Guest');
     
     state = state.copyWith(isLoading: true, error: null);
 
@@ -270,12 +270,12 @@ class TableGroupNotifier extends Notifier<TableGroupState> {
   /// Join a group session via shared link (no PIN required)
   Future<bool> joinViaLink(String sessionId, {String? displayName}) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) throw Exception('Giriş yapmanız gerekli');
+    if (user == null) throw Exception('LOGIN_REQUIRED');
     
     final userId = user.uid;
     final userName = displayName?.isNotEmpty == true 
         ? displayName! 
-        : (user.displayName ?? user.email?.split('@').first ?? 'Misafir');
+        : (user.displayName ?? user.email?.split('@').first ?? 'Guest');
     
     state = state.copyWith(isLoading: true, error: null);
     

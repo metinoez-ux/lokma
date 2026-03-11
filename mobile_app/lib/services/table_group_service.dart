@@ -113,7 +113,7 @@ class TableGroupService {
       await _db.collection(_collection).doc(session.id).update({
         'status': 'closed', 
         'closedAt': FieldValue.serverTimestamp(),
-        'cancelReason': 'Stale Complete (Masa QR Tarama)',
+        'cancelReason': 'Stale Complete (Table QR Scan)',
       });
       return null;
     }
@@ -125,7 +125,7 @@ class TableGroupService {
       await _db.collection(_collection).doc(session.id).update({
         'status': 'cancelled', 
         'closedAt': FieldValue.serverTimestamp(),
-        'cancelReason': '15 Dakika Zaman Aşımı (Masa QR Tarama)'
+        'cancelReason': '15 Minute Timeout (Table QR Scan)'
       });
       return null;
     }
@@ -397,8 +397,9 @@ class TableGroupService {
   /// from concurrent participant edits).
   Future<List<String>> submitGroupOrder(String sessionId) async {
     final docRef = _db.collection(_collection).doc(sessionId);
-    final orderRef = _db.collection('meat_orders').doc();
-    final orderNumber = orderRef.id.substring(0, 6).toUpperCase();
+    // Generate orderNumber from a temporary ref (not used for actual order creation)
+    final tempRef = _db.collection('meat_orders').doc();
+    final orderNumber = tempRef.id.substring(0, 6).toUpperCase();
 
     // Get fresh FCM token for the order
     String? fcmToken;
@@ -584,7 +585,7 @@ class TableGroupService {
 
     if (createdOrderIds.isNotEmpty) {
       debugPrint(
-          '🍽️ Submitted 1 combined group order (${orderRef.id}) for session $sessionId');
+          '🍽️ Submitted 1 combined group order (${createdOrderIds.first}) for session $sessionId');
     }
 
     return createdOrderIds;
@@ -689,7 +690,7 @@ class TableGroupService {
         'status': 'cancelled',
         'cancelledAt': FieldValue.serverTimestamp(),
         'cancelledBy': cancellerName,
-        'cancelReason': 'Host tarafından iptal edildi',
+        'cancelReason': 'Cancelled by host',
         'closedAt': FieldValue.serverTimestamp(),
       });
     });
@@ -754,15 +755,14 @@ class TableGroupService {
   }
 
   /// Get closed group sessions where user was a participant (order history)
+  /// TODO: Add 'participantUserIds' array field for Firestore-native filtering
+  /// instead of client-side filtering to improve scalability.
   Stream<List<TableGroupSession>> getUserGroupHistory(String userId) {
-    // Firestore can't query inside arrays of maps directly,
-    // so we fetch all closed sessions and filter client-side.
-    // For scale, we'd add a 'participantUserIds' array field.
     return _db
         .collection(_collection)
         .where('status', isEqualTo: 'closed')
         .orderBy('closedAt', descending: true)
-        .limit(50)
+        .limit(20)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => TableGroupSession.fromFirestore(doc))
