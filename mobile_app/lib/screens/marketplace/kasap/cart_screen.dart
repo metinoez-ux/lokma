@@ -876,7 +876,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   reservationTime: _scheduledDeliverySlot!,
                   businessName: cart.butcherName ?? _butcherData?['companyName'] ?? 'LOKMA',
                   partySize: 1,
-                  tableCardNumbers: _scannedTableNumber != null ? [_scannedTableNumber!] : null,
+                  tableCardNumbers: _scannedTableNumber != null ? [int.tryParse(_scannedTableNumber!) ?? 0] : null,
                 );
               } else {
                 // Kurye / Gel-Al / Kermes → standard order event

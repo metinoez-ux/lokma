@@ -36,7 +36,7 @@ class _GroupLinkJoinScreenState extends ConsumerState<GroupLinkJoinScreen> {
 
       if (success) {
         // Navigate to the business detail screen for the group order
-        final session = ref.read(tableGroupProvider).currentSession;
+        final session = ref.read(tableGroupProvider).session;
         if (session != null) {
           context.go('/kasap/${session.businessId}?mode=teslimat');
         } else {
