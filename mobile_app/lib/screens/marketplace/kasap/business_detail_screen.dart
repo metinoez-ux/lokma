@@ -185,6 +185,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // When scrolled to the very top, always select 'Tümü'
     if (_scrollController.hasClients && _scrollController.offset < 10) {
       if (_selectedCategory != 'Tümü') {
+        HapticFeedback.selectionClick();
         setState(() => _selectedCategory = 'Tümü');
         // Delay chip scroll to avoid conflicting with main scroll
         Future.delayed(const Duration(milliseconds: 50), () {
@@ -215,6 +216,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     }
 
     if (visibleCategory != null && visibleCategory != _selectedCategory) {
+      HapticFeedback.selectionClick();
       setState(() {
         _selectedCategory = visibleCategory!;
       });

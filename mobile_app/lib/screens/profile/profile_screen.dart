@@ -258,43 +258,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         return Column(
                           children: [
                             // First row: Standard chips
-                            Row(
-                              children: [
-                                _buildQuickAccessChip(
-                                    Icons.receipt_long_outlined,
-                                    'profile.my_orders'.tr(),
-                                    () => context.push('/orders')),
-                                const SizedBox(width: 12),
-                                _buildQuickAccessChip(
-                                    Icons.favorite_outline,
-                                    'profile.favorites'.tr(),
-                                    () => context.push('/favorites')),
-                                const SizedBox(width: 12),
-                                _buildQuickAccessChip(
-                                    Icons.location_on_outlined,
-                                    'profile.my_addresses'.tr(),
-                                    () => context.push('/my-info')),
-                              ],
+                            IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildQuickAccessChip(
+                                      Icons.receipt_long_outlined,
+                                      'profile.my_orders'.tr(),
+                                      () => context.push('/orders')),
+                                  const SizedBox(width: 12),
+                                  _buildQuickAccessChip(
+                                      Icons.favorite_outline,
+                                      'profile.favorites'.tr(),
+                                      () => context.push('/favorites')),
+                                  const SizedBox(width: 12),
+                                  _buildQuickAccessChip(
+                                      Icons.location_on_outlined,
+                                      'profile.my_addresses'.tr(),
+                                      () => context.push('/my-info')),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 12),
                             // Second row: Reservations and Notifications
-                            Row(
-                              children: [
-                                _buildQuickAccessChip(
-                                    Icons.table_restaurant,
-                                    'profile.my_reservations'.tr().replaceAll(' ', '\n'),
-                                    () => context.push('/my-reservations')),
-                                const SizedBox(width: 12),
-                                _buildQuickAccessChip(
-                                    Icons.notifications_active_outlined,
-                                    'profile.notification_settings'.tr().replaceAll(' ', '\n'),
-                                    () =>
-                                        context.push('/notification-settings')),
-                                const SizedBox(width: 12),
-                                const Expanded(
-                                    child:
-                                        SizedBox()), // Placeholder for grid alignment
-                              ],
+                            IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildQuickAccessChip(
+                                      Icons.table_restaurant,
+                                      'profile.my_reservations'.tr(),
+                                      () => context.push('/my-reservations')),
+                                  const SizedBox(width: 12),
+                                  _buildQuickAccessChip(
+                                      Icons.notifications_active_outlined,
+                                      'profile.notification_settings'.tr(),
+                                      () =>
+                                          context.push('/notification-settings')),
+                                  const SizedBox(width: 12),
+                                  const Expanded(
+                                      child:
+                                          SizedBox()), // Placeholder for grid alignment
+                                ],
+                              ),
                             ),
                             // Teslimat Paneli removed - consolidated into Teslimatlarım
                           ],

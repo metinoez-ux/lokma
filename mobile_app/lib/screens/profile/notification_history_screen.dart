@@ -619,13 +619,13 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
             onTap: widget.isFirst ? null : () => setState(() => _expanded = !_expanded),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 12, 12),
+              padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Row 1: Order type + number (left) + Date (right)
+                  // ── Row 1: Order type + number (left) + Date+Business (right)
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Column(
@@ -665,47 +665,54 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                           ],
                         ),
                       ),
-                      if (headerDateStr.isNotEmpty)
-                        Text(
-                          headerDateStr,
-                          style: TextStyle(
-                            color: cardSubtleColor,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      if (!widget.isFirst) ...[
-                        const SizedBox(width: 4),
-                        Icon(
-                          _expanded
-                              ? Icons.keyboard_arrow_up_rounded
-                              : Icons.keyboard_arrow_down_rounded,
-                          color: cardSubtleColor,
-                          size: 22,
-                        ),
-                      ],
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if (headerDateStr.isNotEmpty)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  headerDateStr,
+                                  style: TextStyle(
+                                    color: cardSubtleColor,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                if (!widget.isFirst) ...[
+                                  const SizedBox(width: 2),
+                                  Icon(
+                                    _expanded
+                                        ? Icons.keyboard_arrow_up_rounded
+                                        : Icons.keyboard_arrow_down_rounded,
+                                    color: cardSubtleColor,
+                                    size: 20,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          if (group.businessName.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Text(
+                                group.businessName,
+                                style: TextStyle(
+                                  color: cardSubtleColor,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                  // ── Row 2: Business name (right-aligned)
-                  if (group.businessName.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 3),
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          group.businessName,
-                          style: TextStyle(
-                            color: cardSubtleColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   // ── Row 3: Status badge (left) + total amount (right)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -1043,17 +1050,22 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                           final pendingTs = pendingEntry['createdAt'] as Timestamp?;
                           _showOrderDetail(context, group.orderId, pendingTs?.toDate());
                         },
-                      icon: const Icon(Icons.receipt_long_rounded, size: 16),
-                      label: Text('common.siparisi_goruntule'.tr()),
+                      icon: const Icon(Icons.receipt_long_rounded, size: 14),
+                      label: Text(
+                        'common.siparisi_goruntule'.tr(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
                         backgroundColor: isDark
                             ? Colors.white.withValues(alpha: 0.12)
                             : const Color(0xFF2C2C2E),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                        textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -1089,10 +1101,14 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                               ),
                               child: Icon(
                                 unread > 0 ? Icons.chat_bubble : Icons.chat_bubble_outline,
-                                size: 16,
+                                size: 14,
                               ),
                             ),
-                            label: Text(unread > 0 ? 'Mesaj ($unread)' : 'Mesaj'),
+                            label: Text(
+                              unread > 0 ? 'Mesaj ($unread)' : 'Mesaj',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                             style: TextButton.styleFrom(
                               foregroundColor: unread > 0
                                   ? const Color(0xFF4CAF50)
@@ -1100,10 +1116,11 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                               backgroundColor: unread > 0
                                   ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
                                   : isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFF3A3A3C).withValues(alpha: 0.08),
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                              textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
                             ),
                           );
                         },
@@ -1126,15 +1143,20 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.map_rounded, size: 16),
-                        label: Text('notification.open_map'.tr()),
+                        icon: const Icon(Icons.map_rounded, size: 14),
+                        label: Text(
+                          'notification.open_map'.tr(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         style: TextButton.styleFrom(
                           foregroundColor: const Color(0xFF00BCD4),
                           backgroundColor: const Color(0xFF00BCD4).withValues(alpha: 0.12),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          textStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
