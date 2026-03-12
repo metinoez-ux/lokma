@@ -78,6 +78,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   bool _isUserScrolling = true;
   final ScrollController _chipScrollController = ScrollController();
 
+  // Sliding pill indicator state
+  double _pillLeft = 0;
+  double _pillWidth = 60;
+  bool _pillInitialized = false;
+  final GlobalKey _chipRowKey = GlobalKey();
+
   /// Select a category and scroll to its section
   void _selectCategory(String category) {
     if (_selectedCategory == category) return;
@@ -86,6 +92,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     
     // Auto-scroll the chip bar to show the selected chip fully
     _scrollChipBarToSelected(category);
+    
+    // Slide the pill to the new chip position
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updatePillPosition(category);
+    });
     
     if (category == 'Tümü') {
       if (_scrollController.hasClients) {
@@ -147,6 +158,27 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     );
   }
 
+  /// Measure selected chip position and update pill indicator
+  void _updatePillPosition([String? cat]) {
+    final category = cat ?? _selectedCategory;
+    final tabKey = _tabKeys[category];
+    if (tabKey?.currentContext == null || _chipRowKey.currentContext == null) return;
+    
+    final RenderBox? chipBox = tabKey!.currentContext!.findRenderObject() as RenderBox?;
+    final RenderBox? rowBox = _chipRowKey.currentContext!.findRenderObject() as RenderBox?;
+    if (chipBox == null || rowBox == null) return;
+    
+    final chipPos = chipBox.localToGlobal(Offset.zero, ancestor: rowBox);
+    
+    if (mounted) {
+      setState(() {
+        _pillLeft = chipPos.dx;
+        _pillWidth = chipBox.size.width;
+        _pillInitialized = true;
+      });
+    }
+  }
+
   void _onMenuScroll() {
     if (!_isUserScrolling || _menuSearchQuery.isNotEmpty) return;
 
@@ -156,7 +188,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         setState(() => _selectedCategory = 'Tümü');
         // Delay chip scroll to avoid conflicting with main scroll
         Future.delayed(const Duration(milliseconds: 50), () {
-          if (mounted) _scrollChipBarToSelected('Tümü');
+          if (mounted) {
+            _scrollChipBarToSelected('Tümü');
+            _updatePillPosition('Tümü');
+          }
         });
       }
       return;
@@ -185,7 +220,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       });
       // Delay chip scroll to avoid conflicting with main scroll
       Future.delayed(const Duration(milliseconds: 50), () {
-        if (mounted) _scrollChipBarToSelected(visibleCategory!);
+        if (mounted) {
+          _scrollChipBarToSelected(visibleCategory!);
+          _updatePillPosition(visibleCategory!);
+        }
       });
     }
   }
@@ -2107,111 +2145,125 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         Expanded(
                           child: Row(
                             children: [
-                              // Scrollable category chips
+                              // Scrollable category chips with sliding pill
                               Expanded(
-                                child: LayoutBuilder(
-                                  builder: (context, constraints) {
+                                child: Builder(
+                                  builder: (context) {
                                     // Only show categories that have products (or 'Tümü')
                                     final visibleCategories = _categories.where((c) => c['name'] == 'Tümü' || _allProducts.any((p) => p.category == c['name'])).toList();
-                                    return ListView.builder(
+                                    
+                                    // Schedule pill position initialization
+                                    if (!_pillInitialized) {
+                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                        if (mounted) _updatePillPosition();
+                                      });
+                                    }
+                                    
+                                    return SingleChildScrollView(
                                       controller: _chipScrollController,
                                       scrollDirection: Axis.horizontal,
                                       padding: const EdgeInsets.only(left: 16, right: 4, top: 8, bottom: 8),
-                                      itemCount: visibleCategories.length,
-                                      itemBuilder: (context, index) {
-                                        final cat = visibleCategories[index];
-                                        final catName = cat['name'] as String;
-                                        final isSelected = _selectedCategory == catName;
-                                        // Count cart items in this category
-                                        final cartItems = ref.watch(cartProvider).items;
-                                        final catCartCount = catName == 'Tümü'
-                                            ? cartItems.length
-                                            : cartItems.where((ci) => ci.product.category == catName).length;
-                                        return Padding(
-                                          padding: const EdgeInsets.only(right: 6),
-                                          child: GestureDetector(
-                                            onTap: () => _selectCategory(catName),
-                                            child: AnimatedScale(
-                                              scale: isSelected ? 1.07 : 1.0,
-                                              duration: const Duration(milliseconds: 350),
+                                      child: Stack(
+                                        alignment: Alignment.centerLeft,
+                                        children: [
+                                          // 1. Sliding pill indicator (painted first = behind)
+                                          if (_pillInitialized)
+                                            AnimatedPositioned(
+                                              duration: const Duration(milliseconds: 400),
                                               curve: Curves.easeOutBack,
+                                              left: _pillLeft,
+                                              top: 0,
+                                              bottom: 0,
                                               child: AnimatedContainer(
-                                                duration: const Duration(milliseconds: 350),
+                                                duration: const Duration(milliseconds: 400),
                                                 curve: Curves.easeOutBack,
-                                                key: _tabKeys.putIfAbsent(catName, () => GlobalKey()),
-                                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                                                width: _pillWidth,
                                                 decoration: BoxDecoration(
-                                                  color: isSelected 
-                                                    ? (isDark ? Colors.white : const Color(0xFF3E3E3F)) 
-                                                    : Colors.transparent,
+                                                  color: isDark ? Colors.white : const Color(0xFF3E3E3F),
                                                   borderRadius: BorderRadius.circular(50),
-                                                  boxShadow: isSelected
-                                                    ? [
-                                                        BoxShadow(
-                                                          color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.15),
-                                                          blurRadius: 8,
-                                                          offset: const Offset(0, 2),
-                                                        ),
-                                                      ]
-                                                    : [],
-                                                ),
-                                                child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    AnimatedDefaultTextStyle(
-                                                      duration: const Duration(milliseconds: 300),
-                                                      curve: Curves.easeOutCubic,
-                                                      style: TextStyle(
-                                                        color: isSelected 
-                                                          ? (isDark ? Colors.black : Colors.white) 
-                                                          : (isDark ? Colors.white70 : Colors.black54),
-                                                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                                        fontSize: 13,
-                                                      ),
-                                                      child: Text(
-                                                        catName == 'Tümü' ? tr('business_details.all') : catName,
-                                                      ),
-                                                    ),
-                                                    // Cart count badge with animated scale
-                                                    AnimatedSize(
-                                                      duration: const Duration(milliseconds: 250),
-                                                      curve: Curves.easeOutBack,
-                                                      child: catCartCount > 0
-                                                        ? Padding(
-                                                            padding: const EdgeInsets.only(left: 6),
-                                                            child: AnimatedContainer(
-                                                              duration: const Duration(milliseconds: 300),
-                                                              curve: Curves.easeOutBack,
-                                                              width: 20,
-                                                              height: 20,
-                                                              decoration: BoxDecoration(
-                                                                color: isSelected
-                                                                    ? (isDark ? Colors.black87 : Colors.white)
-                                                                    : Colors.red,
-                                                                shape: BoxShape.circle,
-                                                              ),
-                                                              alignment: Alignment.center,
-                                                              child: Text(
-                                                                '$catCartCount',
-                                                                style: TextStyle(
-                                                                  fontSize: 11,
-                                                                  fontWeight: FontWeight.w600,
-                                                                  color: isSelected
-                                                                      ? (isDark ? Colors.white : Colors.black87)
-                                                                      : Colors.white,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          )
-                                                        : const SizedBox.shrink(),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.12),
+                                                      blurRadius: 8,
+                                                      offset: const Offset(0, 2),
                                                     ),
                                                   ],
                                                 ),
                                               ),
                                             ),
+                                          // 2. Chip texts row (painted second = on top of pill)
+                                          Row(
+                                            key: _chipRowKey,
+                                            children: visibleCategories.map((cat) {
+                                              final catName = cat['name'] as String;
+                                              final isSelected = _selectedCategory == catName;
+                                              final cartItems = ref.watch(cartProvider).items;
+                                              final catCartCount = catName == 'Tümü'
+                                                  ? cartItems.length
+                                                  : cartItems.where((ci) => ci.product.category == catName).length;
+                                              return Padding(
+                                                padding: const EdgeInsets.only(right: 6),
+                                                child: GestureDetector(
+                                                  onTap: () => _selectCategory(catName),
+                                                  child: Container(
+                                                    key: _tabKeys.putIfAbsent(catName, () => GlobalKey()),
+                                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.transparent,
+                                                      borderRadius: BorderRadius.circular(50),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        AnimatedDefaultTextStyle(
+                                                          duration: const Duration(milliseconds: 300),
+                                                          curve: Curves.easeOutCubic,
+                                                          style: TextStyle(
+                                                            color: isSelected 
+                                                              ? (isDark ? Colors.black : Colors.white) 
+                                                              : (isDark ? Colors.white70 : Colors.black54),
+                                                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                                            fontSize: 13,
+                                                          ),
+                                                          child: Text(
+                                                            catName == 'Tümü' ? tr('business_details.all') : catName,
+                                                          ),
+                                                        ),
+                                                        if (catCartCount > 0) ...[
+                                                          const SizedBox(width: 6),
+                                                          AnimatedContainer(
+                                                            duration: const Duration(milliseconds: 300),
+                                                            curve: Curves.easeOutBack,
+                                                            width: 20,
+                                                            height: 20,
+                                                            decoration: BoxDecoration(
+                                                              color: isSelected
+                                                                  ? (isDark ? Colors.black87 : Colors.white)
+                                                                  : Colors.red,
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                            alignment: Alignment.center,
+                                                            child: Text(
+                                                              '$catCartCount',
+                                                              style: TextStyle(
+                                                                fontSize: 11,
+                                                                fontWeight: FontWeight.w600,
+                                                                color: isSelected
+                                                                    ? (isDark ? Colors.white : Colors.black87)
+                                                                    : Colors.white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
                                           ),
-                                        );
-                                      },
+                                        ],
+                                      ),
                                     );
                                   },
                                 ),
