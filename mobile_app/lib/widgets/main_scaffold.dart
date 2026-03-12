@@ -252,64 +252,101 @@ class GlassBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // "Dynamic Frost" Premium Glass - Research Based Implementation
-    // Light Mode: High opacity (0.8) "Ice" to prevent dirty/grey look on colorful backgrounds.
-    // Dark Mode: Medium opacity (0.6) "Smoke" for depth.
-    const blurSigma = 15.0; 
+    // ═══════════════════════════════════════════════════════════════════
+    // Apple iOS 26 "Liquid Glass" Design — Research-Based Implementation
+    // 
+    // Key principles from Apple's Liquid Glass:
+    //  • True translucency: content visibly scrolls behind the bar
+    //  • High blur (σ25) compensates for low opacity → frosted, not dirty
+    //  • Specular highlight gradient: simulates light refraction on glass
+    //  • Minimal border: thin luminous edge, not a thick container stroke
+    //  • Floating depth: soft diffuse shadow, not a hard drop shadow
+    // ═══════════════════════════════════════════════════════════════════
+    const blurSigma = 25.0;
     
-    // Gradient Colors
-    final gradientColors = isDark 
-        ? [Colors.black.withValues(alpha: 0.60), Colors.black.withValues(alpha: 0.40)] // Dark Smoke
-        : [Colors.white.withValues(alpha: 0.80), Colors.white.withValues(alpha: 0.60)]; // Bright Ice
+    // Glass fill — translucent, NOT opaque
+    final glassColor = isDark 
+        ? Colors.black.withValues(alpha: 0.30) 
+        : Colors.white.withValues(alpha: 0.40);
 
-    // Border Colors
+    // Specular highlight — top edge "light refraction"
+    final specularColors = isDark 
+        ? [Colors.white.withValues(alpha: 0.08), Colors.transparent]
+        : [Colors.white.withValues(alpha: 0.55), Colors.white.withValues(alpha: 0.0)];
+
+    // Luminous edge border
     final borderColor = isDark 
-        ? Colors.white.withValues(alpha: 0.15) 
-        : Colors.white.withValues(alpha: 0.60);
+        ? Colors.white.withValues(alpha: 0.12) 
+        : Colors.white.withValues(alpha: 0.50);
 
     return SafeArea(
       top: false,
       minimum: const EdgeInsets.only(bottom: 24), 
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(40), 
+          borderRadius: BorderRadius.circular(35), 
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
             child: Container(
-              height: 72, 
+              height: 68, 
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: gradientColors,
-                ),
-                borderRadius: BorderRadius.circular(40),
+                // Base glass fill
+                color: glassColor,
+                borderRadius: BorderRadius.circular(35),
+                // Luminous edge
                 border: Border.all(
                   color: borderColor,
-                  width: 1.0, 
+                  width: 0.5, 
                 ),
+                // Floating depth shadow
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                    spreadRadius: -2,
+                    color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
+                    spreadRadius: -4,
+                  ),
+                  // Subtle inner-glow illusion via outer light shadow
+                  if (!isDark) BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.25),
+                    blurRadius: 1,
+                    spreadRadius: 0,
                   ),
                 ],
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(items.length, (index) {
-                  final item = items[index];
-                  final isActive = index == currentIndex;
-                  
-                  return _Item(
-                    isActive: isActive,
-                    onTap: () => onTap(index),
-                    child: _buildItemContent(item, isActive, context, isDark),
-                  );
-                }),
+              child: Stack(
+                children: [
+                  // Specular highlight overlay — simulates glass refraction
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(35),
+                        gradient: LinearGradient(
+                          begin: const Alignment(-0.8, -1.0),
+                          end: const Alignment(0.8, 1.0),
+                          colors: specularColors,
+                          stops: const [0.0, 0.5],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Nav items
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(items.length, (index) {
+                      final item = items[index];
+                      final isActive = index == currentIndex;
+                      
+                      return _GlassItem(
+                        isActive: isActive,
+                        isDark: isDark,
+                        onTap: () => onTap(index),
+                        child: _buildItemContent(item, isActive, context, isDark),
+                      );
+                    }),
+                  ),
+                ],
               ),
             ),
           ),
@@ -319,11 +356,12 @@ class GlassBottomBar extends StatelessWidget {
   }
 
   Widget _buildItemContent(_NavItemData item, bool isActive, BuildContext context, bool isDark) {
-    // Brand Rose (Kermes Kırmızısı) - 0xFFFB335B
-    const activeColor = Color(0xFFFB335B); 
-    final inactiveColor = (isDark ? Colors.white : Colors.black).withValues(alpha: 0.6);
+    const activeColor = Color(0xFFFB335B); // LOKMA Brand Rose
+    final inactiveColor = isDark 
+        ? Colors.white.withValues(alpha: 0.55) 
+        : Colors.black.withValues(alpha: 0.50);
     final color = isActive ? activeColor : inactiveColor;
-    const iconSize = 24.0; // İkon biraz küçüldü metin için yer açıldı
+    const iconSize = 22.0;
 
     Widget iconWidget;
 
@@ -345,26 +383,26 @@ class GlassBottomBar extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
-                  color: const Color(0xffFF2D55), // Apple Red Badge
+                  color: const Color(0xffFF2D55),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5),
+                  border: Border.all(
+                    color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.8),
+                    width: 1.5,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 4,
+                      color: const Color(0xffFF2D55).withValues(alpha: 0.4),
+                      blurRadius: 6,
                     )
                   ],
                 ),
-                constraints: const BoxConstraints(
-                  minWidth: 16,
-                  minHeight: 16,
-                ),
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
                 child: Center(
                   child: Text(
                     cartItemCount > 9 ? '9+' : cartItemCount.toString(),
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 9, // Badge font küçüldü
+                      fontSize: 9,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -374,32 +412,13 @@ class GlassBottomBar extends StatelessWidget {
         ],
       );
     } else if (item.path == '/restoran') {
-      iconWidget = Image.asset(
-        'assets/icons/yemek_icon.png',
-        width: iconSize,
-        height: iconSize,
-        color: color,
-      );
+      iconWidget = Image.asset('assets/icons/yemek_icon.png', width: iconSize, height: iconSize, color: color);
     } else if (item.isKermes) {
-      iconWidget = Image.asset(
-        'assets/icons/kermes_icon.png',
-        width: iconSize,
-        height: iconSize,
-        color: color,
-      );
+      iconWidget = Image.asset('assets/icons/kermes_icon.png', width: iconSize, height: iconSize, color: color);
     } else if (item.path == '/market') {
-      iconWidget = Image.asset(
-        'assets/icons/market_icon.png',
-        width: iconSize,
-        height: iconSize,
-        color: color,
-      );
+      iconWidget = Image.asset('assets/icons/market_icon.png', width: iconSize, height: iconSize, color: color);
     } else {
-      iconWidget = Icon(
-        item.icon,
-        size: iconSize + 2, // Material ikonlar assetlere göre küçük kalabiliyor
-        color: color,
-      );
+      iconWidget = Icon(item.icon, size: iconSize + 2, color: color);
     }
 
     return Column(
@@ -407,14 +426,14 @@ class GlassBottomBar extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         iconWidget,
-        const SizedBox(height: 4),
+        const SizedBox(height: 3),
         Text(
           item.label,
           style: TextStyle(
             color: color,
-            fontSize: 10, // Apple standart tab bar text size
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-            letterSpacing: -0.2, // Tight tracking
+            fontSize: 10,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+            letterSpacing: -0.2,
           ),
         ),
       ],
@@ -422,28 +441,40 @@ class GlassBottomBar extends StatelessWidget {
   }
 }
 
-class _Item extends StatelessWidget {
+/// A single nav item with an active pill indicator (Apple Liquid Glass style)
+class _GlassItem extends StatelessWidget {
   final Widget child;
   final bool isActive;
+  final bool isDark;
   final VoidCallback onTap;
 
-  const _Item({
+  const _GlassItem({
     required this.child,
     required this.isActive,
+    required this.isDark,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkResponse(
+    return GestureDetector(
       onTap: onTap,
-      radius: 32,
-      child: SizedBox(
-        width: 60, // Genişlik biraz daraltıldı
-        height: 60,
-        child: Center(
-          child: child,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        width: 62,
+        height: 54,
+        decoration: BoxDecoration(
+          // Active pill: subtle glass-within-glass highlight
+          color: isActive 
+              ? (isDark 
+                  ? Colors.white.withValues(alpha: 0.10)
+                  : Colors.white.withValues(alpha: 0.45))
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(18),
         ),
+        child: Center(child: child),
       ),
     );
   }
