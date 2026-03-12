@@ -1832,27 +1832,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ),
                 titleSpacing: 0,
                 centerTitle: true,
-                actions: [
-                  // Search Icon with white circular background
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Material(
-                      color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                      shape: const CircleBorder(),
-                      elevation: 2,
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: () {
-                          _showMenuSearchOverlay();
-                        },
-                        child: SizedBox(
-                          width: 40, height: 40,
-                          child: Icon(Icons.search, color: textPrimary, size: 20),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                actions: const [],
               ),
               
               // Small spacer between toggle and card content

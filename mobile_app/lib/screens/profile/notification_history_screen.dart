@@ -81,9 +81,9 @@ class _NotificationHistoryScreenState extends State<NotificationHistoryScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : const Color(0xFFF2EEE9),
+      backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white,
       appBar: AppBar(
-        backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : const Color(0xFFF2EEE9),
+        backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
         elevation: 0,
@@ -567,7 +567,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
 
     // ── Card surface: mode-adaptive for harmony ──
     // Light: soft warm gray (iOS grouped bg style) — Dark: elevated surface
-    final cardBg = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFEBEBEF);
+    final cardBg = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2EEE9);
     final cardTextColor = isDark ? Colors.white : const Color(0xFF4A4A4C);
     final cardSubtleColor = isDark
         ? Colors.white.withValues(alpha: 0.55)
@@ -1053,7 +1053,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -1096,14 +1096,14 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                             style: TextButton.styleFrom(
                               foregroundColor: unread > 0
                                   ? const Color(0xFF4CAF50)
-                                  : Colors.white.withValues(alpha: 0.7),
+                                  : isDark ? Colors.white.withValues(alpha: 0.7) : const Color(0xFF3A3A3C),
                               backgroundColor: unread > 0
                                   ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
-                                  : Colors.white.withValues(alpha: 0.08),
+                                  : isDark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFF3A3A3C).withValues(alpha: 0.08),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                             ),
                           );
                         },
@@ -1134,7 +1134,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
