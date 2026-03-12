@@ -126,8 +126,28 @@ class FCMService {
     debugPrint('🔔 Local notifications initialized');
   }
 
-  /// Show a local notification with custom LOKMA sound (instant)
-  Future<void> _showLocalNotificationWithSound(String? title, String? body, {String? payload}) async {
+  /// Get the appropriate sound file for each notification type
+  String _getSoundForType(String? type) {
+    switch (type) {
+      case 'order_status':
+        return 'lokma_classic_ding.caf';    // Pop Melody — status update
+      case 'order_ready':
+        return 'lokma_bright_bell.caf';     // Signature Melody — ready!
+      case 'new_delivery':
+        return 'lokma_warm_dong.caf';       // Delivery Alert — strong attention
+      case 'order_cancelled':
+        return 'lokma_double_ding.caf';     // Marimba Hit — short, serious
+      case 'order_delivered':
+        return 'lokma_soft_gong.caf';       // Completion — happy, satisfying ✨
+      default:
+        return 'lokma_order_bell.caf';      // Cascade Chime — premium default
+    }
+  }
+
+  /// Show a local notification with type-specific LOKMA sound (instant)
+  Future<void> _showLocalNotificationWithSound(String? title, String? body, {String? payload, String? type}) async {
+    final soundFile = _getSoundForType(type);
+    
     // Use custom LOKMA sound from iOS bundle
     const androidDetails = AndroidNotificationDetails(
       'lokma_orders',
@@ -138,15 +158,15 @@ class FCMService {
       playSound: true,
     );
     
-    // Use custom CAF sound from iOS app bundle
-    const iosDetails = DarwinNotificationDetails(
+    // Use type-specific CAF sound from iOS app bundle
+    final iosDetails = DarwinNotificationDetails(
       presentSound: true,
       presentAlert: true,
       presentBadge: true,
-      sound: 'lokma_order_bell.caf',
+      sound: soundFile,
     );
     
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -158,7 +178,7 @@ class FCMService {
       details,
       payload: payload,
     );
-    debugPrint('🔔 Local notification shown with custom LOKMA sound: $title');
+    debugPrint('🔔 Notification with sound [$soundFile] for type [$type]: $title');
   }
 
   /// Manually refresh token - call this before placing an order
@@ -238,7 +258,7 @@ class FCMService {
     
     // ── INSTANT: Play custom sound via local notification FIRST ──
     final payload = '${type ?? "unknown"}:${data['orderId'] ?? ""}';
-    _showLocalNotificationWithSound(title, body, payload: payload);
+    _showLocalNotificationWithSound(title, body, payload: payload, type: type);
     
     // ── Then show in-app overlay ──
     String emoji;

@@ -1213,7 +1213,8 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   Widget _buildDeliveryModeTabs() {
     // Map current mode to index
     int selectedIndex = _deliveryMode == 'gelal' ? 1 : 0;
-    final accent = Theme.of(context).colorScheme.primary;
+    // 🧪 EXPERIMENT: Testing new LOKMA brand color #F41C54
+    const accent = Color(0xFFF41C54);
 
     return ThreeDimensionalPillTabBar(
       selectedIndex: selectedIndex,

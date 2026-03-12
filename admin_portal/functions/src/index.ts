@@ -40,7 +40,7 @@ async function getActiveNotificationSound(): Promise<string> {
 function buildSoundConfig(soundName: string) {
     return {
         apns: {
-            payload: { aps: { sound: soundName } },
+            payload: { aps: { sound: "default" } },
         },
         android: {
             notification: { sound: "default", channelId: "lokma_orders" },

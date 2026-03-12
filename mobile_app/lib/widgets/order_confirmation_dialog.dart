@@ -9,6 +9,7 @@ class OrderConfirmationDialog extends StatelessWidget {
   final bool isPickUp;
   final bool isDineIn;
   final VoidCallback? onDismiss;
+  final VoidCallback? onClearCart;
 
   const OrderConfirmationDialog({
     super.key, 
@@ -18,6 +19,7 @@ class OrderConfirmationDialog extends StatelessWidget {
     this.isPickUp = true,
     this.isDineIn = false,
     this.onDismiss,
+    this.onClearCart,
   });
 
   @override
@@ -120,10 +122,24 @@ class OrderConfirmationDialog extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    final navigator = Navigator.of(context, rootNavigator: true);
-                    context.go('/restoran');
-                    navigator.pop();
-                    if (onDismiss != null) onDismiss!();
+                    // CRITICAL FIX: The checkout page was pushed via
+                    // Navigator.push() (imperative), NOT via go_router.
+                    // context.go('/restoran') only changes the declarative
+                    // go_router stack — it CANNOT pop imperatively-pushed
+                    // routes, leaving them orphaned as a black screen.
+                    //
+                    // Solution: Pop ALL imperative routes (this dialog +
+                    // checkout page) back to the go_router-managed root,
+                    // then clear cart safely.
+                    final rootNav = Navigator.of(context, rootNavigator: true);
+                    rootNav.popUntil((route) => route.isFirst);
+                    
+                    // Clear cart after navigation is complete
+                    if (onClearCart != null) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        onClearCart!();
+                      });
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accentColor,

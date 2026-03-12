@@ -12,40 +12,28 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   static const Color lokmaRed = Color(0xFFFB335B);
 
   late final AnimationController _fadeController;
-  late final AnimationController _scaleController;
   late final Animation<double> _fadeAnimation;
-  late final Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    // Fade animation: fade in over 600ms
+    // Fade-in animation: 1 second with a smooth ease-in curve
     _fadeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 1000),
     );
     _fadeAnimation = CurvedAnimation(
       parent: _fadeController,
       curve: Curves.easeIn,
     );
 
-    // Subtle scale animation: 0.8 → 1.0
-    _scaleController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeOutBack),
-    );
-
-    // Start animations and auto-detect language
+    // Start fade-in and initialize app
     _fadeController.forward();
-    _scaleController.forward();
     _initAndNavigate();
   }
 
@@ -59,13 +47,11 @@ class _SplashScreenState extends State<SplashScreen>
       }
     } catch (_) {}
 
-    // Wait for animation to look nice (minimum 1.2 seconds total)
-    await Future.delayed(const Duration(milliseconds: 1200));
+    // Wait for the fade-in animation to complete (1 second)
+    await Future.delayed(const Duration(milliseconds: 1000));
 
-    // Fade out
-    if (mounted) {
-      await _fadeController.reverse();
-    }
+    // Brief pause at full opacity so the user sees the logo clearly
+    await Future.delayed(const Duration(milliseconds: 500));
 
     // Navigate
     if (mounted) {
@@ -82,69 +68,39 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _fadeController.dispose();
-    _scaleController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lokmaRed,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Logo
-                Container(
-                  width: 140,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 40,
-                        offset: const Offset(0, 12),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(32),
-                    child: Image.asset(
-                      'assets/images/lokma_logo.png',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: Colors.white,
-                        child: const Center(
-                          child: Text(
-                            'LOKMA',
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
-                              color: lokmaRed,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+      // Match the gradient's top color for status bar area
+      backgroundColor: const Color(0xFFE8456B),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SizedBox.expand(
+          child: Image.asset(
+            'assets/images/lokma_splash.png',
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFE8456B), Color(0xFFFF1A1A)],
                 ),
-                const SizedBox(height: 20),
-                // Tagline
-                Text(
-                  'fresh. fast. local.',
+              ),
+              child: const Center(
+                child: Text(
+                  'LOKMA',
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white.withValues(alpha: 0.9),
-                    letterSpacing: 2,
+                    fontSize: 48,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 4,
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),

@@ -980,7 +980,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 2),
       child: GestureDetector(
         onTap: () {
           // 🆕 Lieferando tarzı: Arama'ya tıklayınca SmartSearchScreen'e git
@@ -1042,7 +1042,8 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
     if (_deliveryMode == 'gelal') selectedIndex = 1;
     if (_deliveryMode == 'masa') selectedIndex = 2;
 
-    final accent = Theme.of(context).colorScheme.primary;
+    // 🧪 EXPERIMENT: Testing new LOKMA brand color #F41C54
+    const accent = Color(0xFFF41C54);
 
     return ThreeDimensionalPillTabBar(
       selectedIndex: selectedIndex,
@@ -3120,20 +3121,6 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: lokmaPink.withValues(alpha: 0.35),
-                    blurRadius: 24,
-                    offset: Offset(0, 8),
-                    spreadRadius: 0,
-                  ),
-                  BoxShadow(
-                    color: lokmaPink.withValues(alpha: 0.15),
-                    blurRadius: 48,
-                    offset: Offset(0, 16),
-                    spreadRadius: 0,
-                  ),
-                ],
               ),
               child: Column(
                 children: [
@@ -3158,7 +3145,7 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                     tr('home.order_with_qr'),
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: Theme.of(context).colorScheme.surface,
                       letterSpacing: -0.3,
                     ),

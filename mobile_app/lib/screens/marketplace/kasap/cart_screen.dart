@@ -113,6 +113,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   // 🪙 Driver Tip
   double _tipAmount = 0.0;
 
+  // 📍 Precise delivery GPS coordinates (from map picker)
+  double? _addressLat;
+  double? _addressLng;
+
   // 🎯 Promotion Engine: user segment + live preview
   String? _userSegment; // 'vip', 'new', 'returning' etc.
   PromotionResult? _promoPreviewResult; // live preview for cart UI
@@ -128,8 +132,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final hex = brandColorHex.replaceFirst('#', '');
       return Color(int.parse('FF$hex', radix: 16));
     }
-    // Fallback to LOKMA Rose-500
-    return const Color(0xFFFB335B);
+    // Fallback to LOKMA brand color
+    return const Color(0xFFF41C54);
   }
 
   @override
@@ -833,7 +837,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       }
       
       if (_paymentMethod == 'card') {
-        if (mounted) Navigator.pop(context); // Close initial loading dialog before Stripe sheet
+        if (mounted) Navigator.of(context, rootNavigator: true).pop(); // Close loading dialog (pushed on root navigator via showDialog)
 
         final paymentResult = await StripePaymentService.processPayment(
           amount: grandTotalWithDonation,
@@ -861,23 +865,33 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           if (paymentResult.feeBreakdown != null) 'feeBreakdown': paymentResult.feeBreakdown!.toMap(),
         });
       } else {
-        if (mounted) Navigator.pop(context); // Close loading for non-card
+        if (mounted) Navigator.of(context, rootNavigator: true).pop(); // Close loading dialog (pushed on root navigator via showDialog)
       }
 
-      // Clear cart
-      ref.read(cartProvider.notifier).clearCart();
-
-      // Show success dialog
+      // Show success dialog FIRST — cart clearing is handled ONLY after
+      // context.go('/restoran') in OrderConfirmationDialog to avoid
+      // rebuilding checkout page with an empty cart (causing black screen).
       if (mounted) {
+        // Capture ref before showing dialog so we can use it in the callback
+        final cartNotifier = ref.read(cartProvider.notifier);
+        
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => OrderConfirmationDialog(
+          builder: (dialogCtx) => OrderConfirmationDialog(
             pickupDate: pickupDateTime,
             businessHours: _hoursHelper?.getHoursStringForDate(pickupDateTime),
             businessName: _butcherData?['companyName'],
             isPickUp: _isPickUp,
             isDineIn: _isDineIn,
+            onDismiss: () {
+              // DO NOT clear cart here — it will be cleared AFTER navigation
+              // in the dialog's onPressed handler via post-frame callback
+            },
+            onClearCart: () {
+              // Called AFTER context.go('/restoran') to safely clear cart
+              cartNotifier.clearCart();
+            },
           ),
         );
 
@@ -897,7 +911,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       }
 
     } catch (e) {
-      Navigator.pop(context); // Close loading
+      // Try to close loading dialog — may already be dismissed for card payments
+      try { if (mounted) Navigator.of(context, rootNavigator: true).pop(); } catch (_) {}
       debugPrint('Order error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${'cart.order_error'.tr()}: $e')),
@@ -945,7 +960,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             const SizedBox(height: 16),
             Text(
               'checkout.save_to_calendar'.tr(),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
             Text(
@@ -992,7 +1007,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ),
                 child: Text(
                   'checkout.save_calendar'.tr(),
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -1057,7 +1072,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         ),
         title: Text(
           'checkout.cart_title'.tr(),
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: colorScheme.onSurface),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: colorScheme.onSurface),
         ),
         centerTitle: true,
         bottom: PreferredSize(
@@ -1135,7 +1150,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           '${step + 1}',
                           style: TextStyle(
                             fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w500,
                             color: isActive
                                 ? accent
                                 : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
@@ -1148,7 +1163,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 labels[step],
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: isActive || isCompleted ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: isActive || isCompleted ? FontWeight.w500 : FontWeight.w400,
                   color: isActive || isCompleted
                       ? Theme.of(context).colorScheme.onSurface
                       : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
@@ -1265,7 +1280,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         style: TextStyle(
                           color: textColor,
                           fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
@@ -1330,7 +1345,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           SizedBox(height: 16),
           Text(
             message,
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w500),
           ),
           SizedBox(height: 8),
           Text(
@@ -1448,7 +1463,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                         style: TextStyle(
                                           color: Theme.of(context).colorScheme.surface,
                                           fontSize: 9,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w500,
                                           letterSpacing: 0.5,
                                         ),
                                       ),
@@ -1490,7 +1505,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(height: 4),
@@ -1506,7 +1521,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             decoration: TextDecoration.underline,
                           ),
                         ),
@@ -1531,7 +1546,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       style: TextStyle(
                         color: _getStatusColor(order.status),
                         fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -1589,7 +1604,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         'cart.reorder'.tr(),
                         style: TextStyle(
                           fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                           color: Theme.of(context).colorScheme.surface,
                         ),
                       ),
@@ -1666,7 +1681,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 32,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(height: 16),
@@ -1685,7 +1700,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 color: colorScheme.onSurface,
                                 fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             const Spacer(),
@@ -1711,7 +1726,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             icon: Icon(Icons.star_border, color: Theme.of(context).colorScheme.surface, size: 20),
                             label: Text(
                               'cart.rate'.tr(),
-                              style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 15, fontWeight: FontWeight.w600),
+                              style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 15, fontWeight: FontWeight.w500),
                             ),
                           ),
                         ),
@@ -1733,7 +1748,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             },
                             child: Text(
                               'cart.reorder'.tr(),
-                              style: TextStyle(color: colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w600),
+                              style: TextStyle(color: colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w500),
                             ),
                           ),
                         ),
@@ -1749,7 +1764,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(height: 8),
@@ -1803,7 +1818,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     style: TextStyle(
                                       color: colorScheme.onSurface,
                                       fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                   SizedBox(height: 4),
@@ -1872,7 +1887,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 color: colorScheme.onSurface,
                                 fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             Text(
@@ -1880,7 +1895,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 color: colorScheme.onSurface,
                                 fontSize: 15,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
@@ -1896,7 +1911,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               color: brandColor,
                               fontSize: 14,
                               decoration: TextDecoration.underline,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -1917,7 +1932,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     style: TextStyle(
                                       color: colorScheme.onSurface,
                                       fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                   SizedBox(height: 4),
@@ -1936,7 +1951,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       ),
                                       child: Text(
                                         'cart.start_chat'.tr(),
-                                        style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 13, fontWeight: FontWeight.w600),
+                                        style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 13, fontWeight: FontWeight.w500),
                                       ),
                                     ),
                                   ),
@@ -2163,7 +2178,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         style: TextStyle(
                           fontFamily: 'Courier',
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                           color: const Color(0xFF3E2723),
                           letterSpacing: 2,
                         ),
@@ -2206,7 +2221,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w500,
                                 color: const Color(0xFF3E2723),
                               ),
                             ),
@@ -2218,7 +2233,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w500,
                                 color: const Color(0xFF3E2723),
                               ),
                               textAlign: TextAlign.center,
@@ -2231,7 +2246,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: TextStyle(
                                 fontFamily: 'Courier',
                                 fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w500,
                                 color: const Color(0xFF3E2723),
                               ),
                               textAlign: TextAlign.right,
@@ -2300,7 +2315,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             style: TextStyle(
                               fontFamily: 'Courier',
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w500,
                               color: const Color(0xFF3E2723),
                             ),
                           ),
@@ -2309,7 +2324,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             style: TextStyle(
                               fontFamily: 'Courier',
                               fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w500,
                               color: const Color(0xFF3E2723),
                             ),
                           ),
@@ -2325,7 +2340,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         style: TextStyle(
                           fontFamily: 'Courier',
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                           color: const Color(0xFF3E2723),
                           letterSpacing: 2,
                         ),
@@ -2412,7 +2427,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           style: TextStyle(
             fontFamily: 'Courier',
             fontSize: 12,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w500,
             color: const Color(0xFF3E2723),
           ),
         ),
@@ -2648,7 +2663,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -2785,7 +2800,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               'Gel Al',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
             ),
@@ -2943,7 +2958,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 12),
@@ -2969,7 +2984,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Text('common.understood'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                  child: Text('common.understood'.tr(), style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
                 ),
               ),
             ],
@@ -3020,7 +3035,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -3123,12 +3138,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 children: [
                   TextSpan(
                     text: '${remaining.toStringAsFixed(2).replaceAll('.', ',')} ${CurrencyUtils.getCurrencySymbol()}',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                   const TextSpan(text: ' daha ekle, min. sipariş '),
                   TextSpan(
                     text: '${minOrder.toStringAsFixed(0)} ${CurrencyUtils.getCurrencySymbol()}',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                 ],
               ),
@@ -3181,7 +3196,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 if (subtitle != null && subtitle.isNotEmpty)
@@ -3342,20 +3357,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // #N Position number badge
-                        Container(
-                          margin: const EdgeInsets.only(top: 2, right: 8),
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: _accentColor.withValues(alpha: isDark ? 0.25 : 0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
+                        // #N Position number — plain dark gray
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2, right: 8),
                           child: Text(
                             '#$positionNumber',
                             style: TextStyle(
-                              color: _accentColor,
+                              color: isDark ? Colors.grey[400] : Colors.grey[600],
                               fontSize: 11,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
@@ -3367,7 +3377,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 productName,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   fontSize: 15,
                                 ),
                                 maxLines: 2,
@@ -3396,7 +3406,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     ),
                                     child: const Text(
                                       '🎁 Gratis',
-                                      style: TextStyle(fontSize: 11, color: Color(0xFF4CAF50), fontWeight: FontWeight.w600),
+                                      style: TextStyle(fontSize: 11, color: Color(0xFF4CAF50), fontWeight: FontWeight.w500),
                                     ),
                                   ),
                                 ),
@@ -3408,23 +3418,17 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           '${totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onSurface,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             fontSize: 15,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    // Row 2: Note button (left) + Quantity pill (right)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
+                    // Row 2: Note button (left) + Delete + Quantity pill (right)
+                    Row(
                       children: [
-                        // Note button — subtle chip style
+                        // Note button — subtle chip style (Lieferando reference)
                         GestureDetector(
                           onTap: () => _showNoteDialog(item),
                           child: Container(
@@ -3432,7 +3436,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             decoration: BoxDecoration(
                               color: isDark ? Colors.grey[900] : Colors.grey[50],
                               border: Border.all(
-                                color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                                color: isDark ? Colors.grey[700]! : const Color(0xFFEFEEEA),
                               ),
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -3445,7 +3449,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       ? Icons.edit_note
                                       : Icons.note_add_outlined,
                                   size: 14,
-                                  color: Colors.grey[500],
+                                  color: isDark ? Colors.grey[500] : const Color(0xFF3E3E3E),
                                 ),
                                 const SizedBox(width: 4),
                                 Flexible(
@@ -3453,10 +3457,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     _buildNoteDisplayText(item),
                                     style: TextStyle(
                                       fontSize: 12,
+                                      fontWeight: FontWeight.w400,
                                       color: (item.note != null && item.note!.isNotEmpty) ||
                                               (item.recipientName != null && item.recipientName!.isNotEmpty)
-                                          ? (isDark ? Colors.grey[300] : Colors.grey[700])
-                                          : Colors.grey[500],
+                                          ? (isDark ? Colors.grey[300] : const Color(0xFF3E3E3E))
+                                          : (isDark ? Colors.grey[500] : const Color(0xFF3E3E3E)),
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -3483,16 +3488,20 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           ),
                         ),
                         const SizedBox(width: 8),
-                        // 🔢 Quantity Pill — Lieferando style rounded container
+                        // 🔢 Quantity Pill — Lieferando style: single beige pill with flat text
                         Container(
                           decoration: BoxDecoration(
-                            color: isDark ? Colors.grey[800] : Colors.grey[100],
+                            color: isDark ? Colors.grey[800] : const Color(0xFFF5F0E8),
                             borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0),
+                              width: 0.5,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Minus button
+                              // Minus button — flat text style
                               GestureDetector(
                                 onTap: () {
                                   HapticFeedback.lightImpact();
@@ -3504,32 +3513,30 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     ref.read(cartProvider.notifier).removeFromCart(item.uniqueKey);
                                   }
                                 },
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isDark ? _accentColor : _accentColor,
-                                  ),
-                                  child: Icon(
-                                    Icons.remove,
-                                    size: 16,
-                                    color: Colors.white,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  child: Text(
+                                    '–',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark ? Colors.grey[300] : const Color(0xFF3E3E3E),
+                                    ),
                                   ),
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
                                 child: Text(
                                   qtyText,
                                   style: TextStyle(
                                     color: Theme.of(context).colorScheme.onSurface,
                                     fontSize: 15,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
-                              // Plus button
+                              // Plus button — flat text style
                               GestureDetector(
                                 onTap: () {
                                   HapticFeedback.lightImpact();
@@ -3538,17 +3545,15 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     isKg ? quantity + 0.5 : quantity + 1,
                                   );
                                 },
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: isDark ? _accentColor : _accentColor,
-                                  ),
-                                  child: Icon(
-                                    Icons.add,
-                                    size: 16,
-                                    color: Colors.white,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  child: Text(
+                                    '+',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark ? Colors.grey[300] : const Color(0xFF3E3E3E),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -3557,7 +3562,6 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         ),
                       ],
                     ),
-                    ), // Container
                   ],
                 ),
               ),
@@ -3568,7 +3572,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         Divider(
           height: 1,
           thickness: 1,
-          color: isDark ? Colors.grey[800] : const Color(0xFFEEEEEE),
+          color: isDark ? Colors.grey[800] : const Color(0xFFE8E8E8),
         ),
       ],
     );
@@ -3632,7 +3636,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     'cart.your_note'.tr(),
                     style: TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
@@ -3645,7 +3649,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     'cart.note_recipient_label'.tr(),
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
@@ -3699,7 +3703,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     'cart.note_food_label'.tr(),
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
@@ -3780,7 +3784,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               'common.cancel'.tr(),
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                                 color: isDark ? Colors.white : Colors.black87,
                               ),
                             ),
@@ -3817,7 +3821,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               'common.save'.tr(),
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                                 color: (noteController.text.trim().isNotEmpty || recipientController.text.trim().isNotEmpty)
                                     ? Colors.white
                                     : (isDark ? Colors.grey[500] : Colors.grey[400]),
@@ -3846,7 +3850,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF2A2520) : const Color(0xFFF5F0E8),
+        color: isDark ? const Color(0xFF2A2520) : const Color(0xFFDBE0A9),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -3862,7 +3866,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     'marketplace.forgot_something_de'.tr(),
                     style: TextStyle(
                       fontSize: 17,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
@@ -4117,7 +4121,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             style: TextStyle(
               color: nearThreshold ? const Color(0xFF6EE7B7) : const Color(0xFF9CA3AF),
               fontSize: 13,
-              fontWeight: nearThreshold ? FontWeight.w600 : FontWeight.w500,
+              fontWeight: nearThreshold ? FontWeight.w500 : FontWeight.w500,
             ),
           ),
           const SizedBox(height: 8),
@@ -4270,7 +4274,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       subtitle,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight: hasFreeDrink ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight: hasFreeDrink ? FontWeight.w500 : FontWeight.w500,
                         color: hasFreeDrink
                             ? Color(0xFF10B981)
                             : (isDark ? Colors.white60 : Color(0xFF065F46)),
@@ -4393,7 +4397,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 11,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   color: isDark ? Colors.white : Colors.black87,
                                   height: 1.2,
                                 ),
@@ -4419,7 +4423,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     '0,00 €',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w500,
                                       color: Color(0xFF10B981),
                                     ),
                                   ),
@@ -4638,7 +4642,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.surface,
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               if (!(_isDineIn && _scannedTableNumber == null)) ...[
@@ -4699,7 +4703,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 'Masanızdaki QR Kodu Okutun',
                 style: TextStyle(
                   fontSize: 20, 
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
@@ -4819,7 +4823,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           autofocus: true,
           style: TextStyle(
             fontSize: 24, 
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
             color: isDark ? Colors.white : Colors.black87,
           ),
           textAlign: TextAlign.center,
@@ -4939,7 +4943,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               'Masa $tableNum — Aktif Grup Siparişi',
               style: const TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 8),
@@ -4959,7 +4963,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               keyboardType: TextInputType.number,
               maxLength: 4,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: 12),
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w500, letterSpacing: 12),
               decoration: InputDecoration(
                 hintText: '• • • •',
                 counterText: '',
@@ -4995,7 +4999,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 icon: const Icon(Icons.group_add),
                 label: const Text(
                   'Gruba Katıl',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor: _accentColor,
@@ -5066,7 +5070,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               'Masa $tableNum',
               style: const TextStyle(
                 fontSize: 20,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 8),
@@ -5091,7 +5095,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 icon: const Icon(Icons.groups),
                 label: const Text(
                   'Grup Siparişi Başlat',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 style: FilledButton.styleFrom(
                   backgroundColor: _accentColor,
@@ -5252,7 +5256,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 Text(
                   'Masa $_scannedTableNumber',
                   style: TextStyle(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     fontSize: 16,
                     color: isDark ? Colors.white : Colors.black87,
                   ),
@@ -5367,7 +5371,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           SizedBox(height: 16),
           Text(
             'marketplace.your_cart_is_empty'.tr(),
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 20, fontWeight: FontWeight.w600),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 20, fontWeight: FontWeight.w500),
           ),
           SizedBox(height: 8),
           Text('marketplace.order_from_kermes'.tr(), style: TextStyle(color: Colors.grey)),
@@ -5388,7 +5392,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               icon: const Icon(Icons.arrow_back_rounded, size: 20),
               label: const Text(
                 'Menüye Dön',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
               style: FilledButton.styleFrom(
                 backgroundColor: _accentColor,
@@ -5516,7 +5520,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       children: [
                         Text(
                           'checkout.select_delivery_address'.tr(),
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black),
                         ),
                         const Spacer(),
                         IconButton(
@@ -5642,7 +5646,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                       tr('checkout.add_new_address'),
                                       style: TextStyle(
                                         color: isDark ? Colors.grey[400]! : Colors.grey[700]!,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w500,
                                         fontSize: 14,
                                       ),
                                     ),
@@ -5728,7 +5732,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           style: TextStyle(
                             fontSize: 11,
                             color: isDefault ? Colors.green : (isDark ? Colors.grey[400]! : Colors.grey[600]!),
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         if (isDefault) ...[
@@ -5894,7 +5898,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                           'checkout.find_my_location'.tr(),
                                           style: TextStyle(
                                             fontSize: 13,
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: FontWeight.w500,
                                             color: isDark ? Colors.white : Colors.black87,
                                           ),
                                         ),
@@ -5934,6 +5938,11 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     if (result != null) {
                                       final rLat = result['lat'] as double;
                                       final rLng = result['lng'] as double;
+                                      // Store coordinates for delivery PIN
+                                      setState(() {
+                                        _addressLat = rLat;
+                                        _addressLng = rLng;
+                                      });
                                       try {
                                         final placemarks = await placemarkFromCoordinates(rLat, rLng);
                                         if (placemarks.isNotEmpty) {
@@ -5969,7 +5978,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                           'checkout.select_on_map'.tr(),
                                           style: TextStyle(
                                             fontSize: 13,
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: FontWeight.w500,
                                             color: isDark ? Colors.white : Colors.black87,
                                           ),
                                         ),
@@ -6143,7 +6152,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
                                 elevation: 0,
                               ),
-                              child: Text('checkout.save_and_use'.tr(), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                              child: Text('checkout.save_and_use'.tr(), style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16)),
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -6178,7 +6187,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 'checkout.use_only'.tr(),
                                 style: TextStyle(
                                   color: isDark ? Colors.grey[400] : Colors.grey[600],
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   fontSize: 15,
                                 ),
                               ),
@@ -6216,7 +6225,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         labelText: label,
         hintText: hint,
         floatingLabelBehavior: FloatingLabelBehavior.always,
-        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 14, fontWeight: FontWeight.w600),
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 14, fontWeight: FontWeight.w500),
         hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
         prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: isDark ? Colors.grey[500] : Colors.grey[500], size: 20) : null,
         filled: true,
@@ -6275,7 +6284,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           'marketplace.if_product_unavailable'.tr(),
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             color: isDark ? Colors.white : Colors.black87,
                           ),
                         ),
@@ -6294,7 +6303,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                     Expanded(
                                       child: Text(
                                         'marketplace.what_if_unavailable'.tr(),
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: isDark ? Colors.white : Colors.black),
                                       ),
                                     ),
                                   ],
@@ -6310,7 +6319,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(dialogCtx),
-                                    child: Text('common.understood'.tr(), style: TextStyle(color: _accentColor, fontWeight: FontWeight.w600)),
+                                    child: Text('common.understood'.tr(), style: TextStyle(color: _accentColor, fontWeight: FontWeight.w500)),
                                   ),
                                 ],
                               ),
@@ -6390,7 +6399,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         productName,
                         style: TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                           color: isDark ? Colors.white : Colors.black87,
                         ),
                         maxLines: 1,
@@ -6502,7 +6511,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         TextSpan(text: 'Alerjiniz varsa, '),
                         TextSpan(
                           text: '"Ürün ücretini iade et"',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                          style: TextStyle(fontWeight: FontWeight.w500),
                         ),
                         TextSpan(text: ' seçeneğini öneriyoruz.'),
                       ],
@@ -6530,7 +6539,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       productName,
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         color: isDark ? Colors.white : Colors.black87,
                       ),
                       maxLines: 1,
@@ -6631,7 +6640,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     title,
                     style: TextStyle(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
@@ -6688,7 +6697,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           label,
           style: TextStyle(
             fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            fontWeight: isSelected ? FontWeight.w500 : FontWeight.w500,
             color: isSelected
                 ? _accentColor
                 : (isDark ? Colors.grey[300] : Colors.grey[600]),
@@ -6795,7 +6804,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   'Teslim Alma Saati',
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
@@ -6811,7 +6820,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       selectedDisplay,
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         color: isDark ? Colors.white : const Color(0xFF1A1A1A),
                       ),
                     ),
@@ -6878,7 +6887,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 dayLabels[index],
                                 style: TextStyle(
                                   fontSize: isSelected ? 18 : 15,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                                   color: isSelected
                                       ? Theme.of(context).colorScheme.onSurface
                                       : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
@@ -6926,7 +6935,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                 timeStr,
                                 style: TextStyle(
                                   fontSize: isSelected ? 18 : 15,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                                   color: isSelected
                                       ? Theme.of(context).colorScheme.onSurface
                                       : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35),
@@ -7096,7 +7105,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.w500,
+                                isSelected ? FontWeight.w500 : FontWeight.w500,
                             color: isSelected
                                 ? (isDark ? Colors.white : Colors.black87)
                                 : (isDark ? Colors.grey[400] : Colors.grey[600]),
@@ -7180,7 +7189,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: isSelected
-                                        ? FontWeight.w600
+                                        ? FontWeight.w500
                                         : FontWeight.w400,
                                     color: isSelected
                                         ? (isDark ? Colors.white : Colors.black87)
@@ -7324,7 +7333,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                               'checkout.understood'.tr(),
                               style: TextStyle(
                                 fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                                 color: isDark ? Colors.grey[300] : Colors.grey[700],
                               ),
                             ),
@@ -7368,7 +7377,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 label,
                 style: TextStyle(
                   fontSize: 15,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                   color: isSelected
                       ? (isDark ? Colors.white : Colors.black87)
                       : (isDark ? Colors.grey[400] : Colors.grey[700]),
@@ -7535,7 +7544,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       Expanded(
                         child: Text(title, style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                           color: Theme.of(sheetCtx).colorScheme.onSurface,
                         )),
                       ),
@@ -7709,7 +7718,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
         ),
         title: Text(
           'checkout.title'.tr(),
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface),
         ),
         centerTitle: true,
         bottom: PreferredSize(
@@ -7736,7 +7745,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     // ═══════════════════════════════════════
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                      child: Text('checkout.order_details'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                      child: Text('checkout.order_details'.tr(), style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                     ),
 
                     // ── User Info Row ──
@@ -7774,9 +7783,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   children: [
                                     Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
                                     const SizedBox(height: 20),
-                                    Text('checkout.your_details'.tr(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
+                                    Text('checkout.your_details'.tr(), style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                                     const SizedBox(height: 16),
-                                    Text('checkout.first_name'.tr(), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                                    Text('checkout.first_name'.tr(), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                                     const SizedBox(height: 6),
                                     TextField(
                                       controller: firstNameCtrl,
@@ -7789,7 +7798,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15),
                                     ),
                                     const SizedBox(height: 12),
-                                    Text('checkout.last_name'.tr(), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                                    Text('checkout.last_name'.tr(), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                                     const SizedBox(height: 6),
                                     TextField(
                                       controller: lastNameCtrl,
@@ -7802,7 +7811,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15),
                                     ),
                                     const SizedBox(height: 12),
-                                    Text('checkout.phone'.tr(), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                                    Text('checkout.phone'.tr(), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                                     const SizedBox(height: 6),
                                     TextField(
                                       controller: phoneCtrl,
@@ -7825,7 +7834,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                                               side: BorderSide(color: Colors.grey[400]!),
                                             ),
-                                            child: Text('checkout.cancel'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600)),
+                                            child: Text('checkout.cancel'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500)),
                                           ),
                                         ),
                                         const SizedBox(width: 12),
@@ -7854,7 +7863,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                                               elevation: 0,
                                             ),
-                                            child: Text('checkout.save'.tr(), style: const TextStyle(fontWeight: FontWeight.w700)),
+                                            child: Text('checkout.save'.tr(), style: const TextStyle(fontWeight: FontWeight.w500)),
                                           ),
                                         ),
                                       ],
@@ -7941,7 +7950,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(hasAddress ? displayStreet.toString() : 'checkout.add_address'.tr(),
-                                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface)),
+                                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                                               if (hasAddress) ...[
                                                 const SizedBox(height: 2),
                                                 Text(displayCity.toString(), style: TextStyle(fontSize: 13, color: Colors.grey[500])),
@@ -7988,7 +7997,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
 
                                 // 🗺️ Mini Map Preview — tapping opens full-screen map picker (independent from address picker)
                                 if (_addressLat != null && _addressLng != null) ...[
-                                  GestureDetector(
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 38),
+                                    child: GestureDetector(
                                     onTap: () async {
                                       final result = await Navigator.of(context).push<Map<String, dynamic>>(
                                         MaterialPageRoute(
@@ -8005,10 +8016,15 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                         ),
                                       );
                                       if (result != null && mounted) {
+                                        final rLat = result['lat'] as double;
+                                        final rLng = result['lng'] as double;
                                         setState(() {
-                                          _addressLat = result['lat'] as double;
-                                          _addressLng = result['lng'] as double;
+                                          _addressLat = rLat;
+                                          _addressLng = rLng;
                                         });
+                                        // Sync to parent for _submitOrder
+                                        parent._addressLat = rLat;
+                                        parent._addressLng = rLng;
                                       }
                                     },
                                     child: ClipRRect(
@@ -8086,6 +8102,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                         ),
                                       ),
                                     ),
+                                    ),
                                   ),
                                   const SizedBox(height: 12),
                                 ],
@@ -8103,7 +8120,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       icon: Icons.description_outlined,
                       iconColor: brandRed,
                       title: 'checkout.delivery_notes'.tr(),
-                      trailing: Icon(Icons.add, color: neutralIcon, size: 24),
+                      trailing: Icon(Icons.add_circle_outline, color: neutralIcon, size: 24),
                       dividerColor: dividerColor,
                       onTap: () {
                         // Show order note bottom sheet
@@ -8116,7 +8133,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('checkout.delivery_notes'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                                Text('checkout.delivery_notes'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
                                 const SizedBox(height: 12),
                                 TextField(
                                   controller: widget.noteController,
@@ -8175,7 +8192,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text('checkout.required'.tr(),
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.amber[800])),
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.amber[800])),
                               )
                             : null,
                         trailing: Icon(Icons.chevron_right, color: chevronColor, size: 22),
@@ -8209,7 +8226,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                           ),
                                         ),
                                       ),
-                                      Text('checkout.when'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                                      Text('checkout.when'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
                                       const SizedBox(height: 16),
                                       parent._buildDeliveryTimePicker(setSheetState),
                                       const SizedBox(height: 16),
@@ -8282,7 +8299,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       children: [
                                         Text(
                                           'marketplace.if_product_unavailable'.tr(),
-                                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                                          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
                                         ),
                                         const SizedBox(width: 6),
                                         Icon(Icons.info_outline, size: 16, color: Colors.grey[400]),
@@ -8355,7 +8372,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(parent._isDineIn ? 'checkout.dine_in'.tr() : 'checkout.pickup'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                                  Text(parent._isDineIn ? 'checkout.dine_in'.tr() : 'checkout.pickup'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
                                   const SizedBox(height: 16),
                                   if (parent._isPickUp && !parent._isDineIn)
                                     parent._buildPickupTimePicker(setState),
@@ -8373,7 +8390,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                                         prefixIcon: Icon(parent._scannedTableNumber != null ? Icons.lock : Icons.table_bar, color: parent._scannedTableNumber != null ? Colors.green : neutralIcon, size: 20),
                                       ),
-                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w600),
+                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14, fontWeight: FontWeight.w500),
                                     ),
                                   ],
                                   const SizedBox(height: 16),
@@ -8393,14 +8410,24 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       ),
 
                     // ═══ SECTION DIVIDER ═══
-                    Container(height: 8, color: sectionDividerColor),
+                    Container(height: 10, color: sectionDividerColor),
                     // ═══════════════════════════════════════
-                    // ORDER ITEMS SUMMARY (inside sectionDivider block)
+                    // ORDER ITEMS SUMMARY — "Bestellübersicht"
                     // ═══════════════════════════════════════
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Text(
+                            'checkout.order_summary'.tr(),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
                           ...widget.cart.items.map<Widget>((item) => Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
@@ -8449,7 +8476,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   const SizedBox(width: 4),
                                   Text('checkout.coupon_discount'.tr(), style: TextStyle(color: Colors.green[700], fontSize: 13)),
                                 ]),
-                                Text('-${widget.couponDiscount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                                Text('-${widget.couponDiscount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w500)),
                               ],
                             ),
                           ],
@@ -8459,7 +8486,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text('checkout.welcome_discount'.tr(), style: TextStyle(color: Colors.orange[700], fontSize: 13)),
-                                Text('-${widget.firstOrderDiscountAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.orange[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                                Text('-${widget.firstOrderDiscountAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.orange[700], fontSize: 13, fontWeight: FontWeight.w500)),
                               ],
                             ),
                           ],
@@ -8473,7 +8500,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   const SizedBox(width: 4),
                                   Text('checkout.wallet'.tr(), style: TextStyle(color: Colors.green[700], fontSize: 13)),
                                 ]),
-                                Text('-${widget.walletApplied.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                                Text('-${widget.walletApplied.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w500)),
                               ],
                             ),
                           ],
@@ -8483,7 +8510,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text('checkout.tip'.tr(), style: TextStyle(color: Colors.blue[700], fontSize: 13)),
-                                Text('+${parent._tipAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.blue[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                                Text('+${parent._tipAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.blue[700], fontSize: 13, fontWeight: FontWeight.w500)),
                               ],
                             ),
                           ],
@@ -8493,7 +8520,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text('checkout.donation'.tr(), style: TextStyle(color: Colors.green[700], fontSize: 13)),
-                                Text('+${parent._donationAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                                Text('+${parent._donationAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w500)),
                               ],
                             ),
                           ],
@@ -8501,8 +8528,8 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('checkout.total'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 16)),
-                              Text('${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w600, fontSize: 16)),
+                              Text('checkout.total'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 16)),
+                              Text('${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500, fontSize: 16)),
                             ],
                           ),
                         ],
@@ -8510,14 +8537,14 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     ),
 
                     // ═══ SECTION DIVIDER ═══
-                    Container(height: 8, color: sectionDividerColor),
+                    Container(height: 10, color: sectionDividerColor),
 
                     // ═══════════════════════════════════════
                     // SECTION 2: GUTSCHEINE UND RABATTE
                     // ═══════════════════════════════════════
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                      child: Text('checkout.vouchers'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                      child: Text('checkout.vouchers'.tr(), style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                     ),
                     _buildCheckoutRow(
                       context,
@@ -8552,7 +8579,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-                                Text('checkout.vouchers'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                                Text('checkout.vouchers'.tr(), style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                                 const SizedBox(height: 16),
                                 TextField(
                                   controller: widget.couponController,
@@ -8571,7 +8598,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                                     prefixIcon: Icon(Icons.local_offer_outlined, color: parent._accentColor, size: 22),
                                   ),
-                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 1.5),
+                                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 15, fontWeight: FontWeight.w500, letterSpacing: 1.5),
                                 ),
                                 const SizedBox(height: 16),
                                 SizedBox(
@@ -8601,7 +8628,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                     ),
                                     child: parent._isValidatingCoupon
                                         ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                        : Text('cart.apply'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                                        : Text('cart.apply'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                   ),
                                 ),
                               ],
@@ -8612,7 +8639,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     ),
 
                     // ═══ SECTION DIVIDER ═══
-                    Container(height: 8, color: sectionDividerColor),
+                    Container(height: 10, color: sectionDividerColor),
 
                     // ═══════════════════════════════════════
                     // SECTION 3: DRIVER TIP (only for delivery)
@@ -8622,7 +8649,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                         child: Row(
                           children: [
-                            Text('checkout.tip_title'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                            Text('checkout.tip_title'.tr(), style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                             const SizedBox(width: 6),
                             GestureDetector(
                               onTap: () {
@@ -8644,7 +8671,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                           // Simple delivery icon
                                           Icon(Icons.delivery_dining, size: 56, color: sheetDark ? Colors.grey[400] : Colors.grey[600]),
                                           const SizedBox(height: 20),
-                                          Text('checkout.tip_info_title'.tr(), textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: sheetDark ? Colors.white : Colors.black87)),
+                                          Text('checkout.tip_info_title'.tr(), textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: sheetDark ? Colors.white : Colors.black87)),
                                           const SizedBox(height: 14),
                                           Text('checkout.tip_info_body'.tr(), style: TextStyle(fontSize: 14, color: sheetDark ? Colors.grey[400] : Colors.grey[600], height: 1.5)),
                                           const SizedBox(height: 28),
@@ -8659,7 +8686,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                               ),
-                                              child: Text('checkout.tip_info_dismiss'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                              child: Text('checkout.tip_info_dismiss'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                             ),
                                           ),
                                         ],
@@ -8692,10 +8719,10 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                     decoration: BoxDecoration(
                                       color: parent._tipAmount == tipVal
                                           ? (isDark ? Colors.grey[600] : Colors.grey[700])
-                                          : (isDark ? Colors.grey[800] : const Color(0xFFF5F5F5)),
+                                          : (isDark ? Colors.grey[800] : sectionDividerColor),
                                       borderRadius: BorderRadius.circular(24),
                                       border: Border.all(
-                                        color: parent._tipAmount == tipVal ? (isDark ? Colors.grey[500]! : Colors.grey[700]!) : (isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0)),
+                                        color: parent._tipAmount == tipVal ? (isDark ? Colors.grey[500]! : Colors.grey[700]!) : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
                                         width: 1,
                                       ),
                                     ),
@@ -8704,7 +8731,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                         '${tipVal.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
                                         style: TextStyle(
                                           color: parent._tipAmount == tipVal ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w500,
                                           fontSize: 13,
                                         ),
                                       ),
@@ -8732,7 +8759,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text('checkout.tip_custom'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                                          Text('checkout.tip_custom'.tr(), style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500)),
                                           const SizedBox(height: 12),
                                           TextField(
                                             controller: controller,
@@ -8743,7 +8770,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                                               suffixText: CurrencyUtils.getCurrencySymbol(),
                                             ),
-                                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w600),
+                                            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.w500),
                                           ),
                                           const SizedBox(height: 12),
                                           SizedBox(
@@ -8769,11 +8796,11 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   decoration: BoxDecoration(
                                     color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
                                         ? (isDark ? Colors.grey[600] : Colors.grey[700])
-                                        : (isDark ? Colors.grey[800] : const Color(0xFFF5F5F5)),
+                                        : (isDark ? Colors.grey[800] : sectionDividerColor),
                                     borderRadius: BorderRadius.circular(24),
                                     border: Border.all(
                                       color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
-                                          ? (isDark ? Colors.grey[500]! : Colors.grey[700]!) : (isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0)),
+                                          ? (isDark ? Colors.grey[500]! : Colors.grey[700]!) : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
                                       width: 1,
                                     ),
                                   ),
@@ -8785,7 +8812,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       style: TextStyle(
                                         color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
                                             ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w500,
                                         fontSize: 13,
                                       ),
                                     ),
@@ -8797,7 +8824,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Container(height: 8, color: sectionDividerColor),
+                      Container(height: 10, color: sectionDividerColor),
                     ],
 
                     // ═══════════════════════════════════════
@@ -8839,7 +8866,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               // Title row with ℹ button (inline, right after title)
                               Row(
                                 children: [
-                                  Text('checkout.donation_title'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                                  Text('checkout.donation_title'.tr(), style: TextStyle(fontSize: 17, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.onSurface)),
                                   const SizedBox(width: 6),
                                   GestureDetector(
                                     onTap: () {
@@ -8860,7 +8887,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                               const SizedBox(height: 20),
                                               Icon(Icons.volunteer_activism, size: 40, color: Colors.green[600]),
                                               const SizedBox(height: 12),
-                                              Text('checkout.donation_sheet_title'.tr(), textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: sheetDark ? Colors.white : Colors.black87)),
+                                              Text('checkout.donation_sheet_title'.tr(), textAlign: TextAlign.center, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: sheetDark ? Colors.white : Colors.black87)),
                                               const SizedBox(height: 14),
                                               Text('checkout.donation_sheet_body'.tr(), style: TextStyle(fontSize: 14, color: sheetDark ? Colors.grey[400] : Colors.grey[600], height: 1.5)),
                                               const SizedBox(height: 20),
@@ -8893,7 +8920,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                                     padding: const EdgeInsets.symmetric(vertical: 14),
                                                   ),
-                                                  child: Text('checkout.tip_info_dismiss'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                                  child: Text('checkout.tip_info_dismiss'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                                 ),
                                               ),
                                             ],
@@ -8925,19 +8952,19 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                           decoration: BoxDecoration(
                                             color: selectedDonation == (options[i]['donation'] as double)
                                                 ? Colors.green
-                                                : (isDark ? Colors.grey[800] : const Color(0xFFF5F5F5)),
+                                                : (isDark ? Colors.grey[800] : sectionDividerColor),
                                             borderRadius: BorderRadius.circular(24),
                                             border: Border.all(
                                               color: selectedDonation == (options[i]['donation'] as double)
                                                   ? Colors.green
-                                                  : (isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0)),
+                                                  : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
                                               width: 1,
                                             ),
                                           ),
                                           child: Center(
                                             child: Text(options[i]['label'] as String, style: TextStyle(
                                               color: selectedDonation == (options[i]['donation'] as double) ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                              fontWeight: FontWeight.w600, fontSize: 12)),
+                                              fontWeight: FontWeight.w500, fontSize: 12)),
                                           ),
                                         ),
                                       ),
@@ -8948,33 +8975,53 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               // Confirmation banner with from → to amounts
                               if (selectedDonation > 0) ...[
                                 const SizedBox(height: 10),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                                  decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(10)),
-                                  child: Row(
+                                Builder(builder: (_) {
+                                  final isActualRoundUp = (baseTotal * 100) % 100 != 0;
+                                  return Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('💚', style: TextStyle(fontSize: 16)),
-                                      const SizedBox(width: 8),
+                                      // Heart icon in brand red with gentle scale-in
+                                      TweenAnimationBuilder<double>(
+                                        tween: Tween(begin: 0.7, end: 1.0),
+                                        duration: const Duration(milliseconds: 600),
+                                        curve: Curves.elasticOut,
+                                        builder: (context, scale, child) {
+                                          return Transform.scale(scale: scale, child: child);
+                                        },
+                                        child: const Icon(Icons.favorite, size: 16, color: Color(0xFFF41C54)),
+                                      ),
+                                      const SizedBox(width: 6),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text('checkout.donation_thanks'.tr(), style: TextStyle(color: Colors.green[700], fontSize: 13, fontWeight: FontWeight.w600)),
+                                            Text(
+                                              isActualRoundUp
+                                                  ? 'checkout.donation_thanks'.tr()
+                                                  : 'checkout.donation_thanks_direct'.tr(),
+                                              style: TextStyle(
+                                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[300] : const Color(0xFF3E3E3E),
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              'checkout.donation_summary'.tr(namedArgs: {
-                                                'from': '$currency${baseTotal.toStringAsFixed(2)}',
-                                                'to': '$currency${newTotal.toStringAsFixed(2)}',
-                                                'donation': '$currency${selectedDonation.toStringAsFixed(2)}',
-                                              }),
-                                              style: TextStyle(color: Colors.green[600], fontSize: 11, height: 1.3),
+                                              isActualRoundUp
+                                                  ? '${CurrencyUtils.getCurrencySymbol()}${baseTotal.toStringAsFixed(2)} → ${CurrencyUtils.getCurrencySymbol()}${newTotal.toStringAsFixed(2)} – ${CurrencyUtils.getCurrencySymbol()}${selectedDonation.toStringAsFixed(2)} Spende'
+                                                  : '${CurrencyUtils.getCurrencySymbol()}${selectedDonation.toStringAsFixed(2)} Spende',
+                                              style: TextStyle(
+                                                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[500] : Colors.grey[600],
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w400,
+                                              ),
                                             ),
                                           ],
                                         ),
                                       ),
                                     ],
-                                  ),
-                                ),
+                                  );
+                                }),
                               ],
                               // ── Charity reference (always visible) ──
                               const SizedBox(height: 12),
@@ -9012,7 +9059,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           ),
                         );
                       }),
-                      Container(height: 8, color: sectionDividerColor),
+                      Container(height: 10, color: sectionDividerColor),
                     ],
 
                     // ═══════════════════════════════════════
@@ -9104,7 +9151,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       opt.label,
                                       style: TextStyle(
                                         fontSize: 15,
-                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                        fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                                         color: isSelected
                                             ? Theme.of(context).colorScheme.onSurface
                                             : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
@@ -9233,7 +9280,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       const SizedBox(width: 6),
                                       Text(
                                         '${'checkout.submit'.tr()} · ${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
                                       ),
                                     ],
                                   )
@@ -9241,7 +9288,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                     parent._isDineIn && parent._scannedTableNumber != null
                                       ? '${'checkout.submit'.tr()} · Masa ${parent._scannedTableNumber}'
                                       : '${'checkout.submit'.tr()} · ${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600),
+                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w500),
                                   ),
                       ),
                     ),
@@ -9369,7 +9416,7 @@ class _PaymentMethodSelectionPageState extends State<_PaymentMethodSelectionPage
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 17,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
@@ -9389,8 +9436,8 @@ class _PaymentMethodSelectionPageState extends State<_PaymentMethodSelectionPage
                     Text(
                       'checkout.payment_methods'.tr(),
                       style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w500,
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
@@ -9422,7 +9469,7 @@ class _PaymentMethodSelectionPageState extends State<_PaymentMethodSelectionPage
                                     opt.label,
                                     style: TextStyle(
                                       fontSize: 15,
-                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                      fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
                                       color: Theme.of(context).colorScheme.onSurface,
                                     ),
                                   ),
@@ -9456,7 +9503,7 @@ class _PaymentMethodSelectionPageState extends State<_PaymentMethodSelectionPage
                   ),
                   child: Text(
                     'checkout.confirm'.tr(),
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w500),
                   ),
                 ),
               ),
