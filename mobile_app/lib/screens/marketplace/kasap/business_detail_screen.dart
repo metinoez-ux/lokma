@@ -2131,7 +2131,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           padding: const EdgeInsets.only(right: 6),
                                           child: GestureDetector(
                                             onTap: () => _selectCategory(catName),
-                                            child: Container(
+                                            child: AnimatedContainer(
+                                              duration: const Duration(milliseconds: 250),
+                                              curve: Curves.easeInOut,
                                               key: _tabKeys.putIfAbsent(catName, () => GlobalKey()),
                                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                                               decoration: BoxDecoration(
@@ -2143,8 +2145,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Text(
-                                                    catName == 'Tümü' ? tr('business_details.all') : catName,
+                                                  AnimatedDefaultTextStyle(
+                                                    duration: const Duration(milliseconds: 250),
+                                                    curve: Curves.easeInOut,
                                                     style: TextStyle(
                                                       color: isSelected 
                                                         ? (isDark ? Colors.black : Colors.white) 
@@ -2152,31 +2155,43 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                                                       fontSize: 13,
                                                     ),
-                                                  ),
-                                                  if (catCartCount > 0) ...[
-                                                    const SizedBox(width: 6),
-                                                    Container(
-                                                      width: 20,
-                                                      height: 20,
-                                                      decoration: BoxDecoration(
-                                                        color: isSelected
-                                                            ? (isDark ? Colors.black87 : Colors.white)
-                                                            : Colors.red,
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                      alignment: Alignment.center,
-                                                      child: Text(
-                                                        '$catCartCount',
-                                                        style: TextStyle(
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.w600,
-                                                          color: isSelected
-                                                              ? (isDark ? Colors.white : Colors.black87)
-                                                              : Colors.white,
-                                                        ),
-                                                      ),
+                                                    child: Text(
+                                                      catName == 'Tümü' ? tr('business_details.all') : catName,
                                                     ),
-                                                  ],
+                                                  ),
+                                                  // Cart count badge with animated scale
+                                                  AnimatedSize(
+                                                    duration: const Duration(milliseconds: 200),
+                                                    curve: Curves.easeInOut,
+                                                    child: catCartCount > 0
+                                                      ? Padding(
+                                                          padding: const EdgeInsets.only(left: 6),
+                                                          child: AnimatedContainer(
+                                                            duration: const Duration(milliseconds: 250),
+                                                            curve: Curves.easeInOut,
+                                                            width: 20,
+                                                            height: 20,
+                                                            decoration: BoxDecoration(
+                                                              color: isSelected
+                                                                  ? (isDark ? Colors.black87 : Colors.white)
+                                                                  : Colors.red,
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                            alignment: Alignment.center,
+                                                            child: Text(
+                                                              '$catCartCount',
+                                                              style: TextStyle(
+                                                                fontSize: 11,
+                                                                fontWeight: FontWeight.w600,
+                                                                color: isSelected
+                                                                    ? (isDark ? Colors.white : Colors.black87)
+                                                                    : Colors.white,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        )
+                                                      : const SizedBox.shrink(),
+                                                  ),
                                                 ],
                                               ),
                                             ),
