@@ -29,6 +29,12 @@
 		F297E6BD239B59151A72D9F7 /* lokma_wind_chime.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1EC70992B202AFC8CB7EEF87 /* lokma_wind_chime.caf */; };
 		9A41BA4B6605A847FFAE551D /* lokma_zen_bowl.caf in Resources */ = {isa = PBXBuildFile; fileRef = F623D7202126F156B2A95738 /* lokma_zen_bowl.caf */; };
 		5F9E1967EA1D8725ED6941B9 /* lokma_xylophone.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1789DE46E7F03C8D2BD11697 /* lokma_xylophone.caf */; };
+		A1B2C3D4E5F60001A1B2C3D4 /* lokma_cascade_chime.caf in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60011A1B2C3D4 /* lokma_cascade_chime.caf */; };
+		A1B2C3D4E5F60002A1B2C3D4 /* lokma_delivery_alert.caf in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60012A1B2C3D4 /* lokma_delivery_alert.caf */; };
+		A1B2C3D4E5F60003A1B2C3D4 /* lokma_marimba_hit.caf in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60013A1B2C3D4 /* lokma_marimba_hit.caf */; };
+		A1B2C3D4E5F60004A1B2C3D4 /* lokma_pop_melody.caf in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60014A1B2C3D4 /* lokma_pop_melody.caf */; };
+		A1B2C3D4E5F60005A1B2C3D4 /* lokma_signature_melody.caf in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60015A1B2C3D4 /* lokma_signature_melody.caf */; };
+		A1B2C3D4E5F60006A1B2C3D4 /* lokma_turkish_strike.caf in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60016A1B2C3D4 /* lokma_turkish_strike.caf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -91,6 +97,12 @@
 		1EC70992B202AFC8CB7EEF87 /* lokma_wind_chime.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_wind_chime.caf; sourceTree = "<group>"; };
 		F623D7202126F156B2A95738 /* lokma_zen_bowl.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_zen_bowl.caf; sourceTree = "<group>"; };
 		1789DE46E7F03C8D2BD11697 /* lokma_xylophone.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_xylophone.caf; sourceTree = "<group>"; };
+		A1B2C3D4E5F60011A1B2C3D4 /* lokma_cascade_chime.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_cascade_chime.caf; sourceTree = "<group>"; };
+		A1B2C3D4E5F60012A1B2C3D4 /* lokma_delivery_alert.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_delivery_alert.caf; sourceTree = "<group>"; };
+		A1B2C3D4E5F60013A1B2C3D4 /* lokma_marimba_hit.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_marimba_hit.caf; sourceTree = "<group>"; };
+		A1B2C3D4E5F60014A1B2C3D4 /* lokma_pop_melody.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_pop_melody.caf; sourceTree = "<group>"; };
+		A1B2C3D4E5F60015A1B2C3D4 /* lokma_signature_melody.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_signature_melody.caf; sourceTree = "<group>"; };
+		A1B2C3D4E5F60016A1B2C3D4 /* lokma_turkish_strike.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = lokma_turkish_strike.caf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -199,6 +211,12 @@
 				1EC70992B202AFC8CB7EEF87 /* lokma_wind_chime.caf */,
 				F623D7202126F156B2A95738 /* lokma_zen_bowl.caf */,
 				1789DE46E7F03C8D2BD11697 /* lokma_xylophone.caf */,
+				A1B2C3D4E5F60011A1B2C3D4 /* lokma_cascade_chime.caf */,
+				A1B2C3D4E5F60012A1B2C3D4 /* lokma_delivery_alert.caf */,
+				A1B2C3D4E5F60013A1B2C3D4 /* lokma_marimba_hit.caf */,
+				A1B2C3D4E5F60014A1B2C3D4 /* lokma_pop_melody.caf */,
+				A1B2C3D4E5F60015A1B2C3D4 /* lokma_signature_melody.caf */,
+				A1B2C3D4E5F60016A1B2C3D4 /* lokma_turkish_strike.caf */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -316,6 +334,12 @@
 				F297E6BD239B59151A72D9F7 /* lokma_wind_chime.caf in Resources */,
 				9A41BA4B6605A847FFAE551D /* lokma_zen_bowl.caf in Resources */,
 				5F9E1967EA1D8725ED6941B9 /* lokma_xylophone.caf in Resources */,
+				A1B2C3D4E5F60001A1B2C3D4 /* lokma_cascade_chime.caf in Resources */,
+				A1B2C3D4E5F60002A1B2C3D4 /* lokma_delivery_alert.caf in Resources */,
+				A1B2C3D4E5F60003A1B2C3D4 /* lokma_marimba_hit.caf in Resources */,
+				A1B2C3D4E5F60004A1B2C3D4 /* lokma_pop_melody.caf in Resources */,
+				A1B2C3D4E5F60005A1B2C3D4 /* lokma_signature_melody.caf in Resources */,
+				A1B2C3D4E5F60006A1B2C3D4 /* lokma_turkish_strike.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
