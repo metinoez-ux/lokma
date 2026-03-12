@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import '../router/app_router.dart';
 import '../widgets/in_app_notification.dart';
@@ -14,11 +16,19 @@ class FCMService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   String? _fcmToken;
   
+  // Local notifications plugin for foreground sound
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+  bool _localNotificationsInitialized = false;
+  
   String? get token => _fcmToken;
 
   /// Initialize FCM and request permissions
   Future<void> initialize() async {
     debugPrint('🔔 FCMService: Initializing...');
+    
+    // Initialize local notifications for sound playback
+    await _initLocalNotifications();
     
     // Request permission (iOS requires this)
     final settings = await _messaging.requestPermission(
@@ -36,10 +46,11 @@ class FCMService {
     if (settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional) {
       // CRITICAL: Tell iOS to show notification banners even when app is in foreground
+      // Sound is OFF here because we play it ourselves via flutter_local_notifications
       await _messaging.setForegroundNotificationPresentationOptions(
-        alert: true,
+        alert: false,  // We show our own InAppNotification overlay
         badge: true,
-        sound: true,
+        sound: false,  // We play sound ourselves via local notification
       );
       debugPrint('🔔 Foreground notification presentation options set');
       
@@ -60,6 +71,94 @@ class FCMService {
     } else {
       debugPrint('⚠️ FCM: Notification permission denied');
     }
+  }
+
+  /// Initialize flutter_local_notifications for foreground sound
+  Future<void> _initLocalNotifications() async {
+    if (_localNotificationsInitialized) return;
+    
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings(
+      requestSoundPermission: true,
+      requestBadgePermission: true,
+      requestAlertPermission: true,
+    );
+    
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+    
+    await _localNotifications.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        debugPrint('🔔 Local notification tapped: ${response.payload}');
+        if (response.payload != null) {
+          final parts = response.payload!.split(':');
+          if (parts.length >= 2) {
+            final type = parts[0];
+            final orderId = parts[1];
+            if (type == 'new_delivery') {
+              _navigateToDriverDeliveries(orderId);
+            } else if (type == 'order_status' || type == 'order_cancelled') {
+              _navigateToOrders();
+            }
+          }
+        }
+      },
+    );
+    
+    // Create notification channel for Android
+    if (Platform.isAndroid) {
+      const channel = AndroidNotificationChannel(
+        'lokma_orders',
+        'Sipariş Bildirimleri',
+        description: 'LOKMA sipariş bildirimleri',
+        importance: Importance.high,
+        playSound: true,
+      );
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+    }
+    
+    _localNotificationsInitialized = true;
+    debugPrint('🔔 Local notifications initialized');
+  }
+
+  /// Show a local notification with custom LOKMA sound (instant)
+  Future<void> _showLocalNotificationWithSound(String? title, String? body, {String? payload}) async {
+    // Use custom LOKMA sound from iOS bundle
+    const androidDetails = AndroidNotificationDetails(
+      'lokma_orders',
+      'Sipariş Bildirimleri',
+      channelDescription: 'LOKMA sipariş bildirimleri',
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
+    );
+    
+    // Use custom CAF sound from iOS app bundle
+    const iosDetails = DarwinNotificationDetails(
+      presentSound: true,
+      presentAlert: true,
+      presentBadge: true,
+      sound: 'lokma_cascade_chime.caf',
+    );
+    
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+    
+    await _localNotifications.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title ?? 'Bildirim',
+      body,
+      details,
+      payload: payload,
+    );
+    debugPrint('🔔 Local notification shown with custom LOKMA sound: $title');
   }
 
   /// Manually refresh token - call this before placing an order
@@ -107,7 +206,6 @@ class FCMService {
     }
     
     try {
-      // Use set with merge to create document if it doesn't exist
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'fcmToken': token,
         'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
@@ -115,7 +213,6 @@ class FCMService {
       debugPrint('✅ FCM Token saved to Firestore for user: ${user.uid}');
     } catch (e) {
       debugPrint('Error saving FCM token: $e');
-      // Try to set if document might not exist
       try {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'fcmToken': token,
@@ -136,36 +233,39 @@ class FCMService {
     
     if (title == null && body == null) return;
     
-    // Determine emoji and accent color based on notification type
     final data = message.data;
     final type = data['type'] as String?;
     
+    // ── INSTANT: Play custom sound via local notification FIRST ──
+    final payload = '${type ?? "unknown"}:${data['orderId'] ?? ""}';
+    _showLocalNotificationWithSound(title, body, payload: payload);
+    
+    // ── Then show in-app overlay ──
     String emoji;
     Color accentColor;
     
     switch (type) {
       case 'order_cancelled':
         emoji = '❌';
-        accentColor = const Color(0xFFE53935); // Red
+        accentColor = const Color(0xFFE53935);
         break;
       case 'order_status':
         emoji = '📦';
-        accentColor = const Color(0xFF42A5F5); // Blue
+        accentColor = const Color(0xFF42A5F5);
         break;
       case 'new_delivery':
         emoji = '🚚';
-        accentColor = const Color(0xFFFB335B); // LOKMA Brand
+        accentColor = const Color(0xFFFB335B);
         break;
       case 'order_ready':
         emoji = '✅';
-        accentColor = const Color(0xFF66BB6A); // Green
+        accentColor = const Color(0xFF66BB6A);
         break;
       default:
         emoji = '🔔';
-        accentColor = const Color(0xFF6C63FF); // Purple
+        accentColor = const Color(0xFF6C63FF);
     }
     
-    // Show elegant overlay banner
     try {
       final context = _navigatorKey.currentContext;
       if (context != null) {
@@ -186,8 +286,6 @@ class FCMService {
           },
         );
         debugPrint('✅ Foreground notification overlay shown');
-      } else {
-        debugPrint('⚠️ No context available for notification overlay');
       }
     } catch (e) {
       debugPrint('❌ Error showing foreground notification: $e');
@@ -203,25 +301,18 @@ class FCMService {
     
     debugPrint('🔔 Notification type: $type, orderId: $orderId');
     
-    // Handle different notification types
     if (type == 'new_delivery' && orderId != null) {
-      // Driver tapped on new delivery notification - navigate to driver deliveries
       debugPrint('🚚 Navigating to driver deliveries for order: $orderId');
       _navigateToDriverDeliveries(orderId);
     } else if (type == 'order_status' && orderId != null) {
-      // Customer tapped on order status notification - navigate to orders
       debugPrint('📦 Navigating to orders for order: $orderId');
       _navigateToOrders();
     }
   }
   
   void _navigateToDriverDeliveries(String orderId) {
-    // Use a slight delay to ensure the app is fully initialized
     Future.delayed(const Duration(milliseconds: 500), () {
-      // Import and use GoRouter for navigation
       try {
-        // Navigate to driver deliveries screen
-        // The screen will show the order that needs attention
         final context = _navigatorKey.currentContext;
         if (context != null) {
           GoRouter.of(context).go('/driver-deliveries');
@@ -249,7 +340,6 @@ class FCMService {
     });
   }
   
-  // Global navigator key - set this from main.dart
   GlobalKey<NavigatorState> get _navigatorKey => AppRouter.navigatorKey;
 
   /// Delete token on logout
