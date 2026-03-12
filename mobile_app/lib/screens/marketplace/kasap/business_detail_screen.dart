@@ -2207,7 +2207,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                   onTap: () => _selectCategory(catName),
                                                   child: Container(
                                                     key: _tabKeys.putIfAbsent(catName, () => GlobalKey()),
-                                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                                                     decoration: BoxDecoration(
                                                       color: Colors.transparent,
                                                       borderRadius: BorderRadius.circular(50),
@@ -2223,7 +2223,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                               ? (isDark ? Colors.black : Colors.white) 
                                                               : (isDark ? Colors.white70 : Colors.black54),
                                                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                                            fontSize: 13,
+                                                            fontSize: 14,
                                                           ),
                                                           child: Text(
                                                             catName == 'Tümü' ? tr('business_details.all') : catName,
