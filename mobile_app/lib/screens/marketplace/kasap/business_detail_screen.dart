@@ -2558,7 +2558,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      // Center text
                      Expanded(
                        child: Text(
-                         _isMasaMode ? 'Siparişi Gönder' : 'checkout.view_cart'.tr(),
+                         _isMasaMode ? 'Siparişi Gönder' : 'cart.view_cart'.tr(),
                          style: const TextStyle(
                            color: Colors.white,
                            fontSize: 16,
