@@ -109,7 +109,10 @@ class AppRouter {
           ),
           GoRoute(
             path: '/orders',
-            builder: (context, state) => OrdersScreen(),
+            builder: (context, state) {
+              final orderId = state.uri.queryParameters['orderId'];
+              return OrdersScreen(highlightOrderId: orderId);
+            },
           ),
           GoRoute(
             path: '/cart',

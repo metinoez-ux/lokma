@@ -300,8 +300,8 @@ class FCMService {
             final orderId = data['orderId'];
             if (type == 'new_delivery' && orderId != null) {
               _navigateToDriverDeliveries(orderId);
-            } else if ((type == 'order_status' || type == 'order_cancelled') && orderId != null) {
-              _navigateToOrders();
+            } else {
+              _navigateToOrders(orderId: orderId);
             }
           },
         );
@@ -324,9 +324,9 @@ class FCMService {
     if (type == 'new_delivery' && orderId != null) {
       debugPrint('🚚 Navigating to driver deliveries for order: $orderId');
       _navigateToDriverDeliveries(orderId);
-    } else if (type == 'order_status' && orderId != null) {
-      debugPrint('📦 Navigating to orders for order: $orderId');
-      _navigateToOrders();
+    } else {
+      debugPrint('📦 Navigating to order: $orderId');
+      _navigateToOrders(orderId: orderId);
     }
   }
   
@@ -346,13 +346,14 @@ class FCMService {
     });
   }
   
-  void _navigateToOrders() {
+  void _navigateToOrders({String? orderId}) {
     Future.delayed(const Duration(milliseconds: 500), () {
       try {
         final context = _navigatorKey.currentContext;
         if (context != null) {
-          GoRouter.of(context).go('/orders');
-          debugPrint('✅ Navigated to orders');
+          final path = orderId != null ? '/orders?orderId=$orderId' : '/orders';
+          GoRouter.of(context).go(path);
+          debugPrint('✅ Navigated to $path');
         }
       } catch (e) {
         debugPrint('❌ Navigation error: $e');

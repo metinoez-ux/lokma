@@ -20,7 +20,8 @@ import '../../utils/currency_utils.dart';
 
 
 class OrdersScreen extends ConsumerStatefulWidget {
-  const OrdersScreen({super.key});
+  final String? highlightOrderId;
+  const OrdersScreen({super.key, this.highlightOrderId});
 
   @override
   ConsumerState<OrdersScreen> createState() => _OrdersScreenState();
@@ -166,7 +167,11 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             // Active orders — shown normally
             if (activeOrders.isNotEmpty) ...[
               for (final order in activeOrders)
-                _OrderCard(order: order, isDark: isDark),
+                _OrderCard(
+                  order: order,
+                  isDark: isDark,
+                  autoOpen: order.id == widget.highlightOrderId,
+                ),
             ] else ...[
               // No active orders message
               Padding(
@@ -260,8 +265,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
 class _OrderCard extends ConsumerStatefulWidget {
   final LokmaOrder order;
   final bool isDark;
+  final bool autoOpen;
 
-  const _OrderCard({required this.order, required this.isDark});
+  const _OrderCard({required this.order, required this.isDark, this.autoOpen = false});
 
   @override
   ConsumerState<_OrderCard> createState() => _OrderCardState();
@@ -275,6 +281,12 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
   void initState() {
     super.initState();
     _loadBusinessInfo();
+    // Auto-open order detail when navigated from push notification
+    if (widget.autoOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showOrderDetails();
+      });
+    }
   }
 
   Future<void> _loadBusinessInfo() async {
