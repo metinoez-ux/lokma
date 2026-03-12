@@ -252,12 +252,12 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
                       radius: widget.deliveryRadiusKm * 1000, // meters
                       useRadiusInMeter: true,
                       color: _isSatellite
-                          ? Colors.white.withValues(alpha: 0.10)
-                          : Colors.black.withValues(alpha: 0.06),
+                          ? brandOrange.withValues(alpha: 0.08)
+                          : brandOrange.withValues(alpha: 0.06),
                       borderColor: _isSatellite
-                          ? Colors.white.withValues(alpha: 0.50)
-                          : Colors.black.withValues(alpha: 0.35),
-                      borderStrokeWidth: 2,
+                          ? brandOrange.withValues(alpha: 0.70)
+                          : brandOrange.withValues(alpha: 0.55),
+                      borderStrokeWidth: 2.5,
                     ),
                   ],
                 ),

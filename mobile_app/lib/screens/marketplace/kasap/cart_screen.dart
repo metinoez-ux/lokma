@@ -8513,10 +8513,15 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                             Expanded(
                               child: GestureDetector(
                                 onTap: () {
-                                  final controller = TextEditingController(text: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50 ? parent._tipAmount.toStringAsFixed(2) : '');
+                                  final isCustom = parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50;
+                                  final controller = TextEditingController(text: isCustom ? parent._tipAmount.toStringAsFixed(2) : '');
                                   showModalBottomSheet(
                                     context: context,
                                     isScrollControlled: true,
+                                    backgroundColor: Theme.of(context).colorScheme.surface,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                    ),
                                     builder: (ctx) => Padding(
                                       padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
                                       child: Column(
@@ -8569,7 +8574,9 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      'checkout.tip_other'.tr(),
+                                      parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
+                                          ? '${parent._tipAmount.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'
+                                          : 'checkout.tip_other'.tr(),
                                       style: TextStyle(
                                         color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
                                             ? Colors.white : Theme.of(context).colorScheme.onSurface,
@@ -8595,14 +8602,21 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       Builder(builder: (context) {
                         final currency = CurrencyUtils.getCurrencySymbol();
                         final baseTotal = widget.grandTotal;
-                        final roundedUp = (baseTotal.ceil()).toDouble();
-                        final diffToRound = roundedUp - baseTotal;
-                        // Incremental options: +0.50, +1.00, +1.50, Nein
+                        // Dynamic round-up helpers
+                        double _roundUpTo(double val, double step) {
+                          final rounded = (val / step).ceil() * step;
+                          return rounded <= val ? val + step : rounded;
+                        }
+                        final roundHalf = _roundUpTo(baseTotal, 0.50);
+                        final round1   = _roundUpTo(baseTotal, 1.00);
+                        final round5   = _roundUpTo(baseTotal, 5.00);
+                        final round10  = _roundUpTo(baseTotal, 10.00);
+                        // Dynamic options: show round-up difference with + prefix
                         final options = <Map<String, dynamic>>[
-                          {'label': '+0,50 $currency', 'donation': 0.50},
-                          {'label': '+1,00 $currency', 'donation': 1.00},
-                          {'label': '+1,50 $currency', 'donation': 1.50},
-                          {'label': 'checkout.no_donation'.tr(), 'donation': 0.0},
+                          {'label': '+${(roundHalf - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((roundHalf - baseTotal).toStringAsFixed(2))},
+                          {'label': '+${(round1 - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((round1 - baseTotal).toStringAsFixed(2))},
+                          {'label': '+${(round5 - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((round5 - baseTotal).toStringAsFixed(2))},
+                          {'label': '+${(round10 - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((round10 - baseTotal).toStringAsFixed(2))},
                         ];
                         final selectedDonation = parent._donationAmount;
                         final newTotal = baseTotal + selectedDonation;
@@ -8700,12 +8714,12 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                           padding: const EdgeInsets.symmetric(vertical: 10),
                                           decoration: BoxDecoration(
                                             color: selectedDonation == (options[i]['donation'] as double)
-                                                ? ((options[i]['donation'] as double) == 0 ? Colors.grey.shade700 : Colors.green)
+                                                ? Colors.green
                                                 : (isDark ? Colors.grey[800] : const Color(0xFFF5F5F5)),
                                             borderRadius: BorderRadius.circular(24),
                                             border: Border.all(
                                               color: selectedDonation == (options[i]['donation'] as double)
-                                                  ? ((options[i]['donation'] as double) == 0 ? Colors.grey : Colors.green)
+                                                  ? Colors.green
                                                   : (isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0)),
                                               width: 1.5,
                                             ),
@@ -8762,14 +8776,20 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     // ═══════════════════════════════════════
                     // SECTION 5: PAYMENT METHOD (single row → full page)
                     // ═══════════════════════════════════════
-                    _buildCheckoutRow(
-                      context,
-                      icon: Icons.payment,
-                      iconColor: brandRed,
-                      title: 'checkout.payment_title'.tr(),
-                      subtitle: _getPaymentMethodLabel(parent._paymentMethod),
-                      trailing: Icon(Icons.chevron_right, color: neutralIcon, size: 24),
-                      dividerColor: null,
+                    // Payment method section header
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                      child: Text(
+                        'checkout.payment_title'.tr(),
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    // Tappable payment method row
+                    InkWell(
                       onTap: () async {
                         final payMethodsSettings = (parent._butcherData?['paymentMethods'] as Map<String, dynamic>?) ?? {};
                         final allowCard = payMethodsSettings['card'] != false;
@@ -8794,6 +8814,25 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           setState(() => parent._paymentMethod = result);
                         }
                       },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: Row(
+                          children: [
+                            Icon(Icons.payment, color: brandRed, size: 22),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                _getPaymentMethodLabel(parent._paymentMethod),
+                                style: TextStyle(
+                                  color: Colors.grey[500],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.chevron_right, color: neutralIcon, size: 24),
+                          ],
+                        ),
+                      ),
                     ),
                     // Wallet toggle
                     if (parent._walletBalance > 0) ...[
