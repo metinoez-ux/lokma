@@ -1810,6 +1810,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       )
                     : ThreeDimensionalPillTabBar(
                         margin: EdgeInsets.zero,
+                        activeColor: accent,
                         selectedIndex: _deliveryModeIndex,
                         tabs: [
                           TabItem(
@@ -1834,7 +1835,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ),
                 titleSpacing: 0,
                 centerTitle: true,
-                actions: const [],
+                actions: const [
+                  // Invisible spacer to balance the leading back button
+                  // so title (search bar / toggle) stays centered
+                  SizedBox(width: 48),
+                ],
               ),
               
               // Small spacer between toggle and card content
@@ -2181,8 +2186,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               final isSelected = _selectedCategory == catName;
                                               final cartItems = ref.watch(cartProvider).items;
                                               final catCartCount = catName == 'Tümü'
-                                                  ? cartItems.length
-                                                  : cartItems.where((ci) => ci.product.category == catName).length;
+                                                  ? cartItems.fold<int>(0, (sum, ci) => sum + ci.quantity)
+                                                  : cartItems.where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity);
                                               return Padding(
                                                 padding: const EdgeInsets.only(right: 6),
                                                 child: GestureDetector(
@@ -2353,7 +2358,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           // Category Header with cart count badge
                           Builder(builder: (context) {
                             final catCartCount = ref.watch(cartProvider).items
-                                .where((ci) => ci.product.category == catName).length;
+                                .where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity);
                             return Container(
                               width: double.infinity,
                               color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFE2E2E2),
@@ -2460,13 +2465,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      if (cart.isEmpty) return const SizedBox.shrink();
      
      final isDark = Theme.of(context).brightness == Brightness.dark;
-     final barBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-     final barShadow = isDark ? Colors.black54 : Colors.black12;
-     final barBorder = isDark ? Colors.white10 : Colors.black12;
-     final iconBg = isDark ? Colors.white10 : Colors.grey.shade100;
-     final iconColor = isDark ? Colors.white : Colors.black87;
-     final subtitleColor = isDark ? Colors.grey : Colors.grey.shade600;
-     final priceColor = isDark ? Colors.white : Colors.black87;
+     final accent = _getAccent(context);
      final currency = CurrencyUtils.getCurrencySymbol();
 
      // Min order value from business data
@@ -2475,6 +2474,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
      final cartTotal = cart.totalAmount;
      final remaining = minOrder - cartTotal;
      final isDeliveryMode = _deliveryModeIndex == 0 && !_isMasaMode;
+     final itemCount = cart.items.fold<int>(0, (sum, item) => sum + (item.quantity is int ? item.quantity.toInt() : item.quantity.round()));
 
      return Column(
        mainAxisSize: MainAxisSize.min,
@@ -2505,58 +2505,80 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                ],
              ),
            ),
-         // Cart bar
-         Container(
+         // ── Lieferando-Style Single Pill Cart Button ──
+         Padding(
            padding: EdgeInsets.only(
-             left: 16, right: 16, top: 16, 
-             bottom: MediaQuery.of(context).padding.bottom + 16,
+             left: 16, right: 16, top: 12,
+             bottom: MediaQuery.of(context).padding.bottom + 12,
            ),
-           decoration: BoxDecoration(
-             color: barBg,
-             boxShadow: [BoxShadow(color: barShadow, blurRadius: 10, offset: const Offset(0, -5))],
-             border: Border(top: BorderSide(color: barBorder)),
-           ),
-           child: Row(
-             children: [
-               Container(
-                 padding: const EdgeInsets.all(12),
-                 decoration: BoxDecoration(
-                   color: iconBg,
-                   borderRadius: BorderRadius.circular(12),
-                 ),
-                 child: Icon(Icons.shopping_bag, color: iconColor, size: 24),
-               ),
-               const SizedBox(width: 16),
-               Column(
-                 mainAxisSize: MainAxisSize.min,
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 children: [
-                   Text('${cart.items.length} Ürün', style: TextStyle(color: subtitleColor, fontSize: 12)),
-                   Text('$currency${cart.totalAmount.toStringAsFixed(2)}', style: TextStyle(color: priceColor, fontSize: 18, fontWeight: FontWeight.w600)),
-                 ],
-               ),
-               const Spacer(),
-               ElevatedButton(
-                 onPressed: () {
-                   Navigator.of(context).push(
-                     MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber)),
-                   );
-                 },
-                 style: ElevatedButton.styleFrom(
-                   backgroundColor: _getAccent(context),
-                   foregroundColor: Colors.white,
-                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                 ),
+           child: Material(
+             color: accent,
+             borderRadius: BorderRadius.circular(28),
+             elevation: 4,
+             shadowColor: accent.withValues(alpha: 0.4),
+             child: InkWell(
+               borderRadius: BorderRadius.circular(28),
+               onTap: () {
+                 HapticFeedback.selectionClick();
+                 Navigator.of(context).push(
+                   MaterialPageRoute(builder: (context) => CartScreen(initialPickUp: _deliveryModeIndex == 1, initialDineIn: _isMasaMode, initialTableNumber: widget.initialTableNumber)),
+                 );
+               },
+               child: Padding(
+                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                  child: Row(
                    children: [
-                     Text(_isMasaMode ? 'Siparişi Gönder' : 'Sepete Git', style: const TextStyle(fontWeight: FontWeight.w600)),
-                     const SizedBox(width: 8),
-                     Icon(_isMasaMode ? Icons.restaurant : Icons.arrow_forward, size: 16),
+                     // Cart icon with badge
+                     Stack(
+                       clipBehavior: Clip.none,
+                       children: [
+                         const Icon(Icons.shopping_basket, color: Colors.white, size: 24),
+                         Positioned(
+                           top: -6,
+                           right: -8,
+                           child: Container(
+                             padding: const EdgeInsets.all(4),
+                             decoration: const BoxDecoration(
+                               color: Color(0xFF1A1A1A),
+                               shape: BoxShape.circle,
+                             ),
+                             child: Text(
+                               '$itemCount',
+                               style: const TextStyle(
+                                 color: Colors.white,
+                                 fontSize: 12,
+                                 fontWeight: FontWeight.w700,
+                               ),
+                             ),
+                           ),
+                         ),
+                       ],
+                     ),
+                     const SizedBox(width: 14),
+                     // Center text
+                     Expanded(
+                       child: Text(
+                         _isMasaMode ? 'Siparişi Gönder' : 'checkout.view_cart'.tr(),
+                         style: const TextStyle(
+                           color: Colors.white,
+                           fontSize: 16,
+                           fontWeight: FontWeight.w600,
+                         ),
+                       ),
+                     ),
+                     // Price on right
+                     Text(
+                       '${cartTotal.toStringAsFixed(2)} $currency',
+                       style: const TextStyle(
+                         color: Colors.white,
+                         fontSize: 16,
+                         fontWeight: FontWeight.w600,
+                       ),
+                     ),
                    ],
                  ),
                ),
-             ],
+             ),
            ),
          ),
        ],
@@ -2995,18 +3017,10 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 final data = _butcherDoc?.data() as Map<String, dynamic>?;
                                 final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
                                 final noteText = noteController.text.trim().isNotEmpty ? noteController.text.trim() : null;
-                                HapticFeedback.mediumImpact();
+                                HapticFeedback.heavyImpact();
                                 ref.read(cartProvider.notifier).addToCart(product, selectedQty, widget.businessId, butcherName, note: noteText);
                                 setState(() => _selections[product.sku] = selectedQty);
                                 Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('${product.name} sepete eklendi'),
-                                    duration: const Duration(seconds: 2),
-                                    behavior: SnackBarBehavior.floating,
-                                    backgroundColor: accent,
-                                  ),
-                                );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: accent,
@@ -4053,7 +4067,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                                 margin: const EdgeInsets.only(top: 12, bottom: 4),
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.grey.withValues(alpha: 0.08),
+                                  color: isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFFF2EEE9),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(

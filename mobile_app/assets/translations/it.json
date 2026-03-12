@@ -1511,7 +1511,6 @@
     "submit": "Invia ordine",
     "required": "Obbligatorio",
     "donation_added_label": "donazione",
-
     "step_cart": "Carrello",
     "step_payment": "Pagamento",
     "step_confirm": "Conferma",
@@ -1570,5 +1569,15 @@
     "pin_moved_far_warning": "Il pin si è spostato parecchio. Controlla se è il posto giusto per {}",
     "confirm": "Conferma",
     "cancel": "Annulla"
+  },
+  "coupon": {
+    "enter_code": "Inserisci un codice coupon",
+    "invalid_code": "Codice coupon non valido",
+    "not_yet_active": "Questo coupon non è ancora attivo",
+    "expired": "Questo coupon è scaduto",
+    "usage_limit_reached": "Questo coupon ha raggiunto il limite di utilizzo",
+    "min_order_required": "Importo minimo dell'ordine: {amount}€",
+    "not_valid_for_business": "Questo coupon non è valido per questa attività",
+    "already_used": "Hai già utilizzato questo coupon"
   }
 }

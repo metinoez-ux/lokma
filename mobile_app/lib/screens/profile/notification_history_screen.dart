@@ -571,7 +571,7 @@ class _OrderTimelineCardState extends State<_OrderTimelineCard> {
     final cardTextColor = isDark ? Colors.white : const Color(0xFF4A4A4C);
     final cardSubtleColor = isDark
         ? Colors.white.withValues(alpha: 0.55)
-        : const Color(0xFF3A3A3C).withValues(alpha: 0.55);
+        : const Color(0xFF3A3A3C).withValues(alpha: 0.8);
     final dividerColor = isDark
         ? Colors.white.withValues(alpha: 0.1)
         : const Color(0xFF3A3A3C).withValues(alpha: 0.08);

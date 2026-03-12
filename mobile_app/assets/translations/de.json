@@ -667,7 +667,7 @@
     "ingredients_tags_de": "Zutaten / Tags",
     "see_menu": "Menü ansehen",
     "open_menu": "Menü öffnen",
-    "required_field": "Pflichtfeld",
+    "required_field": "Erforderlich",
     "add_to_cart": "Hinzufügen",
     "update_item": "Aktualisieren",
     "added_to_cart": "{} zum Warenkorb hinzugefügt",
@@ -1579,8 +1579,16 @@
     "try_different_location": "Anderen Standort wählen",
     "go_back": "Zurück",
     "delivery_address_label": "Lieferadresse:",
-    "pin_moved_far_warning": "Der Pin hat sich ziemlich weit bewegt. Prüfe, ob es die richtige Stelle für {} ist",
-    "confirm": "Bestätigen",
-    "cancel": "Abbrechen"
+    "pin_moved_far_warning": "Der Pin hat sich ziemlich weit bewegt. Prüfe, ob es die richtige Stelle für {} ist"
+  },
+  "coupon": {
+    "enter_code": "Bitte Gutscheincode eingeben",
+    "invalid_code": "Ungültiger Gutscheincode",
+    "not_yet_active": "Dieser Gutschein ist noch nicht aktiv",
+    "expired": "Dieser Gutschein ist abgelaufen",
+    "usage_limit_reached": "Dieser Gutschein hat sein Nutzungslimit erreicht",
+    "min_order_required": "Mindestbestellwert: {amount}€",
+    "not_valid_for_business": "Dieser Gutschein ist für dieses Geschäft nicht gültig",
+    "already_used": "Sie haben diesen Gutschein bereits verwendet"
   }
 }

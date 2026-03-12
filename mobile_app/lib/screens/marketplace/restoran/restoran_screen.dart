@@ -631,13 +631,13 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
               pinned: true,
               floating: false,
               clipBehavior: Clip.hardEdge, // Overflow'u kesin gizle
-              expandedHeight: (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 220 : 195,
+              expandedHeight: (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 200 : 175,
               collapsedHeight:
                   120, // Daraltılmış yükseklik (sadece konum + arama)
               automaticallyImplyLeading: false,
               flexibleSpace: LayoutBuilder(
                 builder: (context, constraints) {
-                  final expandedHeight = (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 220.0 : 195.0;
+                  final expandedHeight = (_deliveryMode == 'gelal' || _deliveryMode == 'masa') ? 200.0 : 175.0;
                   final collapsedHeight = 120.0;
                   final currentHeight = constraints.maxHeight;
                   final expandRatio = ((currentHeight - collapsedHeight) /

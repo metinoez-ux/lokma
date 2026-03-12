@@ -1511,7 +1511,6 @@
     "submit": "Submit Order",
     "required": "Required",
     "donation_added_label": "donation",
-
     "step_cart": "Cart",
     "step_payment": "Payment",
     "step_confirm": "Confirm",
@@ -1577,8 +1576,16 @@
     "try_different_location": "Try Different Location",
     "go_back": "Go Back",
     "delivery_address_label": "Delivery address:",
-    "pin_moved_far_warning": "The pin has moved quite far. Check if it's the right spot for {}",
-    "confirm": "Confirm",
-    "cancel": "Cancel"
+    "pin_moved_far_warning": "The pin has moved quite far. Check if it's the right spot for {}"
+  },
+  "coupon": {
+    "enter_code": "Please enter a coupon code",
+    "invalid_code": "Invalid coupon code",
+    "not_yet_active": "This coupon is not yet active",
+    "expired": "This coupon has expired",
+    "usage_limit_reached": "This coupon has reached its usage limit",
+    "min_order_required": "Minimum order amount: {amount}€",
+    "not_valid_for_business": "This coupon is not valid for this business",
+    "already_used": "You have already used this coupon"
   }
 }

@@ -1511,7 +1511,6 @@
     "submit": "Siparişi Gönder",
     "required": "Zorunlu",
     "donation_added_label": "bağış",
-
     "step_cart": "Sepet",
     "step_payment": "Ödeme",
     "step_confirm": "Onay",
@@ -1577,8 +1576,16 @@
     "try_different_location": "Farklı Konum Seç",
     "go_back": "Geri Dön",
     "delivery_address_label": "Teslimat adresi:",
-    "pin_moved_far_warning": "İğne oldukça uzağa taşındı. {} için doğru yer olup olmadığını kontrol et",
-    "confirm": "Onayla",
-    "cancel": "İptal"
+    "pin_moved_far_warning": "İğne oldukça uzağa taşındı. {} için doğru yer olup olmadığını kontrol et"
+  },
+  "coupon": {
+    "enter_code": "Kupon kodu giriniz",
+    "invalid_code": "Geçersiz kupon kodu",
+    "not_yet_active": "Bu kupon henüz aktif değil",
+    "expired": "Bu kuponun süresi dolmuş",
+    "usage_limit_reached": "Bu kupon kullanım limitine ulaşmış",
+    "min_order_required": "Minimum sipariş tutarı: {amount}€",
+    "not_valid_for_business": "Bu kupon bu işletme için geçerli değil",
+    "already_used": "Bu kuponu zaten kullandınız"
   }
 }

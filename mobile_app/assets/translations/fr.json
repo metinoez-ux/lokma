@@ -1511,7 +1511,6 @@
     "submit": "Envoyer la commande",
     "required": "Obligatoire",
     "donation_added_label": "don",
-
     "step_cart": "Panier",
     "step_payment": "Paiement",
     "step_confirm": "Confirmation",
@@ -1570,5 +1569,15 @@
     "pin_moved_far_warning": "L'épingle s'est beaucoup déplacée. Vérifie si c'est le bon endroit pour {}",
     "confirm": "Confirmer",
     "cancel": "Annuler"
+  },
+  "coupon": {
+    "enter_code": "Veuillez entrer un code promo",
+    "invalid_code": "Code promo invalide",
+    "not_yet_active": "Ce coupon n'est pas encore actif",
+    "expired": "Ce coupon a expiré",
+    "usage_limit_reached": "Ce coupon a atteint sa limite d'utilisation",
+    "min_order_required": "Montant minimum de commande : {amount}€",
+    "not_valid_for_business": "Ce coupon n'est pas valable pour ce commerce",
+    "already_used": "Vous avez déjà utilisé ce coupon"
   }
 }

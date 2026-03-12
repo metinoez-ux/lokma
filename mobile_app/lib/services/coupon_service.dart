@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 /// Coupon validation result
 class CouponResult {
@@ -44,7 +45,7 @@ class CouponService {
     final normalizedCode = code.trim().toUpperCase();
 
     if (normalizedCode.isEmpty) {
-      return CouponResult.error('Kupon kodu giriniz');
+      return CouponResult.error('coupon.enter_code'.tr());
     }
 
     // Find coupon by code
@@ -56,7 +57,7 @@ class CouponService {
         .get();
 
     if (query.docs.isEmpty) {
-      return CouponResult.error('Geçersiz kupon kodu');
+      return CouponResult.error('coupon.invalid_code'.tr());
     }
 
     final doc = query.docs.first;
@@ -68,25 +69,25 @@ class CouponService {
     final validUntil = (data['validUntil'] as Timestamp?)?.toDate();
 
     if (validFrom != null && now.isBefore(validFrom)) {
-      return CouponResult.error('Bu kupon henüz aktif değil');
+      return CouponResult.error('coupon.not_yet_active'.tr());
     }
 
     if (validUntil != null && now.isAfter(validUntil)) {
-      return CouponResult.error('Bu kuponun süresi dolmuş');
+      return CouponResult.error('coupon.expired'.tr());
     }
 
     // Check usage limit
     final usageLimit = data['usageLimit'] as int?;
     final usedCount = data['usedCount'] as int? ?? 0;
     if (usageLimit != null && usedCount >= usageLimit) {
-      return CouponResult.error('Bu kupon kullanım limitine ulaşmış');
+      return CouponResult.error('coupon.usage_limit_reached'.tr());
     }
 
     // Check minimum order amount
     final minOrderAmount = (data['minOrderAmount'] as num?)?.toDouble() ?? 0;
     if (orderAmount < minOrderAmount) {
       return CouponResult.error(
-          'Minimum sipariş tutarı: ${minOrderAmount.toStringAsFixed(2)}€');
+          'coupon.min_order_required'.tr(namedArgs: {'amount': minOrderAmount.toStringAsFixed(2)}));
     }
 
     // Check business restriction
@@ -95,7 +96,7 @@ class CouponService {
         couponBusinessId.isNotEmpty &&
         businessId != null &&
         couponBusinessId != businessId) {
-      return CouponResult.error('Bu kupon bu işletme için geçerli değil');
+      return CouponResult.error('coupon.not_valid_for_business'.tr());
     }
 
     // Check per-user limit
@@ -108,7 +109,7 @@ class CouponService {
           .where('userId', isEqualTo: userId)
           .get();
       if (userUsages.docs.length >= perUserLimit) {
-        return CouponResult.error('Bu kuponu zaten kullandınız');
+        return CouponResult.error('coupon.already_used'.tr());
       }
     }
 

@@ -916,6 +916,27 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
+      // ── Floating Cart Pill FAB ──
+      floatingActionButton: Consumer(
+        builder: (context, ref, _) {
+          final cart = ref.watch(cartProvider);
+          if (cart.isEmpty) return const SizedBox.shrink();
+          final itemCount = cart.items.fold<int>(0, (sum, item) => sum + (item.quantity is int ? item.quantity.toInt() : item.quantity.round()));
+          final total = cart.totalAmount;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _PulsingCartFab(
+              itemCount: itemCount,
+              total: total,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                context.push('/cart');
+              },
+            ),
+          );
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -1180,6 +1201,101 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
               ),
             ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+// ── Pulsing Cart FAB Pill ──
+class _PulsingCartFab extends StatefulWidget {
+  final int itemCount;
+  final double total;
+  final VoidCallback onTap;
+
+  const _PulsingCartFab({required this.itemCount, required this.total, required this.onTap});
+
+  @override
+  State<_PulsingCartFab> createState() => _PulsingCartFabState();
+}
+
+class _PulsingCartFabState extends State<_PulsingCartFab> with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = Color(0xFFFB335B);
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        final scale = 1.0 + (_pulseController.value * 0.04); // subtle 1.0 → 1.04
+        return Transform.scale(scale: scale, child: child);
+      },
+      child: Material(
+        color: accent,
+        borderRadius: BorderRadius.circular(28),
+        elevation: 6,
+        shadowColor: accent.withValues(alpha: 0.5),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(28),
+          onTap: widget.onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Cart basket icon with badge
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.shopping_basket, color: Colors.white, size: 22),
+                    Positioned(
+                      top: -6,
+                      right: -8,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '${widget.itemCount}',
+                          style: const TextStyle(
+                            color: accent,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 14),
+                Text(
+                  '${widget.total.toStringAsFixed(2)} €',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

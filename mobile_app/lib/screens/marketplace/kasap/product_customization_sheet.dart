@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'legal_report_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/butcher_product.dart';
@@ -153,18 +154,7 @@ class _ProductCustomizationSheetState
     note: noteText,
   );
   Navigator.pop(context);
-  
-  final localizedName = I18nUtils.getLocalizedText(context, widget.product.nameData);
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(widget.existingItem != null 
-        ? 'marketplace.updated_in_cart'.tr(args: [localizedName]) 
-        : 'marketplace.added_to_cart'.tr(args: [localizedName])),
-      duration: const Duration(seconds: 2),
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: const Color(0xFFFB335B),
-    ),
-  );
+  HapticFeedback.heavyImpact();
 }
 
   @override
@@ -205,7 +195,7 @@ class _ProductCustomizationSheetState
           // ── Scrollable Content ──
           Flexible(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.only(left: 16, right: 16, bottom: MediaQuery.of(context).viewInsets.bottom > 0 ? 8 : 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -258,7 +248,7 @@ class _ProductCustomizationSheetState
               left: 16,
               right: 16,
               top: 12,
-              bottom: MediaQuery.of(context).padding.bottom + 12,
+              bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 12,
             ),
             decoration: BoxDecoration(
               color: bg,
@@ -273,8 +263,8 @@ class _ProductCustomizationSheetState
                     // Quantity selector
                     Container(
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white10 : Colors.grey[100],
-                        borderRadius: BorderRadius.circular(10),
+                        color: isDark ? Colors.white10 : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(24),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -309,7 +299,7 @@ class _ProductCustomizationSheetState
                           ),
                           _qtyButton(
                             icon: Icons.add,
-                            color: accent,
+                            color: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
                             onTap: () {
                               setState(() => _quantity += isByWeight ? product.stepQuantity : 1);
                             },
@@ -331,7 +321,7 @@ class _ProductCustomizationSheetState
                             foregroundColor: Colors.white,
                             disabledBackgroundColor: isDark ? Colors.white12 : Colors.grey[300],
                             disabledForegroundColor: isDark ? Colors.white30 : Colors.grey,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                             elevation: 0,
                           ),
                           child: Text(
@@ -415,10 +405,10 @@ class _ProductCustomizationSheetState
             'marketplace.product_info'.tr(),
             style: TextStyle(
               fontSize: 13,
-              color: accent,
+              color: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
               fontWeight: FontWeight.w600,
               decoration: TextDecoration.underline,
-              decorationColor: accent,
+              decorationColor: isDark ? Colors.white70 : const Color(0xFF3A3A3C),
             ),
           ),
         ),
@@ -484,16 +474,17 @@ class _ProductCustomizationSheetState
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: group.required
-                    ? accent.withValues(alpha: 0.12)
+                    ? (isDark ? Colors.white24 : const Color(0xFF3A3A3C))
                     : (isDark ? Colors.white10 : Colors.grey[100]),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
                 group.required ? 'marketplace.required_field'.tr() : 'common.optional'.tr(),
                 style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: group.required ? accent : textSecondary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: group.required ? Colors.white : textSecondary,
+                  letterSpacing: 0.2,
                 ),
               ),
             ),

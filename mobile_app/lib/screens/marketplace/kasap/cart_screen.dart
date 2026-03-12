@@ -3364,8 +3364,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                             '#$positionNumber',
                             style: TextStyle(
                               color: isDark ? Colors.grey[400] : Colors.grey[600],
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -3872,7 +3872,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   ),
                 ),
                 Text(
-                  'marketplace.sponsored'.tr(),
+                  'marketplace.sponsored_de'.tr(),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w400,
@@ -6357,7 +6357,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               setSheetState: setSheetState,
               value: 'substitute',
               title: 'marketplace.product_unavailable_replace'.tr(),
-              subtitle: 'Eşdeğer veya daha düşük fiyatlı ürün gönderilir',
+              subtitle: 'marketplace.unavailable_replace_desc'.tr(),
               isDark: isDark,
             ),
             const SizedBox(height: 4),
@@ -6368,7 +6368,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               setSheetState: setSheetState,
               value: 'refund',
               title: 'marketplace.product_unavailable_refund'.tr(),
-              subtitle: 'Ödeme yönteminize göre otomatik iade',
+              subtitle: 'marketplace.unavailable_refund_desc'.tr(),
               isDark: isDark,
             ),
             const SizedBox(height: 4),
@@ -6379,7 +6379,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               setSheetState: setSheetState,
               value: 'perItem',
               title: 'marketplace.product_unavailable_choose'.tr(),
-              subtitle: 'Her ürün için tercih belirleyin',
+              subtitle: 'marketplace.unavailable_choose_desc'.tr(),
               isDark: isDark,
             ),
             // Per-item preferences (only when perItem is selected)
@@ -6457,8 +6457,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           _buildUnavailabilityOption(
             setSheetState: setSheetState,
             value: 'substitute',
-            title: 'En iyi alternatifle değiştir',
-            subtitle: 'Eşdeğer veya daha düşük fiyatlı ürün gönderilir',
+            title: 'marketplace.product_unavailable_replace'.tr(),
+            subtitle: 'marketplace.unavailable_replace_desc'.tr(),
             isDark: isDark,
           ),
           const SizedBox(height: 4),
@@ -6469,8 +6469,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           _buildUnavailabilityOption(
             setSheetState: setSheetState,
             value: 'refund',
-            title: 'Ürün ücretini iade et',
-            subtitle: 'Ödeme yönteminize göre otomatik iade',
+            title: 'marketplace.product_unavailable_refund'.tr(),
+            subtitle: 'marketplace.unavailable_refund_desc'.tr(),
             isDark: isDark,
           ),
           const SizedBox(height: 4),
@@ -6481,8 +6481,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           _buildUnavailabilityOption(
             setSheetState: setSheetState,
             value: 'perItem',
-            title: 'Her ürün için ayrı seç',
-            subtitle: 'Her ürün için tercih belirleyin',
+            title: 'marketplace.product_unavailable_choose'.tr(),
+            subtitle: 'marketplace.unavailable_choose_desc'.tr(),
             isDark: isDark,
           ),
 
@@ -9070,8 +9070,8 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       child: Text(
                         'checkout.payment_title'.tr(),
                         style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),

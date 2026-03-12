@@ -1511,7 +1511,6 @@
     "submit": "Enviar pedido",
     "required": "Obligatorio",
     "donation_added_label": "donación",
-
     "step_cart": "Carrito",
     "step_payment": "Pago",
     "step_confirm": "Confirmar",
@@ -1570,5 +1569,15 @@
     "pin_moved_far_warning": "El pin se ha movido bastante lejos. Comprueba si es el lugar correcto para {}",
     "confirm": "Confirmar",
     "cancel": "Cancelar"
+  },
+  "coupon": {
+    "enter_code": "Ingrese un código de cupón",
+    "invalid_code": "Código de cupón no válido",
+    "not_yet_active": "Este cupón aún no está activo",
+    "expired": "Este cupón ha expirado",
+    "usage_limit_reached": "Este cupón ha alcanzado su límite de uso",
+    "min_order_required": "Monto mínimo de pedido: {amount}€",
+    "not_valid_for_business": "Este cupón no es válido para este negocio",
+    "already_used": "Ya ha utilizado este cupón"
   }
 }
