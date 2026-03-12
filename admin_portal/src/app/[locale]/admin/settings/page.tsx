@@ -198,6 +198,21 @@ export default function SettingsPage() {
                                 </div>
                                 <span className="ml-auto text-gray-600 group-hover:text-orange-400 transition text-xl">→</span>
                             </Link>
+
+                            {/* 🔔 Bildirim Sesi */}
+                            <Link
+                                href="/admin/settings/notification-sound"
+                                className="flex items-center gap-4 p-5 bg-gray-900 rounded-xl border border-gray-700 hover:border-rose-600 hover:bg-rose-950/20 transition-all group"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-rose-900/50 flex items-center justify-center text-2xl group-hover:bg-rose-800/50 transition">
+                                    🔔
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white group-hover:text-rose-300 transition">{t('bildirim_sesi') || 'Bildirim Sesi'}</h3>
+                                    <p className="text-xs text-gray-500">{t('bildirim_sesi_desc') || 'Push notification ses ayarları'}</p>
+                                </div>
+                                <span className="ml-auto text-gray-600 group-hover:text-rose-400 transition text-xl">→</span>
+                            </Link>
                         </div>
                     </div>
                 )}

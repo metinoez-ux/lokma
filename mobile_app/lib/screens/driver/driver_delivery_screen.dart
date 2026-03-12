@@ -10,6 +10,7 @@ import '../../services/shift_service.dart';
 import '../staff/staff_delivery_screen.dart';
 import '../../utils/currency_utils.dart';
 import '../shared/tap_to_pay_sheet.dart';
+import 'driver_earnings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore, FieldValue;
 
 /// Driver Delivery Screen - Shows pending deliveries from ALL assigned businesses
@@ -259,6 +260,15 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           ),
         ),
         actions: [
+          // Kazançlarım (Earnings) button
+          IconButton(
+            icon: const Icon(Icons.monetization_on_outlined, size: 22),
+            tooltip: 'Kazançlarım',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DriverEarningsScreen()),
+            ),
+          ),
           // Show assigned business count - tappable
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -681,6 +691,12 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
           }
         );
 
+        // Calculate total tips earned today
+        final totalTips = completedOrders.fold<double>(
+          0, (sum, o) => sum + o.tipAmount,
+        );
+        final tippedCount = completedOrders.where((o) => o.tipAmount > 0).length;
+
         final isDark = Theme.of(context).brightness == Brightness.dark;
         final bgColor = isDark ? Colors.grey[900] : Colors.grey[100];
         final borderColor = isDark ? Colors.grey[700] : Colors.grey[300];
@@ -759,6 +775,25 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
                     ),
                     child: Text(
                       '💳 ${cardTotal.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+                // Tip Badge
+                if (totalTips > 0) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    margin: const EdgeInsets.only(left: 6, top: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.amber[700],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '💰 ${totalTips.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()} ($tippedCount)',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -884,14 +919,37 @@ class _DriverDeliveryScreenState extends ConsumerState<DriverDeliveryScreen> {
               ],
             ),
           ),
-          // Price
-          Text(
-            '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: isCash ? Colors.green[700] : Colors.purple[700],
-            ),
+          // Price + Tip
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${order.totalAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  color: isCash ? Colors.green[700] : Colors.purple[700],
+                ),
+              ),
+              if (order.tipAmount > 0) ...[
+                const SizedBox(height: 2),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '💰 +${order.tipAmount.toStringAsFixed(2)}${CurrencyUtils.getCurrencySymbol()}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.amber.shade800,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),

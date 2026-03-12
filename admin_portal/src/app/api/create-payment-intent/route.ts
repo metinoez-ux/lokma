@@ -22,15 +22,20 @@ const VAT_RATE = 19; // 19% German VAT (Umsatzsteuer)
 /**
  * Calculate complete fee breakdown
  */
-function calculateFeeBreakdown(amountCents: number, commissionRate: number) {
-    // 1. Stripe processing fee (charged by Stripe from total)
+function calculateFeeBreakdown(amountCents: number, commissionRate: number, tipAmountCents: number = 0) {
+    // === TIP SEPARATION (§3 Nr. 51 EStG — Tips are tax-free in Germany) ===
+    // Commission is calculated on the ORDER amount only, excluding tip.
+    // Tip stays in LOKMA platform account for driver payouts.
+    const orderAmountCents = amountCents - tipAmountCents;
+
+    // 1. Stripe processing fee (charged by Stripe from TOTAL including tip)
     const stripeFee = Math.round((amountCents * STRIPE_FEE_PERCENT / 100) + STRIPE_FEE_FIXED_CENTS);
 
     // 2. Net after Stripe fee
     const netAfterStripe = amountCents - stripeFee;
 
-    // 3. Platform commission (from gross amount)
-    const commissionGross = Math.round(amountCents * (commissionRate / 100));
+    // 3. Platform commission (from ORDER amount only — NOT from tip)
+    const commissionGross = Math.round(orderAmountCents * (commissionRate / 100));
 
     // 4. VAT on commission (19%)
     // Netto = Brutto / 1.19
@@ -38,22 +43,24 @@ function calculateFeeBreakdown(amountCents: number, commissionRate: number) {
     const commissionVat = commissionGross - commissionNet;
 
     // 5. Amount to transfer to merchant
-    // For destination charges: we send (total - commission) to merchant
-    // Stripe fee is automatically deducted from platform's portion
-    const merchantTransfer = amountCents - commissionGross;
+    // Merchant receives: orderAmount - commission (tip is NOT transferred to merchant)
+    const merchantTransfer = orderAmountCents - commissionGross;
 
     // 6. Platform revenue after Stripe fee
-    // Platform gets commission, but pays Stripe fee from it
+    // Platform keeps: commission + tip (tip pooled for driver payout)
     const platformNetRevenue = commissionGross - stripeFee;
 
     return {
         customerPaid: amountCents,
+        orderAmount: orderAmountCents,
+        tipAmount: tipAmountCents,
         stripeFee,
         netAfterStripe,
         commissionGross,
         commissionNet,
         commissionVat,
         merchantTransfer,
+        tipPooled: tipAmountCents, // Tip stays in platform for driver payout
         platformNetRevenue,
         // Rates used
         stripeFeePercent: STRIPE_FEE_PERCENT,
@@ -67,10 +74,11 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const {
-            amount,           // Total amount in EUR (e.g., 100.00)
+            amount,           // Total amount in EUR (e.g., 100.00) — includes tip
             businessId,       // Merchant business ID
             orderId,          // Order ID for tracking
             customerEmail,    // Customer email for receipt
+            tipAmount = 0,    // Tip amount in EUR (e.g., 2.50) — tax-free, pooled for driver
         } = body;
 
         if (!amount || !businessId) {
@@ -92,16 +100,20 @@ export async function POST(request: NextRequest) {
         const connectedAccountId = businessData.stripeAccountId;
         const commissionRate = businessData.commissionRate || 5;
         const amountCents = Math.round(amount * 100);
+        const tipCents = Math.round((tipAmount || 0) * 100);
 
-        // Calculate complete fee breakdown
-        const fees = calculateFeeBreakdown(amountCents, commissionRate);
+        // Calculate complete fee breakdown (tip excluded from commission)
+        const fees = calculateFeeBreakdown(amountCents, commissionRate, tipCents);
 
-        console.log(`[Payment] Fee Breakdown for €${amount}:`);
+        console.log(`[Payment] Fee Breakdown for €${amount} (tip: €${tipAmount || 0}):`);
+        console.log(`  - Order Amount: €${(fees.orderAmount / 100).toFixed(2)}`);
+        console.log(`  - Tip Amount: €${(fees.tipAmount / 100).toFixed(2)}`);
         console.log(`  - Stripe Fee: €${(fees.stripeFee / 100).toFixed(2)}`);
         console.log(`  - Commission (gross): €${(fees.commissionGross / 100).toFixed(2)}`);
         console.log(`  - Commission VAT (19%): €${(fees.commissionVat / 100).toFixed(2)}`);
         console.log(`  - Commission (net): €${(fees.commissionNet / 100).toFixed(2)}`);
         console.log(`  - Merchant Transfer: €${(fees.merchantTransfer / 100).toFixed(2)}`);
+        console.log(`  - Tip Pooled (for driver): €${(fees.tipPooled / 100).toFixed(2)}`);
         console.log(`  - Platform Net Revenue: €${(fees.platformNetRevenue / 100).toFixed(2)}`);
 
         // Build metadata with all fee details (for accounting)
@@ -111,11 +123,14 @@ export async function POST(request: NextRequest) {
             businessName: businessData.companyName || businessData.brand || '',
             // All amounts in cents for precision
             customerPaidCents: fees.customerPaid.toString(),
+            orderAmountCents: fees.orderAmount.toString(),
+            tipAmountCents: fees.tipAmount.toString(),
             stripeFeeCents: fees.stripeFee.toString(),
             commissionGrossCents: fees.commissionGross.toString(),
             commissionNetCents: fees.commissionNet.toString(),
             commissionVatCents: fees.commissionVat.toString(),
             merchantTransferCents: fees.merchantTransfer.toString(),
+            tipPooledCents: fees.tipPooled.toString(),
             platformNetRevenueCents: fees.platformNetRevenue.toString(),
             // Rates
             commissionRatePercent: commissionRate.toString(),
@@ -147,11 +162,14 @@ export async function POST(request: NextRequest) {
                 // Return fee breakdown for order record
                 feeBreakdown: {
                     customerPaid: fees.customerPaid / 100,
+                    orderAmount: fees.orderAmount / 100,
+                    tipAmount: fees.tipAmount / 100,
                     stripeFee: fees.stripeFee / 100,
                     commissionGross: fees.commissionGross / 100,
                     commissionNet: fees.commissionNet / 100,
                     commissionVat: fees.commissionVat / 100,
                     merchantTransfer: fees.merchantTransfer / 100,
+                    tipPooled: fees.tipPooled / 100,
                     platformNetRevenue: fees.platformNetRevenue / 100,
                     commissionRate,
                     vatRate: VAT_RATE,
@@ -193,11 +211,14 @@ export async function POST(request: NextRequest) {
 
                 // Amounts (in EUR for readability)
                 customerPaid: fees.customerPaid / 100,
+                orderAmount: fees.orderAmount / 100,
+                tipAmount: fees.tipAmount / 100,
                 stripeFee: fees.stripeFee / 100,
                 commissionGross: fees.commissionGross / 100,
                 commissionNet: fees.commissionNet / 100,
                 commissionVat: fees.commissionVat / 100,
                 merchantTransfer: fees.merchantTransfer / 100,
+                tipPooled: fees.tipPooled / 100,
                 platformNetRevenue: fees.platformNetRevenue / 100,
 
                 // Rates used
@@ -224,11 +245,14 @@ export async function POST(request: NextRequest) {
             // Return complete fee breakdown for order record
             feeBreakdown: {
                 customerPaid: fees.customerPaid / 100,
+                orderAmount: fees.orderAmount / 100,
+                tipAmount: fees.tipAmount / 100,
                 stripeFee: fees.stripeFee / 100,
                 commissionGross: fees.commissionGross / 100,
                 commissionNet: fees.commissionNet / 100,
                 commissionVat: fees.commissionVat / 100,
                 merchantTransfer: fees.merchantTransfer / 100,
+                tipPooled: fees.tipPooled / 100,
                 platformNetRevenue: fees.platformNetRevenue / 100,
                 commissionRate,
                 vatRate: VAT_RATE,

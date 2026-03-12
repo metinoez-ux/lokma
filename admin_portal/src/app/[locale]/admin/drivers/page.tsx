@@ -215,12 +215,20 @@ const [allAdmins, setAllAdmins] = useState<AdminStaff[]>([]);
                         <h1 className="text-2xl font-bold">{t('surucu_yonetimi')}</h1>
                         <p className="text-gray-400 text-sm">{t('personeli_surucu_olarak_ata_ve_isletmele')}</p>
                     </div>
-                    <a
-                        href="/admin/drivers/performance"
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-                    >
-                        📊 Performans Raporu
-                    </a>
+                    <div className="flex gap-3">
+                        <a
+                            href="/admin/drivers/tips"
+                            className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 flex items-center gap-2"
+                        >
+                            {t('trinkgeld')}
+                        </a>
+                        <a
+                            href="/admin/drivers/performance"
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                        >
+                            {t('performance_report')}
+                        </a>
+                    </div>
                 </div>
 
                 {/* Stats */}

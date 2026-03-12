@@ -43,6 +43,7 @@ class StripePaymentService {
     required String businessId,
     required String orderId,
     String? customerEmail,
+    double tipAmount = 0,
   }) async {
     // Check if Stripe is ready
     if (!isReady) {
@@ -65,6 +66,7 @@ class StripePaymentService {
           'businessId': businessId,
           'orderId': orderId,
           'customerEmail': customerEmail,
+          if (tipAmount > 0) 'tipAmount': tipAmount,
         }),
       ).timeout(const Duration(seconds: 25));
 
@@ -94,16 +96,19 @@ class StripePaymentService {
         final fb = data['feeBreakdown'];
         feeBreakdown = FeeBreakdown(
           customerPaid: (fb['customerPaid'] as num).toDouble(),
+          orderAmount: (fb['orderAmount'] as num?)?.toDouble() ?? (fb['customerPaid'] as num).toDouble(),
+          tipAmount: (fb['tipAmount'] as num?)?.toDouble() ?? 0,
           stripeFee: (fb['stripeFee'] as num).toDouble(),
           commissionGross: (fb['commissionGross'] as num).toDouble(),
           commissionNet: (fb['commissionNet'] as num).toDouble(),
           commissionVat: (fb['commissionVat'] as num).toDouble(),
           merchantTransfer: (fb['merchantTransfer'] as num).toDouble(),
+          tipPooled: (fb['tipPooled'] as num?)?.toDouble() ?? 0,
           platformNetRevenue: (fb['platformNetRevenue'] as num).toDouble(),
           commissionRate: (fb['commissionRate'] as num).toDouble(),
           vatRate: (fb['vatRate'] as num).toDouble(),
         );
-        debugPrint('📊 Fee breakdown: Stripe ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.stripeFee.toStringAsFixed(2)}, Commission ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.commissionGross.toStringAsFixed(2)}, Merchant ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.merchantTransfer.toStringAsFixed(2)}');
+        debugPrint('📊 Fee breakdown: Stripe ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.stripeFee.toStringAsFixed(2)}, Commission ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.commissionGross.toStringAsFixed(2)}, Merchant ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.merchantTransfer.toStringAsFixed(2)}, Tip Pooled ${CurrencyUtils.getCurrencySymbol()}${feeBreakdown.tipPooled.toStringAsFixed(2)}');
       }
 
       // Check if Apple Pay is supported to avoid generic init errors
@@ -197,23 +202,29 @@ class StripePaymentService {
 
 /// Complete fee breakdown for German tax compliance
 class FeeBreakdown {
-  final double customerPaid;       // What customer paid
+  final double customerPaid;       // What customer paid (order + tip)
+  final double orderAmount;        // Order amount without tip
+  final double tipAmount;          // Tip amount (tax-free under §3(51) EStG)
   final double stripeFee;          // Stripe processing fee
-  final double commissionGross;    // Platform commission (brutto)
+  final double commissionGross;    // Platform commission (brutto, on order only)
   final double commissionNet;      // Commission after VAT
   final double commissionVat;      // VAT portion of commission
   final double merchantTransfer;   // Amount transferred to merchant
+  final double tipPooled;          // Tip pooled for driver payout
   final double platformNetRevenue; // Platform revenue after Stripe fee
   final double commissionRate;     // Commission % used
   final double vatRate;            // VAT % used (19%)
 
   FeeBreakdown({
     required this.customerPaid,
+    this.orderAmount = 0,
+    this.tipAmount = 0,
     required this.stripeFee,
     required this.commissionGross,
     required this.commissionNet,
     required this.commissionVat,
     required this.merchantTransfer,
+    this.tipPooled = 0,
     required this.platformNetRevenue,
     required this.commissionRate,
     required this.vatRate,
@@ -221,11 +232,14 @@ class FeeBreakdown {
 
   Map<String, dynamic> toMap() => {
     'customerPaid': customerPaid,
+    'orderAmount': orderAmount,
+    'tipAmount': tipAmount,
     'stripeFee': stripeFee,
     'commissionGross': commissionGross,
     'commissionNet': commissionNet,
     'commissionVat': commissionVat,
     'merchantTransfer': merchantTransfer,
+    'tipPooled': tipPooled,
     'platformNetRevenue': platformNetRevenue,
     'commissionRate': commissionRate,
     'vatRate': vatRate,

@@ -23,6 +23,32 @@ admin.initializeApp();
 const messaging = admin.messaging();
 const db = admin.firestore();
 
+// ── Notification Sound Helper ──────────────────────────────────────────────
+// Cache the active notification sound per function invocation
+let _cachedNotifSound = "";
+async function getActiveNotificationSound(): Promise<string> {
+    if (_cachedNotifSound) return _cachedNotifSound;
+    try {
+        const soundDoc = await db.doc("platform_config/notification_sound").get();
+        _cachedNotifSound = soundDoc.data()?.activeSound || "lokma_order_bell.caf";
+    } catch (e) {
+        _cachedNotifSound = "lokma_order_bell.caf";
+    }
+    return _cachedNotifSound;
+}
+
+function buildSoundConfig(soundName: string) {
+    return {
+        apns: {
+            payload: { aps: { sound: soundName } },
+        },
+        android: {
+            notification: { sound: "default", channelId: "lokma_orders" },
+        },
+    };
+}
+
+
 /**
  * When a new order is created, send push notification to butcher admin
  */
@@ -96,6 +122,9 @@ export const onNewOrder = onDocumentCreated(
             }
         }
 
+        // Get notification sound once for all push notifications
+        const notifSound = await getActiveNotificationSound();
+
         // Get butcher admin FCM tokens (mobile)
         try {
             const butcherDoc = await admin.firestore()
@@ -125,6 +154,7 @@ export const onNewOrder = onDocumentCreated(
                         orderNumber: orderNumber,
                         ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
                     },
+                    ...buildSoundConfig(notifSound),
                     tokens: fcmTokens,
                 };
 
@@ -189,6 +219,7 @@ export const onNewOrder = onDocumentCreated(
                         orderNumber: orderNumber,
                         ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
                     },
+                    ...buildSoundConfig(notifSound),
                     tokens: webTokens,
                 };
 
@@ -331,6 +362,7 @@ export const onNewOrder = onDocumentCreated(
                                 status: "pending",
                                 ...(isPreOrder && pickupTimeStr ? { pickupTime: pickupTimeStr } : {}),
                             },
+                            ...buildSoundConfig(notifSound),
                             tokens: customerFcmTokens,
                         };
                         const pushResponse = await messaging.sendEachForMulticast(customerPush);
@@ -619,6 +651,9 @@ export const onOrderStatusChange = onDocumentUpdated(
         // Only process if status changed
         if (before.status === after.status) return;
 
+        // Get notification sound for push notifications
+        const notifSound = await getActiveNotificationSound();
+
         // Gather all possible FCM tokens for the customer(s)
         const tokenSet = new Set<string>();
         if (after.fcmToken) tokenSet.add(after.fcmToken);
@@ -776,7 +811,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                                 },
                                 tokens: staffTokens,
                             };
-                            const response = await messaging.sendEachForMulticast(staffMessage);
+                            const response = await messaging.sendEachForMulticast({...staffMessage, ...buildSoundConfig(notifSound)});
                             console.log(`[Shift Gate] Sent delivery notification to ${response.successCount}/${staffTokens.length} on-shift drivers/staff`);
                         } else {
                             console.log(`[Shift Gate] No on-shift driver tokens found for business ${butcherId} (${processedIds.size} total staff, ${skippedPaused} paused)`);
@@ -848,7 +883,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                                 },
                                 tokens: waiterTokens,
                             };
-                            const response = await messaging.sendEachForMulticast(waiterMessage);
+                            const response = await messaging.sendEachForMulticast({...waiterMessage, ...buildSoundConfig(notifSound)});
                             console.log(`[Waiter Gate] Sent table-ready notification to ${response.successCount}/${waiterTokens.length} assigned waiters for table ${tableNum}`);
                         } else {
                             console.log(`[Waiter Gate] No assigned waiters found for table ${tableNum} at business ${butcherId}`);
@@ -1096,12 +1131,14 @@ export const onOrderStatusChange = onDocumentUpdated(
                     if (customerTokens.length === 1) {
                         await messaging.send({
                             ...messagePayload,
+                            ...buildSoundConfig(notifSound),
                             token: customerTokens[0],
                         });
                         console.log(`Sent ${newStatus} notification to customer (single device)`);
                     } else {
                         const response = await messaging.sendEachForMulticast({
                             ...messagePayload,
+                            ...buildSoundConfig(notifSound),
                             tokens: customerTokens,
                         });
                         console.log(`Sent ${newStatus} notification to ${response.successCount}/${customerTokens.length} customer devices`);
@@ -1923,6 +1960,7 @@ export const onScheduledFeedbackRequests = onSchedule(
                 const lang = await getUserLanguage(order.userId || order.customerId); // Try to get user language, defaulting to Turkish
                 const trans = await getPushTranslations(lang);
 
+                const notifSound = await getActiveNotificationSound();
                 try {
                     await messaging.send({
                         notification: {
@@ -1935,6 +1973,7 @@ export const onScheduledFeedbackRequests = onSchedule(
                             businessId: order.butcherId || "",
                             businessName: butcherName,
                         },
+                        ...buildSoundConfig(notifSound),
                         token: customerFcmToken,
                     });
 
@@ -2039,6 +2078,7 @@ export const onNewReservation = onDocumentCreated(
             // Remove duplicates
             const uniqueTokens = [...new Set(staffTokens)];
 
+            const notifSound = await getActiveNotificationSound();
             const message = {
                 notification: {
                     title: "🍽️ Yeni Masa Rezervasyonu!",
@@ -2050,6 +2090,7 @@ export const onNewReservation = onDocumentCreated(
                     businessId: businessId,
                     customerName: customerName,
                 },
+                ...buildSoundConfig(notifSound),
                 tokens: uniqueTokens,
             };
 
@@ -2138,6 +2179,7 @@ export const onReservationStatusChange = onDocumentUpdated(
 
                 if (staffTokens.length > 0) {
                     const uniqueTokens = [...new Set(staffTokens)];
+                    const notifSound = await getActiveNotificationSound();
                     await messaging.sendEachForMulticast({
                         notification: {
                             title: "🚫 Rezervasyon İptal Edildi",
@@ -2148,6 +2190,7 @@ export const onReservationStatusChange = onDocumentUpdated(
                             reservationId: event.params.reservationId,
                             businessId: businessId,
                         },
+                        ...buildSoundConfig(notifSound),
                         tokens: uniqueTokens,
                     });
                     console.log(`[Reservation] Notified staff about cancellation`);
@@ -2176,6 +2219,7 @@ export const onReservationStatusChange = onDocumentUpdated(
 
         // Send push notification if token available
         if (customerFcmToken) {
+            const notifSound = await getActiveNotificationSound();
             try {
                 await messaging.send({
                     notification: { title, body },
@@ -2185,6 +2229,7 @@ export const onReservationStatusChange = onDocumentUpdated(
                         businessId: businessId,
                         status: newStatus,
                     },
+                    ...buildSoundConfig(notifSound),
                     token: customerFcmToken,
                 });
                 console.log(`[Reservation] Sent ${newStatus} push notification to customer`);
@@ -2392,6 +2437,7 @@ export const onScheduledReservationReminders = onSchedule(
                     const resDate = res.reservationDate?.toDate?.() ?? new Date();
                     const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
 
+                    const notifSound = await getActiveNotificationSound();
                     try {
                         await messaging.send({
                             notification: {
@@ -2403,6 +2449,7 @@ export const onScheduledReservationReminders = onSchedule(
                                 reservationId: resDoc.id,
                                 businessId: businessId,
                             },
+                            ...buildSoundConfig(notifSound),
                             token: token,
                         });
 
@@ -2431,6 +2478,7 @@ export const onScheduledReservationReminders = onSchedule(
                     const resDate = res.reservationDate?.toDate?.() ?? new Date();
                     const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
 
+                    const notifSound2h = await getActiveNotificationSound();
                     try {
                         await messaging.send({
                             notification: {
@@ -2442,6 +2490,7 @@ export const onScheduledReservationReminders = onSchedule(
                                 reservationId: resDoc.id,
                                 businessId: businessId,
                             },
+                            ...buildSoundConfig(notifSound2h),
                             token: token,
                         });
 
@@ -2511,6 +2560,7 @@ export const onScheduledReservationReminders = onSchedule(
                         const tableCards = res.tableCardNumbers || [];
                         const tableInfo = tableCards.length > 0 ? ` (Kart: ${tableCards.join(", ")})` : "";
 
+                        const notifSound30 = await getActiveNotificationSound();
                         if (uniqueTokens.length > 0) {
                             try {
                                 await messaging.sendEachForMulticast({
@@ -2523,6 +2573,7 @@ export const onScheduledReservationReminders = onSchedule(
                                         reservationId: resDoc.id,
                                         businessId: businessId,
                                     },
+                                    ...buildSoundConfig(notifSound30),
                                     tokens: uniqueTokens,
                                 });
                                 sentStaff30m++;
@@ -2557,6 +2608,7 @@ export const onScheduledReservationReminders = onSchedule(
                                             reservationId: resDoc.id,
                                             businessId: businessId,
                                         },
+                                        ...buildSoundConfig(notifSound30),
                                         token: customerToken,
                                     });
                                     sentCustomer30m++;
@@ -2721,6 +2773,7 @@ export const onShiftEnd = onDocumentUpdated(
             });
 
             if (adminTokens.length > 0) {
+                const notifSoundOrphan = await getActiveNotificationSound();
                 const orphanMessage = {
                     notification: {
                         title: "⚠️ Sahipsiz Masa Uyarısı",
@@ -2731,6 +2784,7 @@ export const onShiftEnd = onDocumentUpdated(
                         businessId: businessId,
                         tables: orphanTables.join(","),
                     },
+                    ...buildSoundConfig(notifSoundOrphan),
                     tokens: adminTokens,
                 };
                 const response = await messaging.sendEachForMulticast(orphanMessage);
@@ -2817,6 +2871,7 @@ export const preOrderReminder = onSchedule(
                 if (allTokens.length > 0) {
                     const orderNum = reminder.orderNumber ? `#${reminder.orderNumber}` : "";
                     const pickupStr = reminder.pickupTimeStr || "";
+                    const notifSoundPre = await getActiveNotificationSound();
                     const message = {
                         notification: {
                             title: `⏰ Ön Sipariş Hatırlatma! ${orderNum}`,
@@ -2827,6 +2882,7 @@ export const preOrderReminder = onSchedule(
                             orderId: orderId,
                             businessId: businessId,
                         },
+                        ...buildSoundConfig(notifSoundPre),
                         tokens: allTokens,
                     };
 

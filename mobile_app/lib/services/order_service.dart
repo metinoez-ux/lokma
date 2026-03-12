@@ -66,6 +66,10 @@ class LokmaOrder {
   final OrderType orderType;
   final OrderStatus status;
   final String? deliveryAddress;
+  final double? deliveryPinLat;   // Precise GPS latitude from map pin
+  final double? deliveryPinLng;   // Precise GPS longitude from map pin
+  final bool hasPrecisePin;       // true when customer set a precise meeting point
+  final String? deliveryPinCode;  // 4-digit PIN for precise location verification
   final DateTime? scheduledTime;
   final String? notes;
   final String? courierId;
@@ -84,6 +88,7 @@ class LokmaOrder {
   final String? servedByName;
   final String? tableSessionId;
   final dynamic tableNumber; // Can be int or String from Firestore
+  final double tipAmount; // Tip given by customer (§3(51) EStG: tax-free)
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -101,6 +106,10 @@ class LokmaOrder {
     required this.orderType,
     required this.status,
     this.deliveryAddress,
+    this.deliveryPinLat,
+    this.deliveryPinLng,
+    this.hasPrecisePin = false,
+    this.deliveryPinCode,
     this.scheduledTime,
     this.notes,
     this.courierId,
@@ -119,6 +128,7 @@ class LokmaOrder {
     this.servedByName,
     this.tableSessionId,
     this.tableNumber,
+    this.tipAmount = 0,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -155,6 +165,10 @@ class LokmaOrder {
       ),
       status: _parseOrderStatus(data['status']),
       deliveryAddress: data['deliveryAddress'],
+      deliveryPinLat: (data['deliveryPinLat'] as num?)?.toDouble(),
+      deliveryPinLng: (data['deliveryPinLng'] as num?)?.toDouble(),
+      hasPrecisePin: data['hasPrecisePin'] == true,
+      deliveryPinCode: data['deliveryPinCode'] as String?,
       scheduledTime: (data['scheduledTime'] as Timestamp?)?.toDate(),
       notes: data['notes'] ?? data['orderNote'],
       courierId: data['courierId'],
@@ -180,6 +194,7 @@ class LokmaOrder {
       servedByName: data['servedByName'],
       tableSessionId: data['tableSessionId'] ?? data['groupSessionId'],
       tableNumber: data['tableNumber'],
+      tipAmount: (data['tipAmount'] ?? data['tip'] ?? 0).toDouble(),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );

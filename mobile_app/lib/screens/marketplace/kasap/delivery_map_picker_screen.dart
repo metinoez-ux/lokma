@@ -26,6 +26,11 @@ class DeliveryMapPickerScreen extends StatefulWidget {
   final double? businessLat;
   final double? businessLng;
   final double deliveryRadiusKm;
+  /// When true, shows the "pin moved far" warning if user drags >500m.
+  /// Should be false for brand-new address picks (map selection mode).
+  final bool isFineTuning;
+  /// Business name for out-of-range messaging
+  final String? businessName;
 
   const DeliveryMapPickerScreen({
     super.key,
@@ -35,6 +40,8 @@ class DeliveryMapPickerScreen extends StatefulWidget {
     this.businessLat,
     this.businessLng,
     this.deliveryRadiusKm = 5.0,
+    this.isFineTuning = false,
+    this.businessName,
   });
 
   @override
@@ -51,7 +58,7 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
   Timer? _debounceTimer;
 
   // Brand color
-  static const Color brandOrange = Color(0xFFE8772E);
+  static const Color brandOrange = Color(0xFFFB335B);
 
   @override
   void initState() {
@@ -72,15 +79,17 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
   void _onMapMoved(LatLng center) {
     _currentCenter = center;
 
-    // Check if pin moved far from original (>500m)
-    final distanceM = const Distance().as(
-      LengthUnit.Meter,
-      LatLng(widget.initialLat, widget.initialLng),
-      center,
-    );
-    final movedFar = distanceM > 500;
-    if (movedFar != _pinMovedFar) {
-      setState(() => _pinMovedFar = movedFar);
+    // Check if pin moved far from original (>500m) — only in fine-tuning mode
+    if (widget.isFineTuning) {
+      final distanceM = const Distance().as(
+        LengthUnit.Meter,
+        LatLng(widget.initialLat, widget.initialLng),
+        center,
+      );
+      final movedFar = distanceM > 500;
+      if (movedFar != _pinMovedFar) {
+        setState(() => _pinMovedFar = movedFar);
+      }
     }
 
     // Debounce reverse geocoding
@@ -169,22 +178,29 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
 
   void _showOutOfRangeDialog() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bName = widget.businessName ?? 'checkout.partner_no_delivery_title'.tr();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF2C2C2E) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(
-          'checkout.partner_no_delivery_title'.tr(),
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-          textAlign: TextAlign.center,
+        title: Column(
+          children: [
+            const Icon(Icons.location_off_rounded, color: Colors.red, size: 44),
+            const SizedBox(height: 12),
+            Text(
+              'checkout.out_of_range_title'.tr(),
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
         content: Text(
-          'checkout.partner_no_delivery_body'.tr(),
+          'checkout.out_of_range_body'.tr(namedArgs: {'business': bName}),
           style: TextStyle(
             fontSize: 14,
             color: isDark ? Colors.grey[300] : Colors.grey[700],
@@ -194,19 +210,42 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
         ),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: brandOrange,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                elevation: 0,
+          Column(
+            children: [
+              // Primary: try different location
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: brandOrange,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    elevation: 0,
+                  ),
+                  child: Text('checkout.try_different_location'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                ),
               ),
-              child: const Text('Ok', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-            ),
+              const SizedBox(height: 8),
+              // Secondary: go back (clear cart / search business)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx); // close dialog
+                    Navigator.pop(context); // close map picker
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: isDark ? Colors.grey[300] : Colors.grey[700],
+                    side: BorderSide(color: isDark ? Colors.grey[600]! : Colors.grey[300]!),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text('checkout.go_back'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -421,7 +460,7 @@ class _DeliveryMapPickerScreenState extends State<DeliveryMapPickerScreen> {
                         TextSpan(
                           children: [
                             TextSpan(
-                              text: '${'checkout.meeting_point'.tr()} ',
+                              text: '${widget.isFineTuning ? 'checkout.meeting_point'.tr() : 'checkout.delivery_address_label'.tr()} ',
                               style: TextStyle(
                                 fontSize: 13,
                                 color: isDark ? Colors.grey[300] : Colors.grey[700],

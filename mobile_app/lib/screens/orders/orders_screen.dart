@@ -756,6 +756,56 @@ class _OrderCardState extends ConsumerState<_OrderCard> {
                   ],
                 ),
               ],
+              // 📍 PIN Code for precise delivery location
+              if (order.hasPrecisePin && order.deliveryPinCode != null && order.deliveryPinCode!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.blue.shade900.withValues(alpha: 0.3) : Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.blue.shade300, width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.pin, color: Colors.blue, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'orders.delivery_pin'.tr(),
+                              style: TextStyle(fontSize: 12, color: isDark ? Colors.blue.shade200 : Colors.blue.shade700),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'orders.delivery_pin_info'.tr(),
+                              style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.blue,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          order.deliveryPinCode!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               // Notes
               if (order.notes != null && order.notes!.isNotEmpty) ...[
                 const SizedBox(height: 8),

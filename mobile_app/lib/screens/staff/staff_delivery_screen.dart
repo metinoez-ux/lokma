@@ -1,5 +1,8 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -649,11 +652,55 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
   final OrderService _orderService = OrderService();
   final LocationTrackingService _locationService = LocationTrackingService();
 
+  // ── Compass state for precise pin navigation ──
+  StreamSubscription<Position>? _positionSubscription;
+  double? _driverLat;
+  double? _driverLng;
+  double? _distanceToPin; // meters
+  double? _bearingToPin; // degrees
+  bool _compassActive = false;
+
   @override
   void initState() {
     super.initState();
     // Auto-resume tracking if order is already onTheWay
     _resumeTrackingIfNeeded();
+    _startCompassIfNeeded();
+  }
+
+  /// Start listening to driver position for compass mode (only for precise pin orders)
+  Future<void> _startCompassIfNeeded() async {
+    try {
+      final order = await _orderService.getOrder(widget.orderId);
+      if (order == null || !order.hasPrecisePin) return;
+      if (order.deliveryPinLat == null || order.deliveryPinLng == null) return;
+
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) return;
+
+      _positionSubscription = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, distanceFilter: 5),
+      ).listen((pos) {
+        if (!mounted) return;
+        final dist = Geolocator.distanceBetween(
+          pos.latitude, pos.longitude,
+          order.deliveryPinLat!, order.deliveryPinLng!,
+        );
+        final bearing = Geolocator.bearingBetween(
+          pos.latitude, pos.longitude,
+          order.deliveryPinLat!, order.deliveryPinLng!,
+        );
+        setState(() {
+          _driverLat = pos.latitude;
+          _driverLng = pos.longitude;
+          _distanceToPin = dist;
+          _bearingToPin = bearing;
+          _compassActive = dist < 200; // Activate compass when < 200m
+        });
+      });
+    } catch (e) {
+      debugPrint('[ActiveDelivery] Compass init error: $e');
+    }
   }
 
   /// Resume tracking if the order is already onTheWay but tracking stopped
@@ -678,6 +725,7 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
 
   @override
   void dispose() {
+    _positionSubscription?.cancel();
     // Do NOT stop tracking on dispose - the singleton keeps tracking
     // Tracking is stopped only when delivery is completed or cancelled
     super.dispose();
@@ -799,8 +847,16 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => _DeliveryTypeSheet(isCash: isCash),
     );
-    
+
     if (deliveryType == null) return;
+
+    // STEP 2.5: PIN verification for precise pin orders (personal_handoff only)
+    if (orderSnapshot.hasPrecisePin && orderSnapshot.deliveryPinCode != null && deliveryType == 'personal_handoff') {
+      final pinVerified = await _showPinVerificationDialog(orderSnapshot.deliveryPinCode!);
+      if (pinVerified != true) return;
+    }
+    
+    // (null check already handled above)
     
     String? proofPhotoUrl;
     
@@ -1031,15 +1087,18 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
     }
   }
 
-  Future<void> _openNavigation(String? address) async {
-    if (address == null || address.isEmpty) {
+  Future<void> _openNavigation(String? address, {double? lat, double? lng}) async {
+    // Prefer precise GPS coordinates if available
+    final useCoordinates = lat != null && lng != null;
+    
+    if (!useCoordinates && (address == null || address.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(tr('common.address_not_found'))),
       );
       return;
     }
     
-    final encodedAddress = Uri.encodeComponent(address);
+    final encodedAddress = address != null ? Uri.encodeComponent(address) : '';
     
     // Show bottom sheet to let user pick maps app
     if (!mounted) return;
@@ -1054,22 +1113,23 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  'Harita Uygulaması Seçin',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  useCoordinates ? '📍 Hassas Konum Navigasyonu' : 'Harita Uygulaması Seçin',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
               // Apple Maps
               ListTile(
                 leading: const Icon(Icons.map, color: Colors.green, size: 28),
                 title: Text(tr('common.apple_maps')),
-                subtitle: Text(tr('common.default_ios_map')),
+                subtitle: Text(useCoordinates ? 'GPS koordinatlarına git' : tr('common.default_ios_map')),
                 onTap: () async {
                   Navigator.pop(ctx);
-                  // Apple Maps URL scheme
-                  final appleUri = Uri.parse('maps://?q=$encodedAddress');
+                  final appleUri = useCoordinates
+                      ? Uri.parse('maps://?ll=$lat,$lng&q=Teslimat%20Noktası')
+                      : Uri.parse('maps://?q=$encodedAddress');
                   if (await canLaunchUrl(appleUri)) {
                     await launchUrl(appleUri, mode: LaunchMode.externalApplication);
                   }
@@ -1079,12 +1139,15 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
               ListTile(
                 leading: const Icon(Icons.location_on, color: Colors.red, size: 28),
                 title: Text(tr('common.google_maps')),
-                subtitle: Text(tr('common.google_map_app')),
+                subtitle: Text(useCoordinates ? 'GPS koordinatlarına git' : tr('common.google_map_app')),
                 onTap: () async {
                   Navigator.pop(ctx);
-                  // Try Google Maps app first, fallback to web
-                  final googleAppUri = Uri.parse('comgooglemaps://?q=$encodedAddress');
-                  final googleWebUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encodedAddress');
+                  final googleAppUri = useCoordinates
+                      ? Uri.parse('comgooglemaps://?daddr=$lat,$lng&directionsmode=walking')
+                      : Uri.parse('comgooglemaps://?q=$encodedAddress');
+                  final googleWebUri = useCoordinates
+                      ? Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=walking')
+                      : Uri.parse('https://www.google.com/maps/search/?api=1&query=$encodedAddress');
                   
                   if (await canLaunchUrl(googleAppUri)) {
                     await launchUrl(googleAppUri, mode: LaunchMode.externalApplication);
@@ -1099,6 +1162,222 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
       ),
     );
   }
+
+  /// Show PIN verification dialog for precise location deliveries
+  Future<bool?> _showPinVerificationDialog(String expectedPin) async {
+    final pinController = TextEditingController();
+    String? errorText;
+    
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.pin, color: Colors.blue, size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('Teslimat PIN Doğrulama', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Müşteriden 4 haneli teslimat PIN kodunu isteyin.',
+                style: TextStyle(fontSize: 14, color: Colors.grey[600], height: 1.4),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: pinController,
+                keyboardType: TextInputType.number,
+                maxLength: 4,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 12),
+                decoration: InputDecoration(
+                  hintText: '• • • •',
+                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 28, letterSpacing: 12),
+                  errorText: errorText,
+                  counterText: '',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(tr('common.cancel')),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (pinController.text.trim() == expectedPin) {
+                  Navigator.pop(ctx, true);
+                } else {
+                  setDialogState(() => errorText = 'Yanlış PIN kodu. Tekrar deneyin.');
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('✓ Doğrula', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build compass widget for last-mile precision navigation
+  Widget _buildCompassWidget(LokmaOrder order, bool isDark) {
+    if (!order.hasPrecisePin || order.deliveryPinLat == null || order.deliveryPinLng == null) {
+      return const SizedBox.shrink();
+    }
+    
+    final distText = _distanceToPin != null
+        ? (_distanceToPin! < 1000
+            ? '${_distanceToPin!.round()}m'
+            : '${(_distanceToPin! / 1000).toStringAsFixed(1)}km')
+        : '...';
+    
+    final isClose = _compassActive; // < 200m
+    final pinCode = order.deliveryPinCode ?? '';
+    
+    return Card(
+      color: isClose
+          ? (isDark ? const Color(0xFF1B3A1B) : const Color(0xFFE8F5E9))
+          : (isDark ? theme_cardColor(isDark) : null),
+      margin: const EdgeInsets.only(top: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: isClose ? const BorderSide(color: Colors.green, width: 2) : BorderSide.none,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(
+                  isClose ? Icons.near_me : Icons.gps_fixed,
+                  color: isClose ? Colors.green : Colors.blue,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isClose ? '📍 Hassas Konuma Yaklaşıyorsunuz!' : '📍 Hassas Buluşma Noktası',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: isClose ? Colors.green : (isDark ? Colors.white : Colors.black87),
+                    ),
+                  ),
+                ),
+                // Distance badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isClose ? Colors.green : Colors.blue,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    distText,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+            
+            // Compass arrow (only when close)
+            if (isClose && _bearingToPin != null) ...[
+              const SizedBox(height: 12),
+              Center(
+                child: Transform.rotate(
+                  angle: _bearingToPin! * (pi / 180),
+                  child: const Icon(Icons.navigation, color: Colors.green, size: 48),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Center(
+                child: Text(
+                  'Müşterinin konumuna doğru yürüyün',
+                  style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                ),
+              ),
+            ],
+            
+            // PIN code display
+            if (pinCode.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.grey[800] : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.lock_outline, size: 18, color: Colors.amber),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Teslimat PIN: Müşteriden isteyin',
+                        style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[300] : Colors.grey[700]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            
+            // Navigate to precise pin button
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _openNavigation(
+                  order.deliveryAddress,
+                  lat: order.deliveryPinLat,
+                  lng: order.deliveryPinLng,
+                ),
+                icon: const Icon(Icons.navigation, color: Colors.white, size: 18),
+                label: const Text('Hassas Konuma Git', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color? theme_cardColor(bool isDark) => isDark ? const Color(0xFF2C2C2E) : null;
 
   @override
   Widget build(BuildContext context) {
@@ -1335,6 +1614,9 @@ class _ActiveDeliveryScreenState extends State<ActiveDeliveryScreen> {
                           ),
                         ],
                       ),
+
+                      // 📍 Precise Pin Compass Widget (Phase 2)
+                      _buildCompassWidget(order, isDark),
                       
                       const SizedBox(height: 8),
                       

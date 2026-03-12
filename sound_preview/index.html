@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOKMA — Bildirim Sesi Seçici 🔔</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #f0f0f5;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(251,51,91,0.15) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FB335B, #FF6B8A);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ccc;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title .badge {
+            background: rgba(251,51,91,0.15);
+            color: #FB335B;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .sound-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .sound-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sound-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(251,51,91,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(251,51,91,0.1);
+        }
+
+        .sound-card.playing {
+            border-color: #FB335B;
+            background: rgba(251,51,91,0.08);
+        }
+
+        .sound-card.playing::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #FB335B, #FF6B8A);
+            animation: pulse-bar 0.6s ease-out;
+        }
+
+        @keyframes pulse-bar {
+            0% { width: 0; opacity: 1; }
+            100% { width: 100%; opacity: 0; }
+        }
+
+        .sound-card .icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .sound-card .name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .sound-card .desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .sound-card .freq {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            font-size: 10px;
+            color: #555;
+            font-family: monospace;
+        }
+
+        .selected-indicator {
+            display: none;
+            position: absolute;
+            bottom: 12px;
+            right: 14px;
+            width: 22px;
+            height: 22px;
+            background: #FB335B;
+            border-radius: 50%;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .sound-card.selected .selected-indicator {
+            display: flex;
+        }
+
+        .sound-card.selected {
+            border-color: #FB335B;
+            background: rgba(251,51,91,0.06);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FB335B, #E0294F);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 20px rgba(251,51,91,0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.06);
+            color: #aaa;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .visualizer {
+            height: 60px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 0 20px;
+            overflow: hidden;
+        }
+
+        .visualizer .bar {
+            width: 4px;
+            background: linear-gradient(to top, #FB335B, #FF6B8A);
+            border-radius: 2px;
+            transition: height 0.1s ease;
+            min-height: 4px;
+        }
+
+        .selected-info {
+            background: rgba(251,51,91,0.06);
+            border: 1px solid rgba(251,51,91,0.15);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .selected-info strong {
+            color: #FB335B;
+        }
+
+        .tip {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+
+        .tip strong {
+            color: #888;
+        }
+
+        @media (max-width: 600px) {
+            .sound-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="container">
+        <div class="header">
+            <h1>LOKMA Bildirim Sesi 🔔</h1>
+            <p>Hotel resepsiyon zili tarzında premium "ding" sesleri — birini seç!</p>
+        </div>
+
+        <div class="visualizer" id="visualizer"></div>
+
+        <div class="section-title">
+            🏨 Hotel Reception Bell Sesleri
+            <span class="badge">ÖNERİLEN</span>
+        </div>
+        <div class="sound-grid" id="bellSounds"></div>
+
+        <div class="section-title">🍽️ Restaurant / Cafe Sesleri</div>
+        <div class="sound-grid" id="restSounds"></div>
+
+        <div class="section-title">✨ Premium Chime Sesleri</div>
+        <div class="sound-grid" id="chimeSounds"></div>
+
+        <div id="selectedInfo" class="selected-info"></div>
+
+        <div class="tip">
+            <strong>💡 İpucu:</strong> Seçtiğin ses iOS push notification olarak çalacak.
+            Her karta tıklayarak sesi dinleyebilirsin. Karar verince bana söyle, hemen entegre ederim.
+        </div>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let selectedSound = null;
+
+        // Visualizer bars
+        const vizEl = document.getElementById('visualizer');
+        const barCount = 48;
+        for (let i = 0; i < barCount; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.style.height = '4px';
+            vizEl.appendChild(bar);
+        }
+        const bars = vizEl.querySelectorAll('.bar');
+
+        function animateViz(duration = 1.5) {
+            const startTime = Date.now();
+            function frame() {
+                const elapsed = (Date.now() - startTime) / 1000;
+                if (elapsed > duration) {
+                    bars.forEach(b => b.style.height = '4px');
+                    return;
+                }
+                const decay = Math.exp(-elapsed * 3);
+                bars.forEach((b, i) => {
+                    const wave = Math.sin(elapsed * 12 + i * 0.3) * 0.5 + 0.5;
+                    const h = 4 + wave * 50 * decay;
+                    b.style.height = h + 'px';
+                });
+                requestAnimationFrame(frame);
+            }
+            frame();
+        }
+
+        // ─── Sound Definitions ───────────────────────────────
+        const sounds = {
+            bell: [
+                {
+                    id: 'classic_ding',
+                    name: 'Classic Hotel Ding',
+                    desc: 'Klasik otel resepsiyon zili — tek vuruş',
+                    icon: '🛎️',
+                    freq: 880,
+                    harmonics: [0.6, 0.3, 0.15],
+                    decay: 3.5,
+                    type: 'bell',
+                },
+                {
+                    id: 'bright_bell',
+                    name: 'Bright Reception Bell',
+                    desc: 'Parlak ve net kristal zil sesi',
+                    icon: '✨',
+                    freq: 1046.5,
+                    harmonics: [0.5, 0.25, 0.12],
+                    decay: 3.0,
+                    type: 'bell',
+                },
+                {
+                    id: 'warm_dong',
+                    name: 'Warm Dong',
+                    desc: 'Sıcak, derin "dong" — lüks lobby hissi',
+                    icon: '🔔',
+                    freq: 523.25,
+                    harmonics: [0.7, 0.4, 0.2, 0.1],
+                    decay: 4.5,
+                    type: 'bell',
+                },
+                {
+                    id: 'double_ding',
+                    name: 'Double Ding',
+                    desc: 'İki kısa vuruş — dikkat çekici',
+                    icon: '🛎️🛎️',
+                    freq: 880,
+                    harmonics: [0.5, 0.25],
+                    decay: 2.5,
+                    type: 'double',
+                },
+            ],
+            restaurant: [
+                {
+                    id: 'order_bell',
+                    name: 'Order Up Bell',
+                    desc: 'Sipariş hazır zili — mutfak çanı',
+                    icon: '🍳',
+                    freq: 1174.66,
+                    harmonics: [0.4, 0.2],
+                    decay: 2.0,
+                    type: 'bell',
+                },
+                {
+                    id: 'soft_gong',
+                    name: 'Soft Gong',
+                    desc: 'Yumuşak gong — zen bir his',
+                    icon: '🥢',
+                    freq: 392,
+                    harmonics: [0.8, 0.5, 0.3, 0.15],
+                    decay: 5.0,
+                    type: 'bell',
+                },
+                {
+                    id: 'triangle_ting',
+                    name: 'Triangle Ting',
+                    desc: 'Metalik üçgen vuruşu',
+                    icon: '🔺',
+                    freq: 1760,
+                    harmonics: [0.35, 0.15, 0.08],
+                    decay: 2.8,
+                    type: 'bell',
+                },
+                {
+                    id: 'cafe_chime',
+                    name: 'Café Door Chime',
+                    desc: 'Kafe kapı zili — hoş geldiniz',
+                    icon: '☕',
+                    freq: 659.25,
+                    harmonics: [0.5, 0.3, 0.15],
+                    decay: 3.2,
+                    type: 'double',
+                },
+            ],
+            chime: [
+                {
+                    id: 'crystal_chime',
+                    name: 'Crystal Chime',
+                    desc: 'Kristal cam çınlaması — premium',
+                    icon: '💎',
+                    freq: 1318.51,
+                    harmonics: [0.3, 0.15, 0.08],
+                    decay: 4.0,
+                    type: 'bell',
+                },
+                {
+                    id: 'wind_chime',
+                    name: 'Wind Chime',
+                    desc: 'Rüzgar çanı — üç nota akordlu',
+                    icon: '🎐',
+                    freq: 784,
+                    harmonics: [0.4, 0.2],
+                    decay: 3.0,
+                    type: 'triple',
+                },
+                {
+                    id: 'zen_bowl',
+                    name: 'Zen Singing Bowl',
+                    desc: 'Tibet çanağı — meditatif, derin',
+                    icon: '🪷',
+                    freq: 261.63,
+                    harmonics: [0.9, 0.6, 0.4, 0.25, 0.15],
+                    decay: 6.0,
+                    type: 'bell',
+                },
+                {
+                    id: 'xylophone_note',
+                    name: 'Xylophone Note',
+                    desc: 'Ksilofon — kısa, tatlı',
+                    icon: '🎶',
+                    freq: 987.77,
+                    harmonics: [0.2, 0.1],
+                    decay: 1.8,
+                    type: 'bell',
+                },
+            ],
+        };
+
+        function playBellSound(sound) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            const now = audioCtx.currentTime;
+            const masterGain = audioCtx.createGain();
+            masterGain.connect(audioCtx.destination);
+            masterGain.gain.setValueAtTime(0.5, now);
+
+            function createTone(freq, amplitude, startTime, decayTime) {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, startTime);
+                // Slight pitch bend down for realism
+                osc.frequency.exponentialRampToValueAtTime(freq * 0.998, startTime + decayTime);
+
+                gain.gain.setValueAtTime(amplitude * 0.4, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + decayTime);
+
+                osc.connect(gain);
+                gain.connect(masterGain);
+
+                osc.start(startTime);
+                osc.stop(startTime + decayTime);
+            }
+
+            function playHit(startTime) {
+                // Fundamental
+                createTone(sound.freq, 1.0, startTime, sound.decay);
+                // Harmonics
+                sound.harmonics.forEach((amp, i) => {
+                    createTone(sound.freq * (i + 2), amp, startTime, sound.decay * 0.7);
+                });
+                // Attack transient (metallic click)
+                const noise = audioCtx.createOscillator();
+                const noiseGain = audioCtx.createGain();
+                noise.type = 'square';
+                noise.frequency.setValueAtTime(sound.freq * 4, startTime);
+                noise.frequency.exponentialRampToValueAtTime(sound.freq * 2, startTime + 0.02);
+                noiseGain.gain.setValueAtTime(0.08, startTime);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.04);
+                noise.connect(noiseGain);
+                noiseGain.connect(masterGain);
+                noise.start(startTime);
+                noise.stop(startTime + 0.05);
+            }
+
+            if (sound.type === 'double') {
+                playHit(now);
+                playHit(now + 0.25);
+            } else if (sound.type === 'triple') {
+                playHit(now);
+                const s2 = { ...sound, freq: sound.freq * 1.25 };
+                createTone(s2.freq, 0.7, now + 0.2, s2.decay * 0.8);
+                s2.harmonics.forEach((amp, i) => {
+                    createTone(s2.freq * (i + 2), amp * 0.7, now + 0.2, s2.decay * 0.6);
+                });
+                const s3 = { ...sound, freq: sound.freq * 1.5 };
+                createTone(s3.freq, 0.5, now + 0.4, s3.decay * 0.6);
+                s3.harmonics.forEach((amp, i) => {
+                    createTone(s3.freq * (i + 2), amp * 0.5, now + 0.4, s3.decay * 0.5);
+                });
+            } else {
+                playHit(now);
+            }
+
+            animateViz(sound.decay * 0.6);
+        }
+
+        function createCard(sound, container) {
+            const card = document.createElement('div');
+            card.className = 'sound-card';
+            card.dataset.id = sound.id;
+            card.innerHTML = `
+                <span class="freq">${sound.freq} Hz</span>
+                <div class="icon">${sound.icon}</div>
+                <div class="name">${sound.name}</div>
+                <div class="desc">${sound.desc}</div>
+                <div class="selected-indicator">✓</div>
+            `;
+            card.addEventListener('click', () => {
+                // Remove playing class from all
+                document.querySelectorAll('.sound-card').forEach(c => c.classList.remove('playing'));
+                card.classList.add('playing');
+                setTimeout(() => card.classList.remove('playing'), 800);
+
+                playBellSound(sound);
+
+                // Toggle selection
+                if (selectedSound === sound.id) {
+                    // Deselect — just play
+                } else {
+                    document.querySelectorAll('.sound-card').forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedSound = sound.id;
+                    const info = document.getElementById('selectedInfo');
+                    info.style.display = 'block';
+                    info.innerHTML = `🔔 Seçili ses: <strong>${sound.name}</strong> — Bu sesi LOKMA push notification'ı olarak kullanmak istersen bana söyle!`;
+                }
+            });
+            container.appendChild(card);
+        }
+
+        // Build UI
+        const bellContainer = document.getElementById('bellSounds');
+        const restContainer = document.getElementById('restSounds');
+        const chimeContainer = document.getElementById('chimeSounds');
+
+        sounds.bell.forEach(s => createCard(s, bellContainer));
+        sounds.restaurant.forEach(s => createCard(s, restContainer));
+        sounds.chime.forEach(s => createCard(s, chimeContainer));
+    </script>
+</body>
+</html>

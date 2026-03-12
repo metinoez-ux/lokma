@@ -1,4 +1,6 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -503,6 +505,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     }
   }
 
+  /// Generate a 4-digit PIN code for precise delivery location verification
+  String _generateDeliveryPin() {
+    final rng = Random();
+    return (1000 + rng.nextInt(9000)).toString(); // 1000–9999
+  }
+
   Future<void> _submitOrder() async {
     if (_isSubmitting) return;
     
@@ -722,6 +730,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           'scheduledDateTime': Timestamp.fromDate(_scheduledDeliverySlot!),
         },
         'deliveryAddress': (!_isPickUp && !_isDineIn) ? userAddress : null,
+        // 📍 Precise GPS pin coordinates + verification PIN
+        if (!_isPickUp && !_isDineIn && _addressLat != null && _addressLng != null) ...{
+          'deliveryPinLat': _addressLat,
+          'deliveryPinLng': _addressLng,
+          'hasPrecisePin': true,
+          'deliveryPinCode': _generateDeliveryPin(),
+        },
         'paymentMethod': _paymentMethod,
         'paymentStatus': _paymentMethod == 'payLater' ? 'payLater' : (_paymentMethod == 'card' ? 'pending' : 'paid'),
         'status': 'pending',
@@ -1069,17 +1084,21 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: List.generate(labels.length * 2 - 1, (i) {
           // Odd indices are connecting lines
           if (i.isOdd) {
             final stepBefore = i ~/ 2;
             final isCompleted = stepBefore < currentStep;
             return Expanded(
-              child: Container(
-                height: 2,
-                color: isCompleted
-                    ? accent
-                    : (isDark ? Colors.grey[700] : Colors.grey[300]),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 13),
+                child: Container(
+                  height: 2,
+                  color: isCompleted
+                      ? accent
+                      : (isDark ? Colors.grey[700] : Colors.grey[300]),
+                ),
               ),
             );
           }
@@ -2546,11 +2565,10 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final deliveryFee = (!_isPickUp && !_isDineIn) ? ((_butcherData?['deliveryFee'] as num?)?.toDouble() ?? 2.50) : 0.0;
     final grandTotal = kermesTotal + kasapTotal + deliveryFee;
     
-    return Column(
+    return Stack(
       children: [
         // Scrollable content
-        Expanded(
-          child: SingleChildScrollView(
+        SingleChildScrollView(
           padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2700,36 +2718,28 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               // 💰 Price Summary
               _buildLieferandoPriceSummary(kermesTotal, kasapTotal, grandTotal),
               
-              const SizedBox(height: 40),
+              const SizedBox(height: 120),
             ],
           ),
         ),
-      ),
-      // ─── Fixed Bottom Checkout Button + Legal ─────────────────────────
-      Container(
-        padding: EdgeInsets.fromLTRB(20, 10, 20, MediaQuery.of(context).padding.bottom),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -4),
+        // ─── Floating Bottom Checkout Button + Legal ─────────────────────────
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Container(
+            padding: EdgeInsets.fromLTRB(20, 10, 20, MediaQuery.of(context).padding.bottom),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildScannedTableBanner(),
+                _buildLieferandoCheckoutButton(grandTotal),
+              ],
             ),
-          ],
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildScannedTableBanner(),
-            _buildLieferandoCheckoutButton(grandTotal),
-            const SizedBox(height: 6),
-            Text('cart.legal_disclaimer'.tr(), textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.3)),
-          ],
-        ),
-      ),
-    ],
-  );
+      ],
+    );
   }
   
   String? _getEstimatedDeliveryTime() {
@@ -3406,7 +3416,13 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                     ),
                     const SizedBox(height: 10),
                     // Row 2: Note button (left) + Quantity pill (right)
-                    Row(
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
                       children: [
                         // Note button — subtle chip style
                         GestureDetector(
@@ -3541,6 +3557,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         ),
                       ],
                     ),
+                    ), // Container
                   ],
                 ),
               ),
@@ -5759,8 +5776,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     final postalCodeController = TextEditingController();
     final cityController = TextEditingController();
     final labelController = TextEditingController();
-    // ignore: unused_local_variable
-    bool addressSelected = false;
+    bool isGpsLoading = false;
 
     showModalBottomSheet(
       context: parentCtx,
@@ -5771,226 +5787,408 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
           builder: (context, setFormState) {
             final bottomInset = MediaQuery.of(context).viewInsets.bottom;
             return Container(
-              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottomInset),
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40, height: 4,
-                        decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
-                      ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Handle bar
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(color: Colors.grey[400], borderRadius: BorderRadius.circular(2)),
+                  ),
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 16, 4),
+                    child: Row(
+                      children: [
+                        Text(
+                          'checkout.add_new_address'.tr(),
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: isDark ? Colors.white : Colors.black),
+                        ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            width: 32, height: 32,
+                            decoration: BoxDecoration(
+                              color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.close, size: 18, color: isDark ? Colors.white70 : Colors.black54),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'checkout.add_new_address'.tr(),
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: isDark ? Colors.white : Colors.black),
-                    ),
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 12),
 
-                    // 🔍 Google Places Autocomplete search
-                    Text(
-                      'checkout.search_address'.tr(),
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.grey[400] : Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 6),
-                    GooglePlaceAutoCompleteTextField(
-                      textEditingController: searchController,
-                      googleAPIKey: placesApiKey,
-                      boxDecoration: const BoxDecoration(),
-                      inputDecoration: InputDecoration(
-                        hintText: 'marketplace.search_address_hint'.tr(),
-                        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 14),
-                        prefixIcon: Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 20),
-                        filled: true,
-                        fillColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade50,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _accentColor)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                      ),
-                      textStyle: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14),
-                      debounceTime: 400,
-                      countries: const ['de'],
-                      isLatLngRequired: true,
-                      getPlaceDetailWithLatLng: (prediction) async {
-                        // Use reverse geocoding to get structured address components
-                        final lat = double.tryParse(prediction.lat ?? '');
-                        final lng = double.tryParse(prediction.lng ?? '');
-                        if (lat != null && lng != null) {
-                          try {
-                            final placemarks = await placemarkFromCoordinates(lat, lng).timeout(const Duration(seconds: 8));
-                            if (placemarks.isNotEmpty) {
-                              final place = placemarks.first;
-                              setFormState(() {
-                                streetController.text = place.thoroughfare ?? '';
-                                houseNumberController.text = place.subThoroughfare ?? '';
-                                postalCodeController.text = place.postalCode ?? '';
-                                cityController.text = place.locality ?? place.administrativeArea ?? '';
-                                addressSelected = true;
-                              });
-                            }
-                          } catch (e) {
-                            debugPrint('Geocoding error: $e');
-                            // Fallback: try to parse from description
-                            final desc = prediction.description ?? '';
-                            final parts = desc.split(',');
-                            if (parts.isNotEmpty) {
-                              setFormState(() {
-                                streetController.text = parts[0].trim();
-                                if (parts.length >= 2) {
-                                  // Try to parse "PLZ City" from second part
-                                  final plzCity = parts[1].trim();
-                                  final match = RegExp(r'(\d{5})\s*(.*)').firstMatch(plzCity);
-                                  if (match != null) {
-                                    postalCodeController.text = match.group(1) ?? '';
-                                    cityController.text = match.group(2) ?? '';
-                                  } else {
-                                    cityController.text = plzCity;
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottomInset),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── Quick Actions: GPS + Map ──
+                          Row(
+                            children: [
+                              // 📍 Konumumu bul
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    HapticFeedback.mediumImpact();
+                                    setFormState(() => isGpsLoading = true);
+                                    try {
+                                      LocationPermission permission = await Geolocator.checkPermission();
+                                      if (permission == LocationPermission.denied) {
+                                        permission = await Geolocator.requestPermission();
+                                        if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+                                          setFormState(() => isGpsLoading = false);
+                                          return;
+                                        }
+                                      }
+                                      final position = await Geolocator.getCurrentPosition(
+                                        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+                                      ).timeout(const Duration(seconds: 10));
+                                      final placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+                                      if (placemarks.isNotEmpty) {
+                                        final place = placemarks.first;
+                                        setFormState(() {
+                                          streetController.text = place.thoroughfare ?? '';
+                                          houseNumberController.text = place.subThoroughfare ?? '';
+                                          postalCodeController.text = place.postalCode ?? '';
+                                          cityController.text = place.locality ?? place.administrativeArea ?? '';
+                                          searchController.text = '${place.thoroughfare ?? ''} ${place.subThoroughfare ?? ''}, ${place.postalCode ?? ''} ${place.locality ?? ''}';
+                                          isGpsLoading = false;
+                                        });
+                                      }
+                                    } catch (e) {
+                                      debugPrint('GPS error: $e');
+                                      setFormState(() => isGpsLoading = false);
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade50,
+                                      borderRadius: BorderRadius.circular(50),
+                                      border: Border.all(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        if (isGpsLoading)
+                                          SizedBox(
+                                            width: 18, height: 18,
+                                            child: CircularProgressIndicator(strokeWidth: 2, color: _accentColor),
+                                          )
+                                        else
+                                          Icon(Icons.my_location_rounded, color: _accentColor, size: 20),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'checkout.find_my_location'.tr(),
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark ? Colors.white : Colors.black87,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              // 🗺️ Haritadan seç
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    HapticFeedback.mediumImpact();
+                                    // Get current location or default
+                                    double lat = 51.0504;
+                                    double lng = 6.2280;
+                                    try {
+                                      final position = await Geolocator.getCurrentPosition(
+                                        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
+                                      ).timeout(const Duration(seconds: 5));
+                                      lat = position.latitude;
+                                      lng = position.longitude;
+                                    } catch (_) {}
+
+                                    if (!formCtx.mounted) return;
+                                    final result = await Navigator.of(formCtx).push<Map<String, dynamic>>(
+                                      MaterialPageRoute(
+                                        builder: (_) => DeliveryMapPickerScreen(
+                                          initialLat: lat,
+                                          initialLng: lng,
+                                          addressLabel: 'checkout.select_on_map'.tr(),
+                                        ),
+                                      ),
+                                    );
+
+                                    if (result != null) {
+                                      final rLat = result['lat'] as double;
+                                      final rLng = result['lng'] as double;
+                                      try {
+                                        final placemarks = await placemarkFromCoordinates(rLat, rLng);
+                                        if (placemarks.isNotEmpty) {
+                                          final place = placemarks.first;
+                                          setFormState(() {
+                                            streetController.text = place.thoroughfare ?? '';
+                                            houseNumberController.text = place.subThoroughfare ?? '';
+                                            postalCodeController.text = place.postalCode ?? '';
+                                            cityController.text = place.locality ?? place.administrativeArea ?? '';
+                                            searchController.text = result['address'] as String? ?? '';
+                                          });
+                                        }
+                                      } catch (e) {
+                                        debugPrint('Reverse geocode error: $e');
+                                        final addr = result['address'] as String? ?? '';
+                                        setFormState(() => searchController.text = addr);
+                                      }
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade50,
+                                      borderRadius: BorderRadius.circular(50),
+                                      border: Border.all(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.map_outlined, color: _accentColor, size: 20),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'checkout.select_on_map'.tr(),
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark ? Colors.white : Colors.black87,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // ── OR divider ──
+                          Row(
+                            children: [
+                              Expanded(child: Divider(color: isDark ? Colors.grey[800] : Colors.grey[300])),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: Text(
+                                  'checkout.or_search'.tr(),
+                                  style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[500] : Colors.grey[500], fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              Expanded(child: Divider(color: isDark ? Colors.grey[800] : Colors.grey[300])),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // 🔍 Google Places Autocomplete search
+                          GooglePlaceAutoCompleteTextField(
+                            textEditingController: searchController,
+                            googleAPIKey: placesApiKey,
+                            boxDecoration: const BoxDecoration(),
+                            inputDecoration: InputDecoration(
+                              hintText: 'marketplace.search_address_hint'.tr(),
+                              hintStyle: TextStyle(color: Colors.grey[500], fontSize: 15),
+                              prefixIcon: Icon(Icons.search_rounded, color: _accentColor, size: 22),
+                              filled: true,
+                              fillColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade50,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
+                              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: _accentColor, width: 1.5)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                            ),
+                            textStyle: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 15),
+                            debounceTime: 400,
+                            countries: const ['de'],
+                            isLatLngRequired: true,
+                            getPlaceDetailWithLatLng: (prediction) async {
+                              final lat = double.tryParse(prediction.lat ?? '');
+                              final lng = double.tryParse(prediction.lng ?? '');
+                              if (lat != null && lng != null) {
+                                try {
+                                  final placemarks = await placemarkFromCoordinates(lat, lng).timeout(const Duration(seconds: 8));
+                                  if (placemarks.isNotEmpty) {
+                                    final place = placemarks.first;
+                                    setFormState(() {
+                                      streetController.text = place.thoroughfare ?? '';
+                                      houseNumberController.text = place.subThoroughfare ?? '';
+                                      postalCodeController.text = place.postalCode ?? '';
+                                      cityController.text = place.locality ?? place.administrativeArea ?? '';
+                                    });
+                                  }
+                                } catch (e) {
+                                  debugPrint('Geocoding error: $e');
+                                  final desc = prediction.description ?? '';
+                                  final parts = desc.split(',');
+                                  if (parts.isNotEmpty) {
+                                    setFormState(() {
+                                      streetController.text = parts[0].trim();
+                                      if (parts.length >= 2) {
+                                        final plzCity = parts[1].trim();
+                                        final match = RegExp(r'(\d{5})\s*(.*)').firstMatch(plzCity);
+                                        if (match != null) {
+                                          postalCodeController.text = match.group(1) ?? '';
+                                          cityController.text = match.group(2) ?? '';
+                                        } else {
+                                          cityController.text = plzCity;
+                                        }
+                                      }
+                                    });
                                   }
                                 }
-                                addressSelected = true;
-                              });
-                            }
-                          }
-                        }
-                      },
-                      itemClick: (Prediction prediction) {
-                        searchController.text = prediction.description ?? '';
-                        searchController.selection = TextSelection.fromPosition(
-                          TextPosition(offset: searchController.text.length),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 16),
-                    Divider(color: isDark ? Colors.grey[800] : Colors.grey[200]),
-                    const SizedBox(height: 8),
-
-                    // Label (optional)
-                    _buildAddressTextField(labelController, 'checkout.address_label_optional'.tr(), 'checkout.address_label_hint'.tr(), isDark, textInputAction: TextInputAction.next),
-                    const SizedBox(height: 12),
-
-                    // Street + House Number row (auto-filled or manual)
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: _buildAddressTextField(streetController, 'checkout.street_name_required'.tr(), 'checkout.street_name_hint'.tr(), isDark, textInputAction: TextInputAction.next),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          flex: 1,
-                          child: _buildAddressTextField(houseNumberController, 'checkout.house_number_short'.tr(), '', isDark, textInputAction: TextInputAction.next),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // PLZ + City row
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: _buildAddressTextField(postalCodeController, 'checkout.postal_code_required'.tr(), '', isDark, keyboardType: TextInputType.number, textInputAction: TextInputAction.next),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          flex: 3,
-                          child: _buildAddressTextField(cityController, 'checkout.city_required'.tr(), '', isDark, textInputAction: TextInputAction.done),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Buttons
-                    Row(
-                      children: [
-                        // Use without saving
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              if (streetController.text.trim().isEmpty || cityController.text.trim().isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('cart.please_enter_street_city'.tr()), backgroundColor: Theme.of(context).colorScheme.error),
-                                );
-                                return;
                               }
-                              final addr = {
-                                'street': streetController.text.trim(),
-                                'houseNumber': houseNumberController.text.trim(),
-                                'postalCode': postalCodeController.text.trim(),
-                                'city': cityController.text.trim(),
-                              };
-                              setState(() => _selectedDeliveryAddress = addr);
-                              parentSetSheetState(() {});
-                              Navigator.pop(formCtx); // close form
-                              Navigator.pop(parentCtx); // close picker
                             },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: isDark ? Colors.grey.shade600 : Colors.grey.shade400),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: Text(
-                              'checkout.use_only'.tr(),
-                              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontWeight: FontWeight.w500),
+                            itemClick: (Prediction prediction) {
+                              searchController.text = prediction.description ?? '';
+                              searchController.selection = TextSelection.fromPosition(
+                                TextPosition(offset: searchController.text.length),
+                              );
+                            },
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // ── Manual Form Fields ──
+                          // Label (optional)
+                          _buildAddressTextField(labelController, 'checkout.address_label_optional'.tr(), 'checkout.address_label_hint'.tr(), isDark, textInputAction: TextInputAction.next, prefixIcon: Icons.bookmark_border_rounded),
+                          const SizedBox(height: 14),
+
+                          // Street + House Number row
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: _buildAddressTextField(streetController, 'checkout.street_name_required'.tr(), 'checkout.street_name_hint'.tr(), isDark, textInputAction: TextInputAction.next),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                flex: 1,
+                                child: _buildAddressTextField(houseNumberController, 'checkout.house_number_short'.tr(), '', isDark, textInputAction: TextInputAction.next),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 14),
+
+                          // PLZ + City row
+                          Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: _buildAddressTextField(postalCodeController, 'checkout.postal_code_required'.tr(), '', isDark, keyboardType: TextInputType.number, textInputAction: TextInputAction.next),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                flex: 3,
+                                child: _buildAddressTextField(cityController, 'checkout.city_required'.tr(), '', isDark, textInputAction: TextInputAction.done),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+
+                          // ── Premium Buttons ──
+                          // Save & Use — primary
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                if (streetController.text.trim().isEmpty || cityController.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('cart.please_enter_street_city'.tr()), backgroundColor: Theme.of(context).colorScheme.error),
+                                  );
+                                  return;
+                                }
+                                HapticFeedback.mediumImpact();
+                                final addr = {
+                                  'street': streetController.text.trim(),
+                                  'houseNumber': houseNumberController.text.trim(),
+                                  'postalCode': postalCodeController.text.trim(),
+                                  'city': cityController.text.trim(),
+                                };
+                                await FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(userId)
+                                    .collection('savedAddresses')
+                                    .add({
+                                  ...addr,
+                                  'label': labelController.text.trim(),
+                                  'createdAt': FieldValue.serverTimestamp(),
+                                });
+                                setState(() => _selectedDeliveryAddress = addr);
+                                parentSetSheetState(() {});
+                                setPickerState(() {});
+                                if (formCtx.mounted) Navigator.pop(formCtx);
+                                if (parentCtx.mounted) Navigator.pop(parentCtx);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _accentColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                                elevation: 0,
+                              ),
+                              child: Text('checkout.save_and_use'.tr(), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        // Save and use
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              if (streetController.text.trim().isEmpty || cityController.text.trim().isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('cart.please_enter_street_city'.tr()), backgroundColor: Theme.of(context).colorScheme.error),
-                                );
-                                return;
-                              }
-                              final addr = {
-                                'street': streetController.text.trim(),
-                                'houseNumber': houseNumberController.text.trim(),
-                                'postalCode': postalCodeController.text.trim(),
-                                'city': cityController.text.trim(),
-                              };
-                              // Save to Firestore
-                              await FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(userId)
-                                  .collection('savedAddresses')
-                                  .add({
-                                ...addr,
-                                'label': labelController.text.trim(),
-                                'createdAt': FieldValue.serverTimestamp(),
-                              });
-                              setState(() => _selectedDeliveryAddress = addr);
-                              parentSetSheetState(() {});
-                              setPickerState(() {});
-                              if (formCtx.mounted) Navigator.pop(formCtx);
-                              if (parentCtx.mounted) Navigator.pop(parentCtx);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _accentColor,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          const SizedBox(height: 10),
+                          // Use only — secondary
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton(
+                              onPressed: () {
+                                if (streetController.text.trim().isEmpty || cityController.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('cart.please_enter_street_city'.tr()), backgroundColor: Theme.of(context).colorScheme.error),
+                                  );
+                                  return;
+                                }
+                                HapticFeedback.lightImpact();
+                                final addr = {
+                                  'street': streetController.text.trim(),
+                                  'houseNumber': houseNumberController.text.trim(),
+                                  'postalCode': postalCodeController.text.trim(),
+                                  'city': cityController.text.trim(),
+                                };
+                                setState(() => _selectedDeliveryAddress = addr);
+                                parentSetSheetState(() {});
+                                Navigator.pop(formCtx);
+                                Navigator.pop(parentCtx);
+                              },
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                              ),
+                              child: Text(
+                                'checkout.use_only'.tr(),
+                                style: TextStyle(
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
                             ),
-                            child: Text('checkout.save_and_use'.tr(), style: const TextStyle(fontWeight: FontWeight.w600)),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           },
@@ -6007,24 +6205,26 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
     bool isDark, {
     TextInputType keyboardType = TextInputType.text,
     TextInputAction textInputAction = TextInputAction.next,
+    IconData? prefixIcon,
   }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14),
+      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 15, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         floatingLabelBehavior: FloatingLabelBehavior.always,
-        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600], fontSize: 13),
-        hintStyle: TextStyle(color: Colors.grey[500], fontSize: 13),
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[700], fontSize: 14, fontWeight: FontWeight.w600),
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: isDark ? Colors.grey[500] : Colors.grey[500], size: 20) : null,
         filled: true,
         fillColor: isDark ? const Color(0xFF2C2C2E) : Colors.grey.shade50,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _accentColor)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: _accentColor, width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }
@@ -7276,10 +7476,15 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
         .get();
   }
 
+  // Track which address string was last geocoded to detect changes
+  String? _lastGeocodedAddress;
+
   /// Geocode an address string to lat/lng for the mini map preview
   Future<void> _geocodeAddress(String addressString) async {
-    if (_addressGeocoded) return;
+    // If already geocoded for the SAME address, skip
+    if (_addressGeocoded && _lastGeocodedAddress == addressString) return;
     _addressGeocoded = true;
+    _lastGeocodedAddress = addressString;
     try {
       final locations = await locationFromAddress(addressString);
       if (locations.isNotEmpty && mounted) {
@@ -7386,6 +7591,8 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
         return 'checkout.pay_later'.tr();
       case 'cardOnDelivery':
         return 'checkout.card_on_delivery'.tr();
+      case 'klarna':
+        return 'Klarna';
       default:
         return 'checkout.select_payment'.tr();
     }
@@ -7468,13 +7675,13 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
 
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final checkoutBg = isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white;
+    final checkoutBg = isDark ? Theme.of(context).colorScheme.surface : Colors.white;
 
     final neutralIcon = isDark ? Colors.grey[400]! : Colors.grey[700]!;
     const brandRed = Color(0xFFE30613);
     final chevronColor = isDark ? Colors.grey[500]! : Colors.grey[400]!;
     final dividerColor = isDark ? Colors.grey[800]! : const Color(0xFFF0F0F0);
-    final sectionDividerColor = isDark ? Colors.grey[900]! : const Color(0xFFF7F7F7);
+    final sectionDividerColor = isDark ? Colors.grey[900]! : const Color(0xFFF5F0E8);
 
     return Scaffold(
       backgroundColor: checkoutBg,
@@ -7514,14 +7721,13 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
           }),
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => FocusScope.of(context).unfocus(),
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                padding: EdgeInsets.only(bottom: 20 + bottomInset),
+          GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(),
+            child: SingleChildScrollView(
+              controller: _scrollController,
+              padding: EdgeInsets.only(bottom: 140 + bottomInset),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -7688,7 +7894,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           final hasAddress = displayStreet.toString().trim().isNotEmpty;
 
                           // Trigger geocoding for map preview if we have an address
-                          if (hasAddress && !_addressGeocoded) {
+                          if (hasAddress) {
                             final fullAddress = '$displayStreet, $displayCity';
                             _geocodeAddress(fullAddress);
                           }
@@ -7699,28 +7905,28 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           // Level 3: Fully confirmed → no badge
                           final bool isAddressUnconfirmed = hasAddress && (_addressLat == null || _addressLng == null);
 
-                          return GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              // Reset geocoding state so it can re-resolve after picker
-                              _addressGeocoded = false;
-                              _addressLat = null;
-                              _addressLng = null;
-                              parent._showAddressPickerSheet(
-                                context, setState,
-                                widget.firebaseUser?.uid ?? widget.authState.appUser?.uid ?? '',
-                                profileAddress: profileStreet.toString().trim().isNotEmpty ? {
-                                  'street': profileStreet.toString(), 'houseNumber': profileHouseNumber.toString(),
-                                  'postalCode': profilePostalCode.toString(), 'city': profileCity.toString(),
-                                } : null,
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: Column(
-                                children: [
-                                  // Address text row
-                                  Padding(
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Column(
+                              children: [
+                                // Address text row — tapping opens address picker
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () {
+                                    // Reset geocoding state so it can re-resolve after picker
+                                    _addressGeocoded = false;
+                                    _addressLat = null;
+                                    _addressLng = null;
+                                    parent._showAddressPickerSheet(
+                                      context, setState,
+                                      widget.firebaseUser?.uid ?? widget.authState.appUser?.uid ?? '',
+                                      profileAddress: profileStreet.toString().trim().isNotEmpty ? {
+                                        'street': profileStreet.toString(), 'houseNumber': profileHouseNumber.toString(),
+                                        'postalCode': profilePostalCode.toString(), 'city': profileCity.toString(),
+                                      } : null,
+                                    );
+                                  },
+                                  child: Padding(
                                     padding: const EdgeInsets.symmetric(vertical: 16),
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -7778,115 +7984,114 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       ],
                                     ),
                                   ),
+                                ),
 
-                                  // 🗺️ Mini Map Preview (tappable → opens full-screen picker)
-                                  if (_addressLat != null && _addressLng != null) ...[
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                                      child: GestureDetector(
-                                        onTap: () async {
-                                          final result = await Navigator.of(context).push<Map<String, dynamic>>(
-                                            MaterialPageRoute(
-                                              builder: (_) => DeliveryMapPickerScreen(
-                                                initialLat: _addressLat!,
-                                                initialLng: _addressLng!,
-                                                addressLabel: '$displayStreet, $displayCity',
-                                                businessLat: (parent._butcherData?['latitude'] as num?)?.toDouble(),
-                                                businessLng: (parent._butcherData?['longitude'] as num?)?.toDouble(),
-                                                deliveryRadiusKm: (parent._butcherData?['deliveryRadius'] as num?)?.toDouble() ?? 5.0,
-                                              ),
-                                            ),
-                                          );
-                                          if (result != null && mounted) {
-                                            setState(() {
-                                              _addressLat = result['lat'] as double;
-                                              _addressLng = result['lng'] as double;
-                                            });
-                                          }
-                                        },
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: SizedBox(
-                                            height: 160,
-                                            width: double.infinity,
-                                            child: Stack(
-                                              children: [
-                                                IgnorePointer(
-                                                  child: FlutterMap(
-                                                    options: MapOptions(
-                                                      initialCenter: LatLng(_addressLat!, _addressLng!),
-                                                      initialZoom: 16.5,
-                                                      interactionOptions: const InteractionOptions(
-                                                        flags: InteractiveFlag.none,
-                                                      ),
-                                                    ),
-                                                    children: [
-                                                      TileLayer(
-                                                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                                        userAgentPackageName: 'com.lokma.app',
-                                                      ),
-                                                      MarkerLayer(
-                                                        markers: [
-                                                          Marker(
-                                                            point: LatLng(_addressLat!, _addressLng!),
-                                                            width: 40,
-                                                            height: 40,
-                                                            child: Container(
-                                                              decoration: BoxDecoration(
-                                                                color: brandRed,
-                                                                shape: BoxShape.circle,
-                                                                border: Border.all(color: Colors.white, width: 2),
-                                                                boxShadow: [
-                                                                  BoxShadow(
-                                                                    color: Colors.black.withValues(alpha: 0.3),
-                                                                    blurRadius: 6,
-                                                                    offset: const Offset(0, 2),
-                                                                  ),
-                                                                ],
+                                // 🗺️ Mini Map Preview — tapping opens full-screen map picker (independent from address picker)
+                                if (_addressLat != null && _addressLng != null) ...[
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final result = await Navigator.of(context).push<Map<String, dynamic>>(
+                                        MaterialPageRoute(
+                                          builder: (_) => DeliveryMapPickerScreen(
+                                            initialLat: _addressLat!,
+                                            initialLng: _addressLng!,
+                                            addressLabel: '$displayStreet, $displayCity',
+                                            businessLat: (parent._butcherData?['latitude'] as num?)?.toDouble(),
+                                            businessLng: (parent._butcherData?['longitude'] as num?)?.toDouble(),
+                                            deliveryRadiusKm: (parent._butcherData?['deliveryRadius'] as num?)?.toDouble() ?? 5.0,
+                                            isFineTuning: true,
+                                            businessName: parent._butcherData?['name'] as String?,
+                                          ),
+                                        ),
+                                      );
+                                      if (result != null && mounted) {
+                                        setState(() {
+                                          _addressLat = result['lat'] as double;
+                                          _addressLng = result['lng'] as double;
+                                        });
+                                      }
+                                    },
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: SizedBox(
+                                        height: 160,
+                                        width: double.infinity,
+                                        child: Stack(
+                                          children: [
+                                            IgnorePointer(
+                                              child: FlutterMap(
+                                                options: MapOptions(
+                                                  initialCenter: LatLng(_addressLat!, _addressLng!),
+                                                  initialZoom: 16.5,
+                                                  interactionOptions: const InteractionOptions(
+                                                    flags: InteractiveFlag.none,
+                                                  ),
+                                                ),
+                                                children: [
+                                                  TileLayer(
+                                                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                                    userAgentPackageName: 'com.lokma.app',
+                                                  ),
+                                                  MarkerLayer(
+                                                    markers: [
+                                                      Marker(
+                                                        point: LatLng(_addressLat!, _addressLng!),
+                                                        width: 40,
+                                                        height: 40,
+                                                        child: Container(
+                                                          decoration: BoxDecoration(
+                                                            color: brandRed,
+                                                            shape: BoxShape.circle,
+                                                            border: Border.all(color: Colors.white, width: 2),
+                                                            boxShadow: [
+                                                              BoxShadow(
+                                                                color: Colors.black.withValues(alpha: 0.3),
+                                                                blurRadius: 6,
+                                                                offset: const Offset(0, 2),
                                                               ),
-                                                              child: const Icon(Icons.location_on, color: Colors.white, size: 20),
-                                                            ),
+                                                            ],
                                                           ),
-                                                        ],
+                                                          child: const Icon(Icons.location_on, color: Colors.white, size: 20),
+                                                        ),
                                                       ),
                                                     ],
                                                   ),
-                                                ),
-                                                // Tap hint overlay
-                                                Positioned(
-                                                  bottom: 8,
-                                                  right: 8,
-                                                  child: Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.black.withValues(alpha: 0.6),
-                                                      borderRadius: BorderRadius.circular(8),
-                                                    ),
-                                                    child: Row(
-                                                      mainAxisSize: MainAxisSize.min,
-                                                      children: [
-                                                        const Icon(Icons.open_in_full, color: Colors.white, size: 12),
-                                                        const SizedBox(width: 4),
-                                                        Text(
-                                                          'checkout.set_delivery_location'.tr(),
-                                                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
-                                          ),
+                                            // Tap hint overlay
+                                            Positioned(
+                                              bottom: 8,
+                                              right: 8,
+                                              child: Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black.withValues(alpha: 0.6),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(Icons.open_in_full, color: Colors.white, size: 12),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      'checkout.set_delivery_location'.tr(),
+                                                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 12),
-                                  ],
-
-                                  Divider(height: 1, color: dividerColor),
+                                  ),
+                                  const SizedBox(height: 12),
                                 ],
-                              ),
+
+                                Divider(height: 1, color: dividerColor),
+                              ],
                             ),
                           );
                         },
@@ -7954,7 +8159,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       _buildCheckoutRow(
                         context,
                         icon: Icons.access_time,
-                        iconColor: parent._deliveryTimeExplicitlyChosen ? brandRed : Colors.orange,
+                        iconColor: parent._deliveryTimeExplicitlyChosen ? Colors.grey[600]! : Colors.grey[500]!,
                         title: 'checkout.delivery_time'.tr(),
                         subtitle: !parent._deliveryTimeExplicitlyChosen
                             ? 'checkout.select_time'.tr()
@@ -8326,7 +8531,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                               onTap: () => setState(() { parent._appliedCoupon = null; widget.couponController.clear(); }),
                               child: const Icon(Icons.close, color: Colors.red, size: 20),
                             )
-                          : Icon(Icons.add, color: neutralIcon, size: 24),
+                          : Icon(Icons.add_circle_outline, color: neutralIcon, size: 24),
                       dividerColor: null,
                       onTap: parent._appliedCoupon?.isValid == true ? null : () {
                          showModalBottomSheet(
@@ -8361,7 +8566,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(14),
-                                      borderSide: BorderSide(color: parent._accentColor, width: 2),
+                                      borderSide: BorderSide(color: isDark ? Colors.grey[500]! : Colors.grey[400]!, width: 1.5),
                                     ),
                                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                                     prefixIcon: Icon(Icons.local_offer_outlined, color: parent._accentColor, size: 22),
@@ -8463,7 +8668,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   ),
                                 );
                               },
-                              child: Icon(Icons.info_outline, size: 18, color: Colors.grey[400]),
+                              child: Icon(Icons.info_outline, size: 20, color: Colors.grey[400]),
                             ),
                           ],
                         ),
@@ -8483,7 +8688,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   onTap: () => setState(() => parent._tipAmount = parent._tipAmount == tipVal ? 0.0 : tipVal),
                                   child: AnimatedContainer(
                                     duration: const Duration(milliseconds: 200),
-                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
                                     decoration: BoxDecoration(
                                       color: parent._tipAmount == tipVal
                                           ? (isDark ? Colors.grey[600] : Colors.grey[700])
@@ -8491,7 +8696,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                       borderRadius: BorderRadius.circular(24),
                                       border: Border.all(
                                         color: parent._tipAmount == tipVal ? (isDark ? Colors.grey[500]! : Colors.grey[700]!) : (isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0)),
-                                        width: 1.5,
+                                        width: 1,
                                       ),
                                     ),
                                     child: Center(
@@ -8500,7 +8705,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                         style: TextStyle(
                                           color: parent._tipAmount == tipVal ? Colors.white : Theme.of(context).colorScheme.onSurface,
                                           fontWeight: FontWeight.w600,
-                                          fontSize: 14,
+                                          fontSize: 13,
                                         ),
                                       ),
                                     ),
@@ -8560,7 +8765,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                 },
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  padding: const EdgeInsets.symmetric(vertical: 8),
                                   decoration: BoxDecoration(
                                     color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
                                         ? (isDark ? Colors.grey[600] : Colors.grey[700])
@@ -8569,7 +8774,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                     border: Border.all(
                                       color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
                                           ? (isDark ? Colors.grey[500]! : Colors.grey[700]!) : (isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0)),
-                                      width: 1.5,
+                                      width: 1,
                                     ),
                                   ),
                                   child: Center(
@@ -8581,7 +8786,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                         color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
                                             ? Colors.white : Theme.of(context).colorScheme.onSurface,
                                         fontWeight: FontWeight.w600,
-                                        fontSize: 14,
+                                        fontSize: 13,
                                       ),
                                     ),
                                   ),
@@ -8611,13 +8816,19 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         final round1   = _roundUpTo(baseTotal, 1.00);
                         final round5   = _roundUpTo(baseTotal, 5.00);
                         final round10  = _roundUpTo(baseTotal, 10.00);
-                        // Dynamic options: show round-up difference with + prefix
-                        final options = <Map<String, dynamic>>[
+                        // Dynamic options: show round-up difference with + prefix (deduplicated)
+                        final rawOptions = <Map<String, dynamic>>[
                           {'label': '+${(roundHalf - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((roundHalf - baseTotal).toStringAsFixed(2))},
                           {'label': '+${(round1 - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((round1 - baseTotal).toStringAsFixed(2))},
                           {'label': '+${(round5 - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((round5 - baseTotal).toStringAsFixed(2))},
                           {'label': '+${(round10 - baseTotal).toStringAsFixed(2)} $currency', 'donation': double.parse((round10 - baseTotal).toStringAsFixed(2))},
                         ];
+                        // Remove duplicate donation amounts
+                        final seen = <double>{};
+                        final options = <Map<String, dynamic>>[];
+                        for (final o in rawOptions) {
+                          if (seen.add(o['donation'] as double)) options.add(o);
+                        }
                         final selectedDonation = parent._donationAmount;
                         final newTotal = baseTotal + selectedDonation;
                         return Padding(
@@ -8625,12 +8836,11 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Title row with ℹ button
+                              // Title row with ℹ button (inline, right after title)
                               Row(
                                 children: [
-                                  Expanded(
-                                    child: Text('checkout.donation_title'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
-                                  ),
+                                  Text('checkout.donation_title'.tr(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                                  const SizedBox(width: 6),
                                   GestureDetector(
                                     onTap: () {
                                       final sheetDark = Theme.of(context).brightness == Brightness.dark;
@@ -8691,7 +8901,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                         ),
                                       );
                                     },
-                                    child: Icon(Icons.info_outline, size: 18, color: Colors.grey[400]),
+                                    child: Icon(Icons.info_outline, size: 20, color: Colors.grey[400]),
                                   ),
                                 ],
                               ),
@@ -8711,7 +8921,7 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                         }),
                                         child: AnimatedContainer(
                                           duration: const Duration(milliseconds: 200),
-                                          padding: const EdgeInsets.symmetric(vertical: 10),
+                                          padding: const EdgeInsets.symmetric(vertical: 8),
                                           decoration: BoxDecoration(
                                             color: selectedDonation == (options[i]['donation'] as double)
                                                 ? Colors.green
@@ -8721,13 +8931,13 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                               color: selectedDonation == (options[i]['donation'] as double)
                                                   ? Colors.green
                                                   : (isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0)),
-                                              width: 1.5,
+                                              width: 1,
                                             ),
                                           ),
                                           child: Center(
                                             child: Text(options[i]['label'] as String, style: TextStyle(
                                               color: selectedDonation == (options[i]['donation'] as double) ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                                              fontWeight: FontWeight.w600, fontSize: 13)),
+                                              fontWeight: FontWeight.w600, fontSize: 12)),
                                           ),
                                         ),
                                       ),
@@ -8766,6 +8976,38 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   ),
                                 ),
                               ],
+                              // ── Charity reference (always visible) ──
+                              const SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: () => launchUrl(Uri.parse('https://dr-sahin.help/pages/uber-uns'), mode: LaunchMode.externalApplication),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: Image.network(
+                                        'https://dr-sahin.help/cdn/shop/files/HELP_500x.png?v=1622386229',
+                                        width: 22,
+                                        height: 22,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (_, __, ___) => Icon(Icons.volunteer_activism, size: 18, color: Colors.green[400]),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'checkout.donation_charity_ref'.tr(),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey[500],
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(Icons.open_in_new, size: 12, color: Colors.grey[400]),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         );
@@ -8774,9 +9016,8 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                     ],
 
                     // ═══════════════════════════════════════
-                    // SECTION 5: PAYMENT METHOD (single row → full page)
+                    // SECTION 5: PAYMENT METHOD (inline chips)
                     // ═══════════════════════════════════════
-                    // Payment method section header
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
                       child: Text(
@@ -8788,52 +9029,95 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         ),
                       ),
                     ),
-                    // Tappable payment method row
-                    InkWell(
-                      onTap: () async {
-                        final payMethodsSettings = (parent._butcherData?['paymentMethods'] as Map<String, dynamic>?) ?? {};
-                        final allowCard = payMethodsSettings['card'] != false;
-                        final allowCash = payMethodsSettings['cash'] != false;
-                        final allowPayLater = payMethodsSettings['payLater'] == true;
-                        final allowCardOnDelivery = payMethodsSettings['cardOnDelivery'] == true;
+                    // Inline payment method chips
+                    Builder(builder: (ctx) {
+                      final payMethodsSettings = (parent._butcherData?['paymentMethods'] as Map<String, dynamic>?) ?? {};
+                      final allowCard = payMethodsSettings['card'] != false;
+                      final allowCash = payMethodsSettings['cash'] != false;
+                      final allowCardOnDelivery = payMethodsSettings['cardOnDelivery'] != false;
+                      final allowKlarna = payMethodsSettings['klarna'] == true;
 
-                        final result = await Navigator.push<String>(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => _PaymentMethodSelectionPage(
-                              currentMethod: parent._paymentMethod,
-                              accentColor: parent._accentColor,
-                              allowCard: allowCard,
-                              allowCash: allowCash,
-                              allowPayLater: allowPayLater,
-                              allowCardOnDelivery: allowCardOnDelivery,
-                            ),
-                          ),
-                        );
-                        if (result != null) {
-                          setState(() => parent._paymentMethod = result);
-                        }
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: Row(
-                          children: [
-                            Icon(Icons.payment, color: brandRed, size: 22),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Text(
-                                _getPaymentMethodLabel(parent._paymentMethod),
-                                style: TextStyle(
-                                  color: Colors.grey[500],
-                                  fontSize: 14,
+                      final options = <({String key, String label, IconData icon})>[
+                        if (allowCard) (key: 'card', label: 'checkout.card'.tr(), icon: Icons.credit_card),
+                        if (allowCash) (key: 'cash', label: 'checkout.cash'.tr(), icon: Icons.payments_outlined),
+                        if (allowCardOnDelivery && !parent._isPickUp && !parent._isDineIn) (key: 'cardOnDelivery', label: 'checkout.card_on_delivery'.tr(), icon: Icons.contactless),
+                        if (allowKlarna) (key: 'klarna', label: 'Klarna', icon: Icons.schedule_outlined),
+                      ];
+
+                      if (options.isEmpty) return const SizedBox.shrink();
+
+                      // Auto-select first option if nothing is selected or selected is not available
+                      final availableKeys = options.map((o) => o.key).toSet();
+                      if (parent._paymentMethod == null || !availableKeys.contains(parent._paymentMethod)) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            setState(() => parent._paymentMethod = options.first.key);
+                          }
+                        });
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        child: Column(
+                          children: options.map((opt) {
+                            final isSelected = parent._paymentMethod == opt.key;
+                            return GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                setState(() => parent._paymentMethod = opt.key);
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 14),
+                                child: Row(
+                                  children: [
+                                    // Radio circle
+                                    AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      width: 22,
+                                      height: 22,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? (isDark ? Colors.white : const Color(0xFF444444))
+                                              : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
+                                          width: 2,
+                                        ),
+                                        color: isSelected
+                                            ? (isDark ? Colors.white : const Color(0xFF444444))
+                                            : Colors.transparent,
+                                      ),
+                                      child: isSelected
+                                          ? Center(child: Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: isDark ? const Color(0xFF444444) : Colors.white)))
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Icon(
+                                      opt.icon,
+                                      size: 18,
+                                      color: isSelected
+                                          ? Theme.of(context).colorScheme.onSurface
+                                          : (isDark ? Colors.grey[400] : Colors.grey[600]),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      opt.label,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                        color: isSelected
+                                            ? Theme.of(context).colorScheme.onSurface
+                                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            Icon(Icons.chevron_right, color: neutralIcon, size: 24),
-                          ],
+                            );
+                          }).toList(),
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                     // Wallet toggle
                     if (parent._walletBalance > 0) ...[
                       Padding(
@@ -8855,124 +9139,116 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         ),
                       ),
                     ],
+                    // Legal disclaimer moved here, below payment chips
                     const SizedBox(height: 16),
-
-                    // (Unavailability section moved to after Lieferzeit)
-
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        children: [
+                          Text('checkout.legal_disclaimer_prefix'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
+                          GestureDetector(
+                            onTap: () => _showLegalSheet(context, 'checkout.privacy_policy_title'.tr(), 'checkout.privacy_policy_content'.tr()),
+                            child: Text('checkout.legal_disclaimer_privacy'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 10, height: 1.4, decoration: TextDecoration.underline)),
+                          ),
+                          Text('checkout.legal_disclaimer_and'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
+                          GestureDetector(
+                            onTap: () => _showLegalSheet(context, 'checkout.terms_title'.tr(), 'checkout.terms_content'.tr()),
+                            child: Text('checkout.legal_disclaimer_terms'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 10, height: 1.4, decoration: TextDecoration.underline)),
+                          ),
+                          Text('checkout.legal_disclaimer_suffix'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
+                        ],
+                      ),
+                    ),
                     // Extra spacing at bottom for safe scrolling
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),
             ),
-          ),
-          // ─── Submit button + Legal ─────────────────────────
-          Container(
-            padding: EdgeInsets.fromLTRB(20, 10, 20, MediaQuery.of(context).padding.bottom),
-            decoration: BoxDecoration(
-              color: checkoutBg,
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -4),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: parent._isSubmitting ? null : () {
-                    // Payment method check
-                    if (parent._paymentMethod == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Row(
-                          children: [
-                            const Icon(Icons.info_outline, color: Color(0xFFE65100), size: 18),
-                            const SizedBox(width: 8),
-                            Flexible(child: Text('checkout.select_payment_first'.tr(), style: const TextStyle(color: Color(0xFFE65100), fontWeight: FontWeight.w500, fontSize: 13))),
-                          ],
-                        ),
-                        backgroundColor: const Color(0xFFFFF3E0),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        duration: const Duration(seconds: 2),
-                      ));
-                      return;
-                    }
-                    if (parent._isPickUp && !parent._isDineIn && parent._selectedPickupSlot == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('cart.please_select_pickup_time'.tr()), backgroundColor: Colors.amber, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
-                      return;
-                    }
-                    if (parent._isDineIn && (parent._scannedTableNumber ?? parent._tableNumberController.text.trim()).isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('orders.please_enter_table_number')), backgroundColor: Colors.amber, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
-                      return;
-                    }
-                    parent._orderNote = widget.noteController.text;
-                    Navigator.pop(context);
-                    parent._submitOrder();
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    decoration: BoxDecoration(
-                      color: parent._isSubmitting
-                          ? Colors.grey
-                          : (parent._paymentMethod == null
-                              ? Colors.grey[400]
-                              : (parent._paymentMethod == 'card'
-                                  ? Colors.black
-                                  : accentColor)),
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: parent._paymentMethod != null
-                          ? [BoxShadow(color: (parent._paymentMethod == 'card' ? Colors.black : accentColor).withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
-                          : null,
-                    ),
-                    child: Center(
-                      child: parent._isSubmitting
-                          ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2.5))
-                          : parent._paymentMethod == 'card'
-                              ? Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.apple, color: Colors.white, size: 22),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Pay · ${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
-                                    ),
-                                  ],
-                                )
-                              : Text(
-                                  parent._isDineIn && parent._scannedTableNumber != null
-                                    ? '${'checkout.submit'.tr()} · Masa ${parent._scannedTableNumber}'
-                                    : '${'checkout.submit'.tr()} · ${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
-                                  style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600),
-                                ),
+          // ─── Floating Submit button + Legal ─────────────────────────
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(20, 10, 20, MediaQuery.of(context).padding.bottom),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: parent._isSubmitting ? null : () {
+                      // Payment method check
+                      if (parent._paymentMethod == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Row(
+                            children: [
+                              const Icon(Icons.info_outline, color: Color(0xFFE65100), size: 18),
+                              const SizedBox(width: 8),
+                              Flexible(child: Text('checkout.select_payment_first'.tr(), style: const TextStyle(color: Color(0xFFE65100), fontWeight: FontWeight.w500, fontSize: 13))),
+                            ],
+                          ),
+                          backgroundColor: const Color(0xFFFFF3E0),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          duration: const Duration(seconds: 2),
+                        ));
+                        return;
+                      }
+                      if (parent._isPickUp && !parent._isDineIn && parent._selectedPickupSlot == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('cart.please_select_pickup_time'.tr()), backgroundColor: Colors.amber, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
+                        return;
+                      }
+                      if (parent._isDineIn && (parent._scannedTableNumber ?? parent._tableNumberController.text.trim()).isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('orders.please_enter_table_number')), backgroundColor: Colors.amber, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
+                        return;
+                      }
+                      parent._orderNote = widget.noteController.text;
+                      Navigator.pop(context);
+                      parent._submitOrder();
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                        color: parent._isSubmitting
+                            ? Colors.grey
+                            : (parent._paymentMethod == null
+                                ? Colors.grey[400]
+                                : accentColor),
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: parent._paymentMethod != null
+                            ? [BoxShadow(color: accentColor.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
+                            : null,
+                      ),
+                      child: Center(
+                        child: parent._isSubmitting
+                            ? SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Theme.of(context).colorScheme.surface, strokeWidth: 2.5))
+                            : parent._paymentMethod == 'card'
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.credit_card, color: Colors.white, size: 20),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '${'checkout.submit'.tr()} · ${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                                      ),
+                                    ],
+                                  )
+                                : Text(
+                                    parent._isDineIn && parent._scannedTableNumber != null
+                                      ? '${'checkout.submit'.tr()} · Masa ${parent._scannedTableNumber}'
+                                      : '${'checkout.submit'.tr()} · ${(widget.grandTotal + parent._donationAmount + parent._tipAmount).toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 16, fontWeight: FontWeight.w600),
+                                  ),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                // Legal disclaimer with tappable links
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  children: [
-                    Text('checkout.legal_disclaimer_prefix'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
-                    GestureDetector(
-                      onTap: () => _showLegalSheet(context, 'checkout.privacy_policy_title'.tr(), 'checkout.privacy_policy_content'.tr()),
-                      child: Text('checkout.legal_disclaimer_privacy'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 10, height: 1.4, decoration: TextDecoration.underline)),
-                    ),
-                    Text('checkout.legal_disclaimer_and'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
-                    GestureDetector(
-                      onTap: () => _showLegalSheet(context, 'checkout.terms_title'.tr(), 'checkout.terms_content'.tr()),
-                      child: Text('checkout.legal_disclaimer_terms'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 10, height: 1.4, decoration: TextDecoration.underline)),
-                    ),
-                    Text('checkout.legal_disclaimer_suffix'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
-                  ],
-                ),
-              ],
+
+                ],
+              ),
             ),
           ),
         ],
@@ -9018,7 +9294,7 @@ class _PaymentMethodSelectionPageState extends State<_PaymentMethodSelectionPage
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.white;
+    final bgColor = isDark ? Theme.of(context).colorScheme.surface : Colors.white;
     final cardBg = isDark ? Colors.grey[900]! : Colors.white;
     final borderColor = isDark ? Colors.grey[700]! : const Color(0xFFE0E0E0);
     final selectedBorderColor = widget.accentColor;
