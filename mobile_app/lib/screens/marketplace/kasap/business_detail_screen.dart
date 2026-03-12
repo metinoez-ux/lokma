@@ -2186,8 +2186,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                               final isSelected = _selectedCategory == catName;
                                               final cartItems = ref.watch(cartProvider).items;
                                               final catCartCount = catName == 'Tümü'
-                                                  ? cartItems.fold<int>(0, (sum, ci) => sum + ci.quantity)
-                                                  : cartItems.where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity);
+                                                  ? cartItems.fold<int>(0, (sum, ci) => sum + ci.quantity.toInt())
+                                                  : cartItems.where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity.toInt());
                                               return Padding(
                                                 padding: const EdgeInsets.only(right: 6),
                                                 child: GestureDetector(
@@ -2358,7 +2358,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           // Category Header with cart count badge
                           Builder(builder: (context) {
                             final catCartCount = ref.watch(cartProvider).items
-                                .where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity);
+                                .where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity.toInt());
                             return Container(
                               width: double.infinity,
                               color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFE2E2E2),
