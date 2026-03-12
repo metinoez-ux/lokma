@@ -143,7 +143,7 @@ class FCMService {
       presentSound: true,
       presentAlert: true,
       presentBadge: true,
-      sound: 'lokma_cascade_chime.caf',
+      sound: 'lokma_order_bell.caf',
     );
     
     const details = NotificationDetails(
