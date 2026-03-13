@@ -7,6 +7,12 @@ import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { Admin } from '@/types';
 import { isSuperAdmin } from '@/lib/config';
+import {
+    getEffectivePermissions,
+    getDefaultGroupForAdminType,
+    type PermissionSubject,
+    type PermissionMap,
+} from '@/lib/permissions';
 
 // Session invalidation reasons
 export type LogoutReason =
@@ -32,19 +38,50 @@ const AdminContext = createContext<AdminContextType>({
 
 export const useAdmin = () => useContext(AdminContext);
 
+// 🔐 Resolve RBAC 2.0 permissions for an admin
+const resolvePermissions = (admin: Admin): Admin => {
+    // If already has a resolved permissionMap, use it
+    if (admin.permissionMap && Object.keys(admin.permissionMap).length > 0) {
+        return admin;
+    }
+
+    // Auto-assign permission group from adminType if not set
+    const groupId = admin.permissionGroupId || getDefaultGroupForAdminType(admin.adminType || '');
+
+    // Build permission subject
+    const subject: PermissionSubject = {
+        adminType: admin.adminType,
+        permissionGroupId: groupId,
+        permissions: admin.permissionMap as PermissionMap | undefined,
+        permissionOverrides: admin.permissionOverrides as Partial<PermissionMap> | undefined,
+    };
+
+    // Resolve effective permissions
+    const effectivePermissions = getEffectivePermissions(subject);
+
+    return {
+        ...admin,
+        permissionGroupId: groupId,
+        permissionMap: effectivePermissions as Record<string, boolean>,
+    };
+};
+
 // 📸 Helper to always ensure we have a photoURL if possible
 const enrichAdminData = async (baseAdmin: Admin): Promise<Admin> => {
-    const adminAny = baseAdmin as any;
-    if (adminAny.photoURL) return baseAdmin;
+    // Resolve permissions first
+    const permissionedAdmin = resolvePermissions(baseAdmin);
+
+    const adminAny = permissionedAdmin as any;
+    if (adminAny.photoURL) return permissionedAdmin;
 
     try {
-        const targetUserId = adminAny.firebaseUid || baseAdmin.id;
+        const targetUserId = adminAny.firebaseUid || permissionedAdmin.id;
 
         // 1. Check Auth (Priority)
-        if (auth.currentUser && (auth.currentUser.uid === targetUserId || auth.currentUser.uid === baseAdmin.id)) {
+        if (auth.currentUser && (auth.currentUser.uid === targetUserId || auth.currentUser.uid === permissionedAdmin.id)) {
             if (auth.currentUser.photoURL) {
                 console.log('📸 [Enrich] Hydrated photoURL from Auth');
-                return { ...baseAdmin, photoURL: auth.currentUser.photoURL } as any;
+                return { ...permissionedAdmin, photoURL: auth.currentUser.photoURL } as any;
             }
         }
 
@@ -53,13 +90,13 @@ const enrichAdminData = async (baseAdmin: Admin): Promise<Admin> => {
             const userDoc = await getDoc(doc(db, 'users', targetUserId));
             if (userDoc.exists() && userDoc.data()?.photoURL) {
                 console.log('📸 [Enrich] Hydrated photoURL from DB');
-                return { ...baseAdmin, photoURL: userDoc.data().photoURL } as any;
+                return { ...permissionedAdmin, photoURL: userDoc.data().photoURL } as any;
             }
         }
     } catch (e) {
         console.warn('📸 [Enrich] Error:', e);
     }
-    return baseAdmin;
+    return permissionedAdmin;
 };
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {

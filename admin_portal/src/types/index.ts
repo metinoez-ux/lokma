@@ -792,10 +792,18 @@ export interface Admin {
     restaurantName?: string; // @deprecated - use businessName instead
 
     location?: string;
-    permissions: string[];
+    permissions: string[];  // Legacy — kept for backward compat
     createdAt: Date;
     createdBy: string;
     isActive: boolean;
+
+    // ═══ RBAC 2.0 — Module-Based Permission System ═══
+    /** Reference to a permission group template (e.g. 'owner', 'manager', 'cashier') */
+    permissionGroupId?: string;
+    /** Effective permission map — resolved from group + overrides. { "orders.view": true, ... } */
+    permissionMap?: Record<string, boolean>;
+    /** Per-user overrides on top of group permissions. { "revenue.view": false } */
+    permissionOverrides?: Record<string, boolean>;
     subscriptionId?: string;
     subscriptionStatus?: 'active' | 'cancelled' | 'past_due' | 'trialing' | 'none';
     smartNotifications?: {
