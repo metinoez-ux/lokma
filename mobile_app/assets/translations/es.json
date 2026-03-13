@@ -162,7 +162,20 @@
     "note_food_label": "Nota del plato",
     "table_verified": "Mesa {tableNum} verificada ✓",
     "example_hint": "Ej.: 5",
-    "default_address": "Dirección predeterminada"
+    "default_address": "Dirección predeterminada",
+    "send_order": "Enviar Pedido",
+    "in_cart_price": "En el carrito  {price} {currency}",
+    "add_to_cart_price": "Añadir al carrito  {price} {currency}",
+    "table_group_order": "Mesa {tableNum} — Pedido Grupal Activo",
+    "confirm_disclaimer": "Al hacer clic en 'Confirmar pedido', acepta nuestros Términos y Condiciones.",
+    "refund_product_price": "Reembolsar precio del producto",
+    "start_group_order": "Iniciar Pedido Grupal",
+    "single_person_order": "Pedido Individual",
+    "disclaimer_prefix": "Al hacer clic en 'Confirmar pedido', acepta el contenido del carrito, su información ingresada, ",
+    "privacy_policy": "nuestra Política de Privacidad",
+    "and_conjunction": " y ",
+    "terms_of_use": "nuestros Términos de Uso",
+    "disclaimer_suffix": " aceptados."
   },
   "common": {
     "cancel": "Cancelar",
@@ -349,7 +362,10 @@
     "please": "Por favor",
     "warning": "Advertencia",
     "info": "Información",
-    "attention": "Atención"
+    "attention": "Atención",
+    "address": "Dirección",
+    "butcher": "Carnicería",
+    "category": "Categoría"
   },
   "customer": {
     "tumu": "Tümü",
@@ -860,7 +876,27 @@
     "join_group": "Unirse al grupo",
     "single_order": "Pedido individual",
     "yes_close_session": "Sí, cerrar sesión",
-    "start_group_order": "Iniciar pedido grupal"
+    "start_group_order": "Iniciar pedido grupal",
+    "category_all": "Todos",
+    "all_products": "Todos los Productos",
+    "reviews_count": "{count} Reseñas",
+    "business_info": "Información del Negocio",
+    "favorite_butchers": "Mis Carnicerías Favoritas",
+    "all_butchers": "Todas las Carnicerías",
+    "sponsored": "Patrocinado",
+    "group_order_active_info": "Hay un pedido grupal activo con {count} personas en esta mesa.\nIngrese el código PIN para unirse.",
+    "hours_general": "General",
+    "hours_delivery": "Entrega",
+    "hours_pickup": "Recogida",
+    "same_as_general": "Igual que General",
+    "phone_label": "Teléfono",
+    "not_specified": "No especificado",
+    "hours_loading": "Cargando horarios...",
+    "hours_not_found": "No se encontraron horarios.",
+    "hours_cannot_display": "No se pueden mostrar los horarios.",
+    "daily_hours": "Diario",
+    "find_us": "Cómo encontrarnos",
+    "cuisine": "Cocina"
   },
   "navigation": {
     "food": "Comida",
@@ -1033,7 +1069,18 @@
     "view_menu_order": "Ver Menú y Pedir",
     "leave_tip": "Dejar propina",
     "send_message": "Enviar mensaje",
-    "tip_send_failed": "No se pudo enviar la propina, inténtelo de nuevo"
+    "tip_send_failed": "No se pudo enviar la propina, inténtelo de nuevo",
+    "order_number_label": "Pedido Nº: {orderNo}",
+    "support_subject": "Soporte de Pedido: {orderNo}",
+    "support_body": "Pedido Nº: {orderNo}\nNegocio: {business}\nSu Mensaje:",
+    "status_pending_tr": "Pendiente",
+    "status_accepted_tr": "Aceptado",
+    "status_preparing_tr": "Preparando",
+    "status_ready_tr": "Listo",
+    "status_served_tr": "Servido",
+    "status_on_the_way_tr": "En camino",
+    "status_delivered_tr": "Entregado",
+    "status_cancelled_tr": "Cancelado"
   },
   "payments": {
     "step1_payment_collection": "💵 Paso 1: Cobro de pagos",
@@ -1579,5 +1626,18 @@
     "min_order_required": "Monto mínimo de pedido: {amount}€",
     "not_valid_for_business": "Este cupón no es válido para este negocio",
     "already_used": "Ya ha utilizado este cupón"
+  },
+  "reservation": {
+    "please_login_first": "Por favor, inicie sesión primero",
+    "please_select_time": "Por favor, seleccione una hora",
+    "time_slot_full": "¡Este horario está completo! Seleccione otro horario.",
+    "await_confirmation": "Por favor, espere la confirmación del negocio. Puede verificar el estado de su reserva en cualquier momento en la sección 'Mis Reservas'.",
+    "send_request": "Enviar Solicitud de Reserva",
+    "business_approval_required": "Se requiere aprobación del negocio",
+    "request_received": "¡Su solicitud de reserva ha sido recibida!",
+    "date_label": "Fecha",
+    "today": "Hoy",
+    "time_label": "Hora",
+    "optional": "Opcional"
   }
 }

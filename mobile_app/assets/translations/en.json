@@ -163,7 +163,20 @@
     "note_food_label": "Food Note",
     "table_verified": "Table {tableNum} verified ✓",
     "example_hint": "e.g.: 5",
-    "default_address": "Default Address"
+    "default_address": "Default Address",
+    "send_order": "Send Order",
+    "in_cart_price": "In Cart  {price} {currency}",
+    "add_to_cart_price": "Add to Cart  {price} {currency}",
+    "table_group_order": "Table {tableNum} — Active Group Order",
+    "confirm_disclaimer": "By clicking 'Confirm Order', you accept our Terms and Conditions.",
+    "refund_product_price": "Refund product price",
+    "start_group_order": "Start Group Order",
+    "single_person_order": "Single Order",
+    "disclaimer_prefix": "By clicking 'Confirm Order', you accept the cart contents, your entered information, ",
+    "privacy_policy": "our Privacy Policy",
+    "and_conjunction": " and ",
+    "terms_of_use": "our Terms of Use",
+    "disclaimer_suffix": " accepted."
   },
   "common": {
     "ok": "OK",
@@ -350,7 +363,10 @@
     "please": "Please",
     "warning": "Warning",
     "info": "Info",
-    "attention": "Attention"
+    "attention": "Attention",
+    "address": "Address",
+    "butcher": "Butcher",
+    "category": "Category"
   },
   "customer": {
     "tumu": "All",
@@ -861,7 +877,27 @@
     "join_group": "Join Group",
     "single_order": "Order Alone",
     "yes_close_session": "Yes, Close Session",
-    "start_group_order": "Start Group Order"
+    "start_group_order": "Start Group Order",
+    "category_all": "All",
+    "all_products": "All Products",
+    "reviews_count": "{count} Reviews",
+    "business_info": "Business Information",
+    "favorite_butchers": "My Favorite Butchers",
+    "all_butchers": "All Butchers",
+    "sponsored": "Sponsored",
+    "group_order_active_info": "There is an active group order with {count} people at this table.\nEnter the PIN code to join.",
+    "hours_general": "General",
+    "hours_delivery": "Delivery",
+    "hours_pickup": "Pickup",
+    "same_as_general": "Same as General",
+    "phone_label": "Phone",
+    "not_specified": "Not specified",
+    "hours_loading": "Loading opening hours...",
+    "hours_not_found": "No opening hours found.",
+    "hours_cannot_display": "Cannot display opening hours.",
+    "daily_hours": "Daily",
+    "find_us": "How to find us",
+    "cuisine": "Cuisine"
   },
   "navigation": {
     "food": "Food",
@@ -1034,7 +1070,18 @@
     "view_menu_order": "View Menu & Order",
     "leave_tip": "Leave a Tip",
     "send_message": "Send Message",
-    "tip_send_failed": "Failed to send tip, please try again"
+    "tip_send_failed": "Failed to send tip, please try again",
+    "order_number_label": "Order No: {orderNo}",
+    "support_subject": "Order Support: {orderNo}",
+    "support_body": "Order No: {orderNo}\nBusiness: {business}\nYour Message:",
+    "status_pending_tr": "Pending",
+    "status_accepted_tr": "Accepted",
+    "status_preparing_tr": "Preparing",
+    "status_ready_tr": "Ready",
+    "status_served_tr": "Served",
+    "status_on_the_way_tr": "On the way",
+    "status_delivered_tr": "Delivered",
+    "status_cancelled_tr": "Cancelled"
   },
   "payments": {
     "step1_payment_collection": "💵 Step 1: Payment Collection",
@@ -1587,5 +1634,18 @@
     "min_order_required": "Minimum order amount: {amount}€",
     "not_valid_for_business": "This coupon is not valid for this business",
     "already_used": "You have already used this coupon"
+  },
+  "reservation": {
+    "please_login_first": "Please log in first",
+    "please_select_time": "Please select a time",
+    "time_slot_full": "This time slot is full! Please select a different time.",
+    "await_confirmation": "Please wait for the business to confirm. You can check the status of your reservation anytime in the 'My Reservations' section.",
+    "send_request": "Send Reservation Request",
+    "business_approval_required": "Business approval required",
+    "request_received": "Your Reservation Request Has Been Received!",
+    "date_label": "Date",
+    "today": "Today",
+    "time_label": "Time",
+    "optional": "Optional"
   }
 }

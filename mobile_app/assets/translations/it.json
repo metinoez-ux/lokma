@@ -162,7 +162,20 @@
     "note_food_label": "Nota sul piatto",
     "table_verified": "Tavolo {tableNum} verificato ✓",
     "example_hint": "Es.: 5",
-    "default_address": "Indirizzo predefinito"
+    "default_address": "Indirizzo predefinito",
+    "send_order": "Invia Ordine",
+    "in_cart_price": "Nel carrello  {price} {currency}",
+    "add_to_cart_price": "Aggiungi al carrello  {price} {currency}",
+    "table_group_order": "Tavolo {tableNum} — Ordine di Gruppo Attivo",
+    "confirm_disclaimer": "Cliccando su 'Conferma ordine', accetti i nostri Termini e Condizioni.",
+    "refund_product_price": "Rimborsa prezzo prodotto",
+    "start_group_order": "Inizia Ordine di Gruppo",
+    "single_person_order": "Ordine Singolo",
+    "disclaimer_prefix": "Cliccando su 'Conferma ordine', accetti il contenuto del carrello, le informazioni inserite, ",
+    "privacy_policy": "la nostra Informativa sulla Privacy",
+    "and_conjunction": " e ",
+    "terms_of_use": "i nostri Termini di Utilizzo",
+    "disclaimer_suffix": " accettati."
   },
   "common": {
     "cancel": "Annulla",
@@ -349,7 +362,10 @@
     "please": "Per favore",
     "warning": "Avviso",
     "info": "Info",
-    "attention": "Attenzione"
+    "attention": "Attenzione",
+    "address": "Indirizzo",
+    "butcher": "Macelleria",
+    "category": "Categoria"
   },
   "customer": {
     "tumu": "Tümü",
@@ -860,7 +876,27 @@
     "join_group": "Unisciti al gruppo",
     "single_order": "Ordine singolo",
     "yes_close_session": "Sì, chiudi sessione",
-    "start_group_order": "Avvia ordine di gruppo"
+    "start_group_order": "Avvia ordine di gruppo",
+    "category_all": "Tutti",
+    "all_products": "Tutti i Prodotti",
+    "reviews_count": "{count} Recensioni",
+    "business_info": "Informazioni Attività",
+    "favorite_butchers": "Le Mie Macellerie Preferite",
+    "all_butchers": "Tutte le Macellerie",
+    "sponsored": "Sponsorizzato",
+    "group_order_active_info": "C'è un ordine di gruppo attivo con {count} persone a questo tavolo.\nInserisci il codice PIN per unirti.",
+    "hours_general": "Generale",
+    "hours_delivery": "Consegna",
+    "hours_pickup": "Ritiro",
+    "same_as_general": "Come Generale",
+    "phone_label": "Telefono",
+    "not_specified": "Non specificato",
+    "hours_loading": "Caricamento orari...",
+    "hours_not_found": "Nessun orario trovato.",
+    "hours_cannot_display": "Impossibile visualizzare gli orari.",
+    "daily_hours": "Giornaliero",
+    "find_us": "Come trovarci",
+    "cuisine": "Cucina"
   },
   "navigation": {
     "food": "Cibo",
@@ -1033,7 +1069,18 @@
     "view_menu_order": "Vedi Menu & Ordina",
     "leave_tip": "Lascia una mancia",
     "send_message": "Invia messaggio",
-    "tip_send_failed": "Invio mancia fallito, riprova"
+    "tip_send_failed": "Invio mancia fallito, riprova",
+    "order_number_label": "Ordine N°: {orderNo}",
+    "support_subject": "Supporto Ordine: {orderNo}",
+    "support_body": "Ordine N°: {orderNo}\nAttività: {business}\nIl Tuo Messaggio:",
+    "status_pending_tr": "In attesa",
+    "status_accepted_tr": "Accettato",
+    "status_preparing_tr": "In preparazione",
+    "status_ready_tr": "Pronto",
+    "status_served_tr": "Servito",
+    "status_on_the_way_tr": "In arrivo",
+    "status_delivered_tr": "Consegnato",
+    "status_cancelled_tr": "Annullato"
   },
   "payments": {
     "step1_payment_collection": "💵 Fase 1: Incasso pagamento",
@@ -1579,5 +1626,18 @@
     "min_order_required": "Importo minimo dell'ordine: {amount}€",
     "not_valid_for_business": "Questo coupon non è valido per questa attività",
     "already_used": "Hai già utilizzato questo coupon"
+  },
+  "reservation": {
+    "please_login_first": "Effettua prima l'accesso",
+    "please_select_time": "Seleziona un orario",
+    "time_slot_full": "Questo orario è pieno! Seleziona un altro orario.",
+    "await_confirmation": "Attendi la conferma dell'attività. Puoi controllare lo stato della tua prenotazione in qualsiasi momento nella sezione 'Le Mie Prenotazioni'.",
+    "send_request": "Invia Richiesta di Prenotazione",
+    "business_approval_required": "Approvazione dell'attività richiesta",
+    "request_received": "La tua richiesta di prenotazione è stata ricevuta!",
+    "date_label": "Data",
+    "today": "Oggi",
+    "time_label": "Ora",
+    "optional": "Opzionale"
   }
 }

@@ -162,7 +162,20 @@
     "note_food_label": "Note sur le plat",
     "table_verified": "Table {tableNum} vérifiée ✓",
     "example_hint": "Ex. : 5",
-    "default_address": "Adresse par défaut"
+    "default_address": "Adresse par défaut",
+    "send_order": "Envoyer la commande",
+    "in_cart_price": "Dans le panier  {price} {currency}",
+    "add_to_cart_price": "Ajouter au panier  {price} {currency}",
+    "table_group_order": "Table {tableNum} — Commande de groupe active",
+    "confirm_disclaimer": "En cliquant sur 'Confirmer la commande', vous acceptez nos Conditions Générales.",
+    "refund_product_price": "Rembourser le prix du produit",
+    "start_group_order": "Lancer commande de groupe",
+    "single_person_order": "Commande individuelle",
+    "disclaimer_prefix": "En cliquant sur 'Confirmer la commande', vous acceptez le contenu du panier, vos informations saisies, ",
+    "privacy_policy": "notre Politique de Confidentialité",
+    "and_conjunction": " et ",
+    "terms_of_use": "nos Conditions d'Utilisation",
+    "disclaimer_suffix": " acceptées."
   },
   "common": {
     "cancel": "Annuler",
@@ -349,7 +362,10 @@
     "please": "Veuillez",
     "warning": "Avertissement",
     "info": "Info",
-    "attention": "Attention"
+    "attention": "Attention",
+    "address": "Adresse",
+    "butcher": "Boucherie",
+    "category": "Catégorie"
   },
   "customer": {
     "tumu": "Tümü",
@@ -860,7 +876,27 @@
     "join_group": "Rejoindre le groupe",
     "single_order": "Commander seul",
     "yes_close_session": "Oui, fermer la session",
-    "start_group_order": "Démarrer commande de groupe"
+    "start_group_order": "Démarrer commande de groupe",
+    "category_all": "Tous",
+    "all_products": "Tous les Produits",
+    "reviews_count": "{count} Avis",
+    "business_info": "Informations sur le commerce",
+    "favorite_butchers": "Mes Boucheries Favorites",
+    "all_butchers": "Toutes les Boucheries",
+    "sponsored": "Sponsorisé",
+    "group_order_active_info": "Il y a une commande de groupe active avec {count} personnes à cette table.\nEntrez le code PIN pour rejoindre.",
+    "hours_general": "Général",
+    "hours_delivery": "Livraison",
+    "hours_pickup": "À emporter",
+    "same_as_general": "Comme Général",
+    "phone_label": "Téléphone",
+    "not_specified": "Non spécifié",
+    "hours_loading": "Chargement des horaires...",
+    "hours_not_found": "Aucun horaire trouvé.",
+    "hours_cannot_display": "Impossible d'afficher les horaires.",
+    "daily_hours": "Quotidien",
+    "find_us": "Comment nous trouver",
+    "cuisine": "Cuisine"
   },
   "navigation": {
     "food": "Repas",
@@ -1033,7 +1069,18 @@
     "view_menu_order": "Voir le Menu & Commander",
     "leave_tip": "Laisser un pourboire",
     "send_message": "Envoyer un message",
-    "tip_send_failed": "Échec de l'envoi du pourboire, veuillez réessayer"
+    "tip_send_failed": "Échec de l'envoi du pourboire, veuillez réessayer",
+    "order_number_label": "Commande N°: {orderNo}",
+    "support_subject": "Support commande: {orderNo}",
+    "support_body": "Commande N°: {orderNo}\nCommerce: {business}\nVotre Message:",
+    "status_pending_tr": "En attente",
+    "status_accepted_tr": "Accepté",
+    "status_preparing_tr": "En préparation",
+    "status_ready_tr": "Prêt",
+    "status_served_tr": "Servi",
+    "status_on_the_way_tr": "En route",
+    "status_delivered_tr": "Livré",
+    "status_cancelled_tr": "Annulé"
   },
   "payments": {
     "step1_payment_collection": "💵 Étape 1 : Collecte de paiement",
@@ -1579,5 +1626,18 @@
     "min_order_required": "Montant minimum de commande : {amount}€",
     "not_valid_for_business": "Ce coupon n'est pas valable pour ce commerce",
     "already_used": "Vous avez déjà utilisé ce coupon"
+  },
+  "reservation": {
+    "please_login_first": "Veuillez vous connecter d'abord",
+    "please_select_time": "Veuillez sélectionner une heure",
+    "time_slot_full": "Ce créneau est complet ! Veuillez choisir un autre horaire.",
+    "await_confirmation": "Veuillez attendre la confirmation du commerce. Vous pouvez vérifier le statut de votre réservation à tout moment dans la section 'Mes Réservations'.",
+    "send_request": "Envoyer la demande de réservation",
+    "business_approval_required": "Approbation du commerce requise",
+    "request_received": "Votre demande de réservation a été reçue !",
+    "date_label": "Date",
+    "today": "Aujourd'hui",
+    "time_label": "Heure",
+    "optional": "Optionnel"
   }
 }

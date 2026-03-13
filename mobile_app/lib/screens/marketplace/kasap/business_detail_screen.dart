@@ -319,9 +319,9 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       } catch (_) {
         // context.locale may not be available yet during initState/early callbacks
       }
-      return (name[locale] ?? name['tr'] ?? name.values.firstOrNull ?? 'Kategori').toString();
+      return (name[locale] ?? name['tr'] ?? name.values.firstOrNull ?? 'common.category'.tr()).toString();
     }
-    return 'Kategori';
+    return 'common.category'.tr();
   }
   
   // 🆕 Setup real-time listener for categories from Firestore subcollection
@@ -483,7 +483,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   void _showClosedBusinessDialog({bool preOrderEnabled = false}) {
     // Get business name
     final data = _butcherDoc?.data() as Map<String, dynamic>?;
-    final businessName = data?['businessName'] ?? data?['companyName'] ?? 'İşletme';
+    final businessName = data?['businessName'] ?? data?['companyName'] ?? 'common.business'.tr();
     
     // Calculate next opening time
     final openingHelper = OpeningHoursHelper(data?['openingHours']);
@@ -732,7 +732,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             products: _allProducts,
             businessId: widget.businessId,
             businessName: (_butcherDoc?.data() as Map<String, dynamic>?)?['companyName'] ?? 
-                          (_butcherDoc?.data() as Map<String, dynamic>?)?['name'] ?? 'Kasap',
+                          (_butcherDoc?.data() as Map<String, dynamic>?)?['name'] ?? 'common.butcher'.tr(),
             onSearch: (query) {
               setState(() {
                 _menuSearchQuery = query;
@@ -903,7 +903,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                  children: [
                                    Row(children: List.generate(5, (i) => Icon(Icons.star, color: i < rating.round() ? Colors.amber : Colors.grey, size: 14))),
                                    SizedBox(height: 4),
-                                   Text('$total Değerlendirme', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                                   Text('marketplace.reviews_count'.tr(namedArgs: {'count': '$total'}), style: TextStyle(color: Colors.grey[400], fontSize: 12)),
                                  ],
                                ),
                              ],
@@ -971,7 +971,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(review['author_name'] ?? 'Misafir', style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600)),
+                                        Text(review['author_name'] ?? 'common.guest'.tr(), style: TextStyle(color: Theme.of(context).colorScheme.surface, fontWeight: FontWeight.w600)),
                                         const SizedBox(height: 2),
                                         Text(review['relative_time_description'] ?? '', style: TextStyle(color: Colors.grey[500], fontSize: 11)),
                                       ],
@@ -1288,109 +1288,369 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDark ? Colors.white : Colors.black87;
+    final subtitleColor = isDark ? Colors.grey[400]! : Colors.grey.shade600;
     final handleColor = isDark ? Colors.white24 : Colors.grey.shade300;
+    final dividerColor = isDark ? Colors.white10 : Colors.grey.shade200;
+    final accent = _getAccent(context);
     
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) {
+      builder: (ctx) {
         try {
+          // Extract address
+          final address = _butcherDoc?['address'];
+          final street = address is Map ? (address['street'] ?? '') : '';
+          final postalCode = address is Map ? (address['postalCode'] ?? '') : '';
+          final city = address is Map ? (address['city'] ?? '') : '';
+          final hasAddress = street.toString().trim().isNotEmpty;
+          final fullAddress = hasAddress ? '$street\n$postalCode $city' : 'marketplace.no_address_info'.tr();
+          
+          final phone = _butcherDoc?['shopPhone']?.toString() ?? '';
+          final hasPhone = phone.trim().isNotEmpty;
+          
+          // Cuisine type
+          final cuisineType = _butcherDoc?['cuisineType']?.toString() ?? '';
+          
+          // ══ Determine which service tabs to show ══
+          final data = _butcherDoc?.data() as Map<String, dynamic>?;
+          final hasDelivery = data?['supportsDelivery'] == true || data?['hasDelivery'] == true;
+          final deliveryStart = data?['deliveryStartTime']?.toString() ?? '';
+          final deliveryEnd = data?['deliveryEndTime']?.toString() ?? '';
+          final pickupStart = data?['pickupStartTime']?.toString() ?? '';
+          final pickupEnd = data?['pickupEndTime']?.toString() ?? '';
+          final hasPickup = pickupStart.trim().isNotEmpty || pickupEnd.trim().isNotEmpty;
+          
+          // Build dynamic tabs list
+          final List<Tab> tabs = [
+            Tab(text: 'marketplace.hours_general'.tr()),
+          ];
+          final List<Widget> tabViews = [
+            _buildGeneralHoursTab(isDark, textColor, subtitleColor, accent),
+          ];
+          
+          if (hasDelivery) {
+            tabs.add(Tab(text: 'marketplace.hours_delivery'.tr()));
+            tabViews.add(_buildServiceHoursTab(
+              deliveryStart, deliveryEnd,
+              isDark, textColor, subtitleColor, accent,
+            ));
+          }
+          if (hasPickup) {
+            tabs.add(Tab(text: 'marketplace.hours_pickup'.tr()));
+            tabViews.add(_buildServiceHoursTab(
+              pickupStart, pickupEnd,
+              isDark, textColor, subtitleColor, accent,
+            ));
+          }
+          
+          final showTabs = tabs.length > 1;
+          
           return Container(
-            height: MediaQuery.of(context).size.height * 0.6,
+            height: MediaQuery.of(ctx).size.height * 0.75,
             decoration: BoxDecoration(
               color: sheetBg,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
-            child: Column(
-              children: [
-                // Handle
-                Container(
-                  margin: const EdgeInsets.only(top: 8, bottom: 12),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
-                ),
-                
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    children: [
-                      // Title
-                      Text(
-                        _butcherDoc?['companyName'] ?? 'İşletme Bilgileri',
-                        style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 4),
-                      
-                      // Label Badge
-                      if (_butcherDoc?['brandLabelActive'] == true)
-                        InkWell(
-                          onTap: () {
-                             Navigator.pop(context); // Close info sheet first
-                             _showTunaBrandInfo(); // Open brand info
-                          },
-                          child: Container(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Color(0xFFFB335B),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row( // Added Row for Arrow hint
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                   _getBrandLabel(_butcherDoc?['brand']),
-                                    style: TextStyle(color: Theme.of(context).colorScheme.surface, fontSize: 12, fontWeight: FontWeight.w600),
+            child: DefaultTabController(
+              length: tabs.length,
+              child: Column(
+                children: [
+                  // ── Handle ──
+                  Container(
+                    margin: const EdgeInsets.only(top: 8, bottom: 12),
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(color: handleColor, borderRadius: BorderRadius.circular(2)),
+                  ),
+                  
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      children: [
+                        // ═══ Business Name ═══
+                        Text(
+                          _butcherDoc?['companyName'] ?? 'marketplace.business_info'.tr(),
+                          style: TextStyle(color: textColor, fontSize: 22, fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 6),
+                        
+                        // Brand Badge
+                        if (_butcherDoc?['brandLabelActive'] == true)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: InkWell(
+                              onTap: () { Navigator.pop(ctx); _showTunaBrandInfo(); },
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFB335B),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
-                                  const SizedBox(width: 4),
-                                  const Icon(Icons.info, color: Colors.white70, size: 14),
-                                ],
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(_getBrandLabel(_butcherDoc?['brand']),
+                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.info_outline, color: Colors.white70, size: 13),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                        
+                        if (_butcherDoc?['brandLabelActive'] != true)
+                          const SizedBox(height: 10),
 
-                      const SizedBox(height: 12),
-                      
-                      // Info Sections - with safe address access
-                      Builder(builder: (context) {
-                        try {
-                          final address = _butcherDoc?['address'];
-                          final street = address is Map ? (address['street'] ?? '') : '';
-                          final postalCode = address is Map ? (address['postalCode'] ?? '') : '';
-                          final city = address is Map ? (address['city'] ?? '') : '';
-                          return _buildInfoRow(Icons.location_on, 'Adres', '$street\n$postalCode $city', isDark: isDark);
-                        } catch (e) {
-                          return _buildInfoRow(Icons.location_on, 'marketplace.address_label'.tr(), 'marketplace.no_address_info'.tr(), isDark: isDark);
-                        }
-                      }),
-                      Divider(color: isDark ? Colors.white10 : Colors.grey.shade300),
-                      _buildInfoRow(Icons.phone, 'Telefon', _butcherDoc?['shopPhone']?.toString() ?? 'Belirtilmemiş', isAction: true, onTap: _callStore, isDark: isDark),
-                      
-                      const SizedBox(height: 12),
-                      Text('marketplace.business_hours'.tr(), style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600)),
-                      const SizedBox(height: 8),
-                      
-                      // Hours List - wrapped in try-catch builder
-                      ..._buildHoursListThemed(isDark),
-                      
-                      const SizedBox(height: 20),
-                    ],
+                        // ═══ MAP SECTION — "So findest du uns" ═══
+                        if (hasAddress) ...[
+                          Text('marketplace.find_us'.tr(),
+                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 10),
+                          GestureDetector(
+                            onTap: () {
+                              final query = Uri.encodeComponent('$street, $postalCode $city');
+                              launchUrl(Uri.parse('https://maps.apple.com/?q=$query'));
+                            },
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(14),
+                              child: SizedBox(
+                                height: 160,
+                                width: double.infinity,
+                                child: Stack(
+                                  children: [
+                                    // OSM Static Map Image
+                                    Image.network(
+                                      'https://staticmap.openstreetmap.de/staticmap.php?center=$street,$postalCode+$city&zoom=15&size=600x300&maptype=mapnik&markers=$street,$postalCode+$city,red-pushpin',
+                                      width: double.infinity,
+                                      height: 160,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                                        child: Center(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(Icons.map_outlined, color: subtitleColor, size: 36),
+                                              const SizedBox(height: 6),
+                                              Text('$postalCode $city',
+                                                style: TextStyle(color: subtitleColor, fontSize: 13)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // Overlay gradient for readability
+                                    Positioned(
+                                      bottom: 0, left: 0, right: 0,
+                                      child: Container(
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [Colors.transparent, Colors.black.withValues(alpha: 0.4)],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // "Open in Maps" indicator
+                                    Positioned(
+                                      bottom: 8, right: 10,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.9),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.open_in_new, size: 12, color: Colors.black87),
+                                            SizedBox(width: 4),
+                                            Text('Maps', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black87)),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                        ],
+
+                        // ═══ ADDRESS ROW — Lieferando style ═══
+                        InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: hasAddress ? () {
+                            final query = Uri.encodeComponent('$street, $postalCode $city');
+                            launchUrl(Uri.parse('https://maps.apple.com/?q=$query'));
+                          } : null,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 40, height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(Icons.location_on, color: Colors.red, size: 22),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('common.address'.tr(),
+                                        style: TextStyle(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w400)),
+                                      const SizedBox(height: 3),
+                                      Text(fullAddress,
+                                        style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w400, height: 1.4)),
+                                    ],
+                                  ),
+                                ),
+                                if (hasAddress)
+                                  Icon(Icons.arrow_forward_ios, color: subtitleColor, size: 14),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        Divider(color: dividerColor, height: 1),
+                        
+                        // ═══ PHONE ROW — Lieferando style ═══
+                        InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: hasPhone ? _callStore : null,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40, height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(Icons.phone, color: Colors.blue, size: 20),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('marketplace.phone_label'.tr(),
+                                        style: TextStyle(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w400)),
+                                      const SizedBox(height: 3),
+                                      Text(hasPhone ? phone : 'marketplace.not_specified'.tr(),
+                                        style: TextStyle(
+                                          color: hasPhone ? Colors.blue : subtitleColor,
+                                          fontSize: 15, fontWeight: FontWeight.w400,
+                                        )),
+                                    ],
+                                  ),
+                                ),
+                                if (hasPhone)
+                                  Icon(Icons.arrow_forward_ios, color: subtitleColor, size: 14),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // ═══ KÜCHE (CUISINE) SECTION ═══
+                        if (cuisineType.trim().isNotEmpty) ...[
+                          Text('marketplace.cuisine'.tr(),
+                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: cuisineType.split(RegExp(r'[,;]')).map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).map((tag) => Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300, width: 0.5),
+                              ),
+                              child: Text(tag,
+                                style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.w400)),
+                            )).toList(),
+                          ),
+                          const SizedBox(height: 20),
+                          Divider(color: dividerColor, height: 1),
+                          const SizedBox(height: 16),
+                        ],
+                        
+                        // ═══ BUSINESS HOURS ═══
+                        Text('marketplace.business_hours'.tr(),
+                          style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 12),
+                        
+                        // Show underline tab bar only if there are multiple tabs
+                        if (showTabs) ...[
+                          TabBar(
+                            indicatorSize: TabBarIndicatorSize.label,
+                            dividerColor: dividerColor,
+                            indicatorColor: accent,
+                            indicatorWeight: 2.5,
+                            labelColor: textColor,
+                            unselectedLabelColor: subtitleColor,
+                            labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                            unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                            tabs: tabs,
+                          ),
+                          const SizedBox(height: 12),
+                          
+                          // Tab Content
+                          SizedBox(
+                            height: 320,
+                            child: TabBarView(
+                              children: tabViews,
+                            ),
+                          ),
+                        ] else ...[
+                          // No tabs needed — just show general hours directly
+                          _buildGeneralHoursTab(isDark, textColor, subtitleColor, accent),
+                        ],
+                        
+                        // ═══ IMPRESSUM ═══
+                        if (data != null) ...[
+                          const SizedBox(height: 24),
+                          Divider(color: dividerColor, height: 1),
+                          const SizedBox(height: 16),
+                          Text('Impressum',
+                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 12),
+                          _buildImpressumSection(data, textColor, subtitleColor),
+                        ],
+                        
+                        const SizedBox(height: 30),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         } catch (e) {
           debugPrint('Error building info sheet: $e');
           return Container(
             height: MediaQuery.of(context).size.height * 0.4,
-            decoration: const BoxDecoration(
-              color: Color(0xFF1E1E1E),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            decoration: BoxDecoration(
+              color: sheetBg,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Center(
               child: Text('marketplace.info_load_error'.tr(), style: TextStyle(color: Colors.white54)),
@@ -1401,18 +1661,253 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     );
   }
 
-  // Themed wrapper for hours list  
-  List<Widget> _buildHoursListThemed(bool isDark) {
-    final subtitleColor = isDark ? Colors.grey[400] : Colors.grey.shade600;
+  // ═══ IMPRESSUM SECTION ═══
+  Widget _buildImpressumSection(Map<String, dynamic>? data, Color textColor, Color subtitleColor) {
+    if (data == null) return const SizedBox.shrink();
     
-    // For simplicity, reuse _buildHoursList and just return - theme colors are handled via the page context
+    final companyName = data['companyName']?.toString() ?? '';
+    final businessName = data['businessName']?.toString() ?? data['name']?.toString() ?? '';
+    final displayName = companyName.isNotEmpty ? companyName : businessName;
+    
+    final legalForm = data['legalForm']?.toString() ?? '';
+    final managingDirector = data['managingDirector']?.toString() ?? data['ownerName']?.toString() ?? '';
+    final authorizedRep = data['authorizedRepresentative']?.toString() ?? '';
+    final registerCourt = data['registerCourt']?.toString() ?? '';
+    final registerNumber = data['registerNumber']?.toString() ?? '';
+    final taxId = data['taxId']?.toString() ?? data['taxNumber']?.toString() ?? '';
+    final vatId = data['vatId']?.toString() ?? '';
+    final email = data['email']?.toString() ?? data['shopEmail']?.toString() ?? data['contactEmail']?.toString() ?? '';
+    
+    final address = data['address'];
+    final street = address is Map ? (address['street'] ?? '') : '';
+    final postalCode = address is Map ? (address['postalCode'] ?? '') : '';
+    final city = address is Map ? (address['city'] ?? '') : '';
+    final fullAddress = street.toString().trim().isNotEmpty 
+      ? '$street, $postalCode $city' 
+      : '';
+    
+    // Format legal form label
+    String legalFormLabel = '';
+    const legalFormMap = {
+      'gmbh': 'GmbH', 'ug': 'UG (haftungsbeschränkt)', 'ag': 'AG',
+      'gbr': 'GbR', 'ohg': 'OHG', 'kg': 'KG', 'gmbh_co_kg': 'GmbH & Co. KG',
+      'einzelunternehmen': 'Einzelunternehmen', 'freiberufler': 'Freiberufler',
+      'ev': 'e.V.', 'eg': 'eG', 'se': 'SE',
+    };
+    if (legalForm.isNotEmpty) {
+      legalFormLabel = legalFormMap[legalForm] ?? legalForm;
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (displayName.isNotEmpty)
+          _impressumRow(displayName + (legalFormLabel.isNotEmpty ? ' ($legalFormLabel)' : ''), textColor),
+        if (fullAddress.isNotEmpty)
+          _impressumRow(fullAddress, subtitleColor),
+        if (managingDirector.isNotEmpty)
+          _impressumRow('Vertretungsberechtigter: $managingDirector', subtitleColor),
+        if (authorizedRep.isNotEmpty && authorizedRep != managingDirector)
+          _impressumRow('Vertretungsberechtigt: $authorizedRep', subtitleColor),
+        if (registerCourt.isNotEmpty || registerNumber.isNotEmpty)
+          _impressumRow(
+            [if (registerCourt.isNotEmpty) registerCourt, if (registerNumber.isNotEmpty) registerNumber].join(', '),
+            subtitleColor,
+          ),
+        if (taxId.isNotEmpty)
+          _impressumRow('Steuer-Nr.: $taxId', subtitleColor),
+        if (vatId.isNotEmpty)
+          _impressumRow('USt-IdNr.: $vatId', subtitleColor),
+        if (email.isNotEmpty)
+          _impressumRow('E-Mail: $email', subtitleColor),
+      ],
+    );
+  }
+  
+  Widget _impressumRow(String text, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(text, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w400, height: 1.4)),
+    );
+  }
+
+  // ═══ GENERAL HOURS TAB — day-by-day from openingHours ═══
+  Widget _buildGeneralHoursTab(bool isDark, Color textColor, Color subtitleColor, Color accent) {
+    try {
+      if (_butcherDoc == null) {
+        return Center(child: Text('marketplace.hours_loading'.tr(), style: TextStyle(color: subtitleColor)));
+      }
+      
+      final rawData = _butcherDoc!.data();
+      if (rawData == null) {
+        return Center(child: Text('marketplace.hours_not_found'.tr(), style: TextStyle(color: subtitleColor)));
+      }
+      
+      final data = rawData as Map<String, dynamic>;
+      final hours = data['openingHours'];
+
+      if (hours == null || hours.toString().trim().isEmpty) {
+        return Center(child: Text('marketplace.business_hours_not_entered'.tr(), style: TextStyle(color: subtitleColor)));
+      }
+
+      final dayNamesDisplay = [
+        'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
+        'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
+      ];
+      final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+      final now = DateTime.now();
+      final todayIndex = now.weekday - 1;
+
+      List<String> lines = [];
+      if (hours is String) {
+        lines = hours.split(RegExp(r'\r?\n'));
+      } else if (hours is List) {
+        lines = hours.map((e) => e.toString()).toList();
+      } else {
+        return Center(child: Text('marketplace.call_store_for_hours'.tr(), style: TextStyle(color: subtitleColor)));
+      }
+
+      lines = lines.where((l) => l.trim().isNotEmpty).toList();
+
+      final Map<String, String> enToTr = {
+        'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
+        'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar'
+      };
+      
+      List<String> standardizedLines = [];
+      for (var line in lines) {
+        String cleanLine = line.trim();
+        for (var entry in enToTr.entries) {
+          if (cleanLine.startsWith(entry.key)) {
+            cleanLine = cleanLine.replaceFirst(entry.key, entry.value);
+            break;
+          }
+        }
+        cleanLine = cleanLine.replaceAllMapped(RegExp(r'(\d{1,2})(:\d{2})?\s*([AP]M)', caseSensitive: false), (match) {
+          int h = int.parse(match.group(1)!);
+          int m = match.group(2) != null ? int.parse(match.group(2)!.substring(1)) : 0;
+          String period = match.group(3)!.toUpperCase();
+          if (period == 'PM' && h < 12) h += 12;
+          if (period == 'AM' && h == 12) h = 0;
+          return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+        });
+        cleanLine = cleanLine.replaceAll('–', '-').replaceAll('—', '-');
+        cleanLine = cleanLine.replaceAll(RegExp(r'Closed', caseSensitive: false), 'Kapalı');
+        standardizedLines.add(cleanLine);
+      }
+      lines = standardizedLines;
+
+      bool structureMatch = lines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
+      if (!structureMatch) {
+        return ListView(
+          padding: EdgeInsets.zero,
+          children: lines.map((line) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Text(line, style: TextStyle(color: textColor, fontSize: 14)),
+          )).toList(),
+        );
+      }
+
+      return ListView(
+        padding: EdgeInsets.zero,
+        children: List.generate(7, (i) {
+          final dayNameTr = dayNamesTr[i];
+          final dayNameDisplay = dayNamesDisplay[i];
+          final isToday = todayIndex == i;
+          
+          final line = lines.firstWhere(
+            (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
+            orElse: () => '$dayNameTr: Kapalı'
+          );
+          
+          String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
+          if (content.isEmpty || content == 'Kapalı') content = 'common.closed'.tr();
+
+          return _buildDayRow(dayNameDisplay, content, isToday, isDark, textColor, subtitleColor, accent);
+        }),
+      );
+    } catch (e) {
+      debugPrint('Error building general hours tab: $e');
+      return Center(child: Text('marketplace.hours_cannot_display'.tr(), style: TextStyle(color: subtitleColor)));
+    }
+  }
+
+  // ═══ SERVICE HOURS TAB (Delivery / Pickup) ═══
+  Widget _buildServiceHoursTab(String startTime, String endTime, bool isDark, Color textColor, Color subtitleColor, Color accent) {
+    final hasCustomHours = startTime.trim().isNotEmpty && endTime.trim().isNotEmpty;
+    
+    if (!hasCustomHours) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.schedule, color: subtitleColor, size: 40),
+            const SizedBox(height: 12),
+            Text('marketplace.same_as_general'.tr(),
+              style: TextStyle(color: subtitleColor, fontSize: 16, fontWeight: FontWeight.w500)),
+          ],
+        ),
+      );
+    }
+
+    final dayNamesDisplay = [
+      'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
+      'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
+    ];
+    final now = DateTime.now();
+    final todayIndex = now.weekday - 1;
+    final hoursText = '$startTime - $endTime';
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: List.generate(7, (i) {
+        return _buildDayRow(dayNamesDisplay[i], hoursText, todayIndex == i, isDark, textColor, subtitleColor, accent);
+      }),
+    );
+  }
+
+  // ═══ SINGLE DAY ROW — Lieferando style ═══
+  Widget _buildDayRow(String dayName, String hours, bool isToday, bool isDark, Color textColor, Color subtitleColor, Color accent) {
+    final isClosed = hours == 'common.closed'.tr() || hours.toLowerCase().contains('kapalı') || hours.toLowerCase().contains('geschlossen') || hours.toLowerCase().contains('closed');
+    
+    final dayColor = isToday ? accent : (isDark ? Colors.grey[300]! : Colors.black87);
+    final hoursColor = isToday ? accent : (isClosed ? (isDark ? Colors.grey[500]! : Colors.grey) : textColor);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      margin: const EdgeInsets.only(bottom: 2),
+      decoration: BoxDecoration(
+        color: isToday ? accent.withValues(alpha: 0.08) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: isToday ? Border.all(color: accent.withValues(alpha: 0.2), width: 1) : null,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(dayName, style: TextStyle(
+            color: dayColor,
+            fontSize: 15,
+            fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+          )),
+          Text(hours, style: TextStyle(
+            color: hoursColor,
+            fontSize: 15,
+            fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+          )),
+        ],
+      ),
+    );
+  }
+
+  // ═══ Legacy wrappers for backward compatibility ═══
+  List<Widget> _buildHoursListThemed(bool isDark) {
     try {
       return _buildHoursList();
     } catch (e) {
       return [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text('Çalışma saatleri görüntülenemiyor.', style: TextStyle(color: subtitleColor)),
+          child: Text('marketplace.hours_cannot_display'.tr(), style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey.shade600)),
         )
       ];
     }
@@ -1457,167 +1952,107 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   List<Widget> _buildHoursList() {
     try {
       if (_butcherDoc == null) {
-        return [
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Text('Çalışma saatleri bilgisi yükleniyor...', style: TextStyle(color: Colors.white54)),
-          )
-        ];
+        return [Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text('marketplace.hours_loading'.tr(), style: const TextStyle(color: Colors.white54)))];
       }
       
       final rawData = _butcherDoc!.data();
       if (rawData == null) {
-        return [
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Text('Çalışma saatleri bilgisi bulunamadı.', style: TextStyle(color: Colors.white54)),
-          )
-        ];
+        return [Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text('marketplace.hours_not_found'.tr(), style: const TextStyle(color: Colors.white54)))];
       }
       
       final data = rawData as Map<String, dynamic>;
       final hours = data['openingHours'];
 
-    if (hours == null || hours.toString().trim().isEmpty) {
-      return [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text('marketplace.business_hours_not_entered'.tr(), style: const TextStyle(color: Colors.white54)),
-        )
-      ];
-    }
-
-    // Display names (i18n) and internal keys for matching Firebase data
-    final dayNamesDisplay = [
-      'common.day_monday'.tr(),
-      'common.day_tuesday'.tr(),
-      'common.day_wednesday'.tr(),
-      'common.day_thursday'.tr(),
-      'common.day_friday'.tr(),
-      'common.day_saturday'.tr(),
-      'common.day_sunday'.tr(),
-    ];
-    // Internal keys for matching raw data from Firebase (Turkish or English)
-    final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-    final now = DateTime.now();
-    final todayIndex = now.weekday - 1;
-
-    List<String> lines = [];
-
-    
-    if (hours is String) {
-        lines = hours.split(RegExp(r'\r?\n'));
-    } else if (hours is List) {
-        // Handle List<dynamic> (e.g. ["Pazartesi: 09:00 - 18:00", ...])
-        lines = hours.map((e) => e.toString()).toList();
-    } else if (hours is Map) {
-        // Handle Map (e.g. {"monday": "09:00", ...} though this is rarer for our schema)
-        // Try to convert to list implicitly by iterating days
-        // This is a complex fallback, usually our schema is String or List
-        return [Text('marketplace.call_store_for_hours'.tr(), style: const TextStyle(color: Colors.white54))];
-    } else {
-         // Fallback for unknown data types
-         return [Text('marketplace.time_format_not_supported'.tr(), style: const TextStyle(color: Colors.white54))];
-    }
-
-    // Filter out empty lines just in case
-    lines = lines.where((l) => l.trim().isNotEmpty).toList();
-    
-    // --- STANDARDIZATION LOGIC ---
-    // Map English days to Turkish (internal key format) for matching
-    final Map<String, String> enToTr = {
-      'Monday': 'Pazartesi',
-      'Tuesday': 'Salı',
-      'Wednesday': 'Çarşamba',
-      'Thursday': 'Perşembe',
-      'Friday': 'Cuma',
-      'Saturday': 'Cumartesi',
-      'Sunday': 'Pazar'
-    };
-
-    List<String> standardizedLines = [];
-    for (var line in lines) {
-      String cleanLine = line.trim();
-      
-      // 1. Check for English Day Names and Translate
-      for (var entry in enToTr.entries) {
-        if (cleanLine.startsWith(entry.key)) {
-           cleanLine = cleanLine.replaceFirst(entry.key, entry.value);
-           break;
-        }
+      if (hours == null || hours.toString().trim().isEmpty) {
+        return [Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text('marketplace.business_hours_not_entered'.tr(), style: const TextStyle(color: Colors.white54)))];
       }
 
-      // 2. Normalize Time Format (12h AM/PM -> 24h)
-      // Regex detects patterns like "8:00 AM", "08:00 PM", "7 PM"
-      cleanLine = cleanLine.replaceAllMapped(RegExp(r'(\d{1,2})(:(\d{2}))?\s*([AP]M)', caseSensitive: false), (match) {
-         int h = int.parse(match.group(1)!);
-         int m = match.group(3) != null ? int.parse(match.group(3)!) : 0;
-         String period = match.group(4)!.toUpperCase();
+      final dayNamesDisplay = [
+        'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
+        'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
+      ];
+      final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+      final now = DateTime.now();
+      final todayIndex = now.weekday - 1;
 
-         if (period == 'PM' && h < 12) h += 12;
-         if (period == 'AM' && h == 12) h = 0;
+      List<String> lines = [];
+      if (hours is String) {
+        lines = hours.split(RegExp(r'\r?\n'));
+      } else if (hours is List) {
+        lines = hours.map((e) => e.toString()).toList();
+      } else {
+        return [Text('marketplace.call_store_for_hours'.tr(), style: const TextStyle(color: Colors.white54))];
+      }
 
-         return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
-      });
+      lines = lines.where((l) => l.trim().isNotEmpty).toList();
 
-      // 3. Normalize Separators (en-dash, em-dash -> hyphen)
-      cleanLine = cleanLine.replaceAll('–', '-').replaceAll('—', '-');
-      
-      // 4. Translate "Closed" -> internal Turkish key "Kapalı" for matching
-      cleanLine = cleanLine.replaceAll(RegExp(r'Closed', caseSensitive: false), 'Kapalı');
+      final Map<String, String> enToTr = {
+        'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
+        'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar'
+      };
 
-      standardizedLines.add(cleanLine);
-    }
-    
-    lines = standardizedLines;
-    // ----------------------------
+      List<String> standardizedLines = [];
+      for (var line in lines) {
+        String cleanLine = line.trim();
+        for (var entry in enToTr.entries) {
+          if (cleanLine.startsWith(entry.key)) {
+            cleanLine = cleanLine.replaceFirst(entry.key, entry.value);
+            break;
+          }
+        }
+        cleanLine = cleanLine.replaceAllMapped(RegExp(r'(\d{1,2})(:\d{2})?\s*([AP]M)', caseSensitive: false), (match) {
+          int h = int.parse(match.group(1)!);
+          int m = match.group(2) != null ? int.parse(match.group(2)!.substring(1)) : 0;
+          String period = match.group(3)!.toUpperCase();
+          if (period == 'PM' && h < 12) h += 12;
+          if (period == 'AM' && h == 12) h = 0;
+          return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+        });
+        cleanLine = cleanLine.replaceAll('–', '-').replaceAll('—', '-');
+        cleanLine = cleanLine.replaceAll(RegExp(r'Closed', caseSensitive: false), 'Kapalı');
+        standardizedLines.add(cleanLine);
+      }
+      lines = standardizedLines;
 
-    if (lines.isEmpty) {
-       return [Text('marketplace.time_info_empty'.tr(), style: const TextStyle(color: Colors.white54))];
-    }
+      if (lines.isEmpty) {
+        return [Text('marketplace.time_info_empty'.tr(), style: const TextStyle(color: Colors.white54))];
+      }
 
-    // Check if lines align with day names (using internal Turkish keys for matching)
-    bool structureMatch = lines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
+      bool structureMatch = lines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
+      if (!structureMatch) {
+        return lines.map((line) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text(line, style: const TextStyle(color: Colors.white70)),
+        )).toList();
+      }
 
-    if (!structureMatch) {
-       return lines.map((line) => Padding(
-         padding: const EdgeInsets.symmetric(vertical: 4),
-         child: Text(line, style: const TextStyle(color: Colors.white70)),
-       )).toList();
-    }
-
-    return List.generate(7, (i) {
-        final dayNameTr = dayNamesTr[i]; // Internal key for matching
-        final dayNameDisplay = dayNamesDisplay[i]; // i18n display name
+      return List.generate(7, (i) {
+        final dayNameTr = dayNamesTr[i];
+        final dayNameDisplay = dayNamesDisplay[i];
         final isToday = todayIndex == i;
         
-        // Find line with better matching - STRICT MATCHING (using internal Turkish keys)
         final line = lines.firstWhere(
-          (l) {
-             return l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr ');
-          },
+          (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
           orElse: () => '$dayNameTr: Kapalı'
         );
         
-        // Clean content
         String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
         if (content.isEmpty || content == 'Kapalı') content = 'common.closed'.tr();
 
-        // Theme-aware colors
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        final dayColor = isToday 
-            ? Colors.green 
-            : (isDark ? Colors.grey[300] : Colors.black87);
-        final hoursColor = isToday 
-            ? Colors.green 
-            : (isDark ? Colors.white : Colors.black87);
+        final accent = _getAccent(context);
+        final dayColor = isToday ? accent : (isDark ? Colors.grey[300] : Colors.black87);
+        final hoursColor = isToday ? accent : (isDark ? Colors.white : Colors.black87);
 
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
           decoration: BoxDecoration(
-            color: isToday ? Colors.green.withValues(alpha: 0.1) : Colors.transparent,
+            color: isToday ? accent.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
-            border: isToday ? Border.all(color: Colors.green.withValues(alpha: 0.3)) : null,
+            border: isToday ? Border.all(color: accent.withValues(alpha: 0.3)) : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1627,7 +2062,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             ],
           ),
         );
-    }).toList();
+      }).toList();
     } catch (e) {
       debugPrint('Error building hours list: $e');
       return [
@@ -1638,6 +2073,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       ];
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -2008,7 +2445,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                          children: [
                            Expanded(
                              child: Text(
-                               data?['companyName'] ?? data?['name'] ?? 'İşletme',
+                               data?['companyName'] ?? data?['name'] ?? 'common.business'.tr(),
                                style: TextStyle(
                                  color: Theme.of(context).colorScheme.onSurface,
                                  fontSize: 24,
@@ -2558,7 +2995,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                      // Center text
                      Expanded(
                        child: Text(
-                         _isMasaMode ? 'Siparişi Gönder' : 'cart.view_cart'.tr(),
+                         _isMasaMode ? 'cart.send_order'.tr() : 'cart.view_cart'.tr(),
                          style: const TextStyle(
                            color: Colors.white,
                            fontSize: 16,
@@ -2590,7 +3027,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     // Route products with optionGroups to the new customization sheet
     if (product.optionGroups.isNotEmpty) {
       final data = _butcherDoc?.data() as Map<String, dynamic>?;
-      final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+      final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
       // Always open fresh sheet from product listing (edit happens in cart screen)
       showModalBottomSheet(
         context: context,
@@ -2866,7 +3303,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                                       minChildSize: 0.5,
                                                       builder: (_, controller) => LegalReportSheet(
                                                         businessId: widget.businessId,
-                                                        businessName: _butcherDoc?['companyName'] ?? _butcherDoc?['name'] ?? 'İşletme',
+                                                        businessName: _butcherDoc?['companyName'] ?? _butcherDoc?['name'] ?? 'common.business'.tr(),
                                                         productId: product.id,
                                                         productName: product.name,
                                                         productCategory: product.category,
@@ -3015,7 +3452,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             child: ElevatedButton(
                               onPressed: () {
                                 final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                                final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                                final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                                 final noteText = noteController.text.trim().isNotEmpty ? noteController.text.trim() : null;
                                 HapticFeedback.heavyImpact();
                                 ref.read(cartProvider.notifier).addToCart(product, selectedQty, widget.businessId, butcherName, note: noteText);
@@ -3176,7 +3613,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 child: InkWell(
                                   onTap: () {
                                     final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                                    final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                                    final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                                     showModalBottomSheet(
                                       context: context,
                                       isScrollControlled: true,
@@ -3326,7 +3763,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             } else {
                               // No options → add directly to cart
                               final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                              final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                              final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                               HapticFeedback.mediumImpact();
                               ref.read(cartProvider.notifier).addToCart(
                                 product,
@@ -3681,7 +4118,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   _showProductBottomSheet(product);
                                 } else {
                                   final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                                  final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                                  final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                                   HapticFeedback.mediumImpact();
                                   ref.read(cartProvider.notifier).addToCart(
                                     product,
@@ -3736,7 +4173,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               _showProductBottomSheet(product);
                             } else {
                               final data = _butcherDoc?.data() as Map<String, dynamic>?;
-                              final butcherName = data?['companyName'] ?? data?['name'] ?? 'Kasap';
+                              final butcherName = data?['companyName'] ?? data?['name'] ?? 'common.butcher'.tr();
                               final qtyToAdd = _selections[product.sku] ?? defaultQty;
                               HapticFeedback.mediumImpact();
                               ref.read(cartProvider.notifier).addToCart(
@@ -3775,8 +4212,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               const SizedBox(width: 6),
                               Text(
                                 inCart 
-                                  ? 'Sepette  ${totalPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}'
-                                  : 'Sepete Ekle  ${previewPrice.toStringAsFixed(2)} ${CurrencyUtils.getCurrencySymbol()}',
+                                  ? 'cart.in_cart_price'.tr(namedArgs: {'price': totalPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()})
+                                  : 'cart.add_to_cart_price'.tr(namedArgs: {'price': previewPrice.toStringAsFixed(2), 'currency': CurrencyUtils.getCurrencySymbol()}),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,

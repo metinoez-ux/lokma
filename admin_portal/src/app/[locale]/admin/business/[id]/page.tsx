@@ -33,7 +33,7 @@ import { getLocalizedText } from "@/lib/utils";
 import MultiLanguageInput from '@/components/ui/MultiLanguageInput';
 import { BUSINESS_TYPES } from "@/lib/business-types";
 import { auth, db, storage } from "@/lib/firebase";
-import { Admin, ButcherPartner } from "@/types";
+import { Admin, ButcherPartner, GERMAN_LEGAL_FORM_LABELS, GermanLegalForm } from "@/types";
 import { useAdmin } from "@/components/providers/AdminProvider";
 import { useTranslations } from "next-intl";
 import { useSectors } from "@/hooks/useSectors";
@@ -441,6 +441,12 @@ export default function BusinessDetailsPage() {
     // 🆕 Fatura Bilgileri
     billingName: "",
     billingVatNumber: "",
+    // 🆕 Impressum / Rechtliche Angaben
+    legalForm: "" as string,
+    managingDirector: "",
+    authorizedRepresentative: "",
+    registerCourt: "",
+    registerNumber: "",
     // 🆕 Masa Rezervasyonu
     hasReservation: false,   // Masa rezervasyonu aktif mi?
     tableCapacity: 0,        // Toplam oturma kapasitesi (kişi)
@@ -722,6 +728,12 @@ export default function BusinessDetailsPage() {
           whatsapp: d.whatsapp || "",
           tiktok: d.tiktok || "",
           youtube: d.youtube || "",
+          // 🆕 Impressum / Rechtliche Angaben
+          legalForm: d.legalForm || "",
+          managingDirector: d.managingDirector || d.ownerName || "",
+          authorizedRepresentative: d.authorizedRepresentative || "",
+          registerCourt: d.registerCourt || "",
+          registerNumber: d.registerNumber || "",
           // 🆕 Fatura Bilgileri
           billingName: d.billingAddress?.name || "",
           billingVatNumber: d.billingAddress?.vatNumber || "",
@@ -1973,6 +1985,12 @@ export default function BusinessDetailsPage() {
         whatsapp: formData.whatsapp || "",
         tiktok: formData.tiktok || "",
         youtube: formData.youtube || "",
+        // 🆕 Impressum / Rechtliche Angaben
+        legalForm: formData.legalForm || "",
+        managingDirector: formData.managingDirector || "",
+        authorizedRepresentative: formData.authorizedRepresentative || "",
+        registerCourt: formData.registerCourt || "",
+        registerNumber: formData.registerNumber || "",
         address: {
           street: formData.street || "",
           postalCode: formData.postalCode || "",
@@ -3487,6 +3505,40 @@ export default function BusinessDetailsPage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div><label className="text-gray-400 text-xs block mb-1">{t('kisiselTel')}</label><input type="tel" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
                           <div><label className="text-gray-400 text-xs block mb-1">{t('kisiselEmail')}</label><input type="email" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg disabled:opacity-50" /></div>
+                        </div>
+                      </div>
+                      {/* Impressum / Rechtliche Angaben */}
+                      <div className="space-y-4 pt-4 border-t border-gray-700">
+                        <h4 className="text-white font-medium pb-2">📜 Impressum / Rechtliche Angaben</h4>
+                        <p className="text-gray-500 text-xs -mt-2">Diese Angaben werden im Impressum der mobilen App angezeigt.</p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm">Rechtsform</label>
+                            <select value={formData.legalForm || ''} onChange={(e) => setFormData({ ...formData, legalForm: e.target.value })} disabled={!isEditing} className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50">
+                              <option value="">— Bitte wählen —</option>
+                              {Object.entries(GERMAN_LEGAL_FORM_LABELS).map(([key, label]) => (
+                                <option key={key} value={key}>{label}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm">Geschäftsführer / Inhaber</label>
+                            <input type="text" value={formData.managingDirector || ''} onChange={(e) => setFormData({ ...formData, managingDirector: e.target.value })} disabled={!isEditing} placeholder="Vor- und Nachname" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-gray-400 text-sm">Vertretungsberechtigte/r</label>
+                          <input type="text" value={formData.authorizedRepresentative || ''} onChange={(e) => setFormData({ ...formData, authorizedRepresentative: e.target.value })} disabled={!isEditing} placeholder="Falls abweichend vom Geschäftsführer" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-gray-400 text-sm">Registergericht</label>
+                            <input type="text" value={formData.registerCourt || ''} onChange={(e) => setFormData({ ...formData, registerCourt: e.target.value })} disabled={!isEditing} placeholder="z.B. Amtsgericht Mönchengladbach" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50" />
+                          </div>
+                          <div>
+                            <label className="text-gray-400 text-sm">Handelsregisternummer</label>
+                            <input type="text" value={formData.registerNumber || ''} onChange={(e) => setFormData({ ...formData, registerNumber: e.target.value })} disabled={!isEditing} placeholder="z.B. HRB 12345" className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50 font-mono" />
+                          </div>
                         </div>
                       </div>
                       {/* Google Place */}

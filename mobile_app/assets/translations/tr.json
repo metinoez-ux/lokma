@@ -163,7 +163,20 @@
     "note_food_label": "Yemek Notu",
     "table_verified": "Masa {tableNum} doğrulandı ✓",
     "example_hint": "Örn: 5",
-    "default_address": "Varsayılan Adres"
+    "default_address": "Varsayılan Adres",
+    "send_order": "Siparişi Gönder",
+    "in_cart_price": "Sepette  {price} {currency}",
+    "add_to_cart_price": "Sepete Ekle  {price} {currency}",
+    "table_group_order": "Masa {tableNum} — Aktif Grup Siparişi",
+    "confirm_disclaimer": "Siparişi Onayla butonuna tıklayarak, Genel Şartlar ve Koşullarımızı kabul etmiş olursunuz.",
+    "refund_product_price": "Ürün ücretini iade et",
+    "start_group_order": "Grup Siparişi Başlat",
+    "single_person_order": "Tek Kişi Sipariş",
+    "disclaimer_prefix": "Siparişi Onayla butonuna tıklayarak sepet içeriğini, girdiğiniz bilgileri, ",
+    "privacy_policy": "Gizlilik Politikamızı",
+    "and_conjunction": " ve ",
+    "terms_of_use": "Kullanım Koşullarımızı",
+    "disclaimer_suffix": " kabul etmiş olursunuz."
   },
   "common": {
     "ok": "Tamam",
@@ -350,7 +363,10 @@
     "please": "Lütfen",
     "warning": "Uyarı",
     "info": "Bilgi",
-    "attention": "Dikkat"
+    "attention": "Dikkat",
+    "address": "Adres",
+    "butcher": "Kasap",
+    "category": "Kategori"
   },
   "customer": {
     "tumu": "Tümü",
@@ -861,7 +877,27 @@
     "join_group": "Gruba Katıl",
     "single_order": "Tek Kişi Sipariş",
     "yes_close_session": "Evet, Oturumu Kapat",
-    "start_group_order": "Grup Siparişi Başlat"
+    "start_group_order": "Grup Siparişi Başlat",
+    "category_all": "Tümü",
+    "all_products": "Tüm Ürünler",
+    "reviews_count": "{count} Değerlendirme",
+    "business_info": "İşletme Bilgileri",
+    "favorite_butchers": "Favori Kasaplarım",
+    "all_butchers": "Tüm Kasaplar",
+    "sponsored": "Sponsorlu",
+    "group_order_active_info": "Bu masada {count} kişilik aktif bir grup siparişi var.\nKatılmak için PIN kodunu girin.",
+    "hours_general": "Genel",
+    "hours_delivery": "Kurye",
+    "hours_pickup": "Gel Al",
+    "same_as_general": "Genel ile Aynı",
+    "phone_label": "Telefon",
+    "not_specified": "Belirtilmemiş",
+    "hours_loading": "Çalışma saatleri bilgisi yükleniyor...",
+    "hours_not_found": "Çalışma saatleri bilgisi bulunamadı.",
+    "hours_cannot_display": "Çalışma saatleri görüntülenemiyor.",
+    "daily_hours": "Her Gün",
+    "find_us": "Bizi nasıl bulursunuz",
+    "cuisine": "Mutfak"
   },
   "navigation": {
     "food": "Yemek",
@@ -1034,7 +1070,18 @@
     "view_menu_order": "Menüyü Gör & Sipariş Ver",
     "leave_tip": "Bahşiş Bırak",
     "send_message": "Mesaj Gönder",
-    "tip_send_failed": "Bahşiş gönderilemedi, lütfen tekrar deneyin"
+    "tip_send_failed": "Bahşiş gönderilemedi, lütfen tekrar deneyin",
+    "order_number_label": "Sipariş No: {orderNo}",
+    "support_subject": "Sipariş Desteği: {orderNo}",
+    "support_body": "Sipariş No: {orderNo}\nİşletme: {business}\nMesajınız:",
+    "status_pending_tr": "Beklemede",
+    "status_accepted_tr": "Onaylandı",
+    "status_preparing_tr": "Hazırlanıyor",
+    "status_ready_tr": "Hazır",
+    "status_served_tr": "Servis Edildi",
+    "status_on_the_way_tr": "Yolda",
+    "status_delivered_tr": "Teslim Edildi",
+    "status_cancelled_tr": "İptal"
   },
   "payments": {
     "step1_payment_collection": "💵 Adım 1: Ödeme Tahsili",
@@ -1587,5 +1634,18 @@
     "min_order_required": "Minimum sipariş tutarı: {amount}€",
     "not_valid_for_business": "Bu kupon bu işletme için geçerli değil",
     "already_used": "Bu kuponu zaten kullandınız"
+  },
+  "reservation": {
+    "please_login_first": "Lütfen önce giriş yapın",
+    "please_select_time": "Lütfen bir saat seçin",
+    "time_slot_full": "Bu saat dolmuş! Lütfen farklı bir saat seçin.",
+    "await_confirmation": "Lütfen işletmeden onay bildirimini bekleyin. Rezervasyon durumunuzu her zaman 'Rezervasyonlarım' bölümünden takip edebilirsiniz.",
+    "send_request": "Rezervasyon Talebi Gönder",
+    "business_approval_required": "İşletme onayı gereklidir",
+    "request_received": "Rezervasyon Talebiniz Alındı!",
+    "date_label": "Tarih",
+    "today": "Bugün",
+    "time_label": "Saat",
+    "optional": "Opsiyonel"
   }
 }
