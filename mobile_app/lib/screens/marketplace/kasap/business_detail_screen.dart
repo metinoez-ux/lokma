@@ -2096,10 +2096,26 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                       ),
                 titleSpacing: 0,
                 centerTitle: true,
-                actions: const [
-                  // Invisible spacer to balance the leading back button
-                  // so title (search bar / toggle) stays centered
-                  SizedBox(width: 48),
+                actions: [
+                  if (!_showSearchBar)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Material(
+                        color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
+                        shape: const CircleBorder(),
+                        elevation: 2,
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () => _showMenuSearchOverlay(),
+                          child: SizedBox(
+                            width: 40, height: 40,
+                            child: Icon(Icons.search, color: accent, size: 20),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 48),
                 ],
               ),
               

@@ -8718,11 +8718,11 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                     padding: const EdgeInsets.symmetric(vertical: 8),
                                     decoration: BoxDecoration(
                                       color: parent._tipAmount == tipVal
-                                          ? (isDark ? Colors.grey[600] : Colors.grey[700])
+                                          ? lokmaPink
                                           : (isDark ? Colors.grey[800] : sectionDividerColor),
                                       borderRadius: BorderRadius.circular(24),
                                       border: Border.all(
-                                        color: parent._tipAmount == tipVal ? (isDark ? Colors.grey[500]! : Colors.grey[700]!) : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
+                                        color: parent._tipAmount == tipVal ? lokmaPink : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
                                         width: 1,
                                       ),
                                     ),
@@ -8795,12 +8795,12 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   padding: const EdgeInsets.symmetric(vertical: 8),
                                   decoration: BoxDecoration(
                                     color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
-                                        ? (isDark ? Colors.grey[600] : Colors.grey[700])
+                                        ? lokmaPink
                                         : (isDark ? Colors.grey[800] : sectionDividerColor),
                                     borderRadius: BorderRadius.circular(24),
                                     border: Border.all(
                                       color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
-                                          ? (isDark ? Colors.grey[500]! : Colors.grey[700]!) : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
+                                          ? lokmaPink : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
                                       width: 1,
                                     ),
                                   ),
