@@ -639,6 +639,7 @@
     "supply_standards": "Estándares de suministro",
     "production_standards": "Estándares de producción",
     "business_hours": "Horas de oficina",
+    "closing_soon": "Abierto {time} más hoy",
     "business_hours_cannot_be_displayed": "El horario de apertura no se puede mostrar.",
     "loading_business_hours": "Cargando el horario de oficina...",
     "business_hours_not_found": "Información de horario de apertura no encontrada.",
@@ -788,6 +789,7 @@
     "business_type_section": "Tipo de Negocio",
     "filter_all": "Todos",
     "business_count": "{} negocios",
+    "order_at_partners": "Pedir en {count} establecimientos",
     "quick_filters_section": "Filtros Rápidos",
     "show_businesses": "Mostrar {} Negocios",
     "filter_cancel": "Cancelar",
@@ -1647,5 +1649,19 @@
     "today": "Hoy",
     "time_label": "Hora",
     "optional": "Opcional"
+  },
+  "order_confirmation": {
+    "title": "¡Pedido recibido!",
+    "preparing_by": "Su pedido será preparado por {businessName}.",
+    "order_forwarded": "Su pedido ha sido enviado.",
+    "served_at_table": "Será servido en su mesa",
+    "estimated_time": "Tiempo estimado: 30-45 min",
+    "dine_in_hint": "Su pedido ha sido enviado a la cocina. Por favor, espere en su mesa.",
+    "pickup_hint": "Se le notificará cuando su pedido esté listo.",
+    "delivery_hint": "Puede seguir a su repartidor en vivo.",
+    "notification_reminder": "¡No olvide activar las notificaciones!",
+    "ok_button": "OK",
+    "today": "Hoy",
+    "tomorrow": "Mañana"
   }
 }

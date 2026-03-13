@@ -640,6 +640,7 @@
     "supply_standards": "Supply Standards",
     "production_standards": "Production Standards",
     "business_hours": "Business Hours",
+    "closing_soon": "Open for {time} more today",
     "business_hours_cannot_be_displayed": "Business hours cannot be displayed.",
     "loading_business_hours": "Loading business hours...",
     "business_hours_not_found": "Business hours info not found.",
@@ -789,6 +790,7 @@
     "business_type_section": "Business Type",
     "filter_all": "All",
     "business_count": "{} businesses",
+    "order_at_partners": "Order from {count} partners",
     "quick_filters_section": "Quick Filters",
     "show_businesses": "Show {} Businesses",
     "filter_cancel": "Cancel",
@@ -1655,5 +1657,19 @@
     "today": "Today",
     "time_label": "Time",
     "optional": "Optional"
+  },
+  "order_confirmation": {
+    "title": "Order Received!",
+    "preparing_by": "Your order will be prepared by {businessName}.",
+    "order_forwarded": "Your order has been forwarded.",
+    "served_at_table": "Will be served at your table",
+    "estimated_time": "Estimated time: 30-45 min",
+    "dine_in_hint": "Your order has been sent to the kitchen. Please wait at your table.",
+    "pickup_hint": "You will be notified when your order is ready.",
+    "delivery_hint": "You can track your courier live.",
+    "notification_reminder": "Don't forget to enable notifications!",
+    "ok_button": "OK",
+    "today": "Today",
+    "tomorrow": "Tomorrow"
   }
 }

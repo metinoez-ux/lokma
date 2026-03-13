@@ -963,7 +963,14 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
           borderRadius: BorderRadius.circular(20),
           border: isFavoriteSection 
             ? Border.all(color: accent.withValues(alpha: 0.3), width: 1)
-            : Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            : Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -1124,7 +1131,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                   Text(
                     '${butcher['brand']} • ${butcher['location']}',
                     style: TextStyle(
-                      color: Colors.grey.shade400,
+                      color: const Color(0xFFA8A8A8), // Between grey[300] and grey[400]
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
@@ -1157,7 +1164,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                         child: Text(
                           _getTodayHours(butcher['hours']),
                           style: TextStyle(
-                            color: Colors.grey.shade500,
+                            color: Colors.grey.shade400,
                             fontSize: 13,
                           ),
                           maxLines: 1,

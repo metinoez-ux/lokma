@@ -9,7 +9,7 @@ import { generateInvoicePDF } from "./invoicePdf";
 import { createLexwareInvoice, buildMonthlyInvoicePayload, downloadLexwareInvoicePDF, classifyTaxType } from "./services/lexwareService";
 import { collectMonthlyBillingData } from "./services/billingDataCollector";
 import { iotApp } from "./iot-gateway";
-import { getPushTranslations, getUserLanguage } from "./utils/translation";
+import { getPushTranslations, getUserLanguage, getDayNames, getDateLabel } from "./utils/translation";
 
 // Define secrets for secure key management
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -61,7 +61,7 @@ export const onNewOrder = onDocumentCreated(
         const butcherId = order.butcherId;
         const rawOrderNum = order.orderNumber;
 
-        let lang = "tr";
+        let lang = "de";
         if (order.userId) {
             lang = await getUserLanguage(order.userId);
         } else if (order.customerId) {
@@ -69,10 +69,10 @@ export const onNewOrder = onDocumentCreated(
         }
 
         const trans = await getPushTranslations(lang);
-        const orderPrefix = trans.orderPrefix || "Sipariş";
-        const orderNumber = rawOrderNum ? `${orderPrefix} #${rawOrderNum}` : "Yeni Sipariş";
+        const orderPrefix = trans.orderPrefix || "Bestellung";
+        const orderNumber = rawOrderNum ? `${orderPrefix} #${rawOrderNum}` : (trans.newOrderTitle || "🔔 Neue Bestellung!");
         const totalAmount = order.totalAmount || 0;
-        const customerName = order.customerName || "Müşteri";
+        const customerName = order.customerName || (trans.customer || "Kunde");
 
         // ── Pre-Order Detection ──────────────────────────────────────────────
         const isPickupOrder = order.deliveryMethod === "pickup";
@@ -93,11 +93,11 @@ export const onNewOrder = onDocumentCreated(
             tomorrow.setDate(tomorrow.getDate() + 1);
 
             if (d.toDateString() === today.toDateString()) {
-                return `Bugün ${hours}:${minutes}`;
+                return `${getDateLabel(lang, 'today')} ${hours}:${minutes}`;
             } else if (d.toDateString() === tomorrow.toDateString()) {
-                return `Yarın ${hours}:${minutes}`;
+                return `${getDateLabel(lang, 'tomorrow')} ${hours}:${minutes}`;
             } else {
-                const dayNames = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+                const dayNames = getDayNames(lang);
                 return `${dayNames[d.getDay()]} ${hours}:${minutes}`;
             }
         };
@@ -137,10 +137,10 @@ export const onNewOrder = onDocumentCreated(
 
             if (fcmTokens.length > 0) {
                 const notifTitle = isPreOrder
-                    ? `📋 Ön Sipariş (Gel Al)!`
-                    : "🔔 Yeni Sipariş!";
+                    ? (trans.preOrderTitle || `📋 Vorbestellung (Abholung)!`)
+                    : (trans.newOrderTitle || "🔔 Neue Bestellung!");
                 const notifBody = isPreOrder && pickupTimeStr
-                    ? `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€ — Teslim: ${pickupTimeStr}`
+                    ? `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€ — ${trans.delivery || "Lieferung"}: ${pickupTimeStr}`
                     : `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`;
 
                 const message = {
@@ -202,10 +202,10 @@ export const onNewOrder = onDocumentCreated(
 
             if (webTokens.length > 0) {
                 const webNotifTitle = isPreOrder
-                    ? `📋 Ön Sipariş (Gel Al)!`
-                    : "🔔 Yeni Sipariş!";
+                    ? (trans.preOrderTitle || `📋 Vorbestellung (Abholung)!`)
+                    : (trans.newOrderTitle || "🔔 Neue Bestellung!");
                 const webNotifBody = isPreOrder && pickupTimeStr
-                    ? `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€ — Teslim: ${pickupTimeStr}`
+                    ? `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€ — ${trans.delivery || "Lieferung"}: ${pickupTimeStr}`
                     : `${orderNumber} - ${customerName} - ${totalAmount.toFixed(2)}€`;
 
                 const webMessage = {
@@ -286,12 +286,12 @@ export const onNewOrder = onDocumentCreated(
         const customerId = order.userId || order.customerId;
         if (customerId) {
             try {
-                const businessName2 = order.butcherName || order.businessName || "İşletme";
+                const businessName2 = order.butcherName || order.businessName || (trans.business || "Geschäft");
                 const pendingTitle = `⏳ ${orderNumber}`;
-                const deliveryLabel = isPickupOrder ? "Gel Al" : "Kurye Teslimat";
+                const deliveryLabel = isPickupOrder ? (trans.pickupLabel || "Abholung") : (trans.deliveryLabel || "Lieferung");
                 const pendingBody = isPreOrder && pickupTimeStr
-                    ? `Ön siparişiniz alındı — ${deliveryLabel}: ${pickupTimeStr}`
-                    : `Siparişiniz alındı — ${businessName2} onayını bekliyor.`;
+                    ? `${trans.orderAcceptedBody || "Ihre Vorbestellung wurde aufgenommen"} — ${deliveryLabel}: ${pickupTimeStr}`
+                    : `${trans.orderPendingBody || "Ihre Bestellung wurde aufgenommen"} — ${businessName2}`;
 
                 // Fetch business address info
                 let businessCity = "";
@@ -436,7 +436,7 @@ async function createCommissionRecord(orderId: string, orderData: any) {
             return;
         }
         const businessData = businessDoc.data()!;
-        const businessName = businessData.companyName || businessData.name || businessData.businessName || businessData.brand || orderData.butcherName || "İşletme";
+        const businessName = businessData.companyName || businessData.name || businessData.businessName || businessData.brand || orderData.butcherName || "Geschäft";
         const planId = businessData.subscriptionPlan || businessData.plan || "free";
 
         // Get the plan from subscription_plans collection
@@ -675,18 +675,18 @@ export const onOrderStatusChange = onDocumentUpdated(
         const rawOrderNumber = after.orderNumber || event.params.orderId.substring(0, 6).toUpperCase();
 
         // Fetch user language and translation mappings
-        let lang = "tr";
+        let lang = "de";
         if (hasCustomerToken && after.userId) {
             lang = await getUserLanguage(after.userId);
         } else if (hasCustomerToken && after.customerId) {
             lang = await getUserLanguage(after.customerId);
         }
         const trans = await getPushTranslations(lang);
-        const orderPrefix = trans.orderPrefix || "Sipariş";
+        const orderPrefix = trans.orderPrefix || "Bestellung";
         const orderNumber = rawOrderNumber ? `${orderPrefix} #${rawOrderNumber}` : orderPrefix;
         const orderTag = rawOrderNumber ? ` (#${rawOrderNumber})` : "";
         const totalAmount = after.totalAmount || 0;
-        const businessName = after.butcherName || after.businessName || "İşletme";
+        const businessName = after.butcherName || after.businessName || (trans.business || "Geschäft");
         const newStatus = after.status;
 
         let title = "";
@@ -694,8 +694,8 @@ export const onOrderStatusChange = onDocumentUpdated(
 
         switch (newStatus) {
             case "pending":
-                title = `${orderPrefix} Güncellendi${orderTag}`;
-                body = `${orderNumber} - Siparişiniz tekrar bekleme durumunda.`;
+                title = `${trans.orderPendingTitle || (orderPrefix + " aktualisiert")}${orderTag}`;
+                body = `${orderNumber} - ${trans.orderPendingBody || "Ihre Bestellung ist wieder im Wartestatus."}`;
                 break;
             case "accepted":
                 title = `${trans.orderAcceptedTitle}${orderTag}`;
@@ -718,7 +718,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                     const isDineInReady = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
                     if (isDineInReady && after.tableNumber != null) {
                         title = `${trans.orderReadyDineInTitle}${orderTag}`;
-                        body = `${orderNumber} - Masa ${after.tableNumber}: ${trans.orderReadyDineInBody}`;
+                        body = `${orderNumber} - ${trans.table || "Tisch"} ${after.tableNumber}: ${trans.orderReadyDineInBody}`;
                     } else {
                         // Pickup order: customer should come pick it up
                         title = `${trans.orderReadyPickupTitle}${orderTag}`;
@@ -801,7 +801,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                         if (staffTokens.length > 0) {
                             const staffMessage = {
                                 notification: {
-                                    title: "🚚 Teslimat Bekliyor!",
+                                    title: trans.deliveryPendingTitle || "🚚 Lieferung ausstehend!",
                                     body: `${orderNumber} - ${deliveryAddress.substring(0, 50)}${deliveryAddress.length > 50 ? "..." : ""}`,
                                 },
                                 data: {
@@ -872,8 +872,8 @@ export const onOrderStatusChange = onDocumentUpdated(
                         if (waiterTokens.length > 0) {
                             const waiterMessage = {
                                 notification: {
-                                    title: `🍽️ Masa ${tableNum} Siparişi Hazır!`,
-                                    body: `${orderNumber} - Masaya servis edilmeyi bekliyor`,
+                                    title: `${trans.tableOrderTitle || "🍽️ Tischbestellung fertig!"} (${trans.table || "Tisch"} ${tableNum})`,
+                                    body: `${orderNumber} - ${trans.orderReadyDineInBody || "Wartet auf Tischservice"}`,
                                 },
                                 data: {
                                     type: "table_order_ready",
@@ -896,13 +896,13 @@ export const onOrderStatusChange = onDocumentUpdated(
             case "served": {
                 // Dine-in order served at the table
                 const isDineInServed = after.orderType === "dine-in" || after.orderType === "masa" || after.tableNumber != null;
-                const servedByName = after.servedByName || "Garson";
+                const servedByName = after.servedByName || "";
                 if (isDineInServed && after.tableNumber != null) {
-                    title = `${trans.orderDeliveredTitle}${orderTag}`;
-                    body = `${orderNumber} - Siparişiniz masanıza servis edildi. Afiyet olsun! 😊`;
+                    title = `${trans.orderServedTitle || trans.orderDeliveredTitle}${orderTag}`;
+                    body = `${orderNumber} - ${trans.orderServedBody || trans.orderDeliveredBody}`;
                 } else {
-                    title = `${trans.orderDeliveredTitle}${orderTag}`;
-                    body = `${orderNumber} - ${servedByName} tarafından servis edildi. Afiyet olsun!`;
+                    title = `${trans.orderServedTitle || trans.orderDeliveredTitle}${orderTag}`;
+                    body = `${orderNumber} - ${trans.orderServedBody || trans.orderDeliveredBody}`;
                 }
                 // Schedule feedback request for dine-in served orders
                 const servedFeedbackSendAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -914,7 +914,7 @@ export const onOrderStatusChange = onDocumentUpdated(
             }
             case "onTheWay":
                 // Courier has claimed and started delivery
-                const courierName = after.courierName || "Kurye";
+                const courierName = after.courierName || "";
                 title = `${trans.deliveryPickedUpTitle}${orderTag}`;
                 body = `${orderNumber} - ${courierName} ${trans.deliveryPickedUpBody.toLowerCase()}`;
                 break;
@@ -966,7 +966,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                             rewardBatch.set(referrerTxRef, {
                                 type: "referral_reward",
                                 amount: referrerReward,
-                                description: "Arkadaş davet ödülü",
+                                description: "Empfehlungsbonus",
                                 referredUserId: deliveredUserId,
                                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                             });
@@ -983,7 +983,7 @@ export const onOrderStatusChange = onDocumentUpdated(
                             rewardBatch.set(refereeTxRef, {
                                 type: "referral_welcome",
                                 amount: refereeReward,
-                                description: "Hoş geldin ödülü",
+                                description: "Willkommensbonus",
                                 referrerId: referrerId,
                                 createdAt: admin.firestore.FieldValue.serverTimestamp(),
                             });
@@ -1011,32 +1011,32 @@ export const onOrderStatusChange = onDocumentUpdated(
                 await createCommissionRecord(event.params.orderId, after);
                 break;
             case "rejected":
-                const reason = after.rejectionReason || "İstediğiniz ürün şu an mevcut değil";
+                const reason = after.rejectionReason || "";
                 const butcherPhone = after.butcherPhone || "";
-                title = `❌ Sipariş Kabul Edilemedi${orderTag}`;
-                body = `${orderNumber} - ${reason}${butcherPhone ? ` Tel: ${butcherPhone}` : ""}`;
+                title = `${trans.orderRejectedTitle || "❌ Bestellung konnte nicht bestätigt werden"}${orderTag}`;
+                body = `${orderNumber}${reason ? " - " + reason : ""}${butcherPhone ? ` Tel: ${butcherPhone}` : ""}`;
                 break;
             case "cancelled":
-                const cancellationReason = after.cancellationReason || "İşletme tarafından iptal edildi";
+                const cancellationReason = after.cancellationReason || "";
                 const paymentStatus = after.paymentStatus;
                 const paymentMethod = after.paymentMethod;
 
                 title = `${trans.orderCancelledTitle}${orderTag}`;
 
                 // Build message with reason and refund info
-                let cancelMsg = `${orderNumber} - Sebep: ${cancellationReason}`;
+                let cancelMsg = `${orderNumber}${cancellationReason ? " - " + cancellationReason : ""}`;
 
                 // If payment was made (paid/completed), mention refund
                 if (paymentStatus === "paid" || paymentStatus === "completed") {
                     if (paymentMethod === "card" || paymentMethod === "stripe") {
-                        cancelMsg += ". 💳 Ödemeniz kartınıza otomatik olarak iade edilecektir.";
+                        cancelMsg += ". 💳 Ihre Zahlung wird automatisch auf Ihre Karte zurückerstattet.";
                     } else {
-                        cancelMsg += ". Ödemeniz iade edilecektir.";
+                        cancelMsg += ". Ihre Zahlung wird erstattet.";
                     }
                 }
 
                 // Add apology
-                cancelMsg += " Verdiğimiz rahatsızlık için özür dileriz. 🙏";
+                cancelMsg += " Wir entschuldigen uns für die Unannehmlichkeiten. 🙏";
                 body = cancelMsg;
                 break;
             default:
@@ -1686,7 +1686,7 @@ export const onScheduledMonthlyDeliveryPauseReport = onSchedule(
         // Calculate period (previous month)
         const periodStart = new Date(year, month - 1, 1);
         const periodEnd = new Date(year, month, 0); // Last day of previous month
-        const periodString = `${periodStart.toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}`;
+        const periodString = `${periodStart.toLocaleDateString("de-DE", { month: "long", year: "numeric" })}`;
 
         try {
             // Get all businesses with delivery support
@@ -1854,8 +1854,8 @@ export const onScheduledMonthlyDeliveryPauseReport = onSchedule(
                 </table>
                 <hr/>
                 <p style="color: #666; font-size: 12px;">
-                    Bu rapor LOKMA Platform tarafından otomatik olarak oluşturulmuştur.<br/>
-                    Rapor Dönemi: ${periodStart.toLocaleDateString("tr-TR")} - ${periodEnd.toLocaleDateString("tr-TR")}
+                    Dieser Bericht wurde automatisch von der LOKMA-Plattform erstellt.<br/>
+                    Berichtszeitraum: ${periodStart.toLocaleDateString("de-DE")} - ${periodEnd.toLocaleDateString("de-DE")}
                 </p>
             `;
 
@@ -1956,7 +1956,7 @@ export const onScheduledFeedbackRequests = onSchedule(
                     skipCount++;
                     continue;
                 }
-                const butcherName = order.butcherName || "İşletme";
+                const butcherName = order.butcherName || "Geschäft";
                 const lang = await getUserLanguage(order.userId || order.customerId); // Try to get user language, defaulting to Turkish
                 const trans = await getPushTranslations(lang);
 
@@ -2022,11 +2022,11 @@ export const onNewReservation = onDocumentCreated(
         if (!reservation) return;
 
         const businessId = event.params.businessId;
-        const customerName = reservation.userName || reservation.customerName || "Müşteri";
+        const customerName = reservation.userName || reservation.customerName || "Kunde";
         const partySize = reservation.partySize || 0;
         const resDate = reservation.reservationDate?.toDate?.() ?? new Date();
-        const dateStr = resDate.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" });
-        const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+        const dateStr = resDate.toLocaleDateString("de-DE", { day: "numeric", month: "long", year: "numeric" });
+        const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
 
         console.log(`[Reservation] New reservation at business ${businessId} by ${customerName}`);
 
@@ -2127,12 +2127,12 @@ export const onReservationStatusChange = onDocumentUpdated(
 
         const newStatus = after.status;
         const businessId = event.params.businessId;
-        const businessName = after.businessName || "İşletme";
+        const businessName = after.businessName || "Geschäft";
         const resDate = after.reservationDate?.toDate?.() ?? new Date();
-        const dateStr = resDate.toLocaleDateString("tr-TR", { day: "numeric", month: "long" });
-        const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+        const dateStr = resDate.toLocaleDateString("de-DE", { day: "numeric", month: "long" });
+        const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
         const partySize = after.partySize || 0;
-        const customerName = after.userName || after.customerName || "Müşteri";
+        const customerName = after.userName || after.customerName || "Kunde";
         const tableCardNumbers = after.tableCardNumbers || [];
 
         // ─── Customer-initiated cancellation → notify staff ───
@@ -2417,7 +2417,7 @@ export const onScheduledReservationReminders = onSchedule(
 
             for (const businessDoc of businessesSnapshot.docs) {
                 const businessId = businessDoc.id;
-                const businessName = businessDoc.data().companyName || "İşletme";
+                const businessName = businessDoc.data().companyName || "Geschäft";
 
                 // ─── 24h Customer Reminders ───
                 const upcoming24h = await db.collection("businesses")
@@ -2435,7 +2435,7 @@ export const onScheduledReservationReminders = onSchedule(
                     if (!token) continue;
 
                     const resDate = res.reservationDate?.toDate?.() ?? new Date();
-                    const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+                    const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
 
                     const notifSound = await getActiveNotificationSound();
                     try {
@@ -2554,8 +2554,8 @@ export const onScheduledReservationReminders = onSchedule(
                     for (const resDoc of unreminedStaff) {
                         const res = resDoc.data();
                         const resDate = res.reservationDate?.toDate?.() ?? new Date();
-                        const timeStr = resDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-                        const customerName = res.userName || res.customerName || "Müşteri";
+                        const timeStr = resDate.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                        const customerName = res.userName || res.customerName || "Kunde";
                         const partySize = res.partySize || 0;
                         const tableCards = res.tableCardNumbers || [];
                         const tableInfo = tableCards.length > 0 ? ` (Kart: ${tableCards.join(", ")})` : "";
@@ -2874,8 +2874,8 @@ export const preOrderReminder = onSchedule(
                     const notifSoundPre = await getActiveNotificationSound();
                     const message = {
                         notification: {
-                            title: `⏰ Ön Sipariş Hatırlatma! ${orderNum}`,
-                            body: `${reminder.customerName || "Müşteri"} - ${(reminder.totalAmount || 0).toFixed(2)}€ — ${pickupStr} teslim alınacak`,
+                            title: `⏰ Vorbestellungs-Erinnerung! ${orderNum}`,
+                            body: `${reminder.customerName || "Kunde"} - ${(reminder.totalAmount || 0).toFixed(2)}€ — ${pickupStr}`,
                         },
                         data: {
                             type: "pre_order_reminder",

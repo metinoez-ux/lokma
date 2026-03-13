@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
 
 class OrderConfirmationDialog extends StatelessWidget {
   final DateTime pickupDate;
@@ -59,7 +60,7 @@ class OrderConfirmationDialog extends StatelessWidget {
 
               // Title
               Text(
-                'Sipariş Alındı!',
+                'order_confirmation.title'.tr(),
                 style: TextStyle(
                   color: textColor,
                   fontSize: 22,
@@ -69,8 +70,8 @@ class OrderConfirmationDialog extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 businessName != null
-                  ? 'Siparişiniz $businessName tarafından hazırlanacak.'
-                  : 'Siparişiniz iletildi.',
+                  ? 'order_confirmation.preparing_by'.tr(namedArgs: {'businessName': businessName!})
+                  : 'order_confirmation.order_forwarded'.tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: subtextColor, fontSize: 14, height: 1.4),
               ),
@@ -83,17 +84,17 @@ class OrderConfirmationDialog extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Mode info
-              _buildModeInfo(textColor, subtextColor, accentColor, isDark),
+              _buildModeInfo(context, textColor, subtextColor, accentColor, isDark),
 
               const SizedBox(height: 16),
 
               // Mode-specific hint
               Text(
                 isDineIn
-                    ? 'Siparişiniz mutfağa iletildi. Masanızda bekleyiniz.'
+                    ? 'order_confirmation.dine_in_hint'.tr()
                     : (isPickUp
-                        ? 'Hazır olduğunda bildirim alacaksınız.'
-                        : 'Kuryenizi canlı takip edebilirsiniz.'),
+                        ? 'order_confirmation.pickup_hint'.tr()
+                        : 'order_confirmation.delivery_hint'.tr()),
                 textAlign: TextAlign.center,
                 style: TextStyle(color: subtextColor, fontSize: 13, height: 1.4),
               ),
@@ -108,7 +109,7 @@ class OrderConfirmationDialog extends StatelessWidget {
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      'Bildirimleri açmayı unutmayın!',
+                      'order_confirmation.notification_reminder'.tr(),
                       style: TextStyle(color: subtextColor, fontSize: 12, fontWeight: FontWeight.w500),
                     ),
                   ),
@@ -150,7 +151,7 @@ class OrderConfirmationDialog extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text('Tamam', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                  child: Text('order_confirmation.ok_button'.tr(), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
                 ),
               ),
             ],
@@ -160,7 +161,7 @@ class OrderConfirmationDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildModeInfo(Color textColor, Color subtextColor, Color accentColor, bool isDark) {
+  Widget _buildModeInfo(BuildContext context, Color textColor, Color subtextColor, Color accentColor, bool isDark) {
     if (isDineIn) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -168,7 +169,7 @@ class OrderConfirmationDialog extends StatelessWidget {
           Icon(Icons.restaurant, color: accentColor, size: 20),
           const SizedBox(width: 8),
           Text(
-            'Masanızda servis edilecek',
+            'order_confirmation.served_at_table'.tr(),
             style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
           ),
         ],
@@ -180,7 +181,7 @@ class OrderConfirmationDialog extends StatelessWidget {
           Icon(Icons.store_outlined, color: subtextColor, size: 20),
           const SizedBox(width: 8),
           Text(
-            '${_formatPickupDay()}, ${_formatPickupClock()}',
+            '${_formatPickupDay(context)}, ${_formatPickupClock()}',
             style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ],
@@ -192,7 +193,7 @@ class OrderConfirmationDialog extends StatelessWidget {
           Icon(Icons.delivery_dining, color: subtextColor, size: 22),
           const SizedBox(width: 8),
           Text(
-            'Tahmini süre: 30-45 dk',
+            'order_confirmation.estimated_time'.tr(),
             style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w600),
           ),
         ],
@@ -200,21 +201,21 @@ class OrderConfirmationDialog extends StatelessWidget {
     }
   }
 
-  String _formatPickupDay() {
+  String _formatPickupDay(BuildContext context) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
     final checkDate = DateTime(pickupDate.year, pickupDate.month, pickupDate.day);
 
-    final dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-    final monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
-
     if (checkDate == today) {
-      return 'Bugün';
+      return 'order_confirmation.today'.tr();
     } else if (checkDate == tomorrow) {
-      return 'Yarın';
+      return 'order_confirmation.tomorrow'.tr();
     } else {
-      return '${dayNames[pickupDate.weekday - 1]}, ${pickupDate.day} ${monthNames[pickupDate.month - 1]}';
+      // Use locale-aware date formatting
+      final locale = context.locale.toString();
+      final formatter = DateFormat('EEEE, d MMMM', locale);
+      return formatter.format(pickupDate);
     }
   }
 

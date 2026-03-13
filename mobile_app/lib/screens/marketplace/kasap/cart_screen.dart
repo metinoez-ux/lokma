@@ -2748,6 +2748,48 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildScannedTableBanner(),
+                // 🟡 Persistent min order banner for delivery mode
+                if (!_isPickUp && !_isDineIn) ...[
+                  () {
+                    final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
+                    if (grandTotal < minOrder) {
+                      final isDark = Theme.of(context).brightness == Brightness.dark;
+                      return Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: isDark ? const Color(0xFFFFD54F).withValues(alpha: 0.15) : const Color(0xFFFFF3CD),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isDark ? const Color(0xFFFFD54F).withValues(alpha: 0.3) : const Color(0xFFFFE082),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.info_outline_rounded,
+                              color: isDark ? const Color(0xFFFFD54F) : const Color(0xFFF9A825),
+                              size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'marketplace.min_order_for_courier'.tr(namedArgs: {
+                                'amount': minOrder.toStringAsFixed(0),
+                                'currency': CurrencyUtils.getCurrencySymbol(),
+                              }),
+                              style: TextStyle(
+                                color: isDark ? const Color(0xFFFFD54F) : const Color(0xFF5D4037),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }(),
+                ],
                 _buildLieferandoCheckoutButton(grandTotal),
               ],
             ),
@@ -3312,7 +3354,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       children: [
         // ── Spacious row with image: Lieferando-inspired ──
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -3322,12 +3364,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   borderRadius: BorderRadius.circular(10),
                   child: CachedNetworkImage(
                     imageUrl: imageUrl,
-                    width: 64,
-                    height: 64,
+                    width: 52,
+                    height: 52,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
-                      width: 64,
-                      height: 64,
+                      width: 52,
+                      height: 52,
                       decoration: BoxDecoration(
                         color: isDark ? Colors.grey[800] : Colors.grey[100],
                         borderRadius: BorderRadius.circular(10),
@@ -3335,8 +3377,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       child: Icon(Icons.restaurant, color: Colors.grey[400], size: 24),
                     ),
                     errorWidget: (_, __, ___) => Container(
-                      width: 64,
-                      height: 64,
+                      width: 52,
+                      height: 52,
                       decoration: BoxDecoration(
                         color: isDark ? Colors.grey[800] : Colors.grey[100],
                         borderRadius: BorderRadius.circular(10),
@@ -3346,7 +3388,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   ),
                 ),
               if (imageUrl != null && imageUrl.isNotEmpty)
-                const SizedBox(width: 14),
+                const SizedBox(width: 10),
               
               // Product Info + Controls
               Expanded(
@@ -3424,7 +3466,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
                     // Row 2: Note button (left) + Delete + Quantity pill (right)
                     Row(
                       children: [
@@ -3514,7 +3556,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   }
                                 },
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   child: Text(
                                     '–',
                                     style: TextStyle(
@@ -3546,7 +3588,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                                   );
                                 },
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                   child: Text(
                                     '+',
                                     style: TextStyle(
@@ -4602,13 +4644,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
         if (!_isPickUp && !_isDineIn) {
           final minOrder = (_butcherData?['minOrderAmount'] as num?)?.toDouble() ?? 10.0;
           if (total < minOrder) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('marketplace.min_order_for_courier'.tr(namedArgs: {'amount': minOrder.toStringAsFixed(0), 'currency': CurrencyUtils.getCurrencySymbol()})),
-                backgroundColor: Colors.amber,
-              ),
-            );
-            return;
+            return; // Banner is shown persistently above the button
           }
         }
         _showCheckoutSheet(total);
@@ -8718,11 +8754,11 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                     padding: const EdgeInsets.symmetric(vertical: 8),
                                     decoration: BoxDecoration(
                                       color: parent._tipAmount == tipVal
-                                          ? lokmaPink
+                                          ? Colors.blue[700]
                                           : (isDark ? Colors.grey[800] : sectionDividerColor),
                                       borderRadius: BorderRadius.circular(24),
                                       border: Border.all(
-                                        color: parent._tipAmount == tipVal ? lokmaPink : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
+                                        color: parent._tipAmount == tipVal ? Colors.blue[700]! : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
                                         width: 1,
                                       ),
                                     ),
@@ -8795,12 +8831,12 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                                   padding: const EdgeInsets.symmetric(vertical: 8),
                                   decoration: BoxDecoration(
                                     color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
-                                        ? lokmaPink
+                                        ? Colors.blue[700]
                                         : (isDark ? Colors.grey[800] : sectionDividerColor),
                                     borderRadius: BorderRadius.circular(24),
                                     border: Border.all(
                                       color: parent._tipAmount > 0 && parent._tipAmount != 1.50 && parent._tipAmount != 2.50 && parent._tipAmount != 3.50
-                                          ? lokmaPink : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
+                                          ? Colors.blue[700]! : (isDark ? Colors.grey[700]! : const Color(0xFFE8E0D0)),
                                       width: 1,
                                     ),
                                   ),
@@ -9093,12 +9129,13 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
 
                       if (options.isEmpty) return const SizedBox.shrink();
 
-                      // Auto-select first option if nothing is selected or selected is not available
+                      // Only reset if the currently selected method is no longer available
+                      // Do NOT auto-select when null — user must explicitly choose
                       final availableKeys = options.map((o) => o.key).toSet();
-                      if (parent._paymentMethod == null || !availableKeys.contains(parent._paymentMethod)) {
+                      if (parent._paymentMethod != null && !availableKeys.contains(parent._paymentMethod)) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           if (mounted) {
-                            setState(() => parent._paymentMethod = options.first.key);
+                            setState(() => parent._paymentMethod = null);
                           }
                         });
                       }
@@ -9196,12 +9233,12 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                           Text('checkout.legal_disclaimer_prefix'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
                           GestureDetector(
                             onTap: () => _showLegalSheet(context, 'checkout.privacy_policy_title'.tr(), 'checkout.privacy_policy_content'.tr()),
-                            child: Text('checkout.legal_disclaimer_privacy'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 10, height: 1.4, decoration: TextDecoration.underline)),
+                            child: Text('checkout.legal_disclaimer_privacy'.tr(), style: TextStyle(color: Colors.grey[800], fontSize: 10, height: 1.4, fontWeight: FontWeight.w500)),
                           ),
                           Text('checkout.legal_disclaimer_and'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
                           GestureDetector(
                             onTap: () => _showLegalSheet(context, 'checkout.terms_title'.tr(), 'checkout.terms_content'.tr()),
-                            child: Text('checkout.legal_disclaimer_terms'.tr(), style: TextStyle(color: Colors.grey[600], fontSize: 10, height: 1.4, decoration: TextDecoration.underline)),
+                            child: Text('checkout.legal_disclaimer_terms'.tr(), style: TextStyle(color: Colors.grey[800], fontSize: 10, height: 1.4, fontWeight: FontWeight.w500)),
                           ),
                           Text('checkout.legal_disclaimer_suffix'.tr(), style: TextStyle(color: Colors.grey[500], fontSize: 10, height: 1.4)),
                         ],

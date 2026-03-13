@@ -640,6 +640,7 @@
     "supply_standards": "Tedarik Standartları",
     "production_standards": "Üretim Standartları",
     "business_hours": "Çalışma Saatleri",
+    "closing_soon": "Bugün {time} daha açık",
     "business_hours_cannot_be_displayed": "Çalışma saatleri görüntülenemiyor.",
     "loading_business_hours": "Çalışma saatleri bilgisi yükleniyor...",
     "business_hours_not_found": "Çalışma saatleri bilgisi bulunamadı.",
@@ -774,6 +775,7 @@
     "business_type_section": "İşletme Türü",
     "filter_all": "Tümü",
     "business_count": "{} işletme",
+    "order_at_partners": "{count} İş Yerinde Sipariş Ver",
     "quick_filters_section": "Hızlı Filtreler",
     "show_businesses": "{} İşletme Göster",
     "filter_cancel": "İptal",
@@ -881,7 +883,7 @@
     "category_all": "Tümü",
     "all_products": "Tüm Ürünler",
     "reviews_count": "{count} Değerlendirme",
-    "business_info": "İşletme Bilgileri",
+    "business_info": "İşletme Hakkında",
     "favorite_butchers": "Favori Kasaplarım",
     "all_butchers": "Tüm Kasaplar",
     "sponsored": "Sponsorlu",
@@ -1655,5 +1657,19 @@
     "today": "Bugün",
     "time_label": "Saat",
     "optional": "Opsiyonel"
+  },
+  "order_confirmation": {
+    "title": "Sipariş Alındı!",
+    "preparing_by": "Siparişiniz {businessName} tarafından hazırlanacak.",
+    "order_forwarded": "Siparişiniz iletildi.",
+    "served_at_table": "Masanızda servis edilecek",
+    "estimated_time": "Tahmini süre: 30-45 dk",
+    "dine_in_hint": "Siparişiniz mutfağa iletildi. Masanızda bekleyiniz.",
+    "pickup_hint": "Hazır olduğunda bildirim alacaksınız.",
+    "delivery_hint": "Kuryenizi canlı takip edebilirsiniz.",
+    "notification_reminder": "Bildirimleri açmayı unutmayın!",
+    "ok_button": "Tamam",
+    "today": "Bugün",
+    "tomorrow": "Yarın"
   }
 }

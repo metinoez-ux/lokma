@@ -9,6 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'legal_report_sheet.dart';
 import 'package:lokma_app/services/business_deals_service.dart';
 
@@ -1331,14 +1333,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
           ];
           
           if (hasDelivery) {
-            tabs.add(Tab(text: 'marketplace.hours_delivery'.tr()));
+            tabs.add(Tab(
+              icon: const Icon(Icons.delivery_dining, size: 18),
+              text: 'marketplace.hours_delivery'.tr(),
+            ));
             tabViews.add(_buildServiceHoursTab(
               deliveryStart, deliveryEnd,
               isDark, textColor, subtitleColor, accent,
             ));
           }
           if (hasPickup) {
-            tabs.add(Tab(text: 'marketplace.hours_pickup'.tr()));
+            tabs.add(Tab(
+              icon: const Icon(Icons.store, size: 18),
+              text: 'marketplace.hours_pickup'.tr(),
+            ));
             tabViews.add(_buildServiceHoursTab(
               pickupStart, pickupEnd,
               isDark, textColor, subtitleColor, accent,
@@ -1371,11 +1379,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         // ═══ Business Name ═══
                         Text(
                           _butcherDoc?['companyName'] ?? 'marketplace.business_info'.tr(),
-                          style: TextStyle(color: textColor, fontSize: 22, fontWeight: FontWeight.w600),
+                          style: TextStyle(color: textColor, fontSize: 22, fontWeight: FontWeight.w200),
                         ),
                         const SizedBox(height: 6),
                         
-                        // Brand Badge
+                        // Brand Badge — pill style matching business card
                         if (_butcherDoc?['brandLabelActive'] == true)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16),
@@ -1384,18 +1392,30 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFFB335B),
-                                    borderRadius: BorderRadius.circular(6),
+                                    color: const Color(0xFFA01E22),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.2),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(_getBrandLabel(_butcherDoc?['brand']),
-                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-                                      const SizedBox(width: 4),
-                                      const Icon(Icons.info_outline, color: Colors.white70, size: 13),
+                                      const Icon(Icons.verified, color: Colors.white, size: 14),
+                                      const SizedBox(width: 5),
+                                      Text(_getBrandLabel(_butcherDoc?['brand']).toUpperCase(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 1.2,
+                                        )),
                                     ],
                                   ),
                                 ),
@@ -1409,78 +1429,125 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         // ═══ MAP SECTION — "So findest du uns" ═══
                         if (hasAddress) ...[
                           Text('marketplace.find_us'.tr(),
-                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600)),
+                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w200)),
                           const SizedBox(height: 10),
-                          GestureDetector(
-                            onTap: () {
-                              final query = Uri.encodeComponent('$street, $postalCode $city');
-                              launchUrl(Uri.parse('https://maps.apple.com/?q=$query'));
-                            },
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(14),
-                              child: SizedBox(
-                                height: 160,
-                                width: double.infinity,
-                                child: Stack(
-                                  children: [
-                                    // OSM Static Map Image
-                                    Image.network(
-                                      'https://staticmap.openstreetmap.de/staticmap.php?center=$street,$postalCode+$city&zoom=15&size=600x300&maptype=mapnik&markers=$street,$postalCode+$city,red-pushpin',
-                                      width: double.infinity,
+                          Builder(
+                            builder: (context) {
+                              // Extract lat/lng from business document
+                              double? lat = (address is Map && address['lat'] is num)
+                                  ? (address['lat'] as num).toDouble() : null;
+                              double? lng = (address is Map && address['lng'] is num)
+                                  ? (address['lng'] as num).toDouble() : null;
+                              // Fallback to top-level
+                              lat ??= (data?['lat'] is num) ? (data!['lat'] as num).toDouble() : null;
+                              lng ??= (data?['lng'] is num) ? (data!['lng'] as num).toDouble() : null;
+                              // Fallback to placeDetails
+                              lat ??= (data?['placeDetails']?['lat'] is num)
+                                  ? (data!['placeDetails']['lat'] as num).toDouble() : null;
+                              lng ??= (data?['placeDetails']?['lng'] is num)
+                                  ? (data!['placeDetails']['lng'] as num).toDouble() : null;
+
+                              if (lat != null && lng != null) {
+                                final center = LatLng(lat, lng);
+                                return GestureDetector(
+                                  onTap: () {
+                                    final query = Uri.encodeComponent('$street, $postalCode $city');
+                                    launchUrl(Uri.parse('https://maps.apple.com/?q=$query'));
+                                  },
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: SizedBox(
                                       height: 160,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
-                                        color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
-                                        child: Center(
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.map_outlined, color: subtitleColor, size: 36),
-                                              const SizedBox(height: 6),
-                                              Text('$postalCode $city',
-                                                style: TextStyle(color: subtitleColor, fontSize: 13)),
-                                            ],
+                                      width: double.infinity,
+                                      child: Stack(
+                                        children: [
+                                          AbsorbPointer(
+                                            child: FlutterMap(
+                                              options: MapOptions(
+                                                initialCenter: center,
+                                                initialZoom: 17,
+                                                interactionOptions: const InteractionOptions(
+                                                  flags: InteractiveFlag.none,
+                                                ),
+                                              ),
+                                              children: [
+                                                TileLayer(
+                                                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                                  userAgentPackageName: 'shop.lokma.app',
+                                                ),
+                                                MarkerLayer(
+                                                  markers: [
+                                                    Marker(
+                                                      point: center,
+                                                      width: 40,
+                                                      height: 40,
+                                                      child: const Icon(
+                                                        Icons.location_on,
+                                                        color: Colors.red,
+                                                        size: 40,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                        ),
+                                          // "Open in Maps" indicator
+                                          Positioned(
+                                            bottom: 8, right: 10,
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withValues(alpha: 0.9),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Icon(Icons.open_in_new, size: 12, color: Colors.black87),
+                                                  const SizedBox(width: 4),
+                                                  Text('marketplace.open_maps'.tr(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.black87)),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    // Overlay gradient for readability
-                                    Positioned(
-                                      bottom: 0, left: 0, right: 0,
-                                      child: Container(
-                                        height: 40,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topCenter,
-                                            end: Alignment.bottomCenter,
-                                            colors: [Colors.transparent, Colors.black.withValues(alpha: 0.4)],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    // "Open in Maps" indicator
-                                    Positioned(
-                                      bottom: 8, right: 10,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.9),
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
+                                  ),
+                                );
+                              } else {
+                                // Fallback: show placeholder with address
+                                return GestureDetector(
+                                  onTap: () {
+                                    final query = Uri.encodeComponent('$street, $postalCode $city');
+                                    launchUrl(Uri.parse('https://maps.apple.com/?q=$query'));
+                                  },
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(14),
+                                    child: Container(
+                                      height: 160,
+                                      width: double.infinity,
+                                      color: isDark ? const Color(0xFF2A2A2A) : Colors.grey.shade100,
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
-                                            Icon(Icons.open_in_new, size: 12, color: Colors.black87),
-                                            SizedBox(width: 4),
-                                            Text('marketplace.open_maps'.tr(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black87)),
+                                            Icon(Icons.map_outlined, color: subtitleColor, size: 36),
+                                            const SizedBox(height: 6),
+                                            Text('$postalCode $city',
+                                              style: TextStyle(color: subtitleColor, fontSize: 13)),
+                                            const SizedBox(height: 4),
+                                            Text('marketplace.open_maps'.tr(),
+                                              style: TextStyle(color: Colors.blue, fontSize: 12)),
                                           ],
                                         ),
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                                  ),
+                                );
+                              }
+                            },
                           ),
                           const SizedBox(height: 14),
                         ],
@@ -1497,24 +1564,15 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 40, height: 40,
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Icon(Icons.location_on, color: Colors.red, size: 22),
-                                ),
-                                const SizedBox(width: 14),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text('common.address'.tr(),
-                                        style: TextStyle(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w400)),
+                                        style: TextStyle(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w100)),
                                       const SizedBox(height: 3),
                                       Text(fullAddress,
-                                        style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w400, height: 1.4)),
+                                        style: TextStyle(color: textColor, fontSize: 15, fontWeight: FontWeight.w100, height: 1.4)),
                                     ],
                                   ),
                                 ),
@@ -1527,51 +1585,51 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         
                         Divider(color: dividerColor, height: 1),
                         
-                        // ═══ PHONE ROW — Lieferando style ═══
-                        InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: hasPhone ? _callStore : null,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 40, height: 40,
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(12),
+                        // ═══ PHONE ROW — only show if phone exists ═══
+                        if (hasPhone) ...[
+                          InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: _callStore,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 40, height: 40,
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(Icons.phone, color: Colors.blue, size: 20),
                                   ),
-                                  child: const Icon(Icons.phone, color: Colors.blue, size: 20),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('marketplace.phone_label'.tr(),
-                                        style: TextStyle(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w400)),
-                                      const SizedBox(height: 3),
-                                      Text(hasPhone ? phone : 'marketplace.not_specified'.tr(),
-                                        style: TextStyle(
-                                          color: hasPhone ? Colors.blue : subtitleColor,
-                                          fontSize: 15, fontWeight: FontWeight.w400,
-                                        )),
-                                    ],
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('marketplace.phone_label'.tr(),
+                                          style: TextStyle(color: subtitleColor, fontSize: 13, fontWeight: FontWeight.w100)),
+                                        const SizedBox(height: 3),
+                                        Text(phone,
+                                          style: TextStyle(
+                                            color: Colors.blue,
+                                            fontSize: 15, fontWeight: FontWeight.w100,
+                                          )),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                if (hasPhone)
                                   Icon(Icons.arrow_forward_ios, color: subtitleColor, size: 14),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        
-                        const SizedBox(height: 16),
+                          const SizedBox(height: 16),
+                        ],
                         
                         // ═══ KÜCHE (CUISINE) SECTION ═══
                         if (cuisineType.trim().isNotEmpty) ...[
                           Text('marketplace.cuisine'.tr(),
-                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600)),
+                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w200)),
                           const SizedBox(height: 10),
                           Wrap(
                             spacing: 8,
@@ -1584,7 +1642,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 border: Border.all(color: isDark ? Colors.white12 : Colors.grey.shade300, width: 0.5),
                               ),
                               child: Text(tag,
-                                style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.w400)),
+                                style: TextStyle(color: textColor, fontSize: 13, fontWeight: FontWeight.w100)),
                             )).toList(),
                           ),
                           const SizedBox(height: 20),
@@ -1594,7 +1652,26 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         
                         // ═══ BUSINESS HOURS ═══
                         Text('marketplace.business_hours'.tr(),
-                          style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600)),
+                          style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w200)),
+                        // ═══ CLOSING SOON INDICATOR ═══
+                        Builder(builder: (context) {
+                          final closingSoonText = _getClosingSoonText();
+                          if (closingSoonText == null) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                closingSoonText,
+                                style: const TextStyle(color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          );
+                        }),
                         const SizedBox(height: 12),
                         
                         // Show underline tab bar only if there are multiple tabs
@@ -1606,8 +1683,8 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                             indicatorWeight: 2.5,
                             labelColor: textColor,
                             unselectedLabelColor: subtitleColor,
-                            labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                            unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+                            labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w200),
+                            unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w100),
                             labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                             tabs: tabs,
                           ),
@@ -1631,7 +1708,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           Divider(color: dividerColor, height: 1),
                           const SizedBox(height: 16),
                           Text('marketplace.impressum'.tr(),
-                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600)),
+                            style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w200)),
                           const SizedBox(height: 12),
                           _buildImpressumSection(data, textColor, subtitleColor),
                         ],
@@ -1727,8 +1804,100 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
   Widget _impressumRow(String text, Color color) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w400, height: 1.4)),
+      child: Text(text, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w100, height: 1.4)),
     );
+  }
+
+  // ═══ CLOSING SOON HELPER ═══
+  String? _getClosingSoonText() {
+    try {
+      if (_butcherDoc == null) return null;
+      final rawData = _butcherDoc!.data();
+      if (rawData == null) return null;
+      final data = rawData as Map<String, dynamic>;
+      final hours = data['openingHours'];
+      if (hours == null || hours.toString().trim().isEmpty) return null;
+
+      List<String> lines = [];
+      if (hours is String) {
+        lines = hours.split(RegExp(r'\r?\n'));
+      } else if (hours is List) {
+        lines = hours.map((e) => e.toString()).toList();
+      } else {
+        return null;
+      }
+      lines = lines.where((l) => l.trim().isNotEmpty).toList();
+
+      // Map English day names to Turkish (data is stored in Turkish)
+      final enToTr = {
+        'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
+        'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar'
+      };
+      final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+      final now = DateTime.now();
+      final todayIndex = now.weekday - 1;
+      final todayDayName = dayNamesTr[todayIndex];
+
+      // Find today's line
+      String? todayLine;
+      for (var line in lines) {
+        String clean = line.trim();
+        for (var entry in enToTr.entries) {
+          if (clean.startsWith(entry.key)) {
+            clean = clean.replaceFirst(entry.key, entry.value);
+            break;
+          }
+        }
+        if (clean.startsWith(todayDayName)) {
+          todayLine = clean;
+          break;
+        }
+      }
+      if (todayLine == null) return null;
+
+      // Extract closing time (last HH:MM pattern in the line)
+      final timeRegex = RegExp(r'(\d{1,2}):(\d{2})');
+      final matches = timeRegex.allMatches(todayLine).toList();
+      if (matches.isEmpty) return null;
+
+      // Handle AM/PM conversion if present
+      String processedLine = todayLine.replaceAllMapped(
+        RegExp(r'(\d{1,2})(:\d{2})?\s*([AP]M)', caseSensitive: false),
+        (match) {
+          int h = int.parse(match.group(1)!);
+          int m = match.group(2) != null ? int.parse(match.group(2)!.substring(1)) : 0;
+          String period = match.group(3)!.toUpperCase();
+          if (period == 'PM' && h < 12) h += 12;
+          if (period == 'AM' && h == 12) h = 0;
+          return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+        },
+      );
+
+      final processedMatches = timeRegex.allMatches(processedLine).toList();
+      if (processedMatches.isEmpty) return null;
+
+      // Last time is the closing time
+      final lastMatch = processedMatches.last;
+      final closeHour = int.parse(lastMatch.group(1)!);
+      final closeMinute = int.parse(lastMatch.group(2)!);
+
+      final closeTime = DateTime(now.year, now.month, now.day, closeHour, closeMinute);
+      final diff = closeTime.difference(now);
+      final remainingMinutes = diff.inMinutes;
+
+      // Only show if within 2 hours (120 minutes) and still open
+      if (remainingMinutes <= 0 || remainingMinutes > 120) return null;
+
+      final hrs = remainingMinutes ~/ 60;
+      final mins = remainingMinutes % 60;
+      final timeStr = hrs > 0
+          ? '$hrs:${mins.toString().padLeft(2, '0')}'
+          : '${mins}min';
+
+      return 'marketplace.closing_soon'.tr(namedArgs: {'time': timeStr});
+    } catch (e) {
+      return null;
+    }
   }
 
   // ═══ GENERAL HOURS TAB — day-by-day from openingHours ═══
@@ -1844,7 +2013,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             Icon(Icons.schedule, color: subtitleColor, size: 40),
             const SizedBox(height: 12),
             Text('marketplace.same_as_general'.tr(),
-              style: TextStyle(color: subtitleColor, fontSize: 16, fontWeight: FontWeight.w500)),
+              style: TextStyle(color: subtitleColor, fontSize: 16, fontWeight: FontWeight.w300)),
           ],
         ),
       );
@@ -1876,23 +2045,18 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       margin: const EdgeInsets.only(bottom: 2),
-      decoration: BoxDecoration(
-        color: isToday ? accent.withValues(alpha: 0.08) : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-        border: isToday ? Border.all(color: accent.withValues(alpha: 0.2), width: 1) : null,
-      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(dayName, style: TextStyle(
             color: dayColor,
             fontSize: 15,
-            fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+            fontWeight: isToday ? FontWeight.w300 : FontWeight.w100,
           )),
           Text(hours, style: TextStyle(
             color: hoursColor,
             fontSize: 15,
-            fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+            fontWeight: isToday ? FontWeight.w300 : FontWeight.w100,
           )),
         ],
       ),
@@ -2046,13 +2210,13 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                         child: Container(
                           height: 44,
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF2A2A2A) : Colors.grey[100],
+                            color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF5F0E8),
                             borderRadius: BorderRadius.circular(22),
                           ),
                           child: Row(
                             children: [
                               const SizedBox(width: 12),
-                              Icon(Icons.search, color: accent, size: 22),
+                              Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 22),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
@@ -2100,17 +2264,11 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                   if (!_showSearchBar)
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
-                      child: Material(
-                        color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
-                        shape: const CircleBorder(),
-                        elevation: 2,
-                        child: InkWell(
-                          customBorder: const CircleBorder(),
-                          onTap: () => _showMenuSearchOverlay(),
-                          child: SizedBox(
-                            width: 40, height: 40,
-                            child: Icon(Icons.search, color: accent, size: 20),
-                          ),
+                      child: GestureDetector(
+                        onTap: () => _showMenuSearchOverlay(),
+                        child: SizedBox(
+                          width: 40, height: 40,
+                          child: Icon(Icons.search, color: isDark ? Colors.grey[400] : Colors.grey[600], size: 22),
                         ),
                       ),
                     )
@@ -2638,7 +2796,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                 .where((ci) => ci.product.category == catName).fold<int>(0, (sum, ci) => sum + ci.quantity.toInt());
                             return Container(
                               width: double.infinity,
-                              color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFE2E2E2),
+                              color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF2EEE9),
                               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                               child: Row(
                                 children: [
@@ -3470,7 +3628,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                     decoration: BoxDecoration(
-                                      color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.grey[50],
+                                      color: isDark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFF5F0E8),
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
                                         color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[200]!,
@@ -4248,7 +4406,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                   child: Container(
                     height: 48,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[100],
+                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F0E8),
                       borderRadius: BorderRadius.circular(24),
                     ),
                     child: Row(
@@ -4302,7 +4460,7 @@ class _MenuSearchPageState extends State<_MenuSearchPage> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E1E1E) : Colors.grey[200],
+                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F0E8),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(Icons.close, color: textPrimary, size: 20),

@@ -640,6 +640,7 @@
     "supply_standards": "Lieferstandards",
     "production_standards": "Produktionsstandards",
     "business_hours": "Geschäftszeiten",
+    "closing_soon": "Heute noch {time} Std. geöffnet",
     "business_hours_cannot_be_displayed": "Geschäftszeiten können nicht angezeigt werden.",
     "loading_business_hours": "Geschäftszeiten werden geladen...",
     "business_hours_not_found": "Informationen zu Geschäftszeiten nicht gefunden.",
@@ -774,6 +775,7 @@
     "business_type_section": "Geschäftstyp",
     "filter_all": "Alle",
     "business_count": "{} Geschäfte",
+    "order_at_partners": "Bei {count} Partnern bestellen",
     "quick_filters_section": "Schnellfilter",
     "show_businesses": "{} Geschäfte anzeigen",
     "filter_cancel": "Abbrechen",
@@ -881,7 +883,7 @@
     "category_all": "Alle",
     "all_products": "Alle Produkte",
     "reviews_count": "{count} Bewertungen",
-    "business_info": "Geschäftsinformationen",
+    "business_info": "Geschäftsinfos",
     "favorite_butchers": "Meine Lieblingsmetzger",
     "all_butchers": "Alle Metzger",
     "sponsored": "Gesponsert",
@@ -1658,5 +1660,19 @@
     "min_order_required": "Mindestbestellwert: {amount}€",
     "not_valid_for_business": "Dieser Gutschein ist für dieses Geschäft nicht gültig",
     "already_used": "Sie haben diesen Gutschein bereits verwendet"
+  },
+  "order_confirmation": {
+    "title": "Bestellung erhalten!",
+    "preparing_by": "Ihre Bestellung wird von {businessName} zubereitet.",
+    "order_forwarded": "Ihre Bestellung wurde weitergeleitet.",
+    "served_at_table": "Wird an Ihrem Tisch serviert",
+    "estimated_time": "Voraussichtliche Zeit: 30-45 Min.",
+    "dine_in_hint": "Ihre Bestellung wurde an die Küche weitergeleitet. Bitte warten Sie an Ihrem Tisch.",
+    "pickup_hint": "Sie werden benachrichtigt, sobald Ihre Bestellung fertig ist.",
+    "delivery_hint": "Sie können Ihren Kurier live verfolgen.",
+    "notification_reminder": "Vergessen Sie nicht, Benachrichtigungen zu aktivieren!",
+    "ok_button": "OK",
+    "today": "Heute",
+    "tomorrow": "Morgen"
   }
 }

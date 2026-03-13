@@ -53,11 +53,11 @@ class _ThreeDimensionalPillTabBarState extends State<ThreeDimensionalPillTabBar>
           : 0;
 
   // Compact vs normal dimensions
-  double get _height => widget.compact ? 36 : 48;
+  double get _height => widget.compact ? 36 : 42;
   double get _borderRadius => _height / 2;
   double get _pillRadius => (_height - 6) / 2;
-  double get _iconSize => widget.compact ? 13 : 17;
-  double get _fontSize => widget.compact ? 12 : 14;
+  double get _iconSize => widget.compact ? 13 : 15;
+  double get _fontSize => widget.compact ? 12 : 13;
   EdgeInsets get _margin => widget.margin ?? (widget.compact
       ? const EdgeInsets.symmetric(horizontal: 4, vertical: 4)
       : const EdgeInsets.symmetric(horizontal: 16, vertical: 6));

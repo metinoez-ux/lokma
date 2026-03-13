@@ -722,6 +722,23 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
                 ),
               ],
 
+            // "Bei X Partnern bestellen" header — Lieferando style
+            if (!_isLoading && _filteredBusinesses.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                  child: Text(
+                    tr('marketplace.order_at_partners', namedArgs: {'count': '${_filteredBusinesses.length}'}),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                ),
+              ),
+
             // Restaurant List
             SliverPadding(
               padding: const EdgeInsets.only(left: 16, right: 16, bottom: 120),
@@ -1852,11 +1869,19 @@ class _RestoranScreenState extends ConsumerState<RestoranScreen> {
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.06),
+            width: 0.5,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black.withValues(alpha: 0.3)
+                  : Colors.black.withValues(alpha: 0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
