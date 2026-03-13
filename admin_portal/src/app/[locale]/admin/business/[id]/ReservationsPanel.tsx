@@ -185,7 +185,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
             );
             setShowCardModal(null);
             const cardStr = cardNumbers.length > 0 ? ` (Masa ${cardNumbers.join(", ")})` : "";
-            setNotification({ msg: `✅ Rezervasyon onaylandı${cardStr}`, type: "success" });
+            setNotification({ msg: `Rezervasyon onaylandı${cardStr}`, type: "success" });
             setTimeout(() => setNotification(null), 3000);
         } catch (err) {
             console.error("Error confirming reservation:", err);
@@ -218,7 +218,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
             );
 
             setNotification({
-                msg: "❌ Rezervasyon reddedildi",
+                msg: "Rezervasyon reddedildi",
                 type: "success",
             });
             setTimeout(() => setNotification(null), 3000);
@@ -239,10 +239,10 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
             cancelled: "bg-gray-500/20 text-gray-400 border-gray-500/30",
         };
         const labels: Record<string, string> = {
-            pending: "⏳ Bekliyor",
+            pending: t('bekleyen'),
             confirmed: t('onaylandi'),
-            rejected: "❌ Reddedildi",
-            cancelled: "🚫 İptal",
+            rejected: "Reddedildi",
+            cancelled: "İptal",
         };
         return (
             <span className={`text-xs px-2 py-1 rounded-full border ${styles[status] || styles.pending}`}>
@@ -284,7 +284,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                     onClick={fetchReservations}
                     className="px-3 py-1.5 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 text-sm transition"
                 >
-                    🔄 Yenile
+                    Aktualisieren
                 </button>
             </div>
 
@@ -320,17 +320,17 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                         <button
                             key={s}
                             onClick={() => setFilter(s)}
-                            className={`px-3 py-1 text-xs rounded-md transition ${filter === s ? "bg-amber-600 text-white" : "text-gray-400 hover:text-white"
+                            className={`px-3 py-1 text-xs rounded-md transition ${filter === s ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"
                                 }`}
                         >
                             {s === "pending"
-                                ? `⏳ Bekliyor (${reservations.filter((r) => r.status === "pending").length})`
+                                ? `${t('bekleyen')} (${reservations.filter((r) => r.status === "pending").length})`
                                 : s === "confirmed"
                                     ? t('onayli')
                                     : s === "rejected"
-                                        ? "❌ Red"
+                                        ? "Red"
                                         : s === "cancelled"
-                                            ? "🚫 İptal"
+                                            ? "İptal"
                                             : t('tumu')}
                         </button>
                     ))}
@@ -344,7 +344,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                 </div>
             ) : filtered.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                    <p className="text-4xl mb-2">🍽️</p>
+                    <p className="text-4xl mb-2 opacity-40">—</p>
                     <p className="font-medium">{t('rezervasyon_bulunamadi')}</p>
                     <p className="text-sm mt-1">{t('secili_filtreler_icin_sonuc_yok')}</p>
                 </div>
@@ -386,13 +386,13 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                             </div>
                                             <div>
                                                 <p className="text-gray-500 text-xs">{t('kisi')}</p>
-                                                <p className="text-white font-medium text-lg">👥 {res.partySize}</p>
+                                                <p className="text-white font-medium text-lg">{res.partySize}</p>
                                             </div>
                                         </div>
 
                                         {res.notes && (
                                             <div className="mt-2 bg-gray-700/50 rounded-lg px-3 py-2">
-                                                <p className="text-xs text-gray-400">📝 Not:</p>
+                                                <p className="text-xs text-gray-400">Not:</p>
                                                 <p className="text-sm text-gray-300">{res.notes}</p>
                                             </div>
                                         )}
@@ -406,7 +406,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                         {/* Table Card Numbers */}
                                         {res.status === "confirmed" && res.tableCardNumbers.length > 0 && (
                                             <div className="mt-2 flex items-center gap-2">
-                                                <span className="text-gray-500 text-xs">🃏 Masa No:</span>
+                                                <span className="text-gray-500 text-xs">Masa No:</span>
                                                 {res.tableCardNumbers.map((n) => (
                                                     <span key={n} className="bg-green-600 text-white px-2 py-0.5 rounded text-sm font-bold">
                                                         {n}
@@ -431,7 +431,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                                                 disabled={actionLoading === res.id}
                                                 className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition disabled:opacity-50"
                                             >
-                                                {actionLoading === res.id ? "..." : "❌ Reddet"}
+                                                {actionLoading === res.id ? "..." : "Reddet"}
                                             </button>
                                         </div>
                                     )}
@@ -512,7 +512,7 @@ const [reservations, setReservations] = useState<Reservation[]>([]);
                             >
                                 {selectedCards.size === 0
                                     ? t('numara_secin')
-                                    : `✅ Onayla (${selectedCards.size} masa)`}
+                                    : `Onayla (${selectedCards.size} masa)`}
                             </button>
                         </div>
                     </div>

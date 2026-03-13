@@ -402,6 +402,7 @@ export default function BusinessDetailsPage() {
     accountBalance: 0,
     notes: "",
     supportsDelivery: false,
+    pickupEnabled: true,                // Gel-Al fonksiyonu açık mı?
     deliveryPostalCode: "",
     deliveryRadius: 5,
     minDeliveryOrder: 0,
@@ -694,6 +695,7 @@ export default function BusinessDetailsPage() {
           accountBalance: d.accountBalance || 0,
           notes: d.notes || "",
           supportsDelivery: d.supportsDelivery || false,
+          pickupEnabled: d.pickupEnabled !== false,
           deliveryPostalCode: d.deliveryPostalCode || "",
           deliveryRadius: d.deliveryRadius || 5,
           minDeliveryOrder: d.minDeliveryOrder || 0,
@@ -2019,6 +2021,7 @@ export default function BusinessDetailsPage() {
         accountBalance: Number(formData.accountBalance) || 0,
         notes: formData.notes || "",
         supportsDelivery: formData.supportsDelivery || false,
+        pickupEnabled: formData.pickupEnabled !== false,
         rating: formData.rating || 0,
         reviewCount: formData.reviewCount || 0,
         reviews: Array.isArray(formData.reviews) ? formData.reviews : [], // Ensure not undefined
@@ -3719,26 +3722,34 @@ export default function BusinessDetailsPage() {
                             <div>
                               <h4 className="text-white font-medium mb-4">{t('calismaSaatleri3')}</h4>
                               <div className="space-y-2">
-                                {[
-                                  { tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" },
-                                ].map((dayObj) => {
-                                  const currentLine = formData.openingHours?.split("\n").find((l) => { return l.startsWith(dayObj.tr + ":") || l.startsWith(dayObj.tr + " ") || l.startsWith(dayObj.en + ":") || l.startsWith(dayObj.en + " "); }) || "";
-                                  const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed");
-                                  let startTime = ""; let endTime = "";
-                                  if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
-                                  const updateHours = (newStart: string, newEnd: string, newClosed: boolean) => {
-                                    const newLines = ["Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi", "Pazar"].map((d) => {
-                                      const dObj = [{ tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" }].find((o) => o.tr === d);
-                                      const existingLine = formData.openingHours?.split("\n").find((l) => { const dayTR = dObj!.tr; const dayEN = dObj!.en; return l.startsWith(dayTR + ":") || l.startsWith(dayTR + " ") || l.startsWith(dayEN + ":") || l.startsWith(dayEN + " "); }) || "";
-                                      if (d === dayObj.tr) { if (newClosed) return `${d}${t('kapali2')}`; return `${d}: ${newStart} - ${newEnd}`; }
-                                      if (existingLine.startsWith(dObj!.en)) { const content = existingLine.split(": ").slice(1).join(": "); return `${d}: ${content}`; }
-                                      return existingLine || `${d}${t('kapali2')}`;
-                                    });
-                                    setFormData({ ...formData, openingHours: newLines.join("\n") });
-                                  };
+                                {(() => {
+                                  const DAY_DEFS = [
+                                    { display: t('pazartesi'), variants: ["Pazartesi", "Monday", "Montag", t('pazartesi')] },
+                                    { display: t('sali'), variants: ["Salı", "Salı", "Tuesday", "Dienstag", t('sali')] },
+                                    { display: t('carsamba'), variants: ["Çarşamba", "Çarşamba", "Wednesday", "Mittwoch", t('carsamba')] },
+                                    { display: t('persembe'), variants: ["Perşembe", "Perşembe", "Thursday", "Donnerstag", t('persembe')] },
+                                    { display: t('cuma'), variants: ["Cuma", "Friday", "Freitag", t('cuma')] },
+                                    { display: t('cumartesi'), variants: ["Cumartesi", "Saturday", "Samstag", t('cumartesi')] },
+                                    { display: t('pazar'), variants: ["Pazar", "Sunday", "Sonntag", t('pazar')] },
+                                  ];
+                                  const findLine = (data: string, variants: string[]) => data.split("\n").find((l) => variants.some(v => l.startsWith(v + ":") || l.startsWith(v + " "))) || "";
+                                  return DAY_DEFS.map((day, dayIndex) => {
+                                    const currentLine = findLine(formData.openingHours || "", day.variants);
+                                    const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed") || currentLine.toLowerCase().includes("geschlossen");
+                                    let startTime = ""; let endTime = "";
+                                    if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
+                                    const updateHours = (newStart: string, newEnd: string, newClosed: boolean) => {
+                                      const newLines = DAY_DEFS.map((dd, i) => {
+                                        if (i === dayIndex) { if (newClosed) return `${dd.display}${t('kapali2')}`; return `${dd.display}: ${newStart} - ${newEnd}`; }
+                                        const existingLine = findLine(formData.openingHours || "", dd.variants);
+                                        if (existingLine) { const content = existingLine.split(": ").slice(1).join(": "); return content ? `${dd.display}: ${content}` : `${dd.display}${t('kapali2')}`; }
+                                        return `${dd.display}${t('kapali2')}`;
+                                      });
+                                      setFormData({ ...formData, openingHours: newLines.join("\n") });
+                                    };
                                   return (
-                                    <div key={dayObj.tr} className="flex items-center gap-3">
-                                      <span className="w-24 text-sm text-gray-400 font-medium">{dayObj.tr}</span>
+                                    <div key={day.display} className="flex items-center gap-3">
+                                      <span className="w-24 text-sm text-gray-400 font-medium">{day.display}</span>
                                       <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
                                       <span className="text-gray-500 font-bold">–</span>
                                       <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
@@ -3749,7 +3760,8 @@ export default function BusinessDetailsPage() {
                                       </label>
                                     </div>
                                   );
-                                })}
+                                  });
+                                })()}
                               </div>
                             </div>
                           )}
@@ -3777,39 +3789,48 @@ export default function BusinessDetailsPage() {
                                 </div>
                               )}
                               <div className="space-y-2">
-                                {[
-                                  { tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" },
-                                ].map((dayObj) => {
-                                  const hoursData = formData.deliveryHours || formData.openingHours || "";
-                                  const currentLine = hoursData.split("\n").find((l) => { return l.startsWith(dayObj.tr + ":") || l.startsWith(dayObj.tr + " ") || l.startsWith(dayObj.en + ":") || l.startsWith(dayObj.en + " "); }) || "";
-                                  const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed");
-                                  let startTime = ""; let endTime = "";
-                                  if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
-                                  const updateDeliveryHours = (newStart: string, newEnd: string, newClosed: boolean) => {
-                                    const baseHours = formData.deliveryHours || formData.openingHours || "";
-                                    const newLines = ["Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi", "Pazar"].map((d) => {
-                                      const dObj = [{ tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" }].find((o) => o.tr === d);
-                                      const existingLine = baseHours.split("\n").find((l) => { const dayTR = dObj!.tr; const dayEN = dObj!.en; return l.startsWith(dayTR + ":") || l.startsWith(dayTR + " ") || l.startsWith(dayEN + ":") || l.startsWith(dayEN + " "); }) || "";
-                                      if (d === dayObj.tr) { if (newClosed) return `${d}${t('kapali2')}`; return `${d}: ${newStart} - ${newEnd}`; }
-                                      if (existingLine.startsWith(dObj!.en)) { const content = existingLine.split(": ").slice(1).join(": "); return `${d}: ${content}`; }
-                                      return existingLine || `${d}${t('kapali2')}`;
-                                    });
-                                    setFormData({ ...formData, deliveryHours: newLines.join("\n") });
-                                  };
-                                  return (
-                                    <div key={dayObj.tr} className="flex items-center gap-3">
-                                      <span className="w-24 text-sm text-gray-400 font-medium">{dayObj.tr}</span>
-                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
-                                      <span className="text-gray-500 font-bold">–</span>
-                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
-                                      <label className="flex items-center cursor-pointer ml-auto relative">
-                                        <input type="checkbox" checked={isClosed} onChange={(e) => updateDeliveryHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
-                                        <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
-                                        <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
-                                      </label>
-                                    </div>
-                                  );
-                                })}
+                                {(() => {
+                                  const DAY_DEFS = [
+                                    { display: t('pazartesi'), variants: ["Pazartesi", "Monday", "Montag", t('pazartesi')] },
+                                    { display: t('sali'), variants: ["Salı", "Salı", "Tuesday", "Dienstag", t('sali')] },
+                                    { display: t('carsamba'), variants: ["Çarşamba", "Çarşamba", "Wednesday", "Mittwoch", t('carsamba')] },
+                                    { display: t('persembe'), variants: ["Perşembe", "Perşembe", "Thursday", "Donnerstag", t('persembe')] },
+                                    { display: t('cuma'), variants: ["Cuma", "Friday", "Freitag", t('cuma')] },
+                                    { display: t('cumartesi'), variants: ["Cumartesi", "Saturday", "Samstag", t('cumartesi')] },
+                                    { display: t('pazar'), variants: ["Pazar", "Sunday", "Sonntag", t('pazar')] },
+                                  ];
+                                  const findLine = (data: string, variants: string[]) => data.split("\n").find((l) => variants.some(v => l.startsWith(v + ":") || l.startsWith(v + " "))) || "";
+                                  return DAY_DEFS.map((day, dayIndex) => {
+                                    const hoursData = formData.deliveryHours || formData.openingHours || "";
+                                    const currentLine = findLine(hoursData, day.variants);
+                                    const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed") || currentLine.toLowerCase().includes("geschlossen");
+                                    let startTime = ""; let endTime = "";
+                                    if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
+                                    const updateDeliveryHours = (newStart: string, newEnd: string, newClosed: boolean) => {
+                                      const baseHours = formData.deliveryHours || formData.openingHours || "";
+                                      const newLines = DAY_DEFS.map((dd, i) => {
+                                        if (i === dayIndex) { if (newClosed) return `${dd.display}${t('kapali2')}`; return `${dd.display}: ${newStart} - ${newEnd}`; }
+                                        const existingLine = findLine(baseHours, dd.variants);
+                                        if (existingLine) { const content = existingLine.split(": ").slice(1).join(": "); return content ? `${dd.display}: ${content}` : `${dd.display}${t('kapali2')}`; }
+                                        return `${dd.display}${t('kapali2')}`;
+                                      });
+                                      setFormData({ ...formData, deliveryHours: newLines.join("\n") });
+                                    };
+                                    return (
+                                      <div key={day.display} className="flex items-center gap-3">
+                                        <span className="w-24 text-sm text-gray-400 font-medium">{day.display}</span>
+                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <span className="text-gray-500 font-bold">–</span>
+                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updateDeliveryHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <label className="flex items-center cursor-pointer ml-auto relative">
+                                          <input type="checkbox" checked={isClosed} onChange={(e) => updateDeliveryHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
+                                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                          <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+                                        </label>
+                                      </div>
+                                    );
+                                  });
+                                })()}
                               </div>
                             </div>
                           )}
@@ -3837,39 +3858,48 @@ export default function BusinessDetailsPage() {
                                 </div>
                               )}
                               <div className="space-y-2">
-                                {[
-                                  { tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" },
-                                ].map((dayObj) => {
-                                  const hoursData = formData.pickupHours || formData.openingHours || "";
-                                  const currentLine = hoursData.split("\n").find((l) => { return l.startsWith(dayObj.tr + ":") || l.startsWith(dayObj.tr + " ") || l.startsWith(dayObj.en + ":") || l.startsWith(dayObj.en + " "); }) || "";
-                                  const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed");
-                                  let startTime = ""; let endTime = "";
-                                  if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
-                                  const updatePickupHours = (newStart: string, newEnd: string, newClosed: boolean) => {
-                                    const baseHours = formData.pickupHours || formData.openingHours || "";
-                                    const newLines = ["Pazartesi", t('sali'), t('carsamba'), t('persembe'), "Cuma", "Cumartesi", "Pazar"].map((d) => {
-                                      const dObj = [{ tr: "Pazartesi", en: "Monday" }, { tr: t('sali'), en: "Tuesday" }, { tr: t('carsamba'), en: "Wednesday" }, { tr: t('persembe'), en: "Thursday" }, { tr: "Cuma", en: "Friday" }, { tr: "Cumartesi", en: "Saturday" }, { tr: "Pazar", en: "Sunday" }].find((o) => o.tr === d);
-                                      const existingLine = baseHours.split("\n").find((l) => { const dayTR = dObj!.tr; const dayEN = dObj!.en; return l.startsWith(dayTR + ":") || l.startsWith(dayTR + " ") || l.startsWith(dayEN + ":") || l.startsWith(dayEN + " "); }) || "";
-                                      if (d === dayObj.tr) { if (newClosed) return `${d}${t('kapali2')}`; return `${d}: ${newStart} - ${newEnd}`; }
-                                      if (existingLine.startsWith(dObj!.en)) { const content = existingLine.split(": ").slice(1).join(": "); return `${d}: ${content}`; }
-                                      return existingLine || `${d}${t('kapali2')}`;
-                                    });
-                                    setFormData({ ...formData, pickupHours: newLines.join("\n") });
-                                  };
-                                  return (
-                                    <div key={dayObj.tr} className="flex items-center gap-3">
-                                      <span className="w-24 text-sm text-gray-400 font-medium">{dayObj.tr}</span>
-                                      <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updatePickupHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
-                                      <span className="text-gray-500 font-bold">–</span>
-                                      <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
-                                      <label className="flex items-center cursor-pointer ml-auto relative">
-                                        <input type="checkbox" checked={isClosed} onChange={(e) => updatePickupHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
-                                        <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
-                                        <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
-                                      </label>
-                                    </div>
-                                  );
-                                })}
+                                {(() => {
+                                  const DAY_DEFS = [
+                                    { display: t('pazartesi'), variants: ["Pazartesi", "Monday", "Montag", t('pazartesi')] },
+                                    { display: t('sali'), variants: ["Salı", "Salı", "Tuesday", "Dienstag", t('sali')] },
+                                    { display: t('carsamba'), variants: ["Çarşamba", "Çarşamba", "Wednesday", "Mittwoch", t('carsamba')] },
+                                    { display: t('persembe'), variants: ["Perşembe", "Perşembe", "Thursday", "Donnerstag", t('persembe')] },
+                                    { display: t('cuma'), variants: ["Cuma", "Friday", "Freitag", t('cuma')] },
+                                    { display: t('cumartesi'), variants: ["Cumartesi", "Saturday", "Samstag", t('cumartesi')] },
+                                    { display: t('pazar'), variants: ["Pazar", "Sunday", "Sonntag", t('pazar')] },
+                                  ];
+                                  const findLine = (data: string, variants: string[]) => data.split("\n").find((l) => variants.some(v => l.startsWith(v + ":") || l.startsWith(v + " "))) || "";
+                                  return DAY_DEFS.map((day, dayIndex) => {
+                                    const hoursData = formData.pickupHours || formData.openingHours || "";
+                                    const currentLine = findLine(hoursData, day.variants);
+                                    const isClosed = currentLine.toLowerCase().includes(t('kapali1')) || currentLine.toLowerCase().includes("closed") || currentLine.toLowerCase().includes("geschlossen");
+                                    let startTime = ""; let endTime = "";
+                                    if (!isClosed && currentLine.includes(": ")) { const timePart = currentLine.split(": ").slice(1).join(": ").trim(); const separator = timePart.includes("–") ? "–" : "-"; const parts = timePart.split(separator).map(p => p.trim()); if (parts.length >= 2) { startTime = formatTo24h(parts[0]); endTime = formatTo24h(parts[1]); } }
+                                    const updatePickupHours = (newStart: string, newEnd: string, newClosed: boolean) => {
+                                      const baseHours = formData.pickupHours || formData.openingHours || "";
+                                      const newLines = DAY_DEFS.map((dd, i) => {
+                                        if (i === dayIndex) { if (newClosed) return `${dd.display}${t('kapali2')}`; return `${dd.display}: ${newStart} - ${newEnd}`; }
+                                        const existingLine = findLine(baseHours, dd.variants);
+                                        if (existingLine) { const content = existingLine.split(": ").slice(1).join(": "); return content ? `${dd.display}: ${content}` : `${dd.display}${t('kapali2')}`; }
+                                        return `${dd.display}${t('kapali2')}`;
+                                      });
+                                      setFormData({ ...formData, pickupHours: newLines.join("\n") });
+                                    };
+                                    return (
+                                      <div key={day.display} className="flex items-center gap-3">
+                                        <span className="w-24 text-sm text-gray-400 font-medium">{day.display}</span>
+                                        <input type="time" value={formatTo24h(startTime)} disabled={isClosed} onChange={(e) => updatePickupHours(e.target.value, endTime, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <span className="text-gray-500 font-bold">–</span>
+                                        <input type="time" value={formatTo24h(endTime)} disabled={isClosed} onChange={(e) => updatePickupHours(startTime, e.target.value, false)} className={`w-28 bg-gray-900 border border-gray-600 rounded px-2 py-1.5 text-sm text-white focus:border-blue-500 outline-none font-mono text-center [color-scheme:dark] ${isClosed ? 'opacity-30' : ''}`} />
+                                        <label className="flex items-center cursor-pointer ml-auto relative">
+                                          <input type="checkbox" checked={isClosed} onChange={(e) => updatePickupHours(startTime, endTime, e.target.checked)} className="sr-only peer" />
+                                          <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+                                          <span className="ml-2 text-xs text-gray-400 font-medium w-10">{isClosed ? t('kapali') : t('acik')}</span>
+                                        </label>
+                                      </div>
+                                    );
+                                  });
+                                })()}
                               </div>
                             </div>
                           )}
@@ -3922,6 +3952,15 @@ export default function BusinessDetailsPage() {
                             <div>
                               <span className="text-white">{t('onSiparisKabulEt')}</span>
                               <p className="text-xs text-gray-400">{t('isletmeKapaliykenDeErtesiGunIcin')}</p>
+                            </div>
+                          </div>
+
+                          {/* Gel-Al (Pickup) Desteği Checkbox */}
+                          <div className="mt-3 flex items-center gap-3">
+                            <input type="checkbox" checked={formData.pickupEnabled !== false} onChange={(e) => setFormData({ ...formData, pickupEnabled: e.target.checked })} disabled={!isEditing} className="w-5 h-5 accent-green-500" />
+                            <div>
+                              <span className="text-white">{t('gelAlDestegiVar')}</span>
+                              <p className="text-xs text-gray-400">{t('musterilerSiparisiKendisiAlabilir')}</p>
                             </div>
                           </div>
                         </div>
@@ -6220,7 +6259,7 @@ export default function BusinessDetailsPage() {
                       {/* Subscription */}
                       <div className="space-y-4">
                         <h4 className="text-white font-medium border-b border-gray-700 pb-2">
-                          💳 Abonelik
+                          {t('uyelikAbonelik')}
                         </h4>
                         <div>
                           <label className="text-gray-400 text-sm">Plan</label>
@@ -6240,23 +6279,6 @@ export default function BusinessDetailsPage() {
                               <option key={plan.code} value={plan.code}>{plan.name}</option>
                             ))}
                           </select>
-                        </div>
-                        <div>
-                          <label className="text-gray-400 text-sm">
-                            {t('aylikUcret')}
-                          </label>
-                          <input
-                            type="number"
-                            value={formData.monthlyFee}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                monthlyFee: parseFloat(e.target.value) || 0,
-                              })
-                            }
-                            disabled={!isEditing}
-                            className="w-full bg-gray-700 text-white px-3 py-2 rounded-lg mt-1 disabled:opacity-50"
-                          />
                         </div>
                       </div>
 
