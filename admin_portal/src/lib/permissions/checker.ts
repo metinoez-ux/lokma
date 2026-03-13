@@ -8,6 +8,9 @@
  * 2. Per-user overrides → highest priority
  * 3. Permission group → base permissions
  * 4. Default → DENY (fail-closed)
+ * 
+ * Performance: getEffectivePermissions is now cached per subject reference
+ * to avoid redundant recalculations in components calling multiple can() checks.
  */
 
 import { PermissionKey, PermissionMap } from './modules';
@@ -20,6 +23,17 @@ export interface PermissionSubject {
   permissionGroupId?: string;
   permissions?: PermissionMap;
   permissionOverrides?: Partial<PermissionMap>;
+}
+
+// ─── Permission Cache (O3+O4 fix) ────────────────────────────────────────────
+
+let _cachedSubject: PermissionSubject | null = null;
+let _cachedPermissions: PermissionMap | null = null;
+
+/** Clear the permission cache. Call when admin data changes. */
+export function clearPermissionCache(): void {
+  _cachedSubject = null;
+  _cachedPermissions = null;
 }
 
 // ─── Core Functions ───────────────────────────────────────────────────────────
@@ -35,41 +49,52 @@ export function isSuperAdmin(subject: PermissionSubject): boolean {
 /**
  * Get the effective permission map for a subject.
  * Merges: group base → user overrides
+ * 
+ * Cached: returns the same object reference if the subject hasn't changed,
+ * avoiding re-computation when multiple hasPermission() calls use the same subject.
  */
 export function getEffectivePermissions(subject: PermissionSubject): PermissionMap {
+  // Return cache hit if same subject reference
+  if (_cachedSubject === subject && _cachedPermissions) {
+    return _cachedPermissions;
+  }
+
+  let result: PermissionMap;
+
   // Super Admin → all true
   if (isSuperAdmin(subject)) {
     const allTrue: PermissionMap = {} as PermissionMap;
-    // Get all known keys from all groups and set them to true
     const ceoGroup = DEFAULT_PERMISSION_GROUPS['ceo'];
     if (ceoGroup) {
       for (const key of Object.keys(ceoGroup.permissions)) {
         allTrue[key as PermissionKey] = true;
       }
     }
-    return allTrue;
-  }
-
-  // If pre-computed full permissions exist, use them directly
-  if (subject.permissions && Object.keys(subject.permissions).length > 0) {
-    // Apply overrides on top
+    result = allTrue;
+  } else if (subject.permissions && Object.keys(subject.permissions).length > 0) {
+    // If pre-computed full permissions exist, use them directly
     if (subject.permissionOverrides) {
-      return { ...subject.permissions, ...subject.permissionOverrides } as PermissionMap;
+      result = { ...subject.permissions, ...subject.permissionOverrides } as PermissionMap;
+    } else {
+      result = subject.permissions;
     }
-    return subject.permissions;
+  } else {
+    // Resolve from group
+    const groupId = subject.permissionGroupId;
+    const group = groupId ? DEFAULT_PERMISSION_GROUPS[groupId] : null;
+    const basePermissions = group?.permissions || ({} as PermissionMap);
+
+    if (subject.permissionOverrides) {
+      result = { ...basePermissions, ...subject.permissionOverrides } as PermissionMap;
+    } else {
+      result = basePermissions;
+    }
   }
 
-  // Resolve from group
-  const groupId = subject.permissionGroupId;
-  const group = groupId ? DEFAULT_PERMISSION_GROUPS[groupId] : null;
-  const basePermissions = group?.permissions || ({} as PermissionMap);
-
-  // Apply overrides
-  if (subject.permissionOverrides) {
-    return { ...basePermissions, ...subject.permissionOverrides } as PermissionMap;
-  }
-
-  return basePermissions;
+  // Cache the result
+  _cachedSubject = subject;
+  _cachedPermissions = result;
+  return result;
 }
 
 /**

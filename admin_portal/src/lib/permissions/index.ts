@@ -19,6 +19,7 @@ export {
   getEffectivePermissions,
   isSuperAdmin,
   diffPermissions,
+  clearPermissionCache,
   type PermissionSubject,
   type PermissionDiff,
 } from './checker';

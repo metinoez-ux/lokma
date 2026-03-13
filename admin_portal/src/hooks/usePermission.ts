@@ -5,106 +5,82 @@
  * Reads admin data from AdminProvider context and resolves permissions.
  *
  * Usage:
- *   const { can, canAny, canAll, canAccessModule } = usePermission();
- *   
- *   // Single check
+ *   const { can, canAny, canAll, canAccess } = usePermission();
  *   if (can('revenue', 'view')) { ... }
- *   
- *   // Module-level check (any action)
- *   if (canAccessModule('revenue')) { ... }
- *   
- *   // Multiple checks
- *   if (canAny([['orders', 'cancel'], ['orders', 'refund']])) { ... }
+ *
+ * Performance: The PermissionSubject is memoized via JSON serialization
+ * to avoid unnecessary re-computations when admin object reference changes
+ * but the actual permission data hasn't. (O5 fix)
  */
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useAdmin } from '@/components/providers/AdminProvider';
 import {
   hasPermission,
-  canAccess,
   hasAllPermissions,
   hasAnyPermission,
-  getEffectivePermissions,
-  isSuperAdmin as checkSuperAdmin,
+  canAccess as canAccessFn,
+  isSuperAdmin as isSuperAdminFn,
   type PermissionSubject,
   type PermissionKey,
-  type PermissionMap,
 } from '@/lib/permissions';
 
-export interface UsePermissionReturn {
-  /** Check if user has a specific module.action permission */
-  can: (module: string, action: string) => boolean;
-
-  /** Check if user has ANY action for a module (show/hide tab) */
-  canAccessModule: (module: string) => boolean;
-
-  /** Check if user has ANY of the listed permissions */
-  canAny: (checks: [string, string][]) => boolean;
-
-  /** Check if user has ALL of the listed permissions */
-  canAll: (checks: [string, string][]) => boolean;
-
-  /** Whether the current user is a Super Admin (bypasses everything) */
-  isSuperAdmin: boolean;
-
-  /** The full resolved permission map */
-  permissions: PermissionMap;
-}
-
-export function usePermission(): UsePermissionReturn {
+export function usePermission() {
   const { admin } = useAdmin();
 
-  // Build the permission subject from admin context
-  const subject: PermissionSubject = useMemo(() => ({
-    adminType: admin?.adminType,
-    permissionGroupId: admin?.permissionGroupId,
-    permissions: admin?.permissionMap as PermissionMap | undefined,
-    permissionOverrides: admin?.permissionOverrides as Partial<PermissionMap> | undefined,
-  }), [admin?.adminType, admin?.permissionGroupId, admin?.permissionMap, admin?.permissionOverrides]);
+  // O5 fix: Memoize subject using stable serialized key
+  const subjectKey = useMemo(() => {
+    if (!admin) return '';
+    return JSON.stringify({
+      t: admin.adminType,
+      g: admin.permissionGroupId,
+      p: admin.permissionMap,
+      o: admin.permissionOverrides,
+    });
+  }, [admin?.adminType, admin?.permissionGroupId, admin?.permissionMap, admin?.permissionOverrides]);
 
-  const superAdmin = useMemo(() => checkSuperAdmin(subject), [subject]);
+  const subject: PermissionSubject = useMemo(() => {
+    if (!admin) return {};
+    return {
+      adminType: admin.adminType,
+      permissionGroupId: admin.permissionGroupId,
+      permissions: admin.permissionMap as Record<string, boolean> | undefined,
+      permissionOverrides: admin.permissionOverrides as Partial<Record<string, boolean>> | undefined,
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subjectKey]);
 
-  const permissions = useMemo(
-    () => getEffectivePermissions(subject),
-    [subject]
-  );
+  const isSuperAdminUser = useMemo(() => isSuperAdminFn(subject), [subject]);
 
-  const can = useMemo(
-    () => (module: string, action: string) => hasPermission(subject, module, action),
-    [subject]
-  );
+  /** Check a single permission: can('orders', 'refund') */
+  const can = useCallback((module: string, action: string): boolean => {
+    return hasPermission(subject, module, action);
+  }, [subject]);
 
-  const canAccessModule = useMemo(
-    () => (module: string) => canAccess(subject, module),
-    [subject]
-  );
+  /** Check if ANY of the given permissions is granted */
+  const canAny = useCallback((permissions: [string, string][]): boolean => {
+    const keys = permissions.map(([m, a]) => `${m}.${a}` as PermissionKey);
+    return hasAnyPermission(subject, keys);
+  }, [subject]);
 
-  const canAny = useMemo(
-    () => (checks: [string, string][]) =>
-      hasAnyPermission(
-        subject,
-        checks.map(([m, a]) => `${m}.${a}` as PermissionKey)
-      ),
-    [subject]
-  );
+  /** Check if ALL of the given permissions are granted */
+  const canAll = useCallback((permissions: [string, string][]): boolean => {
+    const keys = permissions.map(([m, a]) => `${m}.${a}` as PermissionKey);
+    return hasAllPermissions(subject, keys);
+  }, [subject]);
 
-  const canAll = useMemo(
-    () => (checks: [string, string][]) =>
-      hasAllPermissions(
-        subject,
-        checks.map(([m, a]) => `${m}.${a}` as PermissionKey)
-      ),
-    [subject]
-  );
+  /** Check if user can access any action in a module */
+  const canAccess = useCallback((module: string): boolean => {
+    return canAccessFn(subject, module);
+  }, [subject]);
 
   return {
     can,
-    canAccessModule,
     canAny,
     canAll,
-    isSuperAdmin: superAdmin,
-    permissions,
+    canAccess,
+    isSuperAdmin: isSuperAdminUser,
   };
 }

@@ -10,6 +10,7 @@ import { isSuperAdmin } from '@/lib/config';
 import {
     getEffectivePermissions,
     getDefaultGroupForAdminType,
+    clearPermissionCache,
     type PermissionSubject,
     type PermissionMap,
 } from '@/lib/permissions';
@@ -40,6 +41,9 @@ export const useAdmin = () => useContext(AdminContext);
 
 // 🔐 Resolve RBAC 2.0 permissions for an admin
 const resolvePermissions = (admin: Admin): Admin => {
+    // Clear the permission cache when resolving fresh data
+    clearPermissionCache();
+
     // If already has a resolved permissionMap, use it
     if (admin.permissionMap && Object.keys(admin.permissionMap).length > 0) {
         return admin;

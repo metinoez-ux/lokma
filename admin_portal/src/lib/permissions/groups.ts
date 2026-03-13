@@ -118,7 +118,7 @@ const SUPPORT_GROUP: PermissionGroup = {
   description: 'Platform kullanıcı/işletme yönetimi. Ciro verileri erişimi yok.',
   descriptionKey: 'permGroup_support_desc',
   icon: '🎧',
-  color: 'bg-blue-600',
+  color: 'bg-indigo-600',
   isSystem: true,
   isSuperAdminOnly: true,
   permissions: merge(allPermissions(true), {
@@ -329,22 +329,38 @@ export function getAvailableGroups(isSuperAdmin: boolean): PermissionGroup[] {
   );
 }
 
-/** Resolve the default group for a legacy adminType */
+/** Resolve the default group for a legacy adminType.
+ *  IMPORTANT: Every AdminType from types/index.ts must be mapped here.
+ *  Unmapped types fall back to 'intern' (minimal read-only). */
 export function getDefaultGroupForAdminType(adminType: string): string {
   const mapping: Record<string, string> = {
-    'super': 'ceo',
-    'isletme_admin': 'owner',
-    'kasap': 'owner',
-    'restoran': 'owner',
-    'market': 'owner',
-    'isletme_staff': 'cashier',
-    'kasap_staff': 'cashier',
-    'restoran_staff': 'cashier',
-    'market_staff': 'cashier',
-    'kermes': 'owner',
-    'kermes_staff': 'cashier',
-    'cenaze': 'owner',
-    'cenaze_staff': 'cashier',
+    // ═══ Platform-Level ═══
+    'super':           'ceo',
+
+    // ═══ Business Owners ═══
+    'kasap':           'owner',
+    'restoran':        'owner',
+    'market':          'owner',
+    'bakkal':          'owner',
+    'kermes':          'owner',
+    'cenaze_fonu':     'owner',
+    'hali_yikama':     'owner',
+
+    // ═══ Staff / Personel ═══
+    'kasap_staff':     'cashier',
+    'restoran_staff':  'cashier',
+    'market_staff':    'cashier',
+    'kermes_staff':    'cashier',
+    'garson':          'cashier',    // Waiter → cashier level
+    'tur_rehberi':     'cashier',    // Tour guide → cashier level
+
+    // ═══ Kitchen ═══
+    'mutfak':          'kitchen',
+
+    // ═══ Drivers ═══
+    'teslimat':        'driver',
+    'hali_surucu':     'driver',
+    'transfer_surucu': 'driver',
   };
   return mapping[adminType] || 'intern';
 }

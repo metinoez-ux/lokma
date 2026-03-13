@@ -10,6 +10,7 @@
  * - Per-action granular toggle
  * - Permission group template selector
  * - Visual indicator for overridden permissions
+ * - Full i18n via next-intl (perm.* namespace)
  */
 
 'use client';
@@ -23,11 +24,11 @@ import {
   type PermissionCategory,
   type PermissionMap,
   type PermissionKey,
+  type PermissionModule,
 } from '@/lib/permissions/modules';
 import {
   DEFAULT_PERMISSION_GROUPS,
   getAvailableGroups,
-  type PermissionGroup,
 } from '@/lib/permissions/groups';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -60,6 +61,7 @@ function PermissionToggle({
   isOverride,
   label,
   description,
+  overrideLabel,
 }: {
   checked: boolean;
   onChange: (value: boolean) => void;
@@ -67,6 +69,7 @@ function PermissionToggle({
   isOverride?: boolean;
   label: string;
   description?: string;
+  overrideLabel: string;
 }) {
   return (
     <label
@@ -89,12 +92,12 @@ function PermissionToggle({
               ? 'bg-green-500 dark:bg-green-600'
               : 'bg-gray-300 dark:bg-gray-600'
             }
-            ${disabled ? '' : 'peer-focus:ring-2 peer-focus:ring-green-300'}
+            ${disabled ? '' : 'peer-focus:ring-2 peer-focus:ring-green-300 dark:peer-focus:ring-green-700'}
           `}
         />
         <div
-          className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform
-            ${checked ? 'translate-x-[18px]' : 'translate-x-0.5'}
+          className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform
+            ${checked ? 'translate-x-4' : 'translate-x-0'}
           `}
         />
       </div>
@@ -103,7 +106,7 @@ function PermissionToggle({
           {label}
           {isOverride && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 font-normal">
-              override
+              {overrideLabel}
             </span>
           )}
         </div>
@@ -122,13 +125,15 @@ function ModuleSection({
   overrides,
   onToggle,
   readOnly,
+  t,
 }: {
   moduleId: string;
-  module: typeof PERMISSION_MODULES[string];
+  module: PermissionModule;
   permissions: PermissionMap;
   overrides?: Partial<PermissionMap>;
   onToggle: (key: PermissionKey, value: boolean) => void;
   readOnly?: boolean;
+  t: (key: string) => string;
 }) {
   const actions = Object.entries(module.actions);
   const allChecked = actions.every(([actionId]) => 
@@ -160,7 +165,7 @@ function ModuleSection({
         <div className="flex items-center gap-2">
           <span className="text-lg">{module.icon}</span>
           <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
-            {module.label}
+            {t(module.labelKey)}
           </span>
           <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
             ({actions.filter(([actionId]) => permissions[`${moduleId}.${actionId}` as PermissionKey] === true).length}/{actions.length})
@@ -185,8 +190,9 @@ function ModuleSection({
               onChange={(value) => onToggle(key, value)}
               disabled={readOnly}
               isOverride={isOverride}
-              label={actionDef.label}
-              description={actionDef.description}
+              label={t(actionDef.labelKey)}
+              description={actionDef.descriptionKey ? t(actionDef.descriptionKey) : undefined}
+              overrideLabel={t('perm.override_badge')}
             />
           );
         })}
@@ -207,7 +213,7 @@ export default function PermissionEditor({
   onSave,
   readOnly = false,
 }: PermissionEditorProps) {
-  const t = useTranslations('admin');
+  const t = useTranslations();
   const [expandedCategories, setExpandedCategories] = useState<Set<PermissionCategory>>(
     new Set(['operations', 'catalog', 'finance', 'hr', 'settings'])
   );
@@ -272,18 +278,18 @@ export default function PermissionEditor({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            Benutzerrechte
+            {t('perm.title')}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            {grantedCount} / {totalCount} izin aktif
+            {t('perm.active_count', { granted: grantedCount, total: totalCount })}
           </p>
         </div>
         {!readOnly && hasChanges && (
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
           >
-            Kaydet
+            {t('perm.save')}
           </button>
         )}
       </div>
@@ -292,7 +298,7 @@ export default function PermissionEditor({
       {!readOnly && (
         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4">
           <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-2">
-            Yetki Grubu (Şablon)
+            {t('perm.group_template_label')}
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {availableGroups.map((group) => (
@@ -308,14 +314,14 @@ export default function PermissionEditor({
               >
                 <span className="text-base">{group.icon}</span>
                 <div className="min-w-0">
-                  <div className="font-medium truncate">{group.name}</div>
+                  <div className="font-medium truncate">{t(group.nameKey)}</div>
                 </div>
               </button>
             ))}
           </div>
           {localGroupId && DEFAULT_PERMISSION_GROUPS[localGroupId] && (
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
-              {DEFAULT_PERMISSION_GROUPS[localGroupId].description}
+              {t(DEFAULT_PERMISSION_GROUPS[localGroupId].descriptionKey)}
             </p>
           )}
         </div>
@@ -323,8 +329,8 @@ export default function PermissionEditor({
 
       {/* Permission Tree */}
       <div className="space-y-4">
-        {(Object.entries(PERMISSION_CATEGORY_LABELS) as [PermissionCategory, { label: string; icon: string }][]).map(
-          ([category, { label, icon }]) => {
+        {(Object.entries(PERMISSION_CATEGORY_LABELS) as [PermissionCategory, { labelKey: string; icon: string }][]).map(
+          ([category, { labelKey, icon }]) => {
             const modules = modulesByCategory[category];
             if (!modules || modules.length === 0) return null;
             
@@ -342,7 +348,7 @@ export default function PermissionEditor({
                 >
                   <span className="flex items-center gap-2 font-bold text-sm text-gray-800 dark:text-gray-200">
                     <span>{icon}</span>
-                    <span>{label}</span>
+                    <span>{t(labelKey)}</span>
                   </span>
                   <svg
                     className={`w-4 h-4 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -366,6 +372,7 @@ export default function PermissionEditor({
                         overrides={localOverrides}
                         onToggle={handleToggle}
                         readOnly={readOnly}
+                        t={t}
                       />
                     ))}
                   </div>
@@ -381,11 +388,11 @@ export default function PermissionEditor({
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-amber-600 dark:text-amber-400 text-sm font-semibold">
-              {Object.keys(localOverrides).length} bireysel düzenleme
+              {t('perm.override_count', { count: Object.keys(localOverrides).length })}
             </span>
           </div>
           <p className="text-xs text-amber-700/70 dark:text-amber-300/70">
-            Bu izinler grup şablonundan farklı olarak özel olarak ayarlanmıştır.
+            {t('perm.override_description')}
           </p>
         </div>
       )}
