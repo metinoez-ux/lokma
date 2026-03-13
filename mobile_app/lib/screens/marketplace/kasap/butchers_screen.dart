@@ -1144,7 +1144,7 @@ class _ButchersScreenState extends ConsumerState<ButchersScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          isOpen ? 'Açık' : 'Kapalı',
+                          isOpen ? 'common.open'.tr() : 'common.closed'.tr(),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,

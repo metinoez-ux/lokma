@@ -1490,7 +1490,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                       children: [
                         // Order number - always visible
                         Text(
-                          'Sipariş No: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}',
+                          'orders.order_number_label'.tr(namedArgs: {'orderNo': order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}),
                           style: TextStyle(
                             color: colorScheme.onSurface.withValues(alpha: 0.5),
                             fontSize: 11,
@@ -2119,8 +2119,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   /// Open support chat
   void _openSupportChat(LokmaOrder order) {
     // Navigate to support or open email
-    final subject = Uri.encodeComponent('Sipariş Desteği: ${order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}');
-    final body = Uri.encodeComponent('Sipariş No: ${order.id}\nİşletme: ${order.butcherName}\n\nMesajınız:');
+    final subject = Uri.encodeComponent('orders.support_subject'.tr(namedArgs: {'orderNo': order.orderNumber ?? order.id.substring(0, 6).toUpperCase()}));
+    final body = Uri.encodeComponent('orders.support_body'.tr(namedArgs: {'orderNo': order.id, 'business': order.butcherName}));
     final mailtoUri = Uri.parse('mailto:destek@lokma.app?subject=$subject&body=$body');
     launchUrl(mailtoUri);
   }
@@ -2488,21 +2488,21 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
   String _getStatusText(OrderStatus status) {
     switch (status) {
       case OrderStatus.pending:
-        return 'Beklemede';
+        return 'orders.status_pending'.tr();
       case OrderStatus.accepted:
-        return 'Onaylandı';
+        return 'orders.status_accepted'.tr();
       case OrderStatus.preparing:
-        return 'Hazırlanıyor';
+        return 'orders.status_preparing'.tr();
       case OrderStatus.ready:
-        return 'Hazır';
+        return 'orders.status_ready'.tr();
       case OrderStatus.served:
-        return 'Servis Edildi';
+        return 'orders.status_served'.tr();
       case OrderStatus.onTheWay:
-        return 'Yolda';
+        return 'orders.status_on_the_way'.tr();
       case OrderStatus.delivered:
-        return 'Teslim Edildi';
+        return 'orders.status_delivered'.tr();
       case OrderStatus.cancelled:
-        return 'İptal';
+        return 'orders.status_cancelled'.tr();
     }
   }
 
@@ -4940,7 +4940,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             Icon(Icons.groups, size: 48, color: _accentColor),
             const SizedBox(height: 12),
             Text(
-              'Masa $tableNum — Aktif Grup Siparişi',
+              'cart.table_group_order'.tr(namedArgs: {'tableNum': '$tableNum'}),
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w500,
@@ -4948,7 +4948,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             ),
             const SizedBox(height: 8),
             Text(
-              'Bu masada $participantCount kişilik aktif bir grup siparişi var.\nKatılmak için PIN kodunu girin.',
+              'marketplace.group_order_active_info'.tr(namedArgs: {'count': '$participantCount'}),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -5093,8 +5093,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                   _createAndNavigateGroup(tableNum, businessId, businessName);
                 },
                 icon: const Icon(Icons.groups),
-                label: const Text(
-                  'Grup Siparişi Başlat',
+                label: Text(
+                  'cart.start_group_order'.tr(),
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
                 style: FilledButton.styleFrom(
@@ -5132,7 +5132,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 },
                 icon: Icon(Icons.person, color: Colors.grey[600]),
                 label: Text(
-                  'Tek Kişi Sipariş',
+                  'cart.single_person_order'.tr(),
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 ),
                 style: OutlinedButton.styleFrom(
@@ -5311,12 +5311,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
             height: 1.4,
           ),
           children: [
-            const TextSpan(text: 'Siparişi Onayla butonuna tıklayarak sepet içeriğini, girdiğiniz bilgileri, '),
+            TextSpan(text: 'cart.disclaimer_prefix'.tr()),
             WidgetSpan(
               child: GestureDetector(
                 onTap: () => _openPrivacyPolicy(),
                 child: Text(
-                  'Gizlilik Politikamızı',
+                  'cart.privacy_policy'.tr(),
                   style: TextStyle(
                     color: Colors.grey[700],
                     fontSize: 11,
@@ -5326,12 +5326,12 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ),
               ),
             ),
-            const TextSpan(text: ' ve '),
+            TextSpan(text: 'cart.and_conjunction'.tr()),
             WidgetSpan(
               child: GestureDetector(
                 onTap: () => _openTermsOfUse(),
                 child: Text(
-                  'Kullanım Koşullarımızı',
+                  'cart.terms_of_use'.tr(),
                   style: TextStyle(
                     color: Colors.grey[700],
                     fontSize: 11,
@@ -5341,7 +5341,7 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
                 ),
               ),
             ),
-            const TextSpan(text: ' kabul etmiş olursunuz.'),
+            TextSpan(text: 'cart.disclaimer_suffix'.tr()),
           ],
         ),
       ),
@@ -6751,8 +6751,8 @@ class _CartScreenState extends ConsumerState<CartScreen> with TickerProviderStat
       final isToday = dateKey.day == now.day && dateKey.month == now.month && dateKey.year == now.year;
       final tomorrow = now.add(const Duration(days: 1));
       final isTomorrow = dateKey.day == tomorrow.day && dateKey.month == tomorrow.month && dateKey.year == tomorrow.year;
-      if (isToday) return 'Bugün';
-      if (isTomorrow) return 'Yarın';
+      if (isToday) return 'common.today'.tr();
+      if (isTomorrow) return 'common.tomorrow'.tr();
       return dayNames[dateKey.weekday - 1];
     }).toList();
 

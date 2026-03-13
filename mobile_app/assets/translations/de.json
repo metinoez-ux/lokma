@@ -897,7 +897,14 @@
     "hours_cannot_display": "Geschäftszeiten können nicht angezeigt werden.",
     "daily_hours": "Täglich",
     "find_us": "So findest du uns",
-    "cuisine": "Küche"
+    "cuisine": "Küche",
+    "impressum": "Impressum",
+    "impressum_representative": "Vertretungsberechtigter",
+    "impressum_authorized": "Vertretungsberechtigt",
+    "impressum_tax_id": "Steuer-Nr.",
+    "impressum_vat_id": "USt-IdNr.",
+    "impressum_email": "E-Mail",
+    "open_maps": "Karte öffnen"
   },
   "navigation": {
     "food": "Essen",

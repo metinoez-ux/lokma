@@ -896,7 +896,14 @@
     "hours_cannot_display": "Impossibile visualizzare gli orari.",
     "daily_hours": "Giornaliero",
     "find_us": "Come trovarci",
-    "cuisine": "Cucina"
+    "cuisine": "Cucina",
+    "impressum": "Note Legali",
+    "impressum_representative": "Rappresentante Autorizzato",
+    "impressum_authorized": "Autorizzato a Rappresentare",
+    "impressum_tax_id": "Codice Fiscale",
+    "impressum_vat_id": "Partita IVA",
+    "impressum_email": "E-mail",
+    "open_maps": "Apri Mappa"
   },
   "navigation": {
     "food": "Cibo",

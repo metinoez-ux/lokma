@@ -897,7 +897,14 @@
     "hours_cannot_display": "Cannot display opening hours.",
     "daily_hours": "Daily",
     "find_us": "How to find us",
-    "cuisine": "Cuisine"
+    "cuisine": "Cuisine",
+    "impressum": "Legal Notice",
+    "impressum_representative": "Authorized Representative",
+    "impressum_authorized": "Authorized to Represent",
+    "impressum_tax_id": "Tax ID",
+    "impressum_vat_id": "VAT ID",
+    "impressum_email": "Email",
+    "open_maps": "Open Maps"
   },
   "navigation": {
     "food": "Food",

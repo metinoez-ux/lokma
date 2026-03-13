@@ -838,7 +838,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
             ),
             Text('marketplace.weekly_hours'.tr(), style: TextStyle(color: textColor, fontSize: 20, fontWeight: FontWeight.w600)),
             const SizedBox(height: 24),
-            ..._buildHoursListThemed(isDark),
+            _buildGeneralHoursTab(isDark, textColor, isDark ? Colors.grey : Colors.grey.shade600, _getAccent(context)),
             const SizedBox(height: 24),
           ],
         ),
@@ -948,7 +948,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                 // Review List
                 Expanded(
                   child: sortedReviews.isEmpty 
-                    ? Center(child: Text('marketplace.no_review_yet'.tr(), style: TextStyle(color: Colors.white54)))
+                    ? Center(child: Text('marketplace.no_review_yet'.tr(), style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white54 : Colors.black45)))
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                         itemCount: sortedReviews.length,
@@ -1467,12 +1467,12 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                                           color: Colors.white.withValues(alpha: 0.9),
                                           borderRadius: BorderRadius.circular(6),
                                         ),
-                                        child: const Row(
+                                        child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Icon(Icons.open_in_new, size: 12, color: Colors.black87),
                                             SizedBox(width: 4),
-                                            Text('Maps', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black87)),
+                                            Text('marketplace.open_maps'.tr(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black87)),
                                           ],
                                         ),
                                       ),
@@ -1630,7 +1630,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
                           const SizedBox(height: 24),
                           Divider(color: dividerColor, height: 1),
                           const SizedBox(height: 16),
-                          Text('Impressum',
+                          Text('marketplace.impressum'.tr(),
                             style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 12),
                           _buildImpressumSection(data, textColor, subtitleColor),
@@ -1653,7 +1653,7 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Center(
-              child: Text('marketplace.info_load_error'.tr(), style: TextStyle(color: Colors.white54)),
+              child: Text('marketplace.info_load_error'.tr(), style: TextStyle(color: subtitleColor)),
             ),
           );
         }
@@ -1706,20 +1706,20 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
         if (fullAddress.isNotEmpty)
           _impressumRow(fullAddress, subtitleColor),
         if (managingDirector.isNotEmpty)
-          _impressumRow('Vertretungsberechtigter: $managingDirector', subtitleColor),
+          _impressumRow('${'marketplace.impressum_representative'.tr()}: $managingDirector', subtitleColor),
         if (authorizedRep.isNotEmpty && authorizedRep != managingDirector)
-          _impressumRow('Vertretungsberechtigt: $authorizedRep', subtitleColor),
+          _impressumRow('${'marketplace.impressum_authorized'.tr()}: $authorizedRep', subtitleColor),
         if (registerCourt.isNotEmpty || registerNumber.isNotEmpty)
           _impressumRow(
             [if (registerCourt.isNotEmpty) registerCourt, if (registerNumber.isNotEmpty) registerNumber].join(', '),
             subtitleColor,
           ),
         if (taxId.isNotEmpty)
-          _impressumRow('Steuer-Nr.: $taxId', subtitleColor),
+          _impressumRow('${'marketplace.impressum_tax_id'.tr()}: $taxId', subtitleColor),
         if (vatId.isNotEmpty)
-          _impressumRow('USt-IdNr.: $vatId', subtitleColor),
+          _impressumRow('${'marketplace.impressum_vat_id'.tr()}: $vatId', subtitleColor),
         if (email.isNotEmpty)
-          _impressumRow('E-Mail: $email', subtitleColor),
+          _impressumRow('${'marketplace.impressum_email'.tr()}: $email', subtitleColor),
       ],
     );
   }
@@ -1898,182 +1898,6 @@ class _BusinessDetailScreenState extends ConsumerState<BusinessDetailScreen> {
       ),
     );
   }
-
-  // ═══ Legacy wrappers for backward compatibility ═══
-  List<Widget> _buildHoursListThemed(bool isDark) {
-    try {
-      return _buildHoursList();
-    } catch (e) {
-      return [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text('marketplace.hours_cannot_display'.tr(), style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey.shade600)),
-        )
-      ];
-    }
-  }
-
-  Widget _buildInfoRow(IconData icon, String title, String content, {bool isAction = false, VoidCallback? onTap, bool isDark = true}) {
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final subtitleColor = isDark ? Colors.grey : Colors.grey.shade600;
-    final iconBgColor = isDark ? Colors.white10 : Colors.grey.shade100;
-    final arrowColor = isDark ? Colors.white24 : Colors.grey.shade400;
-    
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(8)),
-              child: Icon(icon, color: _getAccent(context), size: 18),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   Text(title, style: TextStyle(color: subtitleColor, fontSize: 12)),
-                   const SizedBox(height: 2),
-                   Text(content, style: TextStyle(color: isAction ? Colors.blue[400] : textColor, fontSize: 14, height: 1.3)),
-                ],
-              ),
-            ),
-            if (isAction) Icon(Icons.arrow_forward_ios, color: arrowColor, size: 12),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildHoursList() {
-    try {
-      if (_butcherDoc == null) {
-        return [Padding(padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text('marketplace.hours_loading'.tr(), style: const TextStyle(color: Colors.white54)))];
-      }
-      
-      final rawData = _butcherDoc!.data();
-      if (rawData == null) {
-        return [Padding(padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text('marketplace.hours_not_found'.tr(), style: const TextStyle(color: Colors.white54)))];
-      }
-      
-      final data = rawData as Map<String, dynamic>;
-      final hours = data['openingHours'];
-
-      if (hours == null || hours.toString().trim().isEmpty) {
-        return [Padding(padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text('marketplace.business_hours_not_entered'.tr(), style: const TextStyle(color: Colors.white54)))];
-      }
-
-      final dayNamesDisplay = [
-        'common.day_monday'.tr(), 'common.day_tuesday'.tr(), 'common.day_wednesday'.tr(),
-        'common.day_thursday'.tr(), 'common.day_friday'.tr(), 'common.day_saturday'.tr(), 'common.day_sunday'.tr(),
-      ];
-      final dayNamesTr = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
-      final now = DateTime.now();
-      final todayIndex = now.weekday - 1;
-
-      List<String> lines = [];
-      if (hours is String) {
-        lines = hours.split(RegExp(r'\r?\n'));
-      } else if (hours is List) {
-        lines = hours.map((e) => e.toString()).toList();
-      } else {
-        return [Text('marketplace.call_store_for_hours'.tr(), style: const TextStyle(color: Colors.white54))];
-      }
-
-      lines = lines.where((l) => l.trim().isNotEmpty).toList();
-
-      final Map<String, String> enToTr = {
-        'Monday': 'Pazartesi', 'Tuesday': 'Salı', 'Wednesday': 'Çarşamba',
-        'Thursday': 'Perşembe', 'Friday': 'Cuma', 'Saturday': 'Cumartesi', 'Sunday': 'Pazar'
-      };
-
-      List<String> standardizedLines = [];
-      for (var line in lines) {
-        String cleanLine = line.trim();
-        for (var entry in enToTr.entries) {
-          if (cleanLine.startsWith(entry.key)) {
-            cleanLine = cleanLine.replaceFirst(entry.key, entry.value);
-            break;
-          }
-        }
-        cleanLine = cleanLine.replaceAllMapped(RegExp(r'(\d{1,2})(:\d{2})?\s*([AP]M)', caseSensitive: false), (match) {
-          int h = int.parse(match.group(1)!);
-          int m = match.group(2) != null ? int.parse(match.group(2)!.substring(1)) : 0;
-          String period = match.group(3)!.toUpperCase();
-          if (period == 'PM' && h < 12) h += 12;
-          if (period == 'AM' && h == 12) h = 0;
-          return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
-        });
-        cleanLine = cleanLine.replaceAll('–', '-').replaceAll('—', '-');
-        cleanLine = cleanLine.replaceAll(RegExp(r'Closed', caseSensitive: false), 'Kapalı');
-        standardizedLines.add(cleanLine);
-      }
-      lines = standardizedLines;
-
-      if (lines.isEmpty) {
-        return [Text('marketplace.time_info_empty'.tr(), style: const TextStyle(color: Colors.white54))];
-      }
-
-      bool structureMatch = lines.any((l) => dayNamesTr.any((d) => l.startsWith(d)));
-      if (!structureMatch) {
-        return lines.map((line) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Text(line, style: const TextStyle(color: Colors.white70)),
-        )).toList();
-      }
-
-      return List.generate(7, (i) {
-        final dayNameTr = dayNamesTr[i];
-        final dayNameDisplay = dayNamesDisplay[i];
-        final isToday = todayIndex == i;
-        
-        final line = lines.firstWhere(
-          (l) => l.startsWith('$dayNameTr:') || l.startsWith('$dayNameTr '),
-          orElse: () => '$dayNameTr: Kapalı'
-        );
-        
-        String content = line.replaceAll('$dayNameTr:', '').replaceAll(dayNameTr, '').trim();
-        if (content.isEmpty || content == 'Kapalı') content = 'common.closed'.tr();
-
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        final accent = _getAccent(context);
-        final dayColor = isToday ? accent : (isDark ? Colors.grey[300] : Colors.black87);
-        final hoursColor = isToday ? accent : (isDark ? Colors.white : Colors.black87);
-
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-          decoration: BoxDecoration(
-            color: isToday ? accent.withValues(alpha: 0.1) : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-            border: isToday ? Border.all(color: accent.withValues(alpha: 0.3)) : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(dayNameDisplay, style: TextStyle(color: dayColor, fontSize: 14, fontWeight: isToday ? FontWeight.w600 : FontWeight.w500)),
-              Text(content, style: TextStyle(color: hoursColor, fontSize: 14, fontWeight: isToday ? FontWeight.w600 : FontWeight.w500)),
-            ],
-          ),
-        );
-      }).toList();
-    } catch (e) {
-      debugPrint('Error building hours list: $e');
-      return [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text('marketplace.business_hours_cannot_be_displayed'.tr(), style: const TextStyle(color: Colors.white54)),
-        )
-      ];
-    }
-  }
-
 
 
   @override

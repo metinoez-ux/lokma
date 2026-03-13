@@ -315,7 +315,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
           .collection('reservations')
           .add({
         'userId': user.uid,
-        'userName': user.displayName ?? 'Misafir',
+        'userName': user.displayName ?? 'common.guest'.tr(),
         'userEmail': user.email ?? '',
         'userPhone': user.phoneNumber ?? '',
         'customerFcmToken': customerFcmToken,
@@ -357,7 +357,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
         backgroundColor: dialogBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         icon: const Icon(Icons.schedule_send, color: Colors.amber, size: 56),
-        title: Text('Rezervasyon Talebiniz Alındı!', style: TextStyle(color: textPrimary)),
+        title: Text('reservation.request_received'.tr(), style: TextStyle(color: textPrimary)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -412,7 +412,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
               Navigator.of(ctx).pop();
               Navigator.of(context).pop();
             },
-            child: const Text('Tamam', style: TextStyle(color: _accent, fontWeight: FontWeight.w600)),
+            child: Text('common.ok'.tr(), style: TextStyle(color: _accent, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -570,7 +570,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                       Icon(Icons.calendar_today, color: _accent, size: 22),
                       const SizedBox(width: 8),
                       Text(
-                        'Tarih',
+                        'reservation.date_label'.tr(),
                         style: TextStyle(
                           color: textPrimary,
                           fontSize: 16,
@@ -632,7 +632,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                                 children: [
                                   Text(
                                     isToday
-                                        ? 'Bugün'
+                                        ? 'reservation.today'.tr()
                                         : DateFormat('EEE', 'tr').format(date),
                                     style: TextStyle(
                                       color: isSelected ? Colors.white70 : textSecondary,
@@ -680,7 +680,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                       Icon(Icons.access_time, color: _accent, size: 22),
                       const SizedBox(width: 8),
                       Text(
-                        'Saat',
+                        'reservation.time_label'.tr(),
                         style: TextStyle(
                           color: textPrimary,
                           fontSize: 16,
@@ -858,7 +858,7 @@ class _ReservationBookingScreenState extends State<ReservationBookingScreen> {
                       ),
                       const Spacer(),
                       Text(
-                        'Opsiyonel',
+                        'reservation.optional'.tr(),
                         style: TextStyle(color: textSecondary, fontSize: 12),
                       ),
                     ],

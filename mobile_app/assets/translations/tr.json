@@ -897,7 +897,14 @@
     "hours_cannot_display": "Çalışma saatleri görüntülenemiyor.",
     "daily_hours": "Her Gün",
     "find_us": "Bizi nasıl bulursunuz",
-    "cuisine": "Mutfak"
+    "cuisine": "Mutfak",
+    "impressum": "İşletme Bilgileri",
+    "impressum_representative": "Yetkili Temsilci",
+    "impressum_authorized": "Vekil",
+    "impressum_tax_id": "Vergi No.",
+    "impressum_vat_id": "KDV No.",
+    "impressum_email": "E-Posta",
+    "open_maps": "Haritayı aç"
   },
   "navigation": {
     "food": "Yemek",
