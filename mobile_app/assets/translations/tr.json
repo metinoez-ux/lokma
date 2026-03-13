@@ -1569,6 +1569,7 @@
     "step_payment": "Ödeme",
     "step_confirm": "Onay",
     "select_payment_first": "Lütfen bir ödeme yöntemi seçin.",
+    "select_delivery_time_first": "Lütfen bir teslimat zamanı seçin.",
     "privacy_policy_title": "Gizlilik Politikası",
     "terms_title": "Kullanım Koşulları",
     "legal_disclaimer_prefix": "Siparişinizi göndererek ",

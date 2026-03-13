@@ -9242,6 +9242,23 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                         ));
                         return;
                       }
+                      // Delivery time check: for delivery mode, user must explicitly choose
+                      if (!parent._isPickUp && !parent._isDineIn && !parent._deliveryTimeExplicitlyChosen) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Row(
+                            children: [
+                              const Icon(Icons.schedule, color: Color(0xFFE65100), size: 18),
+                              const SizedBox(width: 8),
+                              Flexible(child: Text('checkout.select_delivery_time_first'.tr(), style: const TextStyle(color: Color(0xFFE65100), fontWeight: FontWeight.w500, fontSize: 13))),
+                            ],
+                          ),
+                          backgroundColor: const Color(0xFFFFF3E0),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          duration: const Duration(seconds: 2),
+                        ));
+                        return;
+                      }
                       if (parent._isPickUp && !parent._isDineIn && parent._selectedPickupSlot == null) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('cart.please_select_pickup_time'.tr()), backgroundColor: Colors.amber, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
                         return;
@@ -9261,11 +9278,11 @@ class _CheckoutFullPageState extends State<_CheckoutFullPage> {
                       decoration: BoxDecoration(
                         color: parent._isSubmitting
                             ? Colors.grey
-                            : (parent._paymentMethod == null
+                            : (parent._paymentMethod == null || (!parent._isPickUp && !parent._isDineIn && !parent._deliveryTimeExplicitlyChosen)
                                 ? Colors.grey[400]
                                 : accentColor),
                         borderRadius: BorderRadius.circular(28),
-                        boxShadow: parent._paymentMethod != null
+                        boxShadow: parent._paymentMethod != null && (parent._isPickUp || parent._isDineIn || parent._deliveryTimeExplicitlyChosen)
                             ? [BoxShadow(color: accentColor.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))]
                             : null,
                       ),

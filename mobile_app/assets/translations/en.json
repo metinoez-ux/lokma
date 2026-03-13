@@ -1569,6 +1569,7 @@
     "step_payment": "Payment",
     "step_confirm": "Confirm",
     "select_payment_first": "Please select a payment method.",
+    "select_delivery_time_first": "Please select a delivery time.",
     "privacy_policy_title": "Privacy Policy",
     "terms_title": "Terms of Service",
     "legal_disclaimer_prefix": "By placing your order, you agree to our ",

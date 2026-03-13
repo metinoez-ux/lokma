@@ -1582,6 +1582,7 @@
     "step_payment": "Zahlung",
     "step_confirm": "Bestätigung",
     "select_payment_first": "Bitte wählen Sie eine Zahlungsmethode aus.",
+    "select_delivery_time_first": "Bitte wählen Sie einen Lieferzeitpunkt aus.",
     "privacy_policy_title": "Datenschutzrichtlinie",
     "terms_title": "Nutzungsbedingungen",
     "legal_disclaimer_prefix": "Mit Ihrer Bestellung akzeptieren Sie unsere ",
